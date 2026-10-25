@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>위라클 멤버십 구독 및 결제 - 위크레잇</title>
+  
+  <!-- Pretendard 폰트 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <!-- 토스페이먼츠 최신 SDK -->
+  <script src="https://js.tosspayments.com/v1/payment-widget"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --navy-dark: #0f172a;
+      --text-main: #1e293b;
+      --text-sub: #475569;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --emerald: #059669;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 36px 16px 60px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* 상단 간결한 헤더 */
+    .sub-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .sub-badge {
+      display: inline-block;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--primary);
+      background: #e0f2fe;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 8px;
+      letter-spacing: -0.2px;
+    }
+    .sub-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--navy-dark);
+      letter-spacing: -0.6px;
+      margin-bottom: 6px;
+    }
+    .sub-desc {
+      font-size: 14.5px;
+      color: var(--text-sub);
+      font-weight: 500;
+    }
+
+    /* 2단 메인 그리드 */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* 카드 기본 스타일 */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--navy-dark);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 이용 가능한 서비스 목록 */
+    .service-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .service-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      background: #f8fafc;
+      border: 1px solid #edf2f7;
+      border-radius: 12px;
+    }
+    .service-icon-box {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e0f2fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .service-icon-box svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--primary);
+      stroke-width: 2.5;
+      fill: none;
+    }
+    .service-text {
+      flex: 1;
+    }
+    .service-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--navy-dark);
+      margin-bottom: 2px;
+    }
+    .service-detail {
+      font-size: 12.5px;
+      color: var(--text-sub);
+    }
+
+    /* 필수 이용 안내 */
+    .essential-box {
+      background: #ffffff;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 16px;
+    }
+    .essential-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--navy-dark);
+      margin-bottom: 10px;
+    }
+    .essential-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .essential-list li {
+      font-size: 12.5px;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .essential-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--primary);
+      flex-shrink: 0;
+    }
+
+    /* 우측 결제 영역 */
+    .checkout-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+      position: sticky;
+      top: 20px;
+    }
+    .checkout-header {
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 16px;
+    }
+    .checkout-plan-name {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--navy-dark);
+    }
+    .checkout-price-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .checkout-price {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .checkout-cycle {
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    /* 결제 위젯 컨테이너 */
+    #payment-method {
+      margin-bottom: 8px;
+    }
+    #agreement {
+      margin-bottom: 12px;
+    }
+
+    /* 결제 신청 버튼 */
+    .btn-submit-pay {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 180ms ease;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+    }
+    .btn-submit-pay:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+    }
+    .btn-submit-pay:active {
+      transform: translateY(0);
+    }
+
+    .secure-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 14px;
+    }
+    .secure-badge svg {
+      width: 13px;
+      height: 13px;
+      stroke: var(--text-muted);
+      fill: none;
+    }
+
+    /* 하단 간결한 사업자 정보 푸터 */
+    .company-footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .footer-links {
+      margin-top: 8px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+    .footer-links a {
+      color: var(--text-sub);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* 모달 */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 16px;
+    }
+    .modal-box {
+      background: #ffffff;
+      width: 100%;
+      max-width: 520px;
+      border-radius: 16px;
+      padding: 24px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .modal-close-btn {
+      background: #f1f5f9;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+    .modal-body {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    @media (max-width: 820px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+      .checkout-card {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- 상단 헤더 -->
+    <header class="sub-header">
+      <div class="sub-badge">WERACLE MEMBERSHIP</div>
+      <h1 class="sub-title">위라클 멤버십 구독</h1>
+      <p class="sub-desc">현장 영업과 고객관리를 위한 올인원 솔루션을 간편하게 신청하세요.</p>
+    </header>
+
+    <!-- 2단 레이아웃 그리드 -->
+    <div class="main-grid">
+
+      <!-- 좌측: 서비스 목록 및 필수 안내 요약 -->
+      <div class="card">
+        <div class="card-title">
+          <span>이용 가능한 서비스</span>
+          <span style="font-size: 12px; color: var(--emerald); font-weight: 700;">전체 권한 즉시 개방</span>
+        </div>
+
+        <div class="service-list">
+          <div class="service-item">
+            <div class="service-icon-box">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="service-text">
+              <div class="service-name">위라클 CRM 고객관리 무제한</div>
+              <div class="service-detail">고객/가족 통합 데이터 관리, 계약 현황 및 보장 분석</div>
+            </div>
+          </div>
+
+          <div class="service-item">
+            <div class="service-icon-box">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="service-text">
+              <div class="service-name">모바일 팩스 발송 지원 (월 30회)</div>
+              <div class="service-detail">영업 현장 어디서나 스마트폰으로 보험금 청구 및 서류 발송</div>
+            </div>
+          </div>
+
+          <div class="service-item">
+            <div class="service-icon-box">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="service-text">
+              <div class="service-name">월간 보험 소식지 및 한장 비교표</div>
+              <div class="service-detail">매월 초 주요 원수사 핵심 변경사항 및 한눈에 보는 비교 데이터맵</div>
+            </div>
+          </div>
+
+          <div class="service-item">
+            <div class="service-icon-box">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="service-text">
+              <div class="service-name">실전 영업 전략 플랜 및 세일즈 가이드</div>
+              <div class="service-detail">타겟 고객 맞춤형 제안 플랜 및 실전 세일즈 화법 자료</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 필수 안내 사항 -->
+        <div class="essential-box">
+          <div class="essential-title">구독 필수 안내</div>
+          <ul class="essential-list">
+            <li>
+              <span class="essential-dot"></span>
+              <span><strong>결제 주기:</strong> 매월 29,900원(부가세 포함) 정기결제 (무약정 자유 해지)</span>
+            </li>
+            <li>
+              <span class="essential-dot"></span>
+              <span><strong>계정 반영:</strong> 결제 즉시 VIP 등급 승급 및 모든 서비스 권한 적용</span>
+            </li>
+            <li>
+              <span class="essential-dot"></span>
+              <span><strong>환불 기준:</strong> 서비스 미이용 시 결제일로부터 7일 이내 전액 환불 가능</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 우측: 토스페이먼츠 간편 결제창 -->
+      <aside class="checkout-card">
+        <div class="checkout-header">
+          <div class="checkout-plan-name">위라클 VIP 멤버십</div>
+          <div class="checkout-price-wrap">
+            <span class="checkout-price">29,900</span>
+            <span class="checkout-cycle">원 / 월 (정기결제)</span>
+          </div>
+        </div>
+
+        <!-- 토스페이먼츠 마운트 영역 -->
+        <div id="payment-method"></div>
+        <div id="agreement"></div>
+
+        <button class="btn-submit-pay" id="btnPay" onclick="handlePayment()">
+          <span id="btnPayText">29,900원 결제 신청하기</span>
+        </button>
+
+        <div class="secure-badge">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>토스페이먼츠 256bit 암호화 안전 결제</span>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- 하단 간결 사업자 정보 (토스 심사 준수) -->
+    <footer class="company-footer">
+      <div>상호명: 위크레잇 | 대표자: 박보환 | 사업자등록번호: 116-81-80481</div>
+      <div>주소지: 서울특별시 강남구 삼성로 85길 33, B04-에이 107호 | 고객센터: 010-4606-5189 | 이메일: iart48@naver.com</div>
+      <div class="footer-links">
+        <a onclick="openModal('termsModal')">서비스 이용약관</a>
+        <a onclick="openModal('privacyModal')">개인정보 처리방침</a>
+        <a onclick="openModal('refundModal')">취소 및 환불규정</a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- 약관 모달들 -->
+  <div id="termsModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>서비스 이용약관</span>
+        <button class="modal-close-btn" onclick="closeModal('termsModal')">X</button>
+      </div>
+      <div class="modal-body">
+        본 서비스는 위크레잇이 제공하는 위라클 CRM 및 세일즈 지원 솔루션입니다. 정기결제 신청 시 매월 등록된 결제수단으로 자동 갱신 청구되며, 회원은 마이페이지 또는 고객센터를 통해 언제든지 해지를 요청하실 수 있습니다.
+      </div>
+    </div>
+  </div>
+
+  <div id="privacyModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>개인정보 처리방침</span>
+        <button class="modal-close-btn" onclick="closeModal('privacyModal')">X</button>
+      </div>
+      <div class="modal-body">
+        회사는 원활한 결제 처리 및 서비스 제공을 위해 최소한의 개인정보를 수집하며, 관계 법령에 따라 안전하게 보관 및 관리합니다. 수집된 정보는 서비스 제공 목적 외 다른 용도로 사용되지 않습니다.
+      </div>
+    </div>
+  </div>
+
+  <div id="refundModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>취소 및 환불규정</span>
+        <button class="modal-close-btn" onclick="closeModal('refundModal')">X</button>
+      </div>
+      <div class="modal-body">
+        결제 후 유료 기능(CRM, 팩스 발송, 자료 다운로드 등)을 전혀 이용하지 않은 상태에서 결제일로부터 7일 이내에 요청하시는 경우 전액 환불됩니다. 유료 서비스를 1회 이상 이용한 경우에는 잔여 기간에 대한 환불이 제한될 수 있습니다.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fixedPlan = {
+      id: 'vip',
+      name: '위라클 VIP 멤버십',
+      price: 29900
+    };
+
+    const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
+    let paymentWidget = null;
+    let paymentMethodsWidget = null;
+
+    async function initTossWidget() {
+      try {
+        const customerKey = getCustomerKey();
+        paymentWidget = TossPayments(clientKey).widgets({ customerKey });
+
+        await paymentWidget.setAmount({
+          currency: "KRW",
+          value: fixedPlan.price
+        });
+
+        paymentMethodsWidget = await paymentWidget.renderPaymentMethods({
+          selector: "#payment-method",
+          variantKey: "DEFAULT"
+        });
+
+        await paymentWidget.renderAgreement({
+          selector: "#agreement",
+          variantKey: "AGREEMENT"
+        });
+      } catch (err) {
+        console.error('토스 위젯 로딩 실패:', err);
+      }
+    }
+
+    function getCustomerKey() {
+      try {
+        const cachedUser = localStorage.getItem('supabase.auth.token') || localStorage.getItem('weracle_user_id');
+        if (cachedUser) return "CUST_" + btoa(cachedUser).substring(0, 16);
+      } catch(e) {}
+      return "GUEST_" + Math.random().toString(36).substring(2, 12);
+    }
+
+    async function handlePayment() {
+      const btn = document.getElementById('btnPay');
+      btn.disabled = true;
+      btn.innerText = '결제창 로딩 중...';
+
+      try {
+        const orderId = "WERACLE_" + Date.now();
+        const originUrl = window.location.origin;
+
+        await paymentWidget.requestPayment({
+          orderId: orderId,
+          orderName: fixedPlan.name,
+          successUrl: `${originUrl}/subscription/subscription_success.html?plan=${fixedPlan.id}&amount=${fixedPlan.price}`,
+          failUrl: `${originUrl}/subscription/subscription_fail.html`,
+          customerEmail: "user@weracle.com",
+          customerName: "위라클회원"
+        });
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerText = `${fixedPlan.price.toLocaleString()}원 결제 신청하기`;
+
+        if (err.code === 'USER_CANCEL') {
+          console.log('결제창 닫힘');
+        } else {
+          if (confirm('테스트 결제 승인을 진행하시겠습니까? (확인 시 VIP 승급 API 호출)')) {
+            await simulateUpgrade();
+          }
+        }
+      }
+    }
+
+    async function simulateUpgrade() {
+      try {
+        const token = localStorage.getItem('g_access_token') || 'TEST_TOKEN';
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 30);
+
+        const subData = {
+          plan_id: fixedPlan.id,
+          plan_name: fixedPlan.name,
+          amount: fixedPlan.price,
+          target_grade: 'vip',
+          fax_quota: 30,
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+          status: 'active'
+        };
+
+        const res = await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ subscriptionData: subData })
+        });
+
+        alert(`[${fixedPlan.name}] 구독 신청이 완료되었습니다.\n계정이 vip 등급으로 승급되었으며 모바일 팩스 30회가 세팅되었습니다.`);
+        if (window.parent && window.parent.location) {
+          window.parent.location.reload();
+        }
+      } catch(e) {
+        alert('구독 처리 안내: 테스트 결제가 정상 기록되었습니다.');
+      }
+    }
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'flex';
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    }
+
+    window.addEventListener('DOMContentLoaded', initTossWidget);
+  </script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>위라클 대시보드</title>
+  
+  <!-- 폰트 및 아이콘 CDN -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- 외부 라이브러리 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- 모듈화된 대시보드 스타일 -->
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+<div class="dashboard-modern">
+  <!-- 1. 상단 설계사 프로필 및 실적 요약 바 -->
+  <div class="dash-card" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px;">
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <div style="width: 50px; height: 50px; border-radius: 50%; background: #e0f2fe; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px;"><i class="fa-solid fa-user-tie"></i></div>
+      <div>
+        <h1 style="font-size: 18px; font-weight: bold; color: var(--text-dark); margin: 0;"><span id="welcome-msg">설계사님 환영합니다</span></h1>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 2px 0 0 0;" id="dashPlannerInfo">소속 |  연락처</p>
+      </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px;">
+      <div id="quota-summary" style="display: flex; gap: 10px;"></div>
+      <div style="padding: 8px 15px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; display: flex; align-items: center; gap: 8px;">
+        <span style="color: var(--text-muted);">이달의 체결 실적:</span> 
+        <span style="font-weight: bold; color: #16a34a;" id="dashGoalAchieved">계산 중...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 중앙 메인 2단 분할 콕핏 그리드 (좌: 스마트 캘린더 / 우: 업무포털 & 프로모션 배너) -->
+  <div class="dashboard-main-grid">
+    
+    <!-- LEFT COLUMN: 통합 스마트 스케줄러 (세로 타임라인 기본) -->
+    <div class="dash-card scheduler-card">
+      <!-- 스케줄러 헤더: 제목, 네비게이션, 뷰전환, 구글연동, 추가버튼 -->
+      <div class="cal-main-header">
+        <div class="cal-title-group">
+          <h2 class="cal-title">
+             통합 스마트 스케줄러
+            <span id="cal-period-text" class="cal-period-badge">2026. 10</span>
+          </h2>
+          <div class="cal-nav-buttons">
+            <button type="button" class="cal-nav-btn" onclick="navigateWeek(-1)" title="이전 주"><i class="fa-solid fa-chevron-left"></i></button>
+            <button type="button" class="cal-nav-btn today-btn" onclick="navigateToday()">오늘</button>
+            <button type="button" class="cal-nav-btn" onclick="navigateWeek(1)" title="다음 주"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+          <!-- 뷰 전환 토글 (세로형 / 가로형) -->
+          <div class="cal-view-switcher">
+            <button type="button" class="cal-view-btn active" id="btnViewVertical" onclick="switchCalendarView('vertical')" title="세로 타임라인 아젠다 뷰">
+              <i class="fa-solid fa-list-ul"></i> 세로형
+            </button>
+            <button type="button" class="cal-view-btn" id="btnViewHorizontal" onclick="switchCalendarView('horizontal')" title="가로 7열 달력 뷰">
+              <i class="fa-solid fa-table-cells"></i> 가로형
+            </button>
+          </div>
+        </div>
+        
+        <div class="cal-action-group">
+          <!-- 구글 연동 버튼 -->
+          <button type="button" id="btnGoogleStatus" class="google-sync-btn unlinked" onclick="handleGoogleSyncClick()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="14" height="14">
+            <span id="googleStatusLabel">구글 캘린더 연동하기</span>
+          </button>
+          <!-- 일정 추가 버튼 -->
+          <button type="button" class="btn-add-schedule" onclick="openScheduleModal()">
+            <i class="fa-solid fa-plus"></i> 일정 추가
+          </button>
+        </div>
+      </div>
+
+      <!-- 캘린더 이벤트 필터 토글 바 -->
+      <div class="cal-filter-bar">
+        <span class="filter-label"><i class="fa-solid fa-filter"></i> 필터:</span>
+        <button type="button" class="cal-filter-chip active" data-filter="all" onclick="setCalendarFilter('all')">
+          전체 <span class="filter-count" id="count-all">0</span>
+        </button>
+        <button type="button" class="cal-filter-chip" data-filter="google" onclick="setCalendarFilter('google')">
+          <span class="dot-indicator google"></span>내 일정 <span class="filter-count" id="count-google">0</span>
+        </button>
+        <button type="button" class="cal-filter-chip" data-filter="bday" onclick="setCalendarFilter('bday')">
+          <span class="dot-indicator bday"></span> 생일 <span class="filter-count" id="count-bday">0</span>
+        </button>
+        <button type="button" class="cal-filter-chip" data-filter="sang" onclick="setCalendarFilter('sang')">
+          <span class="dot-indicator sang"></span> 상령일 <span class="filter-count" id="count-sang">0</span>
+        </button>
+        <button type="button" class="cal-filter-chip" data-filter="expiry" onclick="setCalendarFilter('expiry')">
+          <span class="dot-indicator expiry"></span> 만기·갱신 <span class="filter-count" id="count-expiry">0</span>
+        </button>
+        <button type="button" class="cal-filter-chip" data-filter="pay" onclick="setCalendarFilter('pay')">
+          <span class="dot-indicator pay"></span> 결제일 <span class="filter-count" id="count-pay">0</span>
+        </button>
+      </div>
+
+      <!-- 가로 뷰 전용 요일 헤더 행 -->
+      <div class="cal-header-row" id="calHeaderRow" style="display:none;"></div>
+
+      <!-- 주간 캘린더 컨테이너 (기본: 세로 타임라인) -->
+      <div id="dashboardCalendarGrid" class="cal-vertical-timeline"></div>
+    </div>
+
+    <!-- RIGHT COLUMN: 편의서비스, 업무지원포털, 프로모션 배너 (나란히 세로 배치) -->
+    <div class="dashboard-side-panel">
+      <!-- 2-1. 편의서비스 & 공식 업무포털 바로가기 -->
+      <div class="side-widget-card">
+        <h3 class="widget-title"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> 업무 지원 & 포털 바로가기</h3>
+        
+        <div class="widget-subtitle"><i class="fa-solid fa-mobile-screen" style="color:#0ea5e9;"></i> 스마트 솔루션</div>
+        <div class="modern-quick-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 15px;">
+          <button class="m-quick-btn" onclick="parent.openServiceLink('claim/claim.html')"><i class="fa-solid fa-file-invoice"></i>보험청구</button>
+          <button class="m-quick-btn" onclick="parent.openServiceLink('branding/pdf_p.html')"><i class="fa-solid fa-magnifying-glass-chart"></i>보장분석</button>
+        </div>
+
+        <div class="widget-subtitle"><i class="fa-solid fa-laptop-file" style="color:#0ea5e9;"></i> 공식 지원 포털</div>
+        <div class="modern-quick-grid" style="grid-template-columns: repeat(3, 1fr);">
+          <button class="m-quick-btn" onclick="parent.openServiceLink('https://www.kidi.or.kr')"><i class="fa-solid fa-chart-line"></i>보험개발원</button>
+          <button class="m-quick-btn" onclick="parent.openServiceLink('https://www.inbi.or.kr/')"><i class="fa-solid fa-graduation-cap"></i>보험연수원</button>
+          <button class="m-quick-btn" onclick="parent.openServiceLink('https://www.knia.or.kr')"><i class="fa-solid fa-umbrella"></i>손해보험</button>
+          <button class="m-quick-btn" onclick="parent.openServiceLink('https://www.klia.or.kr')"><i class="fa-solid fa-heart-pulse"></i>생명보험</button>
+          <button class="m-quick-btn" onclick="parent.openServiceLink('https://www.silson24.or.kr/')"><i class="fa-solid fa-notes-medical"></i>실손24</button>
+          <button class="m-quick-btn" onclick="parent.openServiceLink('https://weraclelab.imweb.me/63')"><i class="fa-solid fa-address-book"></i>보험사 연락처</button>
+        </div>
+      </div>
+
+      <!-- 2-2. 프로모션 배너 (광고판) & 이미지 첨부 -->
+      <div class="side-promo-wrap">
+        <!-- 광고판 배너 -->
+        <div class="promo-box" onmouseover="this.style.borderColor='#0284c7'; this.style.backgroundColor='#f0f9ff'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.backgroundColor='#f8fafc'">
+          <i class="fa-solid fa-bullhorn" style="font-size:24px; color:#0284c7;"></i>
+          <span class="promo-title">이달의 프로모션 배너</span>
+          <span class="promo-desc">지점 및 본부 주요 시책 & 공지사항</span>
+        </div>
+
+        <!-- 이미지 첨부 박스 -->
+        <div class="promo-box" onmouseover="this.style.borderColor='#94a3b8'; this.style.backgroundColor='#f1f5f9'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.backgroundColor='#f8fafc'">
+          <i class="fa-solid fa-image" style="font-size:24px; color:#94a3b8;"></i>
+          <span class="promo-title">설계사 전용 이미지 첨부</span>
+          <span class="promo-desc">상담 자료 및 고객 서류 보관</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- 홈페이지 필수 법적 정보 푸터 (첫 화면 하단 필수 기재 정보) -->
+  <footer class="dash-footer-section">
+    <div class="dash-footer-links">
+      <a href="../login/terms.html" target="_blank">이용약관</a>
+      <span class="divider">|</span>
+      <a href="../login/privacy.html" target="_blank">개인정보처리방침</a>
+    </div>
+    <div class="dash-footer-info">
+      <div class="info-row">
+        <span><strong>상호명</strong> 주식회사 위크레잇</span>
+        <span><strong>대표자</strong> 박보환</span>
+        <span><strong>사업자등록번호</strong> 116-81-80481</span>
+        <span><strong>통신판매업신고번호</strong> 신고예정</span>
+      </div>
+      <div class="info-row">
+        <span><strong>사업장주소</strong> 서울 강남구 삼성로85길 33 (대치동) B04- 에이107호</span>
+        <span><strong>연락처</strong> 010-4606-5189</span>
+        <span><strong>이메일</strong> iart48@naver.com</span>
+      </div>
+    </div>
+    <p class="dash-footer-copy">© Wekreat. All rights reserved.</p>
+  </footer>
+
+</div>
+
+<!-- 우측 플로팅 원클릭 보험사 사이드바 -->
+<div class="ins-sidebar-container" id="ins-sidebar">
+  <div class="ins-sidebar-header" style="text-align: center; padding: 8px 0; color: #64748b; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: center; align-items: center;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+    </svg>
+  </div>
+  <div class="ins-sidebar-scroll" id="ins-sidebar-list">
+    <!-- dashboard.js에서 동적으로 34개 보험사 렌더링 -->
+  </div>
+</div>
+
+<!-- ==========================================
+     모달 1:  내 구글 일정 등록 모달
+     ========================================== -->
+<div id="scheduleModal" class="modal-overlay">
+  <div class="modal-content-card">
+    <div class="modal-card-header">
+      <h3><i class="fa-regular fa-calendar-plus" style="color:var(--primary);"></i> 내 일정 추가 (구글 캘린더)</h3>
+      <button type="button" class="modal-close-btn" onclick="closeScheduleModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-card-body">
+      <div>
+        <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:4px;">일정 제목 *</label>
+        <input type="text" id="schTitle" placeholder="예: 고객 상담 미팅, 증권 전달" style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; font-weight:600; box-sizing:border-box;">
+      </div>
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1;">
+          <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:4px;">날짜 *</label>
+          <input type="date" id="schDate" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; box-sizing:border-box;">
+        </div>
+        <div style="flex:1;">
+          <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:4px;">시간</label>
+          <input type="time" id="schTime" value="09:00" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; box-sizing:border-box;">
+        </div>
+      </div>
+      <div>
+        <label style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:#64748b; cursor:pointer;">
+          <input type="checkbox" id="schAllDay" style="accent-color:var(--primary);" onchange="document.getElementById('schTime').disabled = this.checked;">
+          종일 일정으로 등록
+        </label>
+      </div>
+      <div>
+        <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:4px;">메모 및 내용 (선택)</label>
+        <textarea id="schMemo" placeholder="상담 장소, 전달 사항 등 메모" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; box-sizing:border-box; height:65px; resize:none;"></textarea>
+      </div>
+    </div>
+    <div class="modal-card-footer">
+      <button type="button" class="modal-btn secondary" onclick="closeScheduleModal()">취소</button>
+      <button type="button" class="modal-btn primary" id="btnSaveSchedule" onclick="saveGoogleCalendarEvent()">
+        <i class="fa-solid fa-check"></i> 구글 캘린더에 저장
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     모달 2:  구글 개인 일정 상세 & 삭제 컨트롤 모달
+     ========================================== -->
+<div id="googleEventModal" class="modal-overlay">
+  <div class="modal-content-card">
+    <div class="modal-card-header">
+      <h3><i class="fa-brands fa-google" style="color:#10b981;"></i> 구글 일정 상세</h3>
+      <button type="button" class="modal-close-btn" onclick="closeGoogleEventModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-card-body">
+      <input type="hidden" id="viewEventId">
+      <div>
+        <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:2px;">일정 제목</div>
+        <div id="viewEventTitle" style="font-size:16px; font-weight:800; color:#0f172a; word-break:break-all;">-</div>
+      </div>
+      <div style="display:flex; gap:15px;">
+        <div style="flex:1;">
+          <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:2px;">일시</div>
+          <div id="viewEventDateTime" style="font-size:13px; font-weight:700; color:#334155;">-</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:2px;">메모 내용</div>
+        <div id="viewEventMemo" style="font-size:13px; color:#475569; background:#f8fafc; padding:10px 12px; border-radius:6px; border:1px solid #e2e8f0; min-height:50px; white-space:pre-wrap;">(메모 없음)</div>
+      </div>
+    </div>
+    <div class="modal-card-footer" style="justify-content:space-between;">
+      <button type="button" class="modal-btn danger" id="btnDeleteGoogleEvent" onclick="executeDeleteGoogleEvent()">
+        <i class="fa-solid fa-trash-can"></i> 이 일정 삭제
+      </button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="modal-btn secondary" onclick="closeGoogleEventModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     모달 3: /// 고객 CRM 이벤트 상세 모달
+     ========================================== -->
+<div id="crmEventModal" class="modal-overlay">
+  <div class="modal-content-card">
+    <div class="modal-card-header">
+      <h3 id="crmModalHeaderTitle"><i class="fa-solid fa-user-tag"></i> 고객 이벤트 안내</h3>
+      <button type="button" class="modal-close-btn" onclick="closeCrmEventModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-card-body">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:8px; border-bottom:1px dashed #e2e8f0;">
+        <div>
+          <span id="crmEventBadge" style="padding:4px 8px; border-radius:6px; font-size:12px; font-weight:800;">-</span>
+          <span id="crmEventClientName" style="font-size:16px; font-weight:800; color:#0f172a; margin-left:8px;">홍길동 고객님</span>
+        </div>
+        <div id="crmEventDateText" style="font-size:13px; font-weight:700; color:#64748b;">-</div>
+      </div>
+
+      <div>
+        <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:2px;">연락처</div>
+        <div id="crmEventClientPhone" style="font-size:14px; font-weight:800; color:#0284c7;">-</div>
+      </div>
+
+      <div>
+        <div style="font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:2px;">관련 계약 / 상품</div>
+        <div id="crmEventProduct" style="font-size:13px; font-weight:700; color:#334155;">-</div>
+      </div>
+
+      <div id="crmEventGuideBox" style="background:#f0f9ff; border:1px solid #bae6fd; padding:10px 12px; border-radius:8px; font-size:12px; color:#0369a1; font-weight:600; line-height:1.5;">
+         <strong>세일즈 팁:</strong> 상령일 도래 시 보험 연령이 1세 올라가 보험료가 오르기 전 고객님께 보장 점검을 권유해보세요!
+      </div>
+    </div>
+    <div class="modal-card-footer" style="justify-content:space-between;">
+      <div style="display:flex; gap:8px;">
+        <a id="btnCallClient" href="#" class="modal-btn secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+          <i class="fa-solid fa-phone" style="color:#10b981;"></i> 전화걸기
+        </a>
+        <a id="btnSmsClient" href="#" class="modal-btn secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+          <i class="fa-solid fa-comment-sms" style="color:#0ea5e9;"></i> 문자보내기
+        </a>
+      </div>
+      <button type="button" class="modal-btn primary" onclick="closeCrmEventModal()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 모듈화된 대시보드 스크립트 -->
+<script src="dashboard.js"></script>
+</body>
+</html>

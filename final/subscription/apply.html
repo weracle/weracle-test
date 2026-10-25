@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>위라클 서비스 신청</title>
+  
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  
+  <style>
+    body { margin: 0; padding: 0; background-color: #f4f7f9; }
+
+    /* --- 위라클 공통 스타일 --- */
+    .weracle-pay-wrap { 
+      font-family: 'Pretendard Variable', Pretendard, sans-serif; 
+      width: 100%; max-width: 1200px; 
+      margin: 50px auto; padding: 40px 20px; 
+      box-sizing: border-box; color: #333; 
+    }
+
+    /* --- 상단 탭 메뉴 --- */
+    .pay-tab-menu {
+      display: flex; gap: 10px; margin-bottom: 30px;
+      background: #fff; padding: 10px; border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(17, 63, 103, 0.05);
+    }
+    .tab-btn {
+      flex: 1; padding: 18px; border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 800; cursor: pointer;
+      background: #f8faff; color: #a2bada; transition: 0.3s;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+    }
+    .tab-btn span { font-size: 12px; font-weight: 400; opacity: 0.7; }
+    
+    .tab-btn.active[data-tab="lab"] { background: #113f67; color: #fff; }
+    .tab-btn.active[data-tab="brand"] { background: #c5a059; color: #fff; }
+    .tab-btn.active[data-tab="market"] { background: #4e8d6e; color: #fff; }
+
+    /* --- 마켓용 서브 탭 --- */
+    .market-sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .market-sub-btn { 
+      padding: 10px 20px; border: 1px solid #eee; border-radius: 20px; 
+      background: #fff; color: #666; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px;
+    }
+    .market-sub-btn.active { background: #4e8d6e; color: #fff; border-color: #4e8d6e; }
+
+    /* --- 하단 디테일 뷰 --- */
+    .item-detail-view {
+      margin-top: 30px; padding: 25px; background: #f8faff; 
+      border-radius: 18px; border: 1px solid #e0e6ed;
+      display: none; animation: slideDown 0.3s ease;
+    }
+    .detail-title { font-size: 20px; font-weight: 800; color: #333; margin-top: 0; margin-bottom: 10px; }
+    .detail-desc { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 20px; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    #lab .item-detail-view { background: #fdfaf4; border-color: #d0deeb; }
+    #brand .item-detail-view { background: #fdfaf4; border-color: #eee1c6; }
+    #market .item-detail-view { background: #fdfaf4; border-color: #d1ebd8; }
+
+    /* 상세 설명 리치 텍스트 스타일 */
+    .rich-section { margin-bottom: 15px; text-align: left; background: rgba(255,255,255,0.6); padding: 15px; border-radius: 12px; }
+    .rich-section h4 { margin: 0 0 8px 0; font-size: 15px; font-weight: 800; color: #c5a059; display: flex; align-items: center; gap: 5px; }
+    .rich-section p { margin: 0; font-size: 14px; color: #555; line-height: 1.6; }
+    #lab .rich-section h4 { color: #c5a059; }
+    #market .rich-section h4 { color: #c5a059; }
+
+    /* 이너 탭 메뉴 스타일 (네모 박스 형태) */
+    .detail-inner-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 25px; border-bottom: 1px solid #ddd; padding-bottom: 0; }
+    .inner-tab-btn { background: transparent; border: 1px solid transparent; border-bottom: none; font-size: 15px; font-weight: 800; color: #888; cursor: pointer; padding: 12px 20px; margin-bottom: -1px; transition: 0.2s; border-radius: 8px 8px 0 0; }
+    .inner-tab-btn:hover { background: rgba(255,255,255,0.4); }
+    .inner-tab-btn.active { border-bottom-color: #fff; background: #fff; }
+    
+    #detail-brand .detail-inner-tabs { border-bottom-color: #c5a059; }
+    #detail-brand .inner-tab-btn:hover { color: #c5a059; }
+    #detail-brand .inner-tab-btn.active { color: #c5a059; border-color: #c5a059; }
+    
+    #lab .detail-inner-tabs, #detail-lab .detail-inner-tabs { border-bottom-color: #113f67; }
+    #lab .inner-tab-btn:hover, #detail-lab .inner-tab-btn:hover { color: #113f67; }
+    #lab .inner-tab-btn.active, #detail-lab .inner-tab-btn.active { color: #113f67; border-color: #113f67; }
+    
+    #detail-market .detail-inner-tabs { border-bottom-color: #4e8d6e; }
+    #detail-market .inner-tab-btn:hover { color: #4e8d6e; }
+    #detail-market .inner-tab-btn.active { color: #4e8d6e; border-color: #4e8d6e; }
+
+    .inner-tab-content { display: none; animation: fadeIn 0.3s ease; }
+    .inner-tab-content.active { display: block; }
+    
+    .process-container { border-left: 2px dashed #e0e0e0; margin-left: 10px; padding-left: 25px; margin-top: 10px; }
+    .process-step { position: relative; margin-bottom: 25px; line-height: 1.6; }
+    .process-step:last-child { margin-bottom: 0; }
+    .process-step::before { content: ''; position: absolute; left: -31px; top: 6px; width: 10px; height: 10px; background: #c5a059; border-radius: 50%; box-shadow: 0 0 0 4px #fff; }
+    .step-badge { color: #c5a059; display: inline-block; margin-bottom: 6px; font-size: 12px; font-weight: 800; background: rgba(197, 160, 89, 0.15); padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; }
+    .step-title { margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #222; }
+    .step-desc { margin: 0; font-size: 14px; color: #555; }
+    
+    .philosophy-box { position: relative; padding: 30px 35px; background: linear-gradient(135deg, rgba(197, 160, 89, 0.05) 0%, rgba(197, 160, 89, 0.12) 100%); border-radius: 16px; text-align: center; font-size: 16px; line-height: 1.8; color: #444; font-weight: 500; border: 1px solid rgba(197, 160, 89, 0.2); margin-top: 10px; }
+    .philosophy-box::before { content: '"'; font-family: serif; position: absolute; top: -5px; left: 20px; font-size: 60px; color: rgba(197, 160, 89, 0.2); line-height: 1; }
+    .philosophy-box strong { color: #c5a059; font-weight: 900; }
+    
+    .target-list { display: flex; flex-direction: column; gap: 12px; padding: 5px; }
+    .target-item { display: flex; align-items: flex-start; gap: 15px; padding: 20px 25px; background: #fff; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #eee; transition: 0.3s; }
+    .target-item:hover { transform: translateY(-3px); }
+    #detail-brand .target-item:hover { border-color: #c5a059; box-shadow: 0 8px 20px rgba(197, 160, 89, 0.1); }
+    #detail-lab .target-item:hover { border-color: #113f67; box-shadow: 0 8px 20px rgba(17, 63, 103, 0.1); }
+    #detail-market .target-item:hover { border-color: #4e8d6e; box-shadow: 0 8px 20px rgba(78, 141, 110, 0.1); }
+    .target-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; font-weight: 900; }
+    .target-text { font-size: 15px; color: #444; line-height: 1.6; margin: 0; padding-top: 4px; }
+
+    /* 하단 결제 바 (디테일 뷰 내부로 이동) */
+    .pay-footer {
+      padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.05);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* --- 탭 컨텐츠 영역 --- */
+    .tab-content { display: none; animation: fadeIn 0.4s ease; }
+    .tab-content.active { display: block; }
+    .tab-top-grid { display: grid; grid-template-columns: 350px 1fr; gap: 40px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .pay-section-box {
+      background: #ffffff; border-radius: 24px; padding: 40px;
+      box-shadow: 0 15px 40px rgba(17, 63, 103, 0.08); border: 1px solid rgba(17, 63, 103, 0.03);
+    }
+
+    .intro-side h2 { font-size: 28px; font-weight: 900; margin-bottom: 15px; letter-spacing: -1px; }
+    .intro-side p { font-size: 15px; color: #666; line-height: 1.6; }
+    .feature-list { list-style: none; padding: 0; margin-top: 20px; font-size: 14px; color: #888; }
+    .feature-list li { margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .feature-list li::before { content: ''; color: currentColor; font-weight: bold; }
+
+    .item-list { display: flex; flex-direction: column; gap: 12px; }
+    .pay-card {
+      background: #fff; border: 1px solid #eee; border-radius: 18px; padding: 22px;
+      cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center;
+    }
+    .pay-card:hover { transform: translateX(5px); border-color: #ddd; }
+    .pay-card.selected { border-width: 2px; }
+
+    .tab-content[id="lab"] .pay-card.selected { border-color: #113f67; background: #f0f4f8; color: #113f67; }
+    .tab-content[id="brand"] .pay-card.selected { border-color: #c5a059; background: #fdfaf4; color: #c5a059; }
+    .tab-content[id="market"] .pay-card.selected { border-color: #4e8d6e; background: #f4faf7; color: #4e8d6e; }
+
+    .card-info { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+    .check-circle { width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: transparent; }
+    .pay-card.selected .check-circle { background: currentColor; border-color: currentColor; color: #fff; }
+
+    .price-total { font-size: 24px; font-weight: 900; }
+    .final-pay-btn {
+      padding: 18px 45px; border-radius: 14px; border: none;
+      font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.3s;
+      color: #fff;
+    }
+
+    .lab-btn { background: #113f67; }
+    .brand-btn { background: #c5a059; }
+    .market-btn { background: #4e8d6e; }
+
+    @media(max-width: 900px) {
+      .tab-top-grid { grid-template-columns: 1fr; gap: 20px; }
+      .pay-tab-menu { flex-direction: column; }
+      .pay-footer { flex-direction: column; gap: 20px; text-align: center; }
+      .market-sub-tabs { overflow-x: auto; white-space: nowrap; padding-bottom: 5px; }
+    }
+    
+    .back-btn-wrap { text-align: center; margin-top: 20px; }
+    .back-btn {
+      display: inline-block; padding: 12px 24px; background: #e0e6ed; color: #555;
+      border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s;
+    }
+    .back-btn:hover { background: #d0d8e0; color: #333; }
+  </style>
+  <style>
+  @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap');
+  
+  @font-face {
+    font-family: "Geist";
+    src: url("https://pham.codes/d/GeistVF.woff2") format("woff2");
+  }
+
+  .weracle-lab-archive {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 1000px; 
+    margin: 0 auto; 
+    padding: 30px 20px;
+    background-color: #fcfcfc;
+  }
+
+  /* =========================================
+     1. 헤더 영역
+  ========================================= */
+  .vlab-header-wrap {
+    text-align: center;
+    margin-bottom: 20px;
+    position: relative;
+    padding: 20px 0;
+  }
+
+  .vlab-subtitle {
+    font-size: 14px; font-weight: 400; color: #888; letter-spacing: 3px;
+    text-transform: uppercase; margin-bottom: 8px; display: block;
+  }
+
+  .vlab-main-title {
+    display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0;
+  }
+
+  .brand-name { font-size: 40px; font-weight: 900; color: #113f67; letter-spacing: -1px; }
+
+  .logo-vlab {
+    display: flex; align-items: center; gap: 8px; 
+  }
+
+  .s-icon-lab {
+    width: 32px; 
+    height: 32px;
+    animation: floatEffect 3s infinite ease-in-out; 
+  }
+
+  @keyframes floatEffect {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  .lab-text { font-size: 28px; font-weight: 700; color: #113f67; letter-spacing: 0.5px; }
+
+  .title-deco-line {
+    width: 60px; height: 3px;
+    background: linear-gradient(90deg, #113f67 0%, #00e6f6 100%);
+    margin: 25px auto 0; border-radius: 2px;
+  }
+
+  /* =========================================
+     2. 탭 버튼 영역
+  ========================================= */
+  .vlab-tab-buttons {
+    display: flex; justify-content: flex-start; gap: 10px; margin-bottom: 40px; 
+    border-bottom: 2px solid #eaeaea; padding-bottom: 15px; margin-top: 20px;
+  }
+  .vlab-tab-btn {
+    background: none; border: none; font-size: 17px; font-weight: 600; color: #888;
+    padding: 8px 18px; cursor: pointer; transition: all 0.2s ease;
+    border-radius: 8px 8px 0 0; position: relative; font-family: inherit;
+  }
+  .vlab-tab-btn:hover { color: #113f67; background: #f0f4f8; }
+  .vlab-tab-btn.active { color: #113f67; font-weight: 800; }
+  .vlab-tab-btn.active::after {
+    content: ''; position: absolute; bottom: -17px; left: 0; width: 100%; height: 3px;
+    background: #113f67; border-radius: 3px 3px 0 0;
+  }
+
+  .vlab-tab-content { display: none; animation: fadeIn 0.4s ease; }
+  .vlab-tab-content.active { display: block; }
+
+
+  /* =========================================
+     3. 탭 1 : CRM 6칸 그리드
+  ========================================= */
+  .crm-cards-grid { 
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; 
+  }
+  
+  .sys-card-mini {
+    display: flex; background: #ffffff; border: 1px solid #eaeef2; border-radius: 20px;
+    padding: 24px; gap: 24px; align-items: center; box-shadow: 0 10px 30px rgba(17, 63, 103, 0.04);
+    transition: all 0.3s ease;
+  }
+  .sys-card-mini:hover {
+    border-color: #00e6f6; box-shadow: 0 15px 40px rgba(17, 63, 103, 0.08); transform: translateY(-3px);
+  }
+
+  .sys-graphic-mini {
+    flex: 0 0 100px; height: 100px; background-color: #1d568c; 
+    border-radius: 16px; display: flex; justify-content: center; align-items: center;
+  }
+  
+  .sys-graphic-mini svg { 
+    width: 40px; height: 40px; 
+    fill: none; 
+    stroke: #ffffff; 
+    stroke-width: 2; 
+    stroke-linecap: round; stroke-linejoin: round; 
+    animation: icon-white-glow-noscale 2.5s infinite alternate ease-in-out;
+  }
+  
+  @keyframes icon-white-glow-noscale {
+    0% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.3)); opacity: 0.85; }
+    100% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.9)); opacity: 1; }
+  }
+
+  .sys-info-mini { display: flex; flex-direction: column; justify-content: center; flex: 1; }
+
+  .sys-title-mini { font-size: 20px; font-weight: 800; color: #222; margin-bottom: 8px; letter-spacing: -0.5px; }
+  .sys-desc-mini { font-size: 14.5px; color: #666; line-height: 1.5; word-break: keep-all; margin: 0; }
+
+
+  /* =========================================
+     4. 탭 2 : 보험 인사이트 (가운데 정렬 및 좌우 공백 밸런스 조정)
+  ========================================= */
+  .vlab-intro-text {
+    font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 40px; text-align: center; word-break: keep-all;
+  }
+
+  .sys-list-wrap { display: flex; flex-direction: column; gap: 10px; max-width: 800px; margin: 0 auto; }
+
+  /* 좌우 여백(padding)을 40px로 늘려 좌우 공백 밸런스 조정 */
+  .sys-card {
+    display: flex; background: #ffffff; border: 1px solid #eaeef2; border-radius: 20px;
+    padding: 24px 40px; gap: 32px; align-items: center; box-shadow: 0 10px 30px rgba(17, 63, 103, 0.04);
+    transition: all 0.3s ease;
+  }
+  .sys-card:hover {
+    border-color: #00e6f6; box-shadow: 0 15px 40px rgba(17, 63, 103, 0.08); transform: translateY(-3px);
+  }
+
+  .sys-graphic-box {
+    flex: 0 0 150px; min-height: 150px; background-color: #1d568c; 
+    border-radius: 16px; display: flex; justify-content: center; align-items: center;
+    position: relative; overflow: hidden; padding: 20px; 
+  }
+
+  .sys-info { display: flex; flex-direction: column; justify-content: center; flex: 1; }
+
+  .sys-badge {
+    display: inline-block; background: #f0f4f8; color: #113f67; font-size: 12px;
+    font-weight: 800; padding: 6px 12px; border-radius: 20px; margin-bottom: 10px; align-self: flex-start;
+    border: 1px solid #dde5ed;
+  }
+  .sys-badge span { color: #00baa8; margin-right: 6px; }
+  .sys-title { font-size: 20px; font-weight: 800; color: #222; margin-bottom: 10px; line-height: 1.35; letter-spacing: -0.5px; }
+  .sys-desc { font-size: 14.5px; color: #666; line-height: 1.5; word-break: keep-all; }
+
+  .flow-connector { display: flex; justify-content: center; align-items: center; padding: 10px 0; }
+  .flow-connector svg { width: 28px; height: 28px; stroke: #cbd5e1; }
+
+  /* =========================================
+     5. 애니메이션 그래픽
+  ========================================= */
+  .anim-lightning { width: 60px; fill: #ffffff; animation: pulse-glow 3s infinite ease-in-out; } 
+  @keyframes pulse-glow { 0%, 100% { opacity: 0.4; transform: scale(0.95); } 50% { opacity: 1; filter: drop-shadow(0 0 20px rgba(255,255,255,0.9)); transform: scale(1.05); } }
+
+  .anim-chart { display: flex; align-items: flex-end; gap: 12px; height: 80px; }
+  .anim-bar { width: 10px; background: linear-gradient(to top, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.9) 100%); border-radius: 4px; height: 100%; }
+
+  .anim-stack { position: relative; width: 100px; height: 80px; }
+  .anim-doc { position: absolute; width: 40px; height: 56px; border-radius: 4px; top: 50%; left: 50%; margin-top: -28px; margin-left: -20px; } 
+  .anim-bg { border: 1px solid rgba(255, 255, 255, 0.15); z-index: 1; }
+  .anim-bg:nth-child(1) { transform: translate(-20px, -10px) rotate(-15deg); }
+  .anim-bg:nth-child(2) { transform: translate(20px, -5px) rotate(12deg); }
+  .anim-core { background: #ffffff; z-index: 2; transform: translate(-3px, -1px) rotate(2deg); animation: top-glow 2.5s infinite alternate ease-in-out; }
+  .anim-core::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #113f67; font-size: 12px; }
+  .anim-front { background: #1d568c; border: 1px solid rgba(255, 255, 255, 0.3); z-index: 3; }
+  .anim-front:nth-child(4) { transform: translate(10px, 9px) rotate(6deg); }
+  .anim-front:nth-child(5) { transform: translate(-12px, 13px) rotate(-10deg); }
+  @keyframes top-glow { 0% { box-shadow: 0 -2px 6px -1px rgba(255,255,255,0.2); } 100% { box-shadow: 0 -15px 30px -5px rgba(255,255,255,0.9); } }
+
+  /* =========================================
+     모바일 최적화
+  ========================================= */
+  @media(max-width: 768px) {
+    .vlab-main-title { flex-direction: row; align-items: center; gap: 10px; } 
+    .brand-name { font-size: 32px; }
+    .lab-text { font-size: 24px; }
+    
+    .vlab-tab-buttons { width: 100%; justify-content: space-between; padding: 0 10px; }
+    .vlab-tab-btn { flex: 1; padding: 10px 0; text-align: center; font-size: 14px; }
+
+    /* CRM 반응형 */
+    .crm-cards-grid { grid-template-columns: 1fr; }
+    .sys-card-mini { flex-direction: column; padding: 20px; gap: 20px; text-align: center; }
+    .sys-graphic-mini { flex: 0 0 100%; width: 100%; height: 120px; }
+
+    /* 인사이트 반응형 */
+    .sys-card { flex-direction: column; padding: 24px; gap: 20px; text-align: center; }
+    .sys-graphic-box { flex: 0 0 100%; max-width: 100%; width: 100%; min-height: 130px; } 
+    .sys-badge { align-self: center; }
+  }
+  </style>
+</head>
+<body>
+
+<div class="weracle-pay-wrap">
+  
+  <div class="pay-tab-menu">
+    <button class="tab-btn active" data-tab="lab" onclick="switchTab('lab')">
+      <span>Lab Service</span>위라클 랩 구독
+    </button>
+    <button class="tab-btn" data-tab="brand" onclick="switchTab('brand')">
+      <span>Premium Branding</span>이미지 브랜딩
+    </button>
+    <button class="tab-btn" data-tab="market" onclick="switchTab('market')">
+      <span>Market Tool</span>영업 마켓
+    </button>
+  </div>
+
+  <div class="tab-content active" id="lab">
+    <!-- 상단 소개 텍스트 삭제됨 -->
+
+    <!-- 기본 노출되는 서비스 상세 내용 -->
+    <div class="rich-section" style="padding: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; margin-top: 20px;">
+      <div class="detail-inner-tabs">
+        <button class="inner-tab-btn active" data-inner="lab-overview" onclick="switchInnerTab('lab-overview', event)">서비스 소개</button>
+        <button class="inner-tab-btn" data-inner="lab-guide" onclick="switchInnerTab('lab-guide', event)">이용 가이드</button>
+        <button class="inner-tab-btn" data-inner="lab-qna" onclick="switchInnerTab('lab-qna', event)">자주 묻는 질문(Q&A)</button>
+        <button class="inner-tab-btn" data-inner="lab-notice" onclick="switchInnerTab('lab-notice', event)">이용 안내</button>
+      </div>
+
+      <div class="inner-tab-content active" id="inner-lab-overview" style="padding:0; background:transparent; border:none;">
+<div class="weracle-lab-archive">
+
+
+  <div class="vlab-tab-buttons">
+    <button class="vlab-tab-btn active" onclick="openVlabServiceTab(event, 'vlab-tab-crm')">고객관리프로그램</button>
+    <button class="vlab-tab-btn" onclick="openVlabServiceTab(event, 'vlab-tab-insight')">보험 인사이트</button>
+  </div>
+
+  <div id="vlab-tab-crm" class="vlab-tab-content active">
+    <div class="crm-cards-grid">
+      
+      <div class="sys-card-mini">
+        <div class="sys-graphic-mini">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 18v-6"></path><path d="M9 15l3-3 3 3"></path>
+          </svg>
+        </div>
+        <div class="sys-info-mini">
+          <div class="sys-title-mini">보상 청구 연동</div>
+          <div class="sys-desc-mini">고객 정보를 자동으로 불러와 빠르고 간편하게 청구를 처리합니다.</div>
+        </div>
+      </div>
+
+      <div class="sys-card-mini">
+        <div class="sys-graphic-mini">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+            <line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+        </div>
+        <div class="sys-info-mini">
+          <div class="sys-title-mini">보험 영업 맞춤 설계</div>
+          <div class="sys-desc-mini">실무에 최적화된 구조로 다양한 업무에 즉시 활용 가능합니다.</div>
+        </div>
+      </div>
+
+      <div class="sys-card-mini">
+        <div class="sys-graphic-mini">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline>
+          </svg>
+        </div>
+        <div class="sys-info-mini">
+          <div class="sys-title-mini">간편한 고객 관리</div>
+          <div class="sys-desc-mini">직관적인 UI로 고객 등록 및 수정이 쉽고 빠른 환경을 제공합니다.</div>
+        </div>
+      </div>
+
+      <div class="sys-card-mini">
+        <div class="sys-graphic-mini">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="sys-info-mini">
+          <div class="sys-title-mini">가족 단위 통합 관리</div>
+          <div class="sys-desc-mini">개인이 아닌 가계 단위 기준으로 설계되어 훨씬 효율적으로 운영됩니다.</div>
+        </div>
+      </div>
+
+      <div class="sys-card-mini">
+        <div class="sys-graphic-mini">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><rect x="9" y="11" width="6" height="6" rx="1" ry="1"></rect>
+          </svg>
+        </div>
+        <div class="sys-info-mini">
+          <div class="sys-title-mini">개인 데이터 보안 강화</div>
+          <div class="sys-desc-mini">개인 계정을 기반으로 고객 데이터를 완벽하게 보호하고 보관합니다.</div>
+        </div>
+      </div>
+
+      <div class="sys-card-mini">
+        <div class="sys-graphic-mini">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+        </div>
+        <div class="sys-info-mini">
+          <div class="sys-title-mini">직관적 고객 분류</div>
+          <div class="sys-desc-mini">현장 실무 중심의 카테고리와 필터링으로 원하는 고객을 빠르게 찾습니다.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="vlab-tab-insight" class="vlab-tab-content">
+    <p class="vlab-intro-text">
+      성공적인 세일즈를 위해 위라클 인사이트의<br>
+      <b>3단계 워크플로우</b>를 따라 완벽한 상담을 준비하세요.
+    </p>
+
+    <div class="sys-list-wrap">
+      <div class="sys-card">
+        <div class="sys-graphic-box">
+          <svg class="anim-lightning" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <div class="sys-info">
+          <div class="sys-badge"><span>STEP 01</span> 정보 획득</div>
+          <div class="sys-title">보험 소식지</div>
+          <div class="sys-desc">원수사별 핵심 소식을 위라클만의 정돈된 시각 자료로 담아내어,<br>당신이 업계 트렌드와 상담의 품격에만 집중할 수 있도록 서포트합니다.</div>
+        </div>
+      </div>
+
+      <div class="flow-connector">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+          <polyline points="18 14 12 20 6 14"></polyline>
+        </svg>
+      </div>
+
+      <div class="sys-card">
+        <div class="sys-graphic-box">
+          <div class="anim-chart">
+            <div class="anim-bar"></div><div class="anim-bar"></div><div class="anim-bar"></div><div class="anim-bar"></div>
+          </div>
+        </div>
+        <div class="sys-info">
+          <div class="sys-badge"><span>STEP 02</span> 비교 및 확인</div>
+          <div class="sys-title">보험 데이터맵 (비교표)</div>
+          <div class="sys-desc">방대한 보장 범위와 한도 데이터를 직관적인 비교표로 깔끔하게 수치화합니다.<br>소식지로 얻은 정보를 바탕으로 고객 상담 시 어느 회사가 가장 유리한지<br>즉각적이고 명확한 해답을 찾아보세요.</div>
+        </div>
+      </div>
+
+      <div class="flow-connector">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+          <polyline points="18 14 12 20 6 14"></polyline>
+        </svg>
+      </div>
+
+      <div class="sys-card">
+        <div class="sys-graphic-box">
+          <div class="anim-stack">
+            <div class="anim-doc anim-bg"></div>
+            <div class="anim-doc anim-bg"></div>
+            <div class="anim-doc anim-core"></div>
+            <div class="anim-doc anim-front"></div>
+            <div class="anim-doc anim-front"></div>
+          </div>
+        </div>
+        <div class="sys-info">
+          <div class="sys-badge"><span>STEP 03</span> 전략 수립</div>
+          <div class="sys-title">핵심 세일즈 전략</div>
+          <div class="sys-desc">보험사별 경쟁력 있는 상품을 실제 영업에 적용할 수 있도록<br>화법, 카드뉴스, 플랜 구성 방식까지 함께 제공하는 실전 중심 콘텐츠입니다.<br>단순 정보 전달이 아니라,<br>고객 상담부터 제안서 구성까지 자연스럽게 연결될 수 있도록 설계된 영업 지원 기능입니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+
+      <div class="inner-tab-content" id="inner-lab-guide">
+        <div style="background: #f0f4f8; border: 1px solid #dde5ed; padding: 25px; border-radius: 12px; margin-bottom: 20px;">
+          <strong style="color: #113f67; font-size: 16px; margin-bottom: 12px; display: block;"><i class="fas fa-lightbulb" style="margin-right:8px;"></i>보험 인사이트 활용법</strong>
+          <p style="margin: 0; line-height: 1.7; color: #555; font-size: 14.5px;">매월 초 업데이트되는 원수사 소식지와 꿀팁을 확인하세요. 카드뉴스와 설계안을 다운로드하여 고객님 카톡으로 즉시 발송하거나 블로그에 업로드하여 영업에 활용하실 수 있습니다.</p>
+        </div>
+        <div style="background: #f0f4f8; border: 1px solid #dde5ed; padding: 25px; border-radius: 12px;">
+          <strong style="color: #113f67; font-size: 16px; margin-bottom: 12px; display: block;"><i class="fas fa-users-cog" style="margin-right:8px;"></i>고객 관리 프로그램 활용법</strong>
+          <p style="margin: 0; line-height: 1.7; color: #555; font-size: 14.5px;">위라클 랩 고객 관리 프로그램(CRM)에 고객을 등록하면, 상령일이나 생일 등에 맞춰 자동으로 알림이 제공됩니다. 시스템 내에서 추천해주는 맞춤형 화법을 통해 전문적으로 접근해보세요.</p>
+        </div>
+      </div>
+
+      <div class="inner-tab-content" id="inner-lab-qna">
+        <div style="background: #fff; border: 1px solid #eee; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+          <strong style="color: #113f67; font-size: 18px; margin-bottom: 20px; display: block;">자주 묻는 질문 (Q&A)</strong>
+          <div class="qna-list">
+            <div class="qna-item" style="border-bottom: 1px solid #f0f4f8; padding-bottom: 15px; margin-bottom: 15px;">
+              <div class="qna-q" style="color:#222; font-weight:700; margin-bottom:8px;">Q. 매월 언제 새로운 자료가 올라오나요?</div>
+              <div class="qna-a" style="color:#555; font-size:14.5px; line-height:1.6;">A. 매월 1일~3일 사이에 각 원수사별 최신 개정 사항과 새로운 플랜 자료들이 일괄 업데이트됩니다.</div>
+            </div>
+            <div class="qna-item" style="border-bottom: 1px solid #f0f4f8; padding-bottom: 15px; margin-bottom: 15px;">
+              <div class="qna-q" style="color:#222; font-weight:700; margin-bottom:8px;">Q. 고객 관리 프로그램은 안전한가요?</div>
+              <div class="qna-a" style="color:#555; font-size:14.5px; line-height:1.6;">A. 네, 당사 서버에 고객님의 민감한 DB를 저장하지 않으며, 설계사님 개인의 구글 계정(Google Contacts 등)과 연동하여 설계사님만 접근할 수 있는 강력한 보안 환경을 제공합니다.</div>
+            </div>
+            <div class="qna-item">
+              <div class="qna-q" style="color:#222; font-weight:700; margin-bottom:8px;">Q. 약정 기간이 있나요?</div>
+              <div class="qna-a" style="color:#555; font-size:14.5px; line-height:1.6;">A. 위라클 랩은 무약정 서비스입니다. 한 달만 이용하시고 해지하셔도 위약금 등 어떠한 불이익도 없습니다.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inner-tab-content" id="inner-lab-notice">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 30px; border-radius: 12px;">
+          <strong style="color: #d32f2f; font-size: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-exclamation-circle"></i> 구독 결제 관련 안내 사항
+          </strong>
+          <div class="notice-rule" style="margin-bottom: 15px;">
+            <strong style="color:#113f67; display:block; margin-bottom:5px;">1) 정기결제(빌링) 방식</strong>
+            <p style="margin:0; color:#555; font-size:14.5px; line-height:1.6;">구독 신청 시 최초 1회 카드를 등록하시면, 매월 신청일에 등록된 카드로 월간 이용료가 자동 결제됩니다.</p>
+          </div>
+          <div class="notice-rule" style="margin-bottom: 15px;">
+            <strong style="color:#113f67; display:block; margin-bottom:5px;">2) 해지 및 환불 규정</strong>
+            <p style="margin:0; color:#555; font-size:14.5px; line-height:1.6;">구독 해지는 다음 결제일 이전에 언제든지 마이페이지에서 위약금 없이 자유롭게 해지하실 수 있습니다. 단, 이미 결제된 당월 요금에 대해서는 일할 계산되어 환불되지 않으며 해당 월의 말일까지 서비스 이용이 유지됩니다.</p>
+          </div>
+          <div class="notice-rule">
+            <strong style="color:#113f67; display:block; margin-bottom:5px;">3) 계정 공유 제한</strong>
+            <p style="margin:0; color:#555; font-size:14.5px; line-height:1.6;">본 구독 서비스는 1인 1계정 사용을 원칙으로 하며, 시스템 접속 로그 분석을 통해 다중 IP 동시 접속이나 계정 공유가 적발될 경우 사전 안내 없이 계정이 차단될 수 있습니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 결제 버튼 영역 -->
+    <div class="pay-section-box" style="margin-top: 30px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: #f4f7fa; border: 2px solid #113f67; padding: 30px; border-radius: 20px; gap: 20px;">
+      <div style="flex: 1; min-width: 250px;">
+        <h3 style="margin: 0; color: #113f67; font-size: 22px; font-weight: 900;">월간 구독 서비스 <span style="font-size: 15px; color: #555; font-weight: normal;">(정기결제)</span></h3>
+        <p style="margin: 8px 0 0; color: #475569; font-size: 15px; word-break: keep-all;">어렵고 복잡한 분석은 시스템에 맡기고, 오직 영업에만 집중하세요.</p>
+      </div>
+      <div style="text-align: right; min-width: 200px;">
+        <div style="font-size: 28px; font-weight: 900; color: #113f67; margin-bottom: 15px;">29,900원 <span style="font-size: 16px; font-weight: normal; color: #64748b;">/월</span></div>
+        <button class="final-pay-btn lab-btn" onclick="execPay('lab', true)" style="width: 100%; box-shadow: 0 4px 15px rgba(17, 63, 103, 0.3);">구독 신청하기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="brand">
+    <div class="tab-top-grid">
+      <div class="intro-side">
+        <h2>이미지 브랜딩</h2>
+        <p>전문가로서의 신뢰감을 고객에게 심어주는 최적의 브랜딩 솔루션을 제공합니다.</p>
+        <ul class="feature-list" style="color: #c5a059;">
+          <li>나만의 퍼스널 네이밍 기획</li>
+          <li>신뢰 기반 시그니처 로고 디자인</li>
+          <li>다양한 영업 툴에 즉시 적용 가능한 브랜딩</li>
+        </ul>
+      </div>
+      <div class="pay-section-box">
+        <div class="item-list">
+          <div class="pay-card" onclick="selectSingle(this, 'brand')" data-idx="brand_1" data-price="200000" data-title="위라클 시그니처 브랜딩 패키지">
+            <div class="hidden-desc" style="display:none;">
+              <div class="rich-section" style="padding: 20px;">
+                
+                <div class="detail-inner-tabs">
+                  <button class="inner-tab-btn active" data-inner="overview" onclick="switchInnerTab('overview', event)">서비스 소개</button>
+                  <button class="inner-tab-btn" data-inner="intro" onclick="switchInnerTab('intro', event)">서비스 철학</button>
+                  <button class="inner-tab-btn" data-inner="target" onclick="switchInnerTab('target', event)">추천 대상</button>
+                  <button class="inner-tab-btn" data-inner="process" onclick="switchInnerTab('process', event)">진행 방식</button>
+                  <button class="inner-tab-btn" data-inner="notice" onclick="switchInnerTab('notice', event)">안내 사항</button>
+                </div>
+
+                <div class="inner-tab-content active" id="inner-overview">
+                  <div style="padding: 5px; color: #444; font-size: 15px;">
+                    <p style="margin-top:0; margin-bottom: 20px; line-height: 1.6;">위라클 시그니처 브랜딩 패키지는 <strong>전문 금융 컨설턴트</strong>로서의 확실한 포지셔닝을 위해 다음 두 가지 핵심 솔루션을 집중적으로 제공합니다.</p>
+                    
+                    <div style="background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                      <strong style="color: #c5a059; font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <span style="background: #c5a059; color: #fff; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px;">1</span> 
+                        나만의 퍼스널 네이밍 기획
+                      </strong>
+                      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #666;">고객의 뇌리에 깊게 남는 나만의 고유한 브랜드 이름을 개발합니다. 설계사님의 영업 철학과 주력 타겟에 맞춘 최적의 네이밍을 제안해 드립니다.</p>
+                    </div>
+
+                    <div style="background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                      <strong style="color: #c5a059; font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <span style="background: #c5a059; color: #fff; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px;">2</span> 
+                        신뢰 기반 시그니처 로고
+                      </strong>
+                      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #666;">단순히 예쁜 그림이 아닌, 금융 전문가로서의 '신뢰감'과 '전문성'을 시각화한 로고를 디자인합니다. 명함, SNS, 굿즈 등 모든 영업 현장에 즉시 적용할 수 있습니다.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="inner-tab-content" id="inner-intro">
+                  <div class="philosophy-box">
+                    일반 디자인 업체는 알지 못하는 <strong>보험 영업의 본질(신뢰·전문성·정직)</strong>을 깊이 이해하고,<br>깊이 있고 고급스러운 감성의 미니멀 디자인을 지향합니다.<br><br>단순히 예쁘기만 한 로고를 넘어 명함, 카톡 프로필, 블로그, DM 등<br>실제 영업 현장에서 즉시 활용할 수 있는 뛰어난 가독성과 실용성을 제공합니다.
+                  </div>
+                </div>
+
+                <div class="inner-tab-content" id="inner-target">
+                  <div class="target-list">
+                    <div class="target-item">
+                      <div class="target-icon"></div>
+                      <p class="target-text">기존의 딱딱하고 올드한 보험 아줌마·아저씨 이미지를 벗고, <strong>전문 금융 전문가로 리브랜딩</strong>하고 싶으신 분</p>
+                    </div>
+                    <div class="target-item">
+                      <div class="target-icon"></div>
+                      <p class="target-text">블로그, 인스타그램, 유튜브 등 <strong>디지털/SNS 영업</strong>을 활발히 하시는 분</p>
+                    </div>
+                    <div class="target-item">
+                      <div class="target-icon"></div>
+                      <p class="target-text">프로필 사진, 카드뉴스, 배너 등에 일관되게 사용할 <strong>나만의 시그니처 마크와 컬러 시스템</strong>이 필요하신 분</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="inner-tab-content" id="inner-process">
+                  <div class="process-container">
+                    <div class="process-step">
+                      <div class="step-badge">STEP 01</div>
+                      <h5 class="step-title">퍼스널 네이밍 1차 시안 제안</h5>
+                      <p class="step-desc">설계사님의 철학, 이름, 스토리 등을 종합적으로 고려하여 도출한 여러 가지 네이밍 시안을 1차로 전달해 드립니다.</p>
+                    </div>
+                    <div class="process-step">
+                      <div class="step-badge">STEP 02</div>
+                      <h5 class="step-title">네이밍 2차 정밀 작업 및 최종 선택</h5>
+                      <p class="step-desc">1차 시안 중 설계사님 마음에 드는 네이밍을 후보군으로 좁힌 뒤, 더욱 완성도를 높이는 2차 디벨롭 작업을 거쳐 브랜드의 최종 이름을 확정합니다.</p>
+                    </div>
+                    <div class="process-step">
+                      <div class="step-badge">STEP 03</div>
+                      <h5 class="step-title">신뢰 기반 로고 디자인 개발</h5>
+                      <p class="step-desc">확정된 네이밍을 바탕으로, 금융 전문가로서의 신뢰감을 주는 심볼과 컬러 팔레트를 개발합니다. 설계사님의 개성과 주력 영업 아이템에 활용할 시그니처 컬러와 핵심 아이템들을 로고에 자연스럽게 녹여내며, 명함이나 모바일 화면에 적용된 예시(목업)를 함께 보여드립니다.</p>
+                    </div>
+                    <div class="process-step">
+                      <div class="step-badge">STEP 04</div>
+                      <h5 class="step-title">카톡 소통을 통한 디테일 수정</h5>
+                      <p class="step-desc">바쁜 영업 활동 중에도 편리하게 의견을 조율할 수 있도록 카카오톡 등을 통해 실시간으로 피드백을 주고받습니다. 이를 통해 폰트, 간격, 정렬 등 디테일한 요소를 정교하게 다듬어 완성도를 높입니다.</p>
+                    </div>
+                    <div class="process-step">
+                      <div class="step-badge">STEP 05</div>
+                      <h5 class="step-title">현장 맞춤형 최종 납품</h5>
+                      <p class="step-desc">인쇄소에 바로 넘겨 제작할 수 있는 명함/스티커용 고화질 원본 파일(AI)은 물론, 카톡 프로필, 블로그, 태블릿 상담 화면 등 디지털 영업 현장에서 즉시 활용할 수 있는 이미지 파일(PNG, JPG)을 함께 패키지로 전달해 드립니다.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="inner-tab-content" id="inner-notice">
+                  <p style="margin-bottom: 15px; color: #d32f2f; font-weight: 600;">본 안내 사항은 원활한 작업 진행과 서로 간의 신뢰를 위해 규정된 내용이므로, 결제 전 반드시 확인 부탁드립니다.</p>
+                  <div class="notice-rule">
+                    <strong>1) 수정 및 재작업 규정</strong>
+                    기본 수정 횟수는 1회이며, 선택하신 시안의 범위 내에서 폰트, 컬러, 정렬 등의 디테일 수정한 수정은 제한없이 가능합니다. 컨셉을 완전히 바꾸어 새로운 시안을 재요청하실 경우 추가 비용이 발생할 수 있으니, 최초 상담 시 원하시는 방향성을 명확히 말씀해 주세요.
+                  </div>
+                  <div class="notice-rule">
+                    <strong>2) 환불 규정</strong>
+                    작업 착수 전: 100% 환불이 가능합니다.<br>네이밍/로고 기획 및 시안 개발 착수 후: 전체 금액의 [50%] 환불이 가능합니다.<br>시안이 발송된 이후: 무형의 아이디어 및 디자인 결과물이 제공된 시점 이후로는 환불이 절대 불가합니다.
+                  </div>
+                  <div class="notice-rule">
+                    <strong>3) 상표권 관련 안내</strong>
+                    제안해 드리는 네이밍 시안은 특허청(KIPRIS) 1차 검색을 통해 동일 상표가 없는 것을 확인하고 제안하나, 이는 향후 상표 등록 가능성을 100% 보장하는 것은 아닙니다. 최종 상표 등록 및 법적 권리 확보는 전문 변리사를 통한 별도의 진행을 권장하며, 이로 인한 환불 사유는 되지 않습니다.
+                  </div>
+                  <div class="notice-rule">
+                    <strong>4) 저작권 및 포트폴리오 활용</strong>
+                    최종 확정되어 납품된 네이밍과 로고의 소유권은 고객님께 귀속됩니다. (단, 선택되지 않은 탈락 시안의 저작권은 당사에 있으며 무단 도용할 수 없습니다.) 완성된 브랜딩 결과물은 당사의 포트폴리오(마케팅 사례)로 활용될 수 있습니다. 원치 않으실 경우 사전에 말씀해 주시기 바랍니다.
+                  </div>
+                </div>
+
+              </div>
+            </div>
+            <div class="card-info"><div class="check-circle"></div> 위라클 시그니처 브랜딩 패키지</div>
+            <div style="font-weight:900;">200,000원</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="item-detail-view" id="detail-brand">
+          <h3 class="detail-title">상품명</h3>
+          <p class="detail-desc">상품 설명이 여기에 표시됩니다.</p>
+          <div class="pay-footer">
+            <div><div style="font-size:12px; color:#888;">결제 금액</div><div class="price-total">0원</div></div>
+            <button class="final-pay-btn brand-btn" onclick="execPay('brand')">브랜딩 결제하기</button>
+          </div>
+  </div>
+  </div>
+
+  <div class="tab-content" id="market">
+    <div class="tab-top-grid">
+      <div class="intro-side">
+        <h2>영업 마켓</h2>
+        <p>실전 영업에서 즉시 활용 가능한 유료 서식과 도구들입니다. 필요한 만큼 골라보세요.</p>
+        <ul class="feature-list" style="color: #4e8d6e;">
+          <li>보험 분석 리포트 PDF 서식</li>
+          <li>고객 상담용 바인더 파일</li>
+          <li>영업용 카드 뉴스 양식</li>
+        </ul>
+      </div>
+      <div class="pay-section-box">
+        <!-- 상품 목록 준비 중 -->
+        <div class="item-list" id="market-item-list">
+          <div style="padding: 40px; text-align: center; color: #888; background: #f9f9f9; border-radius: 14px; border: 1px dashed #ddd; font-weight: 500;">
+            영업 마켓 상세 품목은 준비 중입니다.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="item-detail-view" id="detail-market">
+          <h3 class="detail-title">상품명</h3>
+          <p class="detail-desc">상품 설명이 여기에 표시됩니다.</p>
+          <div class="pay-footer">
+            <div><div style="font-size:12px; color:#888;">결제 금액</div><div class="price-total">0원</div></div>
+            <button class="final-pay-btn market-btn" onclick="execPay('market')">장바구니 담기</button>
+          </div>
+  </div>
+  </div>
+
+
+
+</div>
+
+<script>
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    window.location.hash = tabId;
+  }
+
+  window.onload = function() {
+    window.addEventListener('hashchange', function() {
+      const hash = window.location.hash.replace('#', '');
+      if (['lab', 'brand', 'market'].includes(hash)) {
+        switchTab(hash);
+      }
+    });
+    const hash = window.location.hash.replace('#', '');
+    if (['lab', 'brand', 'market'].includes(hash)) {
+      switchTab(hash);
+    }
+  };
+
+  function filterMarket(category) {
+    document.querySelectorAll('.market-sub-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    document.getElementById('detail-market').style.display = 'none';
+    document.querySelectorAll('#market .pay-card').forEach(c => c.classList.remove('selected'));
+
+    document.querySelectorAll('.market-item').forEach(item => {
+      if (item.getAttribute('data-category') === category) {
+        item.style.display = 'flex';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  function switchInnerTab(tabId, event) {
+    const detailView = event.target.closest('.rich-section') || event.target.closest('.item-detail-view');
+    if(!detailView) return;
+
+    detailView.querySelectorAll('.inner-tab-content').forEach(c => c.classList.remove('active'));
+    detailView.querySelectorAll('.inner-tab-btn').forEach(b => b.classList.remove('active'));
+    
+    const targetContent = detailView.querySelector('#inner-' + tabId);
+    
+    if(targetContent) targetContent.classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function selectSingle(el, type) {
+    const section = document.getElementById(type);
+    
+    if (el.classList.contains('selected')) {
+        el.classList.remove('selected');
+        document.getElementById(`detail-${type}`).style.display = 'none';
+        return;
+    }
+
+    section.querySelectorAll('.pay-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+
+    const title = el.getAttribute('data-title');
+        let descHtml = el.getAttribute('data-desc');
+    const hiddenDesc = el.querySelector('.hidden-desc');
+    if (hiddenDesc) {
+        descHtml = hiddenDesc.innerHTML;
+    }
+
+    const price = parseInt(el.getAttribute('data-price')).toLocaleString() + '원';
+
+    const detailView = document.getElementById('detail-' + type);
+    detailView.querySelector('.detail-title').innerText = title;
+    detailView.querySelector('.detail-desc').innerHTML = descHtml;
+    detailView.querySelector('.price-total').innerText = price;
+
+    detailView.style.display = 'block';
+  }
+
+  function execPay(type, isSubscription = false) {
+    let idx = '';
+    if (type === 'lab') {
+      idx = 'lab_sub'; // 구독은 항상 선택된 상태이므로 강제 지정
+    } else {
+      const selected = document.querySelector(`#${type} .pay-card.selected`);
+      if (!selected) { alert('상품을 먼저 선택해 주세요.'); return; }
+      idx = selected.getAttribute('data-idx');
+    }
+
+    // 실제 시스템(아임웹/아임포트) 연동 주소 설정
+    if (isSubscription) {
+      location.href = '/shop_payment/?idx=' + idx + '&order_type=subscription';
+    } else {
+      location.href = '/shop_cart/?add_cart=' + idx + '&redirect=1';
+    }
+  }
+</script>
+
+<script>
+  function openVlabServiceTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("vlab-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+      tabcontent[i].classList.remove("active");
+    }
+    tablinks = document.getElementsByClassName("vlab-tab-btn");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].classList.remove("active");
+    }
+    document.getElementById(tabName).style.display = "block";
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+  }
+</script>
+</body>
+</html>

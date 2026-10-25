@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weracle Dashboard</title>
+    <style id="navy-toss-theme">
+      /* =========================================
+         [ Weracle Partners : Navy Toss Theme ] 
+         ========================================= */
+      :root {
+        --primary: #0284c7 !important;
+        --primary-light: #e0f2fe !important;
+        --bg-color: #f2f4f6 !important;
+        --card-bg: #ffffff !important;
+        --text-main: #191f28 !important;
+        --text-sub: #8b95a1 !important;
+        --border: #e2e8f0 !important;
+        --radius: 20px !important;
+      }
+
+      body, .dashboard-layout, .wm-content-area, .weracle-crm-container, .wm-container, .insight-layout, .main-layout {
+        background-color: var(--bg-color) !important;
+        color: var(--text-main) !important;
+        font-family: 'SUIT', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      }
+      
+      /* Global Layout & Main Containers */
+      .layout-container, .app-container, .main-content {
+        background-color: var(--bg-color) !important;
+      }
+      .sidebar {
+        background-color: #ffffff !important;
+        border-right: 1px solid var(--border) !important;
+      }
+
+      /* Header & Tabs */
+      .vlab-header-bg, .top-header, .app-header {
+        background: transparent !important;
+        padding: 20px 40px 10px 40px !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      .vlab-main-title, .header-title {
+        font-size: 26px !important;
+        font-weight: 900 !important;
+        letter-spacing: -0.5px !important;
+        color: var(--text-main) !important;
+      }
+      
+      
+
+      /* Cards */
+      .board-card, .ranking-box, .tab-content > div[style*="background: #ffffff"], .card, .insight-card, .crm-card, .dashboard-card {
+        background: var(--card-bg) !important;
+        border-radius: var(--radius) !important;
+        padding: 24px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important;
+        border: 1px solid var(--border) !important;
+        transition: transform 0.2s !important;
+      }
+      
+      /* Titles */
+      .highlight-title, .card-title, .section-title {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        color: var(--text-main) !important;
+        letter-spacing: -0.3px !important;
+        margin-bottom: 20px !important;
+      }
+      .highlight-title::before { content: none !important; }
+
+      /* Buttons */
+      .sb-btn, .btn-primary, .btn-secondary, button {
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        padding: 12px 18px !important;
+        transition: all 0.2s ease !important;
+        border: none !important;
+      }
+      .sb-btn-primary, .btn-primary {
+        background: var(--primary) !important;
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2) !important;
+      }
+      .sb-btn-primary:hover, .btn-primary:hover { transform: translateY(-1px) !important; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3) !important; }
+      .sb-btn-secondary, .btn-secondary {
+        background: #f8fafc !important;
+        color: var(--text-main) !important;
+        border: 1px solid #e2e8f0 !important;
+      }
+      .sb-btn-secondary:hover, .btn-secondary:hover { background: #f1f5f9 !important; }
+
+      /* Inputs */
+      .sb-input, input[type="text"], input[type="password"], input[type="email"], textarea {
+        border-radius: 12px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #f9fafb !important;
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+        color: var(--text-main) !important;
+        outline: none !important;
+        transition: 0.2s !important;
+      }
+      .sb-input:focus, input:focus, textarea:focus {
+        border-color: var(--primary) !important;
+        background: #ffffff !important;
+      }
+
+      /* Notice Banner */
+      .soft-flashy-notice {
+        background: linear-gradient(135deg, #0284c7, #0ea5e9) !important;
+        border-radius: 20px !important;
+        padding: 24px 30px !important;
+        border: none !important;
+        box-shadow: 0 10px 20px rgba(30, 58, 138, 0.15) !important;
+        animation: none !important;
+      }
+      .soft-flashy-text {
+        color: white !important;
+        font-size: 24px !important;
+        font-weight: 800 !important;
+        animation: none !important;
+        text-shadow: none !important;
+      }
+      .soft-flashy-badge {
+        background: rgba(255,255,255,0.2) !important;
+        color: white !important;
+        backdrop-filter: blur(4px) !important;
+        border: none !important;
+        box-shadow: none !important;
+        animation: none !important;
+      }
+      /* =========================================
+         [ Weracle Global GNB ] 
+         ========================================= */
+      
+      .weracle-gnb:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+      .gnb-container {
+        width: 100%;
+        max-width: 1400px;
+        padding: 0 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 100%;
+      }
+      .gnb-logo {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        margin-left: 50px;
+      }
+      .gnb-menu {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        height: 100%;
+        align-items: center;
+        gap: 15px; /* 토스 스타일은 메뉴 간격과 패딩으로 둥근 알약을 만듭니다 */
+      }
+      .gnb-item {
+        position: relative;
+        height: 100%;
+        display: flex;
+        align-items: center;
+      }
+                  .gnb-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: #4e5968;
+        font-size: 14.5px;
+        font-weight: 600;
+        padding: 0 12px; /* height 100% 이므로 상하 패딩 불필요 */
+        height: 100%;
+        box-sizing: border-box;
+        border-bottom: 3px solid transparent;
+        position: relative;
+        transition: all 0.2s ease;
+        border-radius: 0;
+        background: transparent;
+      }
+      .gnb-item:hover .gnb-link:not(.active) {
+        color: #191f28;
+        background: transparent;
+      }
+      .gnb-link.active {
+        color: #0284c7;
+        font-weight: 700;
+        
+        background: transparent;
+        box-shadow: none;
+      }
+      /* Dropdown Style */
+      .gnb-dropdown {
+        position: absolute;
+        top: 70px;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background: #ffffff;
+        min-width: 160px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 10000;
+      }
+      .gnb-item:hover .gnb-dropdown {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
+      }
+      .gnb-dropdown a {
+        text-decoration: none;
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 600;
+        padding: 10px 16px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        text-align: center;
+      }
+      .gnb-dropdown a:hover {
+        background: #f1f5f9;
+        color: var(--primary);
+      }
+      
+      /* Profile Icon */
+      .gnb-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+      }
+      .profile-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 14px;
+      }
+      .profile-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #191f28; /* 어두운 색으로 변경 */
+      }
+      
+      /* Adjust main layout to account for fixed header */
+      body {
+        
+      }
+      /* Adjust tab container position if it's currently sticky */
+      .comm-tabs-container {
+        top: 70px !important;
+      }
+    
+  .main-video-info {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  }
+  .comments-section-wrap {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    margin-top: 20px;
+  }
+  .playlist-sidebar {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    flex: 1;
+    overflow-y: auto;
+    max-height: calc(100vh - 150px);
+  }
+  .v-item {
+    padding: 12px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+  }
+  .v-item:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+  }
+  .v-item.playing {
+    background: var(--primary-light);
+    border: 1px solid var(--primary);
+  }
+  .p-ratio {
+    border-radius: var(--radius) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
+  }
+
+
+      #sb-video-gallery-widget-root {
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+        width: 100%;
+      }
+      /* LNB Sidebar */
+      .insight-lnb {
+        width: 240px;
+        background: #ffffff;
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        overflow-y: auto;
+      }
+      .lnb-header {
+        padding: 20px 24px;
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--text-main);
+        border-bottom: 1px solid var(--border);
+        letter-spacing: -0.5px;
+      }
+      .lnb-menu { list-style: none; margin: 0; padding: 12px 0; width: 100%; box-sizing: border-box; }
+      .lnb-category { margin-bottom: 4px; }
+      .lnb-link {
+        display: block;
+        padding: 10px 24px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-sub);
+        text-decoration: none;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        transition: all 0.2s;
+      }
+      .lnb-link:hover {
+        background: #f3f4f6;
+        color: var(--primary);
+      }
+      .lnb-link.active {
+        background: #f0f7ff;
+        color: var(--primary);
+        font-weight: 700;
+        border-left: 3px solid var(--primary);
+      }
+      /* Content Area */
+      .insight-content {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+        background: transparent;
+      }
+      .insight-lnb::-webkit-scrollbar { width: 6px; }
+      .insight-lnb::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+      .insight-lnb::-webkit-scrollbar-track { background: transparent; }
+      .insight-content::-webkit-scrollbar { width: 8px; }
+      .insight-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    
+
+    
+
+    
+
+    <style>
+    @media (max-width: 768px) {
+        /* 사용자 요청: 제목 밑에 네모(그리드) 형태로 깔끔하게 메뉴 정리 */
+        .gnb-menu, 
+        .category-nav, 
+        .vlab-tab-container, 
+        .comm-tabs, 
+        .tab-buttons, 
+        .sub-nav,
+        .crm-filter-group {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+            width: 100% !important;
+            background: #ffffff !important;
+            padding: 12px !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+            height: auto !important;
+            margin-top: 15px !important;
+            margin-bottom: 15px !important;
+        }
+        
+        /* 껍데기(li 등)는 스타일을 가지지 않음 */
+        .gnb-item {
+            display: block !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            background: transparent !important;
+        }
+        
+        /* 실제 클릭되는 버튼(a 태그)을 디자인 */
+        .gnb-link, 
+        .category-nav a, 
+        .vlab-tab-link, 
+        .comm-tab-btn, 
+        .tab-btn,
+        .sub-nav-item {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            width: 100% !important;
+            height: 100% !important;
+            padding: 12px 6px !important;
+            box-sizing: border-box !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            background: #f8fafc !important;
+            color: #64748b !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            margin: 0 !important;
+            text-decoration: none !important;
+            white-space: normal !important;
+            word-break: keep-all !important;
+            line-height: 1.3 !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        /* 활성화된 탭 디자인 */
+        
+        .category-nav a.active,
+        .vlab-tab-link.active,
+        .comm-tab-btn.active,
+        .tab-btn.active,
+        .sub-nav-item.active {
+            background: #0284c7 !important;
+            color: #ffffff !important;
+            border-color: #0284c7 !important;
+            font-weight: 800 !important;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2) !important;
+        }
+    }
+    </style>
+
+    
+
+    <style>
+    @media (max-width: 768px) {
+        /* 사용자 요청: 메뉴들이 오른쪽에 박혀 찌그러지지 않고 제목 밑으로 깔끔하게 떨어지도록 (상하 분리) */
+        .gnb-container {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            padding: 10px 20px !important;
+            height: auto !important;
+        }
+        .gnb-logo {
+            width: 100% !important;
+            margin-bottom: 5px !important;
+        }
+        
+        /* CRM 페이지의 타이틀과 탭 상하 분리 */
+        .vlab-main-title {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 15px !important;
+        }
+        
+        /* vlab-header-bg 안의 최상단 첫번째 div(타이틀+액션버튼)만 상하 분리, 필터 등은 건드리지 않음 */
+        .vlab-header-bg > div:first-child {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 15px !important;
+        }
+        
+        /* 메뉴 박스(그리드) 여백 확보: 본문과 겹치지 않게 공간 분리 */
+        .gnb-menu, .vlab-tab-container, .comm-tabs, .tab-buttons, .sub-nav, .top-crm-tabs {
+            width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding: 12px 10px !important; 
+            margin-bottom: 25px !important; /* 사용자 요청: 밑에 본문이랑 여백 띄우기 */
+        }
+    }
+    </style>
+
+    <style>
+    @media (max-width: 768px) {
+        /* 비디오 페이지: 유튜브 스타일 (한 줄에 1개씩 세로로 길게) */
+        .playlist-item {
+            flex-direction: column !important;
+            gap: 12px !important;
+            padding: 0 !important;
+            border: none !important;
+            border-bottom: 1px solid #eaeef2 !important;
+            border-radius: 0 !important;
+            margin-bottom: 20px !important;
+            padding-bottom: 15px !important;
+        }
+        .thumb-wrapper {
+            flex: none !important;
+            width: 100% !important;
+            height: 220px !important; /* 유튜브처럼 큰 썸네일 */
+            border-radius: 0 !important;
+        }
+        .playlist-item-info {
+            padding: 0 10px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        
+        /* 영상 등록 버튼을 타이틀 우측으로 이동 */
+        .gnb-container {
+            position: relative !important;
+        }
+        .gnb-profile {
+            position: absolute !important;
+            top: 10px !important;
+            right: 20px !important;
+            display: flex !important;
+        }
+        .sb-btn-primary {
+            padding: 6px 12px !important;
+            font-size: 12px !important;
+        }
+    }
+    </style>
+</head>
+<body style="margin:0; padding:0; background-color: #f2f4f6;">
+<div id="sb-video-gallery-widget-root" class="sb-platform">
+          
+  <main class="insight-content">
+    
+    <!-- 통합 헤더 (Flexbox 대칭형 레이아웃) -->
+    
+
+    <!-- 플레이리스트 레이아웃 -->
+    <div class="playlist-layout">
+      
+      <!-- 좌측: 비디오 플레이어 및 상세 설명, 댓글 영역 -->
+      <div class="main-player-section">
+        <div class="p-ratio">
+          <iframe id="main-video-frame" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="main-video-info">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div id="main-video-badge" class="v-badge">-</div>
+            
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <!-- 하트 도움돼요 버튼 -->
+              <button id="btn-like-video" class="btn-like-style">
+                <span class="heart-icon"></span> 도움돼요 <span id="like-count">0</span>
+              </button>
+              <!-- 관리자용 수정/삭제 제어 버튼 -->
+              <div id="admin-edit-btn-container" style="display: none; gap: 6px;">
+                <button class="btn-action-small" id="sb-btn-admin-edit">수정 </button>
+                <button class="btn-action-small btn-danger" id="sb-btn-admin-delete">삭제 </button>
+              </div>
+            </div>
+          </div>
+          <h2 id="main-video-title" class="v-title">영상을 선택해 주세요.</h2>
+          <p id="main-video-desc" class="v-desc">로딩 중...</p>
+        </div>
+        <!-- 댓글(의견) 소통 공간 -->
+        <div class="comments-section-wrap">
+          <h3 style="font-size: 14.5px; font-weight: 800; margin: 0 0 12px 0; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+             의견 및 댓글 (<span id="comments-count">0</span>)
+          </h3>
+          <div id="comments-list" class="comments-list-style">
+            <div style="color: #8896a7; font-size: 13px; text-align: center; padding: 20px 0;">영상을 불러오면 댓글도 함께 표시됩니다.</div>
+          </div>
+          <!-- 댓글 입력창 -->
+          <form id="video-comment-form" style="display: flex; gap: 8px; margin-top: 16px;">
+            <input type="text" id="comment-input" class="comment-input-style" placeholder="영상 소감 및 의견을 등록해 보세요..." required />
+            <button type="submit" class="comment-submit-btn">등록</button>
+          </form>
+        </div>
+      </div>
+      <!-- 우측: 플레이리스트 사이드바 -->
+      <div class="playlist-sidebar" id="playlist-container">
+        <div style="color: #888; font-size: 13px; text-align: center; padding: 40px 0;">동영상을 가져오는 중...</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 관리자용 영상 등록/수정 모달 팝업 -->
+  <div class="vlab-modal-overlay" id="video-editor-modal">
+    <div class="vlab-modal-content">
+      <button class="vlab-modal-close" id="sb-modal-btn-close">×</button>
+      <h3 style="color: var(--primary); font-weight: 800; font-size: 20px; margin-bottom: 18px;" id="modal-title-text">새 교육 영상 등록</h3>
+      
+      <form id="video-editor-form">
+        <div class="vlab-form-group">
+          <label class="vlab-form-label">교육 분류</label>
+          <select id="form-subcategory" class="vlab-form-select">
+            <option value="product">상품 및 보상 분석</option>
+            <option value="sales">실전 영업 노하우</option>
+            <option value="adjuster">손해사정사</option>
+            <option value="mindset">영업마인드셋</option>
+          </select>
+        </div>
+        <div class="vlab-form-group">
+          <label class="vlab-form-label">주제 분류 태그</label>
+          <input type="text" id="form-theme" class="vlab-form-input" placeholder="예: 태아보험, 연금, 펫보험 등" required />
+        </div>
+        <div class="vlab-form-group">
+          <label class="vlab-form-label">강좌 제목</label>
+          <input type="text" id="form-title" class="vlab-form-input" placeholder="강좌 제목을 입력하세요." required />
+        </div>
+        <div class="vlab-form-group">
+          <label class="vlab-form-label">유튜브 URL</label>
+          <input type="url" id="form-video-url" class="vlab-form-input" placeholder="https://www.youtube.com/watch?v=..." required />
+        </div>
+        <div class="vlab-form-group">
+          <label class="vlab-form-label">상세 요약 설명</label>
+          <textarea id="form-desc" class="vlab-form-input" placeholder="동영상에 대한 요약 설명을 입력하세요." required></textarea>
+        </div>
+        <div class="vlab-modal-btn-wrap">
+          <button type="submit" class="comment-submit-btn" style="flex: 1; height: 44px;">저장하기</button>
+          <button type="button" class="btn-action-small" id="sb-modal-btn-cancel" style="flex: 1; height: 44px;">취소</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+  <!-- Custom Alert/Confirm Modal -->
+  <div class="vlab-modal-overlay" id="custom-alert-modal" style="z-index: 100001;">
+    <div class="vlab-modal-content" style="max-width: 400px; text-align: center; padding: 30px; border-radius: 20px;">
+      <h3 style="color: var(--primary); font-weight: 800; font-size: 18px; margin-bottom: 15px;" id="custom-alert-title">알림</h3>
+      <p id="custom-alert-message" style="color: #4e5968; font-size: 14.5px; line-height: 1.5; margin-bottom: 25px; white-space: pre-wrap; word-break: keep-all;">메시지</p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button id="custom-alert-cancel" class="btn-action-small" style="display: none; flex: 1; padding: 12px; height: 44px; margin: 0;">취소</button>
+        <button id="custom-alert-confirm" class="comment-submit-btn" style="flex: 1; padding: 12px; height: 44px; margin: 0;">확인</button>
+      </div>
+    </div>
+  </div>
+
+<style>
+  /* 전역 스크롤바 커스텀 및 가로 스크롤 숨김 */
+  body {
+    overflow-x: hidden !important;
+  }
+  ::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(17, 63, 103, 0.2) !important;
+    border-radius: 10px !important;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(17, 63, 103, 0.4) !important;
+  }
+  @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+  
+  .vlab-archive-wrapper {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 100%; 
+    margin: 0; 
+    padding: 15px 20px;
+    background-color: transparent;
+    color: #2c3a4b;
+  }
+  
+  /* =========================================
+     1. 헤더 영역 (Flexbox 대칭형 레이아웃)
+  ========================================= */
+  .vlab-header-wrap {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 12px 0 12px 45px;
+    border-bottom: 1px solid #eaeef2;
+  }
+  .header-left-col {
+    display: flex;
+    align-items: center;
+  }
+  .header-center-col {
+    display: flex;
+    align-items: center;
+    margin-left: 20px;
+  }
+  .header-right-col {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+  }
+  
+  .vlab-main-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+  }
+  
+  
+  .v-play-icon-tv {
+    width: 14px; /* 크기 추가 축소 */
+    height: 14px; /* 크기 추가 축소 */
+    animation: shakeAndPause 3s infinite ease-in-out;
+    vertical-align: middle;
+  }
+  @keyframes shakeAndPause {
+    0%, 20%, 100% { transform: rotate(0deg); }
+    4% { transform: rotate(8deg); }
+    8% { transform: rotate(-8deg); }
+    12% { transform: rotate(5deg); }
+    16% { transform: rotate(-5deg); }
+  }
+  
+  /* =========================================
+     2. 상단 컨트롤 바 (알약형 파스텔 블루 스타일)
+  ========================================= */
+  
+  /* 버튼 공통 */
+  .sb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    gap: 6px;
+  }
+  .sb-btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary));
+    color: #ffffff;
+    box-shadow: none;
+  }
+  .sb-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(17, 63, 103, 0.25);
+  }
+  
+  .playlist-layout { display: flex; gap: 15px; align-items: flex-start; }
+  .main-player-section { flex: 1.8; display: flex; flex-direction: column; gap: 12px; }
+  .p-ratio {
+    position: relative; padding-bottom: 56.25%; border-radius: 16px; 
+    overflow: hidden; background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .p-ratio iframe { position: absolute; top:0; left:0; width:100%; height:100%; border:none; }
+  
+  /* 비디오 정보 카드 */
+  .main-video-info {
+    background: #ffffff;
+    border: 1px solid rgba(17, 63, 103, 0.08); 
+    border-radius: 16px; padding: 16px; 
+    box-shadow: 0 5px 15px rgba(17, 63, 103, 0.05);
+    text-align: left;
+  }
+  .main-video-info .v-badge {
+    display: inline-block; background: var(--primary); color: #ffffff; font-size: 12px;
+    font-weight: 800; padding: 5px 12px; border-radius: 20px;
+  }
+  .main-video-info .v-title {
+    font-size: 19px; font-weight: 800; color: #222; margin-top: 10px; margin-bottom: 6px; line-height: 1.35; letter-spacing: -0.5px;
+  }
+  .main-video-info .v-desc { 
+    font-size: 14px; color: #666; line-height: 1.6; word-break: keep-all; margin: 0 0 16px 0; 
+  }
+  
+  /* 도움돼요 하트 */
+  .btn-like-style {
+    background: #ffffff; border: 1px solid #e2edf7; border-radius: 30px;
+    padding: 8px 18px; font-size: 13px; font-weight: 700; color: var(--primary);
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(17, 63, 103, 0.03);
+  }
+  .btn-like-style:hover { background: #f0f4f8; transform: translateY(-1px); }
+  .btn-like-style.liked { background: #ffe4e6; border-color: #fda4af; color: #e11d48; }
+  
+  /* 관리자 제어 */
+  .btn-action-small {
+    background: #ffffff; border: 1px solid #e2edf7; color: var(--primary);
+    padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s ease;
+  }
+  .btn-action-small:hover { background: #f0f4f8; }
+  .btn-action-small.btn-danger { color: #dc2626; border-color: #fecaca; }
+  .btn-action-small.btn-danger:hover { background: #fef2f2; }
+  
+  /* 우측 플레이리스트 사이드바 */
+  .playlist-sidebar { flex: 1; display: flex; flex-direction: column; gap: 12px; height: 680px; overflow-y: auto; padding-right: 5px; }
+  .playlist-sidebar::-webkit-scrollbar { width: 6px; }
+  .playlist-sidebar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+  
+  .playlist-item { display: flex; gap: 14px; background: #ffffff; border: 1px solid #eaeef2; padding: 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; align-items: flex-start; text-align: left; }
+  .playlist-item:hover { box-shadow: 0 4px 12px rgba(17, 63, 103, 0.08); border-color: var(--primary); }
+  .playlist-item.active { background: #f0f4f8; border-color: var(--primary); border-left: 5px solid var(--primary); }
+  .thumb-wrapper { position: relative; flex: 0 0 200px; height: 112px; border-radius: 10px; overflow: hidden; background: #000; }
+  .thumb-wrapper img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: 0.3s; }
+  .playlist-item.active .thumb-wrapper img, .playlist-item:hover .thumb-wrapper img { opacity: 1; transform: scale(1.05); }
+  .play-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .playlist-item:hover .play-overlay { opacity: 1; }
+  .playlist-item.active .play-overlay { opacity: 1; background: rgba(17, 63, 103, 0.6); }
+  .play-overlay svg { width: 22px; height: 22px; fill: #fff; }
+  .item-info { flex: 1; display: flex; flex-direction: column; overflow: hidden; justify-content: flex-start; padding-top: 4px; }
+  .item-theme { display: inline-block; background: var(--primary); color: #ffffff; font-size: 11.5px; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; align-self: flex-start; }
+  .item-title { font-size: 15px; font-weight: 700; color: #333; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  
+  /* 댓글 영역 */
+  .comments-section-wrap {
+    margin-top: 16px; background: #ffffff; border: 1px solid rgba(17, 63, 103, 0.08);
+    border-radius: 16px; padding: 16px; box-shadow: 0 5px 15px rgba(17, 63, 103, 0.05);
+  }
+  .comments-list-style {
+    display: flex; flex-direction: column; gap: 12px; max-height: 350px;
+    overflow-y: auto; margin-top: 10px; padding-right: 8px; text-align: left;
+  }
+  .comments-list-style::-webkit-scrollbar { width: 5px; }
+  .comments-list-style::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  
+  .comment-item {
+    display: flex; gap: 12px; padding: 12px; background: #f8fafc;
+    border: 1px solid rgba(17, 63, 103, 0.04); border-radius: 10px; font-size: 13.5px; align-items: flex-start;
+  }
+  .comment-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2edf7; }
+  .comment-body { flex: 1; }
+  .comment-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; flex-wrap: wrap; }
+  .comment-nick { font-weight: 700; color: var(--primary); }
+  .comment-grade { font-size: 9px; font-weight: 800; padding: 2px 5px; border-radius: 4px; }
+  .comment-grade.normal { background: #e2edf7; color: var(--primary); }
+  .comment-grade.vip { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+  .comment-grade.manager { background: #10b981; color: white; }
+  .comment-date { font-size: 11px; color: #8896a7; }
+  .comment-text { color: #2c3a4b; line-height: 1.45; white-space: pre-wrap; word-break: break-all; }
+  .comment-delete-btn {
+    background: none; border: none; color: #ef4444; font-size: 14.5px;
+    cursor: pointer; line-height: 1; padding: 0 4px; transition: transform 0.2s;
+  }
+  .comment-delete-btn:hover { transform: scale(1.2); }
+  .comment-input-style {
+    flex: 1; height: 40px; border: 1px solid rgba(17, 63, 103, 0.08);
+    background: #f8fafc; border-radius: 8px; padding: 0 14px; font-size: 13.5px;
+    color: #2c3a4b; transition: all 0.25s ease;
+  }
+  .comment-input-style:focus { border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 3px rgba(17, 63, 103, 0.1); }
+  .comment-submit-btn {
+    background: var(--primary); color: #ffffff; padding: 0 20px; height: 40px;
+    border-radius: 8px; border: none; font-weight: 800; font-size: 13.5px;
+    cursor: pointer; transition: all 0.25s ease;
+  }
+  .comment-submit-btn:hover { background: var(--primary); }
+  
+  /* 모달 */
+  .vlab-modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(13, 31, 50, 0.45); z-index: 100000; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.3s ease; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  .vlab-modal-overlay.active { display: flex; opacity: 1; }
+  .vlab-modal-content {
+    background: #ffffff; padding: 35px; border-radius: 18px; max-width: 500px; width: 90%;
+    position: relative; box-shadow: 0 30px 70px rgba(13, 31, 50, 0.15);
+    transform: scale(0.9) translateY(30px); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+    border: 1px solid rgba(17, 63, 103, 0.08); text-align: left;
+  }
+  .vlab-modal-overlay.active .vlab-modal-content { transform: scale(1) translateY(0); }
+  .vlab-modal-close {
+    position: absolute; top: 22px; right: 22px; background: #f1f5f9; border: none;
+    width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer;
+    color: #2c3a4b; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .vlab-modal-close:hover { background: var(--primary); color: #ffffff; transform: rotate(90deg); }
+  .vlab-form-group { margin-bottom: 16px; }
+  .vlab-form-label { display: block; font-size: 13.5px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+  .vlab-form-input {
+    width: 100%; height: 40px; border: 1px solid rgba(17, 63, 103, 0.08);
+    background: #f8fafc; border-radius: 8px; padding: 0 12px; font-size: 13.5px;
+    color: #2c3a4b; transition: all 0.25s ease; box-sizing: border-box;
+  }
+  .vlab-form-input:focus { border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 3px rgba(17, 63, 103, 0.1); }
+  textarea.vlab-form-input { height: 100px; padding: 12px; resize: none; }
+  .vlab-form-select {
+    width: 100%; height: 40px; border: 1px solid rgba(17, 63, 103, 0.08);
+    background: #f8fafc; border-radius: 8px; padding: 0 12px; font-size: 13.5px; color: #2c3a4b;
+  }
+  .vlab-modal-btn-wrap { display: flex; gap: 12px; margin-top: 24px; }
+  
+  @media(max-width: 768px) {
+    .vlab-header-wrap {
+      flex-direction: column;
+      gap: 15px;
+      padding: 10px 0;
+      align-items: center;
+    }
+    .header-center-col {
+      margin-left: 0;
+      width: 100%;
+    }
+    .tab-buttons {
+      width: 100%;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .tab-btn {
+      flex: 1;
+      text-align: center;
+      padding: 8px 12px;
+      font-size: 13.5px;
+    }
+    #admin-add-btn-container {
+      width: 100%;
+      text-align: right;
+    }
+    #admin-add-btn-container .sb-btn {
+      width: 100%;
+    }
+    .playlist-layout { flex-direction: column; gap: 20px; }
+    .main-player-section { width: 100%; }
+    .playlist-sidebar { width: 100%; height: auto; max-height: 400px; padding-right: 0; }
+  }
+</style>
+
+<script>
+(function() {
+    // iframe 내부에서 실행 중인 경우 아임웹 공통 헤더/푸터 및 레이아웃 마진 강제 제거
+    if (window.self !== window.top) {
+        const style = document.createElement('style');
+        style.textContent = `
+            header, footer, #header_wrap, #header, .header, .footer, #footer,
+            .main_header, .mobile_header, #mobile_header, .shop_footer,
+            .top_header, #header_container, #footer_container, .navbar, .top_menu {
+                display: none !important;
+            }
+            body, html {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: transparent !important;
+                overflow: hidden !important;
+            }
+            /* 아임웹 기본 레이아웃 가로폭 해제 및 공백 제거 */
+            .container, .content, #content, .page_content, .main_content, .section_wrap, .row, .col-xs-12 {
+                max-width: 100% !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    // 글로벌 백엔드 연결 정보 및 부모 세션 연동 (iframe 대응)
+    function getParentProp(prop) { try { return window.parent && window.parent[prop]; } catch(e) { return null; } }
+      let sb = window.sb || getParentProp('sb');
+    let authEvents = window.authEvents || getParentProp('authEvents');
+    const sbUrl = "https://tjohrovsvgnkrlqhjkwt.supabase.co";
+    const sbKey = "sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR"; // 로컬 백업용
+    // 상태 관리 변수
+    let allVideos = [];
+    let filteredVideos = [];
+    let currentSubcategory = 'sales'; 
+    let activeVideoIndex = 0;
+    
+    // CRUD 모달 상태
+    let isEditMode = false;
+    let currentEditingPostId = null;
+    // 좋아요 상태
+    let userHasLikedActiveVideo = false;
+    // UI 엘리먼트 캐시
+    let container;
+    
+    function customAlert(title, message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('custom-alert-modal');
+            document.getElementById('custom-alert-title').innerText = title;
+            document.getElementById('custom-alert-message').innerText = message;
+            document.getElementById('custom-alert-cancel').style.display = 'none';
+            const confirmBtn = document.getElementById('custom-alert-confirm');
+            confirmBtn.onclick = () => { modal.classList.remove('active'); resolve(true); };
+            modal.classList.add('active');
+        });
+    }
+
+    function customConfirm(title, message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('custom-alert-modal');
+            document.getElementById('custom-alert-title').innerText = title;
+            document.getElementById('custom-alert-message').innerText = message;
+            document.getElementById('custom-alert-cancel').style.display = 'block';
+            const confirmBtn = document.getElementById('custom-alert-confirm');
+            const cancelBtn = document.getElementById('custom-alert-cancel');
+            confirmBtn.onclick = () => { modal.classList.remove('active'); resolve(true); };
+            cancelBtn.onclick = () => { modal.classList.remove('active'); resolve(false); };
+            modal.classList.add('active');
+        });
+    }
+          function initWidget() {
+          window.addEventListener('message', (event) => {
+              if (event.data && event.data.type === 'FILTER_VIDEO') {
+                  if (typeof filterVideoSubcategory === 'function') filterVideoSubcategory(event.data.tab);
+              }
+          });
+        container = document.getElementById('sb-video-gallery-widget-root');
+        if (!container) return;
+        const checkSbAndStart = () => {
+            sb = window.sb || getParentProp('sb');
+            authEvents = window.authEvents || getParentProp('authEvents');
+            // Supabase 인스턴스 미설정 시 수동 설정
+            if (!sb && window.supabase) {
+                const config = window.SUPABASE_CONFIG || getParentProp('SUPABASE_CONFIG');
+                if (config && config.anonKey && config.anonKey !== "YOUR_SUPABASE_ANON_KEY_HERE") {
+                    sb = window.supabase.createClient(config.url, config.anonKey);
+                } else {
+                    sb = window.supabase.createClient(sbUrl, sbKey);
+                }
+                window.sb = sb;
+            }
+            if (sb) {
+                bindEvents();
+                checkUserPermission().catch(console.error);
+                loadVideos().catch(console.error);
+                // 인증 상태 변경 모니터링 바인딩
+                let lastSessionToken = null;
+                if (authEvents && typeof authEvents.on === 'function') {
+                    authEvents.on('stateChange', (data) => {
+                        const session = data ? data.session : null;
+                        const token = session ? session.access_token : null;
+                        
+                        // 동일한 세션 변경은 데이터 재조회 생략 (무한루프/중복호출 방지)
+                        if (lastSessionToken === token && container.querySelector('.playlist-item')) {
+                            return;
+                        }
+                        lastSessionToken = token;
+                        checkUserPermission().catch(console.error);
+                        loadVideos().catch(console.error);
+                    });
+                }
+            } else {
+                setTimeout(checkSbAndStart, 50);
+            }
+        };
+        checkSbAndStart();
+    }
+    function bindEvents() {
+        
+        
+        
+        
+        container.querySelector('#btn-like-video')?.addEventListener('click', () => toggleVideoLike());
+        container.querySelector('#video-comment-form')?.addEventListener('submit', (e) => submitVideoComment(e));
+        
+        container.querySelector('#sb-btn-admin-add')?.addEventListener('click', () => openVideoModal(false));
+        container.querySelector('#sb-btn-admin-edit')?.addEventListener('click', () => openVideoModal(true));
+        container.querySelector('#sb-btn-admin-delete')?.addEventListener('click', () => deleteVideo());
+        
+        container.querySelector('#sb-modal-btn-close')?.addEventListener('click', () => closeVideoModal());
+        container.querySelector('#sb-modal-btn-cancel')?.addEventListener('click', () => closeVideoModal());
+        container.querySelector('#video-editor-form')?.addEventListener('submit', (e) => saveVideo(e));
+    }
+    async function checkUserPermission() {
+        if (!sb) return;
+        try {
+            const { data: { session } } = await sb.auth.getSession();
+            const addBtn = container.querySelector('#admin-add-btn-container');
+            const editBtn = container.querySelector('#admin-edit-btn-container');
+            
+            if(addBtn) addBtn.style.display = 'none';
+            if(editBtn) editBtn.style.display = 'none';
+            if (session && session.user) {
+                const { data: profile } = await sb
+                    .from('profiles')
+                    .select('user_grade')
+                    .eq('id', session.user.id)
+                    .single();
+                const grade = profile ? profile.user_grade : 'normal';
+                if (grade === 'manager') {
+                    if(addBtn) addBtn.style.display = 'flex';
+                    if(editBtn) editBtn.style.display = 'flex';
+                }
+            }
+        } catch (e) {
+            console.warn("User profile check failed:", e);
+        }
+    }
+    async function loadVideos() {
+        if (!sb) return;
+        const sidebar = container.querySelector('#playlist-container');
+        sidebar.innerHTML = `<div style="color: #888; font-size: 13px; text-align: center; padding: 40px 0;">동영상을 가져오는 중...</div>`;
+        try {
+            const { data, error } = await sb
+                .from('posts')
+                .select('id, title, content, category, subcategory, theme, video_url, created_at')
+                .eq('category', 'video')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            allVideos = data || [];
+            filterVideoSubcategory(currentSubcategory);
+        } catch (err) {
+            console.error("Failed to load videos:", err);
+            sidebar.innerHTML = `<div style="color: #dc2626; font-size: 13px; text-align: center; padding: 40px 0;">영상 로드 실패: ${err.message}</div>`;
+        }
+    }
+    function filterVideoSubcategory(subcategory) {
+        currentSubcategory = subcategory;
+        
+        
+        
+        
+        
+        filteredVideos = allVideos.filter(v => v.subcategory === subcategory);
+        const sidebar = container.querySelector('#playlist-container');
+        if (filteredVideos.length === 0) {
+            sidebar.innerHTML = `
+                <div style="color: #8896a7; font-size: 13.5px; text-align: center; padding: 60px 0;">
+                     등록된 교육 영상이 없습니다.
+                </div>
+            `;
+            clearMainPlayer();
+            return;
+        }
+        renderPlaylist();
+        playVideo(0, false);
+    }
+    function clearMainPlayer() {
+        container.querySelector('#main-video-frame').src = "";
+        container.querySelector('#main-video-badge').innerText = "-";
+        container.querySelector('#main-video-title').innerText = "영상이 비어 있습니다.";
+        container.querySelector('#main-video-desc').innerText = "이 분류에 포함된 영상이 없습니다. 관리자 권한으로 등록해 보세요.";
+        container.querySelector('#like-count').innerText = "0";
+        container.querySelector('#comments-count').innerText = "0";
+        container.querySelector('#comments-list').innerHTML = `
+            <div style="color: #8896a7; font-size: 13px; text-align: center; padding: 20px 0;">영상이 존재하지 않습니다.</div>
+        `;
+    }
+    function renderPlaylist() {
+        const sidebar = container.querySelector('#playlist-container');
+        sidebar.innerHTML = '';
+        filteredVideos.forEach((video, index) => {
+            const ytId = extractYoutubeId(video.video_url);
+            const thumbnailUrl = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500';
+            const item = document.createElement('div');
+            item.className = 'playlist-item';
+            item.id = `video-item-${index}`;
+            item.innerHTML = `
+                <div class="thumb-wrapper">
+                    <img src="${thumbnailUrl}" alt="썸네일">
+                    <div class="play-overlay">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                </div>
+                <div class="item-info">
+                    <span class="item-theme">${escapeHtml(video.theme || '기타')}</span>
+                    <span class="item-title">${escapeHtml(video.title)}</span>
+                </div>
+            `;
+            item.addEventListener('click', () => playVideo(index, true));
+            sidebar.appendChild(item);
+        });
+    }
+    async function playVideo(index, autoPlay = false) {
+        if (!filteredVideos[index]) return;
+        activeVideoIndex = index;
+        const video = filteredVideos[index];
+        const ytId = extractYoutubeId(video.video_url);
+        const iframe = container.querySelector('#main-video-frame');
+        iframe.src = `https://www.youtube.com/embed/${ytId}${autoPlay ? '?autoplay=1' : ''}`;
+        container.querySelector('#main-video-badge').innerText = video.theme || '기타';
+        container.querySelector('#main-video-title').innerText = video.title;
+        container.querySelector('#main-video-desc').innerText = video.content || '요약 설명이 없습니다.';
+        const allItems = container.querySelectorAll('.playlist-item');
+        allItems.forEach(item => item.classList.remove('active'));
+        const activeItem = container.querySelector(`#video-item-${index}`);
+        if (activeItem) activeItem.classList.add('active');
+        await loadVideoLikeState(video.id);
+        await loadVideoComments(video.id);
+    }
+    async function loadVideoLikeState(postId) {
+        if (!sb) return;
+        try {
+            const { count, error } = await sb
+                .from('likes')
+                .select('id', { count: 'exact', head: true })
+                .eq('post_id', postId);
+            if (error) throw error;
+            container.querySelector('#like-count').innerText = count || 0;
+            const { data: { session } } = await sb.auth.getSession();
+            userHasLikedActiveVideo = false;
+            
+            const likeBtn = container.querySelector('#btn-like-video');
+            likeBtn.classList.remove('liked');
+            likeBtn.querySelector('.heart-icon').innerText = "";
+            if (session && session.user) {
+                const { data, error: userLikeErr } = await sb
+                    .from('likes')
+                    .select('id')
+                    .eq('post_id', postId)
+                    .eq('user_id', session.user.id);
+                if (!userLikeErr && data && data.length > 0) {
+                    userHasLikedActiveVideo = true;
+                    likeBtn.classList.add('liked');
+                    likeBtn.querySelector('.heart-icon').innerText = "";
+                }
+            }
+        } catch (e) {
+            console.error("Failed to load likes state:", e);
+        }
+    }
+    async function toggleVideoLike() {
+        if (!sb) return;
+        try {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session || !session.user) {
+                await customAlert("알림", " 도움돼요(하트)를 누르시려면 먼저 로그인을 진행해 주세요!");
+                return;
+            }
+            const video = filteredVideos[activeVideoIndex];
+            if (!video) return;
+            const likeBtn = container.querySelector('#btn-like-video');
+            if (userHasLikedActiveVideo) {
+                const { error } = await sb
+                    .from('likes')
+                    .delete()
+                    .eq('post_id', video.id)
+                    .eq('user_id', session.user.id);
+                if (error) throw error;
+                userHasLikedActiveVideo = false;
+                likeBtn.classList.remove('liked');
+                likeBtn.querySelector('.heart-icon').innerText = "";
+            } else {
+                const { error } = await sb
+                    .from('likes')
+                    .insert({
+                        post_id: video.id,
+                        user_id: session.user.id
+                    });
+                if (error) throw error;
+                userHasLikedActiveVideo = true;
+                likeBtn.classList.add('liked');
+                likeBtn.querySelector('.heart-icon').innerText = "";
+            }
+            await loadVideoLikeState(video.id);
+        } catch (err) {
+            await customAlert("알림", "도움돼요 에러: " + err.message);
+        }
+    }
+    async function loadVideoComments(postId) {
+        const listContainer = container.querySelector('#comments-list');
+        listContainer.innerHTML = `<div style="color: #8896a7; font-size: 13px; text-align: center; padding: 20px 0;">댓글 로딩 중...</div>`;
+        try {
+            const { data: comments, error } = await sb
+                .from('comments')
+                .select('id, user_id, content, created_at, profiles(nickname, avatar_url, user_grade)')
+                .eq('post_id', postId)
+                .order('created_at', { ascending: true });
+            if (error) throw error;
+            container.querySelector('#comments-count').innerText = comments ? comments.length : 0;
+            if (!comments || comments.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="color: #8896a7; font-size: 13px; text-align: center; padding: 30px 0;">
+                         첫 번째 한마디를 남겨 보세요!
+                    </div>
+                `;
+                return;
+            }
+            const { data: { session } } = await sb.auth.getSession();
+            const currentUserId = session && session.user ? session.user.id : null;
+            let currentUserGrade = 'normal';
+            if (currentUserId) {
+                const { data: profile } = await sb.from('profiles').select('user_grade').eq('id', currentUserId).single();
+                if (profile) currentUserGrade = profile.user_grade;
+            }
+            listContainer.innerHTML = comments.map(c => {
+                const author = c.profiles || { nickname: '설계사', avatar_url: 'https://api.dicebear.com/7.x/bottts/svg', user_grade: 'normal' };
+                const isMyComment = currentUserId && currentUserId === c.user_id;
+                const isManager = currentUserGrade === 'manager';
+                const canDelete = isMyComment || isManager;
+                let gradeLabel = "일반설계사";
+                let gradeClass = "normal";
+                if (author.user_grade === 'VIP') {
+                    gradeLabel = "우수설계사(VIP)";
+                    gradeClass = "vip";
+                } else if (author.user_grade === 'manager') {
+                    gradeLabel = "관리자";
+                    gradeClass = "manager";
+                }
+                return `
+                    <div class="comment-item">
+                        <img src="${author.avatar_url}" class="comment-avatar" alt="avatar" />
+                        <div class="comment-body">
+                            <div class="comment-meta">
+                                <span class="comment-nick">${escapeHtml(author.nickname)}</span>
+                                <span class="comment-grade ${gradeClass}">${gradeLabel}</span>
+                                <span class="comment-date">${new Date(c.created_at).toLocaleString()}</span>
+                            </div>
+                            <p class="comment-text">${escapeHtml(c.content)}</p>
+                        </div>
+                        ${canDelete ? `<button class="comment-delete-btn" data-comment-id="${c.id}">×</button>` : ''}
+                    </div>
+                `;
+            }).join('');
+            listContainer.querySelectorAll('.comment-delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const commentId = e.target.getAttribute('data-comment-id');
+                    await deleteVideoComment(commentId);
+                });
+            });
+        } catch (err) {
+            listContainer.innerHTML = `
+                <div style="color: #dc2626; font-size: 13px; text-align: center; padding: 20px 0;">댓글 로드 실패: ${err.message}</div>
+            `;
+        }
+    }
+    async function submitVideoComment(event) {
+        event.preventDefault();
+        if (!sb) return;
+        try {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session || !session.user) {
+                await customAlert("알림", " 댓글을 등록하시려면 먼저 로그인을 마쳐주세요!");
+                return;
+            }
+            const video = filteredVideos[activeVideoIndex];
+            if (!video) return;
+            const input = container.querySelector('#comment-input');
+            const content = input.value.trim();
+            if (!content) return;
+            const submitBtn = event.target.querySelector('.comment-submit-btn');
+            submitBtn.disabled = true;
+            const { error } = await sb
+                .from('comments')
+                .insert({
+                    post_id: video.id,
+                    user_id: session.user.id,
+                    content: content
+                });
+            if (error) throw error;
+            input.value = '';
+            await loadVideoComments(video.id);
+        } catch (err) {
+            await customAlert("알림", "댓글 등록 실패: " + err.message);
+        } finally {
+            event.target.querySelector('.comment-submit-btn').disabled = false;
+        }
+    }
+    async function deleteVideoComment(commentId) {
+        const isConfirmed = await customConfirm("확인", "댓글을 정말 삭제하시겠습니까?");
+        if (!isConfirmed) return;
+        try {
+            const { error } = await sb
+                .from('comments')
+                .delete()
+                .eq('id', commentId);
+            if (error) throw error;
+            const video = filteredVideos[activeVideoIndex];
+            if (video) {
+                await loadVideoComments(video.id);
+            }
+        } catch (err) {
+            await customAlert("알림", "댓글 삭제 에러: " + err.message);
+        }
+    }
+    function openVideoModal(editMode = false) {
+        isEditMode = editMode;
+        const modal = container.querySelector('#video-editor-modal');
+        const form = container.querySelector('#video-editor-form');
+        modal.classList.add('active');
+        if (editMode) {
+            container.querySelector('#modal-title-text').innerText = "교육 동영상 강좌 수정";
+            const video = filteredVideos[activeVideoIndex];
+            if (!video) return;
+            currentEditingPostId = video.id;
+            container.querySelector('#form-subcategory').value = video.subcategory || 'product';
+            container.querySelector('#form-theme').value = video.theme || '';
+            container.querySelector('#form-title').value = video.title || '';
+            container.querySelector('#form-video-url').value = video.video_url || '';
+            container.querySelector('#form-desc').value = video.content || '';
+        } else {
+            container.querySelector('#modal-title-text').innerText = "새 교육 동영상 강좌 등록";
+            currentEditingPostId = null;
+            form.reset();
+            container.querySelector('#form-subcategory').value = currentSubcategory;
+        }
+    }
+    function closeVideoModal() {
+        container.querySelector('#video-editor-modal').classList.remove('active');
+    }
+    async function saveVideo(event) {
+        event.preventDefault();
+        if (!sb) return;
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session || !session.user) {
+            await customAlert("알림", "관리자 세션이 만료되었습니다. 다시 로그인해 주세요.");
+            return;
+        }
+        const subcategory = container.querySelector('#form-subcategory').value;
+        const theme = container.querySelector('#form-theme').value.trim();
+        const title = container.querySelector('#form-title').value.trim();
+        const videoUrl = container.querySelector('#form-video-url').value.trim();
+        const desc = container.querySelector('#form-desc').value.trim();
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerText = '저장 중...';
+        const payload = {
+            title: title,
+            content: desc,
+            category: 'video',
+            subcategory: subcategory,
+            theme: theme,
+            video_url: videoUrl,
+            user_id: session.user.id
+        };
+        try {
+            if (isEditMode && currentEditingPostId) {
+                const { error } = await sb
+                    .from('posts')
+                    .update(payload)
+                    .eq('id', currentEditingPostId);
+                if (error) throw error;
+                await customAlert("알림", " 동영상 강좌 수정 완료!");
+            } else {
+                const { error } = await sb
+                    .from('posts')
+                    .insert(payload);
+                if (error) throw error;
+                await customAlert("알림", " 신규 교육 동영상이 성공적으로 등록되었습니다!");
+            }
+            closeVideoModal();
+            await loadVideos();
+        } catch (err) {
+            await customAlert("알림", "영상 저장 에러: " + err.message);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = '저장하기';
+        }
+    }
+    async function deleteVideo() {
+        const video = filteredVideos[activeVideoIndex];
+        if (!video) return;
+        const isConfirmed = await customConfirm("확인", `정말 ["${video.title}"] 동영상을 아카데미에서 삭제하시겠습니까?\n등록된 댓글과 데이터가 완전히 삭제됩니다.`);
+        if (!isConfirmed) return;
+        try {
+            const { error } = await sb
+                .from('posts')
+                .delete()
+                .eq('id', video.id);
+            if (error) throw error;
+            await customAlert("알림", " 영상이 아카데미에서 완전히 삭제되었습니다.");
+            await loadVideos();
+        } catch (err) {
+            await customAlert("알림", "삭제 에러: " + err.message);
+        }
+    }
+    function extractYoutubeId(url) {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+    // 초기 실행 또는 readyState에 맞춘 바인딩
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initWidget);
+    } else {
+        initWidget();
+    }
+})();
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weracle Dashboard</title>
+    <style id="navy-toss-theme">
+      /* =========================================
+         [ Weracle Partners : Navy Toss Theme ] 
+         ========================================= */
+      :root {
+        --primary: #1e3a8a !important;
+        --primary-light: #eff6ff !important;
+        --bg-color: #f8fafc !important;
+        --card-bg: #ffffff !important;
+        --text-main: #191f28 !important;
+        --text-sub: #8b95a1 !important;
+        --border: #f1f5f9 !important;
+        --radius: 20px !important;
+      }
+
+      body, .dashboard-layout, .wm-content-area, .weracle-crm-container, .wm-container, .insight-layout, .main-layout {
+        background-color: var(--bg-color) !important;
+        color: var(--text-main) !important;
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      }
+      
+      /* Global Layout & Main Containers */
+      .layout-container, .app-container, .main-content {
+        background-color: var(--bg-color) !important;
+      }
+      .sidebar {
+        background-color: #ffffff !important;
+        border-right: 1px solid var(--border) !important;
+      }
+
+      /* Header & Tabs */
+      .vlab-header-bg, .top-header, .app-header {
+        background: transparent !important;
+        padding: 20px 40px 10px 40px !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      .vlab-main-title, .header-title {
+        font-size: 26px !important;
+        font-weight: 900 !important;
+        letter-spacing: -0.5px !important;
+        color: var(--text-main) !important;
+      }
+      .comm-tabs-container {
+        background: transparent !important;
+        border: none !important;
+      }
+      .comm-tabs {
+        display: inline-flex !important;
+        gap: 8px !important;
+        background: #ffffff !important;
+        padding: 6px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
+        border: 1px solid var(--border) !important;
+      }
+      .comm-tab-btn {
+        padding: 12px 20px !important;
+        border: none !important;
+        background: transparent !important;
+        border-radius: 12px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: var(--text-sub) !important;
+        transition: all 0.2s ease !important;
+      }
+      .comm-tab-btn::after { display: none !important; }
+      .comm-tab-btn:hover {
+        background: #f1f5f9 !important;
+        color: var(--text-main) !important;
+      }
+      .comm-tab-btn.active {
+        background: var(--primary) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2) !important;
+      }
+
+      /* Cards */
+      .board-card, .ranking-box, .tab-content > div[style*="background: #ffffff"], .card, .insight-card, .crm-card, .dashboard-card {
+        background: var(--card-bg) !important;
+        border-radius: var(--radius) !important;
+        padding: 24px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important;
+        border: 1px solid var(--border) !important;
+        transition: transform 0.2s !important;
+      }
+      
+      /* Titles */
+      .highlight-title, .card-title, .section-title {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        color: var(--text-main) !important;
+        letter-spacing: -0.3px !important;
+        margin-bottom: 20px !important;
+      }
+      .highlight-title::before { content: none !important; }
+
+      /* Buttons */
+      .sb-btn, .btn-primary, .btn-secondary, button {
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        padding: 12px 18px !important;
+        transition: all 0.2s ease !important;
+        border: none !important;
+      }
+      .sb-btn-primary, .btn-primary {
+        background: var(--primary) !important;
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2) !important;
+      }
+      .sb-btn-primary:hover, .btn-primary:hover { transform: translateY(-1px) !important; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3) !important; }
+      .sb-btn-secondary, .btn-secondary {
+        background: #f8fafc !important;
+        color: var(--text-main) !important;
+        border: 1px solid #e2e8f0 !important;
+      }
+      .sb-btn-secondary:hover, .btn-secondary:hover { background: #f1f5f9 !important; }
+
+      /* Inputs */
+      .sb-input, input[type="text"], input[type="password"], input[type="email"], textarea {
+        border-radius: 12px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #f9fafb !important;
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+        color: var(--text-main) !important;
+        outline: none !important;
+        transition: 0.2s !important;
+      }
+      .sb-input:focus, input:focus, textarea:focus {
+        border-color: var(--primary) !important;
+        background: #ffffff !important;
+      }
+
+      /* Notice Banner */
+      .soft-flashy-notice {
+        background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+        border-radius: 20px !important;
+        padding: 24px 30px !important;
+        border: none !important;
+        box-shadow: 0 10px 20px rgba(30, 58, 138, 0.15) !important;
+        animation: none !important;
+      }
+      .soft-flashy-text {
+        color: white !important;
+        font-size: 24px !important;
+        font-weight: 800 !important;
+        animation: none !important;
+        text-shadow: none !important;
+      }
+      .soft-flashy-badge {
+        background: rgba(255,255,255,0.2) !important;
+        color: white !important;
+        backdrop-filter: blur(4px) !important;
+        border: none !important;
+        box-shadow: none !important;
+        animation: none !important;
+      }
+    
+      /* Subscription Card Styles */
+      .sub-period-card {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 12px;
+        padding: 16px;
+        box-sizing: border-box;
+      }
+      .sub-period-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e0f2fe;
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .dday-pill {
+        background: #0284c7;
+        color: #ffffff;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11.5px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
+      }
+      .sub-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      @media (max-width: 600px) {
+        .sub-info-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .sub-info-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12.5px;
+        background: #ffffff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #e0f2fe;
+      }
+      .sub-info-item span:first-child {
+        color: #64748b;
+        font-weight: 600;
+      }
+      .sub-info-item span:last-child {
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+    </style>
+
+    
+
+    
+
+    
+
+    <style>
+    @media (max-width: 768px) {
+        /* 사용자 요청: 제목 밑에 네모(그리드) 형태로 깔끔하게 메뉴 정리 */
+        .gnb-menu, 
+        .category-nav, 
+        .vlab-tab-container, 
+        .comm-tabs, 
+        .tab-buttons, 
+        .sub-nav,
+        .crm-filter-group {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+            width: 100% !important;
+            background: #ffffff !important;
+            padding: 12px !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+            height: auto !important;
+            margin-top: 15px !important;
+            margin-bottom: 15px !important;
+        }
+        
+        /* 껍데기(li 등)는 스타일을 가지지 않음 */
+        .gnb-item {
+            display: block !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            background: transparent !important;
+        }
+        
+        /* 실제 클릭되는 버튼(a 태그)을 디자인 */
+        .gnb-link, 
+        .category-nav a, 
+        .vlab-tab-link, 
+        .comm-tab-btn, 
+        .tab-btn,
+        .sub-nav-item {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            width: 100% !important;
+            height: 100% !important;
+            padding: 12px 6px !important;
+            box-sizing: border-box !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            background: #f8fafc !important;
+            color: #64748b !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            margin: 0 !important;
+            text-decoration: none !important;
+            white-space: normal !important;
+            word-break: keep-all !important;
+            line-height: 1.3 !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        /* 활성화된 탭 디자인 */
+        .gnb-link.active,
+        .category-nav a.active,
+        .vlab-tab-link.active,
+        .comm-tab-btn.active,
+        .tab-btn.active,
+        .sub-nav-item.active {
+            background: #0284c7 !important;
+            color: #ffffff !important;
+            border-color: #0284c7 !important;
+            font-weight: 800 !important;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2) !important;
+        }
+    }
+    </style>
+
+    
+
+    <style>
+    @media (max-width: 768px) {
+        /* 사용자 요청: 메뉴들이 오른쪽에 박혀 찌그러지지 않고 제목 밑으로 깔끔하게 떨어지도록 (상하 분리) */
+        .gnb-container {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            padding: 10px 20px !important;
+            height: auto !important;
+        }
+        .gnb-logo {
+            width: 100% !important;
+            margin-bottom: 5px !important;
+        }
+        
+        /* CRM 페이지의 타이틀과 탭 상하 분리 */
+        .vlab-main-title {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 15px !important;
+        }
+        
+        /* vlab-header-bg 안의 최상단 첫번째 div(타이틀+액션버튼)만 상하 분리, 필터 등은 건드리지 않음 */
+        .vlab-header-bg > div:first-child {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 15px !important;
+        }
+        
+        /* 메뉴 박스(그리드) 여백 확보: 본문과 겹치지 않게 공간 분리 */
+        .gnb-menu, .vlab-tab-container, .comm-tabs, .tab-buttons, .sub-nav, .top-crm-tabs {
+            width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding: 12px 10px !important; 
+            margin-bottom: 25px !important; /* 사용자 요청: 밑에 본문이랑 여백 띄우기 */
+        }
+    }
+    </style>
+<link rel="stylesheet" href="auth_profile_style.css"></head>
+<body style="margin:0; padding:0; background-color: #f8faff;">
+<div id="sb-mypage-widget-root" class="sb-platform">
+  <div class="vlab-archive-wrapper">
+    <div class="vlab-header-bg">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 0;">
+        <h1 class="vlab-main-title" style="margin: 0; display: flex; align-items: center; gap: 8px;">
+    <span style="display: inline-block; position: relative; z-index: 1;">
+        <span class="brand-name">마이페이지</span>
+        </span>
+    
+</h1>
+      </div>
+    </div>
+    
+    <!-- 렌더링 콘텐츠 타겟 영역 -->
+    <div id="sb-mypage-content-area">
+      <div class="sb-glass-card" style="text-align: center; padding: 40px; color: #8896a7;">
+        내 정보를 확인하는 중...
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+    // iframe 내부에서 실행 중인 경우 아임웹 공통 헤더/푸터 및 레이아웃 마진 강제 제거
+    if (window.self !== window.top) {
+        const style = document.createElement('style');
+        style.textContent = `
+            header, footer, #header_wrap, #header, .header, .footer, #footer,
+            .main_header, .mobile_header, #mobile_header, .shop_footer,
+            .top_header, #header_container, #footer_container, .navbar, .top_menu {
+                display: none !important;
+            }
+            body, html {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: transparent !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
+            /* 아임웹 기본 레이아웃 가로폭 해제 및 공백 제거 */
+            .container, .content, #content, .page_content, .main_content, .section_wrap, .row, .col-xs-12 {
+                max-width: 100% !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // 글로벌 백엔드 연결 정보 및 부모 세션 연동 (iframe 대응)
+    let sb = window.sb || (window.parent && window.parent.sb);
+    let authEvents = window.authEvents || (window.parent && window.parent.authEvents);
+
+    const sbUrl = "https://tjohrovsvgnkrlqhjkwt.supabase.co";
+    const sbKey = "sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR"; // 로컬 백업용
+
+    class MyPageWidget {
+        constructor() {
+            this.containerId = 'sb-mypage-content-area'; // 변경: 렌더링 타겟을 content-area로 지정
+            this.container = null;
+            this.activeTab = 'orders'; 
+            this.isEditingProfile = false;
+            this.selectedAvatarUrl = '';
+            this.myPosts = [];
+            this.myComments = [];
+            this.myOrders = [];
+            this.allOrders = [];
+            this.activePostCategory = 'all';
+            this.activeCommentCategory = 'all';
+        }
+
+        init() {
+            this.container = document.getElementById(this.containerId);
+            if (!this.container) return; 
+            
+            this.injectStyles();
+
+            // 부모 또는 윈도우의 sb가 준비될 때까지 안전하게 대기
+            let retryCount = 0;
+            const checkSbAndStart = () => {
+                retryCount++;
+                sb = window.sb || (window.parent && window.parent.sb);
+                authEvents = window.authEvents || (window.parent && window.parent.authEvents);
+
+                if (!sb && window.supabase) {
+                    const config = window.SUPABASE_CONFIG || (window.parent && window.parent.SUPABASE_CONFIG);
+                    if (config && config.anonKey && config.anonKey !== "YOUR_SUPABASE_ANON_KEY_HERE") {
+                        sb = window.supabase.createClient(config.url, config.anonKey);
+                    } else {
+                        sb = window.supabase.createClient(sbUrl, sbKey);
+                    }
+                    window.sb = sb;
+                }
+
+                if (sb || retryCount > 5) {
+                    if (!window.currentUser && window.parent && window.parent.currentUser) {
+                        window.currentUser = window.parent.currentUser;
+                    }
+                    if (!window.currentProfile && window.parent && window.parent.currentProfile) {
+                        window.currentProfile = window.parent.currentProfile;
+                    }
+
+                    window.authEvents = authEvents || {
+                        listeners: {},
+                        on(event, callback) {
+                            if (!this.listeners[event]) this.listeners[event] = [];
+                            this.listeners[event].push(callback);
+                        },
+                        emit(event, data) {
+                            if (this.listeners[event]) {
+                                this.listeners[event].forEach(cb => cb(data));
+                            }
+                        }
+                    };
+                    authEvents = window.authEvents;
+
+                    this.render();
+                    
+                    let lastSessionToken = null;
+                    if (authEvents && typeof authEvents.on === 'function') {
+                        authEvents.on('stateChange', async (data) => {
+                            const session = data ? data.session : null;
+                            const token = session ? session.access_token : null;
+                            
+                            if (lastSessionToken === token && this.container.innerHTML.trim() !== "") {
+                                return;
+                            }
+                            lastSessionToken = token;
+
+                            if (data && data.profile) {
+                                window.currentProfile = data.profile;
+                            }
+                            if (data && data.session && data.session.user) {
+                                window.currentUser = data.session.user;
+                            } else if (sb) {
+                                const sessionData = await sb.auth.getSession().catch(() => ({ data: { session: null } }));
+                                window.currentUser = sessionData.data.session ? sessionData.data.session.user : null;
+                            }
+                            this.render();
+                        });
+                    }
+                } else {
+                    setTimeout(checkSbAndStart, 50);
+                }
+            };
+
+            checkSbAndStart();
+        }
+
+        injectStyles() {
+            const styleId = 'sb-mypage-widget-styles';
+            if (document.getElementById(styleId)) return;
+            
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.textContent = `
+                @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+                
+                #sb-mypage-widget-root {
+                    max-width: 100%;
+                    padding: 0;
+                    --sb-bg-card: #ffffff;
+                    --sb-border-glass: #e2edf7;
+                    --sb-primary: var(--primary);
+                    --sb-secondary: var(--primary);
+                    --sb-accent: var(--primary);
+                    --sb-txt-primary: var(--primary);
+                    --sb-txt-secondary: #516e89;
+                    --sb-txt-muted: #8896a7;
+                    --sb-border-focus: var(--primary);
+                    --sb-primary-glow: rgba(17, 63, 103, 0.15);
+                    --sb-secondary-glow: rgba(30, 92, 148, 0.1);
+                    font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
+                }
+                @media (max-width: 768px) {
+                    #sb-mypage-widget-root {
+                        padding: 0;
+                    }
+                    .vlab-header-wrap {
+                        padding: 10px 0;
+                    }
+                }
+
+                .vlab-archive-wrapper {
+                    max-width: 100%;
+                    margin: 0;
+                    padding: 15px 20px;
+                    color: #2c3a4b;
+                }
+
+                /* 헤더 영역 */
+                .vlab-header-wrap {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 25px;
+                    padding: 10px 0 10px 45px;
+                    border-bottom: 1px solid #eaeef2;
+                }
+                .header-left-col {
+                    display: flex;
+                    align-items: center;
+                }
+                .header-center-col {
+                    display: flex;
+                    align-items: center;
+                    margin-left: 20px;
+                }
+                .header-right-col {
+                    display: flex;
+                    align-items: center;
+                    margin-left: auto;
+                }
+                .vlab-main-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin: 0;
+                }
+                
+                
+                .title-deco-line {
+                    position: absolute;
+                    left: 0;
+                    bottom: -6px;
+                    width: 100%;
+                    height: 2px;
+                    background: linear-gradient(90deg, var(--primary) 0%, #00e6f6 100%);
+                    border-radius: 2px;
+                }
+
+                #sb-mypage-widget-root .sb-glass-card {
+                    background: #ffffff !important;
+                    border: 1px solid var(--primary) !important;
+                    box-shadow: 0 10px 30px rgba(17, 63, 103, 0.05) !important;
+                    color: #2c3a4b !important;
+                    text-align: left;
+                    border-radius: 20px !important;
+                }
+                #sb-mypage-widget-root .sb-glass-card:hover {
+                    border-color: var(--primary) !important;
+                    box-shadow: 0 15px 40px rgba(17, 63, 103, 0.08) !important;
+                }
+
+                #sb-mypage-widget-root .sb-mypage-tab-wrap { display: flex; flex-direction: column; }
+                #sb-mypage-widget-root .sb-input {
+                    background: #f8fafc !important;
+                    border: 1px solid #e2edf7 !important;
+                    color: var(--primary) !important;
+                    box-sizing: border-box;
+                    border-radius: 8px !important;
+                    padding: 10px 12px !important;
+                    font-size: 13.5px !important;
+                    font-family: inherit !important;
+                    transition: all 0.25s ease !important;
+                    outline: none !important;
+                }
+                #sb-mypage-widget-root .sb-input:focus {
+                    background: #ffffff !important;
+                    border-color: var(--primary) !important;
+                    box-shadow: 0 0 0 3px rgba(30, 92, 148, 0.12) !important;
+                }
+                #sb-mypage-widget-root .form-label {
+                    font-size: 12.5px !important;
+                    font-weight: 600 !important;
+                    color: #516e89 !important;
+                    margin-bottom: 5px !important;
+                    display: block !important;
+                }
+                #sb-mypage-widget-root .sb-btn-primary {
+                    background: linear-gradient(135deg, var(--primary), var(--primary)) !important;
+                    color: #ffffff !important;
+                    box-shadow: 0 4px 12px rgba(17, 63, 103, 0.1) !important;
+                    border-radius: 8px !important;
+                    transition: all 0.2s ease !important;
+                }
+                #sb-mypage-widget-root .sb-btn-primary:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 6px 20px rgba(17, 63, 103, 0.2) !important;
+                }
+                #sb-mypage-widget-root .sb-btn-secondary {
+                    background: #ffffff !important;
+                    border: 1px solid #e2edf7 !important;
+                    color: var(--primary) !important;
+                    border-radius: 8px !important;
+                    transition: all 0.2s ease !important;
+                }
+                #sb-mypage-widget-root .sb-btn-secondary:hover {
+                    background: #f0f4f8 !important;
+                }
+                /* Cleaned up duplicate active tab style */
+                #sb-mypage-widget-root .sb-mypage-list-item {
+                    border-bottom: 1px solid #e2edf7 !important;
+                }
+                .sb-modal-overlay {
+                    background: rgba(17, 63, 103, 0.45) !important;
+                    backdrop-filter: blur(8px) !important;
+                    font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif !important;
+                }
+                
+                
+                    100% { box-shadow: 0 0 0 8px rgba(30, 92, 148, 0); }
+                }
+                #sb-mypage-widget-root .profile-image-wrapper {
+                    position: relative;
+                    width: 106px;
+                    height: 106px;
+                    margin-bottom: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                #sb-mypage-widget-root .profile-image-wrapper::after {
+                    content: '';
+                    position: absolute;
+                    top: -3px; left: -3px; right: -3px; bottom: -3px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, var(--primary), var(--primary));
+                    z-index: 1;
+                    animation: pulseAura 2s infinite alternate;
+                }
+                #sb-mypage-widget-root .profile-image-container {
+                    position: relative;
+                    width: 100px;
+                    height: 100px;
+                    border-radius: 50%;
+                    border: 3px solid #ffffff;
+                    overflow: hidden;
+                    cursor: pointer;
+                    z-index: 2;
+                    box-shadow: 0 8px 20px rgba(17, 63, 103, 0.08);
+                    transition: transform 0.2s ease;
+                }
+                #sb-mypage-widget-root .profile-image-container:hover {
+                    transform: scale(1.03);
+                }
+                #sb-mypage-widget-root .profile-image {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+                #sb-mypage-widget-root .profile-image-overlay {
+                    position: absolute;
+                    top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(17, 63, 103, 0.65);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    color: #ffffff;
+                    font-size: 11px;
+                    font-weight: 700;
+                    opacity: 0;
+                    transition: opacity 0.2s ease;
+                    pointer-events: none;
+                }
+                #sb-mypage-widget-root .profile-image-container:hover .profile-image-overlay {
+                    opacity: 1;
+                }
+                #sb-mypage-widget-root .sb-avatar-preset-btn {
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    border: 2px solid #e2edf7;
+                    overflow: hidden;
+                    background: #fff;
+                    transition: all 0.2s ease;
+                }
+                #sb-mypage-widget-root .sb-avatar-preset-btn:hover {
+                    transform: scale(1.1);
+                    border-color: var(--primary);
+                }
+                #sb-mypage-widget-root .sb-avatar-preset-btn.active {
+                    border-color: #1e293b;
+                    box-shadow: 0 0 0 3px rgba(17, 63, 103, 0.15);
+                }
+                #sb-mypage-widget-root .weracle-badge-pro weracle-badge {
+                    background: linear-gradient(135deg, rgba(17, 63, 103, 0.1), rgba(30, 92, 148, 0.1)) !important;
+                    border: 1px solid rgba(17, 63, 103, 0.3) !important;
+                    color: var(--primary) !important;
+                }
+                #sb-mypage-widget-root .weracle-badge-basic weracle-badge {
+                    background: #f1f5f9 !important;
+                    border: 1px solid #cbd5e1 !important;
+                    color: #475569 !important;
+                }
+                #sb-mypage-widget-root .weracle-badge-manager weracle-badge {
+                    background: #10b981 !important;
+                    color: #ffffff !important;
+                }
+                
+                /* 그리드 반응형 기입 */
+                .sb-mypage-grid { display: flex; justify-content: center; padding: 20px; }
+                .col-span-12 { grid-column: span 12; }
+                .col-span-4 { grid-column: span 4; }
+                .col-span-8 { grid-column: span 8; }
+                @media (max-width: 768px) {
+                    .col-span-4, .col-span-8 {
+                        grid-column: span 12;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        async render() {
+            if (!sb) {
+                window.currentUser = window.currentUser || { email: 'weracle_pro@partners.com' };
+                window.currentProfile = window.currentProfile || {
+                    nickname: '위라클 파트너',
+                    company: '위라클 파트너스 본부',
+                    phone: '010-8765-4321',
+                    user_grade: 'vip',
+                    point_balance: 5000,
+                    fax_count: 12
+                };
+                this.renderDashboard();
+                return;
+            }
+
+            const { data: { session } } = await sb.auth.getSession().catch(() => ({ data: { session: null } }));
+            window.currentUser = session ? session.user : null;
+
+            if (!window.currentUser) {
+                const isPreview = window.location.search.includes('preview=login') || 
+                                  (window.parent && window.parent.location && window.parent.location.search && window.parent.location.search.includes('preview=login')) ||
+                                  (window.parent && window.parent.isLoggedIn);
+                if (isPreview) {
+                    window.currentUser = { email: 'weracle_pro@partners.com' };
+                    window.currentProfile = {
+                        nickname: '위라클 파트너',
+                        company: '위라클 파트너스 본부',
+                        phone: '010-8765-4321',
+                        user_grade: 'vip',
+                        point_balance: 5000,
+                        fax_count: 12
+                    };
+                    this.renderDashboard();
+                    return;
+                }
+                this.renderLoggedOutState();
+                return;
+            }
+
+            this.renderLoadingState();
+            
+            try {
+                const { data: latestProfile, error: profileErr } = await sb
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', window.currentUser.id)
+                    .single();
+                if (!profileErr && latestProfile) {
+                    window.currentProfile = latestProfile;
+                } else {
+                    window.currentProfile = window.currentProfile || {
+                        nickname: window.currentUser.email.split('@')[0],
+                        user_grade: 'basic',
+                        avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + window.currentUser.id
+                    };
+                }
+
+                const isManager = window.currentProfile && window.currentProfile.user_grade === 'manager';
+                
+                const promises = [
+                    this.loadMyOrders()
+                ];
+
+                if (isManager) {
+                    promises.push(this.loadAllOrders());
+                }
+                
+                await Promise.all(promises);
+                this.renderDashboard();
+                
+            } catch (error) {
+                console.error("Error loading MyPage data:", error);
+                this.container.innerHTML = `
+                    <div class="sb-glass-card" style="text-align: center; color: #dc2626; padding: 30px;">
+                        데이터를 불러오는 중 오류가 발생했습니다: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        renderLoggedOutState() {
+            this.container.innerHTML = `
+                <div class="sb-glass-card sb-fade-in" style="text-align: center; padding: 60px 24px; color: var(--sb-txt-primary);">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=weracle" class="weracle-profile-img" style="margin: 0 auto 16px auto; display: block;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 1.4rem; font-weight: 700;">비공개 페이지</h3>
+                    <p style="color: var(--sb-txt-secondary); margin: 0 0 24px 0; font-size: 0.95rem;">
+                        마이페이지는 회원 전용 공간입니다.<br>로그인 후 본인의 활동 내역을 확인해 보세요.
+                    </p>
+                    <button class="weracle-btn-primary" id="sb-btn-trigger-login" style="padding: 10px 20px; font-size: 13.5px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">로그인 및 회원가입</button>
+                </div>
+            `;
+            this.container.querySelector('#sb-btn-trigger-login').addEventListener('click', () => {
+                if (authEvents && typeof authEvents.emit === 'function') {
+                    authEvents.emit('openLoginModal');
+                } else if (window.parent && window.parent.authEvents) {
+                    window.parent.authEvents.emit('openLoginModal');
+                } else {
+                    alert("로그인 창을 열 수 없습니다. 메인 페이지의 로그인 버튼을 클릭해 주세요.");
+                }
+            });
+        }
+
+        renderLoadingState() {
+            this.container.innerHTML = `
+                <div class="sb-glass-card" style="text-align: center; padding: 50px;">
+                    <div style="color: #64748b; font-size: 13.5px;">내 정보를 연동하는 중...</div>
+                </div>
+            `;
+        }
+
+        async loadMyOrders() {
+            const { data } = await sb.from('orders').select('id, amount, status, tracking_number, created_at, products(name)').eq('user_id', window.currentUser.id).order('created_at', { ascending: false });
+            this.myOrders = data || [];
+        }
+
+        async loadAllOrders() {
+            const { data } = await sb.from('orders').select('id, amount, status, tracking_number, created_at, shipping_name, shipping_phone, shipping_address, profiles(nickname, email), products(name)').order('created_at', { ascending: false });
+            this.allOrders = data || [];
+        }
+        renderDashboard() {
+            const profile = window.currentProfile || {};
+            const userGradeLower = (profile.user_grade || 'basic').toLowerCase();
+            let gradeBadge = `<span class="weracle-badge weracle-badge-basic weracle-badge" style="font-size:12px; padding:4px 10px; border-radius:12px; font-weight:700;">일반회원(Basic)</span>`;
+            if (userGradeLower === 'vip' || userGradeLower === 'premium') {
+                gradeBadge = `<span class="weracle-badge weracle-badge-pro weracle-badge" style="font-size:12px; padding:4px 10px; border-radius:12px; font-weight:700;">VIP 멤버십</span>`;
+            } else if (userGradeLower === 'svip') {
+                gradeBadge = `<span class="weracle-badge weracle-badge-pro weracle-badge" style="font-size:12px; padding:4px 10px; border-radius:12px; font-weight:700; background:#f59e0b; color:#fff;">SVIP 멤버십</span>`;
+            } else if (userGradeLower === 'family') {
+                gradeBadge = `<span class="weracle-badge weracle-badge-family weracle-badge" style="font-size:12px; padding:4px 10px; border-radius:12px; font-weight:700; background:#10b981; color:#fff;">패밀리(Family)</span>`;
+            } else if (userGradeLower === 'manager' || userGradeLower === 'admin') {
+                gradeBadge = `<span class="weracle-badge weracle-badge-manager weracle-badge" style="font-size:12px; padding:4px 10px; border-radius:12px; font-weight:700;">관리자(Manager)</span>`;
+            }
+
+            // D-Day calculation for subscription
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const targetBillingDate = new Date(2026, 10, 15); // 2026-11-15
+            targetBillingDate.setHours(0, 0, 0, 0);
+            const diffDays = Math.ceil((targetBillingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            const ddayText = diffDays > 0 ? `D-${diffDays}일 남음` : (diffDays === 0 ? '오늘 결제일' : `결제 완료 (D+${Math.abs(diffDays)})`);
+
+            const btnStyle = "font-size: 11.5px; padding: 4px 10px; border-radius: 6px; background: #f1f5f9; color: #4b5563; border: 1px solid #cbd5e1; cursor: pointer; font-weight: 700; transition: all 0.2s; box-sizing: border-box; flex-shrink: 0;";
+
+            this.container.innerHTML = `
+                <div class="sb-mypage-grid" style="display: flex; justify-content: center; padding: 12px; box-sizing: border-box; width: 100%; overflow: hidden;">
+                    <div class="sb-glass-card" style="width: 100%; max-width: 850px; display: flex; flex-direction: row; flex-wrap: wrap; gap: 28px; text-align: left; padding: 28px; align-items: stretch; border-radius: 16px; box-sizing: border-box; overflow: hidden; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                        
+                        <!-- 좌측: 프로필 메인 (사진, 이름, 등급, 로고) -->
+                        <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border-right: 1px solid #e2edf7; padding-right: 24px; box-sizing: border-box;">
+                            
+                            <!-- 아바타 이미지 영역 -->
+                            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; width: 100%; box-sizing: border-box;">
+                                <div style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 4px solid #ffffff; margin-bottom: 12px; box-sizing: border-box; flex-shrink: 0;">
+                                    <img src="${profile.avatar_url || 'https://api.dicebear.com/7.x/lorelei/svg?seed=Jack'}" class="profile-image" style="width: 100%; height: 100%; object-fit: cover;" />
+                                </div>
+                                
+                                <button class="sb-btn-inline-edit" data-field="avatar" style="${btnStyle}; margin-bottom: 12px;">PC 이미지 업로드</button>
+                                
+                                <div style="width: 100%; text-align: center; background: #f8fafc; padding: 10px; border-radius: 12px; box-sizing: border-box;">
+                                    <span style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 8px; display: block;">또는 기본 캐릭터 선택</span>
+                                    <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
+                                        ${['Jack', 'Mia', 'Oliver', 'Sophia', 'Charlie'].map(name => `
+                                            <img src="https://api.dicebear.com/7.x/lorelei/svg?seed=${name}" class="sb-preset-avatar" data-seed="${name}" style="width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid ${profile.avatar_url && profile.avatar_url.includes(name) ? '#0284c7' : 'transparent'}; background: #fff; transition: transform 0.2s; flex-shrink: 0;" />
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="file" id="sb-avatar-file-input" accept="image/*" style="display: none;" />
+
+                            <!-- 이름 및 등급 영역 -->
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 24px; width: 100%; box-sizing: border-box;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                                    <h3 style="margin: 0; font-size: 22px; font-weight: 800; color: #1e293b; text-align: center; word-break: break-all;">${this.escapeHtml(profile.nickname || '위라클 파트너')}</h3>
+                                    <button class="sb-btn-inline-edit" data-field="nickname" style="${btnStyle}">변경</button>
+                                </div>
+                                <div>${gradeBadge}</div>
+                            </div>
+                            
+                            <!-- 전용 로고 -->
+                            <div style="width: 100%; text-align: center; background: #f8fafc; border-radius: 12px; padding: 16px; border: 1px solid #e2edf7; box-sizing: border-box; margin-top: auto;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                                    <div style="font-size: 13px; font-weight: 800; color: #4b5563;">내 전용 로고</div>
+                                    <button class="sb-btn-inline-edit" data-field="logo" style="${btnStyle}">변경</button>
+                                </div>
+                                ${profile.logo_url ? `<img src="${profile.logo_url}" style="width:100%; max-height: 80px; object-fit: contain; border-radius:8px; border:1px solid #e2e8f0; background: #fff;" />` : `<div style="font-size:12px; color:#94a3b8; padding: 8px 0;">등록된 로고가 없습니다.</div>`}
+                            </div>
+                            <input type="file" id="sb-logo-file-input" accept="image/*" style="display: none;" />
+                        </div>
+                        
+                        <!-- 우측: 기본정보, 포인트, 구독/결제 D-Day -->
+                        <div style="flex: 2; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; overflow: hidden; width: 100%; gap: 24px;">
+                            
+                            <!-- 1. 기본 정보 -->
+                            <div style="width: 100%; background: #ffffff; border-radius: 12px; padding: 0 0 18px 0; border-bottom: 1px solid #e2edf7; box-sizing: border-box;">
+                                <h4 style="font-size: 15px; font-weight: 800; color: #0284c7; margin: 0 0 14px 0;">
+                                    <i class="fa-solid fa-user-circle"></i> 기본 정보
+                                </h4>
+                                
+                                <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items: center; flex-wrap: nowrap; gap: 8px;">
+                                    <span style="color:#64748b; font-weight:600; font-size: 13.5px; flex-shrink: 0;">이메일 (아이디)</span>
+                                    <span style="font-weight:700; color:#1e293b; font-size: 13.5px; word-break: break-all; text-align: right;">${window.currentUser ? window.currentUser.email : (profile.email || 'weracle_pro@partners.com')}</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items: center; flex-wrap: nowrap; gap: 8px;">
+                                    <span style="color:#64748b; font-weight:600; font-size: 13.5px; flex-shrink: 0;">소속 지점</span>
+                                    <div style="display:flex; align-items:center; gap: 8px; min-width: 0;">
+                                        <span style="font-weight:700; color:#1e293b; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${this.escapeHtml(profile.company || '위라클 파트너스 본부')}</span>
+                                        <button class="sb-btn-inline-edit" data-field="company" style="${btnStyle}">변경</button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items: center; flex-wrap: nowrap; gap: 8px;">
+                                    <span style="color:#64748b; font-weight:600; font-size: 13.5px; flex-shrink: 0;">연락처</span>
+                                    <div style="display:flex; align-items:center; gap: 8px; min-width: 0;">
+                                        <span style="font-weight:700; color:#1e293b; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${this.escapeHtml(profile.phone || '010-8765-4321')}</span>
+                                        <button class="sb-btn-inline-edit" data-field="phone" style="${btnStyle}">변경</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 2. 보유 포인트 -->
+                            <div style="width: 100%; background: #f8fafc; border-radius: 12px; padding: 14px 18px; border: 1px solid #e2edf7; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                                <div>
+                                    <span style="color:#64748b; font-weight:700; font-size: 13px; display: block; margin-bottom: 2px;">보유 포인트</span>
+                                    <span style="font-weight:900; color:#10b981; font-size: 20px; letter-spacing: -0.5px;">${new Intl.NumberFormat('ko-KR').format(profile.point_balance || 5000)} <span style="font-size: 13px; font-weight: 700; color: #64748b;">P</span></span>
+                                </div>
+                                <button class="sb-btn-recharge" style="font-size:12px; font-weight:800; background:#0284c7; color:#ffffff; border:none; padding:7px 14px; border-radius:6px; cursor:pointer; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25); flex-shrink: 0;">충전하기</button>
+                            </div>
+
+                            <!-- 3. 구독 및 결제 관리 (결제일 및 남은 기간 D-Day 표시) -->
+                            <div style="width: 100%; box-sizing: border-box;">
+                                <h4 style="font-size: 15px; font-weight: 800; color: #0284c7; margin: 0 0 12px 0;">
+                                    <i class="fa-solid fa-credit-card"></i> 구독 및 결제 관리
+                                </h4>
+
+                                <div class="sub-period-card">
+                                    <div class="sub-period-head">
+                                        <div>
+                                            <span style="font-size: 11.5px; color: #0369a1; font-weight: 700; display: block; margin-bottom: 2px;">이용 중인 플랜</span>
+                                            <div style="font-size: 16px; font-weight: 800; color: #0f172a;">위라클 VIP 멤버십 (월간 정기결제)</div>
+                                        </div>
+                                        <div class="dday-pill" id="subDdayBadge">
+                                            <i class="fa-regular fa-clock"></i> <span>${ddayText}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="sub-info-grid">
+                                        <div class="sub-info-item">
+                                            <span>다음 정기 결제 예정일</span>
+                                            <span>2026년 11월 15일</span>
+                                        </div>
+                                        <div class="sub-info-item">
+                                            <span>결제 예정 금액</span>
+                                            <span>월 39,000원 (자동 갱신)</span>
+                                        </div>
+                                        <div class="sub-info-item">
+                                            <span>현재 구독 상태</span>
+                                            <span style="color: #059669; font-weight: 800;">정상 이용 중 (활성)</span>
+                                        </div>
+                                        <div class="sub-info-item">
+                                            <span>결제 수단</span>
+                                            <span>등록 카드 (토스페이먼츠)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            `;
+
+            this.bindEvents();
+        }
+
+        bindEvents() {
+            // Hover effect for inline edit buttons
+            this.container.querySelectorAll('.sb-btn-inline-edit').forEach(btn => {
+                btn.addEventListener('mouseover', (e) => { e.target.style.background = '#f8fafc'; e.target.style.color = '#0284c7'; e.target.style.borderColor = '#0284c7'; });
+                btn.addEventListener('mouseout', (e) => { e.target.style.background = '#f1f5f9'; e.target.style.color = '#4b5563'; e.target.style.borderColor = '#cbd5e1'; });
+                
+                btn.addEventListener('click', async (e) => {
+                    const field = e.target.getAttribute('data-field');
+                    const profile = window.currentProfile;
+
+                    if (field === 'nickname') {
+                        const val = prompt('새로운 닉네임을 입력하세요:', profile.nickname);
+                        if (val !== null && val.trim() !== '') this.updateProfileField('nickname', val.trim());
+                    } else if (field === 'company') {
+                        const val = prompt('새로운 소속을 입력하세요:', profile.company || '');
+                        if (val !== null) this.updateProfileField('company', val.trim());
+                    } else if (field === 'phone') {
+                        const val = prompt('새로운 연락처를 입력하세요:', profile.phone || '');
+                        if (val !== null) this.updateProfileField('phone', val.trim());
+                    } else if (field === 'avatar') {
+                        this.container.querySelector('#sb-avatar-file-input').click();
+                    } else if (field === 'logo') {
+                        this.container.querySelector('#sb-logo-file-input').click();
+                    }
+                });
+            });
+
+            // Preset avatar click handler
+            this.container.querySelectorAll('.sb-preset-avatar').forEach(img => {
+                img.addEventListener('click', (e) => {
+                    const seed = e.target.getAttribute('data-seed');
+                    const url = `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}`;
+                    this.updateProfileField('avatar_url', url);
+                });
+                img.addEventListener('mouseover', e => e.target.style.transform = 'scale(1.15)');
+                img.addEventListener('mouseout', e => e.target.style.transform = 'scale(1)');
+            });
+
+            // Avatar file input handler
+            const avatarInput = this.container.querySelector('#sb-avatar-file-input');
+            if (avatarInput) {
+                avatarInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            this.updateProfileField('avatar_url', event.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // Logo file input handler
+            const logoInput = this.container.querySelector('#sb-logo-file-input');
+            if (logoInput) {
+                logoInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                let width = img.width;
+                                let height = img.height;
+                                if (width > 600) { height = height * (600 / width); width = 600; }
+                                canvas.width = width; canvas.height = height;
+                                ctx.drawImage(img, 0, 0, width, height);
+                                this.updateProfileField('logo_url', canvas.toDataURL('image/png'));
+                            };
+                            img.src = event.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        }
+
+        async updateProfileField(field, value) {
+            try {
+                const updateData = {};
+                updateData[field] = value;
+                const { error } = await sb.from('profiles').update(updateData).eq('id', window.currentUser.id);
+                if (error) throw error;
+                
+                if (window.currentProfile) window.currentProfile[field] = value;
+                if (window.parent && window.parent.currentProfile) window.parent.currentProfile[field] = value;
+                
+                if (typeof authEvents !== 'undefined' && authEvents.emit) {
+                    authEvents.emit('stateChange', { event: 'PROFILE_UPDATED', session: null, profile: window.currentProfile });
+                }
+                
+                this.render();
+            } catch (err) {
+                alert("프로필 업데이트 중 오류가 발생했습니다: " + err.message);
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    }
+
+    const myPageWidget = new MyPageWidget();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => myPageWidget.init());
+    } else {
+        myPageWidget.init();
+    }
+})();
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

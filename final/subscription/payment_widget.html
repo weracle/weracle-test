@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>토스페이먼츠 결제 위젯 모듈</title>
+  <!-- 토스페이먼츠 SDK -->
+  <script src="https://js.tosspayments.com/v1/payment-widget"></script>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <style>
+    * { box-sizing: border-box; font-family: 'Pretendard Variable', Pretendard, sans-serif; }
+    body { margin: 0; padding: 20px; background-color: #f8fafc; color: #1e293b; }
+    .payment-container { max-width: 650px; margin: 30px auto; background: #ffffff; border-radius: 18px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+    .header-area { margin-bottom: 24px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; }
+    .header-title { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; }
+    .header-sub { font-size: 13px; color: #64748b; margin-top: 6px; }
+    .plan-summary { background: #f8faff; border: 1px solid #d0deeb; border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .plan-name { font-size: 16px; font-weight: 700; color: #113f67; }
+    .plan-price { font-size: 20px; font-weight: 900; color: #113f67; }
+    .btn-pay { width: 100%; padding: 18px; background: #113f67; color: #ffffff; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.2s; margin-top: 20px; box-shadow: 0 4px 15px rgba(17, 63, 103, 0.2); }
+    .btn-pay:hover { background: #0c2d4a; }
+  </style>
+</head>
+<body>
+
+  <div class="payment-container">
+    <div class="header-area">
+      <h1 class="header-title">구독 결제</h1>
+      <div class="header-sub">안전한 토스페이먼츠 보안 결제 시스템을 이용합니다.</div>
+    </div>
+
+    <!-- 선택된 상품 정보 요약 -->
+    <div class="plan-summary">
+      <div>
+        <div class="plan-name" id="displayPlanName">위라클 랩 올인원 패키지</div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 4px;">매월 자동 결제되는 정기구독 서비스입니다.</div>
+      </div>
+      <div class="plan-price" id="displayPlanPrice">34,900원 <span style="font-size: 13px; font-weight: normal; color: #64748b;">/월</span></div>
+    </div>
+
+    <!-- 1. 토스 결제 수단 위젯 영역 -->
+    <div id="payment-method"></div>
+
+    <!-- 2. 토스 이용약관 위젯 영역 -->
+    <div id="agreement"></div>
+
+    <!-- 결제 버튼 -->
+    <button class="btn-pay" id="payment-button" onclick="requestPayment()">결제 진행하기</button>
+  </div>
+
+  <script>
+    // 토스페이먼츠 테스트 클라이언트 키
+    const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
+    let paymentWidget = null;
+    let paymentMethodsWidget = null;
+
+    // 결제할 기본 금액 (원)
+    let currentAmount = 34900;
+
+    async function initWidget() {
+      // 로그인한 고객 ID (고유 식별자)
+      const customerKey = "USER_" + Math.random().toString(36).substring(2, 10);
+      paymentWidget = TossPayments(clientKey).widgets({ customerKey });
+
+      // 결제 금액 설정
+      await paymentWidget.setAmount({
+        currency: "KRW",
+        value: currentAmount
+      });
+
+      // 결제 UI 렌더링
+      paymentMethodsWidget = await paymentWidget.renderPaymentMethods({
+        selector: "#payment-method",
+        variantKey: "DEFAULT"
+      });
+
+      // 약관 UI 렌더링
+      await paymentWidget.renderAgreement({
+        selector: "#agreement",
+        variantKey: "AGREEMENT"
+      });
+    }
+
+    async function requestPayment() {
+      if (!paymentWidget) return;
+
+      try {
+        const orderId = "ORDER_" + Date.now();
+        await paymentWidget.requestPayment({
+          orderId: orderId,
+          orderName: document.getElementById('displayPlanName').innerText,
+          successUrl: window.location.origin + "/payment_success.html",
+          failUrl: window.location.origin + "/payment_fail.html",
+          customerEmail: "customer@example.com",
+          customerName: "홍길동"
+        });
+      } catch (err) {
+        if (err.code === 'USER_CANCEL') {
+          console.log('사용자가 결제를 취소했습니다.');
+        } else {
+          alert('결제 요청 중 오류: ' + err.message);
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initWidget);
+  </script>
+</body>
+</html>

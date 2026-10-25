@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>구독 결제 완료 - 위라클</title>
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <style>
+    * { box-sizing: border-box; font-family: 'Pretendard Variable', Pretendard, sans-serif; }
+    body { background: #f8fafc; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+    .card { background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 40px 32px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    .icon-box { width: 64px; height: 64px; background: #ecfdf5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #059669; }
+    h1 { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+    p { font-size: 14px; color: #64748b; margin-bottom: 24px; line-height: 1.6; }
+    .details { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 24px; text-align: left; font-size: 13.5px; }
+    .row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .row:last-child { margin-bottom: 0; }
+    .btn-home { display: block; width: 100%; padding: 14px; background: #113f67; color: #ffffff; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; border: none; cursor: pointer; transition: 0.2s; }
+    .btn-home:hover { background: #0c2d4a; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-box">
+      <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h1>구독 신청이 완료되었습니다</h1>
+    <p>위라클 VIP 멤버십이 정상 등록되었습니다.<br>지금 바로 모든 VIP 기능을 이용하실 수 있습니다.</p>
+
+    <div class="details">
+      <div class="row">
+        <span style="color:#64748b;">신청 플랜</span>
+        <strong id="planName">위라클 VIP 멤버십</strong>
+      </div>
+      <div class="row">
+        <span style="color:#64748b;">결제 금액</span>
+        <strong id="planAmount">29,900원 / 월</strong>
+      </div>
+      <div class="row">
+        <span style="color:#64748b;">모바일 팩스 제공</span>
+        <strong style="color:#113f67;">월 30회 무료 세팅</strong>
+      </div>
+      <div class="row">
+        <span style="color:#64748b;">계정 등급</span>
+        <strong style="color:#059669;">VIP 멤버십 승급 완료</strong>
+      </div>
+    </div>
+
+    <button class="btn-home" onclick="goToDashboard()">CRM 대시보드로 이동</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const planId = params.get('plan') || 'vip';
+    const amount = Number(params.get('amount') || 29900);
+
+    const names = {
+      vip: '위라클 VIP 멤버십',
+      svip: '위라클 SVIP 스페셜 멤버십'
+    };
+
+    document.getElementById('planName').innerText = names[planId] || '위라클 VIP 멤버십';
+    document.getElementById('planAmount').innerText = amount.toLocaleString() + '원 / 월';
+
+    // 백엔드 VIP 승급 처리
+    async function finalizeSubscription() {
+      try {
+        const token = localStorage.getItem('g_access_token') || '';
+        await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            subscriptionData: {
+              plan_id: planId,
+              plan_name: names[planId] || '위라클 VIP 멤버십',
+              amount: amount,
+              target_grade: 'vip',
+              fax_quota: 30,
+              status: 'active'
+            }
+          })
+        });
+      } catch(e) {}
+    }
+    finalizeSubscription();
+
+    function goToDashboard() {
+      if (window.parent && window.parent.location && window.parent.location.pathname.includes('index.html')) {
+        window.parent.location.reload();
+      } else {
+        window.location.href = '/index.html';
+      }
+    }
+  </script>
+</body>
+</html>

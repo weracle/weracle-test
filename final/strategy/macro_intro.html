@@ -1,0 +1,1616 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>매크로 인트로 - 컨셉 5 (스플릿 인터랙티브형)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    :root {
+        --primary: #0284c7;
+        --border: #e2e8f0;
+        --text-main: #1e293b;
+        --text-sub: #64748b;
+        --title-blue: #0284c7;
+    }
+        @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+        body { display: flex; height: 100vh; overflow: hidden; color: #ffffff; background: #000; }
+        
+        /* 양쪽 스플릿 화면 (원래의 선명하고 깊이감 있는 블루 & 그린) */
+        .split-pane { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 60px; position: relative; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); overflow: hidden; cursor: pointer; }
+        .split-pane:hover { flex: 1.2; }
+        
+        /* 왼쪽: 타겟 관리 (Blue) */
+        .left-pane { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
+        .left-pane:hover { background: linear-gradient(135deg, #1e3a8a, #2563eb); }
+        
+        /* 오른쪽: 영업 전략 (Green/Teal) */
+        .right-pane { background: linear-gradient(135deg, #064e3b, #10b981); align-items: flex-end; text-align: right; }
+        .right-pane:hover { background: linear-gradient(135deg, #064e3b, #059669); }
+
+        /* 배경 아이콘 장식 */
+        .bg-icon { position: absolute; font-size: 350px; color: rgba(255,255,255,0.05); pointer-events: none; transition: 0.5s; }
+        .left-pane .bg-icon { left: -50px; bottom: -50px; }
+        .right-pane .bg-icon { right: -50px; top: -50px; }
+        .split-pane:hover .bg-icon { transform: scale(1.1) rotate(5deg); color: rgba(255,255,255,0.1); }
+
+        /* 콘텐츠 텍스트 (화이트 & 볼드) */
+        .content { z-index: 10; max-width: 400px; }
+        .badge { display: inline-block; padding: 6px 14px; background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); font-size: 14px; font-weight: 800; border-radius: 20px; margin-bottom: 24px; letter-spacing: 1px; color: #ffffff; }
+        .title { font-size: 48px; font-weight: 900; margin-bottom: 24px; line-height: 1.2; letter-spacing: -1px; text-shadow: 0 4px 10px rgba(0,0,0,0.15); color: #ffffff; }
+        .desc { font-size: 18px; line-height: 1.6; color: rgba(255,255,255,0.85); margin-bottom: 40px; font-weight: 500; }
+        
+        .action-link { display: inline-flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 800; color: #ffffff; text-decoration: none; border-bottom: 2px solid transparent; padding-bottom: 4px; transition: 0.3s; }
+        .left-pane .action-link:hover { border-color: #ffffff; transform: translateX(8px); }
+        .right-pane .action-link { flex-direction: row-reverse; }
+        .right-pane .action-link:hover { border-color: #ffffff; transform: translateX(-8px); }
+        .action-link i { font-size: 20px; }
+
+        /* 중앙 컨트롤 버튼 그룹 (고객관리 + 카톡자동발송) */
+        .center-btn-group {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 50;
+            align-items: center;
+        }
+
+        .center-card-btn {
+            width: 236px;
+            height: 98px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 4.5px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-align: center;
+            position: relative;
+            user-select: none;
+        }
+
+        .center-card-btn:hover {
+            transform: translateY(-4px) scale(1.04);
+            box-shadow: 0 22px 48px rgba(0, 0, 0, 0.38);
+            border-color: #ffffff;
+        }
+
+        /* 1. 상단: 가이드 버튼 (세련된 소프트 바이올렛/퍼플) */
+        .btn-guide-main {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: #ffffff;
+        }
+        .btn-guide-main .engine-icon {
+            font-size: 26px;
+            margin-bottom: 4px;
+            color: #ffffff;
+            filter: drop-shadow(0 2px 6px rgba(99, 102, 241, 0.4));
+        }
+        .btn-guide-main .engine-text {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            line-height: 1.25;
+            color: #ffffff;
+        }
+
+        /* 2. 중간: 고객리스트 관리 버튼 (소프트 코랄 로즈) */
+        .btn-cust-tower {
+            background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
+            color: #ffffff;
+        }
+        .btn-cust-tower .engine-icon {
+            font-size: 26px;
+            margin-bottom: 4px;
+            color: #ffffff;
+            filter: drop-shadow(0 2px 6px rgba(244, 63, 94, 0.4));
+        }
+        .btn-cust-tower .engine-text {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            line-height: 1.25;
+            color: #ffffff;
+        }
+
+        /* 3. 하단: 프로그램 다운 버튼 (카카오톡 시그니처 옐로우) */
+        .btn-down-main {
+            background: #FEE500;
+            color: #191919;
+            box-shadow: 0 12px 28px rgba(254, 229, 0, 0.35);
+        }
+        .btn-down-main .engine-icon {
+            font-size: 26px;
+            margin-bottom: 4px;
+            color: #191919;
+        }
+        .btn-down-main .engine-text {
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: -0.4px;
+            line-height: 1.25;
+            color: #191919;
+        }
+        .btn-down-main:hover {
+            background: #fada0a;
+            box-shadow: 0 18px 40px rgba(254, 229, 0, 0.48);
+        }
+
+        /* 반응형: Hover 시 중앙 버튼 크기 유지 */
+        .left-pane:hover ~ .center-btn-group, .right-pane:hover ~ .center-btn-group {
+            transform: translate(-50%, -50%) scale(0.96);
+        }
+
+        /* 컨트롤 타워 탭 스타일 */
+        .tower-tab {
+            padding: 14px 20px;
+            border: none;
+            background: transparent;
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tower-tab:hover {
+            color: #0f172a;
+        }
+        .tower-tab.active {
+            color: #0284c7;
+            border-bottom-color: #0284c7;
+            font-weight: 800;
+        }
+        
+    
+        /* 모달 오버레이 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        
+        /* 모달 콘텐츠 */
+        .modal-content {
+            background: #ffffff; width: 500px; max-width: 90%; border-radius: 24px;
+            padding: 40px; position: relative; color: #1e293b;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            transform: translateY(20px) scale(0.95); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .modal-overlay.show .modal-content { transform: translateY(0) scale(1); }
+        
+        .modal-close {
+            position: absolute; top: 24px; right: 24px; background: none; border: none;
+            font-size: 24px; color: #94a3b8; cursor: pointer; transition: color 0.2s;
+        }
+        .modal-close:hover { color: #1e293b; }
+        
+        .modal-title { font-size: 24px; font-weight: 800; margin-bottom: 32px; color: #1e293b; letter-spacing: -0.5px; }
+        
+        .guide-step { display: flex; gap: 12px; margin-bottom: 24px; }
+        .step-num { width: 32px; height: 32px; flex-shrink: 0; background: #FEE500; color: #191919; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; }
+        .step-text strong { display: block; font-size: 17px; font-weight: 700; color: #1e293b; margin-bottom: 4px; letter-spacing: -0.3px; }
+        .step-text p { font-size: 14px; color: #64748b; line-height: 1.5; }
+        
+        .guide-warning { background: #fffbeb; border: 1px solid #fef3c7; padding: 16px; border-radius: 12px; display: flex; gap: 12px; align-items: flex-start; margin-top: 32px; }
+        .guide-warning i { color: #f59e0b; font-size: 18px; margin-top: 2px; }
+        .guide-warning p { font-size: 13px; color: #92400e; line-height: 1.5; font-weight: 600; margin: 0; }
+    
+        .modal-utilities { margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .util-btn { padding: 14px 16px; border: 1px solid #cbd5e1; border-radius: 12px; background: #f8fafc; color: #334155; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .util-btn:hover { background: #e2e8f0; border-color: #94a3b8; transform: translateY(-2px); }
+        .util-btn i { font-size: 16px; color: #0284c7; }
+
+        /* 가이드 모달 전용 가로 확장 및 버튼 스타일 */
+        #guideModal .modal-content {
+            width: 880px;
+            max-width: 95%;
+            padding: 38px 42px;
+            border-radius: 24px;
+            max-height: 92vh;
+            overflow-y: auto;
+        }
+        .btn-down-primary {
+            background: #FEE500 !important;
+            color: #191919 !important;
+            border: 1px solid #ebd300 !important;
+            font-size: 16px !important;
+            font-weight: 900 !important;
+            box-shadow: 0 4px 14px rgba(254, 229, 0, 0.4);
+            transition: all 0.2s ease;
+        }
+        .btn-down-primary:hover {
+            background: #f0d700 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(254, 229, 0, 0.5);
+        }
+        .btn-down-primary i { color: #191919 !important; }
+    </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+</head>
+<body>
+    <!-- 1. 타겟 관리 (좌측) -->
+    <div class="split-pane left-pane" onclick="location.href='target_test.html'">
+        <i class="fa-solid fa-users-viewfinder bg-icon"></i>
+        <div class="content">
+            <div class="badge">STEP 1. TARGET</div>
+            <h1 class="title">누구에게<br>보낼까요?</h1>
+            <p class="desc">필터를 통해 가망 고객과 만기 고객을 정밀하게 추출하고 리스트업합니다.</p>
+            <a href="target_test.html" class="action-link">타겟 추출하기 <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+    </div>
+
+    <!-- 2. 영업 전략 (우측) -->
+    <div class="split-pane right-pane" onclick="location.href='strategy_plan.html'">
+        <i class="fa-solid fa-lightbulb bg-icon"></i>
+        <div class="content">
+            <div class="badge">STEP 2. STRATEGY</div>
+            <h1 class="title">무엇을<br>보낼까요?</h1>
+            <p class="desc">고객의 마음을 움직일 가장 강력한 무기(제안서, 템플릿)를 세팅합니다.</p>
+            <a href="strategy_plan.html" class="action-link"><i class="fa-solid fa-arrow-left"></i> 영업 무기 고르기</a>
+        </div>
+    </div>
+
+    <!-- 3. 중앙 컨트롤 버튼 그룹 (가이드 + 고객리스트 관리 + 프로그램 다운) -->
+    <div class="center-btn-group">
+        <!-- 1. 가이드 -->
+        <div class="center-card-btn btn-guide-main" onclick="openGuide()">
+            <i class="fa-solid fa-book-open-reader engine-icon"></i>
+            <div class="engine-text">가이드<br><span style="font-size:12px; font-weight:600; opacity:0.9;">4단계 사용법 안내</span></div>
+        </div>
+
+        <!-- 2. 고객리스트 관리 -->
+        <div class="center-card-btn btn-cust-tower" onclick="openCustomerTower()">
+            <i class="fa-solid fa-users-gear engine-icon"></i>
+            <div class="engine-text">고객리스트 관리<br><span style="font-size:12px; font-weight:600; opacity:0.9;">통합 컨트롤 타워</span></div>
+        </div>
+
+        <!-- 3. 프로그램 다운 -->
+        <div class="center-card-btn btn-down-main" onclick="window.open('https://drive.google.com/file/d/1ToCTvaejo2WDaxvik94T3PL1LOlPWutW/view?usp=sharing', '_blank')">
+            <i class="fa-solid fa-download engine-icon"></i>
+            <div class="engine-text">프로그램다운<br><span style="font-size:12px; font-weight:700; opacity:0.85;">엔진 즉시 다운로드</span></div>
+        </div>
+    </div>
+
+        <!-- 4. 가이드 모달 -->
+    <div id="guideModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeGuide()"><i class="fa-solid fa-xmark"></i></button>
+            
+            <!-- 상단 헤더 -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 24px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width: 40px; height: 40px; border-radius: 12px; background: #fee500; display:flex; align-items:center; justify-content:center; color:#191919; font-size:19px; box-shadow: 0 2px 8px rgba(254,229,0,0.3);">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title" style="margin-bottom:2px; font-size:21px; font-weight:900; color:#0f172a; letter-spacing:-0.5px;"> 카카오톡 자동발송 엔진 가이드</h2>
+                        <p style="margin:0; font-size:13px; color:#64748b;">위라클 엔진과 함께 4단계로 빠르고 안전하게 1:1 고객 발송을 진행하세요.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 가로형 4단계 가이드 카드 -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+                <!-- Step 1 -->
+                <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px 16px; display: flex; flex-direction: column; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <span style="font-size: 11px; font-weight: 800; color: #854d0e; background: #fef08a; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">STEP 01</span>
+                        <div style="width: 28px; height: 28px; border-radius: 8px; background: #fef9c3; display: flex; align-items: center; justify-content: center; color: #ca8a04; font-size: 13px;">
+                            <i class="fa-solid fa-download"></i>
+                        </div>
+                    </div>
+                    <strong style="font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.3px;">엔진 설치 & 준비</strong>
+                    <p style="font-size: 12.5px; color: #64748b; margin: 0; line-height: 1.5;">하단 <b>[프로그램 다운로드]</b>로 발송기를 설치하고, PC 카카오톡을 켜둡니다.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px 16px; display: flex; flex-direction: column; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <span style="font-size: 11px; font-weight: 800; color: #0369a1; background: #e0f2fe; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">STEP 02</span>
+                        <div style="width: 28px; height: 28px; border-radius: 8px; background: #e0f2fe; display: flex; align-items: center; justify-content: center; color: #0284c7; font-size: 13px;">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                    <strong style="font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.3px;">발송 대상 선택</strong>
+                    <p style="font-size: 12.5px; color: #64748b; margin: 0; line-height: 1.5;"><b>[고객관리 컨트롤 타워]</b> 또는 타겟 관리에서 보낼 고객을 체크합니다.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px 16px; display: flex; flex-direction: column; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <span style="font-size: 11px; font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">STEP 03</span>
+                        <div style="width: 28px; height: 28px; border-radius: 8px; background: #e0e7ff; display: flex; align-items: center; justify-content: center; color: #4f46e5; font-size: 13px;">
+                            <i class="fa-solid fa-file-invoice"></i>
+                        </div>
+                    </div>
+                    <strong style="font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.3px;">세일즈 콘텐츠 선택</strong>
+                    <p style="font-size: 12.5px; color: #64748b; margin: 0; line-height: 1.5;">고객 상황에 맞는 카드뉴스, 제안서, 맞춤 인사말 템플릿을 고릅니다.</p>
+                </div>
+
+                <!-- Step 4 -->
+                <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px 16px; display: flex; flex-direction: column; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <span style="font-size: 11px; font-weight: 800; color: #15803d; background: #dcfce7; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">STEP 04</span>
+                        <div style="width: 28px; height: 28px; border-radius: 8px; background: #dcfce7; display: flex; align-items: center; justify-content: center; color: #16a34a; font-size: 13px;">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </div>
+                    </div>
+                    <strong style="font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.3px;">1:1 순차 자동발송</strong>
+                    <p style="font-size: 12.5px; color: #64748b; margin: 0; line-height: 1.5;">엔진이 고객별 1:1 대화방을 열어 안전한 간격으로 자동 발송합니다.</p>
+                </div>
+            </div>
+            
+            <!-- 하단 안심 안내 박스 -->
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 13px 18px; border-radius: 14px; display: flex; align-items: center; gap: 12px;">
+                <i class="fa-solid fa-circle-check" style="color: #16a34a; font-size: 20px; flex-shrink: 0;"></i>
+                <p style="color: #15803d; font-size: 13px; font-weight: 500; line-height: 1.5; margin: 0;">
+                    <b style="font-weight: 800; color: #14532d;">안내 사항:</b> 백그라운드 자동발송 기능이 적용되어 있어, <b>발송 중에도 마우스와 키보드로 다른 PC 업무를 자유롭게</b> 보실 수 있습니다. (PC 카카오톡 로그인 상태만 유지해 주세요)
+                </p>
+            </div>
+        
+            <!-- 하단 액션 버튼: 프로그램 다운로드 1개만 배치 -->
+            <div style="margin-top: 22px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: center;">
+                <a href="https://drive.google.com/file/d/1ToCTvaejo2WDaxvik94T3PL1LOlPWutW/view?usp=sharing" target="_blank" class="util-btn btn-down-primary" style="text-decoration:none; width: 100%; max-width: 440px; padding: 15px 28px; border-radius: 14px; font-size: 16px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <i class="fa-solid fa-download" style="font-size: 18px;"></i> 프로그램 다운로드
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openGuide() {
+            document.getElementById("guideModal").classList.add("show");
+            checkEngineStatus();
+        }
+        function closeGuide() {
+            document.getElementById("guideModal").classList.remove("show");
+        }
+        
+        // 모달 바깥 배경 클릭 시 닫기
+        const gModalEl = document.getElementById("guideModal");
+        if (gModalEl) {
+            gModalEl.addEventListener("click", function(e) {
+                if (e.target === this) {
+                    closeGuide();
+                }
+            });
+        }
+        const qModalEl = document.getElementById("quickSendModal");
+        if (qModalEl) {
+            qModalEl.addEventListener("click", function(e) {
+                if (e.target === this) {
+                    closeQuickSendModal();
+                }
+            });
+        }
+    
+                        // ==========================================
+        // 연락처 만능 파싱 엔진 및 미리보기 (VCF/CSV)
+        // ==========================================
+        window.tempParsedContacts = [];
+
+        function getBlacklist() { 
+            try {
+                const raw = JSON.parse(localStorage.getItem('weracle_blacklist') || '[]'); 
+                return raw.map(item => (typeof item === 'object' && item !== null) ? normalizePhone(item.phone) : normalizePhone(item)).filter(Boolean);
+            } catch(e) { return []; }
+        }
+        function getBlacklistItems() {
+            try {
+                const raw = JSON.parse(localStorage.getItem('weracle_blacklist') || '[]');
+                return raw.map(item => {
+                    if (typeof item === 'object' && item !== null) {
+                        return {
+                            name: item.name || '차단고객',
+                            phone: normalizePhone(item.phone),
+                            reason: item.reason || '수신 거부 / 차단',
+                            status: item.status || '차단중',
+                            date: item.date || ''
+                        };
+                    } else {
+                        return {
+                            name: '차단고객',
+                            phone: normalizePhone(item),
+                            reason: '수신 거부 / 차단',
+                            status: '차단중',
+                            date: ''
+                        };
+                    }
+                }).filter(item => item.phone);
+            } catch(e) { return []; }
+        }
+        function setBlacklist(list) { 
+            // backwards compatible: accepts array of strings or objects
+            const items = list.map(item => (typeof item === 'object' && item !== null) ? item : { name: '차단고객', phone: normalizePhone(item), reason: '수신 거부 / 차단', status: '차단중', date: new Date().toLocaleString('ko-KR') });
+            localStorage.setItem('weracle_blacklist', JSON.stringify(items)); 
+        }
+        function setBlacklistItems(items) {
+            localStorage.setItem('weracle_blacklist', JSON.stringify(items));
+            syncBlacklistToSheet(items);
+        }
+
+        function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                let parsed = [];
+                if (text.includes("BEGIN:VCARD")) parsed = parseVCF(text);
+                else parsed = parseCSV(text);
+                
+                window.tempParsedContacts = parsed;
+                renderPreFilterList();
+                document.getElementById('filterContactsModal').classList.add('show');
+                event.target.value = ''; 
+            };
+            reader.readAsText(file, "UTF-8"); 
+        }
+
+        function parseVCF(text) {
+            let cleanText = text.replace(/=\r?\n/g, '');
+            const vcards = cleanText.split('BEGIN:VCARD');
+            let results = [];
+            vcards.forEach(vcard => {
+                if (!vcard.trim()) return;
+                let foundName = "", foundPhone = "";
+                const fnMatch = vcard.match(/FN[^:]*:(.*)/);
+                if (fnMatch) {
+                    let rawName = fnMatch[1].trim();
+                    if (vcard.includes("QUOTED-PRINTABLE")) {
+                        try { rawName = decodeURIComponent(rawName.replace(/=/g, '%')); } catch(e) {}
+                    }
+                    foundName = rawName.replace(/;/g, ' ').trim();
+                }
+                const phoneMatch = vcard.match(/TEL[^:]*:([0-9\-\+\s]+)/);
+                if (phoneMatch) foundPhone = normalizePhone(phoneMatch[1]);
+                if (foundName && foundPhone) results.push({ name: foundName, phone: foundPhone });
+            });
+            return results;
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            let results = [];
+            lines.forEach(line => {
+                const columns = line.split(',');
+                let foundName = "", foundPhone = "";
+                columns.forEach(col => {
+                    const cleanCol = col.replace(/"/g, '').trim();
+                    if (/^(010|8210|\+8210|10[0-9]{8})/.test(cleanCol.replace(/[^0-9]/g, ''))) {
+                        foundPhone = normalizePhone(cleanCol);
+                    } else if (cleanCol.length >= 2 && cleanCol.length <= 5 && !/[0-9]/.test(cleanCol)) {
+                        foundName = cleanCol;
+                    }
+                });
+                if (foundName && foundPhone) results.push({ name: foundName, phone: foundPhone });
+            });
+            return results;
+        }
+
+        function normalizePhone(phone) {
+            if (!phone) return "";
+            let onlyNum = phone.replace(/[^0-9]/g, '');
+            if (onlyNum.startsWith('82')) onlyNum = '0' + onlyNum.substring(2);
+            if (onlyNum.startsWith('10') && onlyNum.length === 10) onlyNum = '0' + onlyNum; 
+            return onlyNum;
+        }
+
+        function renderPreFilterList(searchKeyword = '') {
+            const container = document.getElementById('preFilterList');
+            const blacklist = getBlacklist().map(num => normalizePhone(num));
+            container.innerHTML = '';
+            
+            let html = '';
+            let totalRendered = 0, checkedCount = 0;
+
+            window.tempParsedContacts.forEach((contact, index) => {
+                if(searchKeyword && !contact.name.includes(searchKeyword) && !contact.phone.includes(searchKeyword)) return;
+                
+                const cleanPhone = normalizePhone(contact.phone);
+                const isBlacklisted = blacklist.includes(cleanPhone);
+                const isChecked = isBlacklisted ? '' : 'checked';
+                
+                if(!isBlacklisted) checkedCount++;
+                totalRendered++;
+                let displayPhone = cleanPhone.length === 11 ? cleanPhone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3') : cleanPhone;
+
+                html += `
+                    <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: 0.2s; background: ${isBlacklisted ? '#f9fafb' : '#fff'};">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <input type="checkbox" class="prefilter-cb" value="${index}" ${isChecked} onchange="updatePreFilterCount()" style="width: 18px; height: 18px; cursor: pointer;">
+                            <div>
+                                <div style="font-weight: 700; font-size: 15px; color: ${isBlacklisted ? '#94a3b8' : 'var(--text-main)'};">${contact.name}</div>
+                                <div style="font-size: 13px; color: var(--text-sub); margin-top: 2px;">${displayPhone}</div>
+                            </div>
+                        </div>
+                        ${isBlacklisted ? '<span style="font-size: 11px; background: #fee2e2; color: #ef4444; padding: 4px 8px; border-radius: 6px; font-weight: 700;">자동 제외됨</span>' : ''}
+                    </label>
+                `;
+            });
+            container.innerHTML = html;
+            document.getElementById('preFilterCount').innerText = `${checkedCount}명 선택됨`;
+            const selectAllCb = document.getElementById('preFilterSelectAll');
+            if (totalRendered > 0) selectAllCb.checked = (checkedCount === totalRendered);
+            else selectAllCb.checked = false;
+        }
+        function searchPreFilter() { renderPreFilterList(document.getElementById('preFilterSearch').value.trim()); }
+        function togglePreFilterAll(source) {
+            document.querySelectorAll('.prefilter-cb').forEach(cb => cb.checked = source.checked);
+            updatePreFilterCount();
+        }
+        function updatePreFilterCount() {
+            const checkedCount = document.querySelectorAll('.prefilter-cb:checked').length;
+            document.getElementById('preFilterCount').innerText = `${checkedCount}명 선택됨`;
+            const total = document.querySelectorAll('.prefilter-cb').length;
+            if (total > 0) document.getElementById('preFilterSelectAll').checked = (checkedCount === total);
+        }
+
+        function confirmFilteredContacts() {
+            const cbs = document.querySelectorAll('.prefilter-cb');
+            let uploadData = [];
+            let currentBlacklist = getBlacklist().map(num => normalizePhone(num));
+
+            cbs.forEach(cb => {
+                const contact = window.tempParsedContacts[cb.value];
+                const cleanPhone = normalizePhone(contact.phone);
+                
+                if (cb.checked) {
+                    uploadData.push({
+                        name: contact.name,
+                        phone: cleanPhone,
+                        tags: ' 신규 가망고객'
+                    });
+                } else {
+                    if (!currentBlacklist.includes(cleanPhone)) {
+                        currentBlacklist.push(cleanPhone);
+                    }
+                }
+            });
+
+            setBlacklist(currentBlacklist);
+
+            if (uploadData.length > 0) {
+                alert(`총 ${uploadData.length}명의 연락처를 성공적으로 선별했습니다!\n\n통합 연락처(CRM_Contacts)에 안전하게 저장합니다.`);
+                if (window.parent) {
+                    window.parent.postMessage({ type: "SAVE_TARGET_CSV", payload: uploadData }, "*");
+                }
+                document.getElementById('filterContactsModal').classList.remove('show');
+                document.getElementById('guideModal').classList.remove('show');
+            } else {
+                alert("선택된 연락처가 없습니다.");
+            }
+        }
+    </script>
+
+<div class="modal-overlay" id="filterContactsModal" style="z-index: 10001;">
+        <div class="modal-content" style="width: 500px; height: 750px; flex-direction: column; background: #f5f5f7; padding: 0; overflow: hidden; display: flex;">
+            <div style="padding: 24px 24px 16px; background: #fff; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 19px; font-weight: 800; color: var(--primary);"> 연락처 사전 선별</h3>
+                <button onclick="document.getElementById('filterContactsModal').classList.remove('show')" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-sub);"></button>
+            </div>
+            <div style="padding: 16px 24px; background: #fff;">
+                <p style="margin: 0 0 12px 0; font-size: 14px; color: var(--text-sub); line-height: 1.5;">
+                    영업과 무관한 연락처(택배, 대리기사 등)를 체크 해제하세요.<br>
+                    <span style="color: var(--title-blue); font-weight: 700;">해제된 연락처는 '블랙리스트'로 기억되어 다음 업로드 시 자동 제외됩니다.</span>
+                </p>
+                <input type="text" id="preFilterSearch" placeholder="이름 또는 번호 검색..." onkeyup="searchPreFilter()" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #f8fafc; outline: none;">
+            </div>
+            <div style="padding: 12px 24px; background: #fff; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <label style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
+                    <input type="checkbox" id="preFilterSelectAll" checked onchange="togglePreFilterAll(this)" style="width: 18px; height: 18px;"> 전체선택
+                </label>
+                <span id="preFilterCount" style="font-size: 14px; font-weight: 800; color: var(--primary);">0명 선택됨</span>
+            </div>
+            <div id="preFilterList" style="flex: 1; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 8px;"></div>
+            <div style="padding: 20px 24px; background: #fff; border-top: 1px solid var(--border);">
+                <button onclick="confirmFilteredContacts()" style="width: 100%; padding: 16px; background: var(--primary); color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(17,63,103,0.15); transition: 0.2s;">선택한 연락처만 등록하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. 고객관리 통합 컨트롤 타워 모달 (임시) -->
+    <div class="modal-overlay" id="customerTowerModal" style="z-index: 10005;">
+        <div class="modal-content" style="width: 96%; max-width: 1360px; height: 93vh; max-height: 940px; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 24px; box-shadow: 0 30px 70px rgba(0,0,0,0.35); background: #f8fafc;">
+            <!-- Header -->
+            <div style="padding: 20px 28px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #eff6ff; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">위라클 고객 통합 컨트롤 타워</h2>
+                            <span style="background: #e0f2fe; color: #0284c7; font-size: 11.5px; font-weight: 800; padding: 3px 8px; border-radius: 6px;">임시 관리</span>
+                        </div>
+                        <p style="margin: 3px 0 0 0; font-size: 13px; color: #64748b;">CRM 정식 고객, 전화번호부 미등록 연락처, 블랙리스트를 한눈에 통제하고 원클릭으로 편입합니다.</p>
+                    </div>
+                </div>
+                <button onclick="closeCustomerTower()" style="background: #f1f5f9; border: 1px solid #e2e8f0; font-size: 18px; color: #64748b; cursor: pointer; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'"></button>
+            </div>
+
+            <!-- 3대 탭 바 -->
+            <div style="display: flex; background: #ffffff; padding: 0 28px; border-bottom: 1px solid #e2e8f0; gap: 8px;">
+                <button class="tower-tab active" id="tabTower1" onclick="switchTowerTab('crm')">
+                    <i class="fa-solid fa-address-book" style="color: #0284c7;"></i> 1. 고객관리 대상 (<span id="cntTowerCrm">0</span>)
+                </button>
+                <button class="tower-tab" id="tabTower2" onclick="switchTowerTab('unregistered')">
+                    <i class="fa-solid fa-mobile-screen-button" style="color: #f59e0b;"></i> 2. 미등록 번호부 고객 (<span id="cntTowerUnreg">0</span>)
+                </button>
+                <button class="tower-tab" id="tabTower3" onclick="switchTowerTab('blacklist')">
+                    <i class="fa-solid fa-ban" style="color: #ef4444;"></i> 3. 블랙리스트 (<span id="cntTowerBlacklist">0</span>)
+                </button>
+            </div>
+
+            <!-- 액션 툴바 (검색 + 탭별 일괄 편입/차단 버튼) -->
+            <div style="padding: 12px 28px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 14px; flex: 1;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; color: #334155; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="towerSelectAll" onchange="toggleTowerSelectAll(this)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #0284c7;"> 전체선택
+                    </label>
+                    <div style="position: relative; flex: 1; max-width: 320px;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 10px; color: #94a3b8; font-size: 13px;"></i>
+                        <input type="text" id="towerSearchInput" placeholder="이름 또는 전화번호 실시간 검색..." onkeyup="filterTowerList()" style="width: 100%; padding: 8px 12px 8px 34px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background: #ffffff; outline: none;">
+                    </div>
+                </div>
+
+                <!-- 탭별 동적 액션 버튼 영역 -->
+                <div id="towerActionGroup" style="display: flex; align-items: center; gap: 8px;"></div>
+            </div>
+
+            <!-- 고객 목록 리스트 뷰 영역 -->
+            <div id="towerListBody" style="flex: 1; overflow-y: auto; padding: 10px 24px; display: flex; flex-direction: column; gap: 5px;">
+                <!-- 동적 렌더링 -->
+            </div>
+
+            <!-- Footer -->
+            <div style="padding: 14px 28px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <span id="towerStatusInfo" style="font-size: 13.5px; font-weight: 700; color: #64748b;">선택된 고객: 0명</span>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="closeCustomerTower()" style="padding: 8px 22px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; font-weight: 700; color: #475569; cursor: pointer;">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--  [신규] 개별 연락처 직접 등록 모달 -->
+    <div id="singleContactModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:9999999; backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+        <div style="background:#ffffff; border-radius:20px; width:420px; max-width:92%; padding:26px; box-shadow:0 24px 48px rgba(0,0,0,0.25); display:flex; flex-direction:column; gap:18px; border:1px solid #e2e8f0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:14px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="width:34px; height:34px; background:#ecfdf5; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#10b981; font-size:16px;">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:17.5px; font-weight:800; color:#0f172a;">개별 연락처 직접 등록</h3>
+                        <p style="margin:2px 0 0; font-size:12px; color:#64748b;">파일 없이 1~2명의 신규 연락처를 시트에 즉시 등록합니다.</p>
+                    </div>
+                </div>
+                <button onclick="closeSingleContactModal()" style="border:none; background:#f1f5f9; width:30px; height:30px; border-radius:8px; font-size:15px; color:#64748b; cursor:pointer;"></button>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <div>
+                    <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">고객 성함 <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="singleCustName" placeholder="예: 홍길동" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">휴대폰 번호 <span style="color:#ef4444;">*</span></label>
+                    <input type="tel" id="singleCustPhone" placeholder="예: 010-1234-5678" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:5px;">태그 / 출처 메모</label>
+                    <input type="text" id="singleCustTag" placeholder="예: 명함 교환, 지인 소개, 현장 상담" value="개별 직접등록" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; outline:none; box-sizing:border-box;">
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px; border-top:1px solid #f1f5f9; padding-top:16px;">
+                <button onclick="closeSingleContactModal()" style="padding:10px 18px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:10px; font-size:13.5px; font-weight:700; color:#64748b; cursor:pointer;">취소</button>
+                <button onclick="saveSingleContact()" style="padding:10px 22px; background:#10b981; border:none; border-radius:10px; font-size:13.5px; font-weight:800; color:#ffffff; cursor:pointer; box-shadow:0 3px 10px rgba(16,185,129,0.3); display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-check"></i> 번호부 및 시트에 저장
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ==========================================
+    // 위라클 고객 통합 컨트롤 타워 로직
+    // ==========================================
+    window.towerTab = 'crm';
+    window.towerSelection = new Set();
+
+    function openCustomerTower() {
+        document.getElementById('customerTowerModal').classList.add('show');
+        if (window.parent) {
+            window.parent.postMessage({ type: 'INIT_TOWER_SHEETS' }, '*');
+            //  로컬에 있는 미등록 연락처가 구글 시트에 누락되지 않도록 자동 동기화 시도!
+            const localUnreg = getUnregContacts();
+            if (localUnreg && localUnreg.length > 0) {
+                window.parent.postMessage({
+                    type: 'SAVE_CONTACTS_SHEET',
+                    payload: localUnreg.map(c => ({
+                        name: c.name,
+                        phone: c.phone,
+                        source: c.source || '미등록 연락처',
+                        tags: c.tags || c.tag || '신규 가망고객',
+                        status: c.status || '미등록',
+                        date: c.date || new Date().toLocaleString('ko-KR')
+                    }))
+                }, '*');
+            }
+        }
+        loadAndRefreshTower();
+    }
+
+    function syncLocalContactsToSheet() {
+        const unreg = getUnregContacts();
+        if (!unreg || unreg.length === 0) {
+            alert("동기화할 미등록 연락처가 없습니다.");
+            return;
+        }
+        if (window.parent) {
+            window.parent.postMessage({
+                type: 'SAVE_CONTACTS_SHEET',
+                payload: unreg.map(c => ({
+                    name: c.name,
+                    phone: c.phone,
+                    source: c.source || '미등록 연락처',
+                    tags: c.tags || c.tag || '신규 가망고객',
+                    status: c.status || '미등록',
+                    date: c.date || new Date().toLocaleString('ko-KR')
+                }))
+            }, '*');
+            alert(` 구글 시트(CRM_Contacts)로 ${unreg.length}명의 연락처 저장을 전송했습니다!\n잠시 후 구글 시트를 확인해 보세요.`);
+        }
+    }
+
+    function closeCustomerTower() {
+        document.getElementById('customerTowerModal').classList.remove('show');
+    }
+
+    //  [신규] 개별 연락처 직접 등록 함수
+    function openSingleContactModal() {
+        document.getElementById('singleCustName').value = '';
+        document.getElementById('singleCustPhone').value = '';
+        document.getElementById('singleCustTag').value = '개별 직접등록';
+        document.getElementById('singleContactModal').style.display = 'flex';
+        setTimeout(() => document.getElementById('singleCustName').focus(), 100);
+    }
+
+    function closeSingleContactModal() {
+        document.getElementById('singleContactModal').style.display = 'none';
+    }
+
+    function saveSingleContact() {
+        const name = document.getElementById('singleCustName').value.trim();
+        const rawPhone = document.getElementById('singleCustPhone').value.trim();
+        const tag = document.getElementById('singleCustTag').value.trim() || '개별 직접등록';
+        const cleanPhone = normalizePhone(rawPhone);
+
+        if (!name) {
+            alert('고객 성함을 입력해 주세요.');
+            document.getElementById('singleCustName').focus();
+            return;
+        }
+        if (!cleanPhone || cleanPhone.length < 10) {
+            alert('유효한 휴대폰 번호(10~11자리)를 입력해 주세요.');
+            document.getElementById('singleCustPhone').focus();
+            return;
+        }
+
+        // 1. CRM 중복 확인
+        const crmList = getCrmCustomers();
+        const isCrmDup = crmList.some(c => normalizePhone(c['폰번호'] || c['전화번호'] || c['휴대폰'] || c['연락처'] || c.phone || '') === cleanPhone);
+        if (isCrmDup) {
+            alert(' 이미 CRM 고객관리에 정식 등록된 고객입니다.');
+            return;
+        }
+
+        // 2. 블랙리스트 확인
+        const bl = getBlacklist().map(p => normalizePhone(p));
+        if (bl.includes(cleanPhone)) {
+            alert(' 현재 블랙리스트에 등록되어 차단된 번호입니다.\n차단 해제 후 등록해 주세요.');
+            return;
+        }
+
+        // 3. 미등록 목록 중복 확인
+        let unreg = getUnregContacts();
+        if (unreg.some(u => normalizePhone(u.phone) === cleanPhone)) {
+            alert('ℹ 이미 미등록 번호부에 등록되어 있는 고객입니다.');
+            return;
+        }
+
+        // 4. 로컬 저장
+        const nowStr = new Date().toLocaleString('ko-KR');
+        const newContact = {
+            name: name,
+            phone: cleanPhone,
+            source: '개별 직접등록',
+            tag: tag,
+            status: '미등록',
+            date: nowStr
+        };
+        unreg.push(newContact);
+        setUnregContacts(unreg);
+
+        // 5. 구글 시트 CRM_Contacts 탭으로 실시간 활성 풀 전송!
+        syncContactsToSheet(unreg);
+
+        closeSingleContactModal();
+        alert(` '${name}' (${cleanPhone}) 고객이 미등록 번호부 및 구글 시트에 안전하게 등록되었습니다!`);
+        renderTower();
+    }
+
+    function switchTowerTab(tabName) {
+        window.towerTab = tabName;
+        document.querySelectorAll('.tower-tab').forEach(b => b.classList.remove('active'));
+        if (tabName === 'crm') document.getElementById('tabTower1').classList.add('active');
+        else if (tabName === 'unregistered') document.getElementById('tabTower2').classList.add('active');
+        else if (tabName === 'blacklist') document.getElementById('tabTower3').classList.add('active');
+        
+        window.towerSelection.clear();
+        const selAll = document.getElementById('towerSelectAll');
+        if (selAll) selAll.checked = false;
+        document.getElementById('towerSearchInput').value = '';
+        renderTower();
+    }
+
+    function getUnregContacts() {
+        try {
+            const parsed = JSON.parse(localStorage.getItem('weracle_unreg_contacts') || '[]');
+            return Array.isArray(parsed) ? parsed : [];
+        } catch(e) { return []; }
+    }
+
+    function setUnregContacts(list) {
+        localStorage.setItem('weracle_unreg_contacts', JSON.stringify(list));
+    }
+
+    function syncContactsToSheet(list) {
+        const targetList = list || getUnregContacts();
+        if (window.parent) {
+            window.parent.postMessage({
+                type: 'SAVE_CONTACTS_SHEET',
+                payload: targetList.map(c => ({
+                    name: c.name || '미등록 고객',
+                    phone: normalizePhone(c.phone),
+                    source: c.source || '미등록 연락처',
+                    tags: c.tags || c.tag || '신규 가망고객',
+                    status: '미등록',
+                    date: c.date || new Date().toLocaleString('ko-KR')
+                }))
+            }, '*');
+        }
+    }
+
+    function syncBlacklistToSheet(items) {
+        const targetItems = items || getBlacklistItems();
+        if (window.parent) {
+            window.parent.postMessage({
+                type: 'SAVE_BLACKLIST_SHEET',
+                payload: targetItems.map(b => ({
+                    name: b.name || '차단고객',
+                    phone: normalizePhone(b.phone),
+                    reason: b.reason || '수신 거부 / 차단',
+                    status: '차단중',
+                    date: b.date || new Date().toLocaleString('ko-KR')
+                }))
+            }, '*');
+        }
+    }
+
+    function getCrmCustomers() {
+        let list = [];
+        try {
+            if (window.parent && window.parent.globalCustomerData && Array.isArray(window.parent.globalCustomerData)) {
+                list = list.concat(window.parent.globalCustomerData);
+            }
+        } catch(e) {}
+        if (list.length === 0) {
+            try {
+                const cached = localStorage.getItem('weracle_crm_customers_cache');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed)) list = parsed;
+                }
+            } catch(e) {}
+        }
+        return list;
+    }
+
+    function loadAndRefreshTower() {
+        if (window.parent) {
+            window.parent.postMessage({ type: 'requestSyncData' }, '*');
+        }
+        renderTower();
+    }
+
+    // 부모창 동기화 응답 리스너 (구글 시트 실시간 데이터 수신)
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'syncData') {
+            if (event.data.data) {
+                try {
+                    localStorage.setItem('weracle_crm_customers_cache', JSON.stringify(event.data.data));
+                } catch(e) {}
+            }
+            // 구글 시트의 CRM_Blacklist 데이터 동기화 (활성 풀 동기화)
+            if (event.data.blacklist && Array.isArray(event.data.blacklist)) {
+                try {
+                    const blItems = [];
+                    const addedBl = new Set();
+                    event.data.blacklist.forEach(row => {
+                        const p = normalizePhone(row['전화번호'] || row.phone || '');
+                        const st = (row['상태'] || row.status || '차단중').trim();
+                        if (p && st !== '차단해제' && !addedBl.has(p)) {
+                            blItems.push({
+                                name: row['고객명'] || row.name || '차단고객',
+                                phone: p,
+                                reason: row['차단사유'] || row.reason || '수신 거부 / 차단',
+                                status: st,
+                                date: row['차단일시'] || row.date || ''
+                            });
+                            addedBl.add(p);
+                        }
+                    });
+                    localStorage.setItem('weracle_blacklist', JSON.stringify(blItems));
+                } catch(e) {}
+            }
+            // 구글 시트의 CRM_Contacts 데이터 동기화 (활성 미등록 풀 동기화)
+            if (event.data.crmContacts && Array.isArray(event.data.crmContacts)) {
+                try {
+                    let updatedUnreg = [];
+                    const addedPhones = new Set();
+                    event.data.crmContacts.forEach(c => {
+                        let name = c['고객명'] || c['이름'] || c.name || '';
+                        let phone = normalizePhone(c['전화번호'] || c.phone || '');
+                        let source = c['출처'] || c.source || '구글 시트';
+                        let status = (c['상태'] || c.status || '미등록').trim();
+                        let tag = c['태그'] || c.tags || c.tag || '신규 가망고객';
+                        let date = c['등록일시'] || c.date || '';
+                        
+                        if (phone && status === '미등록' && !addedPhones.has(phone)) {
+                            updatedUnreg.push({ name: name || '미등록 고객', phone: phone, source: source, tag: tag, status: status, date: date });
+                            addedPhones.add(phone);
+                        }
+                    });
+                    setUnregContacts(updatedUnreg);
+                } catch(e) {}
+            }
+            if (document.getElementById('customerTowerModal').classList.contains('show')) {
+                renderTower();
+            }
+        }
+    });
+
+    function renderTower() {
+        const listBody = document.getElementById('towerListBody');
+        const actionGroup = document.getElementById('towerActionGroup');
+        const searchVal = document.getElementById('towerSearchInput').value.trim().toLowerCase();
+        const blacklist = getBlacklist().map(p => normalizePhone(p));
+        const crmList = getCrmCustomers();
+        const unregList = getUnregContacts();
+
+        // 카운트 갱신
+        document.getElementById('cntTowerCrm').innerText = crmList.length;
+        document.getElementById('cntTowerUnreg').innerText = unregList.length;
+        document.getElementById('cntTowerBlacklist').innerText = blacklist.length;
+
+        listBody.innerHTML = '';
+
+        // 1. 상단 툴바 액션 버튼 렌더링
+        if (window.towerTab === 'unregistered') {
+            actionGroup.innerHTML = `
+                <input type="file" id="towerFileInput" accept=".csv,.vcf" style="display:none;" onchange="handleTowerFileUpload(event)">
+                <button onclick="document.getElementById('towerFileInput').click()" style="padding: 7px 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-file-import" style="color: #0284c7;"></i> 연락처 파일 가져오기
+                </button>
+                <button onclick="openSingleContactModal()" style="padding: 7px 12px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; font-size: 13px; font-weight: 800; color: #059669; cursor: pointer; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'">
+                    <i class="fa-solid fa-user-plus"></i> 개별 연락처 등록
+                </button>
+                <button onclick="batchEnrollToCrm()" style="padding: 7px 13px; background: #0284c7; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; color: #ffffff; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(2,132,199,0.3);">
+                    <i class="fa-solid fa-user-check"></i> 선택 일괄 CRM 편입
+                </button>
+                <button onclick="batchAddToBlacklist()" style="padding: 7px 12px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; font-size: 13px; font-weight: 800; color: #e11d48; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-ban"></i> 선택 일괄 차단
+                </button>
+                <button onclick="batchDeleteContacts()" style="padding: 7px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; font-size: 13px; font-weight: 800; color: #b91c1c; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-trash-can"></i> 선택 일괄 삭제
+                </button>
+            `;
+        } else if (window.towerTab === 'blacklist') {
+            actionGroup.innerHTML = `
+                <button onclick="batchRemoveFromBlacklist()" style="padding: 7px 14px; background: #10b981; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; color: #ffffff; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(16,185,129,0.3);">
+                    <i class="fa-solid fa-lock-open"></i> 선택 고객 일괄 차단 해제 (연락처로 복귀)
+                </button>
+                <button onclick="batchDeleteFromBlacklist()" style="padding: 7px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; font-size: 13px; font-weight: 800; color: #b91c1c; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-trash-can"></i> 선택 고객 영구 삭제
+                </button>
+            `;
+        } else {
+            actionGroup.innerHTML = `
+                <button onclick="batchAddToBlacklistFromCrm()" style="padding: 7px 12px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; font-size: 13px; font-weight: 800; color: #e11d48; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-user-slash"></i> 선택 고객 블랙리스트 등록
+                </button>
+            `;
+        }
+
+        // 2. 리스트 아이템 구성
+        let itemsToRender = [];
+        if (window.towerTab === 'crm') {
+            itemsToRender = crmList.map((c, idx) => ({
+                id: 'crm_' + idx,
+                name: c['고객명'] || c['성함'] || c['이름'] || '고객',
+                phone: c['폰번호'] || c['전화번호'] || c['연락처'] || '',
+                tag: c['상태'] || '정식고객',
+                source: 'CRM 원장 등록',
+                extra: c['특이사항'] || c['터치인사이트'] || '',
+                raw: c
+            }));
+        } else if (window.towerTab === 'unregistered') {
+            itemsToRender = unregList.map((c, idx) => ({
+                id: 'unreg_' + idx,
+                name: c.name || '미등록 고객',
+                phone: c.phone || '',
+                tag: '미등록',
+                source: c.source || '휴대폰/카톡 연락처',
+                raw: c
+            }));
+        } else if (window.towerTab === 'blacklist') {
+            const blFullItems = getBlacklistItems();
+            itemsToRender = blFullItems.map((b, idx) => ({
+                id: 'bl_' + idx,
+                name: b.name || '차단고객',
+                phone: b.phone || '',
+                tag: '차단됨',
+                source: b.reason || '블랙리스트',
+                raw: b
+            }));
+        }
+
+        // 검색 필터
+        if (searchVal) {
+            itemsToRender = itemsToRender.filter(item => 
+                item.name.toLowerCase().includes(searchVal) || 
+                item.phone.replace(/[^0-9]/g, '').includes(searchVal.replace(/[^0-9]/g, ''))
+            );
+        }
+
+        if (itemsToRender.length === 0) {
+            listBody.innerHTML = `
+                <div style="padding: 60px 0; text-align: center; color: #94a3b8;">
+                    <i class="fa-regular fa-folder-open" style="font-size: 42px; margin-bottom: 12px; opacity: 0.5;"></i>
+                    <div style="font-size: 15px; font-weight: 700; color: #64748b;">해당 탭에 표시할 고객이 없습니다.</div>
+                    ${window.towerTab === 'unregistered' ? '<div style="font-size: 13px; margin-top: 6px; color: #0284c7; font-weight: 600;">상단 [연락처 파일 가져오기] 버튼으로 휴대폰 연락처(.vcf/.csv)를 추가해보세요!</div>' : ''}
+                </div>
+            `;
+            updateTowerStatusCount();
+            return;
+        }
+
+        let html = '';
+        itemsToRender.forEach((item, index) => {
+            const isChecked = window.towerSelection.has(item.id);
+            const cleanP = normalizePhone(item.phone);
+            const displayPhone = cleanP.length === 11 ? cleanP.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3') : (cleanP || '-');
+
+            let actionBtns = '';
+            if (window.towerTab === 'crm') {
+                actionBtns = `
+                    <button onclick="addToBlacklist('${item.name}', '${item.phone}')" style="padding: 4px 10px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 6px; font-size: 11.5px; font-weight: 700; color: #e11d48; cursor: pointer; transition: 0.15s;" onmouseover="this.style.background='#ffe4e6'" onmouseout="this.style.background='#fff1f2'">
+                        <i class="fa-solid fa-ban"></i> 차단
+                    </button>
+                `;
+            } else if (window.towerTab === 'unregistered') {
+                actionBtns = `
+                    <button onclick="enrollToCrm('${item.name}', '${item.phone}')" style="padding: 4px 10px; background: #0284c7; border: none; border-radius: 6px; font-size: 11.5px; font-weight: 800; color: #ffffff; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(2,132,199,0.25);" onmouseover="this.style.background='#0369a1'" onmouseout="this.style.background='#0284c7'">
+                        <i class="fa-solid fa-user-plus"></i> CRM 편입
+                    </button>
+                    <button onclick="addToBlacklist('${item.name}', '${item.phone}')" style="padding: 4px 8px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 6px; font-size: 11.5px; font-weight: 700; color: #e11d48; cursor: pointer;" onmouseover="this.style.background='#fee2e2';" onmouseout="this.style.background='#fff1f2';">
+                        <i class="fa-solid fa-ban"></i> 차단
+                    </button>
+                    <button onclick="deleteContact('${item.phone}', '${item.name}')" style="padding: 4px 8px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11.5px; font-weight: 700; color: #64748b; cursor: pointer;" onmouseover="this.style.background='#fee2e2'; this.style.color='#b91c1c'; this.style.borderColor='#fca5a5';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b'; this.style.borderColor='#cbd5e1';">
+                        <i class="fa-solid fa-trash-can"></i> 삭제
+                    </button>
+                `;
+            } else if (window.towerTab === 'blacklist') {
+                actionBtns = `
+                    <button onclick="removeFromBlacklist('${item.phone}')" style="padding: 4px 10px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; font-size: 11.5px; font-weight: 800; color: #059669; cursor: pointer;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'">
+                        <i class="fa-solid fa-lock-open"></i> 차단 해제
+                    </button>
+                    <button onclick="deleteFromBlacklist('${item.phone}', '${item.name}')" style="padding: 4px 8px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11.5px; font-weight: 700; color: #64748b; cursor: pointer;" onmouseover="this.style.background='#fee2e2'; this.style.color='#b91c1c'; this.style.borderColor='#fca5a5';" onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b'; this.style.borderColor='#cbd5e1';">
+                        <i class="fa-solid fa-trash-can"></i> 영구 삭제
+                    </button>
+                `;
+            }
+
+            html += `
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 14px; display: flex; align-items: center; justify-content: space-between; transition: 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='#93c5fd'; this.style.background='#f8fafc';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#ffffff';">
+                    <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
+                        <input type="checkbox" class="tower-row-cb" data-id="${item.id}" ${isChecked ? 'checked' : ''} onchange="onTowerRowCheck('${item.id}', this.checked)" style="width: 16px; height: 16px; cursor: pointer; accent-color: #0284c7; flex-shrink: 0;">
+                        <span style="font-size: 14px; font-weight: 800; color: #0f172a; min-width: 80px; white-space: nowrap;">${item.name}</span>
+                        <span style="font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: ${window.towerTab === 'crm' ? '#eff6ff' : (window.towerTab === 'blacklist' ? '#fee2e2' : '#fef3c7')}; color: ${window.towerTab === 'crm' ? '#0284c7' : (window.towerTab === 'blacklist' ? '#dc2626' : '#d97706')}; white-space: nowrap;">${item.tag}</span>
+                        <span style="font-size: 13px; font-weight: 700; color: #059669; min-width: 120px; white-space: nowrap;">
+                            <i class="fa-solid fa-phone" style="font-size: 10px; margin-right: 4px; color: #10b981;"></i>${displayPhone}
+                        </span>
+                        <span style="font-size: 11.5px; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">${item.source}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: 10px;">
+                        ${actionBtns}
+                    </div>
+                </div>
+            `;
+        });
+
+        listBody.innerHTML = html;
+        updateTowerStatusCount();
+    }
+
+    function onTowerRowCheck(id, isChecked) {
+        if (isChecked) window.towerSelection.add(id);
+        else window.towerSelection.delete(id);
+        updateTowerStatusCount();
+    }
+
+    function toggleTowerSelectAll(masterCb) {
+        const cbs = document.querySelectorAll('.tower-row-cb');
+        cbs.forEach(cb => {
+            cb.checked = masterCb.checked;
+            const id = cb.getAttribute('data-id');
+            if (masterCb.checked) window.towerSelection.add(id);
+            else window.towerSelection.delete(id);
+        });
+        updateTowerStatusCount();
+    }
+
+    function updateTowerStatusCount() {
+        const selCount = window.towerSelection.size;
+        const statusEl = document.getElementById('towerStatusInfo');
+        if (statusEl) statusEl.innerText = `선택된 고객: ${selCount}명`;
+    }
+
+    function filterTowerList() {
+        renderTower();
+    }
+
+    // ==========================================
+    // 개별 액션 함수 (편입, 차단, 해제)
+    // ==========================================
+
+    function enrollToCrm(name, phone) {
+        const cleanPhone = normalizePhone(phone);
+        // 부모창의 CRM 고객등록 모달 호출
+        if (window.parent && typeof window.parent.openRegModal === 'function') {
+            window.parent.openRegModal('new');
+            setTimeout(() => {
+                try {
+                    const nameInput = window.parent.document.getElementById('reg_name') || window.parent.document.getElementById('name');
+                    const phoneInput = window.parent.document.getElementById('reg_phone') || window.parent.document.getElementById('phone');
+                    if (nameInput) nameInput.value = name || '';
+                    if (phoneInput) phoneInput.value = cleanPhone || '';
+                } catch(e) {}
+            }, 300);
+        }
+        
+        //  [실시간 활성 풀 이동] 정식 CRM 등록 단계로 진입하므로 미등록 번호부 시트에서 제거
+        let unreg = getUnregContacts();
+        unreg = unreg.filter(u => normalizePhone(u.phone) !== cleanPhone);
+        setUnregContacts(unreg);
+        syncContactsToSheet(unreg);
+
+        closeCustomerTower();
+        alert(` 고객등록 폼이 열렸습니다!\n\n[${name} | ${cleanPhone}] 정보가 세팅되었으며, 미등록 번호부 풀에서 CRM 원장으로 성공적으로 이동됩니다.\n확인 후 등록을 완료해 주세요.`);
+        renderTower();
+    }
+
+    //  [신규] 미등록 연락처 개별 삭제
+    function deleteContact(phone, name) {
+        const cleanPhone = normalizePhone(phone);
+        if (!confirm(`정말로 '${name || cleanPhone}' 고객을 연락처 목록 및 구글 시트에서 완전히 삭제하시겠습니까?`)) {
+            return;
+        }
+        let unreg = getUnregContacts();
+        unreg = unreg.filter(u => normalizePhone(u.phone) !== cleanPhone);
+        setUnregContacts(unreg);
+        syncContactsToSheet(unreg);
+        alert(` '${name || cleanPhone}' 고객이 연락처 및 구글 시트에서 안전하게 영구 삭제되었습니다.`);
+        renderTower();
+    }
+
+    //  [신규] 미등록 연락처 선택 일괄 삭제
+    function batchDeleteContacts() {
+        if (window.towerSelection.size === 0) {
+            alert("선택된 고객이 없습니다.");
+            return;
+        }
+        let unreg = getUnregContacts();
+        const toDelete = new Set();
+        window.towerSelection.forEach(id => {
+            if (id.startsWith('unreg_')) {
+                const idx = parseInt(id.replace('unreg_', ''), 10);
+                if (unreg[idx]) toDelete.add(normalizePhone(unreg[idx].phone));
+            }
+        });
+        if (!confirm(`선택한 ${toDelete.size}명의 고객을 연락처 목록과 구글 시트에서 완전히 영구 삭제하시겠습니까?`)) {
+            return;
+        }
+        unreg = unreg.filter(u => !toDelete.has(normalizePhone(u.phone)));
+        setUnregContacts(unreg);
+        syncContactsToSheet(unreg);
+        window.towerSelection.clear();
+        alert(` ${toDelete.size}명의 고객이 연락처 및 구글 시트에서 영구 삭제되었습니다.`);
+        renderTower();
+    }
+
+    //  [신규] 블랙리스트 개별 영구 삭제
+    function deleteFromBlacklist(phone, name) {
+        const cleanPhone = normalizePhone(phone);
+        if (!confirm(`'${name || cleanPhone}' 번호를 블랙리스트 및 구글 시트에서 완전히 삭제하시겠습니까?\n(삭제 시 차단이 해제되며 연락처로 복귀하지 않고 영구 제거됩니다.)`)) {
+            return;
+        }
+        let blItems = getBlacklistItems();
+        blItems = blItems.filter(b => normalizePhone(b.phone) !== cleanPhone);
+        setBlacklistItems(blItems);
+        alert(` 블랙리스트에서 영구 삭제되었습니다.`);
+        renderTower();
+    }
+
+    //  [신규] 블랙리스트 선택 일괄 영구 삭제
+    function batchDeleteFromBlacklist() {
+        if (window.towerSelection.size === 0) {
+            alert("선택된 고객이 없습니다.");
+            return;
+        }
+        let blItems = getBlacklistItems();
+        const toDelete = new Set();
+        window.towerSelection.forEach(id => {
+            if (id.startsWith('bl_')) {
+                const idx = parseInt(id.replace('bl_', ''), 10);
+                if (blItems[idx]) toDelete.add(normalizePhone(blItems[idx].phone));
+            }
+        });
+        if (!confirm(`선택한 ${toDelete.size}건의 번호를 블랙리스트 및 구글 시트에서 영구 삭제하시겠습니까?`)) {
+            return;
+        }
+        blItems = blItems.filter(b => !toDelete.has(normalizePhone(b.phone)));
+        setBlacklistItems(blItems);
+        window.towerSelection.clear();
+        alert(` 선택된 ${toDelete.size}건이 블랙리스트에서 영구 삭제되었습니다.`);
+        renderTower();
+    }
+
+    //  [개편] 차단 (Contacts  Blacklist 이동)
+    function addToBlacklist(name, phone) {
+        const cleanPhone = normalizePhone(phone);
+        if (!cleanPhone && !name) return;
+        
+        // 1. 블랙리스트 풀에 추가
+        let blItems = getBlacklistItems();
+        if (!blItems.some(b => normalizePhone(b.phone) === cleanPhone)) {
+            blItems.push({
+                name: name || '차단고객',
+                phone: cleanPhone,
+                reason: '수신 거부 / 차단',
+                status: '차단중',
+                date: new Date().toLocaleString('ko-KR')
+            });
+            setBlacklistItems(blItems);
+        }
+
+        // 2. 미등록 번호부 풀에서 완전 제거 (연락처 시트에서도 삭제!)
+        let unreg = getUnregContacts();
+        const prevLen = unreg.length;
+        unreg = unreg.filter(u => normalizePhone(u.phone) !== cleanPhone);
+        if (unreg.length !== prevLen) {
+            setUnregContacts(unreg);
+            syncContactsToSheet(unreg);
+        }
+
+        alert(` '${name || cleanPhone}' 고객님이 블랙리스트로 이동되었습니다.\n(연락처 시트에서 제외되고, 블랙리스트 시트로 이동 등록되었습니다.)`);
+        renderTower();
+    }
+
+    //  [개편] 차단 해제 (Blacklist  Contacts 복귀 이동)
+    function removeFromBlacklist(phone) {
+        const cleanPhone = normalizePhone(phone);
+        let blItems = getBlacklistItems();
+        const targetItem = blItems.find(b => normalizePhone(b.phone) === cleanPhone);
+
+        // 1. 블랙리스트 풀에서 제거
+        blItems = blItems.filter(b => normalizePhone(b.phone) !== cleanPhone);
+        setBlacklistItems(blItems);
+
+        // 2. 미등록 연락처 풀로 다시 복귀 추가!
+        let unreg = getUnregContacts();
+        if (!unreg.some(u => normalizePhone(u.phone) === cleanPhone)) {
+            unreg.push({
+                name: targetItem ? targetItem.name : '해제 고객',
+                phone: cleanPhone,
+                source: '차단 해제 복귀',
+                tags: '신규 가망고객',
+                status: '미등록',
+                date: new Date().toLocaleString('ko-KR')
+            });
+            setUnregContacts(unreg);
+            syncContactsToSheet(unreg);
+        }
+
+        alert(` '${cleanPhone}' 고객이 차단 해제되어 다시 미등록 번호부로 복귀되었습니다!\n(블랙리스트 시트에서 빠지고, 연락처 시트에 추가되었습니다.)`);
+        renderTower();
+    }
+
+    // ==========================================
+    // 일괄 처리 함수 (개편)
+    // ==========================================
+
+    function batchEnrollToCrm() {
+        if (window.towerSelection.size === 0) {
+            alert("선택된 고객이 없습니다.");
+            return;
+        }
+        const unreg = getUnregContacts();
+        let selectedContacts = [];
+        window.towerSelection.forEach(id => {
+            if (id.startsWith('unreg_')) {
+                const idx = parseInt(id.replace('unreg_', ''), 10);
+                if (unreg[idx]) selectedContacts.push(unreg[idx]);
+            }
+        });
+
+        if (selectedContacts.length === 0) return;
+
+        if (confirm(`선택한 ${selectedContacts.length}명의 고객을 정식 CRM 및 구글 시트에 일괄 등록하시겠습니까?`)) {
+            if (window.parent) {
+                const payload = selectedContacts.map(c => ({
+                    name: c.name,
+                    phone: normalizePhone(c.phone),
+                    tags: ' 번호부 일괄편입'
+                }));
+                window.parent.postMessage({ type: 'SAVE_TARGET_CSV', payload: payload }, '*');
+            }
+
+            // 미등록 목록에서 제거 (CRM 원장으로 이동)
+            const selectedPhones = new Set(selectedContacts.map(c => normalizePhone(c.phone)));
+            const newUnreg = unreg.filter(u => !selectedPhones.has(normalizePhone(u.phone)));
+            setUnregContacts(newUnreg);
+            syncContactsToSheet(newUnreg);
+            window.towerSelection.clear();
+            alert(` 총 ${selectedContacts.length}명의 고객이 정식 고객으로 편입되었습니다!`);
+            renderTower();
+        }
+    }
+
+    function batchAddToBlacklist() {
+        if (window.towerSelection.size === 0) {
+            alert("선택된 고객이 없습니다.");
+            return;
+        }
+        let unreg = getUnregContacts();
+        let blItems = getBlacklistItems();
+        const blPhones = new Set(blItems.map(b => normalizePhone(b.phone)));
+        let count = 0;
+        const toRemovePhones = new Set();
+
+        window.towerSelection.forEach(id => {
+            if (id.startsWith('unreg_')) {
+                const idx = parseInt(id.replace('unreg_', ''), 10);
+                if (unreg[idx]) {
+                    const p = normalizePhone(unreg[idx].phone);
+                    if (p) {
+                        toRemovePhones.add(p);
+                        if (!blPhones.has(p)) { 
+                            blItems.push({
+                                name: unreg[idx].name || '차단고객',
+                                phone: p,
+                                reason: '선택 일괄 차단',
+                                status: '차단중',
+                                date: new Date().toLocaleString('ko-KR')
+                            });
+                            blPhones.add(p);
+                            count++;
+                        }
+                    }
+                }
+            }
+        });
+
+        // 1. 미등록 풀에서 제거
+        unreg = unreg.filter(u => !toRemovePhones.has(normalizePhone(u.phone)));
+        setUnregContacts(unreg);
+        syncContactsToSheet(unreg);
+
+        // 2. 블랙리스트 풀로 등록
+        setBlacklistItems(blItems);
+
+        window.towerSelection.clear();
+        alert(` 선택된 ${count}명이 블랙리스트로 이동되었습니다.\n(연락처 시트에서 제외되고, 블랙리스트 시트에 등록되었습니다.)`);
+        renderTower();
+    }
+
+    function batchRemoveFromBlacklist() {
+        if (window.towerSelection.size === 0) {
+            alert("선택된 고객이 없습니다.");
+            return;
+        }
+        let blItems = getBlacklistItems();
+        let unreg = getUnregContacts();
+        const unregPhones = new Set(unreg.map(u => normalizePhone(u.phone)));
+        let count = 0;
+        const toRemoveFromBl = new Set();
+
+        window.towerSelection.forEach(id => {
+            if (id.startsWith('bl_')) {
+                const idx = parseInt(id.replace('bl_', ''), 10);
+                if (blItems[idx]) {
+                    const item = blItems[idx];
+                    const p = normalizePhone(item.phone);
+                    toRemoveFromBl.add(p);
+                    if (!unregPhones.has(p)) {
+                        unreg.push({
+                            name: item.name || '해제 고객',
+                            phone: p,
+                            source: '차단 해제 복귀',
+                            tags: '신규 가망고객',
+                            status: '미등록',
+                            date: new Date().toLocaleString('ko-KR')
+                        });
+                        unregPhones.add(p);
+                    }
+                    count++;
+                }
+            }
+        });
+
+        // 1. 블랙리스트 풀에서 제거
+        blItems = blItems.filter(b => !toRemoveFromBl.has(normalizePhone(b.phone)));
+        setBlacklistItems(blItems);
+
+        // 2. 미등록 풀로 복귀 등록
+        setUnregContacts(unreg);
+        syncContactsToSheet(unreg);
+
+        window.towerSelection.clear();
+        alert(` 선택된 ${count}명이 차단 해제되어 미등록 번호부로 복귀되었습니다!`);
+        renderTower();
+    }
+
+    function batchAddToBlacklistFromCrm() {
+        if (window.towerSelection.size === 0) {
+            alert("선택된 고객이 없습니다.");
+            return;
+        }
+        const crmList = getCrmCustomers();
+        let blItems = getBlacklistItems();
+        const blPhones = new Set(blItems.map(b => normalizePhone(b.phone)));
+        let count = 0;
+
+        window.towerSelection.forEach(id => {
+            if (id.startsWith('crm_')) {
+                const idx = parseInt(id.replace('crm_', ''), 10);
+                if (crmList[idx]) {
+                    const p = normalizePhone(crmList[idx]['폰번호'] || crmList[idx]['전화번호'] || crmList[idx]['휴대폰'] || crmList[idx].phone || '');
+                    const n = crmList[idx]['고객명'] || crmList[idx]['성함'] || crmList[idx]['이름'] || 'CRM고객';
+                    if (p && !blPhones.has(p)) {
+                        blItems.push({
+                            name: n,
+                            phone: p,
+                            reason: 'CRM 고객 블랙리스트 등록',
+                            status: '차단중',
+                            date: new Date().toLocaleString('ko-KR')
+                        });
+                        blPhones.add(p);
+                        count++;
+                    }
+                }
+            }
+        });
+
+        setBlacklistItems(blItems);
+        window.towerSelection.clear();
+        alert(` CRM 고객 ${count}명이 블랙리스트로 등록되었습니다.`);
+        renderTower();
+    }
+
+    function handleTowerFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            let parsed = [];
+            if (text.includes("BEGIN:VCARD")) parsed = parseVCF(text);
+            else parsed = parseCSV(text);
+
+            if (parsed.length === 0) {
+                alert("연락처 파일에서 유효한 연락처를 찾지 못했습니다.");
+                return;
+            }
+
+            const existingUnreg = getUnregContacts();
+            const existingPhones = new Set(existingUnreg.map(c => normalizePhone(c.phone)));
+            const crmList = getCrmCustomers();
+            const crmPhones = new Set();
+            const crmNames = new Set();
+            crmList.forEach(c => {
+                const p = normalizePhone(c['폰번호'] || c['전화번호'] || c['휴대폰'] || c['연락처'] || c['핸드폰'] || c.phone || '');
+                if (p) crmPhones.add(p);
+                const n = (c['고객명'] || c['성함'] || c['이름'] || c.name || '').trim();
+                if (n) crmNames.add(n);
+            });
+            const blPhones = new Set(getBlacklist().map(p => normalizePhone(p)));
+
+            let addedCnt = 0;
+            let excludedCrmCnt = 0;
+            let excludedBlCnt = 0;
+            let dupCnt = 0;
+            const validToSync = [];
+
+            parsed.forEach(p => {
+                const cleanP = normalizePhone(p.phone);
+                const name = (p.name || '').trim();
+
+                // 1. 이미 정식 CRM에 등록된 고객인가? (전화번호 일치 or 번호없는 경우 이름 일치)
+                if ((cleanP && crmPhones.has(cleanP)) || (!cleanP && name && crmNames.has(name))) {
+                    excludedCrmCnt++;
+                    return;
+                }
+                // 2. 블랙리스트인가?
+                if (cleanP && blPhones.has(cleanP)) {
+                    excludedBlCnt++;
+                    return;
+                }
+
+                const contactItem = {
+                    name: name || '미등록 고객',
+                    phone: cleanP,
+                    source: file.name,
+                    tags: '신규 가망고객',
+                    status: '미등록',
+                    date: new Date().toLocaleString('ko-KR')
+                };
+
+                // 3. 이미 로컬 목록에 들어가 있는가?
+                if (cleanP && existingPhones.has(cleanP)) {
+                    dupCnt++;
+                } else {
+                    existingUnreg.push(contactItem);
+                    if (cleanP) existingPhones.add(cleanP);
+                    addedCnt++;
+                }
+
+                // 구글 시트 검증 및 전송 대상에는 모두 포함
+                validToSync.push(contactItem);
+            });
+
+            setUnregContacts(existingUnreg);
+
+            //  구글 시트의 CRM_Contacts 탭으로 활성 풀 자동 동기화 연동!
+            syncContactsToSheet(existingUnreg);
+
+            alert(` [연락처 스마트 자동 분류 및 시트 연동]\n\n• 파일 전체 연락처: ${parsed.length}명\n• 기존 고객관리(CRM) 등록자 제외: ${excludedCrmCnt}명 \n• 블랙리스트 제외: ${excludedBlCnt}명 \n• 신규 등록 고객: ${addedCnt}명 \n\n구글 시트(CRM_Contacts)와 화면에 즉시 안전하게 저장되었습니다!`);
+            event.target.value = '';
+            renderTower();
+        };
+        reader.readAsText(file, "UTF-8");
+    }
+    </script>
+</body>
+
+</html>
+

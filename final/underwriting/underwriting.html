@@ -1,0 +1,2370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>심사 분석 리포트 (설계이지 매칭 엔진)</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <style>
+        :root {
+            --brand-primary: #2563eb;
+            --brand-blue: #1d4ed8;
+            --brand-dark: #0f172a;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --text-title: #1e293b;
+            --text-body: #334155;
+            --text-sub: #64748b;
+            --text-muted: #94a3b8;
+            
+            --pass-green: #059669;
+            --pass-bg: #ecfdf5;
+            --pass-border: #a7f3d0;
+            
+            --warn-amber: #d97706;
+            --warn-bg: #fffbeb;
+            --warn-border: #fde68a;
+            
+            --danger-red: #dc2626;
+            --danger-bg: #fef2f2;
+            --danger-border: #fecaca;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; }
+        body { background: var(--bg-page); color: var(--text-body); line-height: 1.5; padding: 20px 24px; -webkit-font-smoothing: antialiased; }
+        .container { max-width: 1240px; margin: 0 auto; }
+
+        /* ======================================================== */
+        /* [Top Profile & Header Bar] - 모던 핀테크 헤더 */
+        /* ======================================================== */
+        .top-meta-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: #ffffff; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            padding: 12px 18px; 
+            margin-bottom: 14px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03); 
+            flex-wrap: wrap; 
+            gap: 12px; 
+        }
+        .meta-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .cust-avatar-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #1e293b;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: -0.5px;
+        }
+        .cust-info-main { display: flex; flex-direction: column; gap: 2px; }
+        .cust-name-row { display: flex; align-items: center; gap: 8px; }
+        .cust-name { font-size: 15px; font-weight: 900; color: var(--text-title); letter-spacing: -0.3px; }
+        .cust-tag-verified {
+            font-size: 11px;
+            font-weight: 800;
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+            padding: 2px 7px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4.5px;
+        }
+        .cust-tag-verified::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+        .cust-meta-sub { font-size: 12px; color: var(--text-sub); }
+        .meta-actions { display: flex; gap: 6px; align-items: center; }
+        .btn-sgez { 
+            background: white; 
+            border: 1px solid var(--border); 
+            color: var(--text-body); 
+            padding: 7px 13px; 
+            border-radius: 6px; 
+            font-size: 12px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: all 0.15s; 
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-sgez:hover { border-color: #94a3b8; background: #f8fafc; color: var(--text-title); }
+        .btn-sgez.btn-primary { background: #059669; border-color: #059669; color: white; }
+        .btn-sgez.btn-primary:hover { background: #047857; border-color: #047857; }
+
+        /* ======================================================== */
+        /* [느낌 있는 세그먼트 메인 탭바] */
+        /* ======================================================== */
+        .sgez-main-tabs-wrap {
+            background: #f1f5f9;
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .sgez-main-tabs {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+        }
+        @media(max-width: 1024px) {
+            .sgez-main-tabs { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media(max-width: 600px) {
+            .sgez-main-tabs { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .sgez-tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 10px 8px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .sgez-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.65);
+            color: #0f172a;
+        }
+        .sgez-tab-btn.active {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #0f172a;
+            font-weight: 900;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        /* 탭 내부 미니 상태 뱃지 */
+        .tab-mini-badge {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 1.5px 6px;
+            border-radius: 4px;
+            line-height: 1.2;
+        }
+        .tab-mini-badge.b-green {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+        .tab-mini-badge.b-blue {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .tab-mini-badge.b-red, .tab-mini-badge.b-warn {
+            background: #dc2626;
+            color: #ffffff;
+            border: 1px solid #b91c1c;
+            font-weight: 800;
+        }
+        .tab-mini-badge.b-gray {
+            background: #e2e8f0;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        .sgez-tab-btn.active .tab-mini-badge.b-gray {
+            background: #0f172a;
+            color: #ffffff;
+            border-color: #0f172a;
+        }
+
+        /* [서브 캡슐 필터 버튼들] */
+        .sub-pill-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+        .sub-pill { 
+            background: white; 
+            border: 1px solid var(--border); 
+            border-radius: 20px; 
+            padding: 6px 16px; 
+            font-size: 12.5px; 
+            font-weight: 700; 
+            color: var(--text-body); 
+            cursor: pointer; 
+            transition: all 0.15s; 
+            user-select: none;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .sub-pill:hover { 
+            border-color: var(--brand-primary); 
+            color: var(--brand-primary); 
+            background: #f8fafc; 
+            transform: translateY(-1px);
+        }
+        .sub-pill:active { transform: translateY(0); }
+        .sub-pill.active { 
+            background: #eff6ff; 
+            border-color: var(--brand-primary); 
+            color: var(--brand-primary); 
+            font-weight: 800; 
+            box-shadow: 0 2px 4px rgba(37,99,235,0.12);
+        }
+
+        /* [선택 항목 즉시 판정 결과 카드] */
+        .result-focus-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            transition: all 0.2s;
+        }
+        .result-focus-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .result-focus-title {
+            font-size: 14.5px;
+            font-weight: 800;
+            color: var(--text-title);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .result-focus-body {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 16px;
+            align-items: center;
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 12px 16px;
+            border: 1px solid #f1f5f9;
+        }
+        @media(max-width: 640px) {
+            .result-focus-body { grid-template-columns: 1fr; gap: 8px; }
+        }
+        .result-focus-metric {
+            border-right: 2px solid #e2e8f0;
+            padding-right: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        @media(max-width: 640px) {
+            .result-focus-metric { border-right: none; padding-right: 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+        }
+        .res-metric-num {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--brand-primary);
+            white-space: nowrap;
+        }
+        .res-metric-unit {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-sub);
+            white-space: nowrap;
+        }
+        .result-focus-desc {
+            font-size: 13px;
+            color: var(--text-body);
+            line-height: 1.55;
+        }
+        .result-focus-desc b {
+            color: var(--text-title);
+        }
+
+        /* Tab Content Panes */
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* Card Section Header */
+        .section-title { font-size: 14.5px; font-weight: 800; color: var(--text-title); margin: 20px 0 10px 0; display: flex; align-items: center; gap: 6px; }
+        .section-title::before { content: ""; display: inline-block; width: 3.5px; height: 13px; background: #059669; border-radius: 2px; }
+
+        /* Clean White Box */
+        .white-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+
+        /* 1. 진료비 한눈에 보기 */
+        /* ======================================================== */
+        /* 요약브리핑 4대 핵심 결과 단일 보드 (모노크롬 & 결과 집중) */
+        /* ======================================================== */
+        .summary-unified-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-top: 4px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1060px) {
+            .summary-unified-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+        }
+        @media (max-width: 540px) {
+            .summary-unified-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+
+        .sum-tile-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px 18px 16px 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            text-align: left;
+            outline: none;
+            position: relative;
+            user-select: none;
+        }
+        .sum-tile-card:hover {
+            border-color: #0f172a;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+        .sum-tile-card:active {
+            transform: translateY(0);
+        }
+
+        /* 카드 상단 */
+        .sum-tile-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .sum-tile-category {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #475569;
+            letter-spacing: -0.2px;
+        }
+        .sum-tile-arrow {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #94a3b8;
+            transition: color 0.15s ease;
+        }
+        .sum-tile-card:hover .sum-tile-arrow {
+            color: #0f172a;
+        }
+
+        /* 핵심 판정 강조 영역 (Verdict Box) */
+        .sum-verdict-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 12px;
+            text-align: center;
+            margin-bottom: 16px;
+            transition: all 0.15s ease;
+        }
+        .sum-verdict-tag {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+        }
+        .sum-verdict-title {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.6px;
+            line-height: 1.2;
+            margin-bottom: 5px;
+        }
+        .sum-verdict-sub {
+            font-size: 11.5px;
+            font-weight: 600;
+            line-height: 1.35;
+        }
+
+        /* 1. 파란색 테마 (가능한 부분: 가입가능, 정상통과, 고지불필요) */
+        .sum-tile-card.c-blue:hover { border-color: #3b82f6; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.12); }
+        .sum-tile-card.c-blue:hover .sum-tile-arrow { color: #1d4ed8; }
+        .sum-tile-card.c-blue .sum-verdict-box { background: #eff6ff; border: 1px solid #bfdbfe; }
+        .sum-tile-card.c-blue .sum-verdict-tag { color: #1e40af; }
+        .sum-tile-card.c-blue .sum-verdict-title { color: #1d4ed8; }
+        .sum-tile-card.c-blue .sum-verdict-sub { color: #1e40af; }
+        .sum-tile-card.c-blue .sum-tile-footer { color: #1d4ed8; }
+
+        /* 2. 빨간색 테마 (고지필요 / 강조필요: 고지필수, 주의) */
+        .sum-tile-card.c-red {
+            border: 1.5px solid #fca5a5;
+            background: #fffafa;
+        }
+        .sum-tile-card.c-red:hover { border-color: #ef4444; box-shadow: 0 8px 20px rgba(239, 68, 68, 0.16); }
+        .sum-tile-card.c-red:hover .sum-tile-arrow { color: #dc2626; }
+        .sum-tile-card.c-red .sum-verdict-box { background: #fee2e2; border: 1.5px solid #fca5a5; }
+        .sum-tile-card.c-red .sum-verdict-tag { color: #991b1b; }
+        .sum-tile-card.c-red .sum-verdict-title { color: #dc2626; }
+        .sum-tile-card.c-red .sum-verdict-sub { color: #991b1b; }
+        .sum-tile-card.c-red .sum-tile-footer { color: #dc2626; }
+
+        /* 팩트 리스트 */
+        .sum-tile-facts {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 0 2px;
+        }
+        .sum-tile-fact-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            line-height: 1.4;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #f1f5f9;
+        }
+        .sum-tile-fact-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .sum-fact-k {
+            color: #64748b;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .sum-fact-v {
+            color: #0f172a;
+            font-weight: 700;
+            text-align: right;
+        }
+        .sum-fact-v.v-notice {
+            color: #ffffff;
+            font-weight: 800;
+            background: #dc2626;
+            border: 1px solid #b91c1c;
+            padding: 2px 8px;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(220, 38, 38, 0.25);
+        }
+
+        /* 카드 푸터 */
+        .sum-tile-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            font-size: 11.5px;
+            font-weight: 800;
+            padding-top: 10px;
+            border-top: 1px solid #f8fafc;
+        }
+        .sum-tile-footer span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Clean Table */
+        .tbl-box { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 16px; background: white; }
+        table.sgez-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+        table.sgez-tbl th { background: #f8fafc; color: var(--text-sub); font-weight: 700; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; white-space: nowrap; }
+        table.sgez-tbl td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); color: var(--text-title); vertical-align: middle; }
+        table.sgez-tbl tr:last-child td { border-bottom: none; }
+        table.sgez-tbl tr:hover { background: #fbfcfe; }
+        
+        /* Row focus animation */
+        tr.row-highlight { background-color: #eff6ff !important; outline: 2px solid var(--brand-primary); }
+
+        /* Categorized Group Header & Period Badges */
+        .group-header-row td {
+            background: #f8fafc !important;
+            padding: 10px 14px !important;
+            font-weight: 800 !important;
+            color: var(--text-title) !important;
+            font-size: 13px !important;
+            border-top: 2px solid #cbd5e1 !important;
+            border-bottom: 1.5px solid #cbd5e1 !important;
+        }
+        .period-tag {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2.5px 8px;
+            border-radius: 4px;
+            margin-right: 8px;
+            display: inline-block;
+        }
+        .tag-p3m { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .tag-p1y { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .tag-p5y { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; }
+        .clean-pass-td {
+            text-align: center;
+            padding: 18px 16px !important;
+            color: #1d4ed8 !important;
+            font-weight: 800 !important;
+            background: #eff6ff !important;
+        }
+
+        /* [핵심 포인트 태그 및 배지] */
+        .point-tag {
+            font-size: 11.5px;
+            font-weight: 800;
+            padding: 2.5px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+        .point-tag.tag-pass, .point-tag.tag-blue {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .point-tag.tag-green {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+        .point-tag.tag-warn, .point-tag.tag-danger, .point-tag.tag-red {
+            background: #dc2626 !important;
+            color: #ffffff !important;
+            border: 1px solid #b91c1c !important;
+            font-weight: 900 !important;
+            padding: 3px 9px !important;
+            border-radius: 4px !important;
+            box-shadow: 0 1px 3px rgba(220, 38, 38, 0.25) !important;
+            letter-spacing: -0.2px;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .point-tag.tag-slate {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+        /* [내용 확인 필요 강조 배지 및 행 스타일] */
+        .tag-check {
+            background: #dc2626;
+            color: #ffffff;
+            border: 1px solid #b91c1c;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 4px;
+            display: inline-block;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(220, 38, 38, 0.2);
+        }
+        .tag-clean-pass {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 4px;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        tr.row-check-needed {
+            background-color: #fef2f2 !important;
+        }
+        tr.row-check-needed td {
+            border-bottom: 1.5px solid #fecaca !important;
+        }
+        tr.row-check-needed:hover {
+            background-color: #fee2e2 !important;
+        }
+
+        /* 전체보기 (확인필요내용) 목록 탭의 테이블 행 배경색 및 붉은색 제거 */
+        #tabAllMedical tr.row-check-needed,
+        #tabDental tr.row-check-needed {
+            background-color: transparent !important;
+        }
+        #tabAllMedical tr.row-check-needed td,
+        #tabDental tr.row-check-needed td {
+            border-bottom: 1px solid var(--border) !important;
+        }
+        #tabAllMedical tr.row-check-needed:hover,
+        #tabDental tr.row-check-needed:hover {
+            background-color: #f8fafc !important;
+        }
+
+        /* [예쁘고 세련된 종합 요약 진단 리포트 카드 디자인] */
+        .summary-report-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            margin-top: 14px;
+            overflow: hidden;
+        }
+        .summary-report-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .summary-report-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+        }
+        
+        /* 3가지 보기 모드 전환 스위처 */
+        .style-switch-wrap {
+            display: inline-flex;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 3px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            gap: 2px;
+        }
+        .style-switch-btn {
+            padding: 4px 10px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #64748b;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .style-switch-btn:hover {
+            color: #0f172a;
+        }
+        .style-switch-btn.active {
+            background: #ffffff;
+            color: var(--brand-primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        /* [버전 1: 깔끔한 리포트 표형] */
+        .v-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .v-table th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 11px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .v-table td {
+            padding: 13px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+            color: #0f172a;
+            vertical-align: middle;
+        }
+        .v-table tr:hover {
+            background: #f8fafc;
+            cursor: pointer;
+        }
+        .v-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* [버전 2: 직관적 바둑판 카드형] */
+        .v-grid {
+            display: grid;
+            gap: 12px;
+            padding: 16px;
+            background: #ffffff;
+        }
+        .v-grid.col-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .v-grid.col-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .v-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 13px 15px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 76px;
+        }
+        .v-card:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        }
+        .v-card.pass {
+            border-color: #e2e8f0;
+        }
+        .v-card.warn {
+            border-color: #fecaca;
+            background: #fffcfc;
+        }
+        .v-card.warn:hover {
+            border-color: #fca5a5;
+            background: #fff8f8;
+        }
+        .v-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .v-card-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+            line-height: 1.3;
+        }
+        .v-card-result {
+            font-size: 12.5px;
+            font-weight: 800;
+            padding: 2.5px 8.5px;
+            border-radius: 5px;
+            letter-spacing: -0.2px;
+            line-height: 1.3;
+            white-space: nowrap;
+        }
+        .v-card-result.pass {
+            color: #059669;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+        }
+        .v-card-result.warn {
+            color: #dc2626;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+        .v-card-desc {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            line-height: 1.35;
+        }
+        .v-card.warn .v-card-desc {
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        /* [버전 3: 슬림 바형] */
+        .v-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px 16px;
+            background: #ffffff;
+        }
+        .v-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 18px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .v-list-item:hover {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+        }
+        .v-list-item.warn {
+            background: #fffaf0;
+            border-color: #fed7aa;
+        }
+        .v-list-item.warn:hover {
+            background: #fff7ed;
+            border-color: #fdba74;
+        }
+        .v-list-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .v-list-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 800;
+        }
+        .v-list-title {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .v-list-desc {
+            font-size: 12px;
+            color: #64748b;
+            margin-left: 8px;
+        }
+        .v-list-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (max-width: 900px) {
+            .v-grid.col-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 600px) {
+            .v-grid.col-4,
+            .v-grid.col-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+        .res-count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 3.5px 12px;
+            border-radius: 9999px;
+            letter-spacing: -0.2px;
+        }
+        .res-count-badge.zero {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+        .res-count-badge.has-count {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        .btn-tbl-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 12px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--brand-primary);
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn-tbl-action:hover {
+            background: var(--brand-primary);
+            color: #ffffff;
+            border-color: var(--brand-primary);
+            box-shadow: 0 2px 4px rgba(30, 41, 59, 0.15);
+        }
+        .summary-table-row {
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+        .summary-table-row:hover {
+            background-color: #f8fafc !important;
+        }
+        .summary-table-row td {
+            padding: 13px 18px !important;
+            vertical-align: middle !important;
+        }
+
+        /* [상세내용 기간별 버튼 네비게이션] */
+        .period-filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 22px 0 10px 0;
+        }
+        .period-btn-group {
+            display: inline-flex;
+            background: #f1f5f9;
+            padding: 3px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            gap: 4px;
+        }
+        .period-btn {
+            padding: 6px 13px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-sub);
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .period-btn:hover {
+            color: var(--text-title);
+            background: rgba(255, 255, 255, 0.85);
+        }
+        .period-btn.active {
+            background: white;
+            color: var(--brand-primary);
+            border-color: #cbd5e1;
+            font-weight: 800;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Print Override */
+        @media print {
+            body { background: white; padding: 0; }
+            .top-meta-bar .meta-actions, .sgez-main-tabs, .sgez-main-tabs-wrap, .sub-pill-bar, .period-btn-group { display: none !important; }
+            .tab-pane { display: block !important; margin-bottom: 20px; page-break-after: always; }
+        }
+    
+        /* [전체항목보기 하단 확인 필요 고지 대상 리스트] */
+        .summary-check-list-wrap {
+            margin-top: 14px;
+            padding: 14px 16px 16px 16px;
+            border-top: 1px solid #f1f5f9;
+            background: #ffffff;
+        }
+        .summary-check-list-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .summary-check-list-title {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .check-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 12.5px;
+        }
+        .check-table th {
+            background: #f8fafc;
+            padding: 9px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .check-table td {
+            padding: 11px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            color: #1e293b;
+        }
+        .check-table tr:last-child td {
+            border-bottom: none;
+        }
+        .check-table tr:hover {
+            background: #fffafa;
+            cursor: pointer;
+        }
+        .check-empty-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #475569;
+            font-size: 12.5px;
+        }
+
+    
+        /* [전체항목보기 심사결과 밑 확인 필요 고지 대상 리스트] */
+        .check-list-section {
+            margin-top: 16px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        }
+        .check-list-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .check-list-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .check-list-title {
+            font-size: 14.5px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+        }
+        .check-tbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .check-tbl th {
+            background: #f8fafc;
+            padding: 10px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .check-tbl td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            color: #1e293b;
+        }
+        .check-tbl tr:last-child td {
+            border-bottom: none;
+        }
+        .check-tbl tr:hover {
+            background: #fffafa;
+            cursor: pointer;
+        }
+        .check-pass-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* [PlanEasy 핀테크 모달 스타일] */
+        .u-modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+        .u-modal-box {
+            background: #ffffff;
+            border-radius: 14px;
+            width: 92%;
+            max-width: 480px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            animation: uModalSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes uModalSlideIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .u-modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px 24px 16px 24px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .u-modal-title {
+            font-size: 16.5px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+            letter-spacing: -0.3px;
+        }
+        .u-modal-subtitle {
+            font-size: 12px;
+            color: #64748b;
+            margin: 4px 0 0 0;
+            line-height: 1.4;
+        }
+        .u-modal-close {
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #94a3b8;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 4px;
+        }
+        .u-modal-close:hover {
+            color: #0f172a;
+        }
+        .u-modal-body {
+            padding: 20px 24px;
+        }
+        .u-form-group {
+            margin-bottom: 13px;
+        }
+        .u-form-group:last-child {
+            margin-bottom: 0;
+        }
+        .u-form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 5px;
+        }
+        .u-form-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px 12px;
+            font-size: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #0f172a;
+            outline: none;
+            transition: all 0.15s ease;
+        }
+        .u-form-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .u-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 24px;
+            background: #f8fafc;
+            border-top: 1px solid #f1f5f9;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- [Top Profile & Header Bar] - 모던 핀테크 헤더 -->
+    <div class="top-meta-bar">
+        <div class="meta-left">
+            <div class="cust-avatar-badge" id="uCustAvatar">고</div>
+            <div class="cust-info-main">
+                <div class="cust-name-row">
+                    <span class="cust-name" id="uCustName">고객 님</span>
+                    <span class="cust-tag-verified" id="uCustStatus">병력 심사 분석</span>
+                </div>
+                <div class="cust-meta-sub" id="uCustMeta">
+                    데이터 분석 범위: 최근 5년 법정 알릴의무 심사 (3개월·1년·5년)
+                </div>
+            </div>
+        </div>
+        <div class="meta-actions">
+            <button type="button" class="btn-sgez" onclick="showNhisDiagnostics()" title="수신된 건강보험공단 원본 JSON 데이터를 검사합니다.">건보공단 원본 JSON</button>
+            <button type="button" class="btn-sgez" onclick="window.print()">리포트 인쇄 / PDF 저장</button>
+            <button type="button" class="btn-sgez btn-primary" onclick="openAuthModal()">고객 정보 입력 / 간편인증</button>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- [느낌 있는 세그먼트 메인 탭바] -->
+    <!-- ======================================================== -->
+    <div class="sgez-main-tabs-wrap">
+        <div class="sgez-main-tabs">
+            <button type="button" class="sgez-tab-btn active" onclick="switchMainTab('tabSummary')">
+                요약브리핑
+            </button>
+            <button type="button" class="sgez-tab-btn" onclick="switchMainTab('tabStandard')">
+                건강체 (일반심사) <span class="tab-mini-badge b-blue" id="tabBadgeStandard">가능</span>
+            </button>
+            <button type="button" class="sgez-tab-btn" onclick="switchMainTab('tabSimple')">
+                유병자 (간편심사) <span class="tab-mini-badge b-blue" id="tabBadgeSimple">3.5.5</span>
+            </button>
+            <button type="button" class="sgez-tab-btn" onclick="switchMainTab('tabDental')">
+                치아 <span class="tab-mini-badge b-gray" id="tabBadgeDental">대기</span>
+            </button>
+            <button type="button" class="sgez-tab-btn" onclick="switchMainTab('tabAllMedical')">
+                모든진료내역 <span class="tab-mini-badge b-gray">0건</span>
+            </button>
+            <button type="button" class="sgez-tab-btn" onclick="switchMainTab('tabAllDrugs')">
+                모든투약내역 <span class="tab-mini-badge b-gray">0종</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 1: 요약브리핑 (4대 핵심 심사 종합 결과) -->
+    <!-- ======================================================== -->
+    <div id="tabSummary" class="tab-pane active">
+        <div class="summary-unified-grid">
+            <!-- 1. 건강체 (일반심사) -->
+            <div class="sum-tile-card c-blue" id="sumTileStandard" onclick="switchMainTab('tabStandard')" title="건강체(일반심사) 상세 점검표로 이동">
+                <div>
+                    <div class="sum-tile-head">
+                        <span class="sum-tile-category">건강체 (일반심사)</span>
+                        <span class="sum-tile-arrow">상세보기 →</span>
+                    </div>
+                    <!-- 핵심 결과 강조 -->
+                    <div class="sum-verdict-box" id="sumVerdictStandard">
+                        <div class="sum-verdict-tag" id="sumTileStdTag">심사 판정</div>
+                        <div class="sum-verdict-title" id="sumTileStdTitle">가입가능</div>
+                        <div class="sum-verdict-sub" id="sumTileStdSub">고지의무 0건 통과 · 표준체 무할증</div>
+                    </div>
+                    <div class="sum-tile-facts">
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">최근 3개월 진료</span>
+                            <span class="sum-fact-v" id="sumFactStd3m">0건 (진료 없음)</span>
+                        </div>
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">최근 5년 입원·수술</span>
+                            <span class="sum-fact-v" id="sumFactStdHospSurg">0건 (해당 없음)</span>
+                        </div>
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">30일 이상 장기투약</span>
+                            <span class="sum-fact-v" id="sumFactStdDrug">0건</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sum-tile-footer">
+                    <span>상세 점검표 바로가기 →</span>
+                </div>
+            </div>
+
+            <!-- 2. 유병자 (간편심사) -->
+            <div class="sum-tile-card c-blue" id="sumTileSimple" onclick="switchMainTab('tabSimple')" title="유병자(간편심사) 상세 점검표로 이동">
+                <div>
+                    <div class="sum-tile-head">
+                        <span class="sum-tile-category">유병자 (간편심사)</span>
+                        <span class="sum-tile-arrow">상세보기 →</span>
+                    </div>
+                    <!-- 핵심 결과 강조 -->
+                    <div class="sum-verdict-box" id="sumVerdictSimple">
+                        <div class="sum-verdict-tag" id="sumTileSimTag">심사 판정</div>
+                        <div class="sum-verdict-title" id="sumTileSimTitle">3.5.5 가입가능</div>
+                        <div class="sum-verdict-sub" id="sumTileSimSub">간편고지 전 항목 통과 · 최저가 플랜</div>
+                    </div>
+                    <div class="sum-tile-facts">
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">3개월 의사 소견</span>
+                            <span class="sum-fact-v" id="sumFactSim3m">소견 없음 (통과)</span>
+                        </div>
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">5년 질병·상해 입원수술</span>
+                            <span class="sum-fact-v" id="sumFactSimHospSurg">입원 0일 · 수술 0건</span>
+                        </div>
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">5년 6대 중대질병</span>
+                            <span class="sum-fact-v" id="sumFactSim6Dis">0건 (진단 없음)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sum-tile-footer">
+                    <span>상세 점검표 바로가기 →</span>
+                </div>
+            </div>
+
+            <!-- 3. 치아 -->
+            <div class="sum-tile-card c-blue" id="sumTileDental" onclick="switchMainTab('tabDental')" title="치아보험 심사 상세 점검표로 이동">
+                <div>
+                    <div class="sum-tile-head">
+                        <span class="sum-tile-category">치아보험 심사</span>
+                        <span class="sum-tile-arrow">상세보기 →</span>
+                    </div>
+                    <!-- 핵심 결과 강조 -->
+                    <div class="sum-verdict-box" id="sumVerdictDental">
+                        <div class="sum-verdict-tag" id="sumTileDenTag">심사 판정</div>
+                        <div class="sum-verdict-title" id="sumTileDenTitle">심사 대기</div>
+                        <div class="sum-verdict-sub" id="sumTileDenSub">치아 치료 및 수술 이력 자동 점검</div>
+                    </div>
+                    <div class="sum-tile-facts">
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">현재 틀니 착용</span>
+                            <span class="sum-fact-v" id="sumFactDenture">확인 대기</span>
+                        </div>
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">1년 충치치료·발치</span>
+                            <span class="sum-fact-v" id="sumFactCavity">확인 대기</span>
+                        </div>
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">5년 치주질환 수술</span>
+                            <span class="sum-fact-v" id="sumFactPerio">확인 대기</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sum-tile-footer">
+                    <span>상세 점검표 바로가기 →</span>
+                </div>
+            </div>
+
+            <!-- 4. 모든 투약내역 -->
+            <div class="sum-tile-card c-blue" id="sumTileDrug" onclick="switchMainTab('tabAllDrugs')" title="모든투약 상세내역으로 이동">
+                <div>
+                    <div class="sum-tile-head">
+                        <span class="sum-tile-category">모든 투약내역</span>
+                        <span class="sum-tile-arrow">상세보기 →</span>
+                    </div>
+                    <!-- 핵심 결과 강조 -->
+                    <div class="sum-verdict-box" id="sumVerdictDrug">
+                        <div class="sum-verdict-tag" id="sumTileDrugTag">심사 판정</div>
+                        <div class="sum-verdict-title" id="sumTileDrugTitle">고지 불필요</div>
+                        <div class="sum-verdict-sub" id="sumTileDrugSub">30일 이상 계속 투약 0건</div>
+                    </div>
+                    <div class="sum-tile-facts">
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">공단 확인 전체 조제</span>
+                            <span class="sum-fact-v" id="sumFactDrugTotal">0종 조제</span>
+                        </div>
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">단일 약제 최장 처방</span>
+                            <span class="sum-fact-v" id="sumFactDrugMaxDays">0일</span>
+                        </div>
+                        <div class="sum-tile-fact-row">
+                            <span class="sum-fact-k">30일 이상 고지대상</span>
+                            <span class="sum-fact-v" id="sumFactDrugOver30">0건</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sum-tile-footer">
+                    <span>상세내역 바로가기 →</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: 건강체 (일반심사) -->
+    <!-- ======================================================== -->
+    <div id="tabStandard" class="tab-pane">
+        <!-- 기간별 핵심 필터 캡슐 -->
+        <div class="sub-pill-bar">
+            <button type="button" class="sub-pill active" onclick="filterStandard('all', this)">전체항목 보기</button>
+            <button type="button" class="sub-pill" onclick="filterStandard('3m', this)">진료 (3개월)</button>
+            <button type="button" class="sub-pill" onclick="filterStandard('1y', this)">추가검사, 재검사 (1년)</button>
+            <button type="button" class="sub-pill" onclick="filterStandard('5y_treat', this)">7일이상 치료, 30일이상 투약, 입원, 수술 (5년)</button>
+            <button type="button" class="sub-pill" onclick="filterStandard('5y_11dis', this)">11대 중대질병 (5년)</button>
+        </div>
+
+        <!-- [전체항목 요약 진단 리포트] (전체항목 보기 시 세련된 요약 카드로 결과 표출) -->
+        <div id="stdSummaryReport">
+            <div class="summary-report-card">
+                <div class="summary-report-head">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="summary-report-title">심사 결과</span>
+                        <span class="point-tag tag-pass" id="stdResBadge">가입가능 (정상 통과)</span>
+                    </div>
+                    <div class="style-switch-wrap">
+                        <button type="button" class="style-switch-btn" data-style="table" onclick="switchResultStyle('table')">표 형태</button>
+                        <button type="button" class="style-switch-btn active" data-style="card" onclick="switchResultStyle('card')">카드 형태</button>
+                        <button type="button" class="style-switch-btn" data-style="list" onclick="switchResultStyle('list')">바 형태</button>
+                    </div>
+                </div>
+
+                <!-- [버전 1: 깔끔한 리포트 표형] (기본 활성화) -->
+                <div class="v-container" data-view="table" style="display:none;">
+                    <table class="v-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 230px;">고지 항목</th>
+                                <th style="width: 110px; text-align: center;">결과</th>
+                                <th>확인 내용</th>
+                                <th style="width: 95px; text-align: center;">상세</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr onclick="filterStandard('3m')">
+                                <td><span class="period-tag tag-p3m" style="margin:0 6px 0 0;">3개월</span> <b>1. 진료</b></td>
+                                <td style="text-align: center;"><span class="point-tag tag-pass" id="stdTblRes3m">통과</span></td>
+                                <td style="color:#64748b;" id="stdTblDesc3m">최근 3개월 병원 진료 없음 (0건)</td>
+                                <td style="text-align: center;"><button type="button" class="btn-tbl-action" onclick="event.stopPropagation(); filterStandard('3m')">상세보기 →</button></td>
+                            </tr>
+                            <tr onclick="filterStandard('1y')">
+                                <td><span class="period-tag tag-p1y" style="margin:0 6px 0 0;">1년</span> <b>2. 추가검사, 재검사</b></td>
+                                <td style="text-align: center;"><span class="point-tag tag-pass" id="stdTblRes1y">통과</span></td>
+                                <td style="color:#64748b;" id="stdTblDesc1y">최근 1년 추가·재검사 소견 없음 (0건)</td>
+                                <td style="text-align: center;"><button type="button" class="btn-tbl-action" onclick="event.stopPropagation(); filterStandard('1y')">상세보기 →</button></td>
+                            </tr>
+                            <tr onclick="filterStandard('5y_treat')">
+                                <td><span class="period-tag tag-p5y" style="margin:0 6px 0 0;">5년</span> <b>3. 7일치료·30일투약·입원수술</b></td>
+                                <td style="text-align: center;"><span class="point-tag tag-pass" id="stdTblRes5yTreat">해당없음</span></td>
+                                <td style="color:#64748b;" id="stdTblDesc5yTreat">입원 0일 / 수술 0건 / 30일투약 없음 (0건)</td>
+                                <td style="text-align: center;"><button type="button" class="btn-tbl-action" onclick="event.stopPropagation(); filterStandard('5y_treat')">상세보기 →</button></td>
+                            </tr>
+                            <tr onclick="filterStandard('5y_11dis')">
+                                <td><span class="period-tag tag-p5y" style="margin:0 6px 0 0;">5년</span> <b>4. 11대 중대질병</b></td>
+                                <td style="text-align: center;"><span class="point-tag tag-pass" id="stdTblRes5y11Dis">해당없음</span></td>
+                                <td style="color:#64748b;" id="stdTblDesc5y11Dis">암·뇌졸중·심근경색 등 중대질환 없음 (0건)</td>
+                                <td style="text-align: center;"><button type="button" class="btn-tbl-action" onclick="event.stopPropagation(); filterStandard('5y_11dis')">상세보기 →</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- [버전 2: 직관적 바둑판 카드형] -->
+                <div class="v-container" data-view="card">
+                    <div class="v-grid col-4">
+                        <div class="v-card pass" id="stdCard3m" onclick="filterStandard('3m')">
+                            <div class="v-card-top">
+                                <span class="v-card-title">1. 진료 (3개월)</span>
+                                <span class="v-card-result pass" id="stdCardRes3m">통과</span>
+                            </div>
+                            <div class="v-card-desc" id="stdCardDesc3m">병원 진료 없음 (0건)</div>
+                        </div>
+                        <div class="v-card pass" id="stdCard1y" onclick="filterStandard('1y')">
+                            <div class="v-card-top">
+                                <span class="v-card-title">2. 추가검사 (1년)</span>
+                                <span class="v-card-result pass" id="stdCardRes1y">통과</span>
+                            </div>
+                            <div class="v-card-desc" id="stdCardDesc1y">추가검사 소견 없음 (0건)</div>
+                        </div>
+                        <div class="v-card pass" id="stdCard5yTreat" onclick="filterStandard('5y_treat')">
+                            <div class="v-card-top">
+                                <span class="v-card-title">3. 입원·수술·투약 (5년)</span>
+                                <span class="v-card-result pass" id="stdCardRes5yTreat">해당없음</span>
+                            </div>
+                            <div class="v-card-desc" id="stdCardDesc5yTreat">법정 기준 미달 (0건)</div>
+                        </div>
+                        <div class="v-card pass" id="stdCard5y11Dis" onclick="filterStandard('5y_11dis')">
+                            <div class="v-card-top">
+                                <span class="v-card-title">4. 11대 질병 (5년)</span>
+                                <span class="v-card-result pass" id="stdCardRes5y11Dis">해당없음</span>
+                            </div>
+                            <div class="v-card-desc" id="stdCardDesc5y11Dis">중대질환 없음 (0건)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- [버전 3: 슬림 바형] -->
+                <div class="v-container" data-view="list" style="display:none;">
+                    <div class="v-list">
+                        <div class="v-list-item" onclick="filterStandard('3m')">
+                            <div class="v-list-left">
+                                <span class="v-list-num">1</span>
+                                <span class="v-list-title">진료 (3개월)</span>
+                                <span class="v-list-desc" id="stdListDesc3m">최근 3개월 이내 병의원 진료 내역 없음 (0건)</span>
+                            </div>
+                            <div class="v-list-right">
+                                <span class="point-tag tag-pass" id="stdListRes3m" style="font-size:12.5px; padding:3.5px 12px;">통과</span>
+                                <span style="font-size:12px; color:#94a3b8;">상세보기 →</span>
+                            </div>
+                        </div>
+                        <div class="v-list-item" onclick="filterStandard('1y')">
+                            <div class="v-list-left">
+                                <span class="v-list-num">2</span>
+                                <span class="v-list-title">추가검사, 재검사 (1년)</span>
+                                <span class="v-list-desc" id="stdListDesc1y">최근 1년 이내 추가검사·재검사 소견 없음 (0건)</span>
+                            </div>
+                            <div class="v-list-right">
+                                <span class="point-tag tag-pass" id="stdListRes1y" style="font-size:12.5px; padding:3.5px 12px;">통과</span>
+                                <span style="font-size:12px; color:#94a3b8;">상세보기 →</span>
+                            </div>
+                        </div>
+                        <div class="v-list-item" onclick="filterStandard('5y_treat')">
+                            <div class="v-list-left">
+                                <span class="v-list-num">3</span>
+                                <span class="v-list-title">7일치료·30일투약·입원수술 (5년)</span>
+                                <span class="v-list-desc" id="stdListDesc5yTreat">입원 0일 / 수술 0건 / 30일 이상 계속투약 없음 (0건)</span>
+                            </div>
+                            <div class="v-list-right">
+                                <span class="point-tag tag-pass" id="stdListRes5yTreat" style="font-size:12.5px; padding:3.5px 12px;">해당없음</span>
+                                <span style="font-size:12px; color:#94a3b8;">상세보기 →</span>
+                            </div>
+                        </div>
+                        <div class="v-list-item" onclick="filterStandard('5y_11dis')">
+                            <div class="v-list-left">
+                                <span class="v-list-num">4</span>
+                                <span class="v-list-title">11대 중대질병 (5년)</span>
+                                <span class="v-list-desc" id="stdListDesc5y11Dis">암, 뇌졸중, 급성심근경색 등 11대 질환 이력 없음 (0건)</span>
+                            </div>
+                            <div class="v-list-right">
+                                <span class="point-tag tag-pass" id="stdListRes5y11Dis" style="font-size:12.5px; padding:3.5px 12px;">해당없음</span>
+                                <span style="font-size:12px; color:#94a3b8;">상세보기 →</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- [전체항목보기 심사결과 밑 확인 필요 고지 대상 리스트] -->
+            <div class="check-list-section">
+                <div class="check-list-head">
+                    <div class="check-list-title-wrap">
+                        <span class="check-list-title">확인 필요 고지 대상 내역</span>
+                        <span class="point-tag tag-pass" id="stdCheckBadge">확인필요 0건</span>
+                    </div>
+                    <span id="stdCheckDesc" style="font-size:12px; color:#64748b;">청약 전 의사 소견 및 추가검사 여부 고객 확인 대상</span>
+                </div>
+                <table class="check-tbl">
+                    <thead>
+                        <tr>
+                            <th style="width:110px;">진료일자</th>
+                            <th style="width:170px;">고지 항목</th>
+                            <th style="width:230px;">상병명 및 병원</th>
+                            <th>확인 필요 내용 (의사 소견 및 청약 고지 안내)</th>
+                            <th style="width:95px; text-align:center;">결과</th>
+                            <th style="width:95px; text-align:center;">상세</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stdCheckTbody">
+                        <tr>
+                            <td colspan="6" class="clean-pass-td" style="text-align:center; padding:32px; color:#94a3b8;">
+                                고지 대상 확인 필요 항목이 없습니다. (간편인증 후 자동 분석됩니다)
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- [상세내용 점검표] (개별 기간 선택 시 표시) -->
+        <div id="stdDetailSection" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin: 18px 0 10px 0;">
+                <div class="section-title" style="margin:0;">표준체(일반심사) 고지항목 상세내용</div>
+                <button type="button" class="btn-sgez" onclick="filterStandard('all')">← 종합 요약 리포트 보기</button>
+            </div>
+            <div class="tbl-box">
+                <table class="sgez-tbl" id="stdTable">
+                <thead>
+                    <tr>
+                        <th style="width:105px;">진료일자</th>
+                        <th style="width:250px;">상병코드 및 주상병명</th>
+                        <th style="width:200px;">외래(통원) / 입원 / 수술 여부</th>
+                        <th style="width:85px; text-align:center;">투약일수</th>
+                        <th style="width:200px;">진료과 및 병원</th>
+                        <th style="width:105px; text-align:center;">심사결과</th>
+                    </tr>
+                </thead>
+                <tbody id="stdTableTbody">
+                    <!-- ============================================== -->
+                    <!-- [분류 1] 진료 (3개월) -->
+                    <!-- ============================================== -->
+                    <tr class="group-header-row" data-period-group="3m">
+                        <td colspan="6">
+                            <span class="period-tag tag-p3m">1. 진료 (3개월)</span>
+                            분석 기준일: 2026.07.15 ~ 2026.10.14
+                        </td>
+                    </tr>
+                    <tr data-cat="3m" data-period="3m">
+                        <td colspan="6" class="clean-pass-td">
+                            최근 3개월 이내 병의원 진료 및 투약 내역이 전혀 없습니다. (0건 · 정상 통과)
+                        </td>
+                    </tr>
+
+                    <!-- ============================================== -->
+                    <!-- [분류 2] 추가검사, 재검사 (1년) -->
+                    <!-- ============================================== -->
+                    <tr class="group-header-row" data-period-group="1y">
+                        <td colspan="6">
+                            <span class="period-tag tag-p1y">2. 추가검사, 재검사 (1년)</span>
+                            분석 기준일: 최근 1년 (조회된 내역 없음)
+                        </td>
+                    </tr>
+                    <tr data-cat="1y" data-period="1y">
+                        <td colspan="6" class="clean-pass-td">
+                            최근 1년 이내 의사의 추가검사·재검사 소견 내역이 없습니다. (0건 · 정상 통과)
+                        </td>
+                    </tr>
+
+                    <!-- ============================================== -->
+                    <!-- [분류 3] 7일이상 치료, 30일이상 투약, 입원, 수술 (5년) -->
+                    <!-- ============================================== -->
+                    <tr class="group-header-row" data-period-group="5y_treat">
+                        <td colspan="6">
+                            <span class="period-tag tag-p5y">3. 7일이상 치료, 30일이상 투약, 입원, 수술 (5년)</span>
+                            분석 기준일: 최근 5년
+                        </td>
+                    </tr>
+                    <tr data-cat="5y_treat" data-period="5y_treat">
+                        <td style="font-weight:700;"><span class="period-tag tag-p5y" style="margin:0;">7일이상 치료</span></td>
+                        <td><b>동일원인 7일 이상 지속 치료 점검</b></td>
+                        <td><span class="tag-clean-pass">동일원인 치료 7일 이상 없음</span></td>
+                        <td style="text-align:center;"><span class="tag-clean-pass">미해당</span></td>
+                        <td>전 의료기관</td>
+                        <td style="text-align:center;"><span class="point-tag tag-pass">통과</span></td>
+                    </tr>
+                    <tr data-cat="5y_treat" data-period="5y_treat">
+                        <td style="font-weight:700;"><span class="period-tag tag-p5y" style="margin:0;">30일이상 투약</span></td>
+                        <td><b>동일원인 30일 이상 계속 투약 점검</b></td>
+                        <td><span class="tag-clean-pass">동일원인 투약 30일 이상 없음</span></td>
+                        <td style="text-align:center;"><span class="tag-clean-pass">미해당</span></td>
+                        <td>전 의료기관</td>
+                        <td style="text-align:center;"><span class="point-tag tag-pass">통과</span></td>
+                    </tr>
+                    <tr data-cat="5y_treat" data-period="5y_treat">
+                        <td style="font-weight:700;"><span class="period-tag tag-p5y" style="margin:0;">입원 및 수술</span></td>
+                        <td><b>질병 또는 상해로 인한 입원 및 수술 점검</b></td>
+                        <td><span class="tag-clean-pass">입원 0일 (0회) / 질병수술 0건</span></td>
+                        <td style="text-align:center;"><span class="tag-clean-pass">미해당</span></td>
+                        <td>전 의료기관</td>
+                        <td style="text-align:center;"><span class="point-tag tag-pass">통과</span></td>
+                    </tr>
+
+                    <!-- ============================================== -->
+                    <!-- [분류 4] 11대 중대질병 (5년) -->
+                    <!-- ============================================== -->
+                    <tr class="group-header-row" data-period-group="5y_11dis">
+                        <td colspan="6">
+                            <span class="period-tag tag-p5y">4. 11대 중대질병 (5년)</span>
+                            분석 기준일: 2021.10.15 ~ 2026.10.14 (암 · 뇌졸중 · 급성심근경색 · 고혈압 · 당뇨 등)
+                        </td>
+                    </tr>
+                    <tr data-cat="5y_11dis" data-period="5y_11dis">
+                        <td style="font-weight:700;"><span class="period-tag tag-p5y" style="margin:0;">11대 중대질병</span></td>
+                        <td><b>11대 중대질병 진단·치료·투약 점검</b></td>
+                        <td><span class="tag-clean-pass">진단·치료 0건</span></td>
+                        <td style="text-align:center;"><span class="tag-clean-pass">미해당</span></td>
+                        <td>전 의료기관</td>
+                        <td style="text-align:center;"><span class="point-tag tag-pass">통과</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: 유병자 (간편심사) -->
+    <!-- ======================================================== -->
+    <div id="tabSimple" class="tab-pane">
+        <!-- 3대 핵심 질문 필터 캡슐 -->
+        <div class="sub-pill-bar">
+            <button type="button" class="sub-pill active" onclick="filterSimple('all', this)">전체항목 보기</button>
+            <button type="button" class="sub-pill" onclick="filterSimple('3m', this)">진료, 소견 (3개월)</button>
+            <button type="button" class="sub-pill" onclick="filterSimple('5y_hosp', this)">입원, 수술 (5년)</button>
+            <button type="button" class="sub-pill" onclick="filterSimple('5y_6dis', this)">6대 중대질병 (5년)</button>
+        </div>
+
+        <!-- [전체항목 요약 진단 리포트] (전체항목 보기 시 세련된 요약 카드로 결과 표출) -->
+        <div id="simSummaryReport">
+            <div class="summary-report-card">
+                <div class="summary-report-head">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="summary-report-title">심사 결과</span>
+                        <span class="point-tag tag-pass" id="simResBadge">초경증 3.5.5 가입가능</span>
+                    </div>
+                    <div class="style-switch-wrap">
+                        <button type="button" class="style-switch-btn" data-style="table" onclick="switchResultStyle('table')">표 형태</button>
+                        <button type="button" class="style-switch-btn active" data-style="card" onclick="switchResultStyle('card')">카드 형태</button>
+                        <button type="button" class="style-switch-btn" data-style="list" onclick="switchResultStyle('list')">바 형태</button>
+                    </div>
+                </div>
+
+                <!-- [버전 1: 깔끔한 리포트 표형] (기본 활성화) -->
+                <div class="v-container" data-view="table" style="display:none;">
+                    <table class="v-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 230px;">고지 항목</th>
+                                <th style="width: 110px; text-align: center;">결과</th>
+                                <th>확인 내용</th>
+                                <th style="width: 95px; text-align: center;">상세</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr onclick="filterSimple('3m')">
+                                <td><span class="period-tag tag-p3m" style="margin:0 6px 0 0;">3개월</span> <b>1. 진료, 소견</b></td>
+                                <td style="text-align: center;"><span class="point-tag tag-pass" id="simTblRes3m">통과</span></td>
+                                <td style="color:#64748b;" id="simTblDesc3m">최근 3개월 병원 진료 없음 (0건)</td>
+                                <td style="text-align: center;"><button type="button" class="btn-tbl-action" onclick="event.stopPropagation(); filterSimple('3m')">상세보기 →</button></td>
+                            </tr>
+                            <tr onclick="filterSimple('5y_hosp')">
+                                <td><span class="period-tag tag-p5y" style="margin:0 6px 0 0;">5년</span> <b>2. 입원, 수술</b></td>
+                                <td style="text-align: center;"><span class="point-tag tag-pass" id="simTblRes5yHosp">해당없음</span></td>
+                                <td style="color:#64748b;" id="simTblDesc5yHosp">입원 0일 / 질병수술 0건 (0건)</td>
+                                <td style="text-align: center;"><button type="button" class="btn-tbl-action" onclick="event.stopPropagation(); filterSimple('5y_hosp')">상세보기 →</button></td>
+                            </tr>
+                            <tr onclick="filterSimple('5y_6dis')">
+                                <td><span class="period-tag tag-p5y" style="margin:0 6px 0 0;">5년</span> <b>3. 6대 중대질병</b></td>
+                                <td style="text-align: center;"><span class="point-tag tag-pass" id="simTblRes5y6Dis">해당없음</span></td>
+                                <td style="color:#64748b;" id="simTblDesc5y6Dis">암·뇌졸중·심근경색 등 6대 질환 없음 (0건)</td>
+                                <td style="text-align: center;"><button type="button" class="btn-tbl-action" onclick="event.stopPropagation(); filterSimple('5y_6dis')">상세보기 →</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- [버전 2: 직관적 바둑판 카드형] -->
+                <div class="v-container" data-view="card">
+                    <div class="v-grid col-3">
+                        <div class="v-card pass" id="simCard3m" onclick="filterSimple('3m')">
+                            <div class="v-card-top">
+                                <span class="v-card-title">1. 진료, 소견 (3개월)</span>
+                                <span class="v-card-result pass" id="simCardRes3m">통과</span>
+                            </div>
+                            <div class="v-card-desc" id="simCardDesc3m">병원 진료 없음 (0건)</div>
+                        </div>
+                        <div class="v-card pass" id="simCard5yHosp" onclick="filterSimple('5y_hosp')">
+                            <div class="v-card-top">
+                                <span class="v-card-title">2. 입원, 수술 (5년)</span>
+                                <span class="v-card-result pass" id="simCardRes5yHosp">해당없음</span>
+                            </div>
+                            <div class="v-card-desc" id="simCardDesc5yHosp">입원/수술 없음 (0건)</div>
+                        </div>
+                        <div class="v-card pass" id="simCard5y6Dis" onclick="filterSimple('5y_6dis')">
+                            <div class="v-card-top">
+                                <span class="v-card-title">3. 6대 질병 (5년)</span>
+                                <span class="v-card-result pass" id="simCardRes5y6Dis">해당없음</span>
+                            </div>
+                            <div class="v-card-desc" id="simCardDesc5y6Dis">6대질환 없음 (0건)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- [버전 3: 슬림 바형] -->
+                <div class="v-container" data-view="list" style="display:none;">
+                    <div class="v-list">
+                        <div class="v-list-item" onclick="filterSimple('3m')">
+                            <div class="v-list-left">
+                                <span class="v-list-num">1</span>
+                                <span class="v-list-title">진료, 소견 (3개월)</span>
+                                <span class="v-list-desc" id="simListDesc3m">최근 3개월 이내 병의원 진료 내역 없음 (0건)</span>
+                            </div>
+                            <div class="v-list-right">
+                                <span class="point-tag tag-pass" id="simListRes3m" style="font-size:12.5px; padding:3.5px 12px;">통과</span>
+                                <span style="font-size:12px; color:#94a3b8;">상세보기 →</span>
+                            </div>
+                        </div>
+                        <div class="v-list-item" onclick="filterSimple('5y_hosp')">
+                            <div class="v-list-left">
+                                <span class="v-list-num">2</span>
+                                <span class="v-list-title">입원, 수술 (5년)</span>
+                                <span class="v-list-desc" id="simListDesc5yHosp">최근 5년 이내 질병·상해 입원 또는 수술 없음 (0건)</span>
+                            </div>
+                            <div class="v-list-right">
+                                <span class="point-tag tag-pass" id="simListRes5yHosp" style="font-size:12.5px; padding:3.5px 12px;">해당없음</span>
+                                <span style="font-size:12px; color:#94a3b8;">상세보기 →</span>
+                            </div>
+                        </div>
+                        <div class="v-list-item" onclick="filterSimple('5y_6dis')">
+                            <div class="v-list-left">
+                                <span class="v-list-num">3</span>
+                                <span class="v-list-title">6대 중대질병 (5년)</span>
+                                <span class="v-list-desc" id="simListDesc5y6Dis">암, 협심증, 심근경색, 뇌졸중 등 6대 질환 없음 (0건)</span>
+                            </div>
+                            <div class="v-list-right">
+                                <span class="point-tag tag-pass" id="simListRes5y6Dis" style="font-size:12.5px; padding:3.5px 12px;">해당없음</span>
+                                <span style="font-size:12px; color:#94a3b8;">상세보기 →</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- [전체항목보기 심사결과 밑 확인 필요 고지 대상 리스트] -->
+            <div class="check-list-section">
+                <div class="check-list-head">
+                    <div class="check-list-title-wrap">
+                        <span class="check-list-title">확인 필요 고지 대상 내역</span>
+                        <span class="point-tag tag-pass" id="simCheckBadge">확인필요 없음 (0건)</span>
+                    </div>
+                    <span id="simCheckDesc" style="font-size:12px; color:#059669; font-weight:600;">3.5.5 간편심사 3대 질문 전 항목 통과 (가입 가능)</span>
+                </div>
+                <table class="check-tbl">
+                    <thead>
+                        <tr>
+                            <th style="width:110px;">진료일자</th>
+                            <th style="width:170px;">고지 항목</th>
+                            <th style="width:230px;">상병명 및 병원</th>
+                            <th>확인 필요 내용 (의사 소견 및 간편고지 안내)</th>
+                            <th style="width:95px; text-align:center;">결과</th>
+                            <th style="width:95px; text-align:center;">상세</th>
+                        </tr>
+                    </thead>
+                    <tbody id="simCheckTbody">
+                        <tr>
+                            <td colspan="6" class="clean-pass-td" style="text-align:center; padding:32px; color:#94a3b8;">
+                                간편심사 고지 대상 확인 필요 항목이 없습니다. (간편인증 후 자동 분석됩니다)
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- [상세내용 점검표] (개별 기간 선택 시 표시) -->
+        <div id="simDetailSection" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin: 18px 0 10px 0;">
+                <div class="section-title" style="margin:0;">간편심사(유병자) 고지항목 상세내용</div>
+                <button type="button" class="btn-sgez" onclick="filterSimple('all')">← 종합 요약 리포트 보기</button>
+            </div>
+            <div class="tbl-box">
+                <table class="sgez-tbl" id="simTable">
+                <thead>
+                    <tr>
+                        <th style="width:105px;">진료일자</th>
+                        <th style="width:250px;">상병코드 및 주상병명</th>
+                        <th style="width:200px;">외래(통원) / 입원 / 수술 여부</th>
+                        <th style="width:85px; text-align:center;">투약일수</th>
+                        <th style="width:200px;">진료과 및 병원</th>
+                        <th style="width:105px; text-align:center;">심사결과</th>
+                    </tr>
+                </thead>
+                <tbody id="simTableTbody">
+                    <!-- ============================================== -->
+                    <!-- [분류 1] 1. 진료, 소견 (3개월) -->
+                    <!-- ============================================== -->
+                    <tr class="group-header-row" data-period-group="3m">
+                        <td colspan="6">
+                            <span class="period-tag tag-p3m">1. 진료, 소견 (3개월)</span>
+                            분석 기준일: 최근 3개월 (투약 제외)
+                        </td>
+                    </tr>
+                    <tr data-cat="3m">
+                        <td colspan="6" class="clean-pass-td">
+                            최근 3개월 이내 병의원 진료 내역 자체가 전혀 없습니다. (입원·수술·재검사·확정진단·의심소견 0건 · 1번 질문 정상 통과)
+                        </td>
+                    </tr>
+
+                    <!-- ============================================== -->
+                    <!-- [분류 2] 2. 입원, 수술 (5년) -->
+                    <!-- ============================================== -->
+                    <tr class="group-header-row" data-period-group="5y_hosp">
+                        <td colspan="6">
+                            <span class="period-tag tag-p5y">2. 입원, 수술 (5년)</span>
+                            분석 기준일: 최근 5년
+                        </td>
+                    </tr>
+                    <tr data-cat="5y_hosp">
+                        <td style="font-weight:700;"><span class="period-tag tag-p5y" style="margin:0;">5년 전수점검</span></td>
+                        <td><b>질병·상해 입원 및 수술 전수 점검</b></td>
+                        <td><span class="tag-clean-pass">입원 0일 (0회) / 질병수술 0건</span></td>
+                        <td style="text-align:center;"><span class="tag-clean-pass">미해당</span></td>
+                        <td>전 의료기관</td>
+                        <td style="text-align:center;"><span class="point-tag tag-pass">통과</span></td>
+                    </tr>
+
+                    <!-- ============================================== -->
+                    <!-- [분류 3] 3. 6대 중대질병 (5년) -->
+                    <!-- ============================================== -->
+                    <tr class="group-header-row" data-period-group="5y_6dis">
+                        <td colspan="6">
+                            <span class="period-tag tag-p5y">3. 6대 중대질병 (5년)</span>
+                            분석 기준일: 2021.10.15 ~ 2026.10.14 (암, 협심증, 심근경색, 판막증, 간경화, 뇌졸중)
+                        </td>
+                    </tr>
+                    <tr data-cat="5y_6dis">
+                        <td colspan="6" class="clean-pass-td">
+                            최근 5년 이내 6대 중대질병(암, 협심증, 심근경색, 심장판막증, 간경화, 뇌졸중)으로 인한 진단, 입원, 수술 사실이 전혀 없습니다. (0건 · 3번 질문 정상 통과)
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 4: 치아 -->
+    <!-- ======================================================== -->
+    <div id="tabDental" class="tab-pane">
+        <div class="sub-pill-bar">
+            <button type="button" class="sub-pill active" onclick="filterDental('all', this)">전체보기</button>
+            <button type="button" class="sub-pill" onclick="filterDental('cavity', this)">충치(1년)</button>
+            <button type="button" class="sub-pill" onclick="filterDental('perio', this)">치주수술, 발치(5년)</button>
+            <button type="button" class="sub-pill" onclick="filterDental('denture', this)">틀니</button>
+        </div>
+
+        <!-- [전체항목 요약 진단 리포트] (전체항목 보기 시 세련된 요약 카드로 결과 표출) -->
+        <div id="denSummaryReport">
+            <div class="summary-report-card">
+                <div class="summary-report-head">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="summary-report-title">심사 결과</span>
+                        <span class="point-tag tag-pass" id="denResBadge">3대 고지 전 항목 통과 (가입 가능)</span>
+                    </div>
+                    <div class="style-switch-wrap">
+                        <button type="button" class="style-switch-btn" data-style="table" onclick="switchResultStyle('table')">표 형태</button>
+                        <button type="button" class="style-switch-btn active" data-style="card" onclick="switchResultStyle('card')">카드 형태</button>
+                        <button type="button" class="style-switch-btn" data-style="list" onclick="switchResultStyle('list')">바 형태</button>
+                    </div>
+                </div>
+
+                <!-- [버전 1: 깔끔한 리포트 표형] (기본 활성화) -->
+                <div class="v-container" data-view="table" style="display:none;">
+                    <table class="v-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 230px;">고지 항목</th>
+                                <th style="width: 110px; text-align: center;">결과</th>
+                                <th>확인 내용</th>
+                                <th style="width: 95px; text-align: center;">상세</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr onclick="filterDental('denture')">
+                                <td><span class="period-tag tag-p3m" style="margin:0 6px 0 0;">틀니</span> <b>1. 틀니 (의치)</b></td>
+                                <td style="text-align: center;"><span class="point-tag tag-pass" id="denTblResDenture">해당없음</span></td>
+                                <td style="color:#64748b;" id="denTblDescDenture">현재 틀니 제작 및 장착 사실 없음 (0건)</td>
+                                <td style="text-align: center;"><button type="button" class="btn-tbl-action" onclick="event.stopPropagation(); filterDental('denture')">상세보기 →</button></td>
+                            </tr>
+                            <tr onclick="filterDental('cavity')">
+                                <td><span class="period-tag tag-p1y" style="margin:0 6px 0 0;">1년</span> <b>2. 충치 (치아우식증)</b></td>
+                                <td style="text-align: center;"><span class="point-tag tag-pass" id="denTblResCavity">해당없음</span></td>
+                                <td style="color:#64748b;" id="denTblDescCavity">최근 1년 충치 치료 및 발치 소견 없음 (0건)</td>
+                                <td style="text-align: center;"><button type="button" class="btn-tbl-action" onclick="event.stopPropagation(); filterDental('cavity')">상세보기 →</button></td>
+                            </tr>
+                            <tr onclick="filterDental('perio')">
+                                <td><span class="period-tag tag-p5y" style="margin:0 6px 0 0;">5년</span> <b>3. 치주수술, 발치</b></td>
+                                <td style="text-align: center;"><span class="point-tag tag-pass" id="denTblResPerio">해당없음</span></td>
+                                <td style="color:#64748b;" id="denTblDescPerio">최근 5년 치주질환 수술 및 발치 소견 없음 (0건)</td>
+                                <td style="text-align: center;"><button type="button" class="btn-tbl-action" onclick="event.stopPropagation(); filterDental('perio')">상세보기 →</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- [버전 2: 직관적 바둑판 카드형] -->
+                <div class="v-container" data-view="card">
+                    <div class="v-grid col-3">
+                        <div class="v-card pass" id="denCardDenture" onclick="filterDental('denture')">
+                            <div class="v-card-top">
+                                <span class="v-card-title">1. 틀니 (의치)</span>
+                                <span class="v-card-result pass" id="denCardResDenture">해당없음</span>
+                            </div>
+                            <div class="v-card-desc" id="denCardDescDenture">틀니 착용 없음 (0건)</div>
+                        </div>
+                        <div class="v-card pass" id="denCardCavity" onclick="filterDental('cavity')">
+                            <div class="v-card-top">
+                                <span class="v-card-title">2. 충치 (1년)</span>
+                                <span class="v-card-result pass" id="denCardResCavity">해당없음</span>
+                            </div>
+                            <div class="v-card-desc" id="denCardDescCavity">충치 치료 없음 (0건)</div>
+                        </div>
+                        <div class="v-card pass" id="denCardPerio" onclick="filterDental('perio')">
+                            <div class="v-card-top">
+                                <span class="v-card-title">3. 치주수술, 발치 (5년)</span>
+                                <span class="v-card-result pass" id="denCardResPerio">해당없음</span>
+                            </div>
+                            <div class="v-card-desc" id="denCardDescPerio">잇몸수술 이력 없음 (0건)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- [버전 3: 슬림 바형] -->
+                <div class="v-container" data-view="list" style="display:none;">
+                    <div class="v-list">
+                        <div class="v-list-item" onclick="filterDental('denture')">
+                            <div class="v-list-left">
+                                <span class="v-list-num">1</span>
+                                <span class="v-list-title">틀니 (의치)</span>
+                                <span class="v-list-desc" id="denListDescDenture">현재 틀니(가철성 의치) 장착 및 치료 사실 없음 (0건)</span>
+                            </div>
+                            <div class="v-list-right">
+                                <span class="point-tag tag-pass" id="denListResDenture" style="font-size:12.5px; padding:3.5px 12px;">해당없음</span>
+                                <span style="font-size:12px; color:#94a3b8;">상세보기 →</span>
+                            </div>
+                        </div>
+                        <div class="v-list-item" onclick="filterDental('cavity')">
+                            <div class="v-list-left">
+                                <span class="v-list-num">2</span>
+                                <span class="v-list-title">충치 (1년)</span>
+                                <span class="v-list-desc" id="denListDescCavity">최근 1년 이내 충치 보철·충전 및 발치 소견 없음 (0건)</span>
+                            </div>
+                            <div class="v-list-right">
+                                <span class="point-tag tag-pass" id="denListResCavity" style="font-size:12.5px; padding:3.5px 12px;">해당없음</span>
+                                <span style="font-size:12px; color:#94a3b8;">상세보기 →</span>
+                            </div>
+                        </div>
+                        <div class="v-list-item" onclick="filterDental('perio')">
+                            <div class="v-list-left">
+                                <span class="v-list-num">3</span>
+                                <span class="v-list-title">치주수술, 발치 (5년)</span>
+                                <span class="v-list-desc" id="denListDescPerio">최근 5년 이내 치주질환 수술 및 발치 소견 없음 (0건)</span>
+                            </div>
+                            <div class="v-list-right">
+                                <span class="point-tag tag-pass" id="denListResPerio" style="font-size:12.5px; padding:3.5px 12px;">해당없음</span>
+                                <span style="font-size:12px; color:#94a3b8;">상세보기 →</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- [전체항목보기 심사결과 밑 확인 필요 고지 대상 리스트] -->
+            <div class="check-list-section">
+                <div class="check-list-head">
+                    <div class="check-list-title-wrap">
+                        <span class="check-list-title">확인 필요 고지 대상 내역</span>
+                        <span class="point-tag tag-pass" id="denCheckBadge">고지대상 없음 (0건)</span>
+                    </div>
+                    <span id="denCheckDesc" style="font-size:12px; color:#059669; font-weight:600;">치아보험 3대 질문 전 항목 통과 (가입 가능)</span>
+                </div>
+                <table class="check-tbl">
+                    <thead>
+                        <tr>
+                            <th style="width:115px;">진료일자</th>
+                            <th style="width:170px;">고지 항목</th>
+                            <th style="width:230px;">상병명 및 병원</th>
+                            <th>확인 필요 내용 (청약 고지 안내)</th>
+                            <th style="width:95px; text-align:center;">결과</th>
+                            <th style="width:95px; text-align:center;">상세</th>
+                        </tr>
+                    </thead>
+                    <tbody id="denCheckTbody">
+                        <tr>
+                            <td colspan="6" class="clean-pass-td" style="text-align:center; padding:32px; color:#94a3b8;">
+                                치아보험 확인 필요 고지 항목이 없습니다. (간편인증 후 자동 분석됩니다)
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- [상세내용 점검표] (개별 기간 선택 시 표시) -->
+        <div id="denDetailSection" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin: 18px 0 10px 0;">
+                <div class="section-title" style="margin:0;">치아보험 고지항목 상세내용</div>
+                <button type="button" class="btn-sgez" onclick="filterDental('all')">← 종합 요약 리포트 보기</button>
+            </div>
+            <div class="tbl-box">
+                <table class="sgez-tbl" id="denTable">
+                <thead>
+                    <tr>
+                        <th style="width:105px;">진료일자</th>
+                        <th style="width:250px;">상병코드 및 주상병명</th>
+                        <th style="width:200px;">외래(통원) / 입원 / 수술 여부</th>
+                        <th style="width:85px; text-align:center;">투약일수</th>
+                        <th style="width:200px;">진료과 및 병원</th>
+                        <th style="width:105px; text-align:center;">심사결과</th>
+                    </tr>
+                </thead>
+                <tbody id="denTableTbody">
+                    <!-- ============================================== -->
+                    <!-- [분류 1] 1번 질문: 현재 틀니(의치) 착용 여부 -->
+                    <!-- ============================================== -->
+                    <tr class="group-header-row" data-period-group="denture">
+                        <td colspan="6">
+                            <span class="period-tag tag-p3m">1. 현재 틀니(의치)를 하고 있는지 여부</span>
+                            점검 내용: 가철성 의치(틀니) 치료 및 장착 여부
+                        </td>
+                    </tr>
+                    <tr data-cat="denture">
+                        <td colspan="6" class="clean-pass-td">
+                            현재 틀니(의치) 제작 및 착용 사실이 전혀 없습니다. (0건 · 1번 질문 정상 통과)
+                        </td>
+                    </tr>
+
+                    <!-- ============================================== -->
+                    <!-- [분류 2] 2번 질문: 최근 1년 이내 충치(치아우식증) 치료 및 영구치 발치 소견 -->
+                    <!-- ============================================== -->
+                    <tr class="group-header-row" data-period-group="cavity">
+                        <td colspan="6">
+                            <span class="period-tag tag-p1y">2. 최근 1년 이내 충치(치아우식증) 치료 여부</span>
+                            분석 기준일: 최근 1년
+                        </td>
+                    </tr>
+                    <tr data-cat="cavity">
+                        <td colspan="6" class="clean-pass-td">
+                            최근 1년 이내 충치(치아우식증) 치료 및 발치 소견 내역이 없습니다. (0건 · 정상 통과)
+                        </td>
+                    </tr>
+
+                    <!-- ============================================== -->
+                    <!-- [분류 3] 3번 질문: 최근 5년 이내 치주질환 수술(잇몸수술) 및 영구치 발치 -->
+                    <!-- ============================================== -->
+                    <tr class="group-header-row" data-period-group="perio">
+                        <td colspan="6">
+                            <span class="period-tag tag-p5y">3. 최근 5년 이내 치주질환으로 치주수술 또는 발치 여부</span>
+                            분석 기준일: 최근 5년 (조회된 내역 없음)
+                        </td>
+                    </tr>
+                    <tr data-cat="perio">
+                        <td colspan="6" class="clean-pass-td">
+                            최근 5년 이내 치주질환(잇몸질환)으로 인한 수술 및 발치 사실이 없습니다. (0건 · 정상 통과)
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 5: 모든진료내역 -->
+    <!-- ======================================================== -->
+    <div id="tabAllMedical" class="tab-pane">
+        <div class="sub-pill-bar">
+            <button type="button" class="sub-pill active" onclick="filterAllMedical('all', this)">전체보기</button>
+            <button type="button" class="sub-pill" onclick="filterAllMedical('warn_only', this)">확인필요내용</button>
+        </div>
+
+        <!-- 선택 항목 즉시 판정 결과 카드 -->
+        <div class="result-focus-card">
+            <div class="result-focus-head">
+                <span class="result-focus-title" id="medResTitle">모든진료내역 전수 점검 결과</span>
+                <span id="medResBadge"><span class="point-tag tag-pass">진료내역 전수 수집완료</span></span>
+            </div>
+            <div class="result-focus-body">
+                <div class="result-focus-metric">
+                    <span class="res-metric-num" id="medResMetricNum">총 0건 방문</span>
+                </div>
+                <div class="result-focus-desc" id="medResDesc">
+                    조회된 병의원 및 약국 방문 기록이 없습니다. (간편인증 후 자동 분석됩니다)
+                </div>
+            </div>
+        </div>
+
+        <!-- Inner 1: 기본 진료내역 -->
+        <div class="section-title">기본 진료내역 (병의원 및 약국 방문기록)</div>
+        <div id="medBasic" class="tbl-box">
+            <table class="sgez-tbl">
+                <thead>
+                    <tr><th>진료개시일</th><th>의료기관명</th><th>진료과</th><th>주상병코드</th><th>주상병명</th><th style="text-align:center;">내원일</th><th style="text-align:right;">본인부담금</th><th style="text-align:right;">공단부담금</th><th style="text-align:right;">총진료비</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="9" style="text-align:center; padding:36px; color:#94a3b8;">조회된 병의원 및 약국 진료내역이 없습니다. (간편인증 후 자동 분석됩니다)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Inner 2: 세부 처치/수술/검사 -->
+        <div class="section-title" id="secMedDetail">세부 처치·수술·검사 팩트체크</div>
+        <div id="medDetail" class="tbl-box">
+            <table class="sgez-tbl">
+                <thead>
+                    <tr><th>진료일자</th><th>의료기관명</th><th>구분</th><th>세부 처치·검사·행위 코드명 (EDI)</th><th style="text-align:center;">1회</th><th style="text-align:center;">1일횟수</th><th style="text-align:center;">일수</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="7" style="text-align:center; padding:36px; color:#94a3b8;">조회된 세부 처치·수술·검사 내역이 없습니다.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Inner 3: 의료기관별 요약 -->
+        <div class="section-title" id="secMedOrgs">의료기관별 진료비 요약 (참고자료)</div>
+        <div id="medOrgs" class="tbl-box">
+            <table class="sgez-tbl">
+                <thead>
+                    <tr><th>의료기관 / 약국명</th><th style="text-align:center;">방문 횟수</th><th style="text-align:right;">내가 낸 의료비 (본인부담금)</th><th style="text-align:right;">혜택받은 금액 (공단부담금)</th><th style="text-align:right;">총 진료비 합계</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="5" style="text-align:center; padding:36px; color:#94a3b8;">조회된 의료기관 내역이 없습니다.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 6: 모든투약내역 -->
+    <!-- ======================================================== -->
+    <div id="tabAllDrugs" class="tab-pane">
+        <div class="sub-pill-bar">
+            <button type="button" class="sub-pill active" onclick="filterDrugs('all', this)">전체보기</button>
+            <button type="button" class="sub-pill" onclick="filterDrugs('warn_only', this)">확인필요내용</button>
+        </div>
+
+        <!-- 선택 항목 즉시 판정 결과 카드 -->
+        <div class="result-focus-card">
+            <div class="result-focus-head">
+                <span class="result-focus-title" id="drugResTitle">처방·조제 의약품 전수 목록 (0종)</span>
+                <span id="drugResBadge"><span class="point-tag tag-pass">30일 고지의무 위반 없음</span></span>
+            </div>
+            <div class="result-focus-body">
+                <div class="result-focus-metric">
+                    <span class="res-metric-num" id="drugResMetricNum">0일</span>
+                    <span class="res-metric-unit" id="drugResMetricUnit">30일 이상 계속 투약 0건</span>
+                </div>
+                <div class="result-focus-desc" id="drugResDesc">
+                    조회된 처방·투약 내역이 없습니다. (간편인증 후 자동 분석됩니다)
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">처방·조제 의약품 전수 목록 및 30일 고지 대조표</div>
+        <div class="tbl-box">
+            <table class="sgez-tbl" id="drugTable">
+                <thead>
+                    <tr>
+                        <th style="width:95px;">처방일자</th>
+                        <th style="width:160px;">처방의료기관 (조제약국)</th>
+                        <th>처방 의약품명</th>
+                        <th style="width:150px;">주요 성분명</th>
+                        <th style="width:80px; text-align:center;">용법</th>
+                        <th style="width:85px; text-align:center;">투약일수</th>
+                        <th style="width:140px;">약효 및 복용 목적</th>
+                        <th style="width:110px; text-align:center;">심사결과</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="drugNoWarnRow">
+                        <td colspan="8" class="clean-pass-td" style="text-align:center; padding:36px; color:#94a3b8;">조회된 처방·투약 내역이 없습니다. (0건 · 고지 불필요 통과)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="underwriting_engine.js"></script>
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('name')) {
+            const name = params.get('name');
+            const elName = document.getElementById('uCustName');
+            const elAvatar = document.getElementById('uCustAvatar');
+            if (elName) elName.innerText = name + ' 님';
+            if (elAvatar) elAvatar.innerText = name.charAt(0);
+            document.title = '심사 분석 리포트 - ' + name + ' 님';
+            const authNameInput = document.getElementById('uAuthName');
+            if (authNameInput) authNameInput.value = name;
+        }
+        if (params.get('birth')) {
+            const birth = params.get('birth');
+            const elMeta = document.getElementById('uCustMeta');
+            if (elMeta) elMeta.innerText = '생년월일: ' + birth + ' · 데이터 분석 범위: 최근 5년 법정 알릴의무 심사';
+            const authSsn1Input = document.getElementById('uAuthSsn1');
+            const cleanB = String(birth).replace(/[^0-9]/g, '');
+            if (authSsn1Input && cleanB.length >= 6) {
+                authSsn1Input.value = cleanB.length === 8 ? cleanB.substring(2, 8) : cleanB.substring(0, 6);
+            }
+        }
+        if (params.get('phone')) {
+            const phone = params.get('phone').replace(/[^0-9]/g, '');
+            const authPhoneInput = document.getElementById('uAuthPhone');
+            if (authPhoneInput) authPhoneInput.value = phone;
+        }
+    });
+</script>
+
+<!-- [고객 정보 입력 및 건보공단 간편인증 모달] -->
+<div id="uAuthModal" class="u-modal-backdrop" style="display:none;">
+    <div class="u-modal-box">
+        <div class="u-modal-head">
+            <div>
+                <h3 class="u-modal-title">건보공단 진료내역 간편인증 조회</h3>
+                <p class="u-modal-subtitle">고객 정보를 입력하고 간편인증으로 최근 5년 법정 고지의무(3개월·1년·5년) 심사를 시작합니다.</p>
+            </div>
+            <button type="button" class="u-modal-close" onclick="closeAuthModal()">&times;</button>
+        </div>
+
+        <div class="u-modal-body">
+            <!-- 입력 폼 -->
+            <div class="u-form-group">
+                <label class="u-form-label">고객 성명</label>
+                <input type="text" id="uAuthName" class="u-form-input" placeholder="예: 홍길동">
+            </div>
+
+            <div class="u-form-group">
+                <label class="u-form-label">주민등록번호</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="text" id="uAuthSsn1" class="u-form-input" maxlength="6" placeholder="앞 6자리 (YYMMDD)" style="flex:1;">
+                    <span style="color:#94a3b8; font-weight:700;">-</span>
+                    <input type="password" id="uAuthSsn2" class="u-form-input" maxlength="7" placeholder="뒤 7자리" style="flex:1;">
+                </div>
+            </div>
+
+            <div class="u-form-group">
+                <label class="u-form-label">휴대폰 번호 (- 없이 입력)</label>
+                <input type="tel" id="uAuthPhone" class="u-form-input" maxlength="11" placeholder="01012345678">
+            </div>
+
+            <div class="u-form-group">
+                <label class="u-form-label">간편인증사 선택</label>
+                <select id="uAuthOrgCd" class="u-form-input">
+                    <option value="kakao" selected>카카오톡 (Kakao)</option>
+                    <option value="pass">PASS 인증서</option>
+                    <option value="toss">토스 (Toss)</option>
+                    <option value="naver">네이버 (Naver)</option>
+                </select>
+            </div>
+
+            <!-- 진행 상태 알림 박스 -->
+            <div id="uAuthStatusBox" style="display:none; margin-top:12px; padding:11px 13px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px;">
+                <div id="uAuthStatusTitle" style="font-weight:700; font-size:12.5px; color:#0f172a;"></div>
+                <div id="uAuthStatusDesc" style="font-size:11.5px; color:#64748b; margin-top:3px; line-height:1.4;"></div>
+            </div>
+        </div>
+
+        <div class="u-modal-footer">
+            <button type="button" class="btn-sgez" onclick="closeAuthModal()" style="padding:8px 14px; font-size:12px;">취소</button>
+            <button type="button" id="btnRequestAuth" class="btn-sgez btn-primary" onclick="requestNhisAuth()" style="padding:8px 20px; font-size:12px; font-weight:700;">간편인증 요청 및 실시간 심사 시작</button>
+        </div>
+    </div>
+</div>
+
+<!-- 건강보험공단 수신 데이터 원본(JSON) 진단 모달 레이어 -->
+<div id="nhisDiagModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:white; border-radius:14px; max-width:720px; width:100%; padding:20px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.2); border:1px solid #cbd5e1; display:flex; flex-direction:column; max-height:85vh;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid #f1f5f9; margin-bottom:12px;">
+            <div style="flex:1;">
+                <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0;">수신된 건강보험공단 원본 데이터(JSON) 전체 검사</h3>
+                <p style="font-size:12px; color:#64748b; margin:2px 0 0 0;">하이픈 서버를 통해 건강보험공단에서 수신된 실시간 응답 전문입니다.</p>
+            </div>
+            <button type="button" onclick="closeNhisDiagModal()" style="border:none; background:none; color:#94a3b8; font-size:20px; font-weight:700; cursor:pointer;">&times;</button>
+        </div>
+
+        <div id="nhisDiagJsonView" style="flex:1; overflow:auto; background:#0f172a; color:#34d399; padding:14px; border-radius:10px; font-family:monospace; font-size:11px; line-height:1.5; max-height:50vh; user-select:all; white-space:pre-wrap; word-break:break-all;">
+            <!-- 원본 JSON 렌더링 -->
+        </div>
+
+        <div style="padding-top:12px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid #f1f5f9; margin-top:12px;">
+            <span id="nhisDiagStatusSummary" style="font-size:11.5px; color:#64748b;">상태 코드: 200 OK</span>
+            <div style="display:flex; gap:8px;">
+                <button type="button" onclick="copyNhisDiagJson()" class="btn-sgez btn-primary" style="padding:6px 12px; font-size:11.5px;">
+                    JSON 전체 복사
+                </button>
+                <button type="button" onclick="closeNhisDiagModal()" class="btn-sgez" style="padding:6px 12px; font-size:11.5px;">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

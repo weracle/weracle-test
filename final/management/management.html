@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>위라클 파트너스 매니지먼트 & 관리자</title>
+  
+  <!-- 공통 CDN 폰트 및 아이콘 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- QR코드 생성 라이브러리 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <!-- 공통 설정 및 Supabase -->
+  <script src="../config.js?v=1.0.0"></script>
+  <script src="../security.js?v=1.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- 커스텀 스타일 -->
+  <link rel="stylesheet" href="management.css?v=20261018_14">
+</head>
+<body>
+
+  <div class="partners-container">
+    
+    <!-- =========================================================
+         [공통 상단] 헤더 & 5대 핵심 메뉴 탭 (관리자 포함)
+         ========================================================= -->
+    <header class="partners-header">
+      <div class="brand-section">
+        <div class="brand-logo-badge">W</div>
+        <div>
+          <h1 class="brand-title">위라클 파트너스</h1>
+          <p class="brand-subtitle">영업 지원 및 통합 매니지먼트 센터</p>
+        </div>
+      </div>
+
+      <!-- 5대 탭 -->
+      <nav class="tab-navigation">
+        <button class="tab-btn active" data-tab="tab-schedule">
+          1. 교육 & 회사 스케줄
+        </button>
+        <button class="tab-btn" data-tab="tab-qr">
+          2. 출근·교육 출석체크
+        </button>
+        <button class="tab-btn" data-tab="tab-perf">
+          3. 실적 표
+        </button>
+        <button class="tab-btn" data-tab="tab-lab">
+          4. 콘텐츠 연구소
+        </button>
+        <button class="tab-btn admin-tab" data-tab="tab-admin">
+          5. 관리자 설정
+        </button>
+      </nav>
+
+      <div class="user-quick-profile">
+        <span class="user-badge" id="currentUserBadge"><i class="fa-solid fa-shield-halved"></i> 최고 관리자 모드</span>
+      </div>
+    </header>
+
+
+    <!-- =========================================================
+         [메뉴 1] 교육 스케줄 및 회사 스케줄 (오늘 기준 세로형 타임라인)
+         ========================================================= -->
+    <section id="tab-schedule" class="tab-pane active">
+      <div class="dash-card">
+        
+        <!-- 상단 타이틀 & 컨트롤 바 -->
+        <div class="card-title-bar">
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <h2 class="card-title">사내 교육 및 회사 스케줄</h2>
+            <span class="sched-today-pill">
+              <i class="fa-solid fa-calendar-check" style="color:var(--primary);"></i> 오늘 <strong>2026년 10월 17일 (토)</strong> 기준
+            </span>
+          </div>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <!-- 필터 버튼군 -->
+            <button class="btn-secondary active" id="btnFilter_all" onclick="filterScheduleCategory('all')">전체 일정</button>
+            <button class="btn-secondary" id="btnFilter_edu" onclick="filterScheduleCategory('edu')">교육 일정</button>
+            <button class="btn-secondary" id="btnFilter_newbie" onclick="filterScheduleCategory('newbie')">신입 교육</button>
+            <button class="btn-secondary" id="btnFilter_comp" onclick="filterScheduleCategory('comp')">회사 일정</button>
+
+            <!-- 뷰 전환 (세로형 타임라인 vs 월간 달력) -->
+            <div class="table-toggle-bar">
+              <button class="table-toggle-btn active" id="btnViewTimeline" onclick="switchScheduleView('timeline')">
+                <i class="fa-solid fa-list-ul"></i> 세로 타임라인
+              </button>
+              <button class="table-toggle-btn" id="btnViewCalendar" onclick="switchScheduleView('calendar')">
+                <i class="fa-solid fa-calendar-days"></i> 월간 달력
+              </button>
+            </div>
+
+            <button class="btn-primary" style="background:#4285F4; border-color:#4285F4; font-size:12px; font-weight:700;" onclick="openGoogleCalSubscribeModal()">
+              <i class="fa-brands fa-google"></i> 내 폰 캘린더 연동 (스마트폰 알림)
+            </button>
+
+            <button class="btn-admin" onclick="switchTab('admin')"><i class="fa-solid fa-gear"></i> 일정 관리/추가</button>
+          </div>
+        </div>
+
+        <!-- [뷰 1] 세로형 타임라인 (기본 메인 뷰) -->
+        <div id="scheduleTimelineView" class="timeline-container">
+          
+          <!-- 오늘 일정 특별 하이라이트 배너 -->
+          <div id="todayHighlightBox"></div>
+
+          <!-- 오늘 기준 다가오는 일정 세로 타임라인 헤더 -->
+          <div class="timeline-section-title">
+            <span style="font-size:14px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+              <i class="fa-solid fa-clock" style="color:var(--primary);"></i> 다가오는 주요 일정 <span id="upcomingScheduleCount" style="color:var(--primary); font-size:13px; font-weight:800;">(0건)</span>
+            </span>
+            <span style="font-size:12px; color:var(--text-muted);">오늘부터 예정된 사내 교육 및 회사 일정이 순서대로 표시됩니다</span>
+          </div>
+
+          <!-- 오늘 이후 세로형 카드 목록 -->
+          <div class="vertical-timeline-list" id="verticalTimelineList">
+            <!-- JS 렌더링 -->
+          </div>
+
+          <!-- 지난 일정 보기 토글 영역 -->
+          <div class="past-schedule-toggle-wrap">
+            <button class="btn-secondary" onclick="togglePastSchedules()" id="btnTogglePast">
+              <i class="fa-solid fa-clock-rotate-left"></i> 지난 일정 확인하기 (<span id="pastScheduleCount">0</span>건) <i class="fa-solid fa-chevron-down" id="pastToggleIcon"></i>
+            </button>
+          </div>
+          <div id="pastScheduleList" class="vertical-timeline-list" style="display:none;">
+            <!-- JS 지난 일정 렌더링 -->
+          </div>
+        </div>
+
+        <!-- [뷰 2] 월간 캘린더 (선택 시 전환 가능) -->
+        <div id="scheduleCalendarView" class="schedule-layout" style="display:none;">
+          <!-- 월간 캘린더 영역 -->
+          <div style="background:#fff; border:1px solid var(--border); border-radius:14px; padding:18px;">
+            <div class="cal-controls">
+              <button class="cal-nav-btn" onclick="changeMonth(-1)">&lt;</button>
+              <div class="cal-month-title" id="calMonthTitle">2026년 10월</div>
+              <button class="cal-nav-btn" onclick="changeMonth(1)">&gt;</button>
+            </div>
+            <div class="cal-grid-header">
+              <div style="color:#ef4444;">일</div>
+              <div>월</div>
+              <div>화</div>
+              <div>수</div>
+              <div>목</div>
+              <div>금</div>
+              <div style="color:#0284c7;">토</div>
+            </div>
+            <div class="cal-grid-body" id="calGridBody">
+              <!-- JS로 캘린더 날짜 자동 렌더링 -->
+            </div>
+          </div>
+
+          <!-- 우측: 다가오는 교육 및 회사 행사 타임라인 -->
+          <div>
+            <h3 style="font-size:14px; font-weight:800; margin-bottom:12px; color:var(--text-sub);">
+              <i class="fa-solid fa-clock-rotate-left"></i> 다가오는 주요 일정
+            </h3>
+            <div class="schedule-side-list" id="scheduleSideList">
+              <!-- JS 렌더링 -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         [메뉴 2] 회사 출근 및 교육 출석체크 (QR코드 & 관리자 월별 다운로드)
+         ========================================================= -->
+    <section id="tab-qr" class="tab-pane">
+      <div class="dash-card">
+        
+        <!-- 상단 서브 네비게이션: [실시간 QR 발급] vs [관리자 출결 리포트] -->
+        <div class="card-title-bar">
+          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+            <h2 class="card-title">출근 및 교육 출석 통합 시스템</h2>
+            <div class="sub-nav-tabs">
+              <button class="sub-nav-btn active" id="subBtnLive" onclick="switchQrSubTab('live')">
+                <i class="fa-solid fa-qrcode"></i> 오늘 출근 체크인
+              </button>
+              <button class="sub-nav-btn" id="subBtnVote" onclick="switchQrSubTab('vote')">
+                <i class="fa-solid fa-square-poll-vertical"></i>  교육 참석 사전 투표
+              </button>
+              <button class="sub-nav-btn" id="subBtnRate" onclick="switchQrSubTab('rate')">
+                <i class="fa-solid fa-chart-pie"></i> 이번달 출석률
+              </button>
+              <button class="sub-nav-btn" id="subBtnReport" onclick="switchQrSubTab('report')">
+                <i class="fa-solid fa-file-invoice"></i> 출결 상세 이력 & 다운로드
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- [서브 1] 실시간 현장 QR 발급기 & 오늘 출석 현황 -->
+        <div id="qrSubViewLive">
+          <div class="qr-checkin-layout">
+            <!-- 좌측: 출입구 부착용 고정 QR 발급기 -->
+            <div class="qr-box-main">
+              <div style="font-size:15px; font-weight:800; color:var(--text-main);">
+                <i class="fa-solid fa-door-open" style="color:var(--primary);"></i> 회사 출입구 부착용 QR
+              </div>
+
+              <!-- 고정 QR 코드 생성 박스 -->
+              <div class="qr-canvas-wrap" id="qrcodeBox"></div>
+
+              <div style="margin:10px 0; text-align:center;">
+                <button class="btn-secondary" style="font-size:12px; padding:6px 14px; width:100%; border-color:#0284c7; color:#0284c7; font-weight:700;" onclick="openQrPrintModal()">
+                  <i class="fa-solid fa-print"></i> 출입구 부착용 QR 포스터 인쇄
+                </button>
+              </div>
+
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; font-size:11px; color:var(--text-sub); line-height:1.5;">
+                <div>⏰ <strong>정규 출근:</strong> 오전 10:00:00 기준 (초과 시 지각)</div>
+                <div style="margin-top:4px;"> <strong>오전 교육:</strong> 10:00 / 11:00 고정</div>
+                <div style="margin-top:4px; color:#0284c7; font-weight:600;">※ 전날 불참 신청자 외 전원(미투표자 포함) 출근 시 교육 자동 출석 연동!</div>
+              </div>
+            </div>
+
+            <!-- 우측: 오늘 실시간 출석 통계 & 현황 테이블 -->
+            <div>
+              <div class="attendance-status-bar">
+                <div class="att-stat-box">
+                  <div class="att-stat-label">파트너스 전원</div>
+                  <div class="att-stat-val" id="statTotal">0명</div>
+                </div>
+                <div class="att-stat-box">
+                  <div class="att-stat-label">정상 출석</div>
+                  <div class="att-stat-val good" id="statNormal">0명</div>
+                </div>
+                <div class="att-stat-box">
+                  <div class="att-stat-label">지각</div>
+                  <div class="att-stat-val late" id="statLate">0명</div>
+                </div>
+                <div class="att-stat-box">
+                  <div class="att-stat-label">미출석/대기</div>
+                  <div class="att-stat-val absent" id="statAbsent">0명</div>
+                </div>
+              </div>
+
+              <div style="background:#ffffff; border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+                <!-- 테이블 헤더 & 뷰 토글 바 -->
+                <div style="padding:10px 14px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                  <div class="table-toggle-bar">
+                    <button class="table-toggle-btn active" id="btnToggleRoster" onclick="switchAttendanceTableView('roster')">
+                      <i class="fa-solid fa-users"></i> 파트너스 출결 대조표 (출석/미출석)
+                    </button>
+                    <button class="table-toggle-btn" id="btnToggleLogs" onclick="switchAttendanceTableView('logs')">
+                      <i class="fa-solid fa-list-check"></i> 실시간 인증 로그
+                    </button>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:11px; color:var(--primary); font-weight:700;"><i class="fa-solid fa-arrows-rotate"></i> 파트너스 전원 자동 반영</span>
+                  </div>
+                </div>
+
+                <!-- 뷰 1: 오늘 대상자 출결 대조표 (출석 완료/미출석 현황) -->
+                <div id="viewTargetRoster" class="table-scroll-wrap">
+                  <table class="attendance-table">
+                    <thead>
+                      <tr>
+                        <th>이름</th>
+                        <th>소속팀</th>
+                        <th>출근 시각</th>
+                        <th>출근 판정</th>
+                        <th>당일 교육 출결 (10시/11시)</th>
+                        <th style="text-align:center;">관리자 조치</th>
+                      </tr>
+                    </thead>
+                    <tbody id="attendanceRosterTbody">
+                      <!-- JS 렌더링 -->
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- 뷰 2: 실시간 인증 로그 -->
+                <div id="viewRealtimeLogs" class="table-scroll-wrap" style="display:none;">
+                  <table class="attendance-table">
+                    <thead>
+                      <tr>
+                        <th>이름</th>
+                        <th>소속팀</th>
+                        <th>인증 일시</th>
+                        <th>상태</th>
+                      </tr>
+                    </thead>
+                    <tbody id="attendanceTbody">
+                      <!-- JS로 실시간 렌더링 -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- [서브 신설] 교육 참석 사전 투표 관리 화면 (밤 12시 마감) -->
+        <div id="qrSubViewVote" style="display:none; flex-direction:column; gap:16px;">
+          
+          <!-- 상단 알림 배너 & 교육 정보 -->
+          <div style="background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border:1px solid #bfdbfe; border-radius:14px; padding:18px 22px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="badge-cat" style="background:#2563eb; color:#ffffff; font-weight:800; padding:4px 10px; border-radius:100px; font-size:12px;"> 사전 투표 진행중</span>
+                <span style="font-size:13px; font-weight:700; color:#1e40af;"><i class="fa-regular fa-clock"></i> 오늘 밤 12:00 투표 마감 (D-1)</span>
+              </div>
+              <h3 style="font-size:18px; font-weight:900; color:#1e3a8a; margin:8px 0 4px 0;" id="voteEduTitleDisplay">
+                내일 10:00 신상품 약관 및 언더라이팅 심화 교육
+              </h3>
+              <p style="font-size:12px; color:#1d4ed8; margin:0; line-height:1.5;">
+                 <strong>안내:</strong> 투표를 하지 않으셔도 자동으로 <strong>[참석]</strong> 처리되어 내일 출근 QR 스캔 시 교육도 함께 자동 출석됩니다. 불참하실 경우에만 '불참'을 선택해 주세요.
+              </p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn-primary" style="background:#2563eb;" onclick="openEduVoteModal()">
+                <i class="fa-solid fa-check-to-slot"></i> 내 투표 팝업 열기
+              </button>
+            </div>
+          </div>
+
+          <!-- 투표 현황 요약 카드 -->
+          <div class="attendance-status-bar">
+            <div class="att-stat-box">
+              <div class="att-stat-label">파트너스 전원 대상</div>
+              <div class="att-stat-val" id="statVoteTotal">0명</div>
+            </div>
+            <div class="att-stat-box">
+              <div class="att-stat-label">참석 예정 (미투표 포함)</div>
+              <div class="att-stat-val good" id="statVoteAttending">0명</div>
+            </div>
+            <div class="att-stat-box">
+              <div class="att-stat-label">사전 불참 신청</div>
+              <div class="att-stat-val late" id="statVoteAbsent">0명</div>
+            </div>
+            <div class="att-stat-box">
+              <div class="att-stat-label">참석 예정률</div>
+              <div class="att-stat-val good" id="statVoteRate">100%</div>
+            </div>
+          </div>
+
+          <!-- 파트너스 투표 명부 테이블 -->
+          <div style="background:#ffffff; border:1px solid var(--border); border-radius:14px; overflow:hidden;">
+            <div style="padding:14px 18px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div>
+                <span style="font-weight:800; font-size:15px; color:var(--text-main);">
+                  <i class="fa-solid fa-list-check" style="color:var(--primary);"></i> 파트너스별 교육 참석 투표 현황
+                </span>
+                <span style="font-size:12px; color:var(--text-sub); margin-left:8px;">(클릭하여 참석/불참 상태를 언제든 직접 변경할 수 있습니다)</span>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <input type="text" id="voteSearchInput" class="search-input" placeholder="직원 검색..." oninput="renderTrainingVoteTab()" style="padding:4px 8px; font-size:12px; width:160px;">
+              </div>
+            </div>
+
+            <div class="table-scroll-wrap">
+              <table class="attendance-table">
+                <thead>
+                  <tr>
+                    <th>이름 (닉네임)</th>
+                    <th>소속팀</th>
+                    <th>교육 일시</th>
+                    <th style="text-align:center;">사전 투표 상태</th>
+                    <th style="text-align:center; width:190px;">투표 변경</th>
+                  </tr>
+                </thead>
+                <tbody id="eduVoteTbody">
+                  <!-- JS 렌더링 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- [서브 2] 관리자 전용: 이번달 출석률 (개인별 집계 현황) 화면 -->
+        <div id="qrSubViewRate" style="display:none; flex-direction:column; gap:16px;">
+          
+          <!-- 상단 필터 & 액션 바 -->
+          <div class="att-filter-container">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:var(--text-sub); display:block; margin-bottom:4px;">조회 연월</label>
+              <select id="rateMonthSelect" class="btn-secondary" onchange="filterMonthlyRateTab()">
+                <option value="2026-10">2026년 10월 (당월)</option>
+                <option value="2026-09">2026년 09월</option>
+                <option value="2026-08">2026년 08월</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="font-size:12px; font-weight:700; color:var(--text-sub); display:block; margin-bottom:4px;">소속 팀</label>
+              <select id="rateTeamSelect" class="btn-secondary" onchange="filterMonthlyRateTab()">
+                <option value="all">전체 팀 보기</option>
+              </select>
+            </div>
+
+            <div style="flex:1;">
+              <label style="font-size:12px; font-weight:700; color:var(--text-sub); display:block; margin-bottom:4px;">파트너 검색</label>
+              <input type="text" id="rateSearch" class="search-input" style="width:100%;" placeholder="직원 이름 또는 별칭 검색..." oninput="filterMonthlyRateTab()">
+            </div>
+
+            <div style="align-self:flex-end; display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn-secondary" onclick="openAttendancePolicyModal()">
+                <i class="fa-solid fa-sliders"></i> <strong>근무일수 & 평가기준 설정</strong>
+              </button>
+              <button class="btn-success" onclick="exportMonthlyRateToCSV()">
+                <i class="fa-solid fa-file-excel"></i> <strong>이번달 출석률 엑셀(CSV) 다운로드</strong>
+              </button>
+            </div>
+          </div>
+
+          <!-- 이번달 출석률 통계 요약 카드 4종 -->
+          <div class="attendance-status-bar">
+            <div class="att-stat-box">
+              <div class="att-stat-label">파트너 평균 출석률</div>
+              <div class="att-stat-val good" id="rateAvgStat">88.9%</div>
+            </div>
+            <div class="att-stat-box">
+              <div class="att-stat-label">우수 개근 파트너 (<span id="lblRateExcellent">95</span>%↑)</div>
+              <div class="att-stat-val good" id="ratePerfectStat">4명</div>
+            </div>
+            <div class="att-stat-box">
+              <div class="att-stat-label">출석 주의 대상 (<span id="lblRateGood">80</span>%↓)</div>
+              <div class="att-stat-val late" id="rateWarnStat">2명</div>
+            </div>
+            <div class="att-stat-box">
+              <div class="att-stat-label">당월 총 근무일수</div>
+              <div class="att-stat-val" id="rateWorkDaysStat">12일</div>
+            </div>
+          </div>
+
+          <!-- 파트너별 개인 출석률 집계 테이블 -->
+          <div style="background:#ffffff; border:1px solid var(--border); border-radius:14px; overflow:hidden;">
+            <div style="padding:14px 18px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:800; font-size:15px; color:var(--text-main);">
+                <i class="fa-solid fa-chart-pie" style="color:var(--primary);"></i>  파트너별 이번달 개인 출석률 현황표
+              </span>
+              <span style="font-size:12px; color:var(--text-sub);">
+                조회된 인원: <strong id="rateResultCount" style="color:var(--primary);">9</strong> 명
+              </span>
+            </div>
+
+            <div class="table-scroll-wrap">
+              <table class="attendance-table">
+                <thead>
+                  <tr>
+                    <th style="width:55px; text-align:center;">순위</th>
+                    <th>직원 이름</th>
+                    <th>소속팀</th>
+                    <th style="width:200px;">이번달 개인 출석률</th>
+                    <th style="text-align:center;">총 근무일</th>
+                    <th style="text-align:center;">정상 출근</th>
+                    <th style="text-align:center;">지각</th>
+                    <th style="text-align:center;">결석/미인증</th>
+                    <th style="text-align:center;">출결 상태</th>
+                  </tr>
+                </thead>
+                <tbody id="monthlyRateTbody">
+                  <!-- JS 렌더링 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- [서브 3] 관리자 전용: 출결 상세 이력 & 다운로드 화면 -->
+        <div id="qrSubViewReport" style="display:none; flex-direction:column; gap:16px;">
+          
+          <!-- 상단 필터 & 월별 다운로드 액션 바 -->
+          <div class="att-filter-container">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:var(--text-sub); display:block; margin-bottom:4px;">조회 연월</label>
+              <select id="reportMonthSelect" class="btn-secondary" onchange="filterAttendanceReport()">
+                <option value="2026-10">2026년 10월 (당월)</option>
+                <option value="2026-09">2026년 09월</option>
+                <option value="2026-08">2026년 08월</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="font-size:12px; font-weight:700; color:var(--text-sub); display:block; margin-bottom:4px;">출결 구분</label>
+              <select id="reportTypeSelect" class="btn-secondary" onchange="filterAttendanceReport()">
+                <option value="all">전체 (출근 + 모든 사내교육)</option>
+                <option value="회사출근"> 정규 회사 출근만</option>
+                <option value="교육"> 사내 교육 전체</option>
+                <option value="신상품 약관"> [교육] 신상품 약관 및 언더라이팅</option>
+                <option value="세일즈 화법"> [교육] 세일즈 화법 및 클로징</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="font-size:12px; font-weight:700; color:var(--text-sub); display:block; margin-bottom:4px;">소속 팀</label>
+              <select id="reportTeamSelect" class="btn-secondary" onchange="filterAttendanceReport()">
+                <option value="all">전체 팀 보기</option>
+              </select>
+            </div>
+
+            <div style="flex:1;">
+              <label style="font-size:12px; font-weight:700; color:var(--text-sub); display:block; margin-bottom:4px;">직원 검색</label>
+              <input type="text" id="reportSearch" class="search-input" style="width:100%;" placeholder="직원 이름 검색..." oninput="filterAttendanceReport()">
+            </div>
+
+            <div style="align-self:flex-end;">
+              <button class="btn-success" onclick="exportAttendanceReportToCSV()">
+                <i class="fa-solid fa-file-excel"></i> <strong>월별 출결 결과 엑셀(CSV) 다운로드</strong>
+              </button>
+            </div>
+          </div>
+
+          <!-- 월간 집계 통계 카드 3종 -->
+          <div class="attendance-status-bar">
+            <div class="att-stat-box">
+              <div class="att-stat-label">선택월 누적 인증 건수</div>
+              <div class="att-stat-val" id="repStatTotalLogs">142건</div>
+            </div>
+            <div class="att-stat-box">
+              <div class="att-stat-label">정상 출결 건수</div>
+              <div class="att-stat-val good" id="repStatNormalLogs">132건</div>
+            </div>
+            <div class="att-stat-box">
+              <div class="att-stat-label">지각 건수</div>
+              <div class="att-stat-val late" id="repStatLateLogs">10건</div>
+            </div>
+          </div>
+
+          <!-- 상세 결과 데이터 테이블 -->
+          <div style="background:#ffffff; border:1px solid var(--border); border-radius:14px; overflow:hidden;">
+            <div style="padding:14px 18px; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:800; font-size:15px; color:var(--text-main);">
+                <i class="fa-solid fa-list-check"></i>  월간 출석 및 교육 상세 명세표
+              </span>
+              <span style="font-size:12px; color:var(--text-sub);">
+                조회된 결과: <strong id="repResultCount" style="color:var(--primary);">0</strong> 건
+              </span>
+            </div>
+            <div class="table-scroll-wrap">
+              <table class="attendance-table">
+                <thead>
+                  <tr>
+                    <th style="width:110px;">일자</th>
+                    <th style="width:90px;">시간</th>
+                    <th>직원 이름</th>
+                    <th>소속팀</th>
+                    <th>출결 구분 (출근 / 교육명)</th>
+                    <th>인증 방식</th>
+                    <th style="text-align:center; width:100px;">출결 판정</th>
+                  </tr>
+                </thead>
+                <tbody id="attendanceReportTbody">
+                  <!-- JS 렌더링 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         [메뉴 3] 파트너스 실적 표 & 팀별 목표 현황
+         ========================================================= -->
+    <section id="tab-perf" class="tab-pane">
+      
+      <!-- [상단]  팀별 당월 목표 달성 현황 카드 (팀 랭킹 보드) -->
+      <div class="dash-card team-perf-section">
+        <div class="team-perf-header">
+          <div>
+            <div class="team-perf-header-title">
+              <i class="fa-solid fa-users-viewfinder" style="color:var(--primary); font-size:18px;"></i>
+              <span>2026년 10월 팀별 목표 달성 현황 (팀 랭킹 보드)</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-sub); margin-top:2px;">팀 카드를 클릭하면 해당 팀원의 실적만 바로 필터링되어 하단에 표시됩니다.</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="btn-secondary" id="btnResetTeamFilter" style="padding:6px 12px; font-size:12px;" onclick="resetTeamFilter()">
+              <i class="fa-solid fa-rotate-left"></i> 전체 팀 보기
+            </button>
+          </div>
+        </div>
+
+        <!-- 팀별 카드 그리드 -->
+        <div class="team-perf-grid" id="teamPerfGrid">
+          <!-- JS 동적 렌더링 -->
+        </div>
+      </div>
+
+      <!-- [하단]  파트너스 영업 실적 집계표 -->
+      <div class="dash-card">
+        <div class="card-title-bar">
+          <div>
+            <h2 class="card-title" style="margin-bottom:2px;">파트너스 영업 실적 집계표</h2>
+            <p style="font-size:12px; color:var(--text-sub);">당월 체결 건수 및 목표 달성률 상세 현황</p>
+          </div>
+          <div class="performance-filter-bar">
+            <input type="text" id="perfSearch" class="search-input" placeholder="파트너 이름 또는 팀 검색..." oninput="filterPerfTable()">
+            <select id="perfMonthSelect" class="btn-secondary" onchange="filterPerfTable()">
+              <option value="2026-10">2026년 10월 (당월)</option>
+              <option value="2026-09">2026년 09월</option>
+              <option value="2026-08">2026년 08월</option>
+            </select>
+            <select id="perfTeamSelect" class="btn-secondary" onchange="handleTeamSelectChange()">
+              <option value="all">전체 팀 보기</option>
+              <!-- JS 동적 채움 -->
+            </select>
+            <button class="btn-primary" onclick="exportPerfToCSV()"><i class="fa-solid fa-file-excel"></i> 엑셀(CSV) 다운로드</button>
+          </div>
+        </div>
+
+        <div class="perf-table-wrap">
+          <table class="perf-table">
+            <thead>
+              <tr>
+                <th style="width:60px;">순위</th>
+                <th>파트너 이름</th>
+                <th>소속팀</th>
+                <th style="text-align:right;">신규 체결건수</th>
+                <th style="text-align:right;">월환산 실적</th>
+                <th style="width:200px;">목표 달성률</th>
+                <th style="text-align:right;">누적 환산 실적</th>
+                <th style="text-align:center;">상태</th>
+              </tr>
+            </thead>
+            <tbody id="perfTableBody">
+              <!-- JS로 렌더링 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         [메뉴 4] 콘텐츠 연구소 (주제 제시 & 직원 의견 소통 라운지)
+         ========================================================= -->
+    <section id="tab-lab" class="tab-pane">
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        
+        <!-- 상단 배너: 현재 진행 중인 메인 연구 주제 -->
+        <div class="lab-header-banner">
+          <div>
+            <span class="lab-topic-tag"><i class="fa-solid fa-lightbulb"></i> 현재 진행 중인 연구 및 토론 주제</span>
+            <h2 class="lab-topic-title" id="currentTopicTitle">"2030 사회초년생의 실손 및 간편 건강보험 첫 상담 클로징 전략"</h2>
+            <p class="lab-topic-desc" id="currentTopicDesc">
+              최근 2030 세대의 1인 가구 증가에 맞춰 실무에서 가장 반응이 좋았던 화법, 자료, 가입 설득 노하우를 자유롭게 나눠주세요.
+            </p>
+          </div>
+          <div>
+            <button class="btn-secondary" style="background:rgba(255,255,255,0.9); font-weight:800;" onclick="switchTab('admin')">
+              <i class="fa-solid fa-sliders"></i> 연구소 주제 관리
+            </button>
+          </div>
+        </div>
+
+        <div class="lab-main-layout">
+          <!-- 좌측: 의견 작성 폼 + 현재 주제 피드 리스트 -->
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            
+            <div class="idea-post-box">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:800; font-size:15px; color:var(--text-main);"> 내 아이디어 & 현장 노하우 나누기</span>
+                <span style="font-size:12px; color:var(--text-sub);">작성자: <strong>김철수 팀장</strong></span>
+              </div>
+              <textarea id="ideaInput" placeholder="이 주제에 대한 나만의 노하우, 현장 고객 반응, 실무 팁을 편하게 적어주세요..."></textarea>
+              <div style="display:flex; justify-content:flex-end;">
+                <button class="btn-accent" onclick="submitIdea()"><i class="fa-solid fa-paper-plane"></i> 의견 등록하기</button>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0 4px;">
+              <span style="font-weight:800; font-size:15px; color:var(--text-main);">
+                <i class="fa-solid fa-comments" style="color:var(--primary);"></i> 현재 주제 파트너 실시간 피드
+              </span>
+              <span style="font-size:12px; color:var(--text-sub);">
+                등록된 의견: <strong id="currentTopicIdeaCount" style="color:var(--primary);">0</strong>개
+              </span>
+            </div>
+
+            <div id="ideaFeedContainer" style="display:flex; flex-direction:column; gap:14px;">
+              <!-- JS로 렌더링 -->
+            </div>
+          </div>
+
+          <!-- 우측: 연구소 안내 가이드 및 지난 주제 보관함 -->
+          <div style="display:flex; flex-direction:column; gap:18px;">
+            
+            <div class="dash-card">
+              <h3 class="card-title" style="font-size:15px;"><i class="fa-solid fa-circle-info" style="color:var(--primary);"></i> 연구소 참여 안내</h3>
+              <div style="font-size:13px; color:var(--text-sub); line-height:1.7; margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+                <div> <strong>실무 세일즈 노하우 공유:</strong> 현장에서 유용했던 고객 상담 팁이나 화법, 나만의 성공 노하우를 자유롭게 남겨주세요.</div>
+                <div> <strong>소통과 피드백:</strong> 동료 파트너들의 아이디어에 공감과 유익한 댓글을 남기며 함께 성장해갑니다.</div>
+                <div> <strong>지난 주제 다시보기:</strong> 지난 연구 주제와 동료들의 소중한 의견들은 아래 '지난 연구 주제 보관함'에서 언제든 확인하실 수 있습니다.</div>
+              </div>
+            </div>
+
+            <div class="dash-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 class="card-title" style="font-size:15px;"><i class="fa-solid fa-folder-open" style="color:var(--accent);"></i> 지난 연구 주제 보관함 <span style="font-size:11px; color:var(--text-sub); font-weight:600;">(최근 3개 보관)</span></h3>
+                <span style="font-size:11px; color:var(--text-muted); font-weight:700;"><span id="pastTopicCount">0</span>/3개 보관</span>
+              </div>
+              <div id="pastTopicsList" style="display:flex; flex-direction:column; gap:8px;">
+                <!-- JS 렌더링 -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         [메뉴 5]  관리자 설정 콘솔 (Admin Console - 탭 분할 뷰)
+         ========================================================= -->
+    <section id="tab-admin" class="tab-pane">
+      <div class="dash-card" style="border-top: 4px solid var(--admin-color);">
+        
+        <!-- 상단 헤더 -->
+        <div class="card-title-bar">
+          <div>
+            <h2 class="card-title admin-style"> 위라클 파트너스 관리자 제어 센터</h2>
+            <p style="font-size:13px; color:var(--text-sub); margin-top:4px;">
+              원하는 파트의 탭을 클릭하여 스케줄, 출결 기준 시간 정책, 실적, 콘텐츠 연구소, 회원 권한을 개별 컨트롤할 수 있습니다.
+            </p>
+          </div>
+          <span style="font-size:12px; padding:6px 14px; background:var(--admin-light); color:var(--admin-color); border-radius:100px; font-weight:800;">
+            <i class="fa-solid fa-shield-halved"></i> 최고 관리자 권한 활성화
+          </span>
+        </div>
+
+        <!-- 관리자 파트별 서브 탭 4종 -->
+        <div class="sub-nav-tabs" style="margin: 12px 0 20px 0; background:#f1f5f9; padding:6px; border-radius:12px; gap:6px; display:flex; flex-wrap:wrap;">
+          <button class="sub-nav-btn active" id="admSubBtn1" onclick="switchAdminSubTab(1)" style="padding:10px 18px; font-size:14px;">
+            <i class="fa-solid fa-calendar-days"></i> 1. 스케줄 & 교육 일정
+          </button>
+          <button class="sub-nav-btn" id="admSubBtn2" onclick="switchAdminSubTab(2)" style="padding:10px 18px; font-size:14px;">
+            <i class="fa-solid fa-clock"></i> 2. 출근 & 교육 시간 설정
+          </button>
+          <button class="sub-nav-btn" id="admSubBtn3" onclick="switchAdminSubTab(3)" style="padding:10px 18px; font-size:14px;">
+            <i class="fa-solid fa-users-gear"></i> 3. 팀·회원 관리
+          </button>
+          <button class="sub-nav-btn" id="admSubBtn4" onclick="switchAdminSubTab(4)" style="padding:10px 18px; font-size:14px;">
+            <i class="fa-solid fa-flask"></i> 4. 콘텐츠 연구소 관리
+          </button>
+        </div>
+
+        <!-- [파트 1] 스케줄 & 교육 일정 관리 -->
+        <div id="admSubPane1" class="admin-pane" style="display:block;">
+          <div style="display:grid; grid-template-columns: 420px 1fr; gap:20px;">
+            <!-- 좌측: 등록 폼 & 회사 관리 -->
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              
+              <!-- 1. 새 일정 등록 폼 -->
+              <div style="background:#f8fafc; padding:20px; border-radius:14px; border:1px solid var(--border); display:flex; flex-direction:column; gap:12px;">
+                <span style="font-weight:800; font-size:15px; color:var(--text-main);"><i class="fa-solid fa-calendar-plus" style="color:var(--primary);"></i> 새 일정 등록하기</span>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                  <div class="admin-form-group">
+                    <label>날짜</label>
+                    <input type="date" id="admSchedDate" class="form-input" value="2026-10-25">
+                  </div>
+                  <div class="admin-form-group">
+                    <label>시간</label>
+                    <input type="time" id="admSchedTime" class="form-input" value="14:00">
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:110px 1fr; gap:8px;">
+                  <div class="admin-form-group">
+                    <label>분류</label>
+                    <select id="admSchedCategory" class="form-input" onchange="handleSchedCategoryChange()">
+                      <option value="edu"> 교육</option>
+                      <option value="comp"> 회사</option>
+                    </select>
+                  </div>
+                  <div class="admin-form-group">
+                    <label>일정 제목</label>
+                    <input type="text" id="admSchedTitle" class="form-input" placeholder="예: 암보험 신상품 약관 및 화법 특강">
+                  </div>
+                </div>
+
+                <!-- [교육 전용 세부 옵션: 주관 회사 선택 & 신입 대상 체크박스] -->
+                <div id="admSchedEduOptions" style="display:flex; flex-direction:column; gap:8px; background:#ffffff; border:1px solid #e2e8f0; padding:12px; border-radius:10px;">
+                  <div class="admin-form-group" style="margin-bottom:0;">
+                    <label style="font-size:12px; font-weight:700; color:var(--text-main); display:flex; justify-content:space-between;">
+                      <span> 교육 주관 회사 (원수사 / 제휴사)</span>
+                      <span style="font-size:11px; color:var(--primary); font-weight:600;">아래에서 회사 추가/삭제 가능</span>
+                    </label>
+                    <select id="admSchedCompany" class="form-input" style="font-weight:600;">
+                      <option value="">선택 안함 (자체 교육)</option>
+                      <!-- JS에서 partnerCompanies 목록으로 동적 렌더링 -->
+                    </select>
+                  </div>
+
+                  <!-- 신입(루키) 전용 교육 여부 표시 -->
+                  <label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:#f0fdf4; border:1px solid #bbf7d0; padding:8px 10px; border-radius:8px; font-size:12px; font-weight:700; color:#166534; margin-top:2px;">
+                    <input type="checkbox" id="admSchedIsNewbie" style="width:16px; height:16px; accent-color:#16a34a; cursor:pointer;">
+                    <span> 신입(루키) 전용 교육으로 표시 (캘린더에 신입 태그 부여)</span>
+                  </label>
+                </div>
+
+                <!-- [3.  구글 캘린더 & 스마트폰 알림 대상자 설정] -->
+                <div style="background:#ffffff; border:1px solid #cbd5e1; padding:12px; border-radius:10px; display:flex; flex-direction:column; gap:8px;">
+                  <label style="font-size:12px; font-weight:800; color:var(--text-main); display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fa-brands fa-google" style="color:#4285F4;"></i> 구글 캘린더 & 스마트폰 알림 대상</span>
+                    <span class="status-badge" style="background:#eff6ff; color:#2563eb; font-size:10px; font-weight:700;">수파베이스+구글 이중연동</span>
+                  </label>
+                  
+                  <div style="display:grid; grid-template-columns:110px 1fr; gap:8px;">
+                    <select id="admSchedTargetType" class="form-input" style="font-weight:700; font-size:12px;" onchange="handleSchedTargetTypeChange()">
+                      <option value="all"> 전사 공통</option>
+                      <option value="team"> 팀별 지정</option>
+                      <option value="personal"> 개별 지정</option>
+                    </select>
+
+                    <!-- 팀 선택 (팀별 지정 시 노출, JS에서 동적 렌더링) -->
+                    <select id="admSchedTargetTeam" class="form-input" style="font-size:12px; display:none;">
+                    </select>
+
+                    <!-- 개별 설계사 선택 (개별 지정 시 노출) -->
+                    <select id="admSchedTargetUser" class="form-input" style="font-size:12px; display:none;">
+                      <option value="">설계사 선택...</option>
+                    </select>
+                    
+                    <div id="admSchedTargetAllDesc" style="font-size:11px; color:var(--text-muted); display:flex; align-items:center;">
+                      전체 파트너 폰 캘린더에 일정 등록 & 알림 발송
+                    </div>
+                  </div>
+
+                  <!-- 스마트폰 알림 시간 설정 -->
+                  <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:2px; font-size:11px; color:var(--text-sub);">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <span style="font-weight:700;"><i class="fa-solid fa-bell" style="color:var(--primary);"></i> 폰 알림 시간:</span>
+                      <select id="admSchedRemindTime" class="form-input" style="padding:4px 8px; font-size:11px; width:auto; border-radius:6px;">
+                        <option value="10m">10분 전 알림</option>
+                        <option value="30m" selected>30분 전 알림</option>
+                        <option value="1h">1시간 전 알림</option>
+                        <option value="2h">2시간 전 알림</option>
+                        <option value="0">정시 (시작 시간)</option>
+                        <option value="none">알림 없음</option>
+                      </select>
+                    </div>
+                    <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+                      <input type="checkbox" id="admSchedRemind1d" checked style="accent-color:var(--primary); cursor:pointer;">
+                       1일 전 사전 알림
+                    </label>
+                  </div>
+                </div>
+
+                <button class="btn-primary" style="padding:12px;" onclick="adminAddSchedule()"><i class="fa-solid fa-plus"></i> 캘린더에 일정 즉시 등록 (구글 동시 연동)</button>
+              </div>
+
+              <!-- 2. 회사 목록 관리 (선택 및 추가/삭제) 박스 -->
+              <div style="background:#ffffff; padding:16px 18px; border-radius:14px; border:1px solid var(--border); display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:13px; font-weight:800; color:var(--text-main);">
+                    <i class="fa-solid fa-building-user" style="color:var(--primary);"></i> 제휴 회사 목록 관리 (<span id="companyCount">0</span>개)
+                  </span>
+                  <span style="font-size:11px; color:var(--text-muted);">원치 않는 회사는 ×를 눌러 삭제</span>
+                </div>
+                
+                <div class="company-chips-wrap" id="companyChipsWrap">
+                  <!-- JS로 회사 태그 및 x 삭제 버튼 렌더링 -->
+                </div>
+
+                <div style="display:flex; gap:6px; margin-top:4px;">
+                  <input type="text" id="admNewCompanyInput" class="form-input" style="font-size:12px; padding:6px 10px;" placeholder="새 회사명 (예: DB손보, 라이나)..." onkeydown="if(event.key==='Enter') adminAddCompany()">
+                  <button class="btn-secondary" style="padding:6px 12px; font-size:12px; white-space:nowrap; font-weight:700;" onclick="adminAddCompany()">
+                    <i class="fa-solid fa-plus"></i> 회사 추가
+                  </button>
+                </div>
+              </div>
+
+              <!-- 3. 구글 캘린더 동기화 설정 박스 -->
+              <div style="background:#ffffff; padding:16px 18px; border-radius:14px; border:1px solid var(--border); display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:13px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+                    <i class="fa-brands fa-google" style="color:#4285F4;"></i> 구글 캘린더 동기화 설정
+                  </span>
+                  <span class="status-badge on-time" style="font-size:11px;" id="gcalStatusBadge">수파베이스+구글 준비완료</span>
+                </div>
+                <p style="font-size:11px; color:var(--text-sub); line-height:1.4; margin:0;">
+                  수파베이스에 저장됨과 동시에 공식 구글 캘린더로 즉시 전송되어 구독한 패밀리 회원의 스마트폰으로 자동 알림을 보냅니다.
+                </p>
+                <div class="admin-form-group" style="margin-bottom:0;">
+                  <label style="font-size:11px; font-weight:700;">구글 캘린더 ID 또는 연동 Webhook URL</label>
+                  <div style="display:flex; gap:6px;">
+                    <input type="text" id="cfgGoogleCalUrl" class="form-input" style="font-size:12px; padding:6px 10px;" placeholder="기본: boheomdapda@gmail.com (또는 Webhook URL)">
+                    <button class="btn-secondary" style="padding:6px 12px; font-size:12px; white-space:nowrap; font-weight:700;" onclick="saveGoogleCalSettings()">
+                      저장
+                    </button>
+                  </div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px; flex-wrap:wrap; gap:6px;">
+                  <button class="btn-secondary" style="font-size:11px; padding:4px 8px;" onclick="testGoogleCalSync()">
+                    <i class="fa-solid fa-bolt"></i> 동기화 연결 테스트
+                  </button>
+                  <button class="btn-secondary" style="font-size:11px; padding:4px 8px; color:#2563eb;" onclick="copyGoogleCalSubscribeUrl()">
+                    <i class="fa-solid fa-link"></i> 직원용 캘린더 구독 링크 복사
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 우측: 등록된 전체 일정 리스트 -->
+            <div style="background:#ffffff; padding:20px; border-radius:14px; border:1px solid var(--border); display:flex; flex-direction:column; gap:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:800; font-size:15px; color:var(--text-main);">현재 등록된 일정 목록</span>
+                <span style="font-size:12px; color:var(--text-sub);">총 <strong id="admSchedCount" style="color:var(--primary);">0</strong> 개</span>
+              </div>
+              <div id="admScheduleList" style="max-height:540px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+                <!-- JS 렌더링 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- [파트 2] 출근시간 및 교육시간 정책 설정 -->
+        <div id="admSubPane2" class="admin-pane" style="display:none;">
+          <div style="max-width:720px; display:flex; flex-direction:column; gap:16px;">
+            <p style="font-size:13px; color:var(--text-sub);">
+              QR 스캔 시 출석/지각 여부를 자동으로 판정하는 기준 시각과 갱신 주기를 설정합니다.
+            </p>
+
+            <div style="background:#f8fafc; padding:16px 20px; border-radius:12px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:800; font-size:14px; color:var(--text-main);"> 정규 회사 출근 기준 시각</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">이 시간 이후 체크인 시 '지각'으로 자동 판정됩니다.</div>
+              </div>
+              <input type="time" id="cfgWorkTime" class="form-input" style="width:120px; font-weight:700;" value="09:00">
+            </div>
+
+            <div style="background:#f8fafc; padding:16px 20px; border-radius:12px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:800; font-size:14px; color:var(--text-main);"> 오전 사내 교육 시작 시각</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">오전 교육 세션 출석 인정 기준 시각입니다.</div>
+              </div>
+              <input type="time" id="cfgEduAmTime" class="form-input" style="width:120px; font-weight:700;" value="10:00">
+            </div>
+
+            <div style="background:#f8fafc; padding:16px 20px; border-radius:12px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:800; font-size:14px; color:var(--text-main);"> 오후 사내 교육 시작 시각</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">오후 교육 세션 출석 인정 기준 시각입니다.</div>
+              </div>
+              <input type="time" id="cfgEduPmTime" class="form-input" style="width:120px; font-weight:700;" value="14:00">
+            </div>
+
+            <div style="background:#f8fafc; padding:16px 20px; border-radius:12px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:800; font-size:14px; color:var(--text-main);"> 보안 QR코드 자동 갱신 주기</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">화면에 표시되는 QR의 갱신 시간 (초)</div>
+              </div>
+              <select id="cfgQrRefresh" class="form-input" style="width:120px; font-weight:700;">
+                <option value="30">30초</option>
+                <option value="60" selected>60초 (권장)</option>
+                <option value="120">120초</option>
+              </select>
+            </div>
+
+            <!-- 이번달 출석률 평가 기준 및 근무일수 설정 -->
+            <div style="margin-top:8px; padding-top:14px; border-top:1px dashed var(--border);">
+              <h4 style="font-size:14px; font-weight:800; color:var(--text-main); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                <i class="fa-solid fa-chart-pie" style="color:var(--primary);"></i> 이번달 출석률 평가 기준 및 총 근무일수
+              </h4>
+            </div>
+
+            <div style="background:#f8fafc; padding:16px 20px; border-radius:12px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:800; font-size:14px; color:var(--text-main);"> 당월 총 근무일수 (분모 기준)</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">개인 출석률 계산 시 기준이 되는 당월 전체 출근 의무 일수입니다.</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <input type="number" id="cfgTotalWorkDays" class="form-input" style="width:90px; text-align:center; font-weight:800;" min="1" max="31" value="12">
+                <span style="font-weight:700; font-size:13px;">일</span>
+              </div>
+            </div>
+
+            <div style="background:#f0fdf4; padding:16px 20px; border-radius:12px; border:1px solid #bbf7d0; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:800; font-size:14px; color:#166534;"> 출석률 '우수 개근' 기준</div>
+                <div style="font-size:12px; color:#15803d; margin-top:2px;">설정한 비율 이상 달성 시 우수 개근 파트너로 자동 지정됩니다.</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <input type="number" id="cfgRateExcellent" class="form-input" style="width:90px; text-align:center; font-weight:800;" min="50" max="100" value="95">
+                <span style="font-weight:700; font-size:13px; color:#166534;">% 이상</span>
+              </div>
+            </div>
+
+            <div style="background:#eff6ff; padding:16px 20px; border-radius:12px; border:1px solid #bfdbfe; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:800; font-size:14px; color:#1e40af;">● 출석률 '보통 (양호)' 기준</div>
+                <div style="font-size:12px; color:#1d4ed8; margin-top:2px;">이 비율 미만인 파트너는 자동으로 ' 출석 주의' 대상으로 분류됩니다.</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <input type="number" id="cfgRateGood" class="form-input" style="width:90px; text-align:center; font-weight:800;" min="30" max="99" value="80">
+                <span style="font-weight:700; font-size:13px; color:#1e40af;">% 이상</span>
+              </div>
+            </div>
+
+            <div>
+              <button class="btn-admin" style="padding:12px 24px; font-size:14px;" onclick="saveTimeSettings()">
+                <i class="fa-solid fa-floppy-disk"></i> 출결 시간 및 출석률 기준 설정 전체 저장
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- [파트 3]  팀·회원 관리 (회원관리 / 팀관리 / 실적관리 / 등급권한 관리) -->
+        <div id="admSubPane3" class="admin-pane" style="display:none;">
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            
+            <!-- 팀·회원 관리 4대 서브 탭 네비게이션 -->
+            <div class="team-subtabs-wrap" style="background:#ffffff; border:1px solid var(--border); padding:6px; border-radius:12px; display:inline-flex; gap:6px; flex-wrap:wrap; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+              <button class="sub-nav-btn active" id="tmSubBtn1" onclick="switchTeamMemberSubTab(1)" style="padding:10px 20px; font-size:14px;">
+                <i class="fa-solid fa-users"></i> 회원관리
+              </button>
+              <button class="sub-nav-btn" id="tmSubBtn2" onclick="switchTeamMemberSubTab(2)" style="padding:10px 20px; font-size:14px;">
+                <i class="fa-solid fa-people-group"></i> 팀관리
+              </button>
+              <button class="sub-nav-btn" id="tmSubBtn3" onclick="switchTeamMemberSubTab(3)" style="padding:10px 20px; font-size:14px;">
+                <i class="fa-solid fa-chart-line"></i> 실적관리
+              </button>
+              <button class="sub-nav-btn" id="tmSubBtn4" onclick="switchTeamMemberSubTab(4)" style="padding:10px 20px; font-size:14px;">
+                <i class="fa-solid fa-shield-halved"></i> 등급권한 관리
+              </button>
+            </div>
+
+            <!-- 서브 1:  회원관리 -->
+            <div id="tmPane1" class="tm-pane" style="display:block;">
+              <div style="background:#ffffff; border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                <div class="card-title-bar" style="margin-bottom:14px;">
+                  <div>
+                    <h4 style="font-size:16px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+                      <i class="fa-solid fa-users" style="color:var(--primary);"></i> 파트너스 회원 목록 및 소속팀 배정
+                    </h4>
+                    <p style="font-size:12px; color:var(--text-sub); margin-top:2px;">
+                      파트너스(C 권한 또는 family/관리자)로 등록된 사내 인원만 표시됩니다. 소속팀 변경 시 실적 및 팀 인원 집계에 즉시 반영됩니다.
+                    </p>
+                  </div>
+                  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <input type="text" id="admUserSearch" class="search-input" placeholder="이름 또는 이메일 검색..." oninput="filterAdminUserList()">
+                    <select id="admUserFilterSelect" class="btn-secondary" onchange="filterAdminUserList()">
+                      <option value="all">전체 팀 보기</option>
+                      <option value="관리자"> 관리자</option>
+                      <option value="미지정"> 미지정</option>
+                    </select>
+                    <button class="btn-primary" onclick="loadAdminUserList()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+                  </div>
+                </div>
+
+                <div style="border:1px solid var(--border); border-radius:10px; overflow-x:auto;">
+                  <table class="attendance-table" style="font-size:13px;">
+                    <thead>
+                      <tr>
+                        <th style="width:140px;">이름 (닉네임)</th>
+                        <th>이메일 / ID</th>
+                        <th style="width:140px;">소속 팀 배정</th>
+                        <th style="width:130px; text-align:center;">파트너스 권한</th>
+                        <th style="width:120px; text-align:center;">회원 등급</th>
+                        <th style="width:110px;">가입일</th>
+                        <th style="text-align:center; width:80px;">상태</th>
+                      </tr>
+                    </thead>
+                    <tbody id="admUserTableBody">
+                      <!-- JS 렌더링 -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- 서브 2:  팀관리 -->
+            <div id="tmPane2" class="tm-pane" style="display:none;">
+              <div style="background:#ffffff; border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+                  <div>
+                    <h4 style="font-size:16px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+                      <i class="fa-solid fa-people-group" style="color:var(--primary);"></i> 팀 목록 및 월간 목표 관리
+                    </h4>
+                    <p style="font-size:12px; color:var(--text-sub); margin-top:2px;">팀을 생성하고 목표액을 설정합니다. 팀명을 변경하면 팀원들의 소속팀도 자동으로 일괄 동기화됩니다.</p>
+                  </div>
+                  <div style="display:flex; gap:8px;">
+                    <button class="btn-secondary" onclick="adminAddNewTeam()"><i class="fa-solid fa-plus"></i> 새 팀 추가</button>
+                    <button class="btn-primary" onclick="adminSaveAllTeamGoals()"><i class="fa-solid fa-floppy-disk"></i> 팀 목표 저장</button>
+                  </div>
+                </div>
+
+                <div style="border:1px solid var(--border); border-radius:10px; overflow-x:auto;">
+                  <table class="attendance-table" style="font-size:13px;">
+                    <thead>
+                      <tr>
+                        <th style="width:60px; text-align:center;">순위</th>
+                        <th style="width:140px;">팀명</th>
+                        <th style="width:130px;">팀장/담당자</th>
+                        <th style="width:90px; text-align:center;">소속 인원</th>
+                        <th style="width:190px;">당월 팀 목표액 (원)</th>
+                        <th style="width:160px; text-align:right;">당월 합산 실적</th>
+                        <th style="width:110px; text-align:center;">목표 달성률</th>
+                        <th style="width:80px; text-align:center;">관리</th>
+                      </tr>
+                    </thead>
+                    <tbody id="admTeamGoalsTableBody">
+                      <!-- JS 렌더링 -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- 서브 3:  실적관리 -->
+            <div id="tmPane3" class="tm-pane" style="display:none;">
+              <div style="background:#ffffff; border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+                  <div>
+                    <h4 style="font-size:16px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+                      <i class="fa-solid fa-chart-line" style="color:var(--accent);"></i> 파트너 개인별 실적 관리
+                    </h4>
+                    <p style="font-size:12px; color:var(--text-sub); margin-top:2px;">각 파트너별 당월 체결 건수와 실적을 관리합니다. 개인 실적은 소속팀의 합산 실적에 즉시 반영됩니다.</p>
+                  </div>
+                  <div style="display:flex; gap:8px;">
+                    <button class="btn-secondary" onclick="adminAddNewPartnerPerf()"><i class="fa-solid fa-user-plus"></i> 파트너 추가</button>
+                    <button class="btn-success" onclick="adminSaveAllPerf()"><i class="fa-solid fa-check"></i> 개인 실적 변경사항 저장</button>
+                  </div>
+                </div>
+
+                <div style="border:1px solid var(--border); border-radius:10px; overflow-x:auto;">
+                  <table class="attendance-table" style="font-size:13px;">
+                    <thead>
+                      <tr>
+                        <th style="width:120px;">파트너명</th>
+                        <th style="width:130px;">소속팀 배정</th>
+                        <th style="width:110px;">신규체결 건수</th>
+                        <th style="width:170px;">당월 환산실적 (원)</th>
+                        <th style="width:170px;">개인 목표액 (원)</th>
+                        <th style="text-align:center; width:80px;">관리</th>
+                      </tr>
+                    </thead>
+                    <tbody id="admPerfTableBody">
+                      <!-- JS 렌더링 -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- 서브 4:  등급권한 관리 -->
+            <div id="tmPane4" class="tm-pane" style="display:none;">
+              <div style="background:#ffffff; border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                <div class="card-title-bar" style="margin-bottom:14px;">
+                  <div>
+                    <h4 style="font-size:16px; font-weight:800; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+                      <i class="fa-solid fa-shield-halved" style="color:#7c3aed;"></i> 회원 기본 등급 및 세부 권한(C/V/A/B) 제어
+                    </h4>
+                    <p style="font-size:12px; color:var(--text-sub); margin-top:2px;">
+                      기본 등급을 변경하거나, <strong>[ 파트너스(C)]</strong> 등 체크박스를 클릭하면 권한이 즉시 실시간 부여/회수됩니다.
+                    </p>
+                  </div>
+                  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <input type="text" id="admRoleSearch" class="search-input" placeholder="이름 또는 이메일 검색..." oninput="filterAdminRoleList()">
+                    <select id="admRoleFilterSelect" class="btn-secondary" onchange="filterAdminRoleList()">
+                      <option value="all">전체 회원 보기</option>
+                      <option value="partner_only"> 파트너스(C) 보유자만</option>
+                      <option value="VIP"> VIP 회원만</option>
+                      <option value="basic"> 일반 회원만</option>
+                      <option value="manager"> 관리자(manager)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="border:1px solid var(--border); border-radius:10px; overflow-x:auto;">
+                  <table class="attendance-table" style="font-size:13px;">
+                    <thead>
+                      <tr>
+                        <th style="width:140px;">이름 (닉네임)</th>
+                        <th>이메일 / ID</th>
+                        <th style="width:150px;">기본 등급 (user_grade)</th>
+                        <th>세부 권한 (access_grades) - 체크박스 즉시 적용</th>
+                        <th style="width:110px;">가입일</th>
+                        <th style="text-align:center; width:80px;">상태</th>
+                      </tr>
+                    </thead>
+                    <tbody id="admRoleTableBody">
+                      <!-- JS 렌더링 -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- [파트 4] 콘텐츠 연구소 주제 및 의견 관리 -->
+        <div id="admSubPane4" class="admin-pane" style="display:none;">
+          <div style="display:grid; grid-template-columns: 440px 1fr; gap:20px;">
+            <!-- 좌측: 연구 주제 변경 & 이전 데이터 자동 보관 안내 -->
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              
+              <!-- 현재 주제 요약 카드 -->
+              <div style="background:#ffffff; border:1px solid var(--border); padding:16px 18px; border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                <div style="font-size:12px; font-weight:800; color:var(--primary); margin-bottom:4px;">
+                  <i class="fa-solid fa-clock-rotate-left"></i> 현재 진행 중인 주제
+                </div>
+                <div id="admCurrentTopicTitle" style="font-size:14px; font-weight:800; color:var(--text-main); line-height:1.4;">
+                  "2030 사회초년생의 실손 및 간편 건강보험 첫 상담 클로징 전략"
+                </div>
+                <div style="font-size:12px; color:var(--text-sub); margin-top:6px;">
+                  현재 등록된 의견: <strong id="admCurrentIdeaCount" style="color:var(--primary);">0</strong>개
+                </div>
+              </div>
+
+              <!-- 새 주제 등록 폼 -->
+              <div style="background:#f8fafc; padding:20px; border-radius:14px; border:1px solid var(--border); display:flex; flex-direction:column; gap:12px;">
+                <div>
+                  <span style="font-weight:800; font-size:15px; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-bullhorn" style="color:var(--accent);"></i> 새로운 연구 주제로 변경하기
+                  </span>
+                  <p style="font-size:12px; color:var(--text-sub); margin-top:4px;">
+                    새 주제를 등록하면 <strong>기존 주제와 의견들은 '지난 주제 보관함'으로 자동 이동</strong>되며 새로운 피드가 시작됩니다.
+                  </p>
+                </div>
+
+                <div class="admin-form-group">
+                  <label>새 연구 안건 제목</label>
+                  <input type="text" id="admLabTitle" class="form-input" placeholder="예: 4050 은퇴설계 및 간병비 보험 클로징 노하우">
+                </div>
+                <div class="admin-form-group">
+                  <label>안건 가이드 설명</label>
+                  <textarea id="admLabDesc" class="form-input" style="height:85px; resize:vertical;" placeholder="파트너들이 자유롭게 나눌 내용 가이드 작성..."></textarea>
+                </div>
+                <button class="btn-primary" style="padding:12px; font-weight:800;" onclick="adminUpdateTopic()">
+                  <i class="fa-solid fa-arrows-rotate"></i> 새 주제로 교체 & 피드 깨끗이 시작
+                </button>
+              </div>
+
+            </div>
+
+            <!-- 우측: 현재 주제의 직원 의견 관리 목록 -->
+            <div style="background:#ffffff; padding:20px; border-radius:14px; border:1px solid var(--border); display:flex; flex-direction:column; gap:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:800; font-size:15px; color:var(--text-main);">현재 주제 등록 의견 관리</span>
+                <span style="font-size:12px; color:var(--text-sub);">총 <strong id="admIdeaManageCount" style="color:var(--primary);">0</strong> 개</span>
+              </div>
+              <p style="font-size:12px; color:var(--text-sub);">현재 진행 중인 주제에 파트너들이 남긴 의견입니다. 부적절하거나 잘못 작성된 글은 [삭제]할 수 있습니다.</p>
+              <div id="admIdeaManageList" style="max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+                <!-- JS 렌더링 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div> <!-- /.partners-container -->
+
+
+
+  <!-- 출석률 평가 기준 및 총 근무일수 설정 모달 -->
+  <div id="attendancePolicyModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeAttendancePolicyModal()">
+    <div class="modal-card" style="max-width:540px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:18px 20px; border-bottom:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <i class="fa-solid fa-sliders" style="color:var(--primary); font-size:18px;"></i>
+          <h3 style="font-size:16px; font-weight:800; color:var(--text-main); margin:0;">출석률 평가 기준 및 총 근무일수 설정</h3>
+        </div>
+        <button onclick="closeAttendancePolicyModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--text-muted);">&times;</button>
+      </div>
+
+      <div style="padding:20px; display:flex; flex-direction:column; gap:16px;">
+        <!-- 1. 총 근무일수 -->
+        <div style="background:#f8fafc; padding:14px 16px; border-radius:10px; border:1px solid var(--border);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:700; font-size:13px; color:var(--text-main);"> 당월 총 근무일수 (분모 기준)</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">출석률 = (출근일수 ÷ 총 근무일수) × 100</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <input type="number" id="modalPolicyWorkDays" class="form-input" style="width:70px; text-align:center; font-weight:800;" min="1" max="31" value="12">
+              <span style="font-size:13px; font-weight:700;">일</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 우수 개근 기준 -->
+        <div style="background:#f0fdf4; padding:14px 16px; border-radius:10px; border:1px solid #bbf7d0;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:700; font-size:13px; color:#166534;"> '우수 개근' 판정 기준</div>
+              <div style="font-size:11px; color:#15803d; margin-top:2px;">설정한 비율 이상 달성 시 우수 개근으로 자동 판정</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <input type="number" id="modalPolicyRateExcellent" class="form-input" style="width:70px; text-align:center; font-weight:800;" min="50" max="100" value="95">
+              <span style="font-size:13px; font-weight:700; color:#166534;">% 이상</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 보통/양호 기준 -->
+        <div style="background:#eff6ff; padding:14px 16px; border-radius:10px; border:1px solid #bfdbfe;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:700; font-size:13px; color:#1e40af;">● '보통 (양호)' 판정 기준</div>
+              <div style="font-size:11px; color:#1d4ed8; margin-top:2px;">이 비율 이상 ~ 우수 미만일 때 보통으로 판정</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <input type="number" id="modalPolicyRateGood" class="form-input" style="width:70px; text-align:center; font-weight:800;" min="30" max="99" value="80" oninput="updateModalWarnPreview()">
+              <span style="font-size:13px; font-weight:700; color:#1e40af;">% 이상</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. 출석 주의 판정 설명 -->
+        <div style="background:#fef2f2; padding:14px 16px; border-radius:10px; border:1px solid #fecaca;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:700; font-size:13px; color:#991b1b;"> '출석 주의' 자동 판정</div>
+              <div style="font-size:11px; color:#b91c1c; margin-top:2px;">보통 기준 미만 시 자동으로 지각/결석 주의 대상으로 분류</div>
+            </div>
+            <span style="font-weight:800; font-size:13px; color:#dc2626;" id="modalPolicyWarnPreview">80% 미만</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; background:#f8fafc;">
+        <button class="btn-secondary" onclick="closeAttendancePolicyModal()">취소</button>
+        <button class="btn-primary" onclick="saveAttendancePolicySettings()"><i class="fa-solid fa-check"></i> 저장 및 즉시 반영</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 지난 연구 주제 상세 보기 모달 -->
+  <div id="pastTopicModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closePastTopicModal()">
+    <div class="modal-card" style="max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:18px 20px; border-bottom:1px solid var(--border);">
+        <div>
+          <span style="font-size:11px; font-weight:800; color:var(--primary); background:#e0f2fe; padding:2px 8px; border-radius:4px;"> 지난 연구 주제 보관함</span>
+          <h3 id="modalTopicTitle" style="font-size:16px; font-weight:800; color:var(--text-main); margin-top:4px;"></h3>
+          <p id="modalTopicDesc" style="font-size:12px; color:var(--text-sub); margin-top:4px; line-height:1.4;"></p>
+        </div>
+        <button onclick="closePastTopicModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--text-muted);">&times;</button>
+      </div>
+      <div id="modalTopicIdeas" style="padding:18px 20px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; flex:1;">
+        <!-- JS 렌더링 -->
+      </div>
+      <div style="padding:12px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; background:#f8fafc;">
+        <button class="btn-secondary" onclick="closePastTopicModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- [구글 캘린더 & 스마트폰 일정 연동 안내 모달] -->
+  <div id="googleCalSubscribeModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeGoogleCalSubscribeModal()">
+    <div class="modal-card" style="max-width:540px; padding:0; overflow:hidden;">
+      <div style="background:linear-gradient(135deg, #1e293b, #334155); color:#ffffff; padding:20px 24px; display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="background:#ffffff; color:#4285F4; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:16px;">
+              <i class="fa-brands fa-google"></i>
+            </span>
+            <h3 style="font-size:17px; font-weight:800; margin:0;">내 스마트폰에 일정 연동하기</h3>
+          </div>
+          <p style="font-size:12px; color:#cbd5e1; margin-top:6px; margin-bottom:0; line-height:1.4;">
+            사내 교육 및 회사 일정을 내 폰 캘린더에 연동하여 <strong>설정된 시간 & 하루 전 자동 알림</strong>을 받으세요!
+          </p>
+        </div>
+        <button onclick="closeGoogleCalSubscribeModal()" style="background:none; border:none; font-size:24px; color:#94a3b8; cursor:pointer;">&times;</button>
+      </div>
+
+      <div style="padding:22px 24px; display:flex; flex-direction:column; gap:16px;">
+        <!-- 스마트폰 알림 혜택 안내 카드 -->
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 14px; display:flex; align-items:center; gap:10px;">
+          <i class="fa-solid fa-bell-ring" style="color:#16a34a; font-size:20px;"></i>
+          <div style="font-size:12px; color:#166534; line-height:1.4;">
+            <strong>알림 보장:</strong> 교육 및 주요 일정 시작 전 스마트폰 진동과 함께 알림이 울려, 중요한 일정을 놓치지 않습니다.
+          </div>
+        </div>
+
+        <!-- 연동 방식 선택 -->
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <!-- 1. 구글 캘린더 웹/앱 바로가기 -->
+          <a id="btnGcalDirectOpen" href="https://calendar.google.com/calendar/render?cid=boheomdapda@gmail.com" target="_blank" class="btn-primary" style="background:#4285F4; border-color:#4285F4; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px; font-weight:700; border-radius:8px;">
+            <i class="fa-brands fa-google"></i> 1. 구글 캘린더 앱에 바로 추가 (1클릭 구독)
+          </a>
+
+          <!-- 2. 아이폰 / 갤럭시 기본 캘린더 구독 (Webcal) -->
+          <button class="btn-secondary" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:12px; font-weight:700; border-radius:8px;" onclick="subscribeViaWebcal()">
+            <i class="fa-solid fa-mobile-screen"></i> 2. 아이폰 / 갤럭시 기본 캘린더 앱에 연동
+          </button>
+
+          <!-- 3. 구독 URL 복사 -->
+          <button class="btn-secondary" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:10px; font-size:12px; border-radius:8px; color:#475569;" onclick="copyMySubscribeUrl()">
+            <i class="fa-solid fa-copy"></i> 3. 캘린더 주소(iCal URL) 수동 복사
+          </button>
+        </div>
+
+        <!-- 폰별 간편 안내 팁 -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; font-size:11px; color:#64748b; line-height:1.5;">
+          <strong> 간편 팁:</strong><br>
+          • <strong>갤럭시:</strong> [1번] 구글 캘린더 버튼을 누르면 구글 캘린더에 바로 등록됩니다.<br>
+          • <strong>아이폰:</strong> [2번] 버튼을 누른 후 [구독]을 승인하면 애플 기본 캘린더에 자동 동기화됩니다.
+        </div>
+      </div>
+
+      <div style="padding:12px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; background:#f8fafc;">
+        <button class="btn-secondary" onclick="closeGoogleCalSubscribeModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       [교육 참석 사전 투표 팝업 모달] (밤 12시 마감)
+       ========================================================= -->
+  <div id="eduAttendanceVoteModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; z-index:9999;">
+    <div class="modal-card" style="width:480px; max-width:92vw; border-radius:16px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.25);">
+      <div style="background:linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color:#ffffff; padding:20px 24px; position:relative;">
+        <div style="font-size:12px; color:#93c5fd; font-weight:700; letter-spacing:0.5px;">WERACLE PARTNERS · 교육 참석 사전 확인</div>
+        <h3 style="font-size:18px; font-weight:900; margin:6px 0 0 0; color:#ffffff;">
+           교육 참석 여부 사전 투표
+        </h3>
+        <button onclick="closeEduVoteModal()" style="position:absolute; top:18px; right:18px; background:transparent; border:none; color:#ffffff; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+
+      <div style="padding:22px 24px;">
+        <div style="background:#f1f5f9; border-radius:10px; padding:14px 16px; margin-bottom:16px;">
+          <div style="font-size:11px; color:#64748b; font-weight:700;">내일 예정된 교육</div>
+          <div style="font-size:15px; font-weight:800; color:#1e293b; margin:4px 0;" id="popupEduTitle">
+            신상품 약관 및 언더라이팅 심화 교육
+          </div>
+          <div style="font-size:12px; color:#0284c7; font-weight:700;">
+            <i class="fa-regular fa-clock"></i> 교육 시간: 오전 10:00 ~ 11:00 고정
+          </div>
+        </div>
+
+        <div style="background:#eff6ff; border-left:4px solid #2563eb; padding:10px 14px; border-radius:4px; font-size:12px; color:#1e40af; line-height:1.5; margin-bottom:16px;">
+          ⏰ <strong>오늘 밤 12시까지 투표 마감</strong><br>
+          ※ 별도로 투표하지 않으셔도 <strong>'기본 참석'</strong>으로 자동 반영되며, 내일 아침 출근 QR을 찍으시면 교육도 함께 자동 출석됩니다!
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:4px;"> 투표 대상 파트너:</label>
+          <select id="popupVotePartnerSelect" class="form-input" style="width:100%; padding:8px 10px; font-size:13px; font-weight:700; background:#f8fafc;" onchange="updatePopupVoteSelection()">
+            <!-- JS 동적 렌더링: 출석 대상자(파트너스 전원) 목록 -->
+          </select>
+        </div>
+
+        <div style="font-size:12px; margin-bottom:16px; text-align:center; padding:6px; background:#f8fafc; border-radius:6px; border:1px solid #e2e8f0;">
+          현재 상태: <span id="popupCurrentStatusDisplay"><span style="color:#475569; font-weight:700;"> 기본참석 (미투표)</span></span>
+        </div>
+
+        <div style="text-align:center; font-size:13px; font-weight:700; color:var(--text-main); margin-bottom:12px;">
+          참석 여부를 선택해 주세요:
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+          <button class="btn-success" style="padding:14px; font-size:14px; font-weight:800; display:flex; flex-direction:column; align-items:center; gap:6px; border-radius:10px;" onclick="submitPopupVote('attending')">
+            <span style="font-size:16px; font-weight:800; color:#059669;">[O]</span>
+            <span>참석합니다 (기본)</span>
+          </button>
+          <button class="btn-secondary" style="padding:14px; font-size:14px; font-weight:800; display:flex; flex-direction:column; align-items:center; gap:6px; border-radius:10px; border-color:#cbd5e1; color:#64748b;" onclick="submitPopupVote('absent')">
+            <span style="font-size:22px;"></span>
+            <span>불참합니다</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="padding:12px 24px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+        <label style="font-size:12px; color:#64748b; cursor:pointer; display:flex; align-items:center; gap:6px;">
+          <input type="checkbox" id="chkDoNotShowToday"> 오늘 하루 보지 않기
+        </label>
+        <button class="btn-secondary" style="font-size:12px; padding:4px 12px;" onclick="closeEduVoteModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       [A4 출입구 부착용 QR 포스터 인쇄 모달]
+       ========================================================= -->
+  <div id="qrPrintModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; z-index:9999;">
+    <div class="modal-card" style="width:520px; max-width:92vw; border-radius:16px; overflow:hidden;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--border);">
+        <h3 style="font-size:16px; font-weight:800; margin:0;"><i class="fa-solid fa-print"></i> 출입구 부착용 공식 QR 인쇄</h3>
+        <button onclick="closeQrPrintModal()" style="background:transparent; border:none; font-size:20px; cursor:pointer;">&times;</button>
+      </div>
+      <div style="padding:24px; text-align:center;" id="printableQrArea">
+        <div style="border:2px dashed #0284c7; border-radius:16px; padding:30px 20px; background:#f0f9ff;">
+          <div style="font-size:13px; font-weight:800; color:#0369a1; letter-spacing:1px; margin-bottom:4px;">WERACLE PARTNERS</div>
+          <h2 style="font-size:24px; font-weight:900; color:#0f172a; margin:0 0 16px 0;"> 출근 및 교육 출석 인증</h2>
+          <div id="printableQrBox" style="display:flex; justify-content:center; margin:16px auto;"></div>
+          <div style="font-size:15px; font-weight:800; color:#0284c7; margin-top:14px;">
+             스마트폰 기본 카메라로 스캔하세요
+          </div>
+          <div style="margin-top:12px; font-size:13px; color:#475569; line-height:1.6;">
+            • <strong>정규 출근:</strong> 오전 10:00:00 (초과 시 지각 자동 판정)<br>
+            • <strong>오전 교육:</strong> 10:00 / 11:00 (출근 스캔 시 자동 동시 출석)
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; background:#f8fafc;">
+        <button class="btn-secondary" onclick="closeQrPrintModal()">닫기</button>
+        <button class="btn-primary" onclick="printQrPoster()"><i class="fa-solid fa-print"></i> 지금 바로 인쇄하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       [현장 모바일 출근 체크인 모달 (스마트폰 QR 스캔 시 노출)]
+       ========================================================= -->
+  <div id="mobileCheckinModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; z-index:10000; background:rgba(15,23,42,0.75);">
+    <div class="modal-card" style="width:420px; max-width:92vw; border-radius:20px; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);">
+      <div style="background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; padding:24px 20px; text-align:center;">
+        <div style="font-size:32px; margin-bottom:8px;"></div>
+        <h3 style="font-size:19px; font-weight:800; margin:0 0 4px 0;">위라클 현장 출근 체크인</h3>
+        <p style="font-size:12px; margin:0; opacity:0.9;">회사 출입구 QR 스캔이 인증되었습니다.</p>
+      </div>
+
+      <div style="padding:22px 20px; background:#fff;">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; text-align:center; margin-bottom:16px;">
+          <div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px;">현재 인증 시각</div>
+          <div id="checkinModalClock" style="font-size:24px; font-weight:900; color:#0f172a; font-variant-numeric:tabular-nums;">--:--:--</div>
+          <div style="font-size:11px; color:#0284c7; margin-top:4px; font-weight:700;">정규 출근 인정 기준: 오전 10:00:00</div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <label style="display:block; font-size:13px; font-weight:800; color:#334155; margin-bottom:6px;">
+            출근자 본인 선택
+          </label>
+          <select id="mobileCheckinPartnerSelect" class="form-input" style="width:100%; padding:10px 12px; font-size:14px; font-weight:700; border-radius:8px; border:1.5px solid #cbd5e1;">
+            <!-- getPartnerAttendanceTargets() 옵션 자동 주입 -->
+          </select>
+        </div>
+
+        <button class="btn-primary" style="width:100%; padding:14px; font-size:15px; font-weight:900; border-radius:10px; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; gap:8px;" onclick="submitMobileCheckin()">
+          <i class="fa-solid fa-circle-check"></i> 지금 바로 출근 체크인 완료
+        </button>
+
+        <div style="margin-top:14px; text-align:center; font-size:11px; color:#94a3b8; line-height:1.5;">
+          • 출근 체크인 시 <strong>오전 10:00 교육</strong>도 자동으로 함께 동시 출석 처리됩니다.<br>
+          • 10:00:00 초과 시 지각으로 자동 판정됩니다.
+        </div>
+      </div>
+
+      <div style="padding:10px 16px; background:#f1f5f9; border-top:1px solid #e2e8f0; text-align:right;">
+        <button class="btn-secondary" style="font-size:11px; padding:4px 10px;" onclick="closeMobileCheckinModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       [위라클 파트너스 전용 커스텀 알림/확인 대화상자]
+       ========================================================= -->
+  <div id="weracleCustomDialog" class="modal-overlay" style="display:none; align-items:center; justify-content:center; z-index:11000; background:rgba(15,23,42,0.65); backdrop-filter:blur(4px);">
+    <div class="modal-card" style="width:440px; max-width:92vw; border-radius:20px; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35); border:1px solid rgba(226,232,240,0.8); background:#ffffff;">
+      <!-- 다이얼로그 헤더 -->
+      <div style="padding:18px 22px 14px 22px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #f1f5f9; background:#ffffff;">
+        <div id="weracleDialogIconBox" style="width:38px; height:38px; border-radius:12px; background:#eff6ff; color:#0284c7; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">
+          <i class="fa-solid fa-bell"></i>
+        </div>
+        <div style="flex:1;">
+          <h4 id="weracleDialogTitle" style="margin:0; font-size:15px; font-weight:800; color:#0f172a;">위라클 파트너스 알림</h4>
+          <span style="font-size:11px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;">WERACLE PARTNERS SYSTEM</span>
+        </div>
+        <button onclick="closeCustomDialog(false)" style="background:transparent; border:none; font-size:20px; color:#94a3b8; cursor:pointer; padding:4px 8px; line-height:1;">&times;</button>
+      </div>
+
+      <!-- 다이얼로그 본문 -->
+      <div style="padding:22px 24px; background:#ffffff;">
+        <div id="weracleDialogMessage" style="font-size:14px; color:#334155; line-height:1.7; white-space:pre-line; word-break:keep-all;">
+          메시지 내용
+        </div>
+      </div>
+
+      <!-- 다이얼로그 버튼 푸터 -->
+      <div id="weracleDialogFooter" style="padding:14px 22px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:8px;">
+        <button id="weracleDialogBtnCancel" class="btn-secondary" style="padding:9px 18px; font-size:13px; font-weight:700; border-radius:10px; display:none;" onclick="closeCustomDialog(false)">취소</button>
+        <button id="weracleDialogBtnConfirm" class="btn-primary" style="padding:9px 22px; font-size:13px; font-weight:800; border-radius:10px; background:linear-gradient(135deg, #0284c7, #2563eb);" onclick="closeCustomDialog(true)">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 공통 자바스크립트 모듈 -->
+  <script src="management.js?v=20261018_19"></script>
+</body>
+</html>

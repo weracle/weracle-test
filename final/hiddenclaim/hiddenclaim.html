@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>실손보험금 미청구 정밀 진단 리포트</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              navy: '#0B132B',
+              blue: '#2563EB',
+              blueHover: '#1D4ED8',
+              slateBg: '#F8FAFC',
+              cardBg: '#FFFFFF',
+              border: '#E2E8F0',
+              textPrimary: '#0F172A',
+              textSecondary: '#64748B',
+              textMuted: '#94A3B8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #F8FAFC;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-numeric {
+      font-variant-numeric: tabular-nums;
+    }
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F8FAFC;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 3px;
+    }
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.98); }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 2s infinite ease-in-out;
+    }
+  </style>
+  <script src="hyphen_parser.js?v=202610202300"></script>
+  <script src="claim_engine.js?v=202610202300"></script>
+</head>
+<body class="p-4 sm:p-6 lg:p-8 min-h-screen flex flex-col justify-between">
+
+  <!-- 전체 레이아웃 컨테이너 (최대 1280px) -->
+  <div class="max-w-7xl mx-auto w-full space-y-6">
+
+    <!-- 상단 글로벌 네비게이션 헤더 -->
+    <header class="flex items-center justify-between border-b border-slate-200 pb-4">
+      <div class="flex items-center space-x-2.5">
+        <span class="bg-blue-600 text-white text-[11px] font-black px-2 py-0.5 rounded tracking-wide">CARE</span>
+        <span class="text-sm font-bold text-slate-900 tracking-tight">실손보험금 미청구 정밀 진단</span>
+        <span class="hidden sm:inline-block text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium border border-slate-200">
+          설계사 전달용 맞춤 리포트
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="btnResetToStep1" onclick="goToStep(1)" class="hidden text-xs text-slate-600 hover:text-slate-900 border border-slate-200 bg-white px-3 py-1.5 rounded-lg transition font-medium shadow-sm">
+          새로 조회하기
+        </button>
+        <button id="btnPrintReport" onclick="window.print()" class="hidden text-xs text-slate-700 border border-slate-300 hover:bg-slate-50 px-3.5 py-1.5 rounded-lg transition font-medium">
+          리포트 인쇄 / PDF
+        </button>
+      </div>
+    </header>
+
+    <!-- 3단계 프로그레스 인디케이터 바 -->
+    <div class="max-w-2xl mx-auto pt-2 pb-1">
+      <div class="flex items-center justify-between text-xs font-bold">
+        
+        <!-- STEP 1 -->
+        <div id="stepIndicator1" class="flex items-center space-x-2 text-blue-600">
+          <span class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">1</span>
+          <span>기본 정보</span>
+        </div>
+        <div id="stepLine1" class="flex-1 h-0.5 mx-3 bg-slate-200 transition-all duration-300"></div>
+
+        <!-- STEP 2 -->
+        <div id="stepIndicator2" class="flex items-center space-x-2 text-slate-400">
+          <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[11px] font-black">2</span>
+          <span>영수증 대조</span>
+        </div>
+        <div id="stepLine2" class="flex-1 h-0.5 mx-3 bg-slate-200 transition-all duration-300"></div>
+
+        <!-- STEP 3 -->
+        <div id="stepIndicator3" class="flex items-center space-x-2 text-slate-400">
+          <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[11px] font-black">3</span>
+          <span>진단 리포트</span>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- =================================================================================== -->
+    <!-- [1단계] 중앙 집중형 정보 입력 카드 -->
+    <!-- =================================================================================== -->
+    <div id="viewStep1" class="max-w-xl mx-auto w-full pt-4 pb-12">
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
+        
+        <div>
+          <div class="inline-flex items-center space-x-1.5 bg-blue-50 text-blue-700 text-[11px] font-bold px-2.5 py-0.5 rounded mb-2">
+            <span>3개년 공공 영수증 기반 정밀 진단</span>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
+            아직 안 찾아간 실손보험금,<br>
+            <span class="text-blue-600">정밀 진단</span>으로 확인해보세요.
+          </h2>
+          <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+            고객 유형에 맞추어 국세청 또는 건강보험공단 영수증과 자동 연동되어 세대별 실손 약관 기준으로 예상 환급 실익을 산출합니다.
+          </p>
+        </div>
+
+        <!-- 1. 고객 유형 선택 카드 -->
+        <div class="space-y-2">
+          <label class="block text-xs font-bold text-slate-700">고객 유형을 선택해주세요</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            
+            <!-- 유형 A: 직장인 -->
+            <label class="cursor-pointer border-2 rounded-xl p-3.5 flex flex-col justify-between transition border-blue-600 bg-blue-50/40" id="cardTypeWorker">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-900 text-sm">직장인 (근로소득자)</span>
+                <input type="radio" name="userRole" value="WORKER" checked onchange="handleRoleSelect('WORKER')" class="text-blue-600 focus:ring-0">
+              </div>
+              <p class="text-[11px] text-slate-500 mt-2">
+                국세청 연말정산 간소화 의료비 및 실손 수령액 자동 대조
+              </p>
+              <div class="mt-2.5">
+                <span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded">국세청 연동</span>
+              </div>
+            </label>
+
+            <!-- 유형 B: 사업자 / 주부 / 프리랜서 -->
+            <label class="cursor-pointer border-2 rounded-xl p-3.5 flex flex-col justify-between transition border-slate-200 hover:border-slate-300" id="cardTypeNonWorker">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-900 text-sm">사업자 · 프리랜서 · 주부</span>
+                <input type="radio" name="userRole" value="NON_WORKER" onchange="handleRoleSelect('NON_WORKER')" class="text-blue-600 focus:ring-0">
+              </div>
+              <p class="text-[11px] text-slate-500 mt-2">
+                국민건강보험공단 3개년 실제 진료비 영수증 기반 발굴
+              </p>
+              <div class="mt-2.5">
+                <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded">건보공단 연동</span>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- 2. 기본 정보 입력 폼 -->
+        <div class="space-y-3.5 text-xs pt-1">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">고객 성명</label>
+            <input type="text" id="inputName" placeholder="고객 성명 입력" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 text-xs">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">생년월일 (앞 6자리)</label>
+              <input type="text" id="inputSsn1" maxlength="6" placeholder="YYMMDD (예: 880520)" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 text-xs">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">주민번호 뒷자리 (7자리)</label>
+              <input type="password" id="inputSsn2" maxlength="7" placeholder="숫자 7자리 입력" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 text-xs">
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">휴대폰 번호 (- 없이 입력)</label>
+            <input type="tel" id="inputPhone" maxlength="11" placeholder="01012345678" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 text-xs">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">간편인증 수단 선택</label>
+            <select id="inputOrgCd" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 text-xs bg-white">
+              <option value="kakao">카카오톡 간편인증</option>
+              <option value="pass">통신사 PASS 인증</option>
+              <option value="naver">네이버 인증</option>
+              <option value="toss">토스 인증</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 3. 안전 조회 동의 -->
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-500 leading-relaxed">
+          <label class="flex items-start space-x-2 cursor-pointer">
+            <input type="checkbox" id="checkConsent" checked class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-0 mt-0.5">
+            <span>본인 확인 및 3개년 의료비 영수증 조회를 위한 간편인증에 동의합니다. (개인정보는 서버에 저장되지 않고 일회성 열람 후 파기됩니다.)</span>
+          </label>
+        </div>
+
+        <!-- 4. 시작 버튼 -->
+        <div class="space-y-2 pt-1">
+          <button onclick="startClaimProcess()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition text-sm flex items-center justify-center space-x-1.5">
+            <span>실손보험금 정밀 진단 시작하기</span>
+          </button>
+          
+          <div class="text-center pt-2">
+            <button onclick="previewSampleDirectly()" class="text-xs text-slate-400 hover:text-slate-600 underline">
+              입력 없이 예시 리포트 바로보기
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- =================================================================================== -->
+    <!-- [2단계] 조회 및 인증 대기 화면 -->
+    <!-- =================================================================================== -->
+    <div id="viewStep2" class="max-w-xl mx-auto w-full pt-10 pb-16 hidden">
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-8 sm:p-10 shadow-sm text-center space-y-6">
+        
+        <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full bg-blue-100 animate-ping opacity-75"></div>
+          <div class="relative w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md">
+            <span>진행중</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-xl font-black text-slate-900" id="step2MainTitle">
+            스마트폰에서 간편인증을 승인해주세요
+          </h3>
+          <p class="text-xs text-slate-500 leading-relaxed" id="step2SubTitle">
+            카카오톡 또는 PASS 알림이 스마트폰으로 전송되었습니다.<br>인증 앱에서 승인 버튼을 누르시면 영수증 조회가 시작됩니다.
+          </p>
+        </div>
+
+        <div class="space-y-2 text-left bg-slate-50 p-4 rounded-xl border border-slate-200/70">
+          <div class="flex items-center justify-between text-xs text-slate-600 font-semibold">
+            <span id="step2StatusText">안전 보안 통신 연결 중...</span>
+            <span class="font-numeric text-blue-600 font-bold" id="step2ProgressPercent">35%</span>
+          </div>
+          <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+            <div id="step2ProgressBar" class="bg-blue-600 h-full rounded-full transition-all duration-500" style="width: 35%"></div>
+          </div>
+        </div>
+
+        <!-- [직장인 2단계 스마트폰 서명 완료 확인 버튼 영역] -->
+        <div id="step2ActionArea" class="space-y-3 pt-2 hidden">
+          <button id="btnCompleteAuthStep" onclick="completeWorkerAuth()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+            <span>스마트폰 인증 완료 (결과 확인)</span>
+          </button>
+          
+          <div class="flex items-center justify-center space-x-4 text-xs text-slate-400 pt-1">
+            <button onclick="goToStep(1)" class="hover:text-slate-600 underline">
+              처음으로 돌아가기
+            </button>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-400 bg-slate-50 py-2.5 px-3 rounded-lg border border-slate-100">
+          정부 공공기관 보안 표준 암호화 통신을 통해 안전하게 처리됩니다.
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- =================================================================================== -->
+    <!-- [2.5단계] 결과 공개 직전 브리핑 화면 -->
+    <!-- =================================================================================== -->
+    <div id="viewStepReady" class="max-w-xl mx-auto w-full pt-10 pb-16 hidden">
+      <div class="bg-white border-2 border-blue-600 rounded-2xl p-8 sm:p-10 shadow-lg text-center space-y-6 bg-gradient-to-br from-blue-50/30 via-white to-white">
+        
+        <div class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto text-sm font-black shadow-md">
+          준비완료
+        </div>
+
+        <div class="space-y-2">
+          <div class="text-[11px] font-bold text-blue-600 tracking-wider">진단 분석 완료</div>
+          <h3 class="text-2xl font-black text-slate-900">
+            3개년 영수증 대조가 완료되었습니다
+          </h3>
+          <p class="text-xs text-slate-600 leading-relaxed pt-1">
+            <span class="text-blue-600 font-bold" id="readyClientName">고객</span> 님의 의료비 영수증과 실손 세대별 약관 대조가 모두 끝났습니다.<br>
+            지금 바로 청구 가능 예상 실익 리포트를 확인합니다.
+          </p>
+        </div>
+
+        <div class="pt-2">
+          <button onclick="revealFinalResult()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition text-sm">
+            진단 리포트 확인하기
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- =================================================================================== -->
+    <!-- [3단계] 최종 결과 리포트 대시보드 (설계사 고객 전달용 맞춤 뷰) -->
+    <!-- =================================================================================== -->
+    <div id="viewStep3" class="space-y-6 hidden">
+
+      <!-- 상단 바: 최신 숨은보험금 결과 / 재조회 & 트랙 모드 전환 -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-1 border-b border-slate-200">
+        <div class="flex items-center space-x-3">
+          <span class="text-base sm:text-lg font-bold text-slate-900">최신 숨은보험금 결과</span>
+          <span class="text-xs text-slate-400 font-medium" id="inquiryTimestamp">2026-10-21 11:50 · 조회 완료</span>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+          <!-- 모드 전환 탭 -->
+          <div class="bg-slate-100 p-1 rounded-xl border border-slate-200 inline-flex">
+            <button id="tabBtnWorker" onclick="switchTrack('WORKER')" class="py-1.5 px-3 rounded-lg text-center transition font-bold text-xs bg-white text-blue-600 shadow-sm flex items-center gap-1.5">
+              <span>직장인 (근로자)</span>
+              <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded font-medium">국세청</span>
+            </button>
+            <button id="tabBtnNonWorker" onclick="switchTrack('NON_WORKER')" class="py-1.5 px-3 rounded-lg text-center transition font-medium text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+              <span>사업자 · 프리랜서</span>
+              <span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.2 rounded font-medium">건보공단</span>
+            </button>
+          </div>
+          <button onclick="goToStep(1)" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm transition">
+            재조회
+          </button>
+        </div>
+      </div>
+
+      <p class="hidden" id="resultDataSourceText">국세청 연말정산 간소화 3개년 영수증 기준 분석 자료입니다.</p>
+      <span class="hidden" id="resultHeaderName">고객</span>
+      <span class="hidden" id="topTotalCount">0건</span>
+      <span class="hidden" id="topDeductedAmount">0원</span>
+      <span class="hidden" id="wCardPossibility">-</span>
+      <span class="hidden" id="wCardPayoutPercent">0.0%</span>
+      <div class="hidden" id="wProgressBar"></div>
+      <div class="hidden" id="workerYearContainer"></div>
+
+      <!-- ------------------------------------------------------------- -->
+      <!-- [Track 1 Result] 직장인 전용 결과 뷰 (설계이지 동일 레이아웃) -->
+      <!-- ------------------------------------------------------------- -->
+      <div id="sectionWorker" class="space-y-4">
+
+        <!-- 1. 파란색 상단 배너 -->
+        <div class="bg-blue-700 text-white rounded-xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="text-base sm:text-lg font-black text-white">
+              <span id="ezClientBannerName">고객</span>님의 숨은보험금 조회 결과
+            </div>
+            <p class="text-xs text-blue-100 mt-1 font-medium">
+              국세청 연말정산 간소화 자료 (최근 2025, 2024, 2023년) 기준입니다.
+            </p>
+          </div>
+          <div>
+            <button onclick="openReportModal()" class="px-3.5 py-1.5 border border-white/70 hover:bg-white/10 text-white font-bold text-xs rounded-lg transition">
+              리포트 보기
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. 필터 & 설정 스트립 -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs">
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center space-x-1.5">
+                <span class="font-bold text-slate-700">실손 세대</span>
+                <select id="wGenSelect" onchange="onWorkerGenSelectChange(this.value)" class="text-xs border border-slate-300 rounded px-2.5 py-1 bg-white font-semibold text-slate-800 focus:outline-none focus:border-blue-500">
+                  <option value="1">1세대</option>
+                  <option value="2">2세대</option>
+                  <option value="3" selected>3세대</option>
+                  <option value="4">4세대</option>
+                  <option value="5">5세대</option>
+                </select>
+              </div>
+
+              <label class="inline-flex items-center space-x-1.5 cursor-pointer text-slate-700 select-none">
+                <input type="checkbox" id="chkExcludeGlasses" checked onchange="onWorkerFilterChange()" class="rounded text-blue-600 focus:ring-blue-500">
+                <span>안경·콘택트렌즈 제외</span>
+              </label>
+
+              <label class="inline-flex items-center space-x-1.5 cursor-pointer text-slate-700 select-none">
+                <input type="checkbox" id="chkExcludeBelowTh" checked onchange="onWorkerFilterChange()" class="rounded text-blue-600 focus:ring-blue-500">
+                <span>청구 기준 미달 제외 (약국 8천·통원 1만 미만)</span>
+              </label>
+
+              <label class="inline-flex items-center space-x-1.5 cursor-pointer text-slate-700 select-none">
+                <input type="checkbox" id="chkIncludeFamily" onchange="onWorkerFilterChange()" class="rounded text-blue-600 focus:ring-blue-500">
+                <span>가족 의료비·수령 포함</span>
+              </label>
+            </div>
+
+            <div class="text-xs font-bold text-sky-700 text-right">
+              숨은보험금 찾기 : 홈택스 호출 / 국세청 연말정산 간소화자료 최근 3년내 기록 기준 · 의료비 공제자료 기준
+            </div>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200/80 rounded-lg p-2.5 text-[11px] text-slate-500 leading-relaxed">
+            실손보험을 가입했을 때 국세청 의료비 공제자료 기준의 참고 데이터입니다. 기본은 대상자명이 고객명과 일치하는 본인 의료비/실손 수령만 계산합니다. 가족의 카드나 가족 연말정산 자료에 합산된 의료비는 고객 기준 조회에서 모이지 않을 수 있습니다.
+          </div>
+
+          <div class="border border-slate-200 rounded-lg overflow-hidden">
+            <button type="button" onclick="toggleGenerationCompare()" class="w-full px-3.5 py-2 bg-white hover:bg-slate-50 flex items-center justify-between text-xs text-slate-700 font-medium transition">
+              <span class="font-bold text-slate-800">세대별 추정 청구 계산</span>
+              <span id="btnGenCompareToggle" class="text-xs text-slate-500">펼치기 ▾</span>
+            </button>
+            <div id="genCompareContainer" class="hidden p-3 border-t border-slate-200 bg-slate-50/50">
+              <!-- 세대별 1~5세대 비교 그리드 JS 렌더링 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 3개년 요약 3단 박스 (보험료 합계 / 의료비 합계 / 실손 수령 합계) -->
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200">
+          <div class="p-4 sm:p-5">
+            <div class="text-xs text-slate-500 font-medium">보험료 합계</div>
+            <div class="text-2xl font-black text-slate-900 font-numeric mt-1" id="wTotalPremium">0원</div>
+            <div class="text-xs text-slate-400 mt-1" id="wTotalPremiumCount">3개년 합계 · 0건</div>
+          </div>
+          <div class="p-4 sm:p-5">
+            <div class="text-xs text-slate-500 font-medium">의료비 합계</div>
+            <div class="text-2xl font-black text-slate-900 font-numeric mt-1" id="wTotalMedicalExpense">0원</div>
+            <div class="text-xs text-slate-400 mt-1" id="wTotalMedicalCount">3개년 합계 · 진료·약국 0건</div>
+          </div>
+          <div class="p-4 sm:p-5">
+            <div class="text-xs text-slate-500 font-medium">실손 수령 합계</div>
+            <div class="text-2xl font-black text-slate-900 font-numeric mt-1" id="wTotalPayoutSummary">0원</div>
+            <div class="text-xs text-slate-400 mt-1" id="wTotalPayoutCount">3개년 합계 · 0건</div>
+          </div>
+        </div>
+
+        <!-- 4. 5개 핵심 KPI 박스 (설계이지 단일 컨테이너 카드) -->
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+          
+          <!-- Box 1: 숨은보험금 가능성 (Pink tint) -->
+          <div class="lg:col-span-2 bg-rose-50/70 p-4 sm:p-5 flex flex-col justify-between">
+            <span class="text-xs font-bold text-slate-600">숨은보험금 가능성</span>
+            <div class="my-3 text-center">
+              <div class="text-2xl sm:text-3xl font-black text-red-600" id="wCardPossibilityText">매우 높음</div>
+            </div>
+            <div class="text-[11px] text-slate-400 text-center">실손 수령 비율 대비</div>
+          </div>
+
+          <!-- Box 2: 추정 청구 가능액 & 제외/공제 내역 -->
+          <div class="lg:col-span-4 p-4 sm:p-5 flex flex-col justify-between">
+            <div class="text-xs text-slate-500 font-medium mb-1">추정 청구 가능액</div>
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <div>
+                <div class="text-2xl sm:text-3xl font-black text-slate-900 font-numeric" id="wCardEstimatedClaimable">0원</div>
+                <div class="text-[11px] text-slate-400 mt-1" id="wBadgeGenName">3세대 실손 기준</div>
+              </div>
+              <div class="text-[11px] text-slate-500 space-y-1 bg-slate-50 sm:bg-transparent p-2.5 sm:p-0 rounded border sm:border-0 border-slate-200">
+                <div class="font-bold text-slate-700 border-b border-slate-200 pb-1 mb-1">제외·공제 내역</div>
+                <div class="flex justify-between gap-3 text-slate-500">
+                  <span>- 안경·콘택트렌즈 제외</span>
+                  <span class="font-numeric font-medium" id="wSummaryGlasses">0원</span>
+                </div>
+                <div class="flex justify-between gap-3 text-slate-500">
+                  <span>- 청구기준 미달 제외</span>
+                  <span class="font-numeric font-medium" id="wSummaryBelowTh">0원</span>
+                </div>
+                <div class="flex justify-between gap-3 text-slate-500">
+                  <span>- 자기부담금·공제 차감</span>
+                  <span class="font-numeric font-medium" id="wSummaryDeductible">0원</span>
+                </div>
+                <div class="flex justify-between gap-3 font-bold text-slate-800 pt-1 border-t border-slate-200">
+                  <span>합계</span>
+                  <span class="font-numeric text-slate-900" id="wSummaryExclusions">0원</span>
+                </div>
+              </div>
+            </div>
+            <div></div>
+          </div>
+
+          <!-- Box 3: 실제 실손 수령액 -->
+          <div class="lg:col-span-2 p-4 sm:p-5 flex flex-col justify-between">
+            <span class="text-xs text-slate-500 font-medium">실제 실손 수령액</span>
+            <div class="my-3">
+              <div class="text-2xl sm:text-3xl font-black text-slate-900 font-numeric" id="wCardActualPayout">0원</div>
+            </div>
+            <div class="text-xs text-slate-400 font-numeric" id="wCardClaimCount">0건 수령</div>
+          </div>
+
+          <!-- Box 4: 실손 수령 비율 -->
+          <div class="lg:col-span-2 p-4 sm:p-5 flex flex-col justify-between">
+            <span class="text-xs text-slate-500 font-medium">실손 수령 비율</span>
+            <div class="my-3">
+              <div class="text-2xl sm:text-3xl font-black text-slate-900 font-numeric" id="wCardPayoutRatio">0%</div>
+            </div>
+            <div class="text-xs text-slate-400 font-medium" id="wCardPayoutGen">3세대</div>
+          </div>
+
+          <!-- Box 5: 미청구 가능성 금액 -->
+          <div class="lg:col-span-2 p-4 sm:p-5 flex flex-col justify-between bg-slate-50/50">
+            <span class="text-xs text-slate-500 font-medium">미청구 가능성 금액</span>
+            <div class="my-3">
+              <div class="text-2xl sm:text-3xl font-black text-blue-600 font-numeric" id="wFinalUnclaimedAmount">0원</div>
+            </div>
+            <div class="text-xs text-blue-600 font-medium">환급 실익 발생</div>
+          </div>
+
+        </div>
+
+        <!-- 5. 노란색 안내 배너 -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 leading-relaxed font-medium" id="wFinalComment">
+          3세대 기준 추정 청구 가능액 0원 대비 실제 실손 수령 0원은 약 0% 수준입니다. 미청구 가능성이 있는 금액은 약 0원입니다.
+        </div>
+
+        <!-- 6. 탭 바 (의료비 / 실손 수령 / 보험료) -->
+        <div class="flex items-center space-x-2 pt-2">
+          <button id="btnReceiptTabMedical" onclick="switchReceiptTab('MEDICAL')" class="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 font-bold border border-blue-300 text-xs shadow-sm transition">
+            의료비
+          </button>
+          <button id="btnReceiptTabPayout" onclick="switchReceiptTab('PAYOUT')" class="px-4 py-2 rounded-lg bg-white text-slate-600 hover:text-slate-900 border border-slate-200 text-xs transition">
+            실손 수령
+          </button>
+          <button id="btnReceiptTabPremium" onclick="switchReceiptTab('PREMIUM')" class="px-4 py-2 rounded-lg bg-white text-slate-600 hover:text-slate-900 border border-slate-200 text-xs transition">
+            보험료
+          </button>
+        </div>
+
+        <!-- 7. 연도별 3열 영수증 그리드 (의료비 탭) -->
+        <div id="tabContentMedical" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+          <div class="col-span-3 py-12 text-center text-xs text-slate-400 bg-white border border-slate-200 rounded-xl">
+            조회된 의료비 내역이 없습니다.
+          </div>
+        </div>
+
+        <!-- 7-2. 실손 수령 탭 컨텐츠 -->
+        <div id="tabContentPayout" class="hidden bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
+          <div class="text-xs font-bold text-slate-800">기수령 실손보험금 상세 내역</div>
+          <div id="payoutListContainer" class="divide-y divide-slate-100 text-xs">
+            <div class="py-6 text-center text-slate-400">기수령 내역이 없습니다.</div>
+          </div>
+        </div>
+
+        <!-- 7-3. 납입 보험료 탭 컨텐츠 -->
+        <div id="tabContentPremium" class="hidden bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
+          <div class="text-xs font-bold text-slate-800">납입 보험료 상세 내역 (3개년)</div>
+          <div id="premiumListContainer" class="divide-y divide-slate-100 text-xs">
+            <div class="py-6 text-center text-slate-400">납입 보험료 내역이 없습니다.</div>
+          </div>
+        </div>
+
+        <!-- 8. 하단 고객 상담용 액션 바 -->
+        <div class="bg-slate-900 text-white rounded-xl p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 class="font-bold text-sm text-slate-100">고객 상담 전달용 정밀 리포트</h3>
+            <p class="text-xs text-slate-400 mt-1">분석 요약본을 복사하여 카카오톡으로 발송하거나 리포트를 인쇄하여 상담에 활용하세요.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="copyWorkerReport()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm transition">
+              상담 요약 텍스트 복사 (카톡 발송용)
+            </button>
+            <button onclick="openReportModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-700 transition">
+              리포트 인쇄 / PDF 저장
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- ------------------------------------------------------------- -->
+      <!-- [Track 2 Result] 비근로자 전용 결과 뷰 (사용자 맞춤 개편 완료) -->
+      <!-- ------------------------------------------------------------- -->
+      <div id="sectionNonWorker" class="space-y-6 hidden">
+
+        <!-- 비근로자 세대 선택 바 (소액제외/치과제외 체크박스 제거 완료) -->
+        <section class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-bold text-slate-500 mr-1">적용 실손 세대:</span>
+              <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+                <button onclick="setNonWorkerGen(1)" id="nwGen-1" class="px-2.5 py-1 text-xs font-medium rounded-md transition text-slate-600">1세대 (~09.09)</button>
+                <button onclick="setNonWorkerGen(2)" id="nwGen-2" class="px-2.5 py-1 text-xs font-medium rounded-md transition text-slate-600">2세대 (09.10~17.03)</button>
+                <button onclick="setNonWorkerGen(3)" id="nwGen-3" class="px-2.5 py-1 text-xs font-bold rounded-md transition bg-white text-blue-600 shadow-sm">3세대 (17.04~21.06)</button>
+                <button onclick="setNonWorkerGen(4)" id="nwGen-4" class="px-2.5 py-1 text-xs font-medium rounded-md transition text-slate-600">4세대 (21.07~)</button>
+                <button onclick="setNonWorkerGen(5)" id="nwGen-5" class="px-2.5 py-1 text-xs font-medium rounded-md transition text-slate-600">5세대 (개편안)</button>
+              </div>
+            </div>
+
+            <div class="text-xs text-slate-500">
+              <span>* 실손 표준약관 기준 청구 가능 실익만 자동 산출</span>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- 4단계 카드 (STEP 1: 총 병원 지출액 / STEP 2: 비청구 대상 금액 / STEP 3: 청구 예상 대상 / FINAL: 청구 가능 예상 실익) -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <!-- STEP 1 -->
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-500">STEP 1. 총 병원 지출액</span>
+              <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-numeric font-semibold" id="nwCardTotalCount">0건 지출</span>
+            </div>
+            <div class="mt-3">
+              <div class="text-2xl font-black text-slate-900 font-numeric" id="nwCardTotalExpense">0원</div>
+              <p class="text-[11px] text-slate-400 mt-1">병원 및 약국 본인부담금 합계</p>
+            </div>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-500">STEP 2. 비청구 대상 금액</span>
+              <span class="text-[11px] bg-rose-50 text-rose-600 px-2 py-0.5 rounded font-semibold">차감 적용</span>
+            </div>
+            <div class="mt-3">
+              <div class="text-2xl font-black text-slate-900 font-numeric" id="nwCardTotalDeducted">0원</div>
+              <p class="text-[11px] text-slate-400 mt-1">소액 기준 미달 및 법정 약관 자기부담금</p>
+            </div>
+          </div>
+
+          <!-- STEP 3 -->
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-500">STEP 3. 청구 예상 대상</span>
+              <span class="text-[11px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-bold">실손 환급 대상</span>
+            </div>
+            <div class="mt-3">
+              <div class="text-2xl font-black text-amber-600 font-numeric" id="nwCardEligibleCount">0건</div>
+              <p class="text-[11px] text-slate-400 mt-1">약관 공제 후 청구 실익이 발생하는 진료</p>
+            </div>
+          </div>
+
+          <!-- FINAL -->
+          <div class="bg-white border-2 border-blue-600 rounded-xl p-5 shadow-md bg-gradient-to-br from-blue-50/30 to-white">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-blue-600">FINAL. 청구 가능 예상 실익</span>
+              <span class="text-[11px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold">통장 입금 예상</span>
+            </div>
+            <div class="mt-3">
+              <div class="text-2xl font-black text-blue-600 font-numeric" id="nwCardUnclaimedBenefit">0원</div>
+              <p class="text-[11px] text-slate-500 mt-1">
+                청구 가능 <span id="nwFinalCountText" class="font-bold text-slate-900">0건</span> / 예상 실익 <span id="nwFinalAmountText" class="font-bold text-blue-600">0원</span>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 비근로자 청구 가능 실익 확인 리스트 테이블 (청구가능 실익 있는 항목만 표시 / 구분 및 수령여부 열 제거) -->
+        <section class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+          <div class="p-5 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded">확인 리스트</span>
+                <h2 class="text-base font-bold text-slate-900">청구 가능 예상 병원비 리스트</h2>
+              </div>
+              <p class="text-xs text-slate-500 mt-1">
+                약관 공제금을 제외하고 실제 환급 실익이 발생하는 진료 영수증만 선별한 목록입니다.
+              </p>
+            </div>
+
+            <div class="text-xs text-slate-600">
+              청구 가능 항목: <span class="font-bold text-blue-600 font-numeric text-sm" id="nwEligibleTableCount">0</span>건
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+              <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4 text-center">No</th>
+                  <th class="py-3 px-4">진료/처방일자</th>
+                  <th class="py-3 px-4">의료기관 / 약국명</th>
+                  <th class="py-3 px-4">주요 진료/질병 내용</th>
+                  <th class="py-3 px-4 text-right">환자 지출액</th>
+                  <th class="py-3 px-4 text-right">약관 공제액</th>
+                  <th class="py-3 px-4 text-right">청구 가능 실익 (환급 예상)</th>
+                  <th class="py-3 px-4 text-center">청구 가능 기한</th>
+                </tr>
+              </thead>
+              <tbody id="nonWorkerTableBody" class="divide-y divide-slate-100 text-slate-700">
+                <!-- 자바스크립트로 청구가능실익 > 0 인 항목만 렌더링 -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 비근로자 하단 액션 바 -->
+        <div class="bg-slate-900 text-white rounded-xl p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 class="font-bold text-sm text-slate-100">비근로자 맞춤형 미청구 병원비 리포트</h3>
+            <p class="text-xs text-slate-400 mt-1">확인된 청구 대상 진료 내역을 복사하거나 인쇄하여 고객 상담에 활용하세요.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="copyNonWorkerReport()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm transition">
+              상담 요약 텍스트 복사 (카톡 발송용)
+            </button>
+            <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-700 transition">
+              리포트 인쇄 / PDF 저장
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =================================================================================== -->
+  <!-- 자바스크립트 엔진 및 제어 로직 -->
+  <!-- =================================================================================== -->
+  <script>
+    let selectedRole = 'WORKER'; // 'WORKER' or 'NON_WORKER'
+    let currentStep = 1;
+
+    let claimEngine = new InsuranceClaimEngine();
+    
+    // 기본값은 항상 null (화면에는 깨끗한 0으로 대기)
+    let workerData = null;
+    let nonWorkerData = null;
+
+    let workerTableFilter = 'ALL';
+
+    function init() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('name')) document.getElementById('inputName').value = urlParams.get('name');
+      if (urlParams.get('phone')) document.getElementById('inputPhone').value = urlParams.get('phone');
+      if (urlParams.get('ssn1')) document.getElementById('inputSsn1').value = urlParams.get('ssn1');
+
+      if (urlParams.get('role') === 'non_worker') {
+        handleRoleSelect('NON_WORKER');
+      } else {
+        handleRoleSelect('WORKER');
+      }
+
+      // 초기화 시 깨끗한 0 기본값 렌더링
+      resetWorkerDisplay();
+      resetNonWorkerDisplay();
+
+      goToStep(1);
+    }
+
+    function handleRoleSelect(role) {
+      selectedRole = role;
+      const cW = document.getElementById('cardTypeWorker');
+      const cNW = document.getElementById('cardTypeNonWorker');
+      const rW = document.querySelector('input[name="userRole"][value="WORKER"]');
+      const rNW = document.querySelector('input[name="userRole"][value="NON_WORKER"]');
+
+      if (role === 'WORKER') {
+        rW.checked = true;
+        cW.className = "cursor-pointer border-2 rounded-xl p-3.5 flex flex-col justify-between transition border-blue-600 bg-blue-50/40";
+        cNW.className = "cursor-pointer border-2 rounded-xl p-3.5 flex flex-col justify-between transition border-slate-200 hover:border-slate-300";
+      } else {
+        rNW.checked = true;
+        cNW.className = "cursor-pointer border-2 rounded-xl p-3.5 flex flex-col justify-between transition border-blue-600 bg-blue-50/40";
+        cW.className = "cursor-pointer border-2 rounded-xl p-3.5 flex flex-col justify-between transition border-slate-200 hover:border-slate-300";
+      }
+    }
+
+    let pendingAuthSession = null;
+
+    function getOrgName(cd) {
+      switch (cd) {
+        case 'kakao': return '카카오톡';
+        case 'pass': return '통신사 PASS';
+        case 'naver': return '네이버';
+        case 'toss': return '토스';
+        default: return '간편인증';
+      }
+    }
+
+    function goToStep(step) {
+      currentStep = step;
+      const v1 = document.getElementById('viewStep1');
+      const v2 = document.getElementById('viewStep2');
+      const vReady = document.getElementById('viewStepReady');
+      const v3 = document.getElementById('viewStep3');
+
+      const sInd1 = document.getElementById('stepIndicator1');
+      const sInd2 = document.getElementById('stepIndicator2');
+      const sInd3 = document.getElementById('stepIndicator3');
+      const sLine1 = document.getElementById('stepLine1');
+      const sLine2 = document.getElementById('stepLine2');
+
+      const btnReset = document.getElementById('btnResetToStep1');
+      const btnPrint = document.getElementById('btnPrintReport');
+
+      v1.classList.add('hidden');
+      v2.classList.add('hidden');
+      vReady.classList.add('hidden');
+      v3.classList.add('hidden');
+
+      if (step === 1) {
+        pendingAuthSession = null;
+        const actArea = document.getElementById('step2ActionArea');
+        if (actArea) actArea.classList.add('hidden');
+        const authBtn = document.getElementById('btnCompleteAuthStep');
+        if (authBtn) {
+          authBtn.disabled = false;
+          authBtn.innerText = '스마트폰 인증 완료 (결과 확인)';
+        }
+
+        v1.classList.remove('hidden');
+        btnReset.classList.add('hidden');
+        btnPrint.classList.add('hidden');
+
+        sInd1.className = "flex items-center space-x-2 text-blue-600 font-bold";
+        sInd1.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black";
+        sLine1.className = "flex-1 h-0.5 mx-3 bg-slate-200";
+
+        sInd2.className = "flex items-center space-x-2 text-slate-400 font-bold";
+        sInd2.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[11px] font-black";
+        sLine2.className = "flex-1 h-0.5 mx-3 bg-slate-200";
+
+        sInd3.className = "flex items-center space-x-2 text-slate-400 font-bold";
+        sInd3.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[11px] font-black";
+      } 
+      else if (step === 2) {
+        v2.classList.remove('hidden');
+        btnReset.classList.add('hidden');
+        btnPrint.classList.add('hidden');
+
+        sInd1.className = "flex items-center space-x-2 text-emerald-600 font-bold";
+        sInd1.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black";
+        sLine1.className = "flex-1 h-0.5 mx-3 bg-blue-600";
+
+        sInd2.className = "flex items-center space-x-2 text-blue-600 font-bold";
+        sInd2.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black";
+        sLine2.className = "flex-1 h-0.5 mx-3 bg-slate-200";
+
+        sInd3.className = "flex items-center space-x-2 text-slate-400 font-bold";
+        sInd3.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[11px] font-black";
+      } 
+      else if (step === 2.5) {
+        vReady.classList.remove('hidden');
+        btnReset.classList.add('hidden');
+        btnPrint.classList.add('hidden');
+
+        sInd2.className = "flex items-center space-x-2 text-emerald-600 font-bold";
+        sInd2.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black";
+        sLine2.className = "flex-1 h-0.5 mx-3 bg-emerald-600";
+      }
+      else if (step === 3) {
+        v3.classList.remove('hidden');
+        btnReset.classList.remove('hidden');
+        btnPrint.classList.remove('hidden');
+
+        sInd1.className = "flex items-center space-x-2 text-emerald-600 font-bold";
+        sInd1.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black";
+        sLine1.className = "flex-1 h-0.5 mx-3 bg-emerald-600";
+
+        sInd2.className = "flex items-center space-x-2 text-emerald-600 font-bold";
+        sInd2.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black";
+        sLine2.className = "flex-1 h-0.5 mx-3 bg-emerald-600";
+
+        sInd3.className = "flex items-center space-x-2 text-blue-600 font-bold";
+        sInd3.querySelector('span:first-child').className = "w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black";
+
+        switchTrack(selectedRole);
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function startClaimProcess() {
+      const name = document.getElementById('inputName').value.trim();
+      const ssn1 = document.getElementById('inputSsn1').value.trim().replace(/[^0-9]/g, '');
+      const ssn2 = document.getElementById('inputSsn2').value.trim().replace(/[^0-9]/g, '');
+      const phone = document.getElementById('inputPhone').value.trim().replace(/[^0-9]/g, '');
+      const orgCd = document.getElementById('inputOrgCd').value;
+      const consent = document.getElementById('checkConsent').checked;
+
+      if (!name || ssn1.length !== 6 || ssn2.length !== 7 || phone.length < 10) {
+        alert('고객 성명, 주민번호(앞 6자리 / 뒤 7자리), 휴대폰 번호를 모두 정확히 입력해주세요.');
+        return;
+      }
+      if (!consent) {
+        alert('의료비 조회를 위한 전자서명 위임에 동의해주세요.');
+        return;
+      }
+
+      goToStep(2);
+
+      const orgName = getOrgName(orgCd);
+
+      if (selectedRole === 'WORKER') {
+        // [직장인: 국세청 연말정산 간소화 2단계 간편인증 - 설계이지 동일 규격]
+        document.getElementById('step2ActionArea').classList.remove('hidden');
+        document.getElementById('step2MainTitle').innerText = `${name} 님의 스마트폰에서 인증을 진행해주세요`;
+        document.getElementById('step2SubTitle').innerHTML = `최근 3개년 국세청 연말정산 의료비 및 보험료 조회를 위해 <b>[${orgName}]</b> 앱으로 인증 요청이 전송되었습니다.<br>스마트폰에서 <b>[확인 / 서명]</b>을 완료하신 후 아래 <b>[스마트폰 인증 완료]</b> 버튼을 눌러주세요.`;
+        document.getElementById('step2StatusText').innerText = `스마트폰 간편인증 대기 중... (${orgName} 앱에서 승인해주세요)`;
+        document.getElementById('step2ProgressBar').style.width = '45%';
+        document.getElementById('step2ProgressPercent').innerText = '45%';
+
+        try {
+          const authPayload = {
+            serviceType: 'hometax',
+            step: 'init',
+            name: name,
+            ssn1: ssn1,
+            ssn2: ssn2,
+            mobileNo: phone,
+            loginOrgCd: orgCd
+          };
+
+          const resData = await callHyphenApi(authPayload);
+          console.log('[HiddenClaim] 국세청 1단계 세션 응답:', resData);
+          const common = resData.data?.common || resData.common || {};
+          const isError = resData.error || common.errYn === 'Y' || (common.errMsg && common.errMsg.trim() !== '');
+
+          if (isError) {
+            const rawMsg = resData.error || common.errMsg || '인증 요청에 실패했습니다.';
+            alert('인증 오류 안내: ' + rawMsg);
+            goToStep(1);
+            return;
+          }
+
+          pendingAuthSession = {
+            name,
+            ssn1,
+            ssn2,
+            phone,
+            orgCd,
+            stepData: resData.data?.data?.step_data || resData.data?.step_data || resData.data?.data,
+            cookieData: resData.data?.data?.cookie_data || resData.data?.cookie_data || resData.data?.data?.cookie,
+            cookie: resData.data?.data?.cookie || resData.data?.cookie
+          };
+        } catch (err) {
+          alert('통신 연결 오류: ' + err.message);
+          goToStep(1);
+        }
+      } else {
+        // [비근로자: 건강보험공단 진료내역 원스톱 조회]
+        document.getElementById('step2ActionArea').classList.add('hidden');
+        document.getElementById('step2MainTitle').innerText = `${name} 님의 스마트폰에서 인증을 승인해주세요`;
+        document.getElementById('step2SubTitle').innerHTML = `최근 3개년 병원·약국 영수증 대조를 위해 <b>[${orgName}]</b> 앱으로 인증 알림이 전송되었습니다.<br>스마트폰에서 <b>[확인 / 서명]</b>을 누르시면 조회가 즉시 완료됩니다.`;
+        document.getElementById('step2StatusText').innerText = `스마트폰 간편인증 대기 중... (${orgName} 앱에서 승인해주세요)`;
+        document.getElementById('step2ProgressBar').style.width = '45%';
+        document.getElementById('step2ProgressPercent').innerText = '45%';
+
+        try {
+          const payload = {
+            serviceType: 'nhis',
+            name: name,
+            ssn1: ssn1,
+            ssn2: ssn2,
+            mobileNo: phone,
+            loginOrgCd: orgCd
+          };
+
+          const resData = await callHyphenApi(payload);
+          const common = resData.data?.common || resData.common || {};
+          const isError = resData.error || common.errYn === 'Y' || (common.errMsg && common.errMsg.trim() !== '');
+
+          if (isError) {
+            const rawMsg = resData.error || common.errMsg || '인증 처리에 실패했습니다.';
+            alert('인증 오류 안내: ' + rawMsg);
+            goToStep(1);
+            return;
+          }
+
+          document.getElementById('step2ProgressBar').style.width = '100%';
+          document.getElementById('step2ProgressPercent').innerText = '100%';
+          document.getElementById('step2StatusText').innerText = '3개년 진료 영수증 대조 및 미청구 금액 산출 완료!';
+
+          const parsed = HyphenHometaxParser.parse(resData.data || resData, name);
+          console.log('[HiddenClaim] 건보공단 진료 영수증 응답 데이터:', resData);
+          console.log('[HiddenClaim] 건보공단 파싱 및 정규화 결과:', parsed);
+
+          const clientRealName = (parsed.clientName && parsed.clientName !== '고객') ? parsed.clientName : name;
+          
+          workerData = {
+            clientName: clientRealName,
+            medicalExpenses: parsed.medicalExpenses || [],
+            claimReceipts: parsed.claimReceipts || [],
+            insurancePremiums: parsed.insurancePremiums || [],
+            totalClaimedPayoutFromNTS: parsed.totalClaimedPayoutFromNTS || 0
+          };
+          nonWorkerData = {
+            clientName: clientRealName,
+            medicalExpenses: parsed.medicalExpenses || []
+          };
+          claimEngine.clientName = clientRealName;
+
+          document.getElementById('readyClientName').innerText = clientRealName;
+          document.getElementById('resultHeaderName').innerText = clientRealName;
+          
+          setTimeout(() => {
+            goToStep(2.5);
+          }, 500);
+
+        } catch (err) {
+          alert('통신 연결 오류: ' + err.message);
+          goToStep(1);
+        }
+      }
+    }
+
+    // 직장인 2단계: 스마트폰 서명 완료 후 최종 국세청 영수증 데이터 수신
+    async function completeWorkerAuth() {
+      if (!pendingAuthSession) {
+        alert('인증 정보가 만료되었거나 존재하지 않습니다. 처음부터 다시 진행해주세요.');
+        goToStep(1);
+        return;
+      }
+
+      const authBtn = document.getElementById('btnCompleteAuthStep');
+      authBtn.disabled = true;
+      authBtn.innerText = '인증 확인 및 3개년 영수증 대조 중...';
+
+      document.getElementById('step2StatusText').innerText = '국세청 홈택스 3개년 의료비 및 실손 수령 영수증 수신 중...';
+      document.getElementById('step2ProgressBar').style.width = '85%';
+      document.getElementById('step2ProgressPercent').innerText = '85%';
+
+      try {
+        const signPayload = {
+          serviceType: 'hometax',
+          step: 'sign',
+          stepData: pendingAuthSession.stepData,
+          cookieData: pendingAuthSession.cookieData,
+          cookie: pendingAuthSession.cookie || pendingAuthSession.cookieData,
+          name: pendingAuthSession.name,
+          ssn1: pendingAuthSession.ssn1,
+          ssn2: pendingAuthSession.ssn2,
+          mobileNo: pendingAuthSession.phone,
+          loginOrgCd: pendingAuthSession.orgCd
+        };
+
+        let resData = await callHyphenApi(signPayload);
+        console.log('[HiddenClaim] 국세청 2단계 응답 원본:', resData);
+
+        const common = resData.data?.common || resData.common || {};
+        const isError = resData.error || common.errYn === 'Y' || (common.errMsg && common.errMsg.trim() !== '');
+
+        if (isError) {
+          authBtn.disabled = false;
+          authBtn.innerText = '스마트폰 인증 완료 (다시 시도)';
+          document.getElementById('step2StatusText').innerText = '스마트폰 간편인증 대기 중...';
+          document.getElementById('step2ProgressBar').style.width = '60%';
+          document.getElementById('step2ProgressPercent').innerText = '60%';
+
+          const rawMsg = resData.error || common.errMsg || '스마트폰에서 인증이 아직 완료되지 않았습니다.';
+          alert('인증 확인 안내: ' + rawMsg + '\n\n스마트폰 앱에서 서명을 먼저 완료하신 후 버튼을 다시 눌러주세요.');
+          return;
+        }
+
+        // [국세청 프론트엔드 자동 조회 폴백]
+        // 서명 완료 후 의료비(G0003/info)가 비어있고 새 세션 쿠키가 발급된 경우 query 단계 자동 요청
+        let infoObj = resData.data?.data?.info || resData.data?.info || resData.data?.data?.G0003 || resData.data?.G0003;
+        const newCookie = resData.data?.data?.cookie || resData.data?.cookie;
+        if (!infoObj && newCookie) {
+          console.log('[HiddenClaim] 2단계 서명 완료 후 데이터 자동 조회 요청 실행...');
+          document.getElementById('step2StatusText').innerText = '국세청 홈택스 3개년 의료비 상세 내역 수신 중...';
+          const queryPayload = {
+            serviceType: 'hometax',
+            step: 'query',
+            cookie: newCookie,
+            cookieData: newCookie,
+            name: pendingAuthSession.name,
+            ssn1: pendingAuthSession.ssn1,
+            ssn2: pendingAuthSession.ssn2,
+            mobileNo: pendingAuthSession.phone,
+            loginOrgCd: pendingAuthSession.orgCd
+          };
+          const queryRes = await callHyphenApi(queryPayload);
+          console.log('[HiddenClaim] 국세청 자동 조회 결과:', queryRes);
+          if (queryRes.data?.data?.info || queryRes.data?.info || queryRes.data?.data?.G0003 || queryRes.data?.G0003) {
+            resData = queryRes;
+          }
+        }
+
+        document.getElementById('step2ProgressBar').style.width = '100%';
+        document.getElementById('step2ProgressPercent').innerText = '100%';
+        document.getElementById('step2StatusText').innerText = '3개년 영수증 대조 및 미청구 금액 산출 완료!';
+
+        const parsed = HyphenHometaxParser.parse(resData.data || resData, pendingAuthSession.name);
+        console.log('[HiddenClaim] 국세청 파싱 결과:', parsed);
+
+        const clientRealName = (parsed.clientName && parsed.clientName !== '고객') 
+          ? parsed.clientName 
+          : (pendingAuthSession?.name || '고객');
+
+        workerData = {
+          clientName: clientRealName,
+          medicalExpenses: parsed.medicalExpenses || [],
+          claimReceipts: parsed.claimReceipts || [],
+          insurancePremiums: parsed.insurancePremiums || [],
+          totalClaimedPayoutFromNTS: parsed.totalClaimedPayoutFromNTS || 0
+        };
+        claimEngine.clientName = clientRealName;
+
+        document.getElementById('readyClientName').innerText = clientRealName;
+        document.getElementById('resultHeaderName').innerText = clientRealName;
+
+        setTimeout(() => {
+          goToStep(2.5);
+        }, 500);
+
+      } catch (err) {
+        authBtn.disabled = false;
+        authBtn.innerText = '스마트폰 인증 완료 (다시 시도)';
+        alert('통신 연결 오류: ' + err.message);
+      }
+    }
+
+    function revealFinalResult() {
+      goToStep(3);
+    }
+
+    // 예시 리포트 바로보기 (클릭 시에만 샘플 데이터 로드)
+    function previewSampleDirectly() {
+      if (selectedRole === 'WORKER') {
+        workerData = InsuranceClaimEngine.getSampleWorkerData();
+        claimEngine.clientName = '박보환';
+      } else {
+        nonWorkerData = InsuranceClaimEngine.getSampleNonWorkerData();
+        claimEngine.clientName = '김고객';
+      }
+
+      const sampleName = selectedRole === 'WORKER' ? '박보환' : '김고객';
+      document.getElementById('readyClientName').innerText = sampleName;
+      document.getElementById('resultHeaderName').innerText = sampleName;
+      goToStep(2.5);
+    }
+
+    function getActiveClientName() {
+      if (workerData && workerData.clientName && workerData.clientName !== '고객') return workerData.clientName;
+      if (nonWorkerData && nonWorkerData.clientName && nonWorkerData.clientName !== '고객') return nonWorkerData.clientName;
+      if (pendingAuthSession && pendingAuthSession.name) return pendingAuthSession.name;
+      const inputVal = document.getElementById('inputName')?.value?.trim();
+      if (inputVal) return inputVal;
+      return '고객';
+    }
+
+    function switchTrack(track) {
+      selectedRole = track;
+      const btnW = document.getElementById('tabBtnWorker');
+      const btnNW = document.getElementById('tabBtnNonWorker');
+      const secW = document.getElementById('sectionWorker');
+      const secNW = document.getElementById('sectionNonWorker');
+      const dsText = document.getElementById('resultDataSourceText');
+
+      if (track === 'WORKER') {
+        btnW.className = "py-1.5 px-3 rounded-lg text-center transition font-bold text-xs bg-white text-blue-600 shadow-sm flex items-center gap-1.5";
+        btnNW.className = "py-1.5 px-3 rounded-lg text-center transition font-medium text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+        secW.classList.remove('hidden');
+        secNW.classList.add('hidden');
+        if (dsText) dsText.innerText = "국세청 연말정산 간소화 3개년 의료비 및 실손 수령액 기준 분석 자료입니다.";
+        
+        if (workerData) {
+          updateWorkerCalculation();
+        } else {
+          resetWorkerDisplay();
+        }
+      } else {
+        btnNW.className = "py-1.5 px-3 rounded-lg text-center transition font-bold text-xs bg-white text-blue-600 shadow-sm flex items-center gap-1.5";
+        btnW.className = "py-1.5 px-3 rounded-lg text-center transition font-medium text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+        secW.classList.add('hidden');
+        secNW.classList.remove('hidden');
+        if (dsText) dsText.innerText = "국민건강보험공단 최근 3개년 실제 진료비 영수증 기준 분석 자료입니다.";
+        
+        if (nonWorkerData) {
+          updateNonWorkerCalculation();
+        } else {
+          resetNonWorkerDisplay();
+        }
+      }
+    }
+
+    // -------------------------------------------------------------
+    // [Track 1] 직장인 초기화 & 계산 로직
+    // -------------------------------------------------------------
+    function resetWorkerDisplay() {
+      const activeName = getActiveClientName();
+      document.getElementById('resultHeaderName').innerText = activeName;
+      document.getElementById('topTotalCount').innerText = '0건';
+      document.getElementById('topDeductedAmount').innerText = '0원';
+
+      document.getElementById('wCardPossibility').innerText = '-';
+      document.getElementById('wCardPossibilityText').innerText = '-';
+      document.getElementById('wCardEstimatedClaimable').innerText = '0원';
+      document.getElementById('wCardActualPayout').innerText = '0원';
+      document.getElementById('wCardClaimCount').innerText = '0건 수령';
+      document.getElementById('wCardPayoutRatio').innerText = '0.0%';
+      document.getElementById('wCardPayoutPercent').innerText = '0.0%';
+      document.getElementById('wProgressBar').style.width = '0%';
+
+      document.getElementById('wFinalUnclaimedAmount').innerText = '0원';
+      document.getElementById('wFinalComment').innerText = '조회를 진행하시면 최근 3개년 영수증을 바탕으로 미청구 금액을 즉시 계산합니다.';
+
+      document.getElementById('wSummaryExclusions').innerText = '0원';
+      document.getElementById('wSummaryBelowTh').innerText = '0원';
+      document.getElementById('wSummaryDeductible').innerText = '0원';
+
+      document.getElementById('wTotalPremium').innerText = '0원';
+      document.getElementById('wTotalPremiumCount').innerText = '보장성 보험 0건';
+      document.getElementById('wTotalMedicalExpense').innerText = '0원';
+      document.getElementById('wTotalMedicalCount').innerText = '진료·약국 0건';
+      document.getElementById('wTotalPayoutSummary').innerText = '0원';
+      document.getElementById('wTotalPayoutCount').innerText = '지급 확인 0건';
+
+      document.getElementById('workerYearContainer').innerHTML = `
+        <div class="py-12 text-center text-xs text-slate-400">조회된 의료비 내역이 없습니다. [새로 조회하기]를 통해 간편인증을 진행해주세요.</div>
+      `;
+    }
+
+    function setWorkerGen(gen) {
+      claimEngine.setGeneration(gen);
+      const sel = document.getElementById('wGenSelect');
+      if (sel) sel.value = String(gen);
+      if (workerData) updateWorkerCalculation();
+    }
+
+    function onWorkerGenSelectChange(val) {
+      claimEngine.setGeneration(Number(val));
+      if (workerData) updateWorkerCalculation();
+    }
+
+    function onWorkerFilterChange() {
+      if (workerData) updateWorkerCalculation();
+    }
+
+    function toggleGenerationCompare() {
+      const cont = document.getElementById('genCompareContainer');
+      const btn = document.getElementById('btnGenCompareToggle');
+      if (!cont) return;
+      if (cont.classList.contains('hidden')) {
+        cont.classList.remove('hidden');
+        if (btn) btn.innerText = '접기 ▴';
+        renderGenComparison(workerData);
+      } else {
+        cont.classList.add('hidden');
+        if (btn) btn.innerText = '펼치기 ▾';
+      }
+    }
+
+    function renderGenComparison(wData) {
+      const container = document.getElementById('genCompareContainer');
+      if (!container || !wData) return;
+
+      const gens = [1, 2, 3, 4, 5];
+      const curGen = claimEngine.generation;
+      let html = '<div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-center">';
+
+      gens.forEach(g => {
+        const tempEngine = new InsuranceClaimEngine({
+          generation: g,
+          excludeGlasses: document.getElementById('chkExcludeGlasses')?.checked ?? true,
+          excludeBelowThreshold: document.getElementById('chkExcludeBelowTh')?.checked ?? true,
+          includeFamily: document.getElementById('chkIncludeFamily')?.checked ?? false,
+          clientName: wData.clientName || '고객'
+        });
+        const res = tempEngine.analyzeWorker(wData);
+        const isCurrent = g === curGen;
+
+        html += `
+          <div class="p-2.5 rounded-lg border text-xs cursor-pointer transition ${isCurrent ? 'bg-blue-50 border-blue-400 font-bold text-blue-700 ring-2 ring-blue-200' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}" onclick="setWorkerGen(${g})">
+            <div class="font-bold text-[11px] mb-1">${g}세대 실손 ${isCurrent ? '(선택됨)' : ''}</div>
+            <div class="text-sm font-black font-numeric text-slate-900">${res.diagnosis.estimatedClaimableAmount.toLocaleString()}원</div>
+            <div class="text-[10px] text-slate-500 mt-1">미청구 ${res.diagnosis.unclaimedPotentialAmount.toLocaleString()}원</div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function updateWorkerCalculation() {
+      if (!workerData) return;
+
+      const exGlasses = document.getElementById('chkExcludeGlasses')?.checked ?? true;
+      const exBelowTh = document.getElementById('chkExcludeBelowTh')?.checked ?? true;
+      const incFamily = document.getElementById('chkIncludeFamily')?.checked ?? false;
+
+      claimEngine.setFilters({
+        excludeGlasses: exGlasses,
+        excludeBelowThreshold: exBelowTh,
+        includeFamily: incFamily
+      });
+
+      const analysis = claimEngine.analyzeWorker(workerData);
+
+      // 상단 배너 고객명 및 필드 세팅
+      const bannerName = document.getElementById('ezClientBannerName');
+      if (bannerName) bannerName.innerText = analysis.clientName;
+      const headerName = document.getElementById('resultHeaderName');
+      if (headerName) headerName.innerText = analysis.clientName;
+
+      const timeElem = document.getElementById('inquiryTimestamp');
+      if (timeElem) {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        timeElem.innerText = `${y}-${m}-${d} ${hh}:${mm} · 조회 완료`;
+      }
+
+      // 3개년 요약 3단 박스
+      document.getElementById('wTotalPremium').innerText = `${analysis.summary.totalPremium.toLocaleString()}원`;
+      document.getElementById('wTotalPremiumCount').innerText = `3개년 합계 · ${analysis.summary.premiumCount}건`;
+      document.getElementById('wTotalMedicalExpense').innerText = `${analysis.summary.totalMedicalExpense.toLocaleString()}원`;
+      document.getElementById('wTotalMedicalCount').innerText = `3개년 합계 · 진료·약국 ${analysis.summary.medicalExpenseCount}건`;
+      document.getElementById('wTotalPayoutSummary').innerText = `${analysis.summary.totalClaimedPayout.toLocaleString()}원`;
+      document.getElementById('wTotalPayoutCount').innerText = `3개년 합계 · ${analysis.summary.claimReceiptCount}건`;
+
+      // 5개 핵심 KPI 박스
+      document.getElementById('wCardPossibilityText').innerText = analysis.diagnosis.possibilityLevel;
+      document.getElementById('wCardEstimatedClaimable').innerText = `${analysis.diagnosis.estimatedClaimableAmount.toLocaleString()}원`;
+      document.getElementById('wBadgeGenName').innerText = `${claimEngine.generation}세대 실손 기준`;
+
+      document.getElementById('wSummaryGlasses').innerText = `${(analysis.diagnosis.exclusions.glassesAmount || 0).toLocaleString()}원`;
+      document.getElementById('wSummaryBelowTh').innerText = `${(analysis.diagnosis.exclusions.belowThresholdAmount || 0).toLocaleString()}원`;
+      document.getElementById('wSummaryDeductible').innerText = `${(analysis.diagnosis.exclusions.deductibleAmount || 0).toLocaleString()}원`;
+      document.getElementById('wSummaryExclusions').innerText = `${(analysis.diagnosis.exclusions.totalExcluded || 0).toLocaleString()}원`;
+
+      document.getElementById('wCardActualPayout').innerText = `${analysis.diagnosis.actualPayout.toLocaleString()}원`;
+      document.getElementById('wCardClaimCount').innerText = `${analysis.summary.claimReceiptCount}건 수령`;
+      document.getElementById('wCardPayoutRatio').innerText = `${analysis.diagnosis.payoutRatio}%`;
+      document.getElementById('wCardPayoutGen').innerText = `${claimEngine.generation}세대`;
+
+      document.getElementById('wFinalUnclaimedAmount').innerText = `${analysis.diagnosis.unclaimedPotentialAmount.toLocaleString()}원`;
+
+      // 노란색 안내 배너
+      document.getElementById('wFinalComment').innerText = `${claimEngine.generation}세대 기준 추정 청구 가능액 ${analysis.diagnosis.estimatedClaimableAmount.toLocaleString()}원 대비 실제 실손 수령 ${analysis.diagnosis.actualPayout.toLocaleString()}원은 약 ${analysis.diagnosis.payoutRatio}% 수준입니다. 미청구 가능성이 있는 금액은 약 ${analysis.diagnosis.unclaimedPotentialAmount.toLocaleString()}원입니다.`;
+
+      // 세대별 비교 아코디언이 열려있다면 재계산 반영
+      const genCont = document.getElementById('genCompareContainer');
+      if (genCont && !genCont.classList.contains('hidden')) {
+        renderGenComparison(workerData);
+      }
+
+      // 3열 그리드 렌더링
+      renderWorkerGrid(analysis.yearGroups, analysis.clientName);
+    }
+
+    function renderWorkerGrid(yearGroups, clientName) {
+      const container = document.getElementById('tabContentMedical');
+      if (!container) return;
+
+      const years = Object.keys(yearGroups).sort().reverse();
+
+      if (years.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-3 py-12 px-6 text-center space-y-2.5 bg-slate-50/70 rounded-xl border border-slate-200/80">
+            <div class="text-sm font-bold text-slate-800">
+              국세청 연말정산에 등록된 본인 지출 의료비가 0건입니다.
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed max-w-lg mx-auto">
+              사업자, 프리랜서, 주부의 경우 국세청 연말정산에 병원비가 집계되지 않습니다.<br>
+              상단 탭에서 <span class="font-bold text-blue-600 cursor-pointer underline" onclick="switchTrack('NON_WORKER')">[사업자 · 프리랜서 · 주부]</span>를 선택하시면 건강보험공단 진료비 영수증 기준으로 조회하실 수 있습니다.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      const gridCols = years.length >= 3 ? 'grid-cols-1 md:grid-cols-3' : (years.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1');
+      container.className = `grid ${gridCols} gap-4 items-start`;
+
+      let html = '';
+      years.forEach(year => {
+        const items = yearGroups[year] || [];
+
+        html += `
+          <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
+            <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+              <span class="font-bold text-slate-900 text-sm">${year}년</span>
+              <span class="text-xs font-semibold text-slate-500 font-numeric">${items.length}건</span>
+            </div>
+            <div class="p-3 space-y-2.5 max-h-[560px] overflow-y-auto divide-y divide-slate-100">
+        `;
+
+        if (items.length === 0) {
+          html += '<div class="py-6 text-center text-xs text-slate-400">영수증 내역 없음</div>';
+        } else {
+          items.forEach(item => {
+            const isEligible = item.status === 'ELIGIBLE' && item.claimable > 0;
+            html += `
+              <div class="pt-2.5 first:pt-0 space-y-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-bold text-slate-800">${item.date || year}</span>
+                  ${isEligible 
+                    ? '<span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">청구 가능</span>'
+                    : '<span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-medium">제외/공제</span>'
+                  }
+                </div>
+                <div class="text-[11px] text-slate-500 truncate" title="${item.institutionName}">
+                  ${item.institutionName || '의료기관'} · 대상자: ${item.patientName || clientName} · ${item.institutionType || '외래/의원'} · ${item.treatmentType || '통원'}
+                </div>
+                <div class="flex items-center justify-between pt-0.5">
+                  <span class="text-[10px] ${isEligible ? 'text-blue-600 font-semibold' : 'text-slate-400'} font-numeric">
+                    ${isEligible ? `환급 실익 약 ${item.claimable.toLocaleString()}원` : (item.reason || '소액 미달')}
+                  </span>
+                  <span class="text-xs font-black text-slate-900 font-numeric">${Number(item.amount || 0).toLocaleString()}원</span>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        html += `
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function switchReceiptTab(tab) {
+      const btnMed = document.getElementById('btnReceiptTabMedical');
+      const btnPay = document.getElementById('btnReceiptTabPayout');
+      const btnPre = document.getElementById('btnReceiptTabPremium');
+      const contMed = document.getElementById('tabContentMedical');
+      const contPay = document.getElementById('tabContentPayout');
+      const contPre = document.getElementById('tabContentPremium');
+
+      const activeClass = "px-4 py-2 rounded-lg bg-blue-50 text-blue-700 font-bold border border-blue-300 text-xs shadow-sm transition";
+      const inactiveClass = "px-4 py-2 rounded-lg bg-white text-slate-600 hover:text-slate-900 border border-slate-200 text-xs transition";
+
+      if (tab === 'MEDICAL') {
+        btnMed.className = activeClass;
+        btnPay.className = inactiveClass;
+        btnPre.className = inactiveClass;
+        contMed.classList.remove('hidden');
+        contPay.classList.add('hidden');
+        contPre.classList.add('hidden');
+      } else if (tab === 'PAYOUT') {
+        btnPay.className = activeClass;
+        btnMed.className = inactiveClass;
+        btnPre.className = inactiveClass;
+        contPay.classList.remove('hidden');
+        contMed.classList.add('hidden');
+        contPre.classList.add('hidden');
+        renderPayoutTab();
+      } else if (tab === 'PREMIUM') {
+        btnPre.className = activeClass;
+        btnMed.className = inactiveClass;
+        btnPay.className = inactiveClass;
+        contPre.classList.remove('hidden');
+        contMed.classList.add('hidden');
+        contPay.classList.add('hidden');
+        renderPremiumTab();
+      }
+    }
+
+    function renderPayoutTab() {
+      const cont = document.getElementById('payoutListContainer');
+      if (!cont) return;
+      const receipts = (workerData && workerData.claimReceipts) || [];
+      if (receipts.length === 0) {
+        cont.innerHTML = '<div class="py-8 text-center text-xs text-slate-400">국세청에 등록된 기수령 실손보험금 내역이 없습니다. (0건)</div>';
+        return;
+      }
+      let html = '';
+      receipts.forEach(r => {
+        html += `
+          <div class="py-3 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-slate-800">${r.insuranceCompany || r.name || '보험사 지급'}</div>
+              <div class="text-[11px] text-slate-400">${r.date || ''} · ${r.type || '실손의료비 환급'}</div>
+            </div>
+            <div class="text-right font-black text-indigo-600 text-sm font-numeric">
+              ${Number(r.amount || r.amt || 0).toLocaleString()}원
+            </div>
+          </div>
+        `;
+      });
+      cont.innerHTML = html;
+    }
+
+    function renderPremiumTab() {
+      const cont = document.getElementById('premiumListContainer');
+      if (!cont) return;
+      const premiums = (workerData && workerData.insurancePremiums) || [];
+      if (premiums.length === 0) {
+        cont.innerHTML = '<div class="py-8 text-center text-xs text-slate-400">등록된 납입 보험료 내역이 없습니다. (0건)</div>';
+        return;
+      }
+      let html = '';
+      premiums.forEach(p => {
+        html += `
+          <div class="py-3 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-slate-800">${p.companyName || p.resCompanyNm || '보험계약'}</div>
+              <div class="text-[11px] text-slate-400">${p.productName || p.resProductNm || '보장성보험'}</div>
+            </div>
+            <div class="text-right font-bold text-slate-900 text-sm font-numeric">
+              ${Number(p.annualAmount || p.anulSumAmt || 0).toLocaleString()}원
+            </div>
+          </div>
+        `;
+      });
+      cont.innerHTML = html;
+    }
+
+    function openReportModal() {
+      const modal = document.getElementById('reportViewModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        renderModalReportContent();
+      }
+    }
+
+    function closeReportModal() {
+      const modal = document.getElementById('reportViewModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function renderModalReportContent() {
+      const clientName = getActiveClientName();
+      document.getElementById('modalReportClientName').innerText = clientName;
+      
+      if (workerData) {
+        const analysis = claimEngine.analyzeWorker(workerData);
+        document.getElementById('modalReportTotalMed').innerText = `${analysis.summary.totalMedicalExpense.toLocaleString()}원`;
+        document.getElementById('modalReportClaimable').innerText = `${analysis.diagnosis.estimatedClaimableAmount.toLocaleString()}원`;
+        document.getElementById('modalReportPayout').innerText = `${analysis.diagnosis.actualPayout.toLocaleString()}원`;
+        document.getElementById('modalReportUnclaimed').innerText = `${analysis.diagnosis.unclaimedPotentialAmount.toLocaleString()}원`;
+      }
+    }
+
+
+    // -------------------------------------------------------------
+    // [Track 2] 비근로자 초기화 & 계산 로직 (사용자 요청 완벽 반영)
+    // -------------------------------------------------------------
+    function resetNonWorkerDisplay() {
+      const activeName = getActiveClientName();
+      document.getElementById('resultHeaderName').innerText = activeName;
+      document.getElementById('topTotalCount').innerText = '0건';
+      document.getElementById('topDeductedAmount').innerText = '0원';
+
+      document.getElementById('nwCardTotalCount').innerText = '0건 지출';
+      document.getElementById('nwCardTotalExpense').innerText = '0원';
+      document.getElementById('nwCardTotalDeducted').innerText = '0원';
+      document.getElementById('nwCardEligibleCount').innerText = '0건';
+      document.getElementById('nwCardUnclaimedBenefit').innerText = '0원';
+      document.getElementById('nwFinalCountText').innerText = '0건';
+      document.getElementById('nwFinalAmountText').innerText = '0원';
+      document.getElementById('nwEligibleTableCount').innerText = '0';
+
+      document.getElementById('nonWorkerTableBody').innerHTML = `
+        <tr><td colspan="8" class="py-12 text-center text-xs text-slate-400">조회된 병원비 내역이 없습니다. [새로 조회하기]를 통해 조회를 시작해주세요.</td></tr>
+      `;
+    }
+
+    function setNonWorkerGen(gen) {
+      claimEngine.setGeneration(gen);
+      [1, 2, 3, 4, 5].forEach(g => {
+        const btn = document.getElementById('nwGen-' + g);
+        if (g === gen) {
+          btn.className = "px-2.5 py-1 text-xs font-bold rounded-md transition bg-white text-blue-600 shadow-sm";
+        } else {
+          btn.className = "px-2.5 py-1 text-xs font-medium rounded-md transition text-slate-600";
+        }
+      });
+      if (nonWorkerData) updateNonWorkerCalculation();
+    }
+
+    function updateNonWorkerCalculation() {
+      if (!nonWorkerData) return;
+
+      claimEngine.setFilters({ excludeBelowThreshold: true, excludeDental: false });
+      const analysis = claimEngine.analyzeNonWorker(nonWorkerData);
+
+      // 청구 가능 실익 있는 항목만 엄선 (claimable > 0)
+      const eligibleItems = analysis.allItems.filter(item => item.claimable > 0);
+
+      // 청구 가능 금액 합계
+      const totalEligibleBenefit = eligibleItems.reduce((sum, item) => sum + (item.claimable || 0), 0);
+      
+      // 비청구 대상 금액 = 총 발생 병원비 - 청구 가능 금액
+      const nonClaimableAmount = Math.max(0, analysis.summary.totalExpenseAmount - totalEligibleBenefit);
+
+      document.getElementById('resultHeaderName').innerText = analysis.clientName;
+      document.getElementById('topTotalCount').innerText = `${analysis.summary.totalCount}건`;
+      document.getElementById('topDeductedAmount').innerText = `${nonClaimableAmount.toLocaleString()}원`;
+
+      // 4단계 카드 반영
+      // STEP 1. 총 병원 지출액
+      document.getElementById('nwCardTotalCount').innerText = `${analysis.summary.totalCount}건 지출`;
+      document.getElementById('nwCardTotalExpense').innerText = `${analysis.summary.totalExpenseAmount.toLocaleString()}원`;
+
+      // STEP 2. 비청구 대상 금액
+      document.getElementById('nwCardTotalDeducted').innerText = `${nonClaimableAmount.toLocaleString()}원`;
+
+      // STEP 3. 청구 예상 대상 건수
+      document.getElementById('nwCardEligibleCount').innerText = `${eligibleItems.length}건`;
+
+      // FINAL. 청구 가능 건수 및 금액 확인 리스트
+      document.getElementById('nwCardUnclaimedBenefit').innerText = `${totalEligibleBenefit.toLocaleString()}원`;
+      document.getElementById('nwFinalCountText').innerText = `${eligibleItems.length}건`;
+      document.getElementById('nwFinalAmountText').innerText = `${totalEligibleBenefit.toLocaleString()}원`;
+      document.getElementById('nwEligibleTableCount').innerText = `${eligibleItems.length}`;
+
+      renderNonWorkerTable(eligibleItems);
+    }
+
+    // 청구가능 실익이 있는 항목만 깔끔하게 렌더링 (구분 및 보험금 수령여부 열 제거 완료)
+    function renderNonWorkerTable(eligibleItems) {
+      const tbody = document.getElementById('nonWorkerTableBody');
+      tbody.innerHTML = '';
+
+      if (!eligibleItems || eligibleItems.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-xs text-slate-400">청구 실익이 발생하는 병원비 영수증 내역이 없습니다.</td></tr>`;
+        return;
+      }
+
+      eligibleItems.forEach((item, idx) => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-50/60 transition">
+            <td class="py-3 px-4 text-center font-numeric text-slate-400">${idx + 1}</td>
+            <td class="py-3 px-4 text-slate-600 font-numeric">${item.date}</td>
+            <td class="py-3 px-4">
+              <span class="font-bold text-slate-900">${item.institutionName}</span>
+              <span class="text-[10px] text-slate-400 ml-1">(${item.institutionType || '의원'})</span>
+            </td>
+            <td class="py-3 px-4 text-slate-600">${item.diseaseName || item.treatmentType || '외래진료'}</td>
+            <td class="py-3 px-4 text-right font-bold text-slate-900 font-numeric">${item.amount.toLocaleString()}원</td>
+            <td class="py-3 px-4 text-right text-slate-400 font-numeric">${item.deductible.toLocaleString()}원</td>
+            <td class="py-3 px-4 text-right font-black text-blue-600 font-numeric">
+              ${item.claimable.toLocaleString()}원
+            </td>
+            <td class="py-3 px-4 text-center">
+              <span class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded font-numeric">3년 이내</span>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function callHyphenApi(payload) {
+      const apiUrl = window.HYPHEN_API_URL || '/api/hyphen';
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch (err) {
+        return { error: '서버 응답 오류 (HTTP ' + res.status + '): ' + text.substring(0, 120) };
+      }
+    }
+
+    // 담당 설계사 전달용 카카오톡 텍스트 복사
+    function copyWorkerReport() {
+      if (!workerData) return;
+      const analysis = claimEngine.analyzeWorker(workerData);
+      const text = `[실손보험금 미청구 정밀 진단 리포트]
+고객명: ${analysis.clientName} 님
+분석 기준: 국세청 최근 3개년 의료비 영수증
+실손 세대: ${claimEngine.generation}세대 실손 기준
+
+1. 3개년 총 발생 의료비: ${analysis.summary.totalMedicalExpense.toLocaleString()}원 (${analysis.summary.medicalExpenseCount}건)
+2. 약관상 청구 가능 추정액: ${analysis.diagnosis.estimatedClaimableAmount.toLocaleString()}원
+3. 기존 보험금 수령 확인: ${analysis.diagnosis.actualPayout.toLocaleString()}원 (${analysis.summary.claimReceiptCount}건, 수령률 ${analysis.diagnosis.payoutRatio}%)
+--------------------------------------------
+* 최종 미청구 예상 실익: 약 ${analysis.diagnosis.unclaimedPotentialAmount.toLocaleString()}원
+--------------------------------------------
+[담당 설계사 안내]
+최근 3개년 병원비 영수증 대조 결과, 아직 수령하지 않은 실손보험금 환급 실익이 약 ${analysis.diagnosis.unclaimedPotentialAmount.toLocaleString()}원 발생한 것으로 분석되었습니다.
+세부 진료 영수증 확인 및 서류 접수는 친절히 도와드리겠습니다.`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('고객 전달용 카카오톡 상담 텍스트가 클립보드에 복사되었습니다.');
+      });
+    }
+
+    function copyNonWorkerReport() {
+      if (!nonWorkerData) return;
+      const analysis = claimEngine.analyzeNonWorker(nonWorkerData);
+      const eligibleItems = analysis.allItems.filter(i => i.claimable > 0);
+      const sum = eligibleItems.reduce((s, i) => s + (i.claimable || 0), 0);
+      const nonClaimable = Math.max(0, analysis.summary.totalExpenseAmount - sum);
+
+      let text = `[실손보험금 미청구 정밀 진단 리포트]
+고객명: ${analysis.clientName} 님
+분석 기준: 국민건강보험공단 최근 3개년 진료비 영수증
+실손 세대: ${claimEngine.generation}세대 실손 기준
+
+1. 총 병원 지출액: ${analysis.summary.totalExpenseAmount.toLocaleString()}원 (${analysis.summary.totalCount}건)
+2. 비청구 대상 금액: ${nonClaimable.toLocaleString()}원 (소액 미달 및 약관 공제)
+3. 청구 예상 대상: 총 ${eligibleItems.length}건
+--------------------------------------------
+* 최종 청구 가능 예상 실익: 약 ${sum.toLocaleString()}원
+--------------------------------------------
+[주요 청구 가능 병원비 내역]
+`;
+
+      eligibleItems.slice(0, 8).forEach((item, idx) => {
+        text += `${idx + 1}. ${item.institutionName} (${item.date}) - 지출 ${item.amount.toLocaleString()}원 (예상 실익 ${item.claimable.toLocaleString()}원)\n`;
+      });
+
+      text += `\n[담당 설계사 안내]\n약관 공제 분석 결과, 환급 실익이 발생하는 청구 대상 건수는 총 ${eligibleItems.length}건(예상 실익 약 ${sum.toLocaleString()}원)입니다.\n세부 진료 영수증 확인 및 서류 접수는 친절히 도와드리겠습니다.`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('고객 전달용 카카오톡 상담 텍스트가 클립보드에 복사되었습니다.');
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+
+  <!-- =================================================================================== -->
+  <!-- [모달] 리포트 보기 모달 (인쇄 및 고객 전달용) -->
+  <!-- =================================================================================== -->
+  <div id="reportViewModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col">
+      <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">
+            <span id="modalReportClientName">고객</span> 님의 실손보험금 정밀 진단 리포트
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">국세청 연말정산 간소화 3개년 영수증 대조 결과</p>
+        </div>
+        <button onclick="closeReportModal()" class="text-slate-400 hover:text-slate-600 text-sm font-bold p-1">
+          X
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs text-slate-700">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+          <div class="text-xs font-bold text-blue-700">최종 미청구 예상 실익 (환급 가능액)</div>
+          <div class="text-2xl sm:text-3xl font-black text-blue-600 font-numeric mt-1" id="modalReportUnclaimed">0원</div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="text-slate-500 font-medium">총 의료비 발생</div>
+            <div class="text-sm font-bold text-slate-900 font-numeric mt-1" id="modalReportTotalMed">0원</div>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="text-slate-500 font-medium">추정 청구 가능액</div>
+            <div class="text-sm font-bold text-slate-900 font-numeric mt-1" id="modalReportClaimable">0원</div>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="text-slate-500 font-medium">기존 수령액</div>
+            <div class="text-sm font-bold text-slate-900 font-numeric mt-1" id="modalReportPayout">0원</div>
+          </div>
+        </div>
+
+        <div class="p-3.5 bg-slate-50 rounded-lg border border-slate-200 space-y-1.5 leading-relaxed text-slate-600">
+          <div class="font-bold text-slate-800">안내 사항</div>
+          <p>1. 본 진단 리포트는 국세청에 등록된 최근 3개년 의료비 영수증을 기준으로 실손 약관의 통원/입원 자기부담금을 공제하여 산출한 추정액입니다.</p>
+          <p>2. 소액 미달(약국 8천원, 의원 1만원 미만) 항목 및 안경 구매 비용 등 비급여 제외 항목은 자동 공제 처리되었습니다.</p>
+          <p>3. 담당 보험설계사와 상세 병원 영수증을 확인하신 후 실제 청구 접수를 진행하실 수 있습니다.</p>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex items-center justify-end gap-2">
+        <button onclick="window.print()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm transition">
+          리포트 인쇄 / PDF 저장
+        </button>
+        <button onclick="closeReportModal()" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

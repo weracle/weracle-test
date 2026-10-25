@@ -1,0 +1,1714 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM V2 Design Preview</title>
+    <!-- Google Identity Services & Google API Client -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="../최종업로드용_버셀/config.js" onerror="this.remove()"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="css/style.css?v=20260922130135" charset="utf-8">
+<script>
+window.addEventListener('error', function(e) {
+    if(e.filename && e.filename.includes('app.js')) {
+        alert('App.js Error: ' + e.message);
+    }
+});
+</script>
+<style>.edit-tab-content { display: flex; flex-direction: column; }</style>
+
+<style>
+.touch-sub-tags {
+    display: none;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+.touch-sub-tags.active {
+    display: flex;
+}
+.touch-sub-tags .pill-btn {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.touch-sub-tags .pill-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+</style>
+<script>
+    if (!localStorage.getItem('v2_sheet_revert_applied_4')) {
+        localStorage.removeItem('g_sheet_id');
+        localStorage.setItem('v2_sheet_revert_applied_4', 'true');
+        console.log('Cleared wrong g_sheet_id to force reconnect to 워라클_통합');
+    }
+</script>
+</head>
+<body>
+<div id="crm-v2-app">
+
+<div class="container">
+            <!-- Header -->
+    <div class="header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px; background:white; padding: 16px 24px; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); min-width: 0;">
+        <div style="display:flex; align-items:center; gap: 16px; flex: 1; min-width: 0;">
+            <h1 style="margin:0; font-size:18px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:4px;">현재 <span style="color: var(--primary);" id="qf-count-total">0</span>의 소중한 고객님을 관리해드리고 있습니다 </h1>
+            <button onclick="window.openTotalCustomers()" style="background: white; border: 1px solid #cbd5e1; color: #334155; font-weight: 800; padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: 0.2s; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.03); flex-shrink: 0; display:flex; align-items:center; font-size:14px; height: 38px;" onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#3b82f6';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#334155';">
+                <i class="fa-solid fa-users" style="margin-right:6px;"></i> 전체 고객 보기
+            </button>
+        </div>
+        
+        <div style="display:flex; align-items:center; gap: 12px; flex-shrink: 0;">
+            <button onclick="openRegModal('new')" style="background: #3b82f6; color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.3); display:flex; align-items:center; gap:6px; transition: 0.2s; white-space: nowrap; height: 38px;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                <i class="fa-solid fa-plus"></i> 새 고객 등록
+            </button>
+        </div>
+    </div>
+
+    
+
+    <div style="display:flex; gap:24px; margin-bottom:24px; align-items:stretch;">
+                <!-- Speed Search Box -->
+      <div style="flex:1; display:flex; flex-direction:column;">
+          <span style="font-size:13px; font-weight:800; color:#64748b; margin-bottom:8px;">고객 빠른 검색 & 스피드 작업</span>
+          <button onclick="if(typeof window.openQuickEditModal === 'function') window.openQuickEditModal();" style="flex:1; background:#eff6ff; border:2px solid #93c5fd; border-radius:16px; padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; box-shadow:0 4px 6px -1px rgba(59,130,246,0.1); transition:all 0.2s;" onmouseover="this.style.background='#dbeafe'; this.style.borderColor='#3b82f6'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(59,130,246,0.2)';" onmouseout="this.style.background='#eff6ff'; this.style.borderColor='#93c5fd'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(59,130,246,0.1)';">
+              <div style="display:flex; align-items:center; gap:24px;">
+                  <i class="fa-solid fa-bolt" style="color:#f59e0b; font-size:20px;"></i>
+                  <span style="font-size:16px; font-weight:800; color:#1e293b;">스피드 작업 센터 열기 (빠른 검색)</span>
+              </div>
+          </button>
+      </div>
+    <!-- Today's Actions Box -->
+    <div style="flex:1.2; display:flex; flex-direction:column;">
+        <span style="font-size:13px; font-weight:800; color:#64748b; margin-bottom:8px;">오늘 챙겨야 할 고객</span>
+        <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:12px 16px; display:flex; gap:16px; align-items:center; height:60px; box-sizing:border-box; box-shadow:0 4px 6px -1px rgba(0,0,0,0.03);">
+            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'birth', value:'today'}, '*')" style="flex:1; margin:0; padding:8px; border:none; box-shadow:none; background:#fffbeb; height:100%;">
+                <span class="badge" id="mini-badge-birth">3명</span>
+                <i class="fa-solid fa-cake-candles mini-icon" style="color: #f59e0b;"></i>
+                <span class="mini-text" style="font-size:13px;">오늘 생일</span>
+            </div>
+            <div style="width:1px; height:30px; background:#e2e8f0;"></div>
+            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'sang', value:'today'}, '*')" style="flex:1; margin:0; padding:8px; border:none; box-shadow:none; background:#ecfdf5; height:100%;">
+                <span class="badge" id="mini-badge-sangryung">5명</span>
+                <i class="fa-solid fa-shield-heart mini-icon" style="color: #10b981;"></i>
+                <span class="mini-text" style="font-size:13px;">상령일 도래</span>
+            </div>
+            <div style="width:1px; height:30px; background:#e2e8f0;"></div>
+            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'expiry', value: '만기'}, '*')" style="flex:1; margin:0; padding:8px; border:none; box-shadow:none; background:#eef2ff; height:100%;">
+                <span class="badge blue" id="mini-badge-expiry">2명</span>
+                <i class="fa-solid fa-file-contract mini-icon" style="color: #6366f1;"></i>
+                <span class="mini-text" style="font-size:13px;">보험 만기</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 2: Pipeline -->
+    <h2 class="section-title">영업 파이프라인 현황 </h2>
+    <div class="grid-4">
+        <div class="pipeline-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'status', value:'관심'}, '*')">
+            <div class="pipe-info">
+                <span class="pipe-title">관심 고객</span>
+                <span class="pipe-count" id="pipe-count-interest">45</span>
+            </div>
+            <i class="fa-solid fa-user-plus" style="font-size:24px; color:#cbd5e1;"></i>
+        </div>
+        <div class="pipeline-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'status', value:'상담'}, '*')">
+            <div class="pipe-info">
+                <span class="pipe-title">상담/설계 중</span>
+                <span class="pipe-count" id="pipe-count-consult">12</span>
+            </div>
+            <i class="fa-solid fa-comments" style="font-size:24px; color:#cbd5e1;"></i>
+        </div>
+        <div class="pipeline-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'status', value:'체결'}, '*')">
+            <div class="pipe-info">
+                <span class="pipe-title">계약/유지 고객</span>
+                <span class="pipe-count" id="pipe-count-contract">840</span>
+            </div>
+            <i class="fa-solid fa-file-signature" style="font-size:24px; color:#cbd5e1;"></i>
+        </div>
+        <div class="pipeline-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'status', value:'케어'}, '*')">
+            <div class="pipe-info">
+                <span class="pipe-title">집중 케어</span>
+                <span class="pipe-count" style="color:var(--badge-red);" id="pipe-count-care">8</span>
+            </div>
+            <i class="fa-solid fa-hand-holding-heart" style="font-size:24px; color:#cbd5e1;"></i>
+        </div>
+    </div> <!-- Horizontal Insurance Filter Banner -->
+      <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:16px 24px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+              <i class="fa-solid fa-building" style="color:var(--primary); font-size:20px;"></i>
+              <span style="font-weight:700; font-size:16px; color:#334155;">보험사별 리스트 검색</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+              <select class="modern-select" id="dash-ins-type-select" onchange="window.updateDashInsCompanies()" style="min-width:160px; height:46px;">
+                  <option value="">분류 (생명/손해)</option>
+                  <option value="생명">생명보험</option>
+                  <option value="손해">손해보험</option>
+              </select>
+              <select class="modern-select" id="dash-ins-comp-select" style="min-width:200px; height:46px;">
+                  <option value="">회사명 선택</option>
+              </select>
+              <button onclick="window.searchDashInsurance()" style="background:#3b82f6; color:white; border:none; padding:0 24px; height:46px; border-radius:8px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 2px 4px rgba(59,130,246,0.3); transition:0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                  <i class="fa-solid fa-list"></i> 리스트 보기
+              </button>
+          </div>
+      </div>
+      <!-- Top Dash Row (2 Big Boxes) -->
+    <div class="dash-row" style="display:flex; gap: 24px; margin-bottom: 24px;">
+    <!-- Right Box: Touch Insights -->
+    <div class="big-box" style="flex:1; width:100%;">
+            <div class="box-header">
+                <div class="box-title"><i class="fa-solid fa-chart-pie" style="color:#f43f5e;"></i> 터치인사이트</div>
+                <span style="font-size:13px; color:var(--text-muted);">테마별 타겟 고객</span>
+            </div>
+            
+                                    <div class="touch-list" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:24px;">
+                <!-- 건강 테마 -->
+                <div class="touch-bar-wrapper">
+                    <div class="touch-bar" onclick="toggleSubTags('touch-health-tags')" style="cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; transition:0.2s;" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1'">
+                        <div class="touch-name">
+                            <div class="touch-icon" style="background:#f43f5e;"><i class="fa-solid fa-heart-pulse"></i></div>
+                            건강의료
+                        </div>
+                        <i class="fa-solid fa-chevron-down" style="color:#94a3b8;"></i>
+                    </div>
+                    <div class="touch-sub-tags" id="touch-health-tags">
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'실손'}, '*')">실손 (<span id="touch-count-실손">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'종합'}, '*')">종합 (<span id="touch-count-종합">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'진단비'}, '*')">진단비 (<span id="touch-count-진단비">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'수술비'}, '*')">수술비 (<span id="touch-count-수술비">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'주요치료비'}, '*')">주요치료비 (<span id="touch-count-주요치료비">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'질병상해통합'}, '*')">질병상해통합 (<span id="touch-count-질병상해통합">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'치아'}, '*')">치아 (<span id="touch-count-치아">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'간병'}, '*')">간병 (<span id="touch-count-간병">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'치매'}, '*')">치매 (<span id="touch-count-치매">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'후유장해'}, '*')">후유장해 (<span id="touch-count-후유장해">0</span>)</button>
+                    </div>
+                </div>
+                
+                <!-- 라이프 테마 -->
+                <div class="touch-bar-wrapper">
+                    <div class="touch-bar" onclick="toggleSubTags('touch-life-tags')" style="cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; transition:0.2s;" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1'">
+                        <div class="touch-name">
+                            <div class="touch-icon" style="background:#10b981;"><i class="fa-solid fa-car"></i></div>
+                            라이프
+                        </div>
+                        <i class="fa-solid fa-chevron-down" style="color:#94a3b8;"></i>
+                    </div>
+                    <div class="touch-sub-tags" id="touch-life-tags">
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'자동차'}, '*')">자동차 (<span id="touch-count-자동차">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'운전자'}, '*')">운전자 (<span id="touch-count-운전자">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'바이크'}, '*')">바이크 (<span id="touch-count-바이크">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'골프'}, '*')">골프 (<span id="touch-count-골프">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'펫보험'}, '*')">펫보험 (<span id="touch-count-펫보험">0</span>)</button>
+                    </div>
+                </div>
+                
+                <!-- 노후자산 테마 -->
+                <div class="touch-bar-wrapper">
+                    <div class="touch-bar" onclick="toggleSubTags('touch-medical-tags')" style="cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; transition:0.2s;" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1'">
+                        <div class="touch-name">
+                            <div class="touch-icon" style="background:#8b5cf6;"><i class="fa-solid fa-piggy-bank"></i></div>
+                            노후자산
+                        </div>
+                        <i class="fa-solid fa-chevron-down" style="color:#94a3b8;"></i>
+                    </div>
+                    <div class="touch-sub-tags" id="touch-medical-tags">
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'연금'}, '*')">연금 (<span id="touch-count-연금">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'재테크'}, '*')">재테크 (<span id="touch-count-재테크">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'종신'}, '*')">종신 (<span id="touch-count-종신">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'정기'}, '*')">정기 (<span id="touch-count-정기">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'생활비'}, '*')">생활비 (<span id="touch-count-생활비">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'주택화재'}, '*')">주택화재 (<span id="touch-count-주택화재">0</span>)</button>
+                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'재물보험'}, '*')">재물보험 (<span id="touch-count-재물보험">0</span>)</button>
+                    </div>
+                </div>
+            </div>
+    <!-- Section 3: Filters -->
+    
+        </div>
+    </div>
+</div>
+<!-- Profile View Modal (Restored V1 Read-Only View) -->
+<!-- Profile Modal (V2 Unified View) -->
+<div class="modal-overlay" id="masterModal" style="z-index: 1500;">
+    <div class="modal-content" style="max-width: 1600px; width: 95%; height: 95vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fa-solid fa-users" style="color:var(--primary);"></i> 전체 고객 마스터 리스트 <span id="memberCount" style="font-size:16px; margin-left:10px; color:#64748b;">0</span></div>
+            <button class="close-btn" onclick="closeMasterModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+                        <div class="modal-body" style="padding: 0; display: flex; flex: 1; overflow: hidden; background: #f8fafc;">
+            <!-- Left: Customer List -->
+            <div style="width: 280px; flex-shrink: 0; border-right: 1px solid #e2e8f0; background: white; display: flex; flex-direction: column;">
+                <div style="padding: 16px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                    <input type="text" id="masterSearch" placeholder="고객 검색..." style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'" onkeyup="if(typeof filterMasterList==='function') filterMasterList()">
+                </div>
+                <div id="masterListArea" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: #f8fafc;">
+                    <!-- Customer cards will be injected here -->
+                </div>
+            </div>
+            
+            <!-- Right: Customer Detail -->
+            <div id="masterDetailArea" style="flex: 1; overflow-y: auto; padding: 40px; background: #f8fafc;">
+                <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; color:#94a3b8; font-size:16px;">
+                    <i class="fa-solid fa-address-card" style="font-size: 64px; margin-bottom: 24px; color:#cbd5e1;"></i>
+                    <p style="margin:0; font-weight:600;">좌측에서 고객을 선택하세요.</p>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="profileModal" style="z-index: 1600;">
+    <div class="modal-content" style="max-width: 1400px; width: 92%; background: #f8fafc; padding: 0; overflow: hidden; display: flex; flex-direction: column; max-height: 95vh;">
+        <!-- Modal Header -->
+        <div style="background: white; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;">
+            <div style="font-weight: 800; color: #0f172a; font-size: 16px;"><i class="fa-solid fa-address-card" style="color:var(--primary); margin-right:8px;"></i> 고객 상세 프로필</div>
+            <button onclick="document.getElementById('profileModal').classList.remove('show'); setTimeout(()=>document.getElementById('profileModal').style.display='none',300);" style="background: none; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; padding: 4px; transition: 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div id="profileModalContent" style="padding: 40px; overflow-y: auto; flex: 1;">
+            <!-- generateProfileHtml content will be injected here -->
+        </div>
+    </div>
+</div><!-- Basic List Modal (Popup) -->
+<div class="modal-overlay" id="listModal">
+    <div class="modal-content" style="max-width: 1600px; width: 95%; height: 95vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle"><i class="fa-solid fa-list" style="color:var(--primary);"></i> 리스트</div>
+            <button class="close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="padding: 0; overflow-y: auto; flex: 1; background: #f8fafc;">
+            <table class="modern-table" style="width: 100%; border-collapse: collapse;">
+                <thead id="listTableHead">
+                </thead>
+                <tbody id="listTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!-- Edit Modal (V2 Design with Perfect V1 Structure) -->
+<div class="modal-overlay" id="regModal" style="z-index: 2000;">
+    <div class="modal-content" style="max-width: 1600px; width: 98%; height: 98vh; display: flex; flex-direction: column; margin: auto; box-sizing: border-box;">
+        
+        <!--  통합된 시안 8-5 상단 가족 탭 영역 (V1과 완벽 호환) -->
+        
+
+        <div class="modal-header" id="regModalHeader">
+            <div class="modal-title" id="regModalTitle"><i class="fa-solid fa-pen-to-square" style="color:var(--primary);"></i> 고객 정보 신규/수정</div>
+            <button class="close-btn" onclick="closeRegModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        
+        <div id="regSetupWizard" style="display:none; flex: 1; flex-direction: column; overflow-y: auto; background: #f8fafc; position: relative;">
+            <button type="button" onclick="closeRegModal()" style="position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 18px; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: 0.2s;" onmouseover="this.style.borderColor='#ef4444'; this.style.color='#ef4444';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#64748b';">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div style="padding: 50px 60px; max-width: 850px; margin: 0 auto; width: 100%;">
+                
+                <!-- STEP 1: 4 Cards -->
+                <div id="wizard-step-1">
+                    <div style="font-size: 20px; color: #334155; margin-bottom: 24px; font-weight: 800;">어떤 방식으로 고객을 등록하시겠습니까?</div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                        <!-- 일반 등록 구역 -->
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <h4 style="margin:0; font-size: 15px; font-weight: 800; color: #64748b;"><i class="fa-solid fa-address-card" style="margin-right:6px;"></i> 일반 등록</h4>
+                            <div id="card-single" onclick="window.wizardMode='single'; executeWizardStart();" style="flex: 1; border: 1px solid #cbd5e1; border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#3b82f6';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1';">
+                                <div style="font-size: 32px; color: #3b82f6; margin-bottom: 12px;"><i class="fa-solid fa-user"></i></div>
+                                <div style="font-weight: 800; font-size: 18px; color: #1e293b;">개인(단독) 등록</div>
+                                <div style="font-size: 13px; color: #64748b; margin-top: 8px;">본인 1명만 상세 등록합니다.</div>
+                            </div>
+                            <div id="card-family" onclick="setWizardMode('family')" style="flex: 1; border: 1px solid #cbd5e1; border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#3b82f6';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1';">
+                                <div id="card-family-icon" style="font-size: 32px; color: #3b82f6; margin-bottom: 12px;"><i class="fa-solid fa-users"></i></div>
+                                <div style="font-weight: 800; font-size: 18px; color: #1e293b;">가족(그룹) 일괄 등록</div>
+                                <div style="font-size: 13px; color: #64748b; margin-top: 8px;">가족을 한 번에 세팅합니다.</div>
+                            </div>
+                        </div>
+
+                        <!-- 빠른 등록 구역 -->
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <h4 style="margin:0; font-size: 15px; font-weight: 800; color: #64748b;"><i class="fa-solid fa-bolt" style="margin-right:6px;"></i> 빠른 등록</h4>
+                            <div id="card-smart" onclick="openSmartRegModal()" style="flex: 1; border: 1px solid #cbd5e1; border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.background='#f0fdf4'; this.style.borderColor='#86efac';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1';">
+                                <div style="font-size: 32px; color: #10b981; margin-bottom: 12px;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                                <div style="font-weight: 800; font-size: 18px; color: #1e293b;">스마트 간편 등록</div>
+                                <div style="font-size: 13px; color: #64748b; margin-top: 8px;">카톡 내용을 복붙하여 등록!</div>
+                            </div>
+                            <div id="card-bulk" onclick="openBulkRegModal()" style="flex: 1; border: 1px solid #cbd5e1; border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#94a3b8';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1';">
+                                <div style="font-size: 32px; color: #8b5cf6; margin-bottom: 12px;"><i class="fa-solid fa-file-excel"></i></div>
+                                <div style="font-weight: 800; font-size: 18px; color: #1e293b;">엑셀 대량 등록</div>
+                                <div style="font-size: 13px; color: #64748b; margin-top: 8px;">수십 명을 한 번에 업로드!</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Family Setup Area -->
+                <div id="family-setup-area" style="display: none; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                    <div style="font-size: 20px; color: #334155; margin-bottom: 24px; font-weight: 800;"><i class="fa-solid fa-users" style="color:#3b82f6; margin-right:8px;"></i>가족 구성원 세팅</div>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+                        <label style="font-size: 16px; font-weight: 700; color: #334155; width: 100px;">계약자(본인)</label>
+                        <input type="text" id="wizard-main-name" placeholder="본인 성함 입력 (예: 홍길동)" style="padding: 14px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; flex: 1; outline: none;">
+                    </div>
+                    
+                    <div style="height: 1px; background: #e2e8f0; margin: 24px 0;"></div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <span style="font-size: 18px; font-weight: 800; color: #1e293b;">추가 가족 구성원</span>
+                        <button type="button" onclick="addWizardFamilyRow()" style="background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: bold;"><i class="fa-solid fa-plus"></i> 가족 추가</button>
+                    </div>
+                    
+                    <div id="wizard-family-list">
+                        <!-- Dynamic Rows -->
+                        <div class="wizard-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;" id="wrow-1">
+                            <select class="w-rel" onchange="handleWizardRelChange(this)" style="padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; flex: 0.5; outline: none;">
+                                <option value="">관계 선택</option>
+                                <option value="배우자">배우자</option>
+                                <option value="자녀">자녀</option>
+                                <option value="부모">부모 (부/모)</option>
+                                <option value="조부모">조부모 (조부/조모)</option>
+                                <option value="형제/자매">형제/자매</option>
+                                <option value="손자녀">손자녀 (손자/손녀)</option>
+                                <option value="며느리/사위">며느리/사위</option>
+                                <option value="친척">친척</option>
+                                <option value="직원">직원</option>
+                                <option value="기타">기타 (직접입력)</option>
+                            </select>
+                            <input type="text" class="w-rel-custom" placeholder="직접입력" style="display:none; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; flex: 0.5; outline: none;">
+                            <input type="text" class="w-name" placeholder="성함 입력" style="padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; flex: 1; outline: none;">
+                            <button type="button" onclick="document.getElementById('wrow-1').remove()" style="background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 11px 14px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold;"><i class="fa-solid fa-minus"></i> 삭제</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                        <button type="button" onclick="setWizardMode('back')" style="background: white; color: #64748b; border: 1px solid #cbd5e1; padding: 14px 24px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;"> 뒤로가기</button>
+                        <button type="button" onclick="executeWizardStart()" style="background: #3b82f6; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.3);">가족 통합 폼 열기 </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+<form id="crmRegForm" onsubmit="if(typeof window.submitFamilyForm === 'function') { window.submitFamilyForm(event); } else { submitCrmData(event); }" novalidate style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+                        <input type="hidden" name="rowNumber" id="hiddenRowNumber">
+            
+            <!-- 상단 고정 취소/저장 버튼 -->
+            
+            
+            <div class="modal-body" style="padding: 20px 24px 80px 24px; flex: 1; overflow-y: auto; background: #fcfcfd; box-sizing: border-box;">
+                <!-- 탭 1: 1차 정보 -->
+                <div id="step-1" class="edit-tab-content">
+                    <div style="display: flex; flex-direction: column; gap: 0;">
+                        <div class="row-table"><div class="row-label">고객번호</div><div class="row-input"><input type="text" name="고객번호" id="base-cust-id" class="form-input" style="width:250px; background-color: #f8fafc; color: #64748b; font-weight: 700; border-color: #e2e8f0;" readonly></div></div>
+                        
+                        <div class="row-table">
+                            <div class="row-label">고객명 <span style="color:#ef4444;">*</span></div>
+                            <div class="row-input">
+                                <input type="text" name="고객명" class="form-input" style="width:250px;" required oninput="if(typeof window.syncCustomerNameToTabs === 'function') window.syncCustomerNameToTabs(this.value)">
+                            </div>
+                        </div>
+
+                        <div class="row-table">
+                            <div class="row-label">고객 상태</div>
+                            <div class="row-input">
+                                <select name="상태" class="form-input" style="cursor:pointer; width: 250px;">
+                                        <option value="">선택</option>
+                                        <option value="관심">관심고객</option>
+                                        <option value="상담">상담/설계 중</option>
+                                        <option value="계약">계약/유지</option>
+                                        <option value="집중케어(VIP)">집중케어(VIP)</option>
+                                    </select>
+                            </div>
+                        </div>
+
+                        <div class="row-table">
+                            <div class="row-label">사업체 소유 여부</div>
+                            <div class="row-input">
+                                <select name="사업여부" class="form-input" style="cursor:pointer; width: 250px;">
+                                    <option value="">해당없음 (일반)</option>
+                                    <option value="개인사업자">개인사업자</option>
+                                    <option value="법인">법인</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row-table">
+                            <div class="row-label">주민등록번호 <span style="color:#ef4444;">*</span></div>
+                            <div class="row-input">
+                                <input type="text" name="주민번호" class="form-input" placeholder="801205-1******" maxlength="14" oninput="autoHyphenJumin(this); parseJumin(this, 'base-sangryung')" onblur="if(window.checkDuplicate) window.checkDuplicate(this, 'jumin')" required style="width: 250px;">
+                            </div>
+                        </div>
+
+                        <div class="row-table">
+                            <div class="row-label">
+                                자동계산 정보
+                                <div style="font-size:11px; font-weight:500; color:#94a3b8; font-weight:normal; margin-top:4px;">(주민번호 입력 시 계산)</div>
+                            </div>
+                            <div class="row-input">
+                                <div style="display:flex; align-items:center; gap:0; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:2px; width:fit-content; box-shadow:inset 0 1px 2px rgba(0,0,0,0.02);">
+                                    <input type="text" name="나이" style="width:45px; background:transparent; border:none; text-align:center; font-size:13px; font-weight:800; color:#334155; padding:6px 0; outline:none;" readonly placeholder="나이">
+                                    <div style="width:1px; height:16px; background:#cbd5e1;"></div>
+                                    <input type="text" name="성별" style="width:45px; background:transparent; border:none; text-align:center; font-size:13px; font-weight:800; color:#334155; padding:6px 0; outline:none;" readonly placeholder="성별">
+                                    <div style="width:1px; height:16px; background:#cbd5e1;"></div>
+                                    <input type="text" name="생일" style="width:75px; background:transparent; border:none; text-align:center; font-size:13px; font-weight:800; color:#334155; padding:6px 0; outline:none;" readonly placeholder="생일">
+                                    <div style="width:1px; height:16px; background:#cbd5e1;"></div>
+                                    <input type="text" name="상령일" id="base-sangryung" style="width:75px; background:transparent; border:none; text-align:center; font-size:13px; font-weight:800; color:#ef4444; padding:6px 0; outline:none;" readonly placeholder="상령일">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row-table">
+                            <div class="row-label">연락처</div>
+                            <div class="row-input">
+                                <div style="display:flex; gap:8px; width: 320px;">
+                                    <input type="text" name="폰번호" id="base-phone" class="form-input" style="flex:1;" maxlength="13" oninput="autoHyphen(this)" onblur="if(window.checkDuplicate) window.checkDuplicate(this, 'phone')" placeholder="010-0000-0000">
+                                    <label style="display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; font-weight:700; color:#475569; background:#f1f5f9; padding:0 14px; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer; transition:0.2s; white-space:nowrap;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                                        <input type="checkbox" name="폰없음여부" id="no-phone-cb" style="accent-color:#475569;" onchange="const bp = document.getElementById('base-phone'); bp.disabled = this.checked; if(this.checked) { bp.value = '폰없음'; bp.required = false; this.parentNode.style.background='#cbd5e1'; } else { bp.value = ''; bp.required = true; this.parentNode.style.background='#f1f5f9'; }">
+                                        폰없음
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row-table">
+                            <div class="row-label">직업 / 상세업무</div>
+                            <div class="row-input">
+                                <div style="display:flex; flex-direction:column; gap:10px;">
+                                    <input type="text" name="직업" class="form-input" placeholder="직업 (예: 사무직)" style="flex:1; max-width:200px;">
+                                    <input type="text" name="상세업무" class="form-input" placeholder="상세업무 (예: 마케팅)" style="flex:1; max-width:200px;">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row-table">
+                            <div class="row-label">주소</div>
+                            <div class="row-input">
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                <div style="display:flex; gap:8px; max-width:600px;">
+                                    <input type="text" name="기본주소" id="base-address" class="form-input" style="flex:1;" placeholder="우편번호 검색을 클릭하세요" readonly onclick="execDaumPostcode('base-address')">
+                                    <button type="button" style="background:#f8fafc; color:#475569; border:1px solid #cbd5e1; padding:0 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13px; white-space:nowrap;" onclick="execDaumPostcode('base-address')">주소 검색 </button>
+                                    <label id="diff-address-label" style="display:none; align-items:center; justify-content:center; gap:6px; font-size:13px; font-weight:700; color:#475569; background:#f1f5f9; padding:0 14px; border-radius:8px; border:1px solid #cbd5e1; cursor:pointer; transition:0.2s; white-space:nowrap;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                                        <input type="checkbox" name="diff_address" id="diff-address-cb" style="accent-color:#475569;" onchange="if(window.handleDiffAddress) window.handleDiffAddress(this)">
+                                        주소다름
+                                    </label>
+                                </div>
+                                <input type="text" name="상세주소입력" id="detail-address" class="form-input" style="max-width:600px;" placeholder="상세주소 (동, 호수 등을 입력하세요)">
+                                <!-- 실제 구글 시트로 넘어갈 숨겨진 병합 필드 -->
+                                <input type="hidden" name="주소" id="merged-address">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row-table">
+                            <div class="row-label">가족관계</div>
+                            <div class="row-input" style="width: 100%;">
+                                <input type="text" name="가족사항" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="예: 배우자, 자녀 2명 (이곳에 간단히 기재하고, 상세 가족은 상단 탭을 이용하세요)">
+                            </div>
+                        </div>
+                    </div>
+                
+
+</div>
+
+<!-- 탭 2: 터치인사이트 -->
+                <div id="step-2" class="edit-tab-content" style="display:none;">
+                    
+                    <div style="display: flex; flex-direction: column; gap: 0; margin-bottom: 24px;">
+                        
+                        <div class="row-table">
+                            <div class="row-label" style="display:flex; align-items:center; gap:8px;">
+                                 반려동물
+                            </div>
+                            <div class="row-input">
+                                <div style="display:flex; align-items:center; gap:16px;">
+                                    <label class="switch" style="margin:0;">
+                                        <input type="checkbox" id="has-pet-cb" onchange="const f = document.getElementById('pet-fields'); if(this.checked){ f.style.display='flex'; setTimeout(()=>f.style.opacity='1',10); } else { f.style.opacity='0'; setTimeout(()=>f.style.display='none',200); }">
+                                        <span class="slider round"></span>
+                                    </label>
+                                    
+                                    
+                                    <div id="pet-fields" style="display:none; opacity:0; flex:1; gap:8px; transition:opacity 0.2s ease;">
+                                        <input type="text" name="반려동물" class="form-input" placeholder="종 (예: 푸들)" style="flex:1;">
+                                        <input type="text" name="동물이름" class="form-input" placeholder="이름 (예: 뽀삐)" style="flex:1;">
+                                        <input type="text" name="코드" class="form-input" placeholder="동물 등록번호" style="flex:1;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row-table">
+                            <div class="row-label" style="display:flex; align-items:center; gap:8px;">
+                                 운전 여부
+                            </div>
+                            <div class="row-input">
+                                <div style="display:flex; align-items:center; gap:16px;">
+                                    <label class="switch" style="margin:0;">
+                                        <input type="checkbox" name="운전여부" value="예" id="is-driving-cb" onchange="const f = document.getElementById('driving-fields'); if(this.checked){ f.style.display='flex'; setTimeout(()=>f.style.opacity='1',10); } else { f.style.opacity='0'; setTimeout(()=>f.style.display='none',200); }">
+                                        <span class="slider round"></span>
+                                    </label>
+                                    
+
+                                    <div id="driving-fields" style="display:none; opacity:0; flex-wrap:wrap; gap:8px; transition:opacity 0.2s ease;">
+                                        <label class="v2-car-cb"><input type="checkbox" name="차량용도_개인용" value="개인용"><span>개인용</span></label>
+                                        <label class="v2-car-cb"><input type="checkbox" name="차량용도_업무용" value="업무용"><span>업무용</span></label>
+                                        <label class="v2-car-cb"><input type="checkbox" name="차량용도_영업용" value="영업용"><span>영업용</span></label>
+                                        <label class="v2-car-cb"><input type="checkbox" name="차량용도_바이크" value="바이크"><span>바이크</span></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 터치인사이트 테마별 분류 -->
+                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:24px; box-shadow:0 1px 2px rgba(0,0,0,0.02); margin-bottom:24px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px;">
+                            <span style="font-size:18px;"></span>
+                            <span style="font-size:15px; font-weight:800; color:#1e293b;">터치인사이트 (관심사 다중 선택)</span>
+                        </div>
+                        
+                        <input type="hidden" name="터치인사이트" id="form-insight-data" value="">
+                        
+                        <div style="display:flex; flex-direction:column; gap:20px;">
+                            
+                            <div style="display:flex; align-items:flex-start;">
+                                <div style="width:100px; display:flex; align-items:center; gap:8px; padding-top:4px;">
+                                    <div style="width:4px; height:14px; background:#ef4444; border-radius:2px;"></div>
+                                    <div style="font-size:13px; font-weight:800; color:#475569;">건강 / 의료</div>
+                                </div>
+                                <div class="theme-health" style="flex:1; display:flex; gap:8px; flex-wrap:wrap;">
+                                    <label class="insight-pill"><input type="checkbox" value="실손"><span>실손</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="종합"><span>종합</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="진단비"><span>진단비</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="수술비"><span>수술비</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="주요치료비"><span>주요치료비</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="질병상해통합"><span>질병상해통합</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="치아"><span>치아</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="간병"><span>간병</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="치매"><span>치매</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="후유장해"><span>후유장해</span></label>
+                                </div>
+                            </div>
+                            <div style="height:1px; background:#f1f5f9;"></div>
+
+                            <div style="display:flex; align-items:flex-start;">
+                                <div style="width:100px; display:flex; align-items:center; gap:8px; padding-top:4px;">
+                                    <div style="width:4px; height:14px; background:#10b981; border-radius:2px;"></div>
+                                    <div style="font-size:13px; font-weight:800; color:#475569;">라이프</div>
+                                </div>
+                                <div class="theme-health" style="flex:1; display:flex; gap:8px; flex-wrap:wrap;">
+                                    <label class="insight-pill"><input type="checkbox" value="자동차"><span>자동차</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="운전자"><span>운전자</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="바이크"><span>바이크</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="골프"><span>골프</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="펫보험"><span>펫보험</span></label>
+                                </div>
+                            </div>
+                            <div style="height:1px; background:#f1f5f9;"></div>
+
+                            <div style="display:flex; align-items:flex-start;">
+                                <div style="width:100px; display:flex; align-items:center; gap:8px; padding-top:4px;">
+                                    <div style="width:4px; height:14px; background:#8b5cf6; border-radius:2px;"></div>
+                                    <div style="font-size:13px; font-weight:800; color:#475569;">노후 / 자산</div>
+                                </div>
+                                <div class="theme-health" style="flex:1; display:flex; gap:8px; flex-wrap:wrap;">
+                                    <label class="insight-pill"><input type="checkbox" value="연금"><span>연금</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="재테크"><span>재테크</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="종신"><span>종신</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="정기"><span>정기</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="생활비"><span>생활비</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="주택화재"><span>주택화재</span></label>
+                                    <label class="insight-pill"><input type="checkbox" value="재물보험"><span>재물보험</span></label>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; box-shadow:0 1px 2px rgba(0,0,0,0.02);">
+                        <label class="form-label" style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                            <span style="font-size:16px;"></span>
+                            <span style="font-size:14px; font-weight:800; color:#1e293b;">특이사항 (메모)</span>
+                        </label>
+                        <textarea name="특이사항" class="form-input" style="width: 100%; box-sizing: border-box; height:120px; resize:none; border-radius:8px; background:#f8fafc;" placeholder="상담 중 파악된 고객의 특이사항이나 니즈를 자유롭게 기록하세요."></textarea>
+                    </div>
+                                <div class="input-field" style="display:none;">
+                                    <label>가입내역 (백업/확인용)</label>
+                                    <textarea name="가입내역" class="form-input" style="height: 80px; resize: vertical;" placeholder="기존 보험 가입내역 등을 자유롭게 통으로 붙여넣어 보관하세요."></textarea>
+                                </div>
+
+                    <script>
+                        (function() {
+                            const hiddenInput = document.getElementById('form-insight-data');
+                            const pills = document.querySelectorAll('.insight-pill input[type="checkbox"]');
+                            
+                            pills.forEach(cb => {
+                                cb.addEventListener('change', function() {
+                                    if(hiddenInput) {
+                                        const activeVals = Array.from(document.querySelectorAll('.insight-pill input[type="checkbox"]:checked')).map(el => el.value);
+                                        hiddenInput.value = activeVals.join(',');
+                                    }
+                                });
+                            });
+
+                            window.syncInsights = function() {
+                                if(hiddenInput) {
+                                    const activeVals = Array.from(document.querySelectorAll('.insight-pill input[type="checkbox"]:checked')).map(el => el.value);
+                                    hiddenInput.value = activeVals.join(',');
+                                }
+                            };
+
+                            const formEl = document.getElementById('crmRegForm');
+                            if(formEl) {
+                                formEl.addEventListener('reset', () => {
+                                      const petFields = document.getElementById('pet-fields');
+                                      if(petFields) { petFields.style.opacity='0'; petFields.style.display='none'; }
+                                      const driveFields = document.getElementById('driving-fields');
+                                      if(driveFields) { driveFields.style.opacity='0'; driveFields.style.display='none'; }
+                                  });
+                            }
+
+                            const originalSetFormVal = window.setFormVal;
+                            if(typeof originalSetFormVal === 'function' && !window.setFormVal.isMonkeyPatched) {
+                                window.setFormVal = function(key, val) {
+                                    originalSetFormVal(key, val);
+                                    if(key === '터치인사이트') {
+                                        const arr = (val||'').split(',').map(s=>s.trim());
+                                        pills.forEach(cb => {
+                                            cb.checked = arr.includes(cb.value);
+                                        });
+                                        window.syncInsights();
+                                    }
+                                };
+                                window.setFormVal.isMonkeyPatched = true;
+                            }
+                        })();
+                    </script>
+                
+
+</div>
+
+<!-- 탭 3: 보험 가입내역 -->
+                <div id="step-3" class="edit-tab-content" style="display:none;">
+                    <button type="button" id="default-add-button" onclick="if(typeof addInsuranceFields === 'function') addInsuranceFields()" style="width:100%; padding:16px; margin-bottom:20px; font-weight:800; background:#f8fafc; border:2px dashed #cbd5e1; color:#475569; font-size:15px; border-radius:12px; cursor:pointer; transition:all 0.2s ease;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#94a3b8'; this.style.color='#334155';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'; this.style.color='#475569';">+ 새로운 보험 상품 추가하기</button>
+                    <div id="insurance-area"></div>
+                
+
+</div>
+
+                <!-- 탭 공통 하단 저장/취소 버튼 -->
+                <div style="display:flex; justify-content:center; gap:12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <button type="button" onclick="if(typeof closeRegModal === 'function') closeRegModal()" style="padding:10px 24px; font-size:14px; font-weight:700; color:#475569; background:#f1f5f9; border:none; border-radius:6px; cursor:pointer;">취소</button>
+                    <button type="submit" style="padding:10px 40px; font-size:14px; font-weight:700; color:white; background:#10b981; border:none; border-radius:6px; cursor:pointer; box-shadow:0 4px 6px -1px rgba(16,185,129,0.3);">현재 탭 저장</button>
+                </div>
+                <!-- 하단 스크롤 확보용 여백 공간 -->
+                <div style="height: 60px; width: 100%;"></div>
+            </div> <!-- End of modal-body -->
+        </form>
+    </div>
+</div>
+</div>
+<script src="js/ui.js?v=20260922130135" charset="utf-8"></script>
+<!-- --- V1 Missing Content Restored --- -->
+<!-- 보험 종류 자동완성 리스트 -->
+<datalist id="cov-list">
+<option value="운전자"></option>
+<option value="자동차"></option>
+<option value="바이크"></option>
+<option value="펫보험"></option>
+<option value="주택화재"></option>
+<option value="재물보험"></option>
+<option value="연금"></option>
+<option value="종신"></option>
+<option value="정기"></option>
+<option value="진단비"></option>
+<option value="주요치료비&생활비"></option>
+<option value="수술비"></option>
+<option value="간병&입원"></option>
+<option value="치매장기요양"></option>
+<option value="후유장해"></option>
+<option value="치아"></option>
+<option value="질병상해통합치료비"></option>
+<option value="실손의료보험"></option>
+<option value="종합보험"></option>
+<option value="종합간편"></option>
+<option value="어린이(자녀태아)"></option>
+<option value="청년보험"></option>
+<option value="기타"></option>
+</datalist>
+
+<!--  통합된 시안 8-5 상단 가족 탭 영역 -->
+
+
+
+        </div>
+    </div>
+</div>
+
+<!-- 미리보기 전용: 데모 모드 강제 실행 (구글 연동 없이 디자인 확인용) -->
+<script>
+    // config.js의 진짜 키를 무시하고 데모 모드 키로 덮어씌움
+    window.GOOGLE_API_KEY = "YOUR_API_KEY";
+</script>
+<script>window.targetSheetName = 'weraclecrm';</script>
+
+<script src="app.js?v=V20261006"></script>
+  <script src="familyTabsLogic.js?v=20261004213200"></script>
+  
+  
+
+<script>
+// 하단 탭 메뉴 전환 로직
+function switchCrmTab(tabName) {
+    // 탭 버튼 스타일 토글
+    document.querySelectorAll('.sf-tab').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.color = '#64748b';
+        btn.style.fontWeight = '700';
+        btn.style.borderBottom = '2px solid transparent';
+        if (btn.getAttribute('data-tab') === tabName) {
+            btn.classList.add('active');
+            btn.style.color = '#0284c7';
+            btn.style.fontWeight = '800';
+            btn.style.borderBottom = '2px solid #0284c7';
+        }
+    });
+
+    const quickFiltersArea = document.getElementById('crm-quick-filters-area');
+    const tableCard = document.querySelector('.crm-table-card');
+    const targetPanel = document.getElementById('crm-target-panel');
+    const claimPanel = document.getElementById('crm-claim-panel');
+    const analysisPanel = document.getElementById('crm-analysis-panel');
+    const actionButtons = document.getElementById('crm-action-buttons');
+    const searchContainer = document.getElementById('crm-search-container');
+    const badgeContainer = document.getElementById('crm-badge-container');
+  const conveniencePanel = document.getElementById('crm-convenience-panel');
+    
+    if (tabName === 'all') {
+        if(quickFiltersArea) quickFiltersArea.style.display = 'flex';
+        if(tableCard) tableCard.style.display = 'block';
+        if(targetPanel) targetPanel.style.display = 'none';
+        if(claimPanel) claimPanel.style.display = 'none';
+        if(analysisPanel) analysisPanel.style.display = 'none';
+        if(actionButtons) actionButtons.style.display = 'flex';
+        if(searchContainer) searchContainer.style.display = 'flex';
+        if(badgeContainer) badgeContainer.style.display = 'none';
+  if(conveniencePanel) conveniencePanel.style.display = 'none';
+    } else if (tabName === 'convenience') {
+  if(quickFiltersArea) quickFiltersArea.style.display = 'none';
+  if(tableCard) tableCard.style.display = 'none';
+  if(targetPanel) targetPanel.style.display = 'none';
+  if(claimPanel) claimPanel.style.display = 'none';
+  if(analysisPanel) analysisPanel.style.display = 'none';
+  if(actionButtons) actionButtons.style.display = 'none';
+  if(searchContainer) searchContainer.style.display = 'none';
+  if(badgeContainer) badgeContainer.style.display = 'none';
+  if(conveniencePanel) conveniencePanel.style.display = 'block';
+  } else if (tabName === 'target') {
+        if(quickFiltersArea) quickFiltersArea.style.display = 'none';
+        if(tableCard) tableCard.style.display = 'none';
+        if(targetPanel) targetPanel.style.display = 'block';
+        if(claimPanel) claimPanel.style.display = 'none';
+        if(analysisPanel) analysisPanel.style.display = 'none';
+        if(actionButtons) actionButtons.style.display = 'none';
+        if(searchContainer) searchContainer.style.display = 'none';
+  if(conveniencePanel) conveniencePanel.style.display = 'none';
+        if(badgeContainer) badgeContainer.style.display = 'none';
+        
+        if(window.globalCustomerData) {
+            const iframe = document.getElementById('targetIframe');
+            if(iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'syncData', data: window.globalCustomerData, targetData: window.globalTargetData || [] }, '*');
+            }
+        }
+    } else if (tabName === 'claim') {
+        if(quickFiltersArea) quickFiltersArea.style.display = 'none';
+        if(tableCard) tableCard.style.display = 'none';
+        if(targetPanel) targetPanel.style.display = 'none';
+        if(claimPanel) claimPanel.style.display = 'block';
+        if(analysisPanel) analysisPanel.style.display = 'none';
+        if(actionButtons) actionButtons.style.display = 'none';
+        if(searchContainer) searchContainer.style.display = 'none';
+  if(conveniencePanel) conveniencePanel.style.display = 'none';
+        if(badgeContainer) badgeContainer.style.display = 'none';
+    } else if (tabName === 'analysis') {
+        if(quickFiltersArea) quickFiltersArea.style.display = 'none';
+        if(tableCard) tableCard.style.display = 'none';
+        if(targetPanel) targetPanel.style.display = 'none';
+        if(claimPanel) claimPanel.style.display = 'none';
+        if(analysisPanel) analysisPanel.style.display = 'block';
+        if(actionButtons) actionButtons.style.display = 'none';
+        if(searchContainer) searchContainer.style.display = 'none';
+  if(conveniencePanel) conveniencePanel.style.display = 'none';
+        if(badgeContainer) badgeContainer.style.display = 'none';
+        
+        if(window.currentProfile && window.currentProfile.logo_url) {
+            const iframe = analysisPanel.querySelector('iframe');
+            if(iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'setLogo', data: window.currentProfile.logo_url }, '*');
+            }
+        }
+    }
+}
+// 페이지가 완전히 로드된 후 기본 상태(통합 관리) 적용
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        switchCrmTab('all');
+    }, 500); // 렌더링 후 적용을 위해 약간의 딜레이
+});
+
+function slideFilters(direction) {
+    const container = document.getElementById('quickFiltersContainer');
+    if (container) {
+        const scrollAmount = 250;
+        if (direction === 'left') {
+            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        } else {
+            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+    }
+}
+
+// 진행바 색상 업데이트 로직 추가
+window.updateProgressLines = function(activeStep) {
+    document.querySelectorAll('.step-item').forEach((item, index) => {
+        if (index + 1 <= activeStep) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+    
+    document.querySelectorAll('.progress-line').forEach((line, index) => {
+        if (index + 1 < activeStep) {
+            line.style.width = '100%';
+            line.style.background = '#0284c7';
+        } else {
+            line.style.width = '0%';
+        }
+    });
+};
+</script>
+<script>
+// --- [Antigravity Patch] ---
+// 1. Hide the loading fallback which was blocking the screen
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        var fallback = document.getElementById('loading-fallback');
+        // 3. Force display CRM Main Screen (since the logic to show it was missing)
+        var mainScreen = document.getElementById('crm-main-screen');
+        if(mainScreen) {
+            mainScreen.style.display = 'block';
+        }
+        if(fallback) {
+            fallback.style.display = 'none';
+        }
+    }, 300);
+});
+
+// height handled by ResizeObserver
+</script>
+<script>
+// --- [Antigravity Diagnostic] ---
+setTimeout(function() {
+    var displayStates = {
+        'fallback': document.getElementById('loading-fallback') ? document.getElementById('loading-fallback').style.display : 'null',
+        'mainScreen': document.getElementById('crm-main-screen') ? document.getElementById('crm-main-screen').style.display : 'null',
+        'phoneLogin': document.getElementById('phone-login-screen') ? document.getElementById('phone-login-screen').style.display : 'null',
+        'tableCard': document.querySelector('.crm-table-card') ? document.querySelector('.crm-table-card').style.display : 'null'
+    };
+    
+    // Save to localStorage or just alert
+    console.log("Diagnostic Display States:", displayStates);
+    
+    // Also, FORCE main screen one more time just to be absolutely sure!
+    if (document.getElementById('crm-main-screen')) {
+        document.getElementById('crm-main-screen').style.setProperty('display', 'block', 'important');
+    }
+    if (document.getElementById('phone-login-screen')) {
+        document.getElementById('phone-login-screen').style.setProperty('display', 'none', 'important');
+    }
+    if (document.querySelector('.crm-table-card')) {
+        document.querySelector('.crm-table-card').style.setProperty('display', 'block', 'important');
+    }
+}, 1500);
+</script>
+<script>
+function handleInsuranceTypeChange() {
+    const type = document.getElementById("insurance-type-select").value;
+    const durationDiv = document.getElementById("property-ins-duration");
+    const labelSignDate = document.getElementById("label-sign-date");
+    
+    // Select input elements by class instead of name with querySelector to avoid regex issues
+    const paymentDateInput = document.querySelector('.payment-date-input');
+    const maturityDateInput = document.querySelector('.maturity-date-input');
+    const paymentPeriodInput = document.querySelector('.payment-period-input');
+    
+    const paymentDate = paymentDateInput ? paymentDateInput.closest('.input-field') : null;
+    const maturityDate = maturityDateInput ? maturityDateInput.closest('.input-field') : null;
+    const paymentPeriod = paymentPeriodInput ? paymentPeriodInput.closest('.input-field') : null;
+    
+    // Reset
+    if (durationDiv) durationDiv.style.display = "none";
+    if (labelSignDate) labelSignDate.innerText = "체결일";
+    if (paymentDate) paymentDate.style.display = "block";
+    if (maturityDate) maturityDate.style.display = "block";
+    if (paymentPeriod) paymentPeriod.style.display = "block";
+    
+    if (type === "재물보험") {
+        if (durationDiv) durationDiv.style.display = "block";
+    } else if (type === "일반보험") {
+        if (labelSignDate) labelSignDate.innerText = "체결개시일";
+        if (paymentDate) paymentDate.style.display = "none";
+        if (maturityDate) maturityDate.style.display = "none";
+        if (paymentPeriod) paymentPeriod.style.display = "none";
+    }
+    
+    calculateRenewalDate();
+}
+
+function calculateRenewalDate() {
+    const typeSelect = document.getElementById("insurance-type-select");
+    const type = typeSelect ? typeSelect.value : null;
+    
+    const signDateInput = document.getElementById("sign-date");
+    const renewalDateInput = document.getElementById("renewal-date");
+    
+    if (!signDateInput || !renewalDateInput || !signDateInput.value) return;
+    
+    const signDate = new Date(signDateInput.value);
+    if (isNaN(signDate.getTime())) return;
+    
+    if (type === "재물보험") {
+        const checkedDuration = document.querySelector('input[name="재물보험기간"]:checked');
+        if (checkedDuration) {
+            const years = parseInt(checkedDuration.value);
+            signDate.setFullYear(signDate.getFullYear() + years);
+            renewalDateInput.value = signDate.toISOString().split("T")[0];
+        } else {
+            renewalDateInput.value = "";
+        }
+    } else if (type === "일반보험") {
+        signDate.setFullYear(signDate.getFullYear() + 1);
+        renewalDateInput.value = signDate.toISOString().split("T")[0];
+    } else {
+        renewalDateInput.value = "";
+    }
+}
+</script>
+
+<!-- 동적 리스트 데이터 -->
+<datalist id="nonlife-insurance-companies">
+    <option value="삼성화재"></option><option value="메리츠화재"></option><option value="DB손해보험"></option>
+    <option value="KB손해보험"></option><option value="현대해상"></option><option value="한화손해보험"></option>
+    <option value="롯데손해보험"></option><option value="흥국화재"></option><option value="하나손해보험"></option>
+    <option value="NH농협손해보험"></option><option value="라이나손보"></option><option value="AIG손보"></option>
+    <option value="MG손해보험"></option>
+</datalist>
+<datalist id="life-insurance-companies">
+    <option value="한화생명"></option><option value="교보생명"></option><option value="농협생명"></option>
+    <option value="메트라이프"></option><option value="KDB생명"></option><option value="DB생명"></option>
+    <option value="흥국생명"></option><option value="동양생명"></option><option value="미래에셋생명"></option>
+    <option value="라이나생명"></option><option value="푸폰현대생명"></option><option value="신한라이프"></option>
+    <option value="ABL생명"></option><option value="IM라이프"></option><option value="KB라이프"></option>
+    <option value="IBK연금보험"></option><option value="처브라이프"></option><option value="카디프생명"></option>
+    <option value="하나생명"></option><option value="AIA생명"></option>
+</datalist>
+<datalist id="pay-date-list">
+    <option value="5일"></option><option value="10일"></option><option value="15일"></option>
+    <option value="20일"></option><option value="25일"></option>
+</datalist>
+<datalist id="pay-period-list">
+    <option value="1년납"></option><option value="3년납"></option><option value="5년납"></option>
+    <option value="7년납"></option><option value="10년납"></option><option value="15년납"></option>
+    <option value="20년납"></option><option value="25년납"></option><option value="30년납"></option>
+    <option value="전기납"></option>
+</datalist>
+<datalist id="maturity-list">
+    <option value="1년만기"></option><option value="3년만기"></option><option value="5년만기"></option>
+    <option value="7년만기"></option><option value="10년만기"></option><option value="15년만기"></option>
+    <option value="20년만기"></option><option value="25년만기"></option><option value="30년만기"></option>
+    <option value="80세만기"></option><option value="90세만기"></option><option value="100세만기"></option>
+</datalist>
+<div id="family-add-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:99999; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+    <div style="background:white; width:90%; max-width:400px; border-radius:16px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); overflow:hidden; animation: scaleIn 0.2s ease-out;">
+        <div style="background:#f8fafc; padding:20px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:18px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;"> 새로운 가족 추가 (연결된 새 탭)</h3>
+            <button type="button" onclick="document.getElementById('family-add-modal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#64748b;">&times;</button>
+        </div>
+        <div style="padding:20px;">
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:13px; font-weight:700; color:#475569; margin-bottom:6px;">메인 계약자와의 관계 (필수)</label>
+                <input type="text" id="fam-add-rel" placeholder="예: 배우자, 자녀 (자동으로 '계약자의' 가 붙습니다)" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:border 0.2s;">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:13px; font-weight:700; color:#475569; margin-bottom:6px;">가족 성함</label>
+                <input type="text" id="fam-add-name" placeholder="예: 홍길동 (선택사항)" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:border 0.2s;">
+            </div>
+            <button type="button" onclick="confirmFamilyAdd()" style="width:100%; padding:14px; background:#3b82f6; color:white; font-size:15px; font-weight:700; border:none; border-radius:8px; cursor:pointer; box-shadow:0 4px 6px -1px rgba(59,130,246,0.5);"> 탭 추가하기</button>
+            </div>
+</div>
+</div>
+
+<script>
+function handleInsuranceTypeChange() {
+    const type = document.getElementById("insurance-type-select").value;
+    const durationDiv = document.getElementById("property-ins-duration");
+    const labelSignDate = document.getElementById("label-sign-date");
+    
+    // Select input elements by class instead of name with querySelector to avoid regex issues
+    const paymentDateInput = document.querySelector('.payment-date-input');
+    const maturityDateInput = document.querySelector('.maturity-date-input');
+    const paymentPeriodInput = document.querySelector('.payment-period-input');
+    
+    const paymentDate = paymentDateInput ? paymentDateInput.closest('.input-field') : null;
+    const maturityDate = maturityDateInput ? maturityDateInput.closest('.input-field') : null;
+    const paymentPeriod = paymentPeriodInput ? paymentPeriodInput.closest('.input-field') : null;
+    
+    // Reset
+    if (durationDiv) durationDiv.style.display = "none";
+    if (labelSignDate) labelSignDate.innerText = "체결일";
+    if (paymentDate) paymentDate.style.display = "block";
+    if (maturityDate) maturityDate.style.display = "block";
+    if (paymentPeriod) paymentPeriod.style.display = "block";
+    
+    if (type === "재물보험") {
+        if (durationDiv) durationDiv.style.display = "block";
+    } else if (type === "일반보험") {
+        if (labelSignDate) labelSignDate.innerText = "체결개시일";
+        if (paymentDate) paymentDate.style.display = "none";
+        if (maturityDate) maturityDate.style.display = "none";
+        if (paymentPeriod) paymentPeriod.style.display = "none";
+    }
+    
+    calculateRenewalDate();
+}
+
+function calculateRenewalDate() {
+    const typeSelect = document.getElementById("insurance-type-select");
+    const type = typeSelect ? typeSelect.value : null;
+    
+    const signDateInput = document.getElementById("sign-date");
+    const renewalDateInput = document.getElementById("renewal-date");
+    
+    if (!signDateInput || !renewalDateInput || !signDateInput.value) return;
+    
+    const signDate = new Date(signDateInput.value);
+    if (isNaN(signDate.getTime())) return;
+    
+    if (type === "재물보험") {
+        const checkedDuration = document.querySelector('input[name="재물보험기간"]:checked');
+        if (checkedDuration) {
+            const years = parseInt(checkedDuration.value);
+            signDate.setFullYear(signDate.getFullYear() + years);
+            renewalDateInput.value = signDate.toISOString().split("T")[0];
+        } else {
+            renewalDateInput.value = "";
+        }
+    } else if (type === "일반보험") {
+        signDate.setFullYear(signDate.getFullYear() + 1);
+        renewalDateInput.value = signDate.toISOString().split("T")[0];
+    } else {
+        renewalDateInput.value = "";
+    }
+}
+</script>
+<script>
+function syncInsights() {
+    const checkboxes = document.querySelectorAll('.insight-pill input[type="checkbox"]:checked');
+    const values = Array.from(checkboxes).map(cb => cb.value);
+    document.getElementById('form-insight-data').value = values.join(', ');
+}
+
+function addFamilyRow(rel='', name='', birth='', job='') {
+    const tbody = document.getElementById('family-tbody');
+    if(!tbody) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td style="padding:4px; border:1px solid #e2e8f0;"><input type="text" name="가족_관계" value="${rel}" placeholder="배우자" style="width:100%; padding:6px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;"></td>
+        <td style="padding:4px; border:1px solid #e2e8f0;"><input type="text" name="가족_이름" value="${name}" placeholder="이름" style="width:100%; padding:6px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;"></td>
+        <td style="padding:4px; border:1px solid #e2e8f0;"><input type="text" name="가족_생년월일" value="${birth}" placeholder="YYMMDD" style="width:100%; padding:6px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;"></td>
+        <td style="padding:4px; border:1px solid #e2e8f0;"><input type="text" name="가족_직업" value="${job}" placeholder="회사원" style="width:100%; padding:6px; font-size:12px; border:1px solid #cbd5e1; border-radius:4px; text-align:center;"></td>
+        <td style="padding:4px; border:1px solid #e2e8f0; text-align:center;"><button type="button" onclick="this.closest('tr').remove()" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer;">X</button></td>
+    `;
+    tbody.appendChild(tr);
+}
+</script>
+<!-- -------------------------------- -->
+
+
+<!-- Custom Alert Modal -->
+<div class="modal-overlay" id="customAlertModal" style="z-index: 9999; display: none;">
+    <div class="modal-content" style="max-width: 400px; padding: 24px; text-align: center; border-radius: 16px;">
+        <h3 id="alertTitle" style="margin-top: 0; color: #1e293b; font-size: 18px; font-weight: 800;"></h3>
+        <p id="alertMessage" style="color: #475569; font-size: 15px; margin-bottom: 24px; line-height: 1.5; word-break: keep-all;"></p>
+        <button onclick="closeCustomAlert()" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; width: 100%; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.3);">확인</button>
+    </div>
+</div>
+
+
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+function execDaumPostcode(targetId) {
+    new daum.Postcode({
+        oncomplete: function(data) {
+            let addr = data.userSelectedType === "R" ? data.roadAddress : data.jibunAddress;
+            document.getElementById(targetId).value = addr;
+            document.getElementById("detail-address").focus();
+        }
+    }).open();
+}
+</script>
+  <!-- 일괄 등록 모달 -->
+  <div id="bulkRegModal" class="modal-overlay" style="display:none; z-index:1000; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+      <div style="background:white; border-radius:16px; width:800px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+          <div style="padding:24px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+              <h2 style="margin:0; font-size:20px; font-weight:800; color:#0f172a;"><i class="fa-solid fa-file-excel" style="color:#10b981; margin-right:8px;"></i> 대량 고객 일괄 등록</h2>
+              <button onclick="document.getElementById('bulkRegModal').style.display='none'" style="background:none; border:none; font-size:24px; color:#64748b; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          
+          <div style="padding:24px; overflow-y:auto; flex:1;">
+              <style>
+.bulk-col-textarea { flex: 1; width: 100%; padding: 12px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; resize: none; outline: none; white-space: pre; font-family: monospace; line-height: 1.6; overflow-x: auto; overflow-wrap: normal; transition: 0.2s; box-sizing: border-box; }
+.bulk-col-textarea:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.1); }
+.bulk-col-textarea::-webkit-scrollbar { width: 6px; height: 6px; }
+.bulk-col-textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+</style>
+<div id="bulkDataInputWrapper">
+    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:16px; margin-bottom:16px;">
+        <h4 style="margin:0 0 8px 0; color:#1e40af; font-size:15px; font-weight:800;"> 엑셀 열(세로줄) 단위 복사 가이드</h4>
+        <p style="margin:0; font-size:13px; color:#3b82f6; line-height:1.6;">
+            엑셀에서 <b>원하는 열(세로줄)만 쫙 드래그해서 복사</b>한 후, 아래의 알맞은 칸에 붙여넣기 하세요.<br>
+            * 엑셀 파일의 열 순서를 맞출 필요가 없습니다. <br>
+            * 각 칸마다 붙여넣은 <b>데이터의 줄 수(고객 수)가 동일해야</b> 짝이 맞습니다! (제목 행 제외)
+        </p>
+        <p style="margin:8px 0 0 0; font-size:13px; color:#ef4444; font-weight:600;">※ 고객번호는 현재 시스템의 가장 마지막 번호부터 자동으로 순차 부여됩니다.</p>
+    </div>
+
+    <div style="display: flex; gap: 8px; width: 100%; height: 250px;">
+        <div style="flex:1; display:flex; flex-direction:column;">
+            <div style="text-align:center; font-weight:800; font-size:13px; color:#334155; margin-bottom:6px; background:#f1f5f9; padding:8px 0; border-radius:6px; border:1px solid #e2e8f0;">이름(필수)</div>
+            <textarea id="bulkColName" class="bulk-col-textarea" placeholder="이름&#10;열&#10;붙여넣기"></textarea>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column;">
+            <div style="text-align:center; font-weight:800; font-size:13px; color:#334155; margin-bottom:6px; background:#f1f5f9; padding:8px 0; border-radius:6px; border:1px solid #e2e8f0;">주민번호</div>
+            <textarea id="bulkColJumin" class="bulk-col-textarea" placeholder="주민번호&#10;열&#10;붙여넣기"></textarea>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column;">
+            <div style="text-align:center; font-weight:800; font-size:13px; color:#334155; margin-bottom:6px; background:#f1f5f9; padding:8px 0; border-radius:6px; border:1px solid #e2e8f0;">폰번호</div>
+            <textarea id="bulkColPhone" class="bulk-col-textarea" placeholder="폰번호&#10;열&#10;붙여넣기"></textarea>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column;">
+            <div style="text-align:center; font-weight:800; font-size:13px; color:#334155; margin-bottom:6px; background:#f1f5f9; padding:8px 0; border-radius:6px; border:1px solid #e2e8f0;">주소</div>
+            <textarea id="bulkColAddr" class="bulk-col-textarea" placeholder="주소&#10;열&#10;붙여넣기"></textarea>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column;">
+            <div style="text-align:center; font-weight:800; font-size:13px; color:#334155; margin-bottom:6px; background:#f1f5f9; padding:8px 0; border-radius:6px; border:1px solid #e2e8f0;">직업</div>
+            <textarea id="bulkColJob" class="bulk-col-textarea" placeholder="직업&#10;열&#10;붙여넣기"></textarea>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column;">
+            <div style="text-align:center; font-weight:800; font-size:13px; color:#334155; margin-bottom:6px; background:#f1f5f9; padding:8px 0; border-radius:6px; border:1px solid #e2e8f0;">특이사항</div>
+            <textarea id="bulkColMemo" class="bulk-col-textarea" placeholder="특이사항&#10;열&#10;붙여넣기"></textarea>
+        </div>
+    </div>
+</div>
+              
+              <div id="bulkPreviewArea" style="margin-top:24px; display:none;">
+                  <h4 style="margin:0 0 12px 0; color:#0f172a; font-size:16px; font-weight:800; display:flex; justify-content:space-between; align-items:center;">
+                      <span>미리보기 (<span id="bulkCount">0</span>명)</span> <button onclick="document.getElementById('bulkPreviewArea').style.display='none'; document.getElementById('bulkDataInputWrapper').style.display='block'; document.getElementById('bulkSubmitBtn').style.display='none'; document.getElementById('bulkPreviewBtn').style.display='block';" style="margin-left:12px; font-size:12px; padding:4px 8px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer;">다시 붙여넣기 </button>
+                  </h4>
+                  <div style="max-height:300px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
+                          <thead style="background:#f1f5f9; position:sticky; top:0;">
+                              <tr>
+                                  <th style="padding:10px; border-bottom:1px solid #cbd5e1; font-weight:700;">고객번호</th>
+                                  <th style="padding:10px; border-bottom:1px solid #cbd5e1; font-weight:700;">이름</th>
+                                  <th style="padding:10px; border-bottom:1px solid #cbd5e1; font-weight:700;">주민번호</th>
+                                  <th style="padding:10px; border-bottom:1px solid #cbd5e1; font-weight:700;">폰번호</th>
+                                  <th style="padding:10px; border-bottom:1px solid #cbd5e1; font-weight:700;">주소</th>
+                                  <th style="padding:10px; border-bottom:1px solid #cbd5e1; font-weight:700;">직업</th>
+                                  <th style="padding:10px; border-bottom:1px solid #cbd5e1; font-weight:700;">특이사항</th>
+                              </tr>
+                          </thead>
+                          <tbody id="bulkPreviewTableBody"></tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
+          
+          <div style="padding:24px; border-top:1px solid #e2e8f0; background:#fcfcfd; display:flex; justify-content:flex-end; gap:12px; border-radius:0 0 16px 16px;">
+              <button onclick="document.getElementById('bulkRegModal').style.display='none'" style="background:white; border:1px solid #cbd5e1; color:#475569; padding:10px 24px; border-radius:8px; font-weight:700; cursor:pointer;">취소</button>
+              <button id="bulkPreviewBtn" onclick="previewBulkData()" style="background:#3b82f6; color:white; border:none; padding:10px 24px; border-radius:8px; font-weight:700; cursor:pointer; box-shadow:0 4px 6px -1px rgba(59,130,246,0.3);">미리보기 </button>
+              <button id="bulkSubmitBtn" onclick="submitBulkData()" style="background:#10b981; color:white; border:none; padding:10px 24px; border-radius:8px; font-weight:800; cursor:pointer; display:none; box-shadow:0 4px 6px -1px rgba(16,185,129,0.3);">등록 </button>
+          </div>
+      </div>
+  </div>
+<!-- Smart Registration Modal -->
+<div id="smartRegModal" class="modal-overlay" style="display:none; z-index:99999;">
+    <div class="modal-content" style="max-width:900px; width:95%; height:auto; max-height:90vh; padding:0; display:flex; flex-direction:column; overflow:hidden;">
+        <div class="modal-header" style="padding:20px 24px; border-bottom:1px solid #e2e8f0; background:#f8fafc; display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:24px;">
+                <div style="width:40px; height:40px; border-radius:10px; background:#d1fae5; color:#059669; display:flex; align-items:center; justify-content:center; font-size:20px;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div>
+                    <h2 style="margin:0; font-size:20px; font-weight:800; color:#0f172a;">스마트 간편 등록</h2>
+                    <div style="font-size:13px; color:#64748b; margin-top:4px;">텍스트를 붙여넣으면 인공지능처럼 알아서 항목을 분류합니다.</div>
+                </div>
+            </div>
+            <button onclick="closeSmartRegModal()" style="background:none; border:none; font-size:24px; color:#94a3b8; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div style="display:flex; flex:1; overflow:hidden; background:#f1f5f9; padding:20px; gap:20px;">
+            <!-- Left: Raw Text Area -->
+            <div style="flex:1; display:flex; flex-direction:column; background:white; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); overflow:hidden;">
+                <div style="padding:16px 20px; border-bottom:1px solid #e2e8f0; background:#f8fafc; font-weight:800; color:#1e293b; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="display:flex; align-items:center; gap:8px;"><i class="fa-regular fa-clipboard" style="color:#64748b;"></i> 원본 텍스트 붙여넣기</span>
+                    <span style="font-size:12px; color:#3b82f6; font-weight:600; background:#eff6ff; padding:4px 10px; border-radius:12px;">Step 1</span>
+                </div>
+                <textarea id="smartRegInput" placeholder="고객 정보를 복사해서 붙여넣으세요. (줄바꿈 단위로 자동 블록화됩니다)" style="height:120px; flex:none; padding:20px; border:none; border-bottom:1px dashed #cbd5e1; resize:none; font-family:Pretendard; font-size:15px; line-height:1.6; outline:none;" oninput="autoParseSmartReg()"></textarea>
+                <div style="padding:12px 20px; background:#f8fafc; font-size:13px; font-weight:700; color:#475569; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-arrows-turn-right"></i> 아래 생성된 블록을 마우스로 끌어다 우측 폼에 넣으세요
+                </div>
+                <div id="smartRegChunkContainer" style="flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; background:#f1f5f9;">
+                    <div style="color:#94a3b8; font-size:14px; text-align:center; margin-top:40px; font-weight:500;">텍스트를 입력하면 드래그 가능한 블록이 생성됩니다.</div>
+                </div>
+            </div>
+            
+            <!-- Right: Parsed Form -->
+            <div style="flex:1; background:white; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); padding:24px; overflow-y:auto; display:flex; flex-direction:column;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                    <div style="font-weight:800; color:#1e293b; font-size:16px; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-list-check" style="color:#64748b;"></i> 추출된 고객 정보
+                    </div>
+                    <span style="font-size:12px; color:#10b981; font-weight:600; background:#d1fae5; padding:4px 10px; border-radius:12px;">Step 2</span>
+                </div>
+                
+                <div style="display:flex; flex-direction:column; gap:20px; flex:1;">
+                    <div style="display:flex; gap:16px;">
+                        <div style="flex: 0 0 110px;">
+                            <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">고객번호</label>
+                            <input type="text" id="smartRegId" class="form-input" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; background:#f1f5f9; color:#475569; font-weight:800; text-align:center; outline:none; box-sizing:border-box;" readonly>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">고객명 <span style="color:#ef4444;">*</span></label>
+                            <input type="text" id="smartRegName" class="form-input" placeholder="이름을 입력하세요" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:0.2s; box-sizing:border-box;">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:16px;">
+                        <div style="flex: 1;">
+                            <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">주민번호</label>
+                            <input type="text" id="smartRegJumin" class="form-input" placeholder="000000-0000000" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:0.2s; box-sizing:border-box;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">전화번호</label>
+                            <input type="text" id="smartRegPhone" class="form-input" placeholder="010-0000-0000" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:0.2s; box-sizing:border-box;">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">주소</label>
+                        <input type="text" id="smartRegAddr" class="form-input" placeholder="상세 주소를 입력하세요" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:0.2s; box-sizing:border-box;">
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">직업</label>
+                        <input type="text" id="smartRegJob" class="form-input" placeholder="직업을 입력하세요" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:0.2s; box-sizing:border-box;">
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">특이사항 (메모)</label>
+                        <textarea id="smartRegMemo" class="form-input" placeholder="추가 메모 사항을 기재하세요" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; height:80px; resize:none; outline:none; transition:0.2s; box-sizing:border-box;"></textarea>
+                    </div>
+                </div>
+                
+                <button onclick="submitSmartReg()" style="width:100%; margin-top:24px; background:#10b981; color:white; border:none; border-radius:8px; padding:16px; font-weight:800; font-size:16px; cursor:pointer; box-shadow:0 4px 6px -1px rgba(16,185,129,0.3); transition:0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                    고객 등록하기 
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Smart Reg Tooltip -->
+    <div id="smartRegTooltip" style="display:none; position:absolute; background:#1e293b; border-radius:8px; padding:6px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:100000; gap:4px; transform:translate(-50%, -100%); margin-top:-10px;">
+        <button onclick="assignSmartReg('smartRegName')" class="smart-btn">이름</button>
+        <button onclick="assignSmartReg('smartRegJumin')" class="smart-btn">주민</button>
+        <button onclick="assignSmartReg('smartRegPhone')" class="smart-btn">폰번호</button>
+        <button onclick="assignSmartReg('smartRegAddr')" class="smart-btn">주소</button>
+        <button onclick="assignSmartReg('smartRegJob')" class="smart-btn">직업</button>
+        <button onclick="assignSmartReg('smartRegMemo')" class="smart-btn">메모</button>
+    </div>
+    <style>
+        .smart-btn { background:transparent; color:#e2e8f0; border:none; padding:6px 10px; border-radius:4px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s; white-space:nowrap; }
+        .smart-btn:hover { background:#334155; color:white; }
+        #smartRegTooltip::after { content:''; position:absolute; bottom:-6px; left:50%; margin-left:-6px; border-width:6px 6px 0; border-style:solid; border-color:#1e293b transparent transparent transparent; }
+    </style>
+</div>
+  <!-- Quick Edit Modal (Speed Workspace) -->
+  <div class="modal-overlay" id="quickEditModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.7); z-index:99999; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; backdrop-filter:blur(4px);">
+      <div class="modal-content" style="background:#f8fafc; width:100%; max-width:1600px; border-radius:24px; padding:32px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); position:relative; max-height:95vh; display:flex; flex-direction:column;">
+          <button onclick="document.getElementById('quickEditModal').style.display='none'" style="position:absolute; top:24px; right:24px; background:none; border:none; font-size:24px; color:#94a3b8; cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'"></button>
+          
+          <h2 style="font-size:24px; font-weight:800; color:#0f172a; margin:0 0 24px 0; display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-bolt" style="color:#3b82f6;"></i> 스피드 작업 센터
+          </h2>
+          
+          <div style="background:white; border-radius:16px; padding:20px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05); border:1px solid #e2e8f0;">
+              <div style="position:relative;">
+                  <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:20px; top:50%; transform:translateY(-50%); font-size:20px; color:#94a3b8;"></i>
+                  <input type="text" id="quickEditSearchInput" placeholder="이름, 폰번호, 고객번호, 주소, 메모 등 무엇이든 자유롭게 검색하세요!" style="width:100%; padding:18px 120px 18px 52px; border:2px solid #cbd5e1; border-radius:12px; font-size:16px; font-weight:700; outline:none; transition:all 0.2s; box-sizing:border-box;" onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59,130,246,0.1)';" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none';" oninput="window.handleQuickEditSearch()">
+                  <div style="position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:14px; color:#64748b; font-weight:600;">
+                      검색 결과: <span id="quickEditCount" style="color:#3b82f6; font-size:16px; font-weight:800;">0</span>건
+                  </div>
+              </div>
+          </div>
+          
+          <div id="quickEditTabs" style="display:flex; gap:10px; margin-bottom:12px; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">
+              <button onclick="window.setQuickEditTab('1차')" id="qeTab-1차" style="padding:10px 20px; border-radius:8px; font-weight:800; font-size:14px; cursor:pointer; background:#3b82f6; color:white; border:none; box-shadow:0 2px 4px rgba(59,130,246,0.2);">1차 고객정보</button>
+              <button onclick="window.setQuickEditTab('터치')" id="qeTab-터치" style="padding:10px 20px; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; background:transparent; color:#94a3b8; border:none; transition:0.2s;" onmouseover="if(this.style.background!=='rgb(59, 130, 246)' && this.style.background!=='#3b82f6')this.style.color='#334155'" onmouseout="if(this.style.background!=='rgb(59, 130, 246)' && this.style.background!=='#3b82f6')this.style.color='#94a3b8'">터치인사이트</button>
+              <button onclick="window.setQuickEditTab('보험')" id="qeTab-보험" style="padding:10px 20px; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; background:transparent; color:#94a3b8; border:none; transition:0.2s;" onmouseover="if(this.style.background!=='rgb(59, 130, 246)' && this.style.background!=='#3b82f6')this.style.color='#334155'" onmouseout="if(this.style.background!=='rgb(59, 130, 246)' && this.style.background!=='#3b82f6')this.style.color='#94a3b8'">보험가입내역</button>
+          </div>
+          
+          <div style="flex:1; overflow-y:auto; background:white; position:relative; border-radius:12px; border:1px solid #e2e8f0;">
+              <table class="modern-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                  <thead id="quickEditTableHeader" style="background:#f1f5f9; position:sticky; top:0; z-index:10; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                  </thead>
+                  <tbody id="quickEditResultArea">
+                  </tbody>
+              </table>
+          </div>
+      </div>
+  </div>
+  
+  <!-- File Upload Modal -->
+<div id="uploadModal" class="modal-overlay" style="display:none; z-index:99999;">
+    <div class="modal-content" style="max-width:500px; width:95%; border-radius: 16px; padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+        
+        <div style="padding: 20px 24px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: #dbeafe; color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;">서류 업로드</h2>
+                    <div style="font-size: 13px; color: #64748b; margin-top: 2px;">고객의 인수심사서류를 구글 드라이브에 안전하게 보관합니다.</div>
+                </div>
+            </div>
+            <button type="button" onclick="closeUploadModal()" style="background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+            <div id="uploadSearchContainer" style="display: none;">
+                <label style="font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 6px; display: block;">고객 검색 (이름)</label>
+                <input type="text" id="uploadSearchNameInput" class="form-input" placeholder="고객 이름으로 검색" oninput="if(typeof searchClientForUpload === 'function') searchClientForUpload()">
+                <div id="uploadSearchResult" style="margin-top: 8px; border: 1px solid #e2e8f0; border-radius: 6px; max-height: 150px; overflow-y: auto; display: none;"></div>
+            </div>
+            
+            <div style="display: flex; gap: 12px; width: 100%; box-sizing: border-box;">
+                <div style="flex: 1; min-width: 0;">
+                    <label style="font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 6px; display: block;">고객번호</label>
+                    <input type="text" id="uploadClientId" class="form-input" placeholder="고객번호" onchange="lookupClientForUpload()" style="width: 100%; box-sizing: border-box;">
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <label style="font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 6px; display: block;">고객명</label>
+                    <input type="text" id="uploadName" class="form-input" placeholder="고객명" onchange="lookupClientForUpload()" style="width: 100%; box-sizing: border-box;">
+                </div>
+            </div>
+            <div id="uploadClientCheckResult" style="font-size: 13px;"></div>
+            
+            <div>
+                <label style="font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 6px; display: block;">업로드할 파일 선택</label>
+                <div style="border: 1px dashed #cbd5e1; border-radius: 8px; padding: 20px; text-align: center; background: #f8fafc;">
+                    <input type="file" id="uploadFile" multiple style="display: block; width: 100%; font-size: 14px; cursor: pointer;">
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 16px 24px; border-top: 1px solid #e2e8f0; background: #fcfcfd; display: flex; justify-content: flex-end; gap: 12px;">
+            <button type="button" onclick="closeUploadModal()" style="padding: 10px 20px; font-size: 14px; font-weight: 700; color: #475569; background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer;">취소</button>
+            <button type="button" onclick="executeUpload()" style="padding: 10px 24px; font-size: 14px; font-weight: 700; color: white; background: #3b82f6; border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.3);"> 파일 업로드하기</button>
+        </div>
+    </div>
+</div>
+
+<!-- Family Manage Modal (Profile) -->
+<div id="family-manage-modal" class="modal-overlay" style="display:none; z-index:99999;">
+    <div class="modal-content" style="max-width:550px; width:95%; border-radius: 16px; padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+        
+        <div style="padding: 20px 24px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: #e0e7ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                    <i class="fa-solid fa-users-gear"></i>
+                </div>
+                <div>
+                    <h2 id="fm-modal-title" style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;">가족 관리</h2>
+                    <div style="font-size: 13px; color: #64748b; margin-top: 2px;">해당 가족 그룹에 구성원을 추가하거나 분리합니다.</div>
+                </div>
+            </div>
+            <button type="button" onclick="document.getElementById('family-manage-modal').style.display='none'" style="background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div style="padding: 24px; display: flex; flex-direction: column; gap: 24px; max-height: 70vh; overflow-y: auto;">
+            
+            <!-- Section 1: Add New Family Member -->
+            <div>
+                <h3 style="margin:0 0 12px 0; font-size:15px; font-weight:800; color:#0f172a;"><i class="fa-solid fa-user-plus" style="color:#4f46e5; margin-right:6px;"></i> 기존 고객을 이 가족으로 데려오기 (추가)</h3>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="fm-search-input" class="form-input" placeholder="추가할 고객 이름 검색..." style="flex:1;" onkeydown="if(event.key==='Enter') window.searchCustomerForFamily()">
+                        <button type="button" onclick="window.searchCustomerForFamily()" style="background:#4f46e5; color:white; border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer;">검색</button>
+                    </div>
+                    <div id="fm-search-results" style="margin-top:12px; display:flex; flex-direction:column; gap:8px; max-height:150px; overflow-y:auto;">
+                        <!-- Search results will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Manage Current Members -->
+            <div>
+                <h3 style="margin:0 0 12px 0; font-size:15px; font-weight:800; color:#0f172a;"><i class="fa-solid fa-people-arrows" style="color:#ef4444; margin-right:6px;"></i> 현재 구성원 분리 (독립)</h3>
+                <div id="fm-current-members" style="display:flex; flex-direction:column; gap:8px;">
+                    <!-- Current members will appear here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<input type="hidden" id="fm-current-root-id">
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

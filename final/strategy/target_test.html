@@ -1,0 +1,2845 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>위라클랩 - 타겟관리 프리미엄 UI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+    <style>
+        :root {
+            /* 브랜드 시그니처 컬러 */
+            --primary: #113f67; 
+            --primary-hover: #0a253d;
+            --title-blue: #0284c7; 
+            
+            /* 애플/SaaS 프리미엄 모노톤 */
+            --bg-body: #f5f5f7;
+            --bg-panel: #ffffff;
+            --border: rgba(0, 0, 0, 0.08);
+            --text-main: #1d1d1f;
+            --text-sub: #86868b;
+            --text-muted: #a1a1a6;
+            
+            /* 카카오톡 UI */
+            --kakao-bg: #bac8d3;
+            --kakao-yellow: #fee500;
+            --kakao-text: #191919;
+        }
+
+        * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing: -0.015em; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg-body); color: var(--text-main);
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+            padding: 16px 24px;
+        }
+
+        /* 스크롤바 정제 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d2d2d7; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+        ::-webkit-scrollbar-thumb:hover { background-color: #979797; }
+
+        /* 패널 벤토박스 */
+        .bento-panel {
+            background: var(--bg-panel);
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.01);
+            display: flex; flex-direction: column; overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .panel-header {
+            padding: 24px 24px 16px; 
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #f0f8ff 0%, #ffffff 100%);
+        }
+        .panel-title { font-size: 19px; font-weight: 800; color: var(--title-blue); }
+
+        /* 레이아웃 구조 */
+        .workspace { flex: 1; display: flex; gap: 24px; overflow: hidden; }
+        .filter-panel { width: 380px; flex-shrink: 0; }
+        .content-panel { flex: 1; display: flex; flex-direction: column; background: transparent; }
+        .right-panel { width: 380px; flex-shrink: 0; } 
+
+        /* 상단 유틸리티 버튼 */
+        .btn-utility {
+            padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+            border-radius: 10px; border: 1px solid var(--border); background: #fff;
+            color: var(--text-sub); transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        .btn-utility:hover { background: #f5f5f7; color: var(--text-main); border-color: #d2d2d7; }
+        .btn-utility.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        
+        .btn-utility.kakao { 
+            background: var(--kakao-yellow); color: var(--kakao-text); 
+            border-color: rgba(0,0,0,0.05); font-weight: 700; 
+            box-shadow: 0 2px 8px rgba(254, 229, 0, 0.15); 
+        }
+        .btn-utility.kakao:hover { 
+            background: #fada0b; color: var(--kakao-text); 
+            border-color: rgba(0,0,0,0.1); transform: translateY(-1px); 
+        }
+        
+        .header-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; padding-bottom: 16px;}
+
+   /* 좌측: 필터 리스트 ( 메뉴 2개 추가를 위한 다이어트 UI) */
+        .filter-list { padding: 4px 0 0; display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; }
+        .filter-item {
+            border-radius: 12px; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;
+            cursor: pointer; transition: all 0.2s ease; border: 1.5px solid #e2e8f0; background: #f8fafc;
+        }
+        .filter-item:hover { background: #f1f5f9; border-color: #cbd5e1; transform: translateY(-1px); }
+        .filter-item.active { background: #eff6ff; border-color: #2563eb; box-shadow: 0 2px 8px rgba(37,99,235,0.12); }
+        .filter-icon { font-size: 16px; line-height: 1; }
+        .filter-title { font-size: 13px; font-weight: 700; color: #475569; }
+        .filter-item.active .filter-title { color: #2563eb; }
+        .filter-desc { display: none; }
+
+        /* 우측: 고객 리스트 */
+        .search-box { padding: 16px 24px 12px; }
+        .search-input {
+            width: 100%; padding: 14px 16px; border: 1px solid transparent; border-radius: 12px;
+            font-size: 14px; background: #f5f5f7; color: var(--text-main); transition: all 0.3s; outline: none;
+        }
+        .search-input:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(17,63,103,0.08); }
+        .search-input::placeholder { color: var(--text-muted); }
+
+        .right-tabs { display: flex; background: #f5f5f7; border-radius: 10px; padding: 4px; margin: 0 24px 16px; }
+        .r-tab { flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 700; color: var(--text-sub); border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .r-tab:hover { color: var(--text-main); }
+        .r-tab.active { background: #fff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+        .list-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #fff; border-top: 1px solid var(--border); }
+        
+        .target-list { flex: 1; overflow-y: auto; padding: 0 24px 24px; }
+        .target-item {
+            padding: 16px; border: 1px solid var(--border); border-radius: 16px;
+            margin-top: 12px; display: flex; align-items: center; gap: 16px; transition: all 0.2s; background: #fff;
+        }
+        .target-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.03); border-color: #d2d2d7; }
+        
+        input[type="checkbox"] {
+            appearance: none; width: 22px; height: 22px; border: 2px solid #d2d2d7; border-radius: 6px;
+            cursor: pointer; position: relative; transition: all 0.2s;
+        }
+        input[type="checkbox"]:checked { background-color: var(--primary); border-color: var(--primary); }
+        input[type="checkbox"]:checked::after {
+            content: ''; position: absolute; top: 3px; left: 7px;
+            width: 4px; height: 9px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
+        }
+
+        /* 중앙: 탭 및 갤러리 */
+        .main-tabs { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
+        .c-tab {
+            padding: 12px 24px; font-size: 15px; font-weight: 700; background: #fff;
+            border: 1px solid var(--border); border-radius: 12px; cursor: pointer; color: var(--text-sub);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.2s;
+        }
+        .c-tab:hover { color: var(--text-main); border-color: #d2d2d7; }
+        .c-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 4px 14px rgba(17,63,103,0.25); }
+
+        .carousel-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        .carousel-container { width: 100%;  height: auto; min-height: 100%;  position: relative; perspective: 1000px; display: flex; align-items: center; justify-content: center; padding: 0 50px; }
+        
+        .nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 50px; height: 50px; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(10px);
+            border-radius: 25px; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: var(--text-main); cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08); transition: all 0.3s; z-index: 10;
+        }
+        .nav-btn:hover { background: #fff; transform: translateY(-50%) scale(1.05); color: var(--primary); }
+        .nav-prev { left: 0px; }
+        .nav-next { right: 0px; }
+
+        .content-card { position: relative; background: transparent; width: 100%; max-width: 960px; margin: 0 auto; display: none; flex-direction: column; gap: 14px; animation: fadeIn 0.4s ease-out; }
+        .content-card.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 14px;
+            min-height: 48px;
+            padding: 0 2px;
+            flex-wrap: nowrap;
+        }
+        .card-title-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex-shrink: 1;
+        }
+        .card-title-text {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+        .card-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #2563eb;
+            background: #eff6ff;
+            border: 1.5px solid #bfdbfe;
+            padding: 3px 10px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+        .card-action-bar {
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+        .logo-checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            user-select: none;
+            padding: 4px 6px;
+        }
+        .cb-use-logo {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            width: 20px !important;
+            height: 20px !important;
+            border: 2px solid #94a3b8 !important;
+            border-radius: 5px !important;
+            background-color: #ffffff !important;
+            cursor: pointer !important;
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.15s ease !important;
+            margin: 0 !important;
+            outline: none !important;
+        }
+        .cb-use-logo:hover {
+            border-color: #2563eb !important;
+        }
+        .cb-use-logo:checked {
+            background-color: #ffffff !important;
+            border-color: #2563eb !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E") !important;
+            background-size: 14px 14px !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+        }
+        .cb-use-logo:checked::after {
+            display: none !important;
+            content: none !important;
+        }
+        .card-action-bar .btn-send.kakao {
+            width: auto !important;
+            min-width: 180px !important;
+            padding: 12px 28px !important;
+            font-size: 15px !important;
+            font-weight: 800 !important;
+            border-radius: 12px !important;
+            background: var(--kakao-yellow) !important;
+            color: var(--kakao-text) !important;
+            box-shadow: 0 4px 14px rgba(254, 229, 0, 0.4) !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            letter-spacing: -0.3px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+        }
+        .card-action-bar .btn-send.kakao:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 18px rgba(254, 229, 0, 0.55) !important;
+            filter: brightness(0.97) !important;
+        }
+
+        .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .img-square {
+            flex: 1.15;
+            min-width: 0;
+            aspect-ratio: 1 / 1;
+            border-radius: 16px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid #e2e8f0;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+            position: relative;
+        }
+        .img-square img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: 14px;
+            cursor: zoom-in;
+            background: #ffffff;
+            transition: transform 0.2s ease;
+        }
+        .img-square img:hover {
+            transform: scale(1.012);
+        }
+
+        .img-square.a4-ratio {
+            aspect-ratio: 1 / 1.414;
+            width: 100% !important;
+            max-width: none !important;
+        }
+        .img-square.daily-ratio {
+            aspect-ratio: 1000 / 1414;
+            width: 100% !important;
+            max-width: none !important;
+        }
+        
+        .text-preview {
+            flex: 1;
+            min-width: 0;
+            background: #ffffff;
+            padding: 22px 24px;
+            border-radius: 16px;
+            font-size: 15px;
+            line-height: 1.75;
+            color: var(--text-main);
+            overflow-y: auto;
+            border: 1.5px solid #e2e8f0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+            word-break: break-word;
+            box-sizing: border-box;
+        }
+        .text-preview::-webkit-scrollbar {
+            width: 6px;
+        }
+        .text-preview::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+        .text-preview::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 6px;
+        }
+        .text-preview::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .btn-group {
+            display: flex; justify-content: center; width: 100%; margin-top: 12px;
+        }
+        .btn-send {
+            width: 100%; max-width: 360px; /* 카톡 버튼 화면 가운데 정렬 */
+            padding: 16px; border: none;
+            border-radius: 14px; font-weight: 800; font-size: 15px; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn-send.kakao {
+            background: var(--kakao-yellow); color: var(--kakao-text); box-shadow: 0 4px 12px rgba(254, 229, 0, 0.2);
+        }
+        .btn-send.kakao:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(254, 229, 0, 0.3); filter: brightness(0.95); }
+
+        .carousel-indicators { display: flex; justify-content: center; gap: 8px; margin-top: 24px; }
+        .indicator { width: 8px; height: 8px; background: #d2d2d7; border-radius: 50%; cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+        .indicator.active { width: 32px; background: var(--primary); border-radius: 4px; }
+
+        /* 공통 발송 모달 */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.4); z-index: 9999;
+            align-items: center; justify-content: center; backdrop-filter: blur(12px);
+            animation: fadeInOverlay 0.3s ease-out;
+        }
+        @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+        
+        .modal-content {
+            background: #fff; width: 920px; height: 680px; border-radius: 32px;
+            display: flex; overflow: hidden; box-shadow: 0 32px 64px rgba(0,0,0,0.15); position: relative;
+            transform: scale(0.98); animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes scaleUp { to { transform: scale(1); } }
+        
+        .btn-close {
+            position: absolute; top: 24px; right: 28px; width: 36px; height: 36px;
+            background: #f5f5f7; border-radius: 50%; border: none; cursor: pointer; color: var(--text-sub);
+            font-size: 20px; display: flex; align-items: center; justify-content: center; z-index: 10;
+            transition: all 0.2s;
+        }
+        .btn-close:hover { background: #e5e5ea; color: var(--text-main); transform: scale(1.05); }
+
+        /*  카카오톡 발송 확인 전용 모달 스타일 */
+        #directSendConfirmModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(8px);
+            z-index: 10005;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInOverlay 0.2s ease-out;
+        }
+        .confirm-modal-box {
+            background: #ffffff;
+            width: 480px;
+            max-width: 92vw;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            padding: 24px 26px 22px;
+            display: flex;
+            flex-direction: column;
+            animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+        }
+        .confirm-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .confirm-icon-wrap {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: #FEE500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(254, 229, 0, 0.35);
+            flex-shrink: 0;
+        }
+        .confirm-header-text {
+            flex: 1;
+            min-width: 0;
+        }
+        .confirm-title {
+            font-size: 19px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+        }
+        .confirm-subtitle {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 3px;
+            font-weight: 500;
+        }
+        .confirm-close-btn {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 32px;
+            height: 32px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            border: none;
+            color: #64748b;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .confirm-close-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .confirm-body {
+            padding: 16px 0 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+        }
+        .confirm-info-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 15px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .confirm-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .confirm-info-row .info-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        .confirm-info-row .info-value {
+            color: #0f172a;
+            font-weight: 700;
+            text-align: right;
+        }
+        .badge-tag.on {
+            color: #059669;
+            background: #ecfdf5;
+            padding: 3px 9px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            border: 1px solid #a7f3d0;
+            font-weight: 700;
+        }
+        .badge-tag.off {
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 3px 9px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            border: 1px solid #e2e8f0;
+            font-weight: 700;
+        }
+        .confirm-message-section {
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 9px;
+            margin-top: 3px;
+        }
+        .confirm-message-preview {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 13px;
+            line-height: 1.55;
+            color: #334155;
+            max-height: 70px;
+            overflow-y: auto;
+            word-break: break-word;
+        }
+        .confirm-tip-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 12px;
+            padding: 11px 14px;
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: #1e40af;
+        }
+        .confirm-tip-box .tip-icon {
+            font-size: 15px;
+            line-height: 1.2;
+        }
+        .confirm-footer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-top: 6px;
+        }
+        .btn-confirm-cancel {
+            flex: 1;
+            padding: 13px 16px;
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            border-radius: 13px;
+            font-size: 14.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-confirm-cancel:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .btn-confirm-action {
+            flex: 1.6;
+            padding: 13px 18px;
+            background: var(--kakao-yellow);
+            color: var(--kakao-text);
+            border: none;
+            border-radius: 13px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(254, 229, 0, 0.4);
+            transition: all 0.15s ease;
+        }
+        .btn-confirm-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(254, 229, 0, 0.55);
+            filter: brightness(0.97);
+        }
+        .btn-confirm-action:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .modal-left-phone { width: 380px; background: var(--kakao-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .kakao-header {
+            padding: 32px 20px 16px; text-align: center; color: var(--kakao-text); font-weight: 800; font-size: 16px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0) 100%);
+        }
+        .kakao-chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .kakao-date { text-align: center; font-size: 11px; color: rgba(255,255,255,0.8); margin-bottom: 8px; font-weight: 500;}
+        .kakao-bubble {
+            background: var(--kakao-yellow); padding: 12px 16px; border-radius: 16px; border-top-right-radius: 4px;
+            font-size: 14px; line-height: 1.5; color: var(--kakao-text); align-self: flex-end; max-width: 82%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+        }
+        .kakao-bubble img { width: 100%; border-radius: 10px; margin-bottom: 8px; display: block; }
+        .kakao-input-area { background: #f5f5f5; padding: 12px 16px; display: flex; gap: 10px; align-items: center; }
+        
+        .modal-right-edit { flex: 1; padding: 40px; display: flex; flex-direction: column; background: #fff; }
+        .edit-title { font-size: 22px; font-weight: 800; margin-bottom: 32px; color: var(--text-main); }
+        
+        .edit-textarea {
+            flex: 1; padding: 20px; border: 1px solid var(--border); border-radius: 16px;
+            font-size: 15px; font-family: inherit; resize: none; background: #f5f5f7; line-height: 1.6;
+            transition: all 0.3s; outline: none; margin-top: 12px;
+        }
+        .edit-textarea:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(17,63,103,0.08); }
+        
+        .upload-box {
+            border: 2px dashed #cbd5e1; border-radius: 16px; padding: 16px 24px; text-align: center;
+            background: #f8fafc; cursor: pointer; transition: all 0.2s; margin-bottom: 20px;
+        }
+        .upload-box:hover { background: #f0f9ff; border-color: var(--title-blue); }
+        .upload-icon { font-size: 28px; margin-bottom: 8px; color: #94a3b8; }
+        .upload-text { font-size: 14px; color: var(--text-main); font-weight: 700; margin-bottom: 4px; }
+        .upload-sub { font-size: 12px; color: var(--text-sub); }
+        #file-upload-input { display: none; }
+
+    /*  프리미엄 갤러리 뷰어 (줌/슬라이드) 스타일 */
+        .zoom-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 10000;
+            align-items: center; justify-content: center; flex-direction: column;
+            animation: fadeInOverlay 0.3s ease-out; overflow: hidden;
+        }
+        .zoom-nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 64px; height: 64px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
+            border-radius: 32px; display: flex; align-items: center; justify-content: center;
+            font-size: 28px; color: #fff; cursor: pointer; backdrop-filter: blur(4px);
+            transition: all 0.3s; z-index: 10001;
+        }
+        .zoom-nav-btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-50%) scale(1.1); }
+        .zoom-prev { left: 40px; }
+        .zoom-next { right: 40px; }
+
+        .zoom-content {
+            position: relative; max-width: 90%; max-height: 85vh;
+            display: flex; flex-direction: column; align-items: center; cursor: default;
+            transform: scale(0.95); animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; z-index: 10000;
+        }
+        #zoom-img-wrapper {
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.2s ease-out; transform-origin: center center;
+        }
+        .zoom-content img {
+            max-width: 100%; max-height: 75vh; border-radius: 16px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.4); object-fit: contain; pointer-events: none;
+        }
+        .btn-zoom-close {
+            position: absolute; top: -20px; right: -40px; width: 40px; height: 40px;
+            background: rgba(255,255,255,0.2); border-radius: 50%; border: none; cursor: pointer; color: #fff;
+            font-size: 20px; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; backdrop-filter: blur(4px); z-index: 10002;
+        }
+        .btn-zoom-close:hover { background: rgba(255,255,255,0.4); transform: scale(1.1); }
+        .btn-zoom-download {
+            margin-top: 32px; padding: 16px 32px; background: #fff; color: var(--text-main);
+            border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1); transition: all 0.2s;
+            display: flex; align-items: center; gap: 8px; z-index: 10002; position: relative;
+        }
+        .btn-zoom-download:hover { background: #f5f5f7; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,0.15); } 
+    </style>
+<!--  수파베이스 SDK 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <canvas id="hiddenNewsCanvas" width="1000" height="1414" style="display:none;"></canvas>
+    <input type="file" id="phoneCsvUpload" accept=".csv, .vcf" style="display: none;">
+   
+
+    <div class="workspace" style="display: flex; gap: 24px; padding: 16px 24px; height: 100vh; overflow: hidden; background: #f8fafc;">
+<div class="left-column" style="flex: 1; display: flex; flex-direction: column; gap: 16px; min-width: 0; overflow-y: auto; padding-right: 8px;">
+       <div class="bento-panel filter-panel" style="width: 100%; flex-shrink: 0; padding: 12px 24px 16px; background: #fff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;">
+    
+    <div class="theme-tabs" style="display: flex; gap: 24px; border-bottom: 1px solid #e2e8f0; margin-bottom: 12px; align-items: flex-end;">
+        <div class="t-tab active" data-type="target" style="padding-bottom: 8px; cursor: pointer; font-size: 16px; font-weight: 800; color: var(--title-blue); border-bottom: 3px solid var(--title-blue);">오늘의 추천 타겟</div>
+        <div class="t-tab" data-type="product" style="padding-bottom: 8px; cursor: pointer; font-size: 16px; font-weight: 700; color: var(--text-sub); border-bottom: 3px solid transparent; transition: 0.2s;">이달의 추천 상품</div>
+        <div class="t-tab" data-type="insight" style="padding-bottom: 8px; cursor: pointer; font-size: 16px; font-weight: 700; color: var(--text-sub); border-bottom: 3px solid transparent; transition: 0.2s;">라이프 인사이트</div>
+    <button id="btn-pc-upload-mode" style="margin-left: auto; margin-bottom: 8px; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; color: #475569; transition: all 0.2s;" onmouseover="this.style.background='#fff'; this.style.borderColor='#94a3b8'; this.style.color='#0284c7';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'; this.style.color='#475569';">+ 내 PC콘텐츠 등록</button>
+    </div>
+    <div class="filter-list"></div>
+
+        </div>
+        <div class="content-panel" style="flex: 1; min-height: 0; background: #fff; border-radius: 20px; padding: 16px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center;  overflow: visible; flex: 1 0 auto;">
+            <div class="main-tabs" style="display: none;">
+                <div class="c-tab active" id="tab-target">오늘의 추천 타겟</div>
+                <div class="c-tab" id="tab-product">이달의 추천 상품</div>
+                <div class="c-tab" id="tab-insight">라이프 인사이트</div>
+                
+            </div>
+
+            <div class="carousel-wrapper">
+                <div class="carousel-container">
+                    <button class="nav-btn nav-prev" onclick="moveSlide(-1)"></button>
+                    <button class="nav-btn nav-next" onclick="moveSlide(1)"></button>
+
+                    <div class="content-card active" id="card-1">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-title-text">Type A. 기본 안내형</span>
+                                <span class="card-badge">1 / 4</span>
+                            </div>
+                            <div class="card-action-bar">
+                                <label class="logo-checkbox-label">
+                                    <input type="checkbox" class="cb-use-logo" checked>
+                                    <span>개인 로고 삽입</span>
+                                </label>
+                                <button class="btn-send kakao" onclick="directSendCard(1)">
+                                    카톡 발송 
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="img-square"><span style="color: var(--text-muted); font-size: 14px; font-weight: 500;">1:1 대형 이미지 영역</span></div>
+                            <div class="text-preview">데이터 연동 중...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-card" id="card-2">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-title-text">Type B. 점검 권유형</span>
+                                <span class="card-badge">2 / 4</span>
+                            </div>
+                            <div class="card-action-bar">
+                                <label class="logo-checkbox-label">
+                                    <input type="checkbox" class="cb-use-logo" checked>
+                                    <span>개인 로고 삽입</span>
+                                </label>
+                                <button class="btn-send kakao" onclick="directSendCard(2)">
+                                    카톡 발송 
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="img-square"><span style="color: var(--text-muted); font-size: 14px; font-weight: 500;">1:1 대형 이미지 영역</span></div>
+                            <div class="text-preview">데이터 연동 중...</div>
+                        </div>
+                    </div>
+
+                    <div class="content-card" id="card-3">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-title-text">Type C. 추가 안내형</span>
+                                <span class="card-badge">3 / 4</span>
+                            </div>
+                            <div class="card-action-bar">
+                                <label class="logo-checkbox-label">
+                                    <input type="checkbox" class="cb-use-logo" checked>
+                                    <span>개인 로고 삽입</span>
+                                </label>
+                                <button class="btn-send kakao" onclick="directSendCard(3)">
+                                    카톡 발송 
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="img-square"><span style="color: var(--text-muted); font-size: 14px; font-weight: 500;">1:1 대형 이미지 영역</span></div>
+                            <div class="text-preview">데이터 연동 중...</div>
+                        </div>
+                    </div>
+
+                    <div class="content-card" id="card-4">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="card-title-text">Type D. 추가 권유형</span>
+                                <span class="card-badge">4 / 4</span>
+                            </div>
+                            <div class="card-action-bar">
+                                <label class="logo-checkbox-label">
+                                    <input type="checkbox" class="cb-use-logo" checked>
+                                    <span>개인 로고 삽입</span>
+                                </label>
+                                <button class="btn-send kakao" onclick="directSendCard(4)">
+                                    카톡 발송 
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="img-square"><span style="color: var(--text-muted); font-size: 14px; font-weight: 500;">1:1 대형 이미지 영역</span></div>
+                            <div class="text-preview">데이터 연동 중...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pc-upload-container" style="display: none; height: 100%; align-items: center; justify-content: center; flex-direction: column; text-align: center; gap: 20px;">
+                <div style="width: 80px; height: 80px; background: #fff; border-radius: 40px; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 10px;"></div>
+                <h2 style="font-size: 22px; color: var(--text-main); font-weight: 800;">내 PC 콘텐츠 발송 모드</h2>
+                <p style="color: var(--text-sub); font-size: 15px; line-height: 1.6; margin-bottom: 10px;">우측 리스트에서 메시지를 보낼 고객을 먼저 선택하신 후,<br>아래 버튼을 눌러 이미지와 화법을 직접 등록하세요.</p>
+                <button onclick="openPcUploadModal()" style="padding: 16px 32px; background: var(--primary); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 20px rgba(17,63,103,0.2);">미리보기 및 콘텐츠 등록 </button>
+            </div>
+            
+            <div class="carousel-indicators">
+                <div class="indicator active"></div><div class="indicator"></div><div class="indicator"></div><div class="indicator"></div>
+            </div>
+        </div>
+
+        </div><div class="bento-panel right-panel" style="width: 380px; flex-shrink: 0; display: flex; flex-direction: column; background: #fff; border-radius: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--border);">
+            <div class="panel-header">
+                <div class="panel-title">고객 리스트</div>
+            </div>
+            <div class="search-box" style="border-bottom: none; padding-bottom: 12px;">
+                <input type="text" class="search-input" placeholder="이름 또는 연락처 검색...">
+            </div>
+            <div class="right-tabs" id="right-tabs-container">
+                <div class="r-tab active" id="r-tab-target"> CRM 고객</div>
+                <div class="r-tab" id="r-tab-all"> 전체 고객</div>
+            </div>
+            <div class="list-header" style="border-top: 1px solid var(--border);">
+                <label style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
+                    <input type="checkbox" id="selectAllCb" checked> 전체선택
+                </label>
+                <span id="customer-count" style="font-size: 14px; color: var(--title-blue); font-weight: 800;">2명</span>
+            </div>
+            <div class="target-list"></div>
+        </div>
+    </div>
+
+    <!-- 발송 모달들 -->
+    <div class="modal-overlay" id="sendModal">
+        <div class="modal-content">
+            <button class="btn-close" onclick="closeModal()"></button>
+            <div class="modal-left-phone">
+                <div class="kakao-header">홍길동 고객님 (카톡)</div>
+                <div class="kakao-chat">
+                    <div class="kakao-date">2026년 8월 24일 월요일</div>
+                    <div class="kakao-bubble">
+                        <div style="width: 100%;  background: #fff; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #a1a1a6; border: 1px solid rgba(0,0,0,0.05);">1:1 이미지</div>
+                        안녕하세요 홍길동 고객님.
+                    </div>
+                </div>
+                <div class="kakao-input-area">
+                    <div style="width: 28px; height: 28px; border: 2px solid #a1a1a6; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #a1a1a6; font-weight: bold; cursor: pointer;">+</div>
+                    <div style="flex: 1; background: #fff; padding: 12px 16px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.05); font-size: 14px; color: #a1a1a6;">메시지 입력...</div>
+                </div>
+            </div>
+            <div class="modal-right-edit">
+                <div class="edit-title">카카오톡 발송 설정</div>
+                <div style="margin-bottom: 24px;">
+                    <div style="font-size: 15px; font-weight: 700; margin-bottom: 10px; color: var(--text-main);">수신자 (총 <span class="modal-customer-count">2</span>명)</div>
+                    <div style="padding: 16px; background: #f5f5f7; border-radius: 14px; font-size: 15px; color: var(--text-main); font-weight: 500;">김철수, 이영희 등</div>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">메시지 및 이미지 편집</div>
+                        <label style="font-size: 13px; color: var(--text-sub); display: flex; align-items: center; gap: 6px; font-weight: 500; cursor: pointer;">
+                            <input type="checkbox" checked style="width:18px; height:18px;"> 개인 로고 삽입
+                        </label>
+                    </div>
+                    <textarea class="edit-textarea"></textarea>
+                </div>
+                <div class="btn-group" style="margin-top: 32px;">
+                    <button class="btn-send kakao" onclick="executeKakaoMacro('sendModal')">카카오톡 전송 시작 </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="pcUploadModal">
+        <div class="modal-content">
+            <button class="btn-close" onclick="closePcUploadModal()"></button>
+            <div class="modal-left-phone" id="pc-phone-frame">
+                
+                <div class="kakao-header" id="pc-phone-header">홍길동 고객님 (직접 등록)</div>
+                <div class="kakao-chat">
+                    <div class="kakao-date" style="color: #86868b;">2026년 8월 24일 월요일</div>
+                    <div class="kakao-bubble" id="pc-phone-bubble">
+                        <div id="pc-preview-img-container" style="width: 100%; background: #fff; border-radius: 10px; margin-bottom: 10px; display: none; border: 1px solid rgba(0,0,0,0.05); padding: 8px; gap: 8px; flex-wrap: wrap; justify-content: flex-start;"></div>
+                        <span id="pc-preview-text" style="color: #94a3b8; font-size: 13px;">직접 작성한 화법이 이곳에 표시됩니다.</span>
+                    </div>
+                </div>
+                <div class="kakao-input-area">
+                    <div style="width: 28px; height: 28px; border: 2px solid #a1a1a6; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #a1a1a6; font-weight: bold; cursor: pointer;">+</div>
+                    <div style="flex: 1; background: #fff; padding: 12px 16px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.05); font-size: 14px; color: #a1a1a6;">메시지 입력...</div>
+                </div>
+            </div>
+            <div class="modal-right-edit">
+                <div class="edit-title">내 PC 콘텐츠 등록</div>
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">이미지 파일 첨부</div>
+                    <label class="upload-box" for="file-upload-input">
+                        <div class="upload-icon"></div>
+                        <div class="upload-text">클릭하여 PC에서 이미지 찾기 (최대 5장)</div>
+                        <div class="upload-sub">JPG, PNG 파일 지원 (Shift 눌러 다중 선택)</div>
+                    </label>
+                    <input type="file" id="file-upload-input" accept="image/*" multiple onchange="previewPcImage(this)">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">맞춤 화법 작성</div>
+                    </div>
+                    <textarea class="edit-textarea" id="pc-text-input" placeholder="고객에게 전달할 맞춤 화법을 직접 입력해 주세요." oninput="updatePcTextPreview(this)"></textarea>
+                </div>
+                <div class="btn-group" style="margin-top: 32px;">
+                    <button class="btn-send kakao" onclick="executeKakaoMacro('pcUploadModal')">카톡 발송 </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   <!--  프리미엄 갤러리 뷰어 뼈대 -->
+    <div class="zoom-overlay" id="zoomModal" onclick="closeZoomModal(event)">
+        <button class="zoom-nav-btn zoom-prev" onclick="changeZoomSlide(-1, event)"></button>
+        <button class="zoom-nav-btn zoom-next" onclick="changeZoomSlide(1, event)"></button>
+        
+        <div class="zoom-content" onclick="event.stopPropagation()">
+            <button class="btn-zoom-close" onclick="closeZoomModal(event)"></button>
+            <div id="zoom-img-wrapper" style="cursor: grab;" onwheel="handleZoomWheel(event)" onmousedown="startZoomDrag(event)">
+                <img id="zoom-img" src="" alt="확대 원본 이미지" draggable="false">
+            </div>
+            <button class="btn-zoom-download" onclick="downloadZoomImage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                로고 적용 이미지 저장
+            </button>
+        </div>
+    </div>
+
+    <!-- 연락처 사전 선별(필터링) 모달 -->
+    <div class="modal-overlay" id="filterContactsModal" style="z-index: 10001;">
+        <div class="modal-content" style="width: 500px; height: 750px; flex-direction: column; background: #f5f5f7;">
+            <div style="padding: 24px 24px 16px; background: #fff; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 19px; font-weight: 800; color: var(--primary);"> 연락처 사전 선별</h3>
+                <button onclick="document.getElementById('filterContactsModal').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-sub);"></button>
+            </div>
+            <div style="padding: 16px 24px; background: #fff;">
+                <p style="margin: 0 0 12px 0; font-size: 14px; color: var(--text-sub); line-height: 1.5;">
+                    영업과 무관한 연락처(택배, 대리기사 등)를 체크 해제하세요.<br>
+                    <span style="color: var(--title-blue); font-weight: 700;">해제된 연락처는 '블랙리스트'로 기억되어 다음 업로드 시 자동 제외됩니다.</span>
+                </p>
+                <input type="text" id="preFilterSearch" placeholder="이름 또는 번호 검색..." onkeyup="searchPreFilter()" style="width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #f8fafc; outline: none;">
+            </div>
+            <div style="padding: 12px 24px; background: #fff; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <label style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
+                    <input type="checkbox" id="preFilterSelectAll" checked onchange="togglePreFilterAll(this)" style="width: 18px; height: 18px;"> 전체선택
+                </label>
+                <span id="preFilterCount" style="font-size: 14px; font-weight: 800; color: var(--primary);">0명 선택됨</span>
+            </div>
+            <div id="preFilterList" style="flex: 1; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 8px;"></div>
+            <div style="padding: 20px 24px; background: #fff; border-top: 1px solid var(--border);">
+                <button onclick="confirmFilteredContacts()" style="width: 100%; padding: 16px; background: var(--primary); color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(17,63,103,0.15); transition: 0.2s;">선택한 연락처만 등록하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 발송 매크로 진행 모달 -->
+    <div id="kakaoSetupModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:30px; border-radius:10px; z-index:9999; box-shadow:0 10px 25px rgba(0,0,0,0.3); text-align:center; min-width:350px;">
+        <h3 style="color:#113f67; margin-bottom: 20px;"> 카카오톡 발송 준비</h3>
+        <p style="font-size:15px; margin: 10px 0;">1. PC 카카오톡을 열어주세요.</p>
+        <p style="font-size:15px; margin: 10px 0;">2. <b>'친구' 탭(사람 모양 아이콘)</b>을 클릭해두세요.</p>
+        <br>
+        <p style="color:#113f67; font-size:14px; font-weight:bold;">※ 아래 '발송 시작'을 누르면 자동으로 카카오톡이<br>맨 앞으로 호출되며 발송이 시작됩니다.</p>
+        <button onclick="startRealMacro()" style="margin-top:20px; background:#113f67; color:white; padding:12px 24px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; width:100%;">발송 시작</button>
+        <button onclick="document.getElementById('kakaoSetupModal').style.display='none'" style="margin-top:10px; background:#e0e0e0; color:#333; padding:10px 24px; border:none; border-radius:5px; cursor:pointer; width:100%;">취소</button>
+    </div>
+
+    <div id="kakaoProgressModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:30px; border-radius:10px; z-index:9999; box-shadow:0 10px 25px rgba(0,0,0,0.3); text-align:center; min-width:400px;">
+        <h3 style="color:#113f67;"> 카카오톡 발송 진행 중...</h3>
+        <p style="font-weight:bold; color:red; margin-top:10px;">마우스나 키보드를 절대 움직이지 마세요!</p>
+        <div style="width:100%; background:#e0e0e0; border-radius:8px; margin-top:20px; height:24px; overflow:hidden;">
+            <div id="kakaoProgressBar" style="width:0%; height:100%; background:#113f67; transition:width 1s linear;"></div>
+        </div>
+        <p id="kakaoProgressText" style="margin-top:10px; font-weight:bold; color:#555;">발송을 준비하고 있습니다...</p>
+    </div>
+
+    <!--  위라클 카카오톡 발송 확인 전용 모달 -->
+    <div class="modal-overlay" id="directSendConfirmModal" style="display:none; z-index: 10005;" onclick="if(event.target === this) closeDirectSendModal()">
+        <div class="confirm-modal-box" id="confirmModalBox">
+            <div id="confirmStepInitial">
+                <div class="confirm-header">
+                    <div class="confirm-icon-wrap">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="#3A1D1D">
+                            <path d="M12 3C6.48 3 2 6.58 2 11c0 2.82 1.84 5.3 4.64 6.72-.2.74-.75 2.76-.86 3.2-.14.54.2.53.42.38.17-.11 2.37-1.63 3.32-2.3.8.12 1.62.18 2.48.18 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+                        </svg>
+                    </div>
+                    <div class="confirm-header-text">
+                        <div class="confirm-title">카카오톡 발송 연동</div>
+                        <div class="confirm-subtitle">선택하신 고객과 콘텐츠를 위라클 프로그램으로 전달합니다.</div>
+                    </div>
+                    <button class="confirm-close-btn" onclick="closeDirectSendModal()" title="닫기"></button>
+                </div>
+
+                <div class="confirm-body">
+                    <div class="confirm-info-card">
+                        <div class="confirm-info-row">
+                            <span class="info-label"> 수신 대상</span>
+                            <span class="info-value" id="confirmModalRecipients">홍길동님 외 0명 (총 0명)</span>
+                        </div>
+                        <div class="confirm-info-row">
+                            <span class="info-label"> 콘텐츠 유형</span>
+                            <span class="info-value" id="confirmModalType">Type A. 맞춤 화법</span>
+                        </div>
+                        <div class="confirm-info-row">
+                            <span class="info-label"> 개인 로고</span>
+                            <span class="info-value" id="confirmModalLogoStatus"><span class="badge-tag on"> 적용 (로고 합성)</span></span>
+                        </div>
+                        <div class="confirm-message-section">
+                            <div class="info-label" style="margin-bottom: 6px;"> 메시지 미리보기</div>
+                            <div class="confirm-message-preview" id="confirmModalMsgPreview">
+                                메시지 내용 미리보기
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="confirm-tip-box">
+                        <span class="tip-icon"></span>
+                        <span class="tip-text"><b>[확인]</b>을 누르시면 위라클 프로그램으로 데이터가 연동되며, 프로그램 창에서 <b>[카카오톡 전송 시작]</b>을 눌러 안전하게 발송할 수 있습니다.</span>
+                    </div>
+                </div>
+
+                <div class="confirm-footer">
+                    <button class="btn-confirm-cancel" onclick="closeDirectSendModal()">취소</button>
+                    <button class="btn-confirm-action" id="btnExecuteDirectSend" onclick="executeDirectSendConfirmed()">
+                        <span>확인 (프로그램 연동) </span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 연동 완료 화면 (확인 후 전환) -->
+            <div id="confirmStepSuccess" style="display:none; text-align: center; padding: 18px 8px 10px;">
+                <div style="width: 60px; height: 60px; background: #ecfdf5; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 14px; border: 2px solid #a7f3d0; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.15);">
+                    
+                </div>
+                <h3 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 8px 0;">위라클 프로그램 연동 완료!</h3>
+                <p id="confirmSuccessDesc" style="font-size: 14px; color: #475569; line-height: 1.6; margin: 0 0 20px 0;">
+                    총 <b style="color:#2563eb;" id="confirmSuccessCount">0명</b>의 고객 명단과 발송 콘텐츠가 전송되었습니다.<br>
+                    위라클 프로그램 창에서 <b>[카카오톡 전송 시작 ]</b>을 누르시면 순차 발송됩니다.
+                </p>
+                <button onclick="closeDirectSendModal()" style="width: 100%; padding: 13px 20px; background: #2563eb; color: #fff; font-weight: 800; border-radius: 12px; border: none; cursor: pointer; font-size: 15px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">
+                    확인 및 창 닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 통합 자바스크립트 -->
+    <script>
+      
+      // =========================================================================
+        //  1. 전역 변수 및 수파베이스 초기화
+        // =========================================================================
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwSq1bNSkQLPW8XGVstSvpZQRo5JWVSLaR73dlM8M-8BSwgQpwnEfsud838e23_NhLnxQ/exec';
+        const NEWS_API_URL = 'https://sheets.googleapis.com/v4/spreadsheets/1rfanzbOCpG9cFDJ-jwUQJx5nNhSIrCXh4YklZEJdIEw/values/데일리뉴스?key=AIzaSyD9XOJBgaaUh6XVAx_az6Ka0IlUUsc2pSw';
+        
+    //  [에러 원인 1 해결] 주소 끝에 있던 /rest/v1/ 을 지웠습니다.
+        const SUPABASE_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR';
+        
+        //  [에러 원인 2 해결] 충돌 폭발을 막기 위해 변수 이름을 dbClient로 바꿨습니다.
+        const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let currentUser = null; 
+
+        let globalContents = []; 
+        let customLogo = new Image();
+        customLogo.crossOrigin = "anonymous";
+        let newsDataObj = null;
+
+        let mergedList = [];    
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 100;
+        let currentMenuType = 'target'; 
+        let currentLeftMenuTitle = '';
+
+       const menus = {
+            target: [
+                { icon: '', title: '데일리뉴스', desc: '매일 아침 업데이트 됨' },
+                { icon: '', title: '오늘생일자', desc: '등록된 콘텐츠가 없습니다.' },
+                { icon: '', title: '상령일 안내', desc: '텍스트 템플릿 4개', active: true },
+                { icon: '', title: '자동차보험 만기', desc: '텍스트 템플릿 4개' },
+                { icon: '⏳', title: '장기보험만기', desc: '텍스트 템플릿 4개' },  /*  신규 추가 */
+                { icon: '', title: '일반보험 만기', desc: '텍스트 템플릿 4개' },
+                { icon: '', title: '재물보험 만기', desc: '텍스트 템플릿 4개' },
+                { icon: '', title: '보장분석', desc: '텍스트 템플릿 4개' },      /*  신규 추가 */
+                { icon: '', title: '보상청구 현황 체크', desc: '텍스트 템플릿 4개' }
+            ],
+            product: [
+                { icon: '', title: '연금', desc: '이달의 추천 노후 준비', active: true },
+                { icon: '', title: '간병&입원', desc: '통합 간병인 지원 플랜' },
+                { icon: '', title: '주요치료비&생활비', desc: '암/뇌/심 3대 질병' },
+                { icon: '', title: '운전자', desc: '최신 법률 반영 운전자' }
+            ],
+            insight: [
+                { icon: '', title: '라이프케어', desc: '라이프 매거진 4종', active: true },
+                { icon: '', title: '안부인사말', desc: '텍스트 템플릿 4개' }
+            ]
+        };
+
+        let currentSlide = 1;
+        let totalSlides = 4;
+
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'setLogo' && e.data.data) {
+                customLogo.src = e.data.data;
+            }
+        });
+        
+     
+// =========================================================================
+
+// =========================================================================
+        //  2. 초기 로드 및 UI 이벤트 매핑
+        // =========================================================================
+       
+        document.addEventListener('DOMContentLoaded', async () => { //  async가 추가되었습니다
+            
+            //  [핵심 보안] 메인 홈페이지에서 몰래 넘겨준 '암호화된 토큰(출입증)'을 가로챕니다.
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = hashParams.get('access_token');
+            const refreshToken = hashParams.get('refresh_token');
+
+            // 토큰이 있다면 수파베이스 로그인 상태를 즉시 강제로 복구(자동 로그인)시킵니다.
+            if (accessToken && refreshToken) {
+                const { data, error } = await dbClient.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken
+                });
+                //  [완벽 보안] 보안을 위해 주소창에 지저분하게 묻어있는 암호 코드를 1초 만에 싹 지워버립니다.
+                if (!error) window.history.replaceState(null, null, window.location.pathname);
+            }
+
+            // 복구된 세션을 통해 "진짜 위조 불가능한 이메일"을 안전하게 가져옵니다.
+            const { data: { user } } = await dbClient.auth.getUser();
+            
+            if (!user) {
+                alert(" 접근 안내: 위라클랩 로그인이 필요합니다.\n현재 공용 콘텐츠만 열람 가능합니다.");
+                window.userEmail = '';
+            } else {
+                currentUser = user;
+                window.userEmail = user.email; // 누군가 주소창을 조작해도 절대 속지 않습니다.
+            }
+
+            if (window.parent !== window) window.parent.postMessage({ type: 'requestLogo' }, '*');
+            const filterListContainer = document.querySelector('.filter-list');
+            const tabTarget = document.getElementById('tab-target');
+            const tabProduct = document.getElementById('tab-product');
+            const tabInsight = document.getElementById('tab-insight'); 
+            const btnPcUploadMode = document.getElementById('btn-pc-upload-mode');
+            const carouselWrapper = document.querySelector('.carousel-wrapper');
+            const pcUploadContainer = document.getElementById('pc-upload-container');
+            const carouselIndicators = document.querySelector('.carousel-indicators');
+            const rightTabsContainer = document.getElementById('right-tabs-container');
+            const rTabTarget = document.getElementById('r-tab-target');
+            const rTabAll = document.getElementById('r-tab-all');
+
+           //  [원클릭 자동화] 버튼 기능 할당
+            const btnSync = document.getElementById('btn-sync');
+            const btnUpload = document.getElementById('btn-upload');
+            const fileInput = document.getElementById('phoneCsvUpload');
+
+            // 1. 새로고침 버튼 (구글 시트에서 수동으로 CRM 내용을 바꿨을 때만 가끔 사용)
+            if(btnSync) {
+                btnSync.onclick = () => {
+                    btnSync.innerText = " 동기화 중...";
+                    loadAllDataAndMerge(() => { 
+                        btnSync.innerText = " CRM 최신화 (새로고침)"; 
+                        alert(" CRM 및 연락처 데이터 최신화 완료!"); 
+                    });
+                };
+            }
+
+         // 2. 연락처 등록 버튼 (수파베이스는 뼈대 세팅 필요 없이 바로 업로드)
+            if(btnUpload && fileInput) {
+                btnUpload.onclick = () => fileInput.click();
+                fileInput.addEventListener('change', handlePhoneCsvUpload);
+            }
+
+            //  최초 콘텐츠 연동
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        globalContents = data.contents || [];
+                        if (data.menus && data.menus.length > 0) {
+                            menus.product = data.menus.sort((a,b) => a.order - b.order).map(m => ({ icon: m.icon, title: m.title, desc: m.desc }));
+                            if(menus.product.length > 0) menus.product[0].active = true;
+                        }
+                        renderFilters(currentMenuType);
+                        const activeItem = document.querySelector('.filter-item.active') || document.querySelector('.filter-item');
+                        if (activeItem) activeItem.click();
+                    }
+                })
+                .catch(err => console.error("시트 연동 실패", err));
+
+            //  [수정] 우측 패널 실시간 검색 엔진 (제대로 된 위치!)
+            const searchInput = document.querySelector('.search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    currentPage = 1; // 검색 시 무조건 1페이지로 초기화
+                    const isAllTab = document.querySelector('.r-tab.active').id === 'r-tab-all';
+                    updateCustomerList(isAllTab ? 'all' : 'targeted', currentLeftMenuTitle);
+                });
+            }
+
+            //  최초 고객 데이터 자동 융합!
+            loadAllDataAndMerge();
+            fetchDailyNews();
+
+            function renderFilters(type) {
+    filterListContainer.innerHTML = ""; 
+    let rowHtml = `<div class="cat-items" style="display: flex; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 0; align-items: center;">`;
+    
+    menus[type].forEach(menu => {
+        const activeClass = menu.active ? "active" : "";
+        rowHtml += `
+            <div class="filter-item ${activeClass}" data-menutype="${type}" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; background: ${menu.active ? '#eff6ff' : '#f8fafc'}; border: 1.5px solid ${menu.active ? '#2563eb' : '#e2e8f0'}; box-shadow: ${menu.active ? '0 2px 8px rgba(37,99,235,0.12)' : 'none'};">
+                <span class="filter-icon" style="font-size: 16px; line-height: 1;">${menu.icon}</span>
+                <span class="filter-title" style="font-size: 13px; font-weight: 700; color: ${menu.active ? '#2563eb' : '#475569'}; white-space: nowrap;">${menu.title}</span>
+                <span class="filter-desc" style="display: none;">${menu.desc}</span>
+            </div>
+        `;
+    });
+    rowHtml += `</div>`;
+    filterListContainer.innerHTML = rowHtml;
+    attachFilterEvents();
+}
+
+            function resetToGalleryMode() {
+                btnPcUploadMode.style.background = 'transparent';
+                btnPcUploadMode.style.color = 'var(--text-sub)';
+                btnPcUploadMode.style.borderColor = '#a1a1a6';
+                carouselWrapper.style.display = 'flex';
+                pcUploadContainer.style.display = 'none';
+            }
+
+            if(btnPcUploadMode) {
+                btnPcUploadMode.addEventListener('click', () => {
+                    tabTarget.classList.remove('active');
+                    tabProduct.classList.remove('active');
+                    tabInsight.classList.remove('active');
+                    btnPcUploadMode.style.background = '#fff';
+                    btnPcUploadMode.style.color = 'var(--primary)';
+                    btnPcUploadMode.style.borderColor = 'var(--primary)';
+                    const filterItems = document.querySelectorAll('.filter-item');
+                    filterItems.forEach(el => el.classList.remove('active'));
+                    
+                    carouselWrapper.style.display = 'none';
+                    if(carouselIndicators) carouselIndicators.style.display = 'none';
+                    pcUploadContainer.style.display = 'flex';
+                    currentLeftMenuTitle = '내 PC 콘텐츠 등록';
+                    
+                    //  [수정] 탭을 숨기지 않고 살려두며, 기본값을 CRM 등록 고객으로 세팅!
+                    rightTabsContainer.style.display = 'flex'; 
+                    rTabTarget.innerText = ' CRM 고객';
+                    rTabAll.innerText = ' 전체 고객';
+                    rTabTarget.classList.add('active'); rTabAll.classList.remove('active');
+                    updateCustomerList('crm', currentLeftMenuTitle);
+                });
+            }
+            tabTarget.addEventListener('click', () => {
+                resetToGalleryMode(); 
+                currentMenuType = 'target';
+                tabTarget.classList.add('active'); tabProduct.classList.remove('active'); tabInsight.classList.remove('active');
+                renderFilters('target');
+                const activeItem = document.querySelector('.filter-item.active') || document.querySelector('.filter-item');
+                if(activeItem) activeItem.click();
+            });
+
+            tabProduct.addEventListener('click', () => {
+                resetToGalleryMode(); 
+                currentMenuType = 'product';
+                tabProduct.classList.add('active'); tabTarget.classList.remove('active'); tabInsight.classList.remove('active'); 
+                renderFilters('product');
+                const firstItem = document.querySelector('.filter-item');
+                if(firstItem) firstItem.click();
+            });
+
+            tabInsight.addEventListener('click', () => {
+                resetToGalleryMode(); 
+                currentMenuType = 'insight';
+                tabInsight.classList.add('active'); tabTarget.classList.remove('active'); tabProduct.classList.remove('active');
+                renderFilters('insight');
+                const firstItem = document.querySelector('.filter-item');
+                if(firstItem) firstItem.click();
+            });
+
+                        rTabTarget.addEventListener('click', function() {
+                this.classList.add('active'); rTabAll.classList.remove('active');
+                if (currentLeftMenuTitle === '데일리뉴스' || currentLeftMenuTitle === '보장분석') {
+                    updateCustomerList('crm', currentLeftMenuTitle);
+                } else {
+                    updateCustomerList('targeted', currentLeftMenuTitle);
+                }
+            });
+
+            rTabAll.addEventListener('click', function() {
+                this.classList.add('active'); rTabTarget.classList.remove('active');
+                updateCustomerList('all', currentLeftMenuTitle);
+            });
+
+            
+const tTabs = document.querySelectorAll(".t-tab");
+tTabs.forEach(tab => {
+    tab.addEventListener("click", function() {
+        tTabs.forEach(t => { t.style.color = "var(--text-sub)"; t.style.borderBottomColor = "transparent"; t.style.fontWeight = "700"; t.classList.remove("active"); });
+        this.style.color = "var(--title-blue)"; this.style.borderBottomColor = "var(--title-blue)"; this.style.fontWeight = "800"; this.classList.add("active");
+        currentMenuType = this.getAttribute("data-type");
+        renderFilters(currentMenuType);
+        const firstItem = document.querySelector(".filter-item");
+        if(firstItem) firstItem.click();
+    });
+});
+function attachFilterEvents() {
+                const filterItems = document.querySelectorAll('.filter-item');
+                const navButtons = document.querySelectorAll('.nav-btn');
+                filterItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        resetToGalleryMode(); 
+                        filterItems.forEach(el => {
+                            el.style.background = "#f8fafc";
+                            el.style.borderColor = "#e2e8f0";
+                            el.style.boxShadow = "none";
+                            const t = el.querySelector(".filter-title");
+                            if (t) t.style.color = "#475569";
+                            el.classList.remove("active");
+                        });
+                        this.style.background = "#eff6ff";
+                        this.style.borderColor = "#2563eb";
+                        this.style.boxShadow = "0 2px 8px rgba(37,99,235,0.12)";
+                        const tActive = this.querySelector(".filter-title");
+                        if (tActive) tActive.style.color = "#2563eb";
+                        this.classList.add("active");
+
+const menuTitle = this.querySelector(".filter-title").innerText.trim();
+                        currentLeftMenuTitle = menuTitle;
+
+                        //  우측 탭을 항상 노출하여 'CRM 고객(타겟)'과 '전체 고객'을 자유롭게 오갈 수 있도록 보장!
+                        rightTabsContainer.style.display = 'flex'; 
+
+                        if (menuTitle === '데일리뉴스' || menuTitle === '보장분석') {
+                            rTabTarget.innerText = ' CRM 고객';
+                            rTabAll.innerText = ' 전체 고객';
+                            rTabAll.classList.add('active'); 
+                            rTabTarget.classList.remove('active');
+                            updateCustomerList('all', menuTitle);
+                        } else if (menuTitle.includes('생일') || menuTitle.includes('만기') || menuTitle.includes('상령일')) {
+                            rTabTarget.innerText = ' CRM 고객 (' + menuTitle + ')';
+                            rTabAll.innerText = ' 전체 고객';
+                            rTabTarget.classList.add('active'); 
+                            rTabAll.classList.remove('active');
+                            updateCustomerList('targeted', menuTitle);
+                        } else {
+                            rTabTarget.innerText = ' CRM 고객';
+                            rTabAll.innerText = ' 전체 고객';
+                            rTabTarget.classList.add('active'); 
+                            rTabAll.classList.remove('active');
+                            updateCustomerList('targeted', menuTitle);
+                        } 
+
+                        document.querySelectorAll('.img-square').forEach(el => {
+                            el.classList.remove('daily-ratio', 'a4-ratio'); 
+                            if (menuTitle === '데일리뉴스') el.classList.add('daily-ratio');
+                            else if (currentMenuType === 'product' || (currentMenuType === 'insight' && menuTitle === '라이프케어')) el.classList.add('a4-ratio');
+                        }); 
+
+                        const filteredData = globalContents.filter(c => c.menu === menuTitle).sort((a,b) => a.num - b.num);
+                        
+                        //  [유동성 로직 적용] 고정된 '4'를 지우고, 구글 시트에 있는 실제 콘텐츠 개수만큼만 슬라이드를 만듭니다!
+                        if (menuTitle === '데일리뉴스') {
+                            totalSlides = 1;
+                        } else {
+                            // 데이터가 1~4개면 그 개수만큼만 생성하고, 아예 0개일 때만 빈 화면 1개를 띄웁니다.
+                            totalSlides = filteredData.length > 0 ? Math.min(filteredData.length, 4) : 1;
+                        }
+
+                        currentSlide = 1;
+                        document.querySelectorAll('.content-card').forEach(card => {
+                            card.classList.remove('active');
+                            card.style.display = ''; 
+                        });
+                        document.getElementById('card-1').classList.add('active');
+
+                        for (let i = 1; i <= 4; i++) {
+                            const cardEl = document.getElementById(`card-${i}`);
+                            if (!cardEl) continue;
+                            if (i <= totalSlides) {
+                                cardEl.style.display = ''; 
+                                const content = filteredData[i - 1];
+                                cardEl._contentData = content;
+                                const cbUseLogo = cardEl.querySelector('.cb-use-logo');
+                                if (cbUseLogo) cbUseLogo.checked = true;
+
+                                const setTitleInfo = (title, badge) => {
+                                    const tEl = cardEl.querySelector('.card-title-text');
+                                    const bEl = cardEl.querySelector('.card-badge');
+                                    if (tEl) tEl.innerText = title;
+                                    if (bEl) bEl.innerText = badge;
+                                };
+
+                                if (menuTitle === '데일리뉴스' && i === 1) {
+                                    cardEl.dataset.isDaily = 'true';
+                                    setTitleInfo('Type A. 데일리뉴스 발송형', '1 / 1');
+                                    cardEl.querySelector('.img-square').innerHTML = `<div style="text-align:center; color:#86868b; font-weight:600;"><i class="fa-solid fa-spinner fa-spin" style="margin-bottom:10px; font-size:24px;"></i><br>뉴스를 굽는 중입니다...</div>`;
+                                    cardEl.querySelector('.text-preview').innerHTML = "오늘의 핵심 이슈를 데일리 뉴스로 정리해 드립니다.<br>바쁘시더라도 꼭 확인해 보세요!";
+                                    const updateNewsCard = () => {
+                                        if (newsDataObj) {
+                                            const useLogo = cbUseLogo ? cbUseLogo.checked : true;
+                                            const b64 = generateNewsImage(useLogo);
+                                            if(b64) cardEl.querySelector('.img-square').innerHTML = `<img src="${b64}" alt="데일리뉴스" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:14px; cursor:zoom-in;" onclick="openZoomModal(this.src)">`;
+                                        } else {
+                                            setTimeout(updateNewsCard, 500); 
+                                        }
+                                    };
+                                    updateNewsCard();
+                                    if (cbUseLogo) {
+                                        cbUseLogo.onchange = () => updateNewsCard();
+                                    }
+                                    const dailyData = { isDaily: true, title: '데일리뉴스', text: "오늘의 핵심 이슈를 데일리 뉴스로 정리해 드립니다.\n바쁘시더라도 꼭 확인해 보세요!" };
+                                    cardEl._contentData = dailyData;
+                                    const btnKakao = cardEl.querySelector('.btn-send.kakao');
+                                    if(btnKakao) btnKakao.onclick = () => directSendCard(i);
+                                } else {
+                                    cardEl.dataset.isDaily = 'false';
+                                    if (content) {
+                                        setTitleInfo(content.title || `Type ${String.fromCharCode(64+i)}. 맞춤 화법`, `${i} / ${totalSlides}`);
+                                        const updateCardImageView = () => {
+                                            const useLogo = cbUseLogo ? cbUseLogo.checked : true;
+                                            if (content.image && content.image.startsWith('http')) {
+                                                if (useLogo) {
+                                                    cardEl.querySelector('.img-square').innerHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#a1a1a6; font-size:14px;">로고 합성 중...</div>`;
+                                                    getWatermarkedBase64(content.image, true, function(b64) {
+                                                        cardEl.querySelector('.img-square').innerHTML = `<img src="${b64}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:14px; cursor:zoom-in;" onclick="openZoomModal(this.src)">`;
+                                                    });
+                                                } else {
+                                                    cardEl.querySelector('.img-square').innerHTML = `<img src="${content.image}" style="width:100%; height:100%; object-fit:contain; display:block; border-radius:14px; cursor:zoom-in;" onclick="openZoomModal(this.src)">`;
+                                                }
+                                            } else {
+                                                cardEl.querySelector('.img-square').innerHTML = `<span style="color: var(--text-muted); font-size: 14px; font-weight: 500;">${content.image || '1:1 대형 이미지 영역'}</span>`;
+                                            }
+                                        };
+                                        updateCardImageView();
+                                        if (cbUseLogo) {
+                                            cbUseLogo.onchange = () => updateCardImageView();
+                                        }
+                                        cardEl.querySelector('.text-preview').innerHTML = content.text.replace(/\n/g, '<br>');
+                                    } else {
+                                        setTitleInfo(`Type ${String.fromCharCode(64+i)}. 맞춤 화법`, `${i} / ${totalSlides}`);
+                                        cardEl.querySelector('.img-square').innerHTML = `<span style="color: var(--text-muted); font-size: 14px; font-weight: 500;">이미지 영역</span>`;
+                                        cardEl.querySelector('.text-preview').innerHTML = `[${menuTitle}] 콘텐츠가 아직 등록되지 않았습니다.`;
+                                    }
+                                    const btnKakao = cardEl.querySelector('.btn-send.kakao');
+                                    if(btnKakao) btnKakao.onclick = () => directSendCard(i);
+                                }
+                            } else {
+                                cardEl.style.display = 'none';
+                            }
+                        }
+                        if (totalSlides <= 1) {
+                            navButtons.forEach(btn => btn.style.display = 'none');
+                            if(carouselIndicators) carouselIndicators.style.display = 'none';
+                        } else {
+                            navButtons.forEach(btn => btn.style.display = 'flex');
+                            if(carouselIndicators) {
+                                carouselIndicators.style.display = 'flex';
+                                carouselIndicators.innerHTML = '';
+                                for(let i=0; i<totalSlides; i++) {
+                                    carouselIndicators.innerHTML += `<div class="indicator ${i===0 ? 'active' : ''}"></div>`;
+                                }
+                            }
+                        }
+                        if (typeof syncTextBoxToImage === 'function') syncTextBoxToImage();
+                    });
+                });
+            }
+        });
+
+     // =========================================================================
+        //  3. 데이터 로드 (수파베이스 연동)
+        // =========================================================================
+        let serverBlacklist = []; 
+
+              let weraclecrm = [];
+       let crmContacts = [];
+
+       window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'syncData') {
+                window.isSyncDataReceived = true;
+                weraclecrm = event.data.data || [];
+                crmContacts = event.data.crmContacts || [];
+                if (event.data.blacklist && Array.isArray(event.data.blacklist)) {
+                    try {
+                        const bList = event.data.blacklist
+                            .filter(row => (row['상태'] || row.status || '') !== '차단해제')
+                            .map(row => String(row['전화번호'] || row.phone || '').replace(/[^0-9]/g, ''))
+                            .filter(Boolean);
+                        if (bList.length > 0) {
+                            const cur = JSON.parse(localStorage.getItem('weracle_blacklist') || '[]');
+                            const curPhones = cur.map(p => (typeof p === 'object' && p !== null) ? String(p.phone || '').replace(/[^0-9]/g, '') : String(p).replace(/[^0-9]/g, '')).filter(Boolean);
+                            const merged = Array.from(new Set([...curPhones, ...bList]));
+                            localStorage.setItem('weracle_blacklist', JSON.stringify(merged));
+                        }
+                    } catch(e) {}
+                }
+                buildMergedData();
+            }
+       });
+
+       async function loadAllDataAndMerge(callback) {
+            let attempts = 0;
+            const requestInterval = setInterval(() => {
+                attempts++;
+                if (window.isSyncDataReceived || attempts > 10) {
+                    clearInterval(requestInterval);
+                    if (callback) callback();
+                } else if (window.parent) {
+                    window.parent.postMessage({ type: 'requestSyncData' }, '*');
+                }
+            }, 500);
+       }
+
+                              function extractCustomerPhone(c) {
+            if (!c) return "";
+            if (typeof c === 'string') {
+                const m = c.match(/01[016789][\s-]?\d{3,4}[\s-]?\d{4}/);
+                return m ? m[0].replace(/[\s-]/g, '') : c.trim();
+            }
+            if (Array.isArray(c)) {
+                for (let item of c) {
+                    const res = extractCustomerPhone(item);
+                    if (res) return res;
+                }
+                return "";
+            }
+            if (typeof c === 'object') {
+                const directKeys = [
+                    '폰번호', '휴대폰', '휴대폰번호', '핸드폰', '전화번호', '연락처', 
+                    '대표자폰번호', '대표자핸드폰', '대표핸드폰', '사업장전화번호', '사업자전화번호',
+                    'phone', 'tel', 'mobile', 'hp', 'cell'
+                ];
+                // 1. Direct & fuzzy key matching
+                for (let k of Object.keys(c)) {
+                    const cleanK = k.trim().toLowerCase().replace(/[\s_\.-]/g, '');
+                    for (let dk of directKeys) {
+                        if (cleanK === dk.toLowerCase() || cleanK.includes(dk.toLowerCase())) {
+                            const val = String(c[k] || '').trim();
+                            if (val && val !== '-' && val !== 'null' && val !== 'undefined') {
+                                return val;
+                            }
+                        }
+                    }
+                }
+                // 2. Scan all object values for phone pattern (010-XXXX-XXXX)
+                for (let k of Object.keys(c)) {
+                    const v = String(c[k] || '').trim();
+                    const m = v.match(/(01[016789])[\s-]?(\d{3,4})[\s-]?(\d{4})/);
+                    if (m) {
+                        return `${m[1]}-${m[2]}-${m[3]}`;
+                    }
+                }
+                if (c.crmData) {
+                    const nested = extractCustomerPhone(c.crmData);
+                    if (nested) return nested;
+                }
+            }
+            return "";
+        }
+
+        function extractCustomerName(c) {
+            if (!c) return "";
+            if (typeof c === 'string') return c.trim();
+            if (Array.isArray(c)) {
+                // If it's a CRM_Contacts row array: [등록일시, 고객명, 전화번호, ...]
+                if (c.length >= 2 && String(c[0]).includes('202') && !String(c[1]).match(/^[0-9\-\s]+$/)) {
+                    return String(c[1]).trim();
+                }
+                for (let item of c) {
+                    let str = String(item || '').trim();
+                    if (!str || str.match(/^[0-9\-\.\s:]+$/) || str.includes('202') || str.includes('http')) continue;
+                    if (str.length >= 2 && str.length <= 15) return str;
+                }
+                return "";
+            }
+            if (typeof c === 'object') {
+                // 1. Direct high-priority exact keys
+                const priorityKeys = ['고객명', '성함', '대표자명', '이름', '카카오톡이름', '고객성함', 'name', 'clientName', 'customerName', 'customer_name'];
+                for (let pk of priorityKeys) {
+                    if (c[pk] && typeof c[pk] === 'string') {
+                        const val = c[pk].trim();
+                        if (val && val !== '-' && val !== 'null' && val !== 'undefined') return val;
+                    }
+                }
+                // 2. Fuzzy key matching (strictly rejecting metadata keys like sheetName, fileName, etc.)
+                for (let k of Object.keys(c)) {
+                    const cleanK = k.trim().toLowerCase().replace(/[\s_\.-]/g, '');
+                    if (cleanK.includes('sheet') || cleanK.includes('file') || cleanK.includes('table') || cleanK === 'rownumber' || cleanK === 'uid') {
+                        continue;
+                    }
+                    for (let dk of ['고객명', '성함', '대표자명', '이름', '카카오톡이름']) {
+                        if (cleanK === dk || cleanK.includes(dk)) {
+                            const val = String(c[k] || '').trim();
+                            if (val && val !== '-' && val !== 'null' && val !== 'undefined') return val;
+                        }
+                    }
+                    if (cleanK === 'name' || cleanK === 'customername' || cleanK === 'clientname') {
+                        const val = String(c[k] || '').trim();
+                        if (val && val !== '-' && val !== 'null' && val !== 'undefined') return val;
+                    }
+                }
+                if (c.crmData) {
+                    const nested = extractCustomerName(c.crmData);
+                    if (nested) return nested;
+                }
+            }
+            return "";
+        }
+
+        function buildMergedData() {
+            // 1. 전체 고객 (CRM_Contacts 기준)
+            let allCustomers = [];
+            crmContacts.forEach(c => {
+                let name = extractCustomerName(c);
+                let phone = extractCustomerPhone(c);
+                
+                const cPhone = String(phone || "").replace(/[\s-]/g, "");
+                const cName = String(name || "").replace(/\s/g, "");
+                
+                const match = weraclecrm.find(w => {
+                    const wPhone = String(extractCustomerPhone(w) || "").replace(/[\s-]/g, "");
+                    if (cPhone !== "" && wPhone !== "" && cPhone === wPhone) return true;
+                    const wName = String(extractCustomerName(w) || "").replace(/\s/g, "");
+                    if (cPhone === "" && wPhone === "" && cName !== "" && cName === wName) return true;
+                    return false;
+                });
+                
+                allCustomers.push({
+                    name: name || "(이름 없음)",
+                    originalName: match ? (extractCustomerName(match) || name) : name,
+                    phone: phone || (match ? extractCustomerPhone(match) : ""),
+                    tag: match ? "CRM매칭" : "단독",
+                    color: match ? "#10b981" : "#86868b",
+                    crmData: match || null
+                });
+            });
+
+            mergedList = allCustomers;
+            window.mergedList = mergedList;
+            
+            // 2. CRM 등록 고객 (weraclecrm 기준)
+            window.pureCrmList = weraclecrm.map(w => {
+                let wName = extractCustomerName(w) || "(이름 없음)";
+                let wPhone = extractCustomerPhone(w) || "";
+                const cleanWPhone = String(wPhone).replace(/[\s-]/g, "");
+                const cleanWName = String(wName).replace(/\s/g, "");
+                
+                // crmContacts에 있는지 확인
+                const isMatched = allCustomers.find(c => {
+                    const cp = String(c.phone || "").replace(/[\s-]/g, "");
+                    if (cleanWPhone !== "" && cp !== "" && cp === cleanWPhone) return true;
+                    const cn = String(c.name || "").replace(/\s/g, "");
+                    if (cleanWPhone === "" && cp === "" && cleanWName !== "" && cn === cleanWName) return true;
+                    return false;
+                });
+                
+                return {
+                    name: wName,
+                    originalName: wName,
+                    phone: wPhone,
+                    tag: isMatched ? "CRM매칭" : "단독(CRM)",
+                    color: isMatched ? "#10b981" : "#3b82f6",
+                    crmData: w
+                };
+            });
+
+            const activeItem = document.querySelector('.filter-item.active') || document.querySelector('.filter-item');
+            if (activeItem) activeItem.click();
+        }
+
+      window.lastTargetType = null;
+      window.lastMenuTitle = null;
+      window.currentBaseData = [];
+
+                                              function updateCustomerList(targetType, menuTitle) {
+            const listContainer = document.querySelector('.target-list');
+            const titleElement = document.querySelector('.right-panel .panel-title');
+            const headerContainer = document.querySelector('.list-header');
+            
+            listContainer.innerHTML = ''; 
+            
+            let baseData = [];
+            
+            //  [수정] 오늘 당일 생일 고객 정확 판별 로직 (월 + 일 모두 일치)
+            function isTodayBirthday(crm, item) {
+                const target = crm || item;
+                if (!target) return false;
+                
+                const today = new Date();
+                const curMonth = today.getMonth() + 1;
+                const curDay = today.getDate();
+
+                // 1. 주민번호 또는 주민등록번호 확인 (YYMMDD)
+                const juminRaw = target['주민번호'] || target['주민등록번호'] || target[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%B2%88%ED%98%B8')] || target[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%93%B1%EB%A1%9D%EB%B2%88%ED%98%B8')] || '';
+                const jumin = String(juminRaw).replace(/[^0-9]/g, '');
+                if (jumin.length >= 6) {
+                    const bMonth = parseInt(jumin.substring(2, 4), 10);
+                    const bDay = parseInt(jumin.substring(4, 6), 10);
+                    if (bMonth >= 1 && bMonth <= 12 && bDay >= 1 && bDay <= 31) {
+                        return (bMonth === curMonth && bDay === curDay);
+                    }
+                }
+
+                // 2. '생일' 또는 '생년월일' 문자열 확인 (보조 수단: YYYY-MM-DD 또는 MM-DD 등)
+                const birthStr = String(target['생일'] || target['생년월일'] || target[decodeURIComponent('%EC%83%9D%EC%9D%BC')] || '').trim();
+                if (birthStr && birthStr !== '-') {
+                    const cleanBirth = birthStr.replace(/[^0-9]/g, '');
+                    if (cleanBirth.length === 8) {
+                        const bMonth = parseInt(cleanBirth.substring(4, 6), 10);
+                        const bDay = parseInt(cleanBirth.substring(6, 8), 10);
+                        return (bMonth === curMonth && bDay === curDay);
+                    } else if (cleanBirth.length === 6) {
+                        const bMonth = parseInt(cleanBirth.substring(2, 4), 10);
+                        const bDay = parseInt(cleanBirth.substring(4, 6), 10);
+                        return (bMonth === curMonth && bDay === curDay);
+                    } else if (cleanBirth.length === 4) {
+                        const bMonth = parseInt(cleanBirth.substring(0, 2), 10);
+                        const bDay = parseInt(cleanBirth.substring(2, 4), 10);
+                        return (bMonth === curMonth && bDay === curDay);
+                    }
+                    
+                    const mMatch = birthStr.match(/(\d{1,2})[\.\-\/\s월]\s*(\d{1,2})/);
+                    if (mMatch) {
+                        const bMonth = parseInt(mMatch[1], 10);
+                        const bDay = parseInt(mMatch[2], 10);
+                        return (bMonth === curMonth && bDay === curDay);
+                    }
+                }
+
+                return false;
+            }
+
+            // 하위 호환용 월단위 생일 함수 (기타 참조용 유지)
+            function hasBirthdayInMonth(crm, targetMonth) {
+                if (!crm) return false;
+                const rrm = String(crm['주민번호'] || crm['주민등록번호'] || crm[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%B2%88%ED%98%B8')] || crm[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%93%B1%EB%A1%9D%EB%B2%88%ED%98%B8')] || "").replace(/[^0-9]/g, '');
+                if (rrm.length >= 6) {
+                    const monthStr = rrm.substring(2, 4);
+                    if (parseInt(monthStr, 10) === targetMonth) return true;
+                }
+                return false;
+            }
+
+            function hasSangryungInMonth(crm, targetMonth) {
+                if (!crm) return false;
+                const rrm = crm[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%B2%88%ED%98%B8')] || crm[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%93%B1%EB%A1%9D%EB%B2%88%ED%98%B8')] || "";
+                if (rrm.length >= 6) {
+                    const monthStr = rrm.substring(2, 4);
+                    let sangMonth = parseInt(monthStr, 10) + 6;
+                    if (sangMonth > 12) sangMonth -= 12;
+                    if (sangMonth === targetMonth) return true;
+                }
+                return false;
+            }
+
+            function hasMaturityInMonth(crm, targetMonth, menuTitle) {
+                if (!crm) return false;
+                const matStr = crm[decodeURIComponent('%EB%A7%8C%EA%B8%B0%EC%9D%BC')] || "";
+                if (!matStr) return false;
+                const m = matStr.match(/\d{4}[-\.]?(\d{2})[-\.]?\d{2}/);
+                if (!m || parseInt(m[1], 10) !== targetMonth) return false;
+
+                const insight = crm[decodeURIComponent('%ED%84%B0%EC%B9%98%EC%9D%B8%EC%82%AC%EC%9D%B4%ED%8A%B8')] || ""; // 터치인사이트 (특약 태그)
+                const coverage = crm[decodeURIComponent('%EA%B0%80%EC%9E%85%EB%82%B4%EC%97%AD')] || ""; // 가입내역
+                const covType = crm[decodeURIComponent('%EB%B3%B4%ED%97%98%EC%A2%85%EB%A5%98')] || ""; // 보험종류
+
+                // 태그 및 특약 포함 여부 확인
+                const hasAutoTag = insight.includes("자동차") || insight.includes("운전자") || insight.includes("바이크") || 
+                                   coverage.includes("자동차") || coverage.includes("운전자") || coverage.includes("바이크");
+                const hasPropertyTag = insight.includes("재물보험") || coverage.includes("재물보험");
+                
+                const isLongTerm = covType.includes("장기보험");
+                const isAutoIns = covType.includes("자동차보험");
+
+                if (menuTitle === "자동차보험 만기") {
+                    // 특약에 자동차/운전자/바이크가 있거나, 애초에 보험종류가 자동차보험인 경우
+                    return hasAutoTag || isAutoIns;
+                }
+                
+                if (menuTitle === "재물보험 만기") {
+                    // 특약에 재물보험이 있거나, 보험종류가 재물보험인 경우
+                    return hasPropertyTag || covType.includes("재물");
+                }
+                
+                if (menuTitle === "장기보험만기") {
+                    // 1. 보험종류가 장기보험일 것
+                    // 2. 특약에 자동차, 운전자, 바이크, 재물보험이 없을 것 (제외 조건)
+                    if (isLongTerm && !hasAutoTag && !hasPropertyTag) {
+                        return true;
+                    }
+                    return false; // 위 조건에 안 맞으면 장기보험 만기 리스트에서 제외
+                }
+                
+                // 일반보험 만기 등 아직 세팅 안 된 나머지는 만기일만 맞으면 일단 노출되도록 허용
+                return true;
+            }
+
+
+            //  블랙리스트(차단된 고객) 실시간 제외
+            let localBlacklist = [];
+            try {
+                localBlacklist = JSON.parse(localStorage.getItem('weracle_blacklist') || '[]').map(p => (typeof p === 'object' && p !== null) ? String(p.phone || p['전화번호'] || '').replace(/[^0-9]/g, '') : String(p).replace(/[^0-9]/g, '')).filter(Boolean);
+            } catch(e) {}
+
+            if (targetType === 'all') {
+                baseData = mergedList || [];
+                titleElement.innerText = '전체 고객 리스트';
+            } else if (targetType === 'crm') {
+                baseData = window.pureCrmList || [];
+                titleElement.innerText = 'CRM 등록 고객';
+            } else if (targetType === 'targeted') {
+                const combinedMap = new Map();
+                (window.pureCrmList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[\s-]/g, ""), c); });
+                (mergedList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[\s-]/g, ""), c); });
+                
+                baseData = Array.from(combinedMap.values()).filter(c => c.tag !== ' 신규 가망고객');
+                
+                const currentMonth = new Date().getMonth() + 1;
+                if (menuTitle.includes('생일')) {
+                    baseData = baseData.filter(c => isTodayBirthday(c.crmData, c));
+                } else if (menuTitle.includes('상령일')) {
+                    baseData = baseData.filter(c => hasSangryungInMonth(c.crmData, currentMonth));
+                } else if (menuTitle.includes('만기')) {
+                    baseData = baseData.filter(c => hasMaturityInMonth(c.crmData, currentMonth, menuTitle));
+                }
+                titleElement.innerText = '추천 타겟 (' + menuTitle + ')';
+            } else {
+                baseData = [];
+                titleElement.innerText = '추천 타겟 (' + menuTitle + ')';
+            }
+
+            //  블랙리스트 제외 적용
+            if (localBlacklist.length > 0) {
+                baseData = baseData.filter(c => {
+                    const p = String(c.phone || '').replace(/[^0-9]/g, '');
+                    return !localBlacklist.includes(p);
+                });
+            }
+
+            //  우측 탭 텍스트 및 개수 배지 동적 업데이트
+            const rTabTargetEl = document.getElementById('r-tab-target');
+            const rTabAllEl = document.getElementById('r-tab-all');
+            if (rTabTargetEl && rTabAllEl) {
+                const allCleanCount = (mergedList || []).filter(c => {
+                    const p = String(c.phone || '').replace(/[^0-9]/g, '');
+                    return !localBlacklist.includes(p);
+                }).length;
+
+                let targetOrCrmCount = 0;
+                if (menuTitle.includes('생일') || menuTitle.includes('만기') || menuTitle.includes('상령일')) {
+                    const combinedMap = new Map();
+                    (window.pureCrmList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[\s-]/g, ""), c); });
+                    (mergedList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[\s-]/g, ""), c); });
+                    let tList = Array.from(combinedMap.values()).filter(c => c.tag !== ' 신규 가망고객');
+                    const curM = new Date().getMonth() + 1;
+                    if (menuTitle.includes('생일')) tList = tList.filter(c => isTodayBirthday(c.crmData, c));
+                    else if (menuTitle.includes('상령일')) tList = tList.filter(c => hasSangryungInMonth(c.crmData, curM));
+                    else if (menuTitle.includes('만기')) tList = tList.filter(c => hasMaturityInMonth(c.crmData, curM, menuTitle));
+                    targetOrCrmCount = tList.filter(c => !localBlacklist.includes(String(c.phone || '').replace(/[^0-9]/g, ''))).length;
+                    
+                    rTabTargetEl.innerText = ` CRM 고객 (${targetOrCrmCount})`;
+                } else {
+                    let crmList = (window.pureCrmList || []).filter(c => !localBlacklist.includes(String(c.phone || '').replace(/[^0-9]/g, '')));
+                    rTabTargetEl.innerText = ` CRM 고객 (${crmList.length})`;
+                }
+                rTabAllEl.innerText = ` 전체 고객 (${allCleanCount})`;
+            }
+
+            if (window.lastTargetType !== targetType || window.lastMenuTitle !== menuTitle) {
+                baseData.forEach(c => c.isChecked = false);
+                window.lastTargetType = targetType;
+                window.lastMenuTitle = menuTitle;
+            }
+            window.currentBaseData = baseData; // 모달창과 매크로에서 꺼내 쓸 장바구니 저장
+
+            // 검색어 필터링 적용
+            let filteredData = baseData;
+            const searchKeyword = document.querySelector('.search-input').value.trim().toLowerCase();
+            if (searchKeyword && filteredData.length > 0) {
+                filteredData = filteredData.filter(c => c.name.toLowerCase().includes(searchKeyword) || c.phone.includes(searchKeyword));
+            }
+
+            const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE) || 1;
+            let paginationHtml = `<div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; width: 100%; border-bottom: 1px solid #f1f5f9; margin-bottom: 8px;">`;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                let btnStyle = "";
+                if (i === currentPage) btnStyle = "background: #113f67; color: white; border: 1px solid #113f67; box-shadow: 0 4px 10px rgba(17,63,103,0.2);";
+                else if (i < currentPage) btnStyle = "background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0;";
+                else btnStyle = "background: white; color: #475569; border: 1px solid #cbd5e1;";
+
+                paginationHtml += `
+                    <button onclick="changeGroupPage(${i})" 
+                        style="flex-shrink: 0; padding: 8px 18px; border-radius: 20px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; ${btnStyle}">
+                        Group ${i}
+                    </button>
+                `;
+            }
+            paginationHtml += `</div>`;
+
+            headerContainer.style.flexDirection = 'column';
+            headerContainer.style.alignItems = 'flex-start';
+            headerContainer.innerHTML = `
+                ${paginationHtml}
+                <div style="display:flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <label style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" id="selectAllCb" style="width: 16px; height: 16px; cursor: pointer;"> <span id="selectedCountText">전체선택</span>
+                    </label>
+                    <span id="customer-count" style="font-size: 14px; color: var(--title-blue); font-weight: 800;">총 ${baseData.length}명</span>
+                </div>
+            `;
+
+            if (filteredData.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="padding: 50px 0; text-align: center; color: #94a3b8;">
+                        <i class="fa-regular fa-folder-open" style="font-size: 36px; margin-bottom: 10px; opacity: 0.5;"></i>
+                        <div style="font-size: 14.5px; font-weight: 700; color: #64748b;">조건에 해당하는 고객이 없습니다.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const currentGroup = filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+            currentGroup.forEach(cust => {
+                let tagHtml = `<div style="font-size: 12px; color: ${cust.color || 'var(--text-sub)'}; margin-top: 4px; background: ${cust.color ? cust.color+'15' : '#f5f5f7'}; display: inline-block; padding: 4px 8px; border-radius: 6px; font-weight:600;">${cust.tag || '기존 등록고객'}</div>`;
+                let pDigits = String(cust.phone || '').replace(/[^0-9]/g, '');
+                let displayPhone = pDigits.length === 11 ? pDigits.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3') : (pDigits.length === 10 ? pDigits.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : (cust.phone || ''));
+                const isCheckedHtml = cust.isChecked ? 'checked' : '';
+
+              const html = `
+                    <div class="target-item">
+                        <input type="checkbox" class="customer-checkbox" data-phone="${cust.phone}" data-name="${cust.originalName}" ${isCheckedHtml} style="cursor:pointer;">
+                        <div style="display: flex; flex-direction: column; gap: 2px; align-items: flex-start;">
+                            <div style="font-weight: 700; font-size: 15px; color: var(--text-main);">${cust.name} <span style="font-size: 13px; color: var(--text-sub); font-weight: 500; margin-left: 4px;">${displayPhone}</span></div>
+                            ${tagHtml}
+                        </div>
+                    </div>
+                `;
+                listContainer.insertAdjacentHTML('beforeend', html);
+            });
+
+            attachCheckboxLogic(currentGroup, baseData);
+        }
+
+    function attachCheckboxLogic(currentGroup, baseData) {
+            const selectAllCb = document.getElementById('selectAllCb');
+            const itemCbs = document.querySelectorAll('.customer-checkbox');
+            const countText = document.getElementById('selectedCountText');
+            const searchKeyword = document.querySelector('.search-input').value.trim();
+
+            const updateCountText = () => {
+                const checkedCount = baseData.filter(c => c.isChecked).length;
+                if(countText) countText.innerText = `(${checkedCount}명 선택됨)`;
+            };
+
+            if(selectAllCb) {
+                selectAllCb.checked = itemCbs.length > 0 && Array.from(itemCbs).every(c => c.checked);
+
+                selectAllCb.onchange = (e) => {
+                    const isChecked = e.target.checked;
+                    if (isChecked) {
+                        if (!searchKeyword) {
+                            baseData.forEach(c => c.isChecked = false);
+                        }
+                        currentGroup.forEach(c => c.isChecked = true);
+                    } else {
+                        currentGroup.forEach(c => c.isChecked = false);
+                    }
+                    itemCbs.forEach(cb => cb.checked = isChecked);
+                    updateCountText();
+                };
+
+                itemCbs.forEach(cb => {
+                    cb.onchange = (e) => {
+                        const isChecked = e.target.checked;
+                        if (isChecked) {
+                            const currentTotal = baseData.filter(c => c.isChecked).length;
+                            if (currentTotal >= 100) {
+                                alert(" [발송 제한] 카카오톡 계정 보호를 위해 한 번에 최대 100명까지만 선택할 수 있습니다.\n다른 고객의 체크를 해제한 후 다시 시도해주세요.");
+                                e.target.checked = false; 
+                                return; 
+                            }
+                        }
+
+                        const targetCust = currentGroup.find(c => (e.target.dataset.phone && c.phone === e.target.dataset.phone) || (c.originalName === e.target.dataset.name));
+                        if (targetCust) targetCust.isChecked = isChecked;
+                        
+                        selectAllCb.checked = Array.from(itemCbs).every(c => c.checked);
+                        updateCountText();
+                    };
+                });
+            }
+            updateCountText();
+        }
+
+        // =========================================================================
+        //  6. 기타 뉴스 및 UI 헬퍼 함수
+        // =========================================================================
+        async function fetchDailyNews() {
+            try {
+                let res = await fetch(NEWS_API_URL);
+                if(res.ok) {
+                    let data = await res.json();
+                    let rows = data.values || [];
+                    if(rows.length > 0) {
+                        const getValue = (index) => (rows[index] && rows[index].length > 1) ? rows[index][1] : '';
+                        let dateValue = getValue(0);
+                        if(dateValue.includes('오늘') || dateValue.includes('자동')) {
+                            const now = new Date();
+                            dateValue = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}. ${['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][now.getDay()]}`;
+                        }
+                        newsDataObj = { date: dateValue, sectionTitle: getValue(1) || '오늘의 핫뉴스 TOP3', news: [ { title: getValue(2), desc: getValue(3) }, { title: getValue(4), desc: getValue(5) }, { title: getValue(6), desc: getValue(7) } ], trends: [getValue(8), getValue(9), getValue(10)] };
+                    }
+                }
+            } catch(e) { console.error('뉴스 연동 실패:', e); }
+        }
+
+        function generateNewsImage(useLogo) {
+            if (!newsDataObj) return null;
+            const canvas = document.getElementById('hiddenNewsCanvas');
+            if (!canvas) return null;
+            const ctx = canvas.getContext('2d');
+            const width = 1000, contentMaxWidth = width - 200, contentX = 100, newsStartY = 380;
+            
+            let mainBoxHeight = 0;
+            newsDataObj.news.forEach(n => {
+                if(n.title.trim() !== '' || n.desc.trim() !== '') {
+                    mainBoxHeight += 40; 
+                    mainBoxHeight += measureWrapTextKR(ctx, n.desc, contentMaxWidth, 38, '500 22px "Noto Sans KR"');
+                    mainBoxHeight += 50; 
+                }
+            });
+
+            let contentTextHeight = 0;
+            newsDataObj.trends.forEach(item => {
+                if(item.trim() !== '') {
+                    contentTextHeight += measureWrapTextKR(ctx, item, contentMaxWidth - 20, 36, '500 22px "Noto Sans KR"');
+                    contentTextHeight += 20; 
+                }
+            });
+
+            const currentYAfterNews = newsStartY + 110 + mainBoxHeight;
+            const contentStartY = currentYAfterNews + 20;
+            const listYAfterContent = contentStartY + 85 + contentTextHeight;
+            const totalCanvasHeight = listYAfterContent + 100; 
+
+            canvas.height = (totalCanvasHeight > 1414) ? totalCanvasHeight : 1414;
+
+            ctx.fillStyle = '#eaf2f8'; ctx.fillRect(0, 0, width, canvas.height);
+            ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1;
+            ctx.fillRect(35, 35, width - 70, canvas.height - 70); ctx.strokeRect(35, 35, width - 70, canvas.height - 70);
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.05)'; ctx.shadowBlur = 15; ctx.shadowOffsetX = -2; ctx.shadowOffsetY = 4;
+            ctx.fillRect(45, 45, width - 90, canvas.height - 90); ctx.strokeRect(45, 45, width - 90, canvas.height - 90);
+            ctx.shadowColor = 'transparent'; 
+
+            if (useLogo && customLogo.src) {
+                const logoH = 100; const logoW = (customLogo.width / customLogo.height) * logoH;
+                ctx.drawImage(customLogo, 85, 45, logoW, logoH); 
+            } else if (useLogo) {
+                ctx.fillStyle = '#f1f5f9'; drawRoundRect(ctx, 85, 45, 260, 100, 8); ctx.fill();
+                ctx.fillStyle = '#94a3b8'; ctx.font = '600 20px "Noto Sans KR"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText('로고를 등록해주세요', 85 + 130, 45 + 50);
+            }
+
+            ctx.font = '700 28px "Noto Sans KR"'; ctx.fillStyle = '#333'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+            ctx.fillText(newsDataObj.date, width - 85, 95);
+            ctx.fillStyle = '#333'; ctx.fillRect(85, 145, width - 170, 2); ctx.fillRect(85, 152, width - 170, 6);
+            ctx.font = '900 115px "Playfair Display", serif'; ctx.textAlign = 'center'; ctx.fillText('DAILY NEWS', width / 2, 240); 
+            ctx.fillRect(85, 320, width - 170, 6); ctx.fillRect(85, 330, width - 170, 2);
+
+            const bannerX = 65, bannerW = width - 130;
+            const grad = ctx.createLinearGradient(bannerX, newsStartY, bannerX + bannerW, newsStartY);
+            grad.addColorStop(0, '#113f67'); grad.addColorStop(1, '#0284c7'); 
+            ctx.fillStyle = grad; drawRoundRect(ctx, bannerX, newsStartY, bannerW, 70, 12); ctx.fill();
+            drawBadge(ctx, bannerX + 20, newsStartY + 15, 140, 40);
+            
+            ctx.fillStyle = '#fde047'; ctx.font = '700 36px "Noto Sans KR"'; ctx.fillText(newsDataObj.sectionTitle, width / 2, newsStartY + 37);
+
+            let currentY = newsStartY + 110;
+            newsDataObj.news.forEach(n => {
+                if(n.title.trim() === '' && n.desc.trim() === '') return;
+                ctx.fillStyle = '#0284c7'; ctx.fillRect(contentX, currentY + 8, 8, 8);
+                ctx.fillStyle = '#111'; ctx.font = 'bold 26px "Noto Sans KR"'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+                ctx.fillText(n.title, contentX + 22, currentY); currentY += 40;
+                ctx.fillStyle = '#475569'; ctx.font = '500 22px "Noto Sans KR"';
+                currentY = wrapTextKR(ctx, n.desc, contentX, currentY, contentMaxWidth, 38); currentY += 50; 
+            });
+
+            const subGrad = ctx.createLinearGradient(bannerX, contentStartY, bannerX + bannerW, contentStartY);
+            subGrad.addColorStop(0, '#113f67'); subGrad.addColorStop(1, '#0284c7'); 
+            ctx.fillStyle = subGrad; drawRoundRect(ctx, bannerX, contentStartY, bannerW, 60, 12); ctx.fill();
+            ctx.font = '700 32px "Noto Sans KR"'; ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('오늘의 트렌드 픽', width / 2, contentStartY + 32);
+
+            let listY = contentStartY + 85; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+            newsDataObj.trends.forEach((item) => {
+                if(item.trim() !== '') {
+                    ctx.fillStyle = '#113f67'; ctx.beginPath(); ctx.arc(contentX + 5, listY + 14, 5, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#334155'; ctx.font = '500 22px "Noto Sans KR"';
+                    listY = wrapTextKR(ctx, item, contentX + 25, listY, contentMaxWidth - 25, 36); listY += 20; 
+                }
+            });
+            return canvas.toDataURL('image/png');
+        }
+
+        function getWatermarkedBase64(imageUrl, useLogo, callback) {
+            if (!imageUrl) return callback('');
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = function() {
+                const cvs = document.createElement('canvas');
+                cvs.width = img.width;
+                cvs.height = img.height;
+                const ctx = cvs.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+
+                if (useLogo && customLogo && customLogo.src) {
+                    const logoH = Math.max(img.height * 0.08, 40); 
+                    const logoW = (customLogo.width / customLogo.height) * logoH;
+                    const pad = img.width * 0.03;
+                    ctx.drawImage(customLogo, img.width - logoW - pad, pad, logoW, logoH);
+                }
+                callback(cvs.toDataURL('image/jpeg', 0.9)); 
+            };
+            img.onerror = function() { callback(imageUrl); };
+            img.src = imageUrl;
+        }
+
+        function drawRoundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); }
+        function measureWrapTextKR(ctx, t, mW, lh, f) { ctx.save(); ctx.font = f; let l = '', h = 0, cl = t.replace(/^[0-9]+[:.]\s*/, ''); for(let i=0; i<cl.length; i++) { if (cl[i] === '\n') { l = ''; h += lh; continue; } if (ctx.measureText(l + cl[i]).width > mW && i > 0) { l = cl[i]; h += lh; } else { l += cl[i]; } } if (l.trim() !== '') h += lh; ctx.restore(); return h; }
+        function wrapTextKR(ctx, t, x, y, mW, lh) { let l = '', cY = y, cl = t.replace(/^[0-9]+[:.]\s*/, ''); for(let i=0; i<cl.length; i++) { if (cl[i] === '\n') { ctx.fillText(l, x, cY); l = ''; cY += lh; continue; } if (ctx.measureText(l + cl[i]).width > mW && i > 0) { ctx.fillText(l, x, cY); l = cl[i]; cY += lh; } else { l += cl[i]; } } if (l.trim() !== '') ctx.fillText(l, x, cY); return cY + lh; }
+        function drawBadge(ctx, x, y, w, h) { const s = 20, hW = w / 2 + 10; ctx.fillStyle = '#113f67'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + hW, y); ctx.lineTo(x + hW - s, y + h); ctx.lineTo(x - s, y + h); ctx.fill(); ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.moveTo(x + hW, y); ctx.lineTo(x + w + s, y); ctx.lineTo(x + w, y + h); ctx.lineTo(x + hW - s, y + h); ctx.fill(); ctx.fillStyle = 'white'; ctx.font = 'italic 900 24px "Noto Sans KR"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('HOT', x + (hW/2) - (s/2), y + (h/2) + 2); ctx.fillText('NEWS', x + hW + (w-hW)/2, y + (h/2) + 2); }
+
+        function getWatermarkedBase64Async(imageUrl, useLogo) {
+            return new Promise((resolve) => {
+                if (!imageUrl) return resolve('');
+                getWatermarkedBase64(imageUrl, useLogo, function(b64) {
+                    resolve(b64 || imageUrl);
+                });
+            });
+        }
+
+        // =========================================================================
+        //  7. 위라클 카톡 발송 확인 및 연동 엔진 (UI 모달 기반)
+        // =========================================================================
+        let pendingDirectSendData = null;
+
+        function showCustomToast(message, type = 'info') {
+            let toast = document.getElementById('customToastBox');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'customToastBox';
+                toast.style.cssText = 'position:fixed; top:28px; left:50%; transform:translateX(-50%) translateY(-10px); background:#1e293b; color:#fff; padding:12px 24px; border-radius:30px; font-size:14.5px; font-weight:700; z-index:99999; box-shadow:0 10px 25px rgba(0,0,0,0.25); display:flex; align-items:center; gap:8px; pointer-events:none; transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1); opacity:0;';
+                document.body.appendChild(toast);
+            }
+            if (type === 'warning') {
+                toast.style.background = '#e11d48';
+            } else if (type === 'success') {
+                toast.style.background = '#059669';
+            } else {
+                toast.style.background = '#1e293b';
+            }
+            toast.innerHTML = message;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(-10px)';
+            }, 2800);
+        }
+
+        function directSendCard(cardIndex) {
+            const cardEl = document.getElementById(`card-${cardIndex}`);
+            if (!cardEl) return;
+
+            // 1. 우측 고객 목록에서 선택된 고객들 수집
+            const selectedCustomers = [];
+            if (window.currentBaseData) {
+                window.currentBaseData.forEach(cust => {
+                    if (cust.isChecked) {
+                        let rawName = cust.originalName || cust.name || "";
+                        let safeName = rawName.replace(/[^\uAC00-\uD7A3a-zA-Z0-9\s()]/g, '').trim();
+                        let phone = cust.phone || extractCustomerPhone(cust) || (cust.crmData ? extractCustomerPhone(cust.crmData) : "");
+                        selectedCustomers.push({ name: safeName || "고객", phone: phone });
+                    }
+                });
+            }
+
+            if (selectedCustomers.length === 0) {
+                showCustomToast(" 우측 리스트에서 발송할 고객을 1명 이상 선택해 주세요.", "warning");
+                return;
+            }
+
+            // 2. 발송 콘텐츠 문구 & 옵션 추출
+            const content = cardEl._contentData;
+            const useLogo = cardEl.querySelector('.cb-use-logo')?.checked ?? true;
+            let textContent = (content && content.text) ? content.text : (cardEl.querySelector('.text-preview')?.innerText || '');
+
+            // 3. 확인 후 전송할 데이터 임시 보관 (확인 버튼 클릭 시 실제 전송됨)
+            pendingDirectSendData = {
+                cardIndex,
+                cardEl,
+                content,
+                useLogo,
+                textContent,
+                selectedCustomers
+            };
+
+            // 4. 모달 UI 필드 세팅
+            const modal = document.getElementById('directSendConfirmModal');
+            if (!modal) return;
+
+            // 수신 대상
+            const count = selectedCustomers.length;
+            let recipientStr = "";
+            if (count === 1) {
+                recipientStr = `${selectedCustomers[0].name} 고객님 (총 1명)`;
+            } else {
+                recipientStr = `${selectedCustomers[0].name}님 외 ${count - 1}명 (총 <b style="color:#2563eb;">${count}명</b>)`;
+            }
+            const recEl = document.getElementById('confirmModalRecipients');
+            if (recEl) recEl.innerHTML = recipientStr;
+
+            // 콘텐츠 유형
+            const titleEl = cardEl.querySelector('.card-title-text');
+            const typeEl = document.getElementById('confirmModalType');
+            if (typeEl) typeEl.innerText = titleEl ? titleEl.innerText : '맞춤 화법';
+
+            // 개인로고 적용 여부
+            const logoEl = document.getElementById('confirmModalLogoStatus');
+            if (logoEl) {
+                logoEl.innerHTML = useLogo
+                    ? '<span class="badge-tag on"> 적용 (로고 합성)</span>'
+                    : '<span class="badge-tag off">미적용 (원본)</span>';
+            }
+
+            // 메시지 미리보기
+            const msgEl = document.getElementById('confirmModalMsgPreview');
+            if (msgEl) {
+                msgEl.innerText = textContent.trim() || '(등록된 메시지 본문이 없습니다)';
+            }
+
+            // 스텝 초기화
+            const stepInit = document.getElementById('confirmStepInitial');
+            const stepSucc = document.getElementById('confirmStepSuccess');
+            if (stepInit) stepInit.style.display = 'block';
+            if (stepSucc) stepSucc.style.display = 'none';
+
+            const btnConfirm = document.getElementById('btnExecuteDirectSend');
+            if (btnConfirm) {
+                btnConfirm.disabled = false;
+                btnConfirm.innerHTML = '<span>확인 (프로그램 연동) </span>';
+            }
+
+            // 모달 열기 (프로그램 연동은 아직 발생하지 않음)
+            modal.style.display = 'flex';
+        }
+
+        function closeDirectSendModal() {
+            const modal = document.getElementById('directSendConfirmModal');
+            if (modal) modal.style.display = 'none';
+            pendingDirectSendData = null;
+        }
+
+        async function executeDirectSendConfirmed() {
+            if (!pendingDirectSendData) return;
+            const { cardEl, content, useLogo, textContent, selectedCustomers } = pendingDirectSendData;
+
+            const btnConfirm = document.getElementById('btnExecuteDirectSend');
+            if (btnConfirm) {
+                btnConfirm.disabled = true;
+                btnConfirm.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 프로그램 연동 중...';
+            }
+
+            // 1. 발송 콘텐츠 이미지 추출 및 합성
+            const imgElement = cardEl.querySelector('.img-square img');
+            let finalImageUrl = "";
+            if (imgElement && imgElement.src && !imgElement.src.startsWith('data:image/svg+xml')) {
+                finalImageUrl = imgElement.src;
+            } else if (content && content.isDaily) {
+                finalImageUrl = generateNewsImage(useLogo) || '';
+            } else if (content && content.image) {
+                if (useLogo) {
+                    finalImageUrl = await getWatermarkedBase64Async(content.image, true);
+                } else {
+                    finalImageUrl = content.image;
+                }
+            }
+
+            // 2. 위라클톡 전송 데이터 패킷 구성
+            const targetPayload = {
+                title: (content && content.title) ? content.title : '타겟관리 추천 발송',
+                company: '위라클',
+                script: textContent,
+                imageUrl: finalImageUrl,
+                allImages: finalImageUrl ? [finalImageUrl] : [],
+                customers: selectedCustomers,
+                targets: selectedCustomers
+            };
+
+            // 3. 위라클 프로그램으로 실시간 빔 전송 (포트 48291 HTTP 브릿지 -> weracle:// 프로토콜)
+            let sent = false;
+            try {
+                const bridgeRes = await fetch('http://127.0.0.1:48291/api/bridge_content', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(targetPayload)
+                });
+                if (bridgeRes.ok) sent = true;
+            } catch (bridgeErr) {
+                console.warn("Direct HTTP bridge fetch failed, falling back to weracle:// protocol...", bridgeErr);
+            }
+
+            if (!sent) {
+                try {
+                    const safePayload = { ...targetPayload };
+                    if (safePayload.imageUrl && safePayload.imageUrl.startsWith('data:image')) {
+                        if (content && content.image && content.image.startsWith('http')) {
+                            safePayload.imageUrl = content.image;
+                            safePayload.allImages = [content.image];
+                        } else {
+                            safePayload.imageUrl = '';
+                            safePayload.allImages = [];
+                        }
+                    }
+                    const uri = 'weracle://bridge?data=' + encodeURIComponent(JSON.stringify(safePayload));
+                    const ifr = document.createElement('iframe');
+                    ifr.style.display = 'none';
+                    ifr.src = uri;
+                    document.body.appendChild(ifr);
+                    setTimeout(() => ifr.remove(), 2500);
+                    sent = true;
+                } catch (protErr) {
+                    console.error('Protocol fallback error:', protErr);
+                }
+            }
+
+            // 4. 모달 내 완료 화면으로 매끄럽게 전환
+            const stepInit = document.getElementById('confirmStepInitial');
+            const stepSucc = document.getElementById('confirmStepSuccess');
+            const countEl = document.getElementById('confirmSuccessCount');
+            if (countEl) countEl.innerText = `${selectedCustomers.length}명`;
+            if (stepInit) stepInit.style.display = 'none';
+            if (stepSucc) stepSucc.style.display = 'block';
+
+            pendingDirectSendData = null;
+        }
+
+       function openModal(contentData) { 
+            const modalId = 'sendModal';
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'flex'; 
+
+            const selectedNames = [];
+            if (window.currentBaseData) {
+                window.currentBaseData.forEach(cust => {
+                    if (cust.isChecked) {
+                        let safeName = cust.originalName.replace(/[^\uAC00-\uD7A3a-zA-Z0-9\s()]/g, '').trim();
+                        selectedNames.push(safeName);
+                    }
+                });
+            }
+            
+            const countSpan = modal.querySelector('.modal-customer-count');
+            const nameDiv = countSpan ? countSpan.parentElement.nextElementSibling : null;
+            if (countSpan && nameDiv) {
+                countSpan.innerText = selectedNames.length;
+                if (selectedNames.length === 0) {
+                    nameDiv.innerText = " 선택된 고객이 없습니다.";
+                    nameDiv.style.color = "#ef4444";
+                } else if (selectedNames.length <= 2) {
+                    nameDiv.innerText = selectedNames.join(', ');
+                    nameDiv.style.color = "var(--text-main)";
+                } else {
+                    nameDiv.innerText = `${selectedNames[0]}, ${selectedNames[1]} 외 ${selectedNames.length - 2}명`;
+                    nameDiv.style.color = "var(--text-main)";
+                }
+            }
+
+            const bubbleClass = '.kakao-bubble';
+            const bubble = modal.querySelector(bubbleClass);
+            const textarea = modal.querySelector('.edit-textarea');
+            const logoCheckbox = modal.querySelector('input[type="checkbox"]');
+            const logoLabel = logoCheckbox ? logoCheckbox.closest('label') : null;
+
+            window.currentContentImage = (contentData && contentData.image) ? contentData.image : '';
+
+            if (contentData) {
+                textarea.value = contentData.text || '';
+                if(logoLabel) logoLabel.style.display = 'flex';
+                if(logoCheckbox) logoCheckbox.checked = true; 
+
+                if (contentData.isDaily) {
+                    const renderDailyBubble = (useLogo) => {
+                        const b64 = generateNewsImage(useLogo);
+                        let imgHtml = b64 
+                            ? `<img src="${b64}" style="width: 100%; height: auto; border-radius: 10px; margin-bottom: 8px; display: block; cursor:zoom-in;" alt="데일리뉴스" onclick="openZoomModal(this.src)">`
+                            : `<div style="padding:40px 0; text-align:center; color:#a1a1a6;">뉴스 굽는 중...</div>`;
+                        bubble.innerHTML = `${imgHtml}<span class="preview-txt">${textarea.value.replace(/\n/g, '<br>')}</span>`;
+                    };
+                    renderDailyBubble(true);
+                    if(logoCheckbox) logoCheckbox.onchange = function() { renderDailyBubble(this.checked); };
+                } else {
+                    const renderNormalBubble = (useLogo) => {
+                        if (contentData.image && contentData.image.startsWith('http')) {
+                            bubble.innerHTML = `<div style="padding:40px 0; text-align:center; color:#a1a1a6;">이미지 합성 중...</div><span class="preview-txt">${textarea.value.replace(/\n/g, '<br>')}</span>`;
+                            getWatermarkedBase64(contentData.image, useLogo, function(b64) {
+                                let imgHtml = `<img src="${b64}" style="width: 100%; height: auto; border-radius: 10px; margin-bottom: 8px; display: block; cursor:zoom-in;" alt="콘텐츠 이미지" onclick="openZoomModal(this.src)">`;
+                                bubble.innerHTML = `${imgHtml}<span class="preview-txt">${textarea.value.replace(/\n/g, '<br>')}</span>`;
+                            });
+                        } else {
+                            let imgHtml = `<div style="width: 100%;  background: rgba(255,255,255,0.2); border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: inherit; border: 1px solid rgba(0,0,0,0.05);">이미지 영역</div>`;
+                            bubble.innerHTML = `${imgHtml}<span class="preview-txt">${textarea.value.replace(/\n/g, '<br>')}</span>`;
+                        }
+                    };
+                    renderNormalBubble(true);
+                    if(logoCheckbox) logoCheckbox.onchange = function() { renderNormalBubble(this.checked); };
+                }
+
+                textarea.oninput = function() {
+                    const txtSpan = bubble.querySelector('.preview-txt');
+                    if (txtSpan) txtSpan.innerHTML = this.value.replace(/\n/g, '<br>');
+                };
+            } else {
+                textarea.value = '';
+                if(logoLabel) logoLabel.style.display = 'none';
+                bubble.innerHTML = `<div style="width: 100%;  background: rgba(255,255,255,0.2); border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: inherit; border: 1px solid rgba(0,0,0,0.05);">등록된 콘텐츠가 없습니다</div><span class="preview-txt"></span>`;
+            }
+        }
+        function closeModal() { document.getElementById('sendModal').style.display = 'none'; }
+        
+       //  [프리미엄 갤러리 뷰어 엔진]
+        let currentZoomImages = [];
+        let currentZoomIndex = 0;
+        let zoomScale = 1;
+        let isDragging = false;
+        let startX, startY, translateX = 0, translateY = 0;
+
+        function openZoomModal(imgSrc) {
+            if(!imgSrc || imgSrc.includes('<div')) return; 
+
+            // 1. 현재 화면에 표시된 제안서 4장의 이미지를 자동으로 찾아서 리스트화합니다.
+            currentZoomImages = [];
+            document.querySelectorAll('.content-card .img-square img').forEach(img => {
+                if (img.src && !img.src.includes('<div')) currentZoomImages.push(img.src);
+            });
+            
+            // 2. 만약 데일리뉴스처럼 1장짜리라면 그것만 담습니다.
+            if(currentZoomImages.length === 0 || !currentZoomImages.includes(imgSrc)) {
+                currentZoomImages = [imgSrc];
+            }
+
+            currentZoomIndex = currentZoomImages.indexOf(imgSrc);
+            if(currentZoomIndex === -1) currentZoomIndex = 0;
+
+            updateZoomImageUI();
+            document.getElementById('zoomModal').style.display = 'flex';
+        }
+
+        function changeZoomSlide(direction, event) {
+            if(event) event.stopPropagation();
+            if(currentZoomImages.length <= 1) return;
+
+            currentZoomIndex += direction;
+            if(currentZoomIndex >= currentZoomImages.length) currentZoomIndex = 0; // 끝에서 처음으로
+            if(currentZoomIndex < 0) currentZoomIndex = currentZoomImages.length - 1; // 처음에서 끝으로
+
+            updateZoomImageUI();
+        }
+
+        function updateZoomImageUI() {
+            document.getElementById('zoom-img').src = currentZoomImages[currentZoomIndex];
+            
+            // 슬라이드가 2장 이상일 때만 좌우 화살표를 보여줍니다.
+            const prevBtn = document.querySelector('.zoom-prev');
+            const nextBtn = document.querySelector('.zoom-next');
+            if(currentZoomImages.length > 1) {
+                prevBtn.style.display = 'flex';
+                nextBtn.style.display = 'flex';
+            } else {
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+            }
+            resetZoomState(); // 사진 넘기면 확대된거 원상복구
+        }
+
+        function closeZoomModal(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('zoomModal').style.display = 'none';
+            resetZoomState();
+        }
+
+        function downloadZoomImage() {
+            const imgSrc = document.getElementById('zoom-img').src;
+            if(!imgSrc) return;
+            const a = document.createElement('a');
+            a.href = imgSrc;
+            a.download = `위라클랩_콘텐츠_${new Date().getTime()}.png`; 
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        //  마우스 휠 확대/축소 및 자유 드래그(이동) 로직
+        function resetZoomState() {
+            zoomScale = 1; translateX = 0; translateY = 0;
+            applyZoomTransform();
+        }
+
+        function applyZoomTransform() {
+            const wrapper = document.getElementById('zoom-img-wrapper');
+            if(wrapper) {
+                wrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomScale})`;
+                // 드래그 중일 땐 부드럽게 따라오고, 휠 굴릴 땐 탄력있게 커집니다.
+                wrapper.style.transition = isDragging ? 'none' : 'transform 0.2s ease-out';
+            }
+        }
+
+        function handleZoomWheel(e) {
+            e.preventDefault();
+            const scaleAmount = 0.15; // 한 번 굴릴 때 확대되는 양
+            if (e.deltaY < 0) zoomScale += scaleAmount; // 휠 위로 (확대)
+            else zoomScale -= scaleAmount; // 휠 아래로 (축소)
+            
+            zoomScale = Math.max(0.5, Math.min(zoomScale, 4)); // 최소 0.5배 ~ 최대 4배 제한
+            applyZoomTransform();
+        }
+
+        function startZoomDrag(e) {
+            e.preventDefault();
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            const wrapper = document.getElementById('zoom-img-wrapper');
+            wrapper.style.cursor = 'grabbing'; // 마우스 주먹 쥔 모양으로 변경
+        }
+
+        // 화면 밖에서도 자연스럽게 마우스 이동을 감지합니다.
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            applyZoomTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            if(isDragging) {
+                isDragging = false;
+                const wrapper = document.getElementById('zoom-img-wrapper');
+                if(wrapper) wrapper.style.cursor = 'grab'; // 마우스 쫙 편 모양 복귀
+                applyZoomTransform();
+            }
+        });
+
+        //  [복구 완료] 내 PC 콘텐츠 등록 모드 필수 엔진 4인방!
+        function openPcUploadModal() { 
+            document.getElementById('pcUploadModal').style.display = 'flex'; 
+            document.getElementById('file-upload-input').value = "";
+            const container = document.getElementById('pc-preview-img-container');
+            container.style.display = "none";
+            container.innerHTML = ""; 
+            document.getElementById('pc-text-input').value = "";
+            document.getElementById('pc-preview-text').innerText = "직접 작성한 화법이 이곳에 표시됩니다.";
+            document.getElementById('pc-preview-text').style.color = "#94a3b8";
+        }
+
+        function closePcUploadModal() { 
+            document.getElementById('pcUploadModal').style.display = 'none'; 
+        }
+
+        function previewPcImage(input) {
+            const container = document.getElementById('pc-preview-img-container');
+            if (input.files && input.files.length > 0) {
+                if (input.files.length > 5) {
+                    alert("이미지는 최대 5장까지만 첨부할 수 있습니다.");
+                    input.value = ""; 
+                    return;
+                }
+                container.innerHTML = ""; 
+                container.style.display = "flex";
+                Array.from(input.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.width = input.files.length === 1 ? "100%" : "calc(50% - 4px)";
+                        img.style.height = "auto";
+                        img.style.objectFit = "cover";
+                        img.style.borderRadius = "8px";
+                        img.className = "pc-multi-preview-img"; 
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+
+        function updatePcTextPreview(textarea) {
+            const preview = document.getElementById('pc-preview-text');
+            if(textarea.value.trim() === "") {
+                preview.innerHTML = "직접 작성한 화법이 이곳에 표시됩니다.";
+                preview.style.color = "#94a3b8";
+            } else {
+                preview.innerHTML = textarea.value.replace(/\n/g, "<br>");
+                preview.style.color = "var(--kakao-text)"; // 카톡 전용 색상으로 고정!
+            }
+        }
+
+        function moveSlide(direction) {
+            document.getElementById(`card-${currentSlide}`).classList.remove('active');
+            currentSlide += direction;
+            if (currentSlide > totalSlides) currentSlide = 1;
+            if (currentSlide < 1) currentSlide = totalSlides;
+            document.getElementById(`card-${currentSlide}`).classList.add('active');
+            const indicators = document.querySelectorAll('.indicator');
+            indicators.forEach((ind, idx) => {
+                if (idx === currentSlide - 1) ind.classList.add('active');
+                else ind.classList.remove('active');
+            });
+            syncTextBoxToImage();
+        }
+
+        //  좌측 이미지 영역의 크기에 맞춰 우측 텍스트 상자 높이만 정확히 고정 & 내부 스크롤 보장
+        function syncTextBoxToImage() {
+            requestAnimationFrame(() => {
+                const activeCard = document.querySelector('.content-card.active') || document.querySelector('.content-card');
+                if (activeCard) {
+                    const imgBox = activeCard.querySelector('.img-square');
+                    const textBox = activeCard.querySelector('.text-preview');
+                    if (imgBox && textBox) {
+                        const h = imgBox.offsetHeight;
+                        if (h > 50) {
+                            textBox.style.height = h + 'px';
+                            textBox.style.maxHeight = h + 'px';
+                            textBox.style.overflowY = 'auto';
+                        }
+                    }
+                }
+            });
+        }
+        window.addEventListener('resize', syncTextBoxToImage);
+        if (window.ResizeObserver) {
+            const imgBoxObserver = new ResizeObserver(() => syncTextBoxToImage());
+            document.querySelectorAll('.img-square').forEach(el => imgBoxObserver.observe(el));
+        }
+
+        // =========================================================================
+        //  7. 파이썬 매크로 통신 영역
+        // =========================================================================
+        let payloadData = null;
+        let selectedModalId = null;
+
+   async function executeKakaoMacro(modalId) {
+            selectedModalId = modalId;
+           const selectedCustomers = [];
+            //  [장바구니 마법 6] 파이썬 매크로로 넘길 때도 눈에 보이는 화면이 아닌, 장바구니를 털어서 보냅니다!
+            if (window.currentBaseData) {
+                window.currentBaseData.forEach(cust => {
+                    if (cust.isChecked) {
+                        let rawName = cust.originalName || cust.name || "";
+                        let safeName = rawName.replace(/[^\uAC00-\uD7A3a-zA-Z0-9\s()]/g, '').trim();
+                        let phone = cust.phone || extractCustomerPhone(cust) || (cust.crmData ? extractCustomerPhone(cust.crmData) : "");
+                        selectedCustomers.push({ name: safeName || "고객", phone: phone });
+                    }
+                });
+            }
+            if (selectedCustomers.length === 0) {
+                alert("우측 리스트에서 발송할 고객을 먼저 선택해주세요.");
+                return;
+            }
+
+            let textContent = "";
+            let imageArray = []; 
+            const modal = document.getElementById(modalId);
+
+            if (modalId === 'sendModal') {
+                textContent = modal.querySelector('.edit-textarea').value;
+                const imgElement = modal.querySelector('.kakao-bubble img');
+                if (window.currentContentImage && window.currentContentImage.startsWith('http')) {
+                    imageArray.push(window.currentContentImage);
+                } else if (imgElement && imgElement.src) {
+                    imageArray.push(imgElement.src);
+                }
+            } else if (modalId === 'pcUploadModal') {
+                textContent = modal.querySelector('#pc-text-input').value;
+                const imgElements = modal.querySelectorAll('.pc-multi-preview-img');
+                imgElements.forEach(img => { if (img.src) imageArray.push(img.src); });
+            }
+
+            if (textContent.trim() === "" && imageArray.length === 0) {
+                alert(" 발송할 콘텐츠(이미지 또는 화법)가 없습니다.\n내용을 확인해 주세요.");
+                return;
+            }
+
+            function toAbsoluteUrl(url) {
+                if (!url) return '';
+                if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image')) {
+                    return url;
+                }
+                try {
+                    return new URL(url, window.location.href).href;
+                } catch(e) {
+                    return url;
+                }
+            }
+
+            const absImages = (imageArray || []).map(toAbsoluteUrl);
+            payloadData = { customers: selectedCustomers, text: textContent, images: absImages };
+            
+            // 위라클톡 데스크톱 무인 엔진 (포트 48291 또는 weracle:// 프로토콜)으로 실시간 빔 전송!
+            const targetPayload = {
+                title: '타겟관리 추천 발송',
+                company: '위라클',
+                script: textContent,
+                imageUrl: absImages.length > 0 ? absImages[0] : (window.currentContentImage || ''),
+                allImages: absImages.length > 0 ? absImages : (window.currentContentImage ? [window.currentContentImage] : []),
+                customers: selectedCustomers,
+                targets: selectedCustomers
+            };
+
+            let sent = false;
+            try {
+                const bridgeRes = await fetch('http://127.0.0.1:48291/api/bridge_content', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(targetPayload)
+                });
+                if (bridgeRes.ok) sent = true;
+            } catch (bridgeErr) {
+                console.warn("Direct HTTP bridge fetch failed, falling back to weracle:// protocol...", bridgeErr);
+            }
+
+            if (!sent) {
+                try {
+                    const safePayload = { ...targetPayload };
+                    if (safePayload.imageUrl && safePayload.imageUrl.startsWith('data:image')) {
+                        if (window.currentContentImage && window.currentContentImage.startsWith('http')) {
+                            safePayload.imageUrl = window.currentContentImage;
+                            safePayload.allImages = [window.currentContentImage];
+                        } else {
+                            safePayload.imageUrl = '';
+                            safePayload.allImages = [];
+                        }
+                    }
+                    const uri = 'weracle://bridge?data=' + encodeURIComponent(JSON.stringify(safePayload));
+                    const ifr = document.createElement('iframe');
+                    ifr.style.display = 'none';
+                    ifr.src = uri;
+                    document.body.appendChild(ifr);
+                    setTimeout(() => ifr.remove(), 2500);
+                    sent = true;
+                } catch (protErr) {
+                    console.error('Protocol fallback error:', protErr);
+                }
+            }
+
+            if (modalId === 'sendModal') closeModal();
+            else closePcUploadModal();
+            alert(` [연동 완료] 위라클 프로그램으로 ${selectedCustomers.length}명의 고객 명단과 발송 콘텐츠(이미지/문구)가 즉시 전송되었습니다!\n\n위라클 프로그램 창에서 [카카오톡 전송 시작 ]을 누르시면 안전하게 무인 발송됩니다.`);
+            return;
+
+            document.getElementById('kakaoSetupModal').style.display = 'block';
+        }
+
+        async function startRealMacro() {
+            document.getElementById('kakaoSetupModal').style.display = 'none';
+            document.getElementById('kakaoProgressModal').style.display = 'block';
+            
+            const progressBar = document.getElementById('kakaoProgressBar');
+            const progressText = document.getElementById('kakaoProgressText');
+            
+            progressBar.style.width = '0%';
+            progressText.innerText = `발송 명령을 위라클 엔진으로 전송 중입니다... ⏳`;
+
+            try {
+                const response = await fetch('http://127.0.0.1:48291/api/bridge_content', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: '타겟관리 추천 발송',
+                        company: '위라클',
+                        script: payloadData.text,
+                        imageUrl: payloadData.images.length > 0 ? payloadData.images[0] : '',
+                        allImages: payloadData.images,
+                        customers: payloadData.customers,
+                        targets: payloadData.customers
+                    })
+                });
+
+                if (response.ok) {
+                    progressBar.style.width = '100%';
+                    progressText.innerText = " 위라클톡 프로그램으로 즉시 전송되었습니다!";
+                    progressText.style.color = "#113f67";
+                    
+                    setTimeout(() => {
+                        document.getElementById('kakaoProgressModal').style.display = 'none';
+                        if (selectedModalId === 'sendModal') closeModal();
+                        else closePcUploadModal();
+                    }, 1500);
+                } else {
+                    document.getElementById('kakaoProgressModal').style.display = 'none';
+                    alert(" 위라클톡 프로그램이 실행 중인지 확인해 주세요.");
+                }
+            } catch (error) {
+                document.getElementById('kakaoProgressModal').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

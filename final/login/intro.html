@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 - 위라클 랩</title>
+  
+  <!-- Pretendard 폰트 및 Outfit 폰트 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --navy-dark: #0f172a;
+      --text-main: #1e293b;
+      --text-sub: #64748b;
+      --border: #e2e8f0;
+      --bg-page: #f8fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 50px 24px 40px;
+    }
+
+    /* 심플하고 단정한 중앙 로그인 카드 */
+    .login-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 440px;
+      padding: 44px 36px 36px;
+      border-radius: 24px;
+      box-shadow: 0 10px 35px -5px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.02);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      text-align: center;
+      position: relative;
+    }
+
+    /* 브랜드 로고 (홈으로 이동 가능) */
+    .brand-logo {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--navy-dark);
+      letter-spacing: -0.8px;
+      margin-bottom: 22px;
+      display: inline-block;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 150ms ease;
+    }
+    .brand-logo:hover {
+      opacity: 0.85;
+    }
+    .brand-logo span {
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    /* 환영 멘트 및 기본 안내 */
+    .login-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--navy-dark);
+      letter-spacing: -0.4px;
+      margin-bottom: 8px;
+    }
+    .login-ment {
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    /* 구글 로그인 버튼 */
+    .btn-google-login {
+      width: 100%;
+      height: 52px;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+      cursor: pointer;
+      transition: all 200ms ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+    .btn-google-login:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    }
+    .btn-google-login:active {
+      transform: translateY(0);
+    }
+    .google-icon {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    /* 연동 안내 팁 배너 */
+    .login-tip {
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: #f0f9ff;
+      border-radius: 12px;
+      font-size: 12.5px;
+      color: #0369a1;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    /* 홈으로 가기 버튼 */
+    .btn-home-back {
+      margin-top: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 20px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      color: #475569;
+      font-size: 13.5px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 150ms ease;
+    }
+    .btn-home-back:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    /* 푸터 약관 링크 */
+    .login-footer {
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px solid #f1f5f9;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .footer-links {
+      margin-top: 6px;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+    }
+    .footer-links a {
+      color: #64748b;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .footer-links a:hover {
+      color: #0284c7;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <a href="javascript:void(0)" class="brand-logo" onclick="goHome()" title="홈 화면으로 이동">
+      WERACLE <span>LAB</span>
+    </a>
+    
+    <h1 class="login-title">위라클 로그인</h1>
+    <p class="login-ment">
+      위라클랩에 오신 것을 환영합니다.<br>
+      구글 계정으로 간편하고 안전하게 시작하세요.
+    </p>
+
+    <!-- 원클릭 구글 로그인 버튼 -->
+    <button type="button" class="btn-google-login" onclick="triggerGoogleLogin()">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"/>
+        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.28v3.15C3.33 21.45 7.37 24 12 24z"/>
+        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.28C.46 8.2 0 10.04 0 12s.46 3.8 1.28 5.42l4-3.15z"/>
+        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.33 2.55 1.28 6.58l4 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+      </svg>
+      <span>Google 계정으로 로그인</span>
+    </button>
+
+    <div class="login-tip">
+      고객 일정 및 캘린더 자동 연동을 위해 구글 계정으로 로그인합니다.
+    </div>
+
+        <div style="margin-top: 14px;">
+      <button type="button" onclick="triggerPreviewLogin()" style="background: none; border: none; font-size: 13px; color: #0284c7; text-decoration: underline; cursor: pointer; padding: 4px 8px;">
+        로그인 후 화면(마이페이지 등) 미리보기
+      </button>
+    </div>
+
+    <div>
+      <a href="javascript:void(0)" class="btn-home-back" onclick="goHome()">
+        <span>홈으로 돌아가기</span>
+      </a>
+    </div>
+
+    <div class="login-footer">
+      <span>로그인 시 위라클의 이용약관 및 개인정보처리방침에 동의하게 됩니다.</span>
+      <div class="footer-links">
+        <a href="terms.html" target="_blank">이용약관</a>
+        <a href="privacy.html" target="_blank">개인정보처리방침</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function triggerGoogleLogin() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'AUTH_SOCIAL', provider: 'google' }, '*');
+      } else if (typeof window.handleSocial === 'function') {
+        window.handleSocial('google');
+      } else {
+        alert('구글 로그인 모듈을 연결하고 있습니다.');
+      }
+    }
+
+        function triggerPreviewLogin() {
+      if (window.parent && typeof window.parent.togglePreviewLogin === 'function') {
+        window.parent.togglePreviewLogin();
+      } else {
+        localStorage.setItem('weracle_preview_login', 'true');
+        window.location.href = '../index.html';
+      }
+    }
+
+    function goHome() {
+      if (window.parent && typeof window.parent.showDashboardHome === 'function') {
+        window.parent.showDashboardHome();
+      } else {
+        window.location.href = '../index.html';
+      }
+    }
+  </script>
+</body>
+</html>

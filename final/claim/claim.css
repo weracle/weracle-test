@@ -1,0 +1,1146 @@
+/* 기본 리셋 및 폰트 설정 (토스/카카오 스타일) */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background-color: #f2f4f6; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; color: #191f28; }
+  
+  .weracle-wrapper { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+  
+  .claim-app-container { 
+    width: 100%; max-width: 480px; 
+    height: 650px; 
+    background-color: #ffffff; 
+    border-radius: 24px; 
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08); 
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  @media (max-width: 500px) { 
+    .weracle-wrapper { padding: 0; align-items: flex-start; background-color: #ffffff; } 
+    .claim-app-container { 
+      box-shadow: none; 
+      border-radius: 0; 
+      height: 100vh; 
+      height: 100dvh; 
+      min-height: 100vh; 
+      min-height: 100dvh;
+      max-width: 100%; 
+    } 
+    .step-title, .slide-title { font-size: 18px !important; margin-bottom: 20px !important; }
+    .form-control { padding: 14px 16px !important; font-size: 15px !important; }
+    select.form-control { min-height: 50px; } 
+    .radio-group label { padding: 14px 16px !important; font-size: 15px !important; }
+    .radio-group input { width: 20px !important; height: 20px !important; } 
+    .content-area { padding: 20px 20px 20px 20px !important; }
+  }
+  
+  .app-header { display: flex; align-items: center; padding: 16px 20px; background: #fff; z-index: 10; }
+  .back-btn { font-size: 15px; color: #8b95a1; cursor: pointer; font-weight: 600; padding-right: 15px; border: none; background: none; }
+  .progress-wrap { flex: 1; height: 4px; background: #f2f4f6; border-radius: 4px; overflow: hidden; }
+  .progress-bar { height: 100%; background: #0284c7; width: 0%; transition: 0.3s ease; }
+ 
+  .content-area { flex: 1; padding: 24px 24px 24px 24px; overflow-y: auto; }
+  
+  .claim-step, .app-slide { display: none; animation: slideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .claim-step.active, .app-slide.active { display: block; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  
+  .step-title, .slide-title { font-size: 20px; font-weight: 700; color: #191f28; margin-bottom: 24px; line-height: 1.4; word-break: keep-all; }
+  .step-desc { font-size: 14px; color: #8b95a1; margin-top: -16px; margin-bottom: 24px; line-height: 1.5; font-weight: 500; }
+  
+  .form-control { 
+    width: 100%; max-width: 100%; 
+    padding: 16px 18px; 
+    background-color: #ffffff; 
+    border: 2px solid #d1d6db; 
+    border-radius: 12px; 
+    font-size: 16px; font-weight: 600; color: #191f28;
+    outline: none; transition: all 0.2s ease; 
+  }
+  .form-control::placeholder { color: #a3aab3; font-weight: 500; }
+  .form-control:focus { background-color: #ffffff; border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+ 
+  select.form-control {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b95a1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 20px;
+    padding-right: 46px !important; 
+    cursor: pointer;
+    color: #191f28 !important; 
+    opacity: 1 !important; 
+    min-height: 56px; 
+    line-height: normal; 
+  }
+  select.form-control:focus { background-color: #ffffff; border-color: #0284c7; }
+  
+  .radio-group { display: flex; flex-direction: column; gap: 8px; }
+  .radio-group label { 
+    display: flex; align-items: center; 
+    background: #ffffff; border: 2px solid #d1d6db; 
+    padding: 14px 16px; border-radius: 12px; 
+    font-size: 14px; font-weight: 600; color: #4e5968; 
+    cursor: pointer; transition: 0.2s; 
+  }
+  .radio-group input { width: 18px; height: 18px; margin-right: 12px; accent-color: #0284c7; flex-shrink: 0; }
+  .radio-group label:has(input:checked) { background-color: #f0f9ff; border-color: #0284c7; color: #0284c7; }
+ 
+  .sub-form-group { margin-bottom: 20px; }
+  .sub-form-group label.main-label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #0f172a; }
+  .sub-form-group label.sub-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #4e5968; }
+  
+  /* 모던 서명 패드 컨테이너 */
+  .signature-box-wrap {
+    position: relative;
+    width: 100%;
+    margin-top: 8px;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  }
+  .signature-box-wrap:focus-within,
+  .signature-box-wrap.is-signing {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+  }
+  .signature-box-wrap.has-signed {
+    border-color: #94a3b8;
+  }
+  
+  .signature-pad {
+    width: 100%;
+    height: 140px;
+    display: block;
+    background: transparent;
+    cursor: crosshair;
+    touch-action: none;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .sig-placeholder-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    pointer-events: none;
+    user-select: none;
+    transition: opacity 0.2s ease;
+    color: #94a3b8;
+    font-size: 13.5px;
+    font-weight: 600;
+    z-index: 1;
+    white-space: nowrap;
+  }
+  .sig-placeholder-hint.signed {
+    opacity: 0;
+  }
+  
+  .sig-guide-line {
+    position: absolute;
+    bottom: 44px;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+    border-bottom: 1px dashed #e2e8f0;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .sig-box-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    position: relative;
+    z-index: 3;
+  }
+  
+  .sig-status-tag {
+    font-size: 12px;
+    font-weight: 700;
+    color: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s;
+  }
+  .sig-status-tag.signed {
+    color: #0284c7;
+    font-weight: 800;
+  }
+  
+  .sig-btn-clear {
+    background: #ffffff;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .sig-btn-clear:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #94a3b8;
+  }
+  
+  .sig-clear-btn { display: none !important; }
+  
+  .file-drop-area { border: 2px dashed #d1d6db; border-radius: 14px; padding: 30px 20px; text-align: center; background-color: #ffffff; color: #4e5968; font-weight: 600; font-size: 15px; cursor: pointer; transition: 0.2s; }
+  .file-drop-area:hover { border-color: #0284c7; background-color: #f0f9ff; color: #0284c7; }
+  
+  .bottom-nav-wrap { width: 100%; padding: 16px 20px; background-color: #ffffff; border-top: 1px solid #f2f4f6; z-index: 10; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+  .btn-prev {
+    flex: 1; max-width: 120px; padding: 15px 12px;
+    background: #f1f5f9; color: #475569;
+    border: 1.5px solid #cbd5e1; border-radius: 12px;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: 0.2s; text-align: center;
+  }
+  .btn-prev:hover { background: #e2e8f0; color: #1e293b; border-color: #94a3b8; }
+  .bottom-nav-wrap .btn-primary { 
+    flex: 2; width: auto; padding: 15px; 
+    background: #0284c7; color: #fff; 
+    border: none; border-radius: 12px; 
+    font-size: 15px; font-weight: 700; 
+    cursor: pointer; transition: 0.2s; box-shadow: 0 4px 16px rgba(2, 132, 199, 0.25);
+  }
+  .bottom-nav-wrap .btn-primary:hover { background: #0369a1; }
+  .bottom-nav-wrap .btn-primary:active { transform: scale(0.98); }
+  
+  .hidden { display: none !important; }
+
+
+      /* =========================================
+         [ Weracle Partners : Signature Sky Blue Theme ] 
+         ========================================= */
+      :root {
+        --primary: #0284c7 !important;
+        --primary-light: #e0f2fe !important;
+        --primary-hover: #0369a1 !important;
+        --bg-color: #f8fafc !important;
+        --card-bg: #ffffff !important;
+        --text-main: #191f28 !important;
+        --text-sub: #8b95a1 !important;
+        --border: #f1f5f9 !important;
+        --radius: 20px !important;
+      }
+
+      body, .dashboard-layout, .wm-content-area, .weracle-crm-container, .wm-container, .insight-layout, .main-layout {
+        background-color: var(--bg-color) !important;
+        color: var(--text-main) !important;
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      }
+      
+      /* Global Layout & Main Containers */
+      .layout-container, .app-container, .main-content {
+        background-color: var(--bg-color) !important;
+      }
+      .sidebar {
+        background-color: #ffffff !important;
+        border-right: 1px solid var(--border) !important;
+      }
+
+      /* Header & Tabs */
+      .vlab-header-bg, .top-header, .app-header {
+        background: transparent !important;
+        padding: 20px 40px 10px 40px !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      .vlab-main-title, .header-title {
+        font-size: 26px !important;
+        font-weight: 900 !important;
+        letter-spacing: -0.5px !important;
+        color: var(--text-main) !important;
+      }
+      .comm-tabs-container {
+        background: transparent !important;
+        border: none !important;
+      }
+      .comm-tabs {
+        display: inline-flex !important;
+        gap: 8px !important;
+        background: #ffffff !important;
+        padding: 6px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
+        border: 1px solid var(--border) !important;
+      }
+      .comm-tab-btn {
+        padding: 12px 20px !important;
+        border: none !important;
+        background: transparent !important;
+        border-radius: 12px !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: var(--text-sub) !important;
+        transition: all 0.2s ease !important;
+      }
+      .comm-tab-btn::after { display: none !important; }
+      .comm-tab-btn:hover {
+        background: #f1f5f9 !important;
+        color: var(--text-main) !important;
+      }
+      .comm-tab-btn.active {
+        background: var(--primary) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2) !important;
+      }
+
+      /* Cards */
+      .board-card, .ranking-box, .tab-content > div[style*="background: #ffffff"], .card, .insight-card, .crm-card, .dashboard-card {
+        background: var(--card-bg) !important;
+        border-radius: var(--radius) !important;
+        padding: 24px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important;
+        border: 1px solid var(--border) !important;
+        transition: transform 0.2s !important;
+      }
+      
+      /* Titles */
+      .highlight-title, .card-title, .section-title {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        color: var(--text-main) !important;
+        letter-spacing: -0.3px !important;
+        margin-bottom: 20px !important;
+      }
+      .highlight-title::before { content: none !important; }
+
+      /* Buttons */
+      .sb-btn, .btn-primary, .btn-secondary, button {
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        padding: 12px 18px !important;
+        transition: all 0.2s ease !important;
+        border: none !important;
+      }
+      .sb-btn-primary, .btn-primary {
+        background: var(--primary) !important;
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2) !important;
+      }
+      .sb-btn-primary:hover, .btn-primary:hover { transform: translateY(-1px) !important; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3) !important; }
+      .sb-btn-secondary, .btn-secondary {
+        background: #f8fafc !important;
+        color: var(--text-main) !important;
+        border: 1px solid #e2e8f0 !important;
+      }
+      .sb-btn-secondary:hover, .btn-secondary:hover { background: #f1f5f9 !important; }
+
+      /* Inputs */
+      .sb-input, input[type="text"], input[type="password"], input[type="email"], textarea {
+        border-radius: 12px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #f9fafb !important;
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+        color: var(--text-main) !important;
+        outline: none !important;
+        transition: 0.2s !important;
+      }
+      .sb-input:focus, input:focus, textarea:focus {
+        border-color: var(--primary) !important;
+        background: #ffffff !important;
+      }
+
+      /* Notice Banner */
+      .soft-flashy-notice {
+        background: linear-gradient(135deg, #0284c7, #38bdf8) !important;
+        border-radius: 20px !important;
+        padding: 24px 30px !important;
+        border: none !important;
+        box-shadow: 0 10px 20px rgba(2, 132, 199, 0.2) !important;
+        animation: none !important;
+      }
+      .soft-flashy-text {
+        color: white !important;
+        font-size: 24px !important;
+        font-weight: 800 !important;
+        animation: none !important;
+        text-shadow: none !important;
+      }
+      .soft-flashy-badge {
+        background: rgba(255,255,255,0.2) !important;
+        color: white !important;
+        backdrop-filter: blur(4px) !important;
+        border: none !important;
+        box-shadow: none !important;
+        animation: none !important;
+      }
+    
+
+    @media (max-width: 768px) {
+        /* 사용자 요청: 제목 밑에 네모(그리드) 형태로 깔끔하게 메뉴 정리 */
+        .gnb-menu, 
+        .category-nav, 
+        .vlab-tab-container, 
+        .comm-tabs, 
+        .tab-buttons, 
+        .sub-nav,
+        .crm-filter-group {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+            width: 100% !important;
+            background: #ffffff !important;
+            padding: 12px !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+            height: auto !important;
+            margin-top: 15px !important;
+            margin-bottom: 15px !important;
+        }
+        
+        /* 껍데기(li 등)는 스타일을 가지지 않음 */
+        .gnb-item {
+            display: block !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            background: transparent !important;
+        }
+        
+        /* 실제 클릭되는 버튼(a 태그)을 디자인 */
+        .gnb-link, 
+        .category-nav a, 
+        .vlab-tab-link, 
+        .comm-tab-btn, 
+        .tab-btn,
+        .sub-nav-item {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            width: 100% !important;
+            height: 100% !important;
+            padding: 12px 6px !important;
+            box-sizing: border-box !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            background: #f8fafc !important;
+            color: #64748b !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            margin: 0 !important;
+            text-decoration: none !important;
+            white-space: normal !important;
+            word-break: keep-all !important;
+            line-height: 1.3 !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        /* 활성화된 탭 디자인 */
+        .gnb-link.active,
+        .category-nav a.active,
+        .vlab-tab-link.active,
+        .comm-tab-btn.active,
+        .tab-btn.active,
+        .sub-nav-item.active {
+            background: #0284c7 !important;
+            color: #ffffff !important;
+            border-color: #0284c7 !important;
+            font-weight: 800 !important;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2) !important;
+        }
+    }
+    
+
+    @media (max-width: 768px) {
+        /* 사용자 요청: 메뉴들이 오른쪽에 박혀 찌그러지지 않고 제목 밑으로 깔끔하게 떨어지도록 (상하 분리) */
+        .gnb-container {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            padding: 10px 20px !important;
+            height: auto !important;
+        }
+        .gnb-logo {
+            width: 100% !important;
+            margin-bottom: 5px !important;
+        }
+        
+        /* CRM 페이지의 타이틀과 탭 상하 분리 */
+        .vlab-main-title {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 15px !important;
+        }
+        
+        /* vlab-header-bg 안의 최상단 첫번째 div(타이틀+액션버튼)만 상하 분리, 필터 등은 건드리지 않음 */
+        .vlab-header-bg > div:first-child {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 15px !important;
+        }
+        
+        /* 메뉴 박스(그리드) 여백 확보: 본문과 겹치지 않게 공간 분리 */
+        .gnb-menu, .vlab-tab-container, .comm-tabs, .tab-buttons, .sub-nav, .top-crm-tabs {
+            width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding: 12px 10px !important; 
+            margin-bottom: 25px !important; /* 사용자 요청: 밑에 본문이랑 여백 띄우기 */
+        }
+    }
+
+/* =========================================
+   [ 청구서 PDF 미리보기 및 전송 확인 모달 ]
+   ========================================= */
+.pdf-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+.pdf-modal-backdrop.active {
+  display: flex;
+}
+.pdf-modal-container {
+  width: 100%;
+  max-width: 680px;
+  height: 92vh;
+  max-height: 860px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modalScaleUp {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.pdf-modal-header {
+  padding: 16px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pdf-modal-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pdf-modal-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #191f28;
+  margin: 0;
+}
+.pdf-modal-subtitle {
+  font-size: 13px;
+  color: #0284c7;
+  font-weight: 600;
+}
+.pdf-modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #8b95a1;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+.pdf-modal-body {
+  flex: 1;
+  background: #f1f5f9;
+  position: relative;
+  overflow: hidden;
+}
+.pdf-modal-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+.pdf-modal-footer {
+  padding: 14px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 10px;
+}
+.pdf-btn-modify {
+  flex: 1;
+  padding: 14px 0;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pdf-btn-save {
+  flex: 1.2;
+  padding: 14px 0;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pdf-btn-send {
+  flex: 2;
+  padding: 14px 0;
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+  transition: all 0.15s ease;
+}
+.pdf-btn-send:hover {
+  background: #0369a1;
+}
+.pdf-btn-send:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+@media (max-width: 500px) {
+  .pdf-modal-backdrop { padding: 0; }
+  .pdf-modal-container { height: 100vh; height: 100dvh; max-height: none; border-radius: 0; }
+  .pdf-modal-footer { flex-direction: column; gap: 8px; padding: 12px 16px; }
+  .pdf-btn-modify, .pdf-btn-save, .pdf-btn-send { width: 100%; padding: 12px 0; }
+}
+
+/* ========================================================
+   CRM 고객 불러오기 모달 및 트리거 버튼 스타일
+   ======================================================== */
+.btn-picker-trigger {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0369a1;
+  background-color: #e0f2fe;
+  border: 1px solid #bae6fd;
+  border-radius: 20px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: normal;
+}
+.btn-picker-trigger:hover {
+  background-color: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+.crm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+.crm-modal-backdrop.show {
+  display: flex;
+}
+
+.crm-modal-container {
+  background: #ffffff;
+  width: 100%;
+  max-width: 480px;
+  height: 600px;
+  max-height: 90vh;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.22);
+}
+
+.crm-modal-header {
+  padding: 16px 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.crm-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+.crm-modal-sub {
+  margin: 4px 0 0 0;
+  font-size: 12.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+.crm-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.crm-modal-step {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+.crm-modal-step.active {
+  display: flex;
+}
+
+.crm-search-wrap {
+  padding: 14px 18px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+}
+.crm-search-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.crm-search-input:focus {
+  border-color: #0284c7;
+}
+
+.crm-list-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 18px;
+  background: #f8fafc;
+}
+
+.crm-customer-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.crm-customer-card:hover {
+  border-color: #0284c7;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.12);
+  transform: translateY(-1px);
+}
+.crm-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.crm-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+.crm-card-badge {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.crm-card-info-row {
+  display: flex;
+  gap: 12px;
+  font-size: 12.5px;
+  color: #475569;
+  margin-bottom: 6px;
+}
+.crm-card-address {
+  font-size: 12px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-empty-state {
+  text-align: center;
+  padding: 40px 16px;
+}
+.crm-empty-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #475569;
+  margin: 0 0 6px 0;
+}
+.crm-empty-desc {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.crm-preview-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  background: #ffffff;
+}
+.crm-preview-banner {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+.crm-preview-group {
+  margin-bottom: 12px;
+}
+.crm-preview-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 4px;
+}
+.crm-preview-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  outline: none;
+}
+.crm-preview-input:focus {
+  border-color: #0284c7;
+}
+
+.crm-preview-account-box {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 14px;
+}
+.crm-account-check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.crm-preview-row-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.crm-preview-footer {
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 10px;
+}
+.crm-btn-back {
+  flex: 1;
+  padding: 12px 0;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.crm-btn-apply {
+  flex: 2;
+  padding: 12px 0;
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+.crm-btn-apply:hover {
+  background: #0369a1;
+}
+
+@media (max-width: 500px) {
+  .crm-modal-container {
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+  }
+}
+
+/* ========================================================
+   모바일 전용 보호 (가로 649px 이하): 코비 스텝퍼 숨김 및 기존 1열 유지
+   ======================================================== */
+@media (max-width: 649px) {
+  .covy-style-stepper {
+    display: none !important;
+  }
+}
+
+/* ========================================================
+   PC 데스크톱 전용 반응형 레이아웃 (가로 650px 이상)
+   코비 스타일 980px 와이드 카드 & 수평 스텝퍼 바
+   내용 및 로직: 기존 우리 프로젝트 100% 원본 유지
+   ======================================================== */
+@media (min-width: 650px) {
+  .weracle-wrapper {
+    padding: 36px 20px;
+    background-color: #f3f6fa;
+  }
+  
+  .claim-app-container {
+    max-width: 980px;
+    height: auto;
+    min-height: 720px;
+    max-height: 90vh;
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(17, 63, 103, 0.08);
+    border: 1px solid #e5e8eb;
+    background-color: #ffffff;
+  }
+
+  .content-area {
+    padding: 30px 40px;
+  }
+
+  /* 코비 타입C 언더라인 + 2번 미니 뱃지 라벨 스타일 */
+  .covy-style-stepper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 12px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 16px 20px 14px;
+    margin-bottom: 26px;
+    box-shadow: 0 4px 16px rgba(17, 63, 103, 0.04);
+  }
+
+  .stepper-tab-c {
+    cursor: pointer;
+    padding: 8px 12px 10px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .stepper-tab-c:hover {
+    background: #f8fafc;
+  }
+
+  .stepper-tab-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stepper-mini-badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #8b95a1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 800;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+  }
+
+  .stepper-tab-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #94a3b8;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+
+  .stepper-tab-line {
+    width: 100%;
+    height: 3.5px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    transition: all 0.25s ease;
+  }
+
+  /* 선택 아닌 탭 마우스 호버 상태 */
+  .stepper-tab-c:hover:not(.active) .stepper-mini-badge {
+    background: #e2e8f0;
+    color: #475569;
+    border-color: #cbd5e1;
+  }
+  .stepper-tab-c:hover:not(.active) .stepper-tab-label {
+    color: #475569;
+  }
+  .stepper-tab-c:hover:not(.active) .stepper-tab-line {
+    background: #cbd5e1;
+  }
+
+  /* 선택된 활성 상태 (Active: 우리 시그니처 색상 #0284c7) */
+  .stepper-tab-c.active .stepper-mini-badge {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+  }
+  .stepper-tab-c.active .stepper-tab-label {
+    color: #0284c7;
+    font-weight: 800;
+  }
+  .stepper-tab-c.active .stepper-tab-line {
+    background: #0284c7;
+    height: 4px;
+  }
+
+  /* 슬라이드 2열 그리드 배치 */
+  .app-slide.active {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 24px;
+    align-items: start;
+  }
+
+  .slide-title {
+    grid-column: 1 / -1;
+    font-size: 22px;
+    font-weight: 800;
+    color: #0284c7;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #eef2f6;
+    margin-bottom: 16px;
+  }
+
+  /* 개별 필드 여백 보정 */
+  .sub-form-group.field-wrapper {
+    margin-bottom: 0;
+  }
+
+  .form-control {
+    padding: 14px 18px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  /* 2열 전체 폭을 차지해야 하는 와이드 필드들 */
+  #wrapper_insAddress,
+  #wrapper_contAddress,
+  #wrapper_beneAddress,
+  #wrapper_docAddress,
+  #wrapper_accDetails,
+  #wrapper_diffInsuredCont,
+  #wrapper_sameAsCont,
+  #wrapper_sameAsBene,
+  #wrapper_autoTransfer,
+  #wrapper_diffInsured,
+  #wrapper_sigInsured,
+  #wrapper_sigContractor,
+  #wrapper_sigBeneficiary,
+  #wrapper_sigClaimant,
+  #wrapper_sigGuide,
+  #wrapper_sigBeneficiary_opt,
+  #wrapper_idVerification,
+  #wrapper_idVerification_Samsung,
+  #wrapper_idVerification_Hana,
+  #wrapper_idVerification_Chubb,
+  #wrapper_idVerification_IM,
+  #wrapper_idVerification_ABL,
+  #wrapper_idVerification_Shinhan,
+  #wrapper_idVerification_Lina,
+  #wrapper_idVerification_Mirae,
+  #wrapper_idVerification_Dongyang,
+  #wrapper_idVerification_DB,
+  #wrapper_idVerification_KDB,
+  #wrapper_idVerification_MetLife,
+  #wrapper_idVerification_Nonghyup,
+  .file-drop-area,
+  .file-list {
+    grid-column: 1 / -1;
+  }
+
+  /* 2단계 가입 보험사 선택 영역 중앙 최적화 */
+  #step2 {
+    max-width: 560px;
+    margin: 20px auto 0;
+    padding: 24px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+  }
+
+  .bottom-nav-wrap {
+    padding: 18px 40px;
+    border-top: 1px solid #e5e8eb;
+  }
+
+  .btn-primary {
+    font-size: 16px;
+    font-weight: 800;
+    border-radius: 12px;
+  }
+}
+
+
+

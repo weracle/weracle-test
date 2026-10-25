@@ -1,0 +1,195 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Weracle Insight - Compare</title>
+        <style>
+      @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+      :root {
+        --primary: #0284c7;
+        --primary-light: #e0f2fe; /* 아주 옅은 배경용 */
+        --bg-color: #f4f5f8;
+        --border: #e2e8f0;
+      }
+      body { margin: 0; padding: 0; background-color: var(--bg-color); font-family: 'Pretendard', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+      
+      .top-nav-container {
+          background: #ffffff;
+          border-bottom: 1px solid var(--border);
+          padding: 24px 32px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+          z-index: 10;
+      }
+      
+      /* [1단계] 대분류 메가 탭 (시그니처 컬러 밑줄) */
+      .mega-tabs {
+          display: flex;
+          gap: 32px;
+          border-bottom: 2px solid #f1f5f9;
+      }
+      .mega-tab {
+          font-size: 20px;
+          font-weight: 800;
+          color: #94a3b8;
+          padding-bottom: 12px;
+          cursor: pointer;
+          position: relative;
+          transition: color 0.2s;
+      }
+      .mega-tab:hover { color: #64748b; }
+      .mega-tab.active { color: var(--primary); }
+      .mega-tab.active::after {
+          content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
+          height: 3px; background: var(--primary); border-radius: 3px 3px 0 0;
+      }
+      
+      /* [2단계] 소분류 캡슐 버튼 (시그니처 컬러 배경) */
+      .sub-cats {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+      }
+      .sub-cat-btn {
+          padding: 8px 18px;
+          border-radius: 20px;
+          font-size: 15px;
+          font-weight: 700;
+          background: #f8fafc;
+          color: #64748b;
+          border: 1px solid var(--border);
+          cursor: pointer;
+          transition: all 0.2s;
+      }
+      .sub-cat-btn:hover { background: #f1f5f9; color: var(--primary); }
+      .sub-cat-btn.active {
+          background: var(--primary);
+          color: #ffffff;
+          border-color: var(--primary);
+          box-shadow: 0 4px 10px rgba(17, 63, 103, 0.2);
+      }
+      
+      /* [3단계] 최종 항목 사각 라운드 버튼 (시그니처 컬러 테두리 & 텍스트) */
+      .items-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          padding-top: 12px;
+          border-top: 1px dashed var(--border);
+      }
+      .item-link {
+          padding: 6px 14px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          background: #ffffff;
+          color: #64748b;
+          border: 1px solid var(--border);
+          cursor: pointer;
+          transition: all 0.2s;
+      }
+      .item-link:hover { background: #f8fafc; border-color: #94a3b8; }
+      .item-link.active {
+          background: var(--primary-light);
+          color: var(--primary);
+          border-color: var(--primary);
+          box-shadow: 0 0 0 1px var(--primary);
+      }
+      
+      .iframe-container { flex: 1; background: #fff; }
+      iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+    <div class="top-nav-container">
+        <div class="mega-tabs" id="megaTabs"></div>
+        <div class="sub-cats" id="subCats"></div>
+        <div class="items-container" id="itemsContainer"></div>
+    </div>
+    <div class="iframe-container"><iframe id="insightFrame"></iframe></div>
+    <script>
+const menuData = [
+  { category: '3대진단비', items: [{ name: '바로보장 암진단비(손보)', url: 'https://weraclelab.imweb.me/46?sheet=바로보장암진단비_손보' }, { name: '바로보장 2암 진단비(손보)', url: 'https://weraclelab.imweb.me/46?sheet=바로보장2암진단비_손보' }, { name: '나눠받는 암진단비(손보)', url: 'https://weraclelab.imweb.me/46?sheet=나눠받는암진단비_손보' }, { name: '심혈관진단비(건강/생보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비건강생보' }, { name: '심혈관진단비(간편/생보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비간편생보' }, { name: '심혈관진단비(건강/손보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비건강손보' }, { name: '심혈관진단비(간편/손보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비간편손보' }] },
+  { category: '3대 치료비/생활비', items: [{ name: '중입자치료비 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=중입자치료비_손보' }, { name: '암주요치료비 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=암주요치료비_손보' }, { name: '암주요치료비 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=암주요치료비_생보' }, { name: '암특급주요치료비 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=암특급주요치료비_손보' }, { name: '암특급주요치료비 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=암특급주요치료비_생보' }, { name: '주요치료 생활비', url: 'https://weraclelab.imweb.me/46?sheet=주요치료생활비' }, { name: '2대주요치료비[순환계포함] (손보)', url: 'https://weraclelab.imweb.me/46?sheet=2대주요치료비순환계포함_손보' }, { name: '2대주요치료비[순환계포함] (생보)', url: 'https://weraclelab.imweb.me/46?sheet=2대주요치료비순환계포함_생보' }] },
+  { category: '수술비', items: [{ name: '인공관절수술등담보 비교', url: 'https://weraclelab.imweb.me/46?sheet=인공관절수술등담보비교' }, { name: '생보/손보 수술비', url: 'https://weraclelab.imweb.me/46?sheet=생보손보수술비' }] },
+  { category: '치아', items: [{ name: '치아보험 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=치아보험_생보' }, { name: '치아보험 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=치아보험_손보' }] },
+  { category: '치매간병', items: [{ name: '장기요양보장 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=장기요양보장_생보' }, { name: '장기요양보장 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=장기요양보장_손보' }, { name: '표적치매약물치료비(레켐비)', url: 'https://weraclelab.imweb.me/46?sheet=표적치매약물치료비레켐비' }] },
+  { category: '종신', items: [{ name: '단기납종신보험 (5/7/10년납)', url: 'https://weraclelab.imweb.me/46?sheet=단기납종신보험5_7_10년납' }, { name: '단기납달러종신 (3년납)', url: 'https://weraclelab.imweb.me/46?sheet=단기납달러종신3년납' }, { name: '700류종신 (20년납)', url: 'https://weraclelab.imweb.me/46?sheet=700류종신20년납' }, { name: '사망보험금유동화제도', url: 'https://weraclelab.imweb.me/46?sheet=사망보험금유동화제도' }, { name: '공시이율상품 리스트', url: 'https://weraclelab.imweb.me/46?sheet=공시이율상품리스트' }] },
+  { category: '연금', items: [{ name: '연금', url: 'https://weraclelab.imweb.me/46?sheet=연금' }, { name: '변액연금', url: 'https://weraclelab.imweb.me/46?sheet=변액연금' }] },
+  { category: '운전자', items: [{ name: '영업용자부상비교', url: 'https://weraclelab.imweb.me/46?sheet=영업용자부상비교' }, { name: '3대(영업용개인/택시등)', url: 'https://weraclelab.imweb.me/46?sheet=영업용개인_택시등_3대' }, { name: '운전자자부상', url: 'https://weraclelab.imweb.me/46?sheet=운전자자부상' }, { name: '고연령70세이상 보장금액', url: 'https://weraclelab.imweb.me/46?sheet=고연령70세이상보장금액' }, { name: '3대이륜차운전자', url: 'https://weraclelab.imweb.me/46?sheet=이륜차운전자_3대' }] },
+  { category: '입원일당', items: [{ name: '첫날부터입원일당 5만원', url: 'https://weraclelab.imweb.me/46?sheet=첫날부터입원일당5만원' }] },
+  { category: '간병인', items: [{ name: '간병인건강체생보', url: 'https://weraclelab.imweb.me/46?sheet=간병인건강체생보' }, { name: '간병인유병자생보', url: 'https://weraclelab.imweb.me/46?sheet=간병인유병자생보' }, { name: '간병인건강체손보', url: 'https://weraclelab.imweb.me/46?sheet=간병인건강체손보' }, { name: '간병인유병자손보', url: 'https://weraclelab.imweb.me/46?sheet=간병인유병자손보' }, { name: '간병인8090', url: 'https://weraclelab.imweb.me/46?sheet=간병인8090' }, { name: '어린이간병인 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=어린이간병인_손보' }] },
+  { category: '단독실손', items: [{ name: '단독실손(손보)', url: 'https://weraclelab.imweb.me/46?sheet=단독실손_손보' }] },
+  { category: '종합질병&상해', items: [{ name: '종합상해 및 상해주요치료', url: 'https://weraclelab.imweb.me/46?sheet=종합상해및상해주요치료' }, { name: '질병종합치료비', url: 'https://weraclelab.imweb.me/46?sheet=질병종합치료비' }] },
+  { category: '기타 치료비', items: [{ name: '고고당암진단비치료비', url: 'https://weraclelab.imweb.me/46?sheet=고고당암진단비치료비' }] },
+  { category: '간편보험', items: [{ name: '고당지추가고지간편보험', url: 'https://weraclelab.imweb.me/46?sheet=고당지추가고지간편보험' }] },
+  { category: '태아플랜', items: [{ name: '태아보험비교', url: 'https://weraclelab.imweb.me/46?sheet=태아보험비교' }] },
+  { category: '주택화재', items: [{ name: '주택화재 (급배수누출누수)', url: 'https://weraclelab.imweb.me/46?sheet=주택화재_급배수누출누수' }] },
+  { category: '펫보험', items: [{ name: '펫보험', url: 'https://weraclelab.imweb.me/46?sheet=펫보험' }] },
+  { category: '골프보험', items: [{ name: '골프보험', url: 'https://weraclelab.imweb.me/46?sheet=골프보험' }] },
+  { category: '기타', items: [{ name: '치매진단비', url: 'https://weraclelab.imweb.me/46?sheet=치매진단비' }] }
+];
+        // Grouping logic
+        const groups = [
+            { name: "건강/질병", cats: ["3대진단비", "3대 치료비/생활비", "수술비", "치아", "종합질병&상해", "기타 치료비"] },
+            { name: "생애/간병", cats: ["치매간병", "간병인", "종신", "연금", "태아플랜"] },
+            { name: "실손/간편", cats: ["단독실손", "간편보험", "입원일당"] },
+            { name: "생활/레저", cats: ["운전자", "주택화재", "펫보험", "골프보험", "기타"] }
+        ];
+
+        let currentGroup = groups[0].name;
+        let currentCat = groups[0].cats[0];
+        let currentUrl = menuData.find(c => c.category === currentCat).items[0].url;
+
+        function render() {
+            const tabs = document.getElementById('megaTabs');
+            tabs.innerHTML = '';
+            groups.forEach(g => {
+                const t = document.createElement('div');
+                t.className = "mega-tab " + (g.name === currentGroup ? "active" : "");
+                t.innerText = g.name;
+                t.onclick = () => { 
+                    currentGroup = g.name; 
+                    currentCat = g.cats[0]; 
+                    currentUrl = menuData.find(c => c.category === currentCat).items[0].url; 
+                    render(); 
+                };
+                tabs.appendChild(t);
+            });
+
+            const subCats = document.getElementById('subCats');
+            subCats.innerHTML = '';
+            groups.find(g => g.name === currentGroup).cats.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = "sub-cat-btn " + (c === currentCat ? "active" : "");
+                btn.innerText = c;
+                btn.onclick = () => { 
+                    currentCat = c; 
+                    currentUrl = menuData.find(x => x.category === c).items[0].url; 
+                    render(); 
+                };
+                subCats.appendChild(btn);
+            });
+
+            const items = document.getElementById('itemsContainer');
+            items.innerHTML = '';
+            menuData.find(x => x.category === currentCat).items.forEach(item => {
+                const a = document.createElement('button');
+                a.className = "item-link " + (item.url === currentUrl ? "active" : "");
+                a.innerText = item.name;
+                a.onclick = () => { 
+                    currentUrl = item.url; 
+                    render(); 
+                };
+                items.appendChild(a);
+            });
+
+            const iframe = document.getElementById('insightFrame');
+            if(iframe.src !== currentUrl) iframe.src = currentUrl;
+        }
+        render();
+    </script>
+</body>
+</html>

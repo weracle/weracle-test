@@ -1,0 +1,835 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데일리 뉴스 생성기 (고객용)</title>
+    
+    <!-- 캔버스 드로잉용 폰트 (뉴스 디자인 유지) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+    
+    <!-- UI용 프리텐다드 및 아이콘 (pdf_p 스타일) -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --weracle-navy: #0284c7; 
+            --weracle-cyan: #00e6f6;
+            --weracle-hover: #f0f9ff; 
+            --bg-color: #f8fafc;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+            background-color: var(--bg-color); 
+            color: #333; 
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 24px 20px 40px;
+        }
+
+        .main-wrapper {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            width: 100%;
+            height: 95vh;
+        }
+        
+        .app-container {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 좌측 컨트롤 패널 */
+        .control-panel {
+            flex: 1;
+            max-width: 450px;
+            overflow-y: auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--weracle-navy) 0%, #0369a1 100%);
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        
+        .content {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .section-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--weracle-navy);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: -5px;
+        }
+        
+        .upload-card {
+            border: 2px dashed #dcdde1;
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            background: #fafbfc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: block;
+        }
+        .upload-card:hover {
+            border-color: var(--weracle-cyan);
+            background: var(--weracle-hover);
+        }
+        .upload-card i {
+            font-size: 32px;
+            color: #8b95a1;
+            margin-bottom: 15px;
+            transition: color 0.3s;
+        }
+        .upload-card:hover i {
+            color: var(--weracle-cyan);
+        }
+        .upload-card .desc {
+            font-size: 14px;
+            color: #555;
+            word-break: keep-all;
+            line-height: 1.4;
+        }
+        .upload-card input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; cursor: pointer;
+        }
+        .selected-file {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #27ae60;
+            font-weight: bold;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .theme-options {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .theme-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .theme-btn:hover {
+            transform: scale(1.1);
+        }
+        .theme-btn.active {
+            border-color: var(--weracle-navy);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+        }
+
+        .bg-options {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .bg-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid #cbd5e1;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        }
+        .bg-btn:hover {
+            transform: scale(1.1);
+        }
+        .bg-btn.active {
+            border-color: var(--weracle-navy);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+        }
+
+        /* 우측 미리보기 패널 */
+        .preview-panel {
+            flex: 2;
+            padding: 30px;
+            align-items: center;
+        }
+        .canvas-container {
+            width: 100%;
+            flex: 1;
+            background: #fafbfc;
+            border-radius: 12px;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            border: 1px solid #dcdde1;
+            padding: 24px 20px 40px;
+            position: relative;
+        }
+        .canvas-container::-webkit-scrollbar { width: 8px; }
+        .canvas-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        
+        canvas {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            background: white;
+        }
+
+        .back-btn {
+            background-color: var(--weracle-navy);
+            color: white;
+            padding: 16px 45px;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .back-btn:hover {
+            background-color: #0369a1;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.3);
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: var(--weracle-navy);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        <!-- 좌측: 컨트롤 패널 (CRM 디자인) -->
+        <div class="app-container control-panel">
+            <div class="header">
+                <h1>나만의 데일리 뉴스 만들기</h1>
+            </div>
+            
+            <div class="content">
+                <div class="section-title">
+                    <i class="fa-solid fa-image"></i> 로고 파일 넣기 (선택)
+                </div>
+                <label class="upload-card" id="logoUploadCard" for="logoInput">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <div class="desc">우측 상단에 표시될 회사 또는 나만의 로고를 첨부해주세요.</div>
+                    <div class="selected-file" id="logoFileName" style="display: none;"></div>
+                    <input type="file" id="logoInput" accept="image/*">
+                </label>
+
+                <div class="section-title">
+                    <i class="fa-solid fa-palette"></i> 브랜드 색상 (테마) 선택
+                </div>
+                <div class="theme-options">
+                    <button class="theme-btn active" data-color1="#1e3a8a" data-color2="#3b82f6" data-text="#fde047" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6);"></button>
+                    <button class="theme-btn" data-color1="#064e3b" data-color2="#10b981" data-text="#fde047" style="background: linear-gradient(135deg, #064e3b, #10b981);"></button>
+                    <button class="theme-btn" data-color1="#4a044e" data-color2="#d946ef" data-text="#fde047" style="background: linear-gradient(135deg, #4a044e, #d946ef);"></button>
+                    <button class="theme-btn" data-color1="#7f1d1d" data-color2="#ef4444" data-text="#fde047" style="background: linear-gradient(135deg, #7f1d1d, #ef4444);"></button>
+                    <button class="theme-btn" data-color1="#1e293b" data-color2="#64748b" data-text="#fde047" style="background: linear-gradient(135deg, #1e293b, #64748b);"></button>
+                    <button class="theme-btn" data-color1="#78350f" data-color2="#f59e0b" data-text="#fde047" style="background: linear-gradient(135deg, #78350f, #f59e0b);"></button>
+                    
+                    <!-- 파스텔 색상들 -->
+                    <button class="theme-btn" data-color1="#ec4899" data-color2="#fbcfe8" data-text="#ffffff" style="background: linear-gradient(135deg, #ec4899, #fbcfe8);"></button>
+                    <button class="theme-btn" data-color1="#8b5cf6" data-color2="#ddd6fe" data-text="#ffffff" style="background: linear-gradient(135deg, #8b5cf6, #ddd6fe);"></button>
+                    <button class="theme-btn" data-color1="#0ea5e9" data-color2="#bae6fd" data-text="#ffffff" style="background: linear-gradient(135deg, #0ea5e9, #bae6fd);"></button>
+                    <button class="theme-btn" data-color1="#10b981" data-color2="#a7f3d0" data-text="#ffffff" style="background: linear-gradient(135deg, #10b981, #a7f3d0);"></button>
+                    <button class="theme-btn" data-color1="#f97316" data-color2="#fed7aa" data-text="#ffffff" style="background: linear-gradient(135deg, #f97316, #fed7aa);"></button>
+                </div>
+
+                <div class="section-title" style="margin-top: 5px;">
+                    <i class="fa-solid fa-fill-drip"></i> 배경 종이 색상
+                </div>
+                <div class="bg-options">
+                    <button class="bg-btn active" data-inner="#ffffff" data-outer="#eaf2f8" style="background: #ffffff;" title="기본 화이트"></button>
+                    <button class="bg-btn" data-inner="#fffbeb" data-outer="#ffffff" style="background: #fffbeb;" title="소프트 바닐라"></button>
+                    <button class="bg-btn" data-inner="#fef3c7" data-outer="#ffffff" style="background: #fef3c7;" title="웜 버터"></button>
+                    <button class="bg-btn" data-inner="#fdf2f8" data-outer="#ffffff" style="background: #fdf2f8;" title="베이비 핑크"></button>
+                    <button class="bg-btn" data-inner="#faf5ff" data-outer="#ffffff" style="background: #faf5ff;" title="라벤더"></button>
+                    <button class="bg-btn" data-inner="#f0fdfa" data-outer="#ffffff" style="background: #f0fdfa;" title="아이스 민트"></button>
+                    <button class="bg-btn" data-inner="#f8fafc" data-outer="#ffffff" style="background: #f8fafc;" title="쿨 그레이"></button>
+                </div>
+
+                <div style="background: #f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:20px; margin-top: auto;">
+                    <div class="section-title" style="color: #166534; font-size: 16px;">
+                        <i class="fa-solid fa-circle-check"></i> 사용 준비 완료
+                    </div>
+                    <p style="font-size:13px; color: #15803d; margin-top:10px; word-break: keep-all; line-height:1.5;">
+                        구글 시트에서 최신 뉴스를 연동했습니다. 미리보기를 확인하고 다운로드 버튼을 눌러주세요.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Hidden inputs -->
+            <div style="display: none;">
+                <input type="text" id="dateInput" value="">
+                <input type="text" id="newsSectionTitle" value="오늘의 보험 핫뉴스 TOP3">
+                <input type="text" id="n1_title" value="">
+                <textarea id="n1_desc"></textarea>
+                <input type="text" id="n2_title" value="">
+                <textarea id="n2_desc"></textarea>
+                <input type="text" id="n3_title" value="">
+                <textarea id="n3_desc"></textarea>
+                <input type="text" id="c1" value="">
+                <input type="text" id="c2" value="">
+                <input type="text" id="c3" value="">
+            </div>
+        </div>
+
+        <!-- 우측: 미리보기 패널 -->
+        <div class="app-container preview-panel">
+            <div class="section-title" style="align-self: flex-start; margin-bottom: 20px;">
+                <i class="fa-solid fa-eye"></i> 실시간 미리보기
+            </div>
+            <div class="canvas-container">
+                <div id="loadingOverlay" class="loading-overlay">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 10px; color: var(--weracle-cyan);"></i>
+                    구글 시트에서 뉴스를 불러오는 중입니다...
+                </div>
+                <canvas id="newsCanvas" width="1000" height="1414"></canvas>
+            </div>
+            <div style="display: flex; gap: 12px; width: 100%; margin-top: 15px;">
+                <button id="downloadBtn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px 0; font-size: 15px; font-weight: 600; background-color: #334155; color: white; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(51, 65, 85, 0.3); transition: all 0.2s; letter-spacing: -0.5px;">
+                    <i class="fa-solid fa-download"></i> 기본 다운로드
+                </button>
+                <button id="downloadStoryBtn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px 0; font-size: 15px; font-weight: 600; background: linear-gradient(135deg, #d946ef, #8b5cf6, #3b82f6); color: white; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); transition: all 0.2s; letter-spacing: -0.5px;">
+                    <i class="fa-brands fa-instagram"></i>
+                    <i class="fa-solid fa-comment" style="color: #FEE500;"></i>
+                    스토리/펑 다운로드
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CRM(사내 시스템) 로고 자동 연동 로직
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'setLogo' && e.data.data) {
+                customLogo = new Image();
+                customLogo.onload = function() {
+                    // 수동 업로드 UI 숨기기
+                    const logoCard = document.getElementById('logoUploadCard');
+                    if (logoCard) {
+                        logoCard.style.display = 'none';
+                        const sectionTitle = logoCard.previousElementSibling;
+                        if (sectionTitle && sectionTitle.classList.contains('section-title')) {
+                            sectionTitle.style.display = 'none';
+                        }
+                    }
+                    console.log("CRM 연동 로고 반영 완료");
+                    triggerDraw();
+                };
+                customLogo.src = e.data.data;
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'requestLogo' }, '*');
+            }
+        });
+
+
+        // 구글 시트 연동 정보
+        const SHEET_ID = '1rfanzbOCpG9cFDJ-jwUQJx5nNhSIrCXh4YklZEJdIEw';
+        const API_KEY = 'AIzaSyD9XOJBgaaUh6XVAx_az6Ka0IlUUsc2pSw';
+        const TAB_NAME = '데일리뉴스';
+
+        let themeDark = '#1e3a8a';
+        let themeLight = '#3b82f6';
+        let themeText = '#fde047';
+        
+        let canvasInnerBg = '#ffffff';
+        let canvasOuterBg = '#eaf2f8';
+
+        const canvas = document.getElementById('newsCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const dateInput = document.getElementById('dateInput');
+        const logoInput = document.getElementById('logoInput');
+        const logoUploadText = document.getElementById('logoFileName');
+        
+        const newsSectionTitle = document.getElementById('newsSectionTitle');
+        const n1_title = document.getElementById('n1_title');
+        const n1_desc = document.getElementById('n1_desc');
+        const n2_title = document.getElementById('n2_title');
+        const n2_desc = document.getElementById('n2_desc');
+        const n3_title = document.getElementById('n3_title');
+        const n3_desc = document.getElementById('n3_desc');
+        
+        const c1 = document.getElementById('c1');
+        const c2 = document.getElementById('c2');
+        const c3 = document.getElementById('c3');
+
+        let customLogo = new Image();
+        let pendingDraw = null;
+
+        async function fetchNewsData() {
+            try {
+                let res = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID + '/values/' + TAB_NAME + '?key=' + API_KEY);
+                if(res.ok) {
+                    let data = await res.json();
+                    let rows = data.values || [];
+                    
+                    if(rows.length > 0) {
+                        const getValue = (index) => (rows[index] && rows[index].length > 1) ? rows[index][1] : '';
+                        
+                        let dateValue = getValue(0);
+                        if(dateValue.includes('오늘') || dateValue.includes('자동')) {
+                            const now = new Date();
+                            const year = now.getFullYear();
+                            const month = String(now.getMonth() + 1).padStart(2, '0');
+                            const day = String(now.getDate()).padStart(2, '0');
+                            const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+                            const dayName = days[now.getDay()];
+                            dateValue = `${year}.${month}.${day}. ${dayName}`;
+                        }
+
+                        dateInput.value = dateValue;
+                        newsSectionTitle.value = getValue(1) || '오늘의 핫뉴스 TOP3';
+                        n1_title.value = getValue(2);
+                        n1_desc.value = getValue(3);
+                        n2_title.value = getValue(4);
+                        n2_desc.value = getValue(5);
+                        n3_title.value = getValue(6);
+                        n3_desc.value = getValue(7);
+                        c1.value = getValue(8);
+                        c2.value = getValue(9);
+                        c3.value = getValue(10);
+                    } else {
+                        alert("구글 시트에 데이터가 없습니다. 시트를 확인해주세요.");
+                    }
+                } else {
+                    console.error("Fetch failed:", res.status);
+                }
+            } catch(e) {
+                console.error('Failed to fetch Google Sheet data:', e);
+            }
+            
+            document.getElementById('loadingOverlay').style.display = 'none';
+            triggerDraw();
+        }
+
+        const themeBtns = document.querySelectorAll('.theme-btn');
+        themeBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                themeBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                themeDark = this.getAttribute('data-color1');
+                themeLight = this.getAttribute('data-color2');
+                themeText = this.getAttribute('data-text') || '#fde047';
+                
+                triggerDraw();
+            });
+        });
+
+        const bgBtns = document.querySelectorAll('.bg-btn');
+        bgBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                bgBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                canvasInnerBg = this.getAttribute('data-inner');
+                canvasOuterBg = this.getAttribute('data-outer');
+                
+                triggerDraw();
+            });
+        });
+
+        // ==========================================
+        // 캔버스 렌더링 로직 (뉴스 디자인 100% 유지)
+        // ==========================================
+        function drawRoundRect(ctx, x, y, width, height, radius) {
+            if (ctx.roundRect) {
+                ctx.beginPath();
+                ctx.roundRect(x, y, width, height, radius);
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + width - radius, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                ctx.lineTo(x + width, y + height - radius);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                ctx.lineTo(x + radius, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+            }
+        }
+
+        function measureWrapTextKR(context, text, maxWidth, lineHeight, fontStr) {
+            context.save();
+            context.font = fontStr;
+            let line = '';
+            let height = 0;
+            let cleanText = text.replace(/^[0-9]+[:.]\s*/, '');
+
+            for(let i = 0; i < cleanText.length; i++) {
+                const char = cleanText[i];
+                if (char === '\n') {
+                    line = '';
+                    height += lineHeight;
+                    continue;
+                }
+                const testLine = line + char;
+                if (context.measureText(testLine).width > maxWidth && i > 0) {
+                    line = char;
+                    height += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            if (line.trim() !== '') {
+                height += lineHeight;
+            }
+            context.restore();
+            return height;
+        }
+
+        function wrapTextKR(context, text, x, y, maxWidth, lineHeight) {
+            let line = '';
+            let currentY = y;
+            let cleanText = text.replace(/^[0-9]+[:.]\s*/, '');
+
+            for(let i = 0; i < cleanText.length; i++) {
+                const char = cleanText[i];
+                if (char === '\n') {
+                    context.fillText(line, x, currentY);
+                    line = '';
+                    currentY += lineHeight;
+                    continue;
+                }
+                const testLine = line + char;
+                if (context.measureText(testLine).width > maxWidth && i > 0) {
+                    context.fillText(line, x, currentY);
+                    line = char;
+                    currentY += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            if (line.trim() !== '') {
+                context.fillText(line, x, currentY);
+            }
+            return currentY + lineHeight;
+        }
+
+        function drawBadge(x, y, w, h) {
+            const skew = 20; 
+            const halfW = w / 2 + 10;
+            
+            ctx.fillStyle = themeDark; 
+            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + halfW, y); ctx.lineTo(x + halfW - skew, y + h); ctx.lineTo(x - skew, y + h); ctx.fill();
+            ctx.fillStyle = '#ef4444'; 
+            ctx.beginPath(); ctx.moveTo(x + halfW, y); ctx.lineTo(x + w + skew, y); ctx.lineTo(x + w, y + h); ctx.lineTo(x + halfW - skew, y + h); ctx.fill();
+
+            ctx.fillStyle = 'white';
+            ctx.font = 'italic 900 24px "Noto Sans KR"';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('HOT', x + (halfW/2) - (skew/2), y + (h/2) + 2);
+            ctx.fillText('NEWS', x + halfW + (w-halfW)/2, y + (h/2) + 2);
+        }
+
+        function triggerDraw() {
+            if(pendingDraw) cancelAnimationFrame(pendingDraw);
+            pendingDraw = requestAnimationFrame(drawCanvas);
+        }
+
+        function drawCanvas() {
+            const width = 1000;
+            const contentMaxWidth = width - 200; 
+            const contentX = 100;
+            const newsStartY = 380;
+            
+            let mainBoxContentHeight = 0;
+            const newsData = [
+                { title: n1_title.value, desc: n1_desc.value },
+                { title: n2_title.value, desc: n2_desc.value },
+                { title: n3_title.value, desc: n3_desc.value }
+            ];
+
+            newsData.forEach(news => {
+                if(news.title.trim() !== '' || news.desc.trim() !== '') {
+                    mainBoxContentHeight += 40; 
+                    mainBoxContentHeight += measureWrapTextKR(ctx, news.desc, contentMaxWidth, 38, '500 22px "Noto Sans KR"');
+                    mainBoxContentHeight += 50; 
+                }
+            });
+
+            let contentTextHeight = 0;
+            const items = [c1.value, c2.value, c3.value];
+            items.forEach(item => {
+                if(item.trim() !== '') {
+                    contentTextHeight += measureWrapTextKR(ctx, item, contentMaxWidth - 20, 36, '500 22px "Noto Sans KR"');
+                    contentTextHeight += 20; 
+                }
+            });
+
+            const currentYAfterNews = newsStartY + 110 + mainBoxContentHeight;
+            const contentStartY = currentYAfterNews + 20;
+            const listYAfterContent = contentStartY + 85 + contentTextHeight;
+            
+            const totalCanvasHeight = listYAfterContent + 100; 
+
+            if(canvas.height !== totalCanvasHeight && totalCanvasHeight > 1000) {
+                canvas.height = totalCanvasHeight;
+            } else if (canvas.height < 1414) {
+                canvas.height = 1414; 
+            }
+
+            ctx.fillStyle = canvasOuterBg;
+            ctx.fillRect(0, 0, width, canvas.height);
+
+            ctx.fillStyle = canvasInnerBg;
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1;
+            ctx.fillRect(35, 35, width - 70, canvas.height - 70);
+            ctx.strokeRect(35, 35, width - 70, canvas.height - 70);
+
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.05)';
+            ctx.shadowBlur = 15;
+            ctx.shadowOffsetX = -2;
+            ctx.shadowOffsetY = 4;
+            ctx.fillRect(45, 45, width - 90, canvas.height - 90);
+            ctx.strokeRect(45, 45, width - 90, canvas.height - 90);
+            ctx.shadowColor = 'transparent'; 
+
+            if (customLogo.src) {
+                const logoH = 100; 
+                const logoW = (customLogo.width / customLogo.height) * logoH;
+                ctx.drawImage(customLogo, 85, 45, logoW, logoH); 
+            } else {
+                ctx.fillStyle = '#f1f5f9';
+                drawRoundRect(ctx, 85, 45, 260, 100, 8); 
+                ctx.fill();
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '600 20px "Noto Sans KR"';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('로고를 등록해주세요', 85 + 130, 45 + 50);
+            }
+
+            ctx.font = '700 28px "Noto Sans KR"';
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(dateInput.value || '불러오는 중...', width - 85, 95);
+
+            ctx.fillStyle = '#333';
+            ctx.fillRect(85, 145, width - 170, 2);
+            ctx.fillRect(85, 152, width - 170, 6);
+
+            ctx.font = '900 115px "Playfair Display", serif';
+            ctx.fillStyle = '#0f172a';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 4;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('DAILY NEWS', width / 2, 240); 
+            ctx.shadowColor = 'transparent'; 
+
+            ctx.fillRect(85, 320, width - 170, 6);
+            ctx.fillRect(85, 330, width - 170, 2);
+
+            const bannerX = 65;
+            const bannerW = width - 130;
+            const grad = ctx.createLinearGradient(bannerX, newsStartY, bannerX + bannerW, newsStartY);
+            grad.addColorStop(0, themeDark); 
+            grad.addColorStop(1, themeLight); 
+            ctx.fillStyle = grad;
+            drawRoundRect(ctx, bannerX, newsStartY, bannerW, 70, 12); 
+            ctx.fill();
+            
+            drawBadge(bannerX + 20, newsStartY + 15, 140, 40);
+
+            ctx.fillStyle = themeText;
+            ctx.font = '700 36px "Noto Sans KR"';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(newsSectionTitle.value, width / 2, newsStartY + 37);
+
+            let currentY = newsStartY + 110;
+
+            newsData.forEach(news => {
+                if(news.title.trim() === '' && news.desc.trim() === '') return;
+
+                ctx.fillStyle = themeLight; 
+                ctx.fillRect(contentX, currentY + 8, 8, 8);
+
+                ctx.fillStyle = '#111'; 
+                ctx.font = 'bold 26px "Noto Sans KR"';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.fillText(news.title, contentX + 22, currentY);
+                currentY += 40;
+
+                ctx.fillStyle = '#475569'; 
+                ctx.font = '500 22px "Noto Sans KR"';
+                currentY = wrapTextKR(ctx, news.desc, contentX, currentY, contentMaxWidth, 38);
+                
+                currentY += 50; 
+            });
+
+            const subGrad = ctx.createLinearGradient(bannerX, contentStartY, bannerX + bannerW, contentStartY);
+            subGrad.addColorStop(0, themeDark);
+            subGrad.addColorStop(1, themeLight); 
+            ctx.fillStyle = subGrad;
+            drawRoundRect(ctx, bannerX, contentStartY, bannerW, 60, 12); 
+            ctx.fill();
+
+            ctx.font = '700 32px "Noto Sans KR"';
+            ctx.fillStyle = '#ffffff'; 
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('오늘의 트렌드 픽', width / 2, contentStartY + 32);
+
+            let listY = contentStartY + 85; 
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            
+            items.forEach((item) => {
+                if(item.trim() !== '') {
+                    ctx.fillStyle = themeDark; 
+                    ctx.beginPath();
+                    ctx.arc(contentX + 5, listY + 14, 5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#334155';
+                    ctx.font = '500 22px "Noto Sans KR"';
+                    listY = wrapTextKR(ctx, item, contentX + 25, listY, contentMaxWidth - 25, 36);
+                    listY += 20; 
+                }
+            });
+        }
+
+        logoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                logoUploadText.textContent = " " + file.name;
+                logoUploadText.style.display = "inline-block";
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    customLogo.onload = function() { triggerDraw(); }
+                    customLogo.src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const link = document.createElement('a');
+            const dateStr = dateInput.value.replace(/[^0-9]/g, '');
+            link.download = `Newsletter_${dateStr || 'Custom'}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+
+        document.getElementById('downloadStoryBtn').addEventListener('click', function() {
+            const storyCanvas = document.createElement('canvas');
+            const targetW = 1080;
+            const targetH = 1920;
+            storyCanvas.width = targetW;
+            storyCanvas.height = targetH;
+            const sCtx = storyCanvas.getContext('2d');
+            
+            // 배경색 채우기 (캔버스 바깥 배경색) - 제거함
+            // sCtx.fillStyle = typeof canvasOuterBg !== 'undefined' ? canvasOuterBg : '#f1f5f9';
+            // sCtx.fillRect(0, 0, targetW, targetH);
+            // 의도적으로 배경을 투명하게 두어, 인스타/카카오펑 업로드 시 앱에서 자동으로 예쁜 그라데이션 배경을 깔아주도록 유도합니다.
+            
+            // 스토리 해상도(1080x1920)에 맞게 1000x(내용높이) 캔버스 사이즈 조정
+            // 가로 또는 세로에 맞춰 비율 유지하며 축소
+            const scale = Math.min(1000 / canvas.width, 1750 / canvas.height); 
+            const drawW = canvas.width * scale;
+            const drawH = canvas.height * scale;
+            
+            const drawX = (targetW - drawW) / 2;
+            const drawY = (targetH - drawH) / 2;
+            
+            sCtx.drawImage(canvas, drawX, drawY, drawW, drawH);
+            
+            const link = document.createElement('a');
+            const dateStr = dateInput.value.replace(/[^0-9]/g, '');
+            link.download = `Newsletter_${dateStr || 'Custom'}_Story.png`;
+            link.href = storyCanvas.toDataURL('image/png');
+            link.click();
+        });
+
+        if (document.fonts) {
+            document.fonts.ready.then(function() { 
+                fetchNewsData(); 
+            });
+        } else {
+            fetchNewsData(); 
+        }
+
+        // CRM(사내 시스템) 로고 연동 자동 로직
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'setLogo' && e.data.data) {
+                customLogo = new Image();
+                customLogo.onload = function() {
+                    triggerDraw();
+                };
+                customLogo.src = e.data.data;
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'requestLogo' }, '*');
+            }
+        });
+    </script>
+</body>
+</html>
+

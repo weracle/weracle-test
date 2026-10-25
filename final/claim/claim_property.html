@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보험금 청구 - 재물보험</title>
+    <link rel="stylesheet" href="claim.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="weracle-wrapper">
+  <div class="claim-app-container">
+    
+    <!-- 공통 앱 헤더 -->
+    <div class="app-header" id="appHeader" style="display:none;">
+      <button class="back-btn" onclick="goBack()">< 이전</button>
+      <div class="progress-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+ 
+    <div class="content-area">
+      <!-- Step 1: 카테고리 선택 -->
+      <div id="step1" class="claim-step active">
+        <div class="step-title">보험 종류 선택</div>
+        <div class="step-desc">청구할 보험을 선택해 주세요.</div>
+        <div class="radio-group" style="gap: 12px;">
+          <label onclick="selectCategory('질병상해')" style="padding: 18px 16px; font-size: 16px;"> 질병 / 상해 보험</label>
+          <label onclick="selectCategory('펫보험')" style="padding: 18px 16px; font-size: 16px;"> 펫 보험</label>
+          <label onclick="selectCategory('생명보험')" style="padding: 18px 16px; font-size: 16px;"> 생명보험 질병/재해</label>
+          <label onclick="selectCategory('재물')" style="padding: 18px 16px; font-size: 16px;"> 재물 보험</label>
+        </div>
+      </div>
+ 
+      <!-- Step 2: 보험사 선택 -->
+      <div id="step2" class="claim-step">
+        <div class="step-title">가입 보험사 선택</div>
+        <div class="sub-form-group">
+          <select id="companySelect" class="form-control" onchange="checkFaxRequirement()"></select>
+        </div>
+        <div id="faxInputWrap" class="sub-form-group hidden" style="background:#f4f8fb; padding:16px; border-radius:14px; margin-top:20px; border: 2px solid #e5e8eb;">
+          <label class="sub-label" style="color:#0284c7;">담당자 개인 팩스번호 (필수)</label>
+          <input type="text" id="faxNumber" class="form-control" style="background:#fff; margin-bottom:0;" placeholder="예: 0505-123-4567">
+        </div>
+        <div style="margin-top: 32px;">
+          <button class="btn-primary" onclick="goToDynStep()">선택 완료 및 다음</button>
+        </div>
+      </div>
+ 
+      <!-- Step 3: 원페이지 슬라이드 동적 렌더링 영역 -->
+      <div id="step_dyn_flow" class="claim-step">
+        <div id="slides-container"></div>
+      </div>
+    </div>
+    
+    <!-- 하단 고정 버튼 영역 -->
+    <div class="bottom-nav-wrap" id="bottomNav" style="display:none;">
+      <button type="button" class="btn-prev" id="prevBtn" onclick="goBack()">이전</button>
+      <button type="button" class="btn-primary" id="nextBtn" onclick="handleNextButton()">다음</button>
+    </div>
+ 
+  </div>
+</div>
+
+    <!-- 모듈 연동 스크립트 -->
+    <script src="claim_coords.js"></script>
+    <script src="insurance_fax_list.js"></script>
+    <script src="customer_picker.js"></script>
+    <script src="claim_property.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            var s1 = document.getElementById('step1');
+            if (s1) {
+                s1.style.display = 'none';
+            }
+            setTimeout(function() {
+                selectCategory('재물');
+            }, 50);
+        });
+    </script>
+
+  <!-- 청구서 PDF 실시간 미리보기 및 발송 확인 모달 -->
+  <div id="pdfPreviewModal" class="pdf-modal-backdrop">
+    <div class="pdf-modal-container">
+      <div class="pdf-modal-header">
+        <div class="pdf-modal-title-wrap">
+          <h3 class="pdf-modal-title">청구서 서류 확인</h3>
+          <span class="pdf-modal-subtitle" id="pdfPreviewSubtitle">보상과 팩스로 발송 예정</span>
+        </div>
+        <button type="button" class="pdf-modal-close" onclick="closePdfPreviewModal()">&times;</button>
+      </div>
+      <div class="pdf-modal-body">
+        <iframe id="pdfPreviewIframe" class="pdf-modal-iframe" src="about:blank"></iframe>
+      </div>
+      <div class="pdf-modal-footer">
+        <button type="button" class="pdf-btn-modify" onclick="closePdfPreviewModal()">수정하기</button>
+        <button type="button" class="pdf-btn-save" onclick="downloadCurrentPdf()">기기에 저장</button>
+        <button type="button" class="pdf-btn-send" id="modalSendFaxBtn" onclick="confirmAndSendFax()">확인 완료 · 팩스 전송</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

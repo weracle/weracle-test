@@ -141,6 +141,16 @@ function parseClientBirthday(client) {
         return { month: mm, day: dd };
       }
     }
+    const rawNum = birthStr.replace(/[^0-9]/g, '');
+    if (rawNum.length === 8) {
+      const mm = parseInt(rawNum.substring(4, 6), 10);
+      const dd = parseInt(rawNum.substring(6, 8), 10);
+      if (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) return { month: mm, day: dd };
+    } else if (rawNum.length === 6) {
+      const mm = parseInt(rawNum.substring(2, 4), 10);
+      const dd = parseInt(rawNum.substring(4, 6), 10);
+      if (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) return { month: mm, day: dd };
+    }
   }
   return null;
 }
@@ -199,10 +209,19 @@ function analyzeCrmData() {
       });
     }
 
-    // 3)  계약 만기 및 갱신일 (Expiry / Renewal)
+    // 3) 계약 만기 및 갱신일 (Expiry / Renewal)
     const rDateStr = (client['갱신일'] || client['만기일'] || client['자동차_만기일'] || '').toString().trim();
     if (rDateStr) {
-      let cleanDate = rDateStr.split('T')[0].replace(/\./g, '-');
+      let rawNums = rDateStr.replace(/[^0-9]/g, '');
+      let cleanDate = '';
+      if (rawNums.length >= 8) {
+        cleanDate = `${rawNums.substring(0, 4)}-${rawNums.substring(4, 6)}-${rawNums.substring(6, 8)}`;
+      } else if (rawNums.length === 4) {
+        cleanDate = `${rawNums.substring(0, 2)}-${rawNums.substring(2, 4)}`;
+      } else {
+        cleanDate = rDateStr.split('T')[0].replace(/\s+/g, '').replace(/[\.\/]/g, '-');
+      }
+
       if (cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
         crmEventsList.push({
           type: 'expiry',
@@ -933,6 +952,7 @@ async function initDashboard() {
         if (crmData.length !== parentWindow.globalCustomerData.length) {
           crmData = parentWindow.globalCustomerData;
           analyzeCrmData();
+          renderV3Calendar();
           updateDashboardV3Stats();
         }
       }
@@ -958,6 +978,7 @@ window.addEventListener("message", (event) => {
     crmData = event.data.data || [];
     targetData = event.data.targetData || [];
     analyzeCrmData();
+    renderV3Calendar();
     updateDashboardV3Stats();
   }
 });

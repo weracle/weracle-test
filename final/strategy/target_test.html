@@ -1083,7 +1083,7 @@
                 { icon: '', title: '오늘생일자', desc: '등록된 콘텐츠가 없습니다.' },
                 { icon: '', title: '상령일 안내', desc: '텍스트 템플릿 4개', active: true },
                 { icon: '', title: '자동차보험 만기', desc: '텍스트 템플릿 4개' },
-                { icon: '⏳', title: '장기보험만기', desc: '텍스트 템플릿 4개' },  /*  신규 추가 */
+                { icon: '', title: '장기보험만기', desc: '텍스트 템플릿 4개' },  /*  신규 추가 */
                 { icon: '', title: '일반보험 만기', desc: '텍스트 템플릿 4개' },
                 { icon: '', title: '재물보험 만기', desc: '텍스트 템플릿 4개' },
                 { icon: '', title: '보장분석', desc: '텍스트 템플릿 4개' },      /*  신규 추가 */
@@ -1693,56 +1693,196 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
             
             let baseData = [];
             
-            //  [수정] 오늘 당일 생일 고객 정확 판별 로직 (월 + 일 모두 일치)
-            function isTodayBirthday(crm, item) {
-                const target = crm || item;
-                if (!target) return false;
-                
+            // 고객별 타겟 조건 정밀 판별 함수 (생일/상령일/만기/상품별 타겟)
+            function getCustomerTargetStatus(c, menuTitle) {
+                const target = c.crmData || c;
+                if (!target) return { match: false };
+
                 const today = new Date();
+                const curYear = today.getFullYear();
                 const curMonth = today.getMonth() + 1;
                 const curDay = today.getDate();
 
-                // 1. 주민번호 또는 주민등록번호 확인 (YYMMDD)
+                // 1. 생년월일 및 나이 파싱
+                let birthMonth = null;
+                let birthDay = null;
+                let birthYear = null;
+                let age = null;
+
                 const juminRaw = target['주민번호'] || target['주민등록번호'] || target[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%B2%88%ED%98%B8')] || target[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%93%B1%EB%A1%9D%EB%B2%88%ED%98%B8')] || '';
                 const jumin = String(juminRaw).replace(/[^0-9]/g, '');
                 if (jumin.length >= 6) {
-                    const bMonth = parseInt(jumin.substring(2, 4), 10);
-                    const bDay = parseInt(jumin.substring(4, 6), 10);
-                    if (bMonth >= 1 && bMonth <= 12 && bDay >= 1 && bDay <= 31) {
-                        return (bMonth === curMonth && bDay === curDay);
+                    let yy = parseInt(jumin.substring(0, 2), 10);
+                    birthMonth = parseInt(jumin.substring(2, 4), 10);
+                    birthDay = parseInt(jumin.substring(4, 6), 10);
+                    if (jumin.length >= 7) {
+                        const genderDigit = parseInt(jumin.charAt(6), 10);
+                        if (genderDigit === 1 || genderDigit === 2 || genderDigit === 5 || genderDigit === 6) {
+                            birthYear = 1900 + yy;
+                        } else if (genderDigit === 3 || genderDigit === 4 || genderDigit === 7 || genderDigit === 8) {
+                            birthYear = 2000 + yy;
+                        }
                     }
+                    if (!birthYear) {
+                        birthYear = yy >= 30 ? (1900 + yy) : (2000 + yy);
+                    }
+                    age = curYear - birthYear;
                 }
 
-                // 2. '생일' 또는 '생년월일' 문자열 확인 (보조 수단: YYYY-MM-DD 또는 MM-DD 등)
                 const birthStr = String(target['생일'] || target['생년월일'] || target[decodeURIComponent('%EC%83%9D%EC%9D%BC')] || '').trim();
                 if (birthStr && birthStr !== '-') {
                     const cleanBirth = birthStr.replace(/[^0-9]/g, '');
                     if (cleanBirth.length === 8) {
-                        const bMonth = parseInt(cleanBirth.substring(4, 6), 10);
-                        const bDay = parseInt(cleanBirth.substring(6, 8), 10);
-                        return (bMonth === curMonth && bDay === curDay);
-                    } else if (cleanBirth.length === 6) {
-                        const bMonth = parseInt(cleanBirth.substring(2, 4), 10);
-                        const bDay = parseInt(cleanBirth.substring(4, 6), 10);
-                        return (bMonth === curMonth && bDay === curDay);
-                    } else if (cleanBirth.length === 4) {
-                        const bMonth = parseInt(cleanBirth.substring(0, 2), 10);
-                        const bDay = parseInt(cleanBirth.substring(2, 4), 10);
-                        return (bMonth === curMonth && bDay === curDay);
-                    }
-                    
-                    const mMatch = birthStr.match(/(\d{1,2})[\.\-\/\s월]\s*(\d{1,2})/);
-                    if (mMatch) {
-                        const bMonth = parseInt(mMatch[1], 10);
-                        const bDay = parseInt(mMatch[2], 10);
-                        return (bMonth === curMonth && bDay === curDay);
+                        birthYear = parseInt(cleanBirth.substring(0, 4), 10);
+                        birthMonth = parseInt(cleanBirth.substring(4, 6), 10);
+                        birthDay = parseInt(cleanBirth.substring(6, 8), 10);
+                        age = curYear - birthYear;
+                    } else if (cleanBirth.length === 6 && !birthMonth) {
+                        let yy = parseInt(cleanBirth.substring(0, 2), 10);
+                        birthYear = yy >= 30 ? (1900 + yy) : (2000 + yy);
+                        birthMonth = parseInt(cleanBirth.substring(2, 4), 10);
+                        birthDay = parseInt(cleanBirth.substring(4, 6), 10);
+                        age = curYear - birthYear;
+                    } else if (cleanBirth.length === 4 && !birthMonth) {
+                        birthMonth = parseInt(cleanBirth.substring(0, 2), 10);
+                        birthDay = parseInt(cleanBirth.substring(2, 4), 10);
                     }
                 }
 
-                return false;
+                // 2. 메뉴별 필터링
+                // A. 생일 고객: 오늘 당일 생일 고객만 표시 (지난 날짜 및 다가올 날짜는 제외)
+                if (menuTitle.includes('생일')) {
+                    if (birthMonth === curMonth && birthDay === curDay) {
+                        return { match: true, badge: '오늘 생일', badgeColor: '#e11d48', badgeBg: '#ffe4e6' };
+                    }
+                    return { match: false };
+                }
+
+                // B. 상령일 고객: 생월 + 6개월. 이번 달 상령일 고객 중 오늘 및 남은 날짜만 대상 (지난 날짜 제외)
+                if (menuTitle.includes('상령일')) {
+                    if (!birthMonth || !birthDay) return { match: false };
+                    let sangMonth = birthMonth + 6;
+                    if (sangMonth > 12) sangMonth -= 12;
+                    let sangDay = birthDay;
+
+                    if (sangMonth === curMonth) {
+                        if (sangDay < curDay) {
+                            return { match: false }; // 이미 지나간 날짜 제외
+                        }
+                        const diff = sangDay - curDay;
+                        const badgeText = diff === 0 ? '오늘 상령일' : `상령일 D-${diff} (${sangMonth}/${sangDay})`;
+                        return { match: true, badge: badgeText, badgeColor: '#7c3aed', badgeBg: '#ede9fe' };
+                    }
+                    return { match: false };
+                }
+
+                // C. 만기 고객: 자동차, 장기, 재물 등 만기일 정밀 필터링 (지난 연도 및 지난 날짜 제외)
+                if (menuTitle.includes('만기')) {
+                    const matStr = String(target['만기일'] || target['갱신일'] || target['자동차_만기일'] || target[decodeURIComponent('%EB%A7%8C%EA%B8%B0%EC%9D%BC')] || '').trim();
+                    if (!matStr) return { match: false };
+
+                    let matYear = null, matMonth = null, matDay = null;
+                    const cleanNums = matStr.replace(/[^0-9]/g, '');
+                    if (cleanNums.length >= 8) {
+                        matYear = parseInt(cleanNums.substring(0, 4), 10);
+                        matMonth = parseInt(cleanNums.substring(4, 6), 10);
+                        matDay = parseInt(cleanNums.substring(6, 8), 10);
+                    } else if (cleanNums.length === 4) {
+                        matMonth = parseInt(cleanNums.substring(0, 2), 10);
+                        matDay = parseInt(cleanNums.substring(2, 4), 10);
+                    } else {
+                        const m = matStr.match(/(\d{4})?[-\.\/\s월]?\s*(\d{1,2})[-\.\/\s일]?\s*(\d{1,2})?/);
+                        if (m) {
+                            if (m[1] && m[1].length === 4) matYear = parseInt(m[1], 10);
+                            if (m[2]) matMonth = parseInt(m[2], 10);
+                            if (m[3]) matDay = parseInt(m[3], 10);
+                        }
+                    }
+
+                    if (!matMonth) return { match: false };
+                    if (matYear && matYear < curYear) return { match: false };
+                    if (matYear && matYear > curYear + 1) return { match: false };
+
+                    if (matMonth === curMonth) {
+                        if (matDay && matDay < curDay) return { match: false }; // 이미 지난 만기 제외
+                    } else {
+                        return { match: false }; // 당월 만기만 노출
+                    }
+
+                    const insight = String(target[decodeURIComponent('%ED%84%B0%EC%B9%98%EC%9D%B8%EC%82%AC%EC%9D%B4%ED%8A%B8')] || target['터치인사이트'] || '');
+                    const coverage = String(target[decodeURIComponent('%EA%B0%80%EC%9E%85%EB%82%B4%EC%97%AD')] || target['가입내역'] || '');
+                    const covType = String(target[decodeURIComponent('%EB%B3%B4%ED%97%98%EC%A2%85%EB%A5%98')] || target['보험종류'] || '');
+
+                    const hasAutoTag = insight.includes("자동차") || insight.includes("운전자") || insight.includes("바이크") || 
+                                       coverage.includes("자동차") || coverage.includes("운전자") || coverage.includes("바이크");
+                    const hasPropertyTag = insight.includes("재물보험") || coverage.includes("재물보험") || covType.includes("재물");
+                    const isLongTerm = covType.includes("장기");
+                    const isAutoIns = covType.includes("자동차");
+
+                    if (menuTitle === "자동차보험 만기") {
+                        if (!hasAutoTag && !isAutoIns) return { match: false };
+                    } else if (menuTitle === "재물보험 만기") {
+                        if (!hasPropertyTag) return { match: false };
+                    } else if (menuTitle === "장기보험만기") {
+                        if (!isLongTerm || hasAutoTag || hasPropertyTag) return { match: false };
+                    }
+
+                    const diff = matDay ? (matDay - curDay) : 0;
+                    const badgeText = (matDay && diff === 0) ? '오늘 만기' : (matDay ? `만기 D-${diff} (${matMonth}/${matDay})` : `만기 ${matMonth}월`);
+                    return { match: true, badge: badgeText, badgeColor: '#d97706', badgeBg: '#fef3c7' };
+                }
+
+                // D. 상품별 타겟 필터
+                if (menuTitle.includes('연금')) {
+                    const insight = String(target['터치인사이트'] || target['가입내역'] || '');
+                    const hasTag = insight.includes('연금') || insight.includes('저축') || insight.includes('은퇴') || insight.includes('노후');
+                    if (hasTag || (age !== null && age >= 40 && age <= 65)) {
+                        const reason = (age !== null) ? `${age}세 노후준비` : '연금 관심고객';
+                        return { match: true, badge: reason, badgeColor: '#0284c7', badgeBg: '#e0f2fe' };
+                    }
+                    return { match: false };
+                }
+
+                if (menuTitle.includes('간병') || menuTitle.includes('입원')) {
+                    const insight = String(target['터치인사이트'] || target['가입내역'] || '');
+                    const hasTag = insight.includes('간병') || insight.includes('치매') || insight.includes('입원');
+                    if (hasTag || (age !== null && age >= 50)) {
+                        const reason = (age !== null) ? `${age}세 간병플랜` : '간병 관심고객';
+                        return { match: true, badge: reason, badgeColor: '#059669', badgeBg: '#d1fae5' };
+                    }
+                    return { match: false };
+                }
+
+                if (menuTitle.includes('치료비') || menuTitle.includes('생활비') || menuTitle.includes('3대')) {
+                    const insight = String(target['터치인사이트'] || target['가입내역'] || '');
+                    const hasTag = insight.includes('암') || insight.includes('뇌') || insight.includes('심') || insight.includes('치료비');
+                    if (hasTag || (age !== null && age >= 30 && age <= 65)) {
+                        const reason = (age !== null) ? `${age}세 3대질병` : '치료비 집중케어';
+                        return { match: true, badge: reason, badgeColor: '#ea580c', badgeBg: '#ffedd5' };
+                    }
+                    return { match: false };
+                }
+
+                if (menuTitle.includes('운전자')) {
+                    const insight = String(target['터치인사이트'] || target['가입내역'] || '');
+                    const hasTag = insight.includes('운전자') || insight.includes('자동차') || insight.includes('면허');
+                    if (hasTag || (age !== null && age >= 20)) {
+                        const reason = (age !== null) ? `${age}세 운전자보장` : '운전자 관심고객';
+                        return { match: true, badge: reason, badgeColor: '#4f46e5', badgeBg: '#e0e7ff' };
+                    }
+                    return { match: false };
+                }
+
+                // 데일리뉴스, 보장분석, 보상청구, 안부인사말, 라이프케어 등: 전체 CRM 고객 대상
+                return { match: true, badge: '추천 대상', badgeColor: '#475569', badgeBg: '#f1f5f9' };
             }
 
-            // 하위 호환용 월단위 생일 함수 (기타 참조용 유지)
+            // 하위 호환용 헬퍼 함수
+            function isTodayBirthday(crm, item) {
+                const status = getCustomerTargetStatus(crm || item, '생일');
+                return status.match;
+            }
+
             function hasBirthdayInMonth(crm, targetMonth) {
                 if (!crm) return false;
                 const rrm = String(crm['주민번호'] || crm['주민등록번호'] || crm[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%B2%88%ED%98%B8')] || crm[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%93%B1%EB%A1%9D%EB%B2%88%ED%98%B8')] || "").replace(/[^0-9]/g, '');
@@ -1754,61 +1894,16 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
             }
 
             function hasSangryungInMonth(crm, targetMonth) {
-                if (!crm) return false;
-                const rrm = crm[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%B2%88%ED%98%B8')] || crm[decodeURIComponent('%EC%A3%BC%EB%AF%BC%EB%93%B1%EB%A1%9D%EB%B2%88%ED%98%B8')] || "";
-                if (rrm.length >= 6) {
-                    const monthStr = rrm.substring(2, 4);
-                    let sangMonth = parseInt(monthStr, 10) + 6;
-                    if (sangMonth > 12) sangMonth -= 12;
-                    if (sangMonth === targetMonth) return true;
-                }
-                return false;
+                const status = getCustomerTargetStatus(crm, '상령일');
+                return status.match;
             }
 
             function hasMaturityInMonth(crm, targetMonth, menuTitle) {
-                if (!crm) return false;
-                const matStr = crm[decodeURIComponent('%EB%A7%8C%EA%B8%B0%EC%9D%BC')] || "";
-                if (!matStr) return false;
-                const m = matStr.match(/\d{4}[-\.]?(\d{2})[-\.]?\d{2}/);
-                if (!m || parseInt(m[1], 10) !== targetMonth) return false;
-
-                const insight = crm[decodeURIComponent('%ED%84%B0%EC%B9%98%EC%9D%B8%EC%82%AC%EC%9D%B4%ED%8A%B8')] || ""; // 터치인사이트 (특약 태그)
-                const coverage = crm[decodeURIComponent('%EA%B0%80%EC%9E%85%EB%82%B4%EC%97%AD')] || ""; // 가입내역
-                const covType = crm[decodeURIComponent('%EB%B3%B4%ED%97%98%EC%A2%85%EB%A5%98')] || ""; // 보험종류
-
-                // 태그 및 특약 포함 여부 확인
-                const hasAutoTag = insight.includes("자동차") || insight.includes("운전자") || insight.includes("바이크") || 
-                                   coverage.includes("자동차") || coverage.includes("운전자") || coverage.includes("바이크");
-                const hasPropertyTag = insight.includes("재물보험") || coverage.includes("재물보험");
-                
-                const isLongTerm = covType.includes("장기보험");
-                const isAutoIns = covType.includes("자동차보험");
-
-                if (menuTitle === "자동차보험 만기") {
-                    // 특약에 자동차/운전자/바이크가 있거나, 애초에 보험종류가 자동차보험인 경우
-                    return hasAutoTag || isAutoIns;
-                }
-                
-                if (menuTitle === "재물보험 만기") {
-                    // 특약에 재물보험이 있거나, 보험종류가 재물보험인 경우
-                    return hasPropertyTag || covType.includes("재물");
-                }
-                
-                if (menuTitle === "장기보험만기") {
-                    // 1. 보험종류가 장기보험일 것
-                    // 2. 특약에 자동차, 운전자, 바이크, 재물보험이 없을 것 (제외 조건)
-                    if (isLongTerm && !hasAutoTag && !hasPropertyTag) {
-                        return true;
-                    }
-                    return false; // 위 조건에 안 맞으면 장기보험 만기 리스트에서 제외
-                }
-                
-                // 일반보험 만기 등 아직 세팅 안 된 나머지는 만기일만 맞으면 일단 노출되도록 허용
-                return true;
+                const status = getCustomerTargetStatus(crm, menuTitle || '만기');
+                return status.match;
             }
 
-
-            //  블랙리스트(차단된 고객) 실시간 제외
+            // 블랙리스트(차단된 고객) 실시간 제외
             let localBlacklist = [];
             try {
                 localBlacklist = JSON.parse(localStorage.getItem('weracle_blacklist') || '[]').map(p => (typeof p === 'object' && p !== null) ? String(p.phone || p['전화번호'] || '').replace(/[^0-9]/g, '') : String(p).replace(/[^0-9]/g, '')).filter(Boolean);
@@ -1822,26 +1917,25 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                 titleElement.innerText = 'CRM 등록 고객';
             } else if (targetType === 'targeted') {
                 const combinedMap = new Map();
-                (window.pureCrmList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[\s-]/g, ""), c); });
-                (mergedList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[\s-]/g, ""), c); });
+                (window.pureCrmList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[s-]/g, ""), c); });
+                (mergedList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[s-]/g, ""), c); });
                 
-                baseData = Array.from(combinedMap.values()).filter(c => c.tag !== ' 신규 가망고객');
-                
-                const currentMonth = new Date().getMonth() + 1;
-                if (menuTitle.includes('생일')) {
-                    baseData = baseData.filter(c => isTodayBirthday(c.crmData, c));
-                } else if (menuTitle.includes('상령일')) {
-                    baseData = baseData.filter(c => hasSangryungInMonth(c.crmData, currentMonth));
-                } else if (menuTitle.includes('만기')) {
-                    baseData = baseData.filter(c => hasMaturityInMonth(c.crmData, currentMonth, menuTitle));
-                }
+                let candidateList = Array.from(combinedMap.values()).filter(c => c.tag !== ' 신규 가망고객');
+                baseData = candidateList.filter(c => {
+                    const status = getCustomerTargetStatus(c, menuTitle);
+                    if (status.match) {
+                        c.targetBadge = { text: status.badge, color: status.badgeColor, bg: status.badgeBg };
+                        return true;
+                    }
+                    return false;
+                });
                 titleElement.innerText = '추천 타겟 (' + menuTitle + ')';
             } else {
                 baseData = [];
                 titleElement.innerText = '추천 타겟 (' + menuTitle + ')';
             }
 
-            //  블랙리스트 제외 적용
+            // 블랙리스트 제외 적용
             if (localBlacklist.length > 0) {
                 baseData = baseData.filter(c => {
                     const p = String(c.phone || '').replace(/[^0-9]/g, '');
@@ -1849,7 +1943,7 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                 });
             }
 
-            //  우측 탭 텍스트 및 개수 배지 동적 업데이트
+            // 우측 탭 텍스트 및 개수 배지 동적 업데이트
             const rTabTargetEl = document.getElementById('r-tab-target');
             const rTabAllEl = document.getElementById('r-tab-all');
             if (rTabTargetEl && rTabAllEl) {
@@ -1858,23 +1952,19 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                     return !localBlacklist.includes(p);
                 }).length;
 
-                let targetOrCrmCount = 0;
-                if (menuTitle.includes('생일') || menuTitle.includes('만기') || menuTitle.includes('상령일')) {
-                    const combinedMap = new Map();
-                    (window.pureCrmList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[\s-]/g, ""), c); });
-                    (mergedList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[\s-]/g, ""), c); });
-                    let tList = Array.from(combinedMap.values()).filter(c => c.tag !== ' 신규 가망고객');
-                    const curM = new Date().getMonth() + 1;
-                    if (menuTitle.includes('생일')) tList = tList.filter(c => isTodayBirthday(c.crmData, c));
-                    else if (menuTitle.includes('상령일')) tList = tList.filter(c => hasSangryungInMonth(c.crmData, curM));
-                    else if (menuTitle.includes('만기')) tList = tList.filter(c => hasMaturityInMonth(c.crmData, curM, menuTitle));
-                    targetOrCrmCount = tList.filter(c => !localBlacklist.includes(String(c.phone || '').replace(/[^0-9]/g, ''))).length;
-                    
-                    rTabTargetEl.innerText = ` CRM 고객 (${targetOrCrmCount})`;
-                } else {
-                    let crmList = (window.pureCrmList || []).filter(c => !localBlacklist.includes(String(c.phone || '').replace(/[^0-9]/g, '')));
-                    rTabTargetEl.innerText = ` CRM 고객 (${crmList.length})`;
-                }
+                const combinedMap = new Map();
+                (window.pureCrmList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[s-]/g, ""), c); });
+                (mergedList || []).forEach(c => { combinedMap.set(String(c.phone).replace(/[s-]/g, ""), c); });
+                let candidateList = Array.from(combinedMap.values()).filter(c => c.tag !== ' 신규 가망고객');
+                
+                let targetCleanCount = candidateList.filter(c => {
+                    const status = getCustomerTargetStatus(c, menuTitle);
+                    if (!status.match) return false;
+                    const p = String(c.phone || '').replace(/[^0-9]/g, '');
+                    return !localBlacklist.includes(p);
+                }).length;
+
+                rTabTargetEl.innerText = ` 추천 타겟 (${targetCleanCount})`;
                 rTabAllEl.innerText = ` 전체 고객 (${allCleanCount})`;
             }
 
@@ -1937,6 +2027,9 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
 
             currentGroup.forEach(cust => {
                 let tagHtml = `<div style="font-size: 12px; color: ${cust.color || 'var(--text-sub)'}; margin-top: 4px; background: ${cust.color ? cust.color+'15' : '#f5f5f7'}; display: inline-block; padding: 4px 8px; border-radius: 6px; font-weight:600;">${cust.tag || '기존 등록고객'}</div>`;
+                if (cust.targetBadge) {
+                    tagHtml += `<div style="font-size: 12px; color: ${cust.targetBadge.color}; margin-top: 4px; margin-left: 6px; background: ${cust.targetBadge.bg}; display: inline-block; padding: 4px 8px; border-radius: 6px; font-weight:700;">${cust.targetBadge.text}</div>`;
+                }
                 let pDigits = String(cust.phone || '').replace(/[^0-9]/g, '');
                 let displayPhone = pDigits.length === 11 ? pDigits.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3') : (pDigits.length === 10 ? pDigits.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : (cust.phone || ''));
                 const isCheckedHtml = cust.isChecked ? 'checked' : '';
@@ -2785,7 +2878,7 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
             const progressText = document.getElementById('kakaoProgressText');
             
             progressBar.style.width = '0%';
-            progressText.innerText = `발송 명령을 위라클 엔진으로 전송 중입니다... ⏳`;
+            progressText.innerText = `발송 명령을 위라클 엔진으로 전송 중입니다...`;
 
             try {
                 const response = await fetch('http://127.0.0.1:48291/api/bridge_content', {

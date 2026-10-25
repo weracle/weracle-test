@@ -3428,9 +3428,20 @@ setTimeout(() => toast.remove(), 400);
 
 window.addEventListener('message', function(event) {
 if (event.data && event.data.type === 'DASHBOARD_READY') {
-const wf = document.getElementById('workerFrame');
-if (wf && wf.contentWindow) wf.contentWindow.postMessage(event.data, '*');
-return;
+  if (window.globalCustomerData && window.globalCustomerData.length > 0) {
+    const mf = document.getElementById('mainFrame');
+    if (mf && mf.contentWindow) {
+      mf.contentWindow.postMessage({
+        type: 'syncData',
+        data: window.globalCustomerData,
+        crmContacts: window.crmContactsData || [],
+        targetData: window.globalTargetData || []
+      }, '*');
+    }
+  }
+  const wf = document.getElementById('workerFrame');
+  if (wf && wf.contentWindow) wf.contentWindow.postMessage(event.data, '*');
+  return;
 }
 if (event.data && event.data.type === 'SAVE_TARGET') {
 const wf = document.getElementById('workerFrame');
@@ -3442,6 +3453,17 @@ if (event.data && (event.data.type === 'SAVE_TARGET_CSV' || event.data.type === 
   if (wf && wf.contentWindow) wf.contentWindow.postMessage(event.data, '*');
 }
 if (event.data && event.data.type === 'requestSyncData') {
+  if (window.globalCustomerData && window.globalCustomerData.length > 0) {
+    const mf = document.getElementById('mainFrame');
+    if (mf && mf.contentWindow) {
+      mf.contentWindow.postMessage({
+        type: 'syncData',
+        data: window.globalCustomerData,
+        crmContacts: window.crmContactsData || [],
+        targetData: window.globalTargetData || []
+      }, '*');
+    }
+  }
   const wf = document.getElementById('workerFrame');
   if (wf && wf.contentWindow) wf.contentWindow.postMessage(event.data, '*');
 }
@@ -3450,13 +3472,22 @@ if (event.data && event.data.type === 'workerAuthFailed') {
   if (mf && mf.contentWindow) mf.contentWindow.postMessage(event.data, '*');
 }
 if (event.data && event.data.type === 'syncData') {
-const mf = document.getElementById('mainFrame');
-if (mf && mf.contentWindow) mf.contentWindow.postMessage(event.data, '*');
+  window.globalCustomerData = event.data.data || [];
+  window.globalTargetData = event.data.targetData || [];
+  window.crmContactsData = event.data.crmContacts || [];
+  try {
+    if (window.globalCustomerData.length > 0) {
+      localStorage.setItem('demo_crm_data', JSON.stringify(window.globalCustomerData));
+    }
+  } catch(e) {}
 
-if (typeof updateIndexDashboard === 'function') {
-updateIndexDashboard(event.data.data || [], event.data.targetData || [], event.data.metrics);
-}
-return;
+  const mf = document.getElementById('mainFrame');
+  if (mf && mf.contentWindow) mf.contentWindow.postMessage(event.data, '*');
+
+  if (typeof updateIndexDashboard === 'function') {
+    updateIndexDashboard(event.data.data || [], event.data.targetData || [], event.data.metrics);
+  }
+  return;
 }
 if (event.data && event.data.type === 'REQUEST_GOOGLE_LOGIN') {
 triggerGoogleLogin();
@@ -4172,7 +4203,7 @@ pbLoginInfo.innerHTML = `
                     <div style="padding: 6px 0;">
                         <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='login/myposts.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
                             <svg style="width:16px;height:16px;color:#64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <span>내가 쓴 글/댓글</span>
+                            <span>내가 쓴 글</span>
                         </a>
                         <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openMyPageFromSidebar ? window.openMyPageFromSidebar() : alert('마이페이지 기능 준비중');" class="pb-dropdown-item">
                             <svg style="width:16px;height:16px;color:#64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>

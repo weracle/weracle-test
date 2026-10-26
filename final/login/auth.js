@@ -311,13 +311,22 @@ window.guardPageAccess = guardPageAccess;
 async function loginWithGoogle() {
     if(!window.sb) { alert("서버 연결 중입니다. 잠시 후 다시 시도해주세요."); return; }
     try {
-        const { error } = await window.sb.auth.signInWithOAuth({
+        const redirectUrl = (window.top && window.top !== window) ? window.top.location.href.split('?')[0].split('#')[0] : window.location.href.split('?')[0].split('#')[0];
+        const { data, error } = await window.sb.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.href.split('?')[0].split('#')[0]
+                redirectTo: redirectUrl,
+                skipBrowserRedirect: true
             }
         });
         if(error) throw error;
+        if(data && data.url) {
+            if(window.top) {
+                window.top.location.href = data.url;
+            } else {
+                window.location.href = data.url;
+            }
+        }
     } catch(err) {
         alert("로그인 에러: " + err.message);
     }

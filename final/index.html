@@ -4021,17 +4021,28 @@ safeAlert("회원가입 실패: " + err.message);
 
 async function handleSocial(provider) {
 try {
-const options = { redirectTo: window.location.href.split('?')[0].split('#')[0] };
+const redirectUrl = (window.top && window.top !== window) ? window.top.location.href.split('?')[0].split('#')[0] : window.location.href.split('?')[0].split('#')[0];
+const options = { 
+  redirectTo: redirectUrl,
+  skipBrowserRedirect: true
+};
 if (provider === 'google') {
 options.scopes = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events';
 options.queryParams = { access_type: 'offline' };
 
 }
-const { error } = await window.sb.auth.signInWithOAuth({
+const { data, error } = await window.sb.auth.signInWithOAuth({
 provider,
 options
 });
 if (error) throw error;
+if (data && data.url) {
+  if (window.top) {
+    window.top.location.href = data.url;
+  } else {
+    window.location.href = data.url;
+  }
+}
 } catch (err) {
 safeAlert("소셜 로그인 에러: " + err.message);
 }

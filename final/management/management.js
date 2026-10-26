@@ -220,7 +220,9 @@ async function loadSettingsFromSupabase() {
         } else if (row.key === 'attendance_times' && row.value) {
           if (row.value.workEnd) timePolicySettings.workTime = row.value.workEnd;
           if (row.value.edu1Start) timePolicySettings.eduAmTime = row.value.edu1Start;
-          if (row.value.edu2Start) timePolicySettings.eduPmTime = row.value.edu2Start;
+          if (row.value.edu2Start) {
+            timePolicySettings.eduPmTime = (row.value.edu2Start === '13:00' || row.value.edu2Start === '14:00' || row.value.edu2Start === '13:30') ? '11:00' : row.value.edu2Start;
+          }
           const wInput = document.getElementById('cfgWorkTime');
           const amInput = document.getElementById('cfgEduAmTime');
           const pmInput = document.getElementById('cfgEduPmTime');
@@ -239,6 +241,12 @@ async function loadSettingsFromSupabase() {
           if (typeof applyTeamGoalsFromObject === 'function') {
             applyTeamGoalsFromObject(row.value);
           }
+        } else if (row.key === 'member_teams' && row.value) {
+          memberTeamsMap = { ...memberTeamsMap, ...row.value };
+          try { localStorage.setItem('weracle_member_teams', JSON.stringify(memberTeamsMap)); } catch(e){}
+        } else if (row.key === 'member_grades' && row.value) {
+          memberGradesMap = { ...memberGradesMap, ...row.value };
+          try { localStorage.setItem('weracle_member_grades', JSON.stringify(memberGradesMap)); } catch(e){}
         } else if (row.key === 'lab_data' && row.value) {
           if (typeof applyLabDataFromSupabase === 'function') {
             applyLabDataFromSupabase(row.value);
@@ -1153,10 +1161,9 @@ window.handleSchedCategoryChange = function() {
 // [2. 출결 시간 정책 설정 및 QR 출석체크]
 // =========================================================
 let timePolicySettings = {
-  workTime: '10:00',
+  workTime: '09:00',
   eduAmTime: '10:00',
-  eduPmTime: '11:00',
-  qrRefreshSec: 60
+  eduPmTime: '11:00'
 };
 
 // [출석률 평가 기준 및 총 근무일수 정책 설정]
@@ -1452,26 +1459,34 @@ function renderLeaderQrGrid() {
   if (!grid) return;
   grid.innerHTML = '';
 
-  const currentBase = window.location.origin + window.location.pathname;
+  let currentBase = window.location.origin + window.location.pathname;
+  if (!window.location.origin || window.location.origin === 'null' || window.location.protocol === 'file:') {
+    // 로컬 파일 실행 시 Vercel 웹 도메인 기준으로 안전 설정
+    currentBase = 'https://weracle-management.vercel.app/management.html';
+  }
 
-  if (!teamGoalsData || teamGoalsData.length === 0) {
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#64748b;">등록된 소속팀이 없습니다. 관리자 팀 설정에서 팀을 먼저 등록해 주세요.</div>';
+  // 파트너스(C 권한)를 부여받은 실제 출결 대상자 목록 조회
+  const targetUsers = getPartnerAttendanceTargets();
+
+  if (!targetUsers || targetUsers.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#64748b;">파트너스(C 권한)가 부여된 회원이 없습니다.<br>[등급권한 관리] 메뉴에서 파트너스 회원의 C 권한을 체크해 주세요.</div>';
     return;
   }
 
-  teamGoalsData.forEach((t, idx) => {
-    const rawLeader = (t.leader || '').trim();
-    const cleanLeader = rawLeader.replace(/팀장/g, '').trim() || `${t.team} 팀장`;
-    const checkinUrl = `${currentBase}?mode=checkin&team=${encodeURIComponent(t.team)}&leader=${encodeURIComponent(cleanLeader)}`;
+  targetUsers.forEach((u, idx) => {
+    const rawName = (u.name || u.nickname || '파트너').trim();
+    const cleanLeader = rawName.replace(/팀장/g, '').trim();
+    const teamName = u.team || '영업 1팀';
+    const checkinUrl = `${currentBase}?mode=checkin&userId=${encodeURIComponent(u.id)}&team=${encodeURIComponent(teamName)}&leader=${encodeURIComponent(cleanLeader)}`;
     const qrContainerId = `leaderQrCanvas_${idx}`;
 
     const card = document.createElement('div');
     card.style.cssText = 'background:#ffffff; border:1.5px solid #cbd5e1; border-radius:14px; padding:18px 14px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.04); display:flex; flex-direction:column; align-items:center; break-inside:avoid;';
     card.innerHTML = `
       <div style="font-size:10px; font-weight:800; color:#0284c7; letter-spacing:1px; margin-bottom:2px;">WERACLE PARTNERS</div>
-      <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:2px;">🏢 ${t.team}</div>
+      <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:2px;">🏢 ${teamName}</div>
       <div style="font-size:16px; font-weight:900; color:#0369a1; margin-bottom:10px;">👑 ${cleanLeader} 팀장</div>
-      <div id="${qrContainerId}" style="display:flex; justify-content:center; margin-bottom:10px; padding:6px; background:#fff; border-radius:8px; border:1px solid #e2e8f0;"></div>
+      <div id="${qrContainerId}" style="width:130px; height:130px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; padding:6px; background:#fff; border-radius:8px; border:1px solid #e2e8f0; overflow:hidden;"></div>
       <div style="font-size:11px; font-weight:700; color:#334155; margin-bottom:4px;">스마트폰 카메라로 스캔</div>
       <div style="font-size:10px; color:#16a34a; font-weight:700; line-height:1.3;">✔ 구글 로그인 없이 즉시 출석</div>
     `;
@@ -1479,60 +1494,79 @@ function renderLeaderQrGrid() {
 
     setTimeout(() => {
       const box = document.getElementById(qrContainerId);
-      if (box && typeof QRCode !== 'undefined') {
+      if (box) {
         box.innerHTML = '';
-        new QRCode(box, {
-          text: checkinUrl,
-          width: 130,
-          height: 130,
-          colorDark: "#0284c7",
-          colorLight: "#ffffff",
-          correctLevel: QRCode.CorrectLevel.H
-        });
+        let qrcodeRendered = false;
+        if (typeof QRCode !== 'undefined') {
+          try {
+            new QRCode(box, {
+              text: checkinUrl,
+              width: 130,
+              height: 130,
+              colorDark: "#0284c7",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.H
+            });
+            qrcodeRendered = true;
+          } catch (e) {
+            console.warn('QRCode JS render error:', e);
+          }
+        }
+        if (!qrcodeRendered) {
+          // CDN 지연 또는 로컬 환경 fallback 이미지
+          box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&color=0284c7&data=${encodeURIComponent(checkinUrl)}" width="130" height="130" alt="출석 QR" style="border-radius:4px; display:block;" />`;
+        }
       }
     }, 40 * (idx + 1));
   });
 }
 
-// 팀장 전용 QR 스캔 시 1초 다이렉트 출석 처리 (로그인 불필요)
-window.handleDirectLeaderCheckin = async function(team, leader) {
-  if (!leader) return;
-  const cleanLeader = String(leader).replace(/팀장/g, '').trim();
+// 팀장/파트너스 전용 QR 스캔 시 1초 다이렉트 출석 처리 (로그인 불필요)
+window.handleDirectLeaderCheckin = async function(team, leader, userId) {
+  if (!leader && !userId) return;
+  const cleanLeader = String(leader || '').replace(/팀장/g, '').trim();
   const todayStr = getTodayDateStr();
 
-  // 대상 팀장 찾기 (adminUsersData 매칭 시도, 없으면 가상 유저 객체 생성)
-  let user = adminUsersData.find(u => 
-    (u.name === cleanLeader || (u.nickname && u.nickname === cleanLeader)) &&
-    (!team || u.team === team)
-  );
-
-  if (!user) {
+  // 대상 파트너 찾기 (userId 우선, 없으면 name/nickname으로 매칭)
+  let user = null;
+  if (userId) {
+    user = adminUsersData.find(u => u.id === userId);
+  }
+  if (!user && cleanLeader) {
+    user = adminUsersData.find(u => 
+      (u.name === cleanLeader || (u.nickname && u.nickname === cleanLeader)) &&
+      (!team || u.team === team)
+    );
+  }
+  if (!user && cleanLeader) {
     user = adminUsersData.find(u => u.name === cleanLeader || (u.nickname && u.nickname === cleanLeader));
   }
 
   if (!user) {
     user = {
-      id: 'leader-' + (team || 'team') + '-' + cleanLeader,
-      name: cleanLeader,
-      team: team || '미지정',
+      id: userId || ('leader-' + (team || 'team') + '-' + cleanLeader),
+      name: cleanLeader || '파트너',
+      team: team || '영업 1팀',
       nickname: '팀장'
     };
   }
 
+  const finalName = user.name || cleanLeader;
+
   // 중복 출석 확인
   const alreadyChecked = attendanceLogs.some(l => 
     (l.user_id && l.user_id === user.id) ||
-    (l.name && (l.name.includes(cleanLeader) || cleanLeader.includes(l.name)))
+    (l.name && (l.name.includes(finalName) || finalName.includes(l.name)))
   );
 
   if (alreadyChecked) {
     const existing = attendanceLogs.find(l => 
       (l.user_id && l.user_id === user.id) ||
-      (l.name && (l.name.includes(cleanLeader) || cleanLeader.includes(l.name)))
+      (l.name && (l.name.includes(finalName) || finalName.includes(l.name)))
     );
     showLeaderCheckinResultModal({
       already: true,
-      name: cleanLeader,
+      name: finalName,
       team: user.team,
       time: existing ? existing.time : '--:--',
       isLate: existing ? existing.status === 'late' : false,
@@ -1544,14 +1578,14 @@ window.handleDirectLeaderCheckin = async function(team, leader) {
   // 출석 즉시 기록 (Supabase 및 로컬 동시)
   const res = await recordAttendanceCheckin({
     user: user,
-    method: '팀장 전용 QR',
+    method: '파트너스 전용 QR',
     type: '회사 정규 출근'
   });
 
   if (res) {
     showLeaderCheckinResultModal({
       already: false,
-      name: cleanLeader,
+      name: finalName,
       team: res.checkinTeam || user.team,
       time: res.timeStr,
       isLate: res.isLate,
@@ -1651,11 +1685,12 @@ setInterval(updateMobileClock, 1000);
 function checkUrlCheckinMode() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('mode') === 'checkin') {
-    const leader = urlParams.get('leader');
+    const leader = urlParams.get('leader') || urlParams.get('name');
     const team = urlParams.get('team');
-    if (leader) {
+    const userId = urlParams.get('userId');
+    if (leader || userId) {
       setTimeout(() => {
-        handleDirectLeaderCheckin(team, leader);
+        handleDirectLeaderCheckin(team, leader, userId);
       }, 350);
       return;
     }
@@ -2152,12 +2187,16 @@ window.recordAttendanceCheckin = async function({ user, method = '스마트폰 Q
   let eduMsg = '';
 
   if (voteStatus !== 'absent') {
+    // 당일 등록된 실제 교육이 있으면 해당 교육 타이틀 사용, 없으면 설정된 교육 시작 시각 기준 적용
+    const todayEdu = sampleSchedules.find(s => s.date === todayStr && s.category === 'edu');
+    const eduTitle = todayEdu ? `${todayEdu.time || '10:00'} ${todayEdu.title}` : `${timePolicySettings.eduAmTime || '10:00'} 사내 교육`;
+
     const eduLog = {
       user_id: user.id || null,
       date: todayStr,
       name: checkinName,
       team: checkinTeam,
-      type: '10:00 신상품 약관 및 언더라이팅 심화 교육',
+      type: eduTitle,
       time: timeStr,
       status: 'on-time',
       method: '출근 연동 자동인증',
@@ -2173,7 +2212,7 @@ window.recordAttendanceCheckin = async function({ user, method = '스마트폰 Q
           user_id: user.id || null,
           name: checkinName,
           team: checkinTeam,
-          checkin_type: '10:00 신상품 약관 및 언더라이팅 심화 교육',
+          checkin_type: eduTitle,
           checkin_time: now.toISOString(),
           status: 'on-time',
           method: '출근 연동 자동인증',
@@ -2181,7 +2220,7 @@ window.recordAttendanceCheckin = async function({ user, method = '스마트폰 Q
         }]);
       } catch (e) {}
     }
-    eduMsg = '\n\n [오전 10:00 교육]도 별도 스캔 없이 자동으로 동시 출석 완료되었습니다! (전날 참석/미투표 연동)';
+    eduMsg = `\n\n [${eduTitle}]도 별도 스캔 없이 자동으로 동시 출석 완료되었습니다! (전날 참석/미투표 연동)`;
   } else {
     eduMsg = '\n\n※ 전날 사전 [불참 신청]이 접수되어 당일 교육 자동 출석에서는 제외되었습니다.';
   }
@@ -3275,9 +3314,29 @@ window.closePastTopicModal = function() {
 // =========================================================
 // [5.  관리자 제어 콘솔 (스케줄/정책/실적/연구소/회원권한)]
 // =========================================================
-let adminUsersData = [];
+// 파트너스(C 권한) 실제 보유 회원 기본값 및 로컬 캐시 연동 (로컬 실행 시 즉시 로딩 보장)
+let adminUsersData = [
+  { id: '9a333f7f-42d2-41b6-8888-a3a3f55e1afc', name: '김시화', nickname: '김시화', team: '영업 1팀', access_grades: 'A,B,C,D,E,F', user_grade: 'VIP' },
+  { id: '6e1bdc08-264d-48ae-a751-47fec5514a21', name: '김선영', nickname: '김선영', team: '영업 1팀', access_grades: 'A,B,C,D,E,F', user_grade: 'VIP' }
+];
 
-let currentTeamMemberSubTab = 1;
+try {
+  const cachedUsers = localStorage.getItem('weracle_partner_profiles');
+  if (cachedUsers) {
+    const parsed = JSON.parse(cachedUsers);
+    if (Array.isArray(parsed) && parsed.length > 0) adminUsersData = parsed;
+  }
+} catch(e){}
+
+let memberTeamsMap = {};
+let memberGradesMap = {};
+
+try {
+  const savedTeams = localStorage.getItem('weracle_member_teams');
+  if (savedTeams) memberTeamsMap = JSON.parse(savedTeams);
+  const savedGrades = localStorage.getItem('weracle_member_grades');
+  if (savedGrades) memberGradesMap = JSON.parse(savedGrades);
+} catch (e) {}
 
 window.switchTeamMemberSubTab = function(subIdx) {
   currentTeamMemberSubTab = subIdx;
@@ -3500,16 +3559,14 @@ window.adminDeleteSchedule = async function(id) {
 
 // 2. 관리자: 출결 시간 및 출석률 평가 정책 설정 저장
 window.saveTimeSettings = function() {
-  const workTime = document.getElementById('cfgWorkTime').value;
-  const eduAmTime = document.getElementById('cfgEduAmTime').value;
-  const eduPmTime = document.getElementById('cfgEduPmTime').value;
-  const qrSec = parseInt(document.getElementById('cfgQrRefresh').value, 10);
+  const workTime = document.getElementById('cfgWorkTime')?.value || '09:00';
+  const eduAmTime = document.getElementById('cfgEduAmTime')?.value || '10:00';
+  const eduPmTime = document.getElementById('cfgEduPmTime')?.value || '11:00';
 
   timePolicySettings = {
     workTime: workTime,
     eduAmTime: eduAmTime,
-    eduPmTime: eduPmTime,
-    qrRefreshSec: qrSec
+    eduPmTime: eduPmTime
   };
 
   const cfgWorkDays = document.getElementById('cfgTotalWorkDays');
@@ -3535,14 +3592,13 @@ window.saveTimeSettings = function() {
     workEnd: timePolicySettings.workTime,
     workLate: '09:30',
     edu1Start: timePolicySettings.eduAmTime,
-    edu1End: '09:30',
+    edu1End: '10:50',
     edu2Start: timePolicySettings.eduPmTime,
-    edu2End: '13:30',
+    edu2End: '11:50',
     leaveStart: '18:00'
   }, '출퇴근 및 교육 인정 시간 설정');
 
-  startQRTimer();
-  alert(`[출결 정책 및 출석률 기준 설정 완료]\n- 정규 출근 기준: ${workTime}\n- 오전 교육 기준: ${eduAmTime}\n- 오후 교육 기준: ${eduPmTime}\n- QR 갱신 주기: ${qrSec}초\n- 당월 총 근무일수: ${attendancePolicySettings.totalWorkDays}일\n-  우수 개근: ${attendancePolicySettings.rateExcellent}% 이상\n- ● 보통(양호): ${attendancePolicySettings.rateGood}% 이상\n-  출석 주의: ${attendancePolicySettings.rateGood}% 미만\n\n모든 시스템에 즉시 반영되었습니다.\n(Supabase 클라우드 동기화 완료)`);
+  alert(`[출결 정책 및 출석률 기준 설정 완료]\n- 정규 출근 기준: ${workTime}\n- 사내 교육 1 기준: ${eduAmTime}\n- 사내 교육 2 기준: ${eduPmTime}\n- 당월 총 근무일수: ${attendancePolicySettings.totalWorkDays}일\n- 🌟 우수 개근: ${attendancePolicySettings.rateExcellent}% 이상\n- ● 보통(양호): ${attendancePolicySettings.rateGood}% 이상\n- ⚠️ 출석 주의: ${attendancePolicySettings.rateGood}% 미만\n\n모든 시스템에 즉시 반영되었습니다.\n(Supabase 클라우드 동기화 완료)`);
 };
 
 // 3. 관리자: 파트너스 실적 및 팀별 목표 관리
@@ -3913,14 +3969,22 @@ async function loadAdminUserList() {
     try {
       const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
       if (!error && Array.isArray(data) && data.length > 0) {
-        adminUsersData = data.map(u => ({
-          ...u,
-          name: u.nickname || u.name || (u.email ? u.email.split('@')[0] : '이름 없음'),
-          nickname: u.nickname || '',
-          team: u.team || '',
-          access_grades: u.access_grades || '',
-          user_grade: u.user_grade || 'basic'
-        }));
+        adminUsersData = data.map(u => {
+          const assignedTeam = memberTeamsMap[u.id] || (u.email ? memberTeamsMap[u.email] : null) || u.team || '';
+          const assignedGrades = memberGradesMap[u.id]?.access_grades !== undefined ? memberGradesMap[u.id].access_grades : (u.access_grades || '');
+          const assignedGrade = memberGradesMap[u.id]?.user_grade !== undefined ? memberGradesMap[u.id].user_grade : (u.user_grade || 'basic');
+          return {
+            ...u,
+            name: u.nickname || u.name || (u.email ? u.email.split('@')[0] : '이름 없음'),
+            nickname: u.nickname || '',
+            team: assignedTeam,
+            access_grades: assignedGrades,
+            user_grade: assignedGrade
+          };
+        });
+        try {
+          localStorage.setItem('weracle_partner_profiles', JSON.stringify(adminUsersData));
+        } catch (e) {}
       }
     } catch (e) {
       console.warn('Supabase profiles 로드 실패, 기본 데이터 사용:', e);
@@ -3928,6 +3992,11 @@ async function loadAdminUserList() {
   }
   filterAdminUserList();
   filterAdminRoleList();
+  renderTargetRosterTable();
+  updateAttendanceStats();
+  if (typeof renderLeaderQrGrid === 'function' && document.getElementById('leaderQrModal')?.style.display !== 'none') {
+    renderLeaderQrGrid();
+  }
 }
 
 // 1. [회원관리] 회원 목록 필터 및 검색 (파트너스로 등록된 사내 인원만 표시)
@@ -4123,10 +4192,13 @@ window.adminChangeUserGrade = async function(userId, newGrade) {
   if (!user) return;
 
   user.user_grade = newGrade;
-
-  // 파트너스 출결 대조표 및 통계 자동 갱신 (C 권한자 또는 family/manager 등급)
-  renderTargetRosterTable();
-  updateAttendanceStats();
+  memberGradesMap[userId] = memberGradesMap[userId] || {};
+  memberGradesMap[userId].user_grade = newGrade;
+  try {
+    localStorage.setItem('weracle_member_grades', JSON.stringify(memberGradesMap));
+    localStorage.setItem('weracle_partner_profiles', JSON.stringify(adminUsersData));
+  } catch(e){}
+  saveSettingToSupabase('member_grades', memberGradesMap, '회원별 등급 및 권한 설정 매핑');
 
   // Supabase DB 업데이트 시도
   const sb = await getSb();
@@ -4138,18 +4210,33 @@ window.adminChangeUserGrade = async function(userId, newGrade) {
     }
   }
 
+  // 파트너스 출결 대조표 및 통계 자동 갱신
+  renderTargetRosterTable();
+  updateAttendanceStats();
+  if (typeof renderLeaderQrGrid === 'function' && document.getElementById('leaderQrModal')?.style.display !== 'none') {
+    renderLeaderQrGrid();
+  }
+
   filterAdminUserList();
   filterAdminRoleList();
   alert(`'${user.name || user.nickname || '회원'}' 님의 기본 등급이 '${newGrade}'(으)로 변경되었습니다.`);
 };
 
-// 2) 소속 팀 변경
+// 2) 소속 팀 변경 (클라우드 영구 저장 연동)
 window.adminUpdateUserTeam = async function(userId, newTeam) {
   const user = adminUsersData.find(u => u.id === userId);
   if (!user) return;
 
   user.team = newTeam;
-  renderTargetRosterTable();
+  memberTeamsMap[userId] = newTeam;
+  if (user.email) memberTeamsMap[user.email] = newTeam;
+  try {
+    localStorage.setItem('weracle_member_teams', JSON.stringify(memberTeamsMap));
+    localStorage.setItem('weracle_partner_profiles', JSON.stringify(adminUsersData));
+  } catch(e){}
+
+  // partners_settings 테이블에 영구 저장 (RLS 차단 우회 보장)
+  saveSettingToSupabase('member_teams', memberTeamsMap, '회원별 소속팀 배정 매핑');
 
   // 실적표에 해당 직원이 있다면 실적표 소속팀도 자동 동기화 & 팀 통계 재계산
   const perfItem = performanceData.find(p => p.name === user.name || p.name === user.nickname || (user.nickname && p.name.includes(user.nickname)) || (user.name && p.name.includes(user.name)));
@@ -4173,12 +4260,16 @@ window.adminUpdateUserTeam = async function(userId, newTeam) {
     }
   }
 
+  renderTargetRosterTable();
   filterAdminUserList();
   filterAdminRoleList();
+  if (typeof renderLeaderQrGrid === 'function' && document.getElementById('leaderQrModal')?.style.display !== 'none') {
+    renderLeaderQrGrid();
+  }
   alert(`'${user.name || user.nickname || '회원'}' 님의 소속 팀이 '${newTeam}'(으)로 설정되었습니다.`);
 };
 
-// 3) 세부 권한 토글 (파트너스 C, VIP V 등)
+// 3) 세부 권한 토글 (파트너스 C, VIP V 등 - 클라우드 영구 저장 연동)
 window.adminToggleAccess = async function(userId, gradeChar, isChecked) {
   const user = adminUsersData.find(u => u.id === userId);
   if (!user) return;
@@ -4194,10 +4285,13 @@ window.adminToggleAccess = async function(userId, gradeChar, isChecked) {
 
   const updatedGrades = gradesArr.join(',');
   user.access_grades = updatedGrades;
-
-  // 파트너스(C) 권한 변경 시 출결 대조표 및 통계 즉시 갱신
-  renderTargetRosterTable();
-  updateAttendanceStats();
+  memberGradesMap[userId] = memberGradesMap[userId] || {};
+  memberGradesMap[userId].access_grades = updatedGrades;
+  try {
+    localStorage.setItem('weracle_member_grades', JSON.stringify(memberGradesMap));
+    localStorage.setItem('weracle_partner_profiles', JSON.stringify(adminUsersData));
+  } catch(e){}
+  saveSettingToSupabase('member_grades', memberGradesMap, '회원별 등급 및 권한 설정 매핑');
 
   const sb = await getSb();
   if (sb) {
@@ -4206,6 +4300,13 @@ window.adminToggleAccess = async function(userId, gradeChar, isChecked) {
     } catch (e) {
       console.warn('DB access_grades 업데이트 에러:', e);
     }
+  }
+
+  // 파트너스(C) 권한 변경 시 출결 대조표, 통계 및 전용 QR 목록 즉시 갱신
+  renderTargetRosterTable();
+  updateAttendanceStats();
+  if (typeof renderLeaderQrGrid === 'function' && document.getElementById('leaderQrModal')?.style.display !== 'none') {
+    renderLeaderQrGrid();
   }
 
   filterAdminUserList();

@@ -251,6 +251,11 @@ async function loadSettingsFromSupabase() {
           if (typeof applyLabDataFromSupabase === 'function') {
             applyLabDataFromSupabase(row.value);
           }
+        } else if (row.key === 'qr_domain' && row.value) {
+          customQrDomain = typeof row.value === 'string' ? row.value : (row.value.url || '');
+          try { localStorage.setItem('weracle_qr_domain', customQrDomain); } catch(e){}
+          const input = document.getElementById('customQrDomainInput');
+          if (input) input.value = customQrDomain;
         }
       });
     }
@@ -1453,11 +1458,29 @@ function checkAndShowEduVotePopup() {
 // =========================================================
 // [팀장님별 전용 출근 QR 모달 및 자동 출석 제어]
 // =========================================================
+let customQrDomain = localStorage.getItem('weracle_qr_domain') || '';
+
 window.openLeaderQrModal = function() {
   const modal = document.getElementById('leaderQrModal');
   if (!modal) return;
   modal.style.display = 'flex';
+  const input = document.getElementById('customQrDomainInput');
+  if (input) {
+    input.value = customQrDomain || ((window.location.protocol === 'http:' || window.location.protocol === 'https:') ? (window.location.origin + window.location.pathname) : '');
+  }
   renderLeaderQrGrid();
+};
+
+window.saveCustomQrDomain = function() {
+  const input = document.getElementById('customQrDomainInput');
+  if (!input) return;
+  customQrDomain = input.value.trim();
+  try { localStorage.setItem('weracle_qr_domain', customQrDomain); } catch(e){}
+  saveSettingToSupabase('qr_domain', { url: customQrDomain }, '파트너스 출석 QR 연결 웹사이트 도메인 주소');
+  renderLeaderQrGrid();
+  alert(customQrDomain 
+    ? `QR 연결 웹 주소가 '${customQrDomain}'(으)로 설정되었습니다.\n모든 파트너스 QR 코드가 새 주소로 즉시 갱신되었습니다.` 
+    : '기본 웹 주소로 초기화되었습니다.');
 };
 
 window.closeLeaderQrModal = function() {
@@ -1557,10 +1580,32 @@ function renderLeaderQrGrid() {
   if (!grid) return;
   grid.innerHTML = '';
 
-  let currentBase = window.location.origin + window.location.pathname;
-  if (!window.location.origin || window.location.origin === 'null' || window.location.protocol === 'file:') {
-    // 로컬 파일 실행 시 Vercel 웹 도메인 기준으로 안전 설정
+  let currentBase = '';
+  if (customQrDomain) {
+    currentBase = customQrDomain;
+  } else if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+    currentBase = window.location.origin + window.location.pathname;
+  } else {
+    // 로컬 파일(file:///) 실행 시 기본 안내 주소
     currentBase = 'https://weracle-management.vercel.app/management.html';
+  }
+
+  // 로컬 파일(file:///) 실행 중이고 커스텀 도메인이 미설정된 경우 안내 박스 노출
+  if (window.location.protocol === 'file:' && !customQrDomain) {
+    const notice = document.createElement('div');
+    notice.className = 'no-print';
+    notice.style.cssText = 'grid-column:1/-1; background:#fffbeb; border:1.5px solid #fde68a; border-radius:12px; padding:14px 18px; font-size:12px; color:#92400e; line-height:1.6; margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,0.02);';
+    notice.innerHTML = `
+      <div style="font-weight:800; font-size:13px; color:#b45309; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+        <i class="fa-solid fa-triangle-exclamation"></i> 스마트폰 카메라 스캔 전 확인 안내
+      </div>
+      <div>
+        현재 로컬 컴퓨터(PC 내 파일)에서 실행 중이므로 스마트폰 일반 카메라로 스캔 시 연결할 웹 주소가 필요합니다.<br>
+        1. <strong>스마트폰 일반 카메라</strong>로 찍으시려면 실제 웹사이트에 업로드(배포)하신 주소를 위 <strong style="color:#0284c7;">'QR 연결 웹 주소'</strong>에 입력 후 [주소 저장]을 눌러주세요.<br>
+        2. 또는 화면 상단의 <strong style="color:#059669;">[📷 카메라로 직접 찍기]</strong> 버튼을 누르시면 웹 배포 없이도 화면 카메라로 즉시 0.1초 출석체크가 가능합니다!
+      </div>
+    `;
+    grid.appendChild(notice);
   }
 
   // 파트너스(C 권한)를 부여받은 실제 출결 대상자 목록 조회
@@ -1584,9 +1629,9 @@ function renderLeaderQrGrid() {
       <div style="font-size:10px; font-weight:800; color:#0284c7; letter-spacing:1px; margin-bottom:2px;">WERACLE PARTNERS</div>
       <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:2px;">🏢 ${teamName}</div>
       <div style="font-size:16px; font-weight:900; color:#0369a1; margin-bottom:10px;">👑 ${cleanLeader} 팀장</div>
-      <div id="${qrContainerId}" style="width:130px; height:130px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; padding:6px; background:#fff; border-radius:8px; border:1px solid #e2e8f0; overflow:hidden;"></div>
-      <div style="font-size:11px; font-weight:700; color:#334155; margin-bottom:4px;">스마트폰 카메라로 스캔</div>
-      <div style="font-size:10px; color:#16a34a; font-weight:700; line-height:1.3;">✔ 구글 로그인 없이 즉시 출석</div>
+      <div id="${qrContainerId}" style="width:140px; height:140px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; padding:6px; background:#fff; border-radius:8px; border:1px solid #e2e8f0; overflow:hidden;"></div>
+      <div style="font-size:11px; font-weight:700; color:#334155; margin-bottom:4px;">스마트폰 카메라 또는 화면 스캐너로 스캔</div>
+      <div style="font-size:10px; color:#16a34a; font-weight:700; line-height:1.3;">✔ 로그인 없이 1초 즉시 출석</div>
     `;
     grid.appendChild(card);
 
@@ -1599,11 +1644,11 @@ function renderLeaderQrGrid() {
           try {
             new QRCode(box, {
               text: checkinUrl,
-              width: 130,
-              height: 130,
-              colorDark: "#0284c7",
+              width: 140,
+              height: 140,
+              colorDark: "#000000",
               colorLight: "#ffffff",
-              correctLevel: QRCode.CorrectLevel.H
+              correctLevel: QRCode.CorrectLevel.M
             });
             qrcodeRendered = true;
           } catch (e) {
@@ -1611,12 +1656,214 @@ function renderLeaderQrGrid() {
           }
         }
         if (!qrcodeRendered) {
-          // CDN 지연 또는 로컬 환경 fallback 이미지
-          box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&color=0284c7&data=${encodeURIComponent(checkinUrl)}" width="130" height="130" alt="출석 QR" style="border-radius:4px; display:block;" />`;
+          // CDN 지연 또는 로컬 환경 fallback 이미지 (고대비 순수 블랙)
+          box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&color=000000&data=${encodeURIComponent(checkinUrl)}" width="140" height="140" alt="출석 QR" style="border-radius:4px; display:block;" />`;
         }
       }
     }, 40 * (idx + 1));
   });
+}
+
+// =========================================================
+// [카메라 라이브 QR 출석 스캐너]
+// =========================================================
+let qrCameraStream = null;
+let qrScanAnimationId = null;
+let currentFacingMode = 'environment';
+let isScanningActive = false;
+
+window.openQrCameraScanner = async function() {
+  const modal = document.getElementById('qrCameraScannerModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  await startCameraScan();
+};
+
+window.closeQrCameraScanner = function() {
+  const modal = document.getElementById('qrCameraScannerModal');
+  if (modal) modal.style.display = 'none';
+  stopCameraScan();
+};
+
+window.switchCameraFacing = async function() {
+  currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+  stopCameraScan();
+  await startCameraScan();
+};
+
+function playCheckinBeep() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  } catch (e) {
+    console.warn('AudioContext beep error:', e);
+  }
+}
+
+async function startCameraScan() {
+  const video = document.getElementById('qrScannerVideo');
+  const statusEl = document.getElementById('qrScannerStatus');
+  if (!video) return;
+
+  if (statusEl) statusEl.innerHTML = '<span style="width:8px; height:8px; border-radius:50%; background:#f59e0b; display:inline-block;"></span> 카메라 연결 중...';
+
+  stopCameraScan();
+  isScanningActive = true;
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (statusEl) statusEl.innerHTML = '<span style="width:8px; height:8px; border-radius:50%; background:#ef4444; display:inline-block;"></span> 카메라 미지원 환경';
+    alert('현재 브라우저에서는 카메라 기능을 지원하지 않습니다.\n최신 크롬(Chrome), 엣지(Edge) 또는 사파리(Safari) 브라우저를 사용해 주세요.');
+    closeQrCameraScanner();
+    return;
+  }
+
+  try {
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: currentFacingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+    } catch (err1) {
+      // facingMode 제약조건 실패 시 일반 video 요청 (노트북/데스크탑 웹캠)
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    }
+
+    qrCameraStream = stream;
+    video.srcObject = stream;
+    video.setAttribute('playsinline', 'true');
+    await video.play();
+
+    if (statusEl) statusEl.innerHTML = '<span style="width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block;"></span> QR을 사각형에 비추면 자동 출석됩니다';
+    qrScanAnimationId = requestAnimationFrame(scanVideoFrame);
+  } catch (err) {
+    console.error('Camera open error:', err);
+    if (statusEl) statusEl.innerHTML = '<span style="width:8px; height:8px; border-radius:50%; background:#ef4444; display:inline-block;"></span> 카메라 시작 실패';
+    alert('카메라를 켤 수 없습니다.\n• 브라우저의 카메라 접근 권한을 허용해 주세요.\n• 다른 프로그램에서 카메라를 사용 중인지 확인해 주세요.');
+    closeQrCameraScanner();
+  }
+}
+
+function stopCameraScan() {
+  isScanningActive = false;
+  if (qrScanAnimationId) {
+    cancelAnimationFrame(qrScanAnimationId);
+    qrScanAnimationId = null;
+  }
+  if (qrCameraStream) {
+    try {
+      qrCameraStream.getTracks().forEach(track => track.stop());
+    } catch (e) {}
+    qrCameraStream = null;
+  }
+  const video = document.getElementById('qrScannerVideo');
+  if (video) video.srcObject = null;
+}
+
+async function scanVideoFrame() {
+  if (!isScanningActive) return;
+  const video = document.getElementById('qrScannerVideo');
+  const canvas = document.getElementById('qrScannerCanvas');
+
+  if (video && video.readyState >= video.HAVE_ENOUGH_DATA && canvas) {
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    let qrText = null;
+
+    // 1. 브라우저 내장 하드웨어 가속 BarcodeDetector 시도
+    if ('BarcodeDetector' in window) {
+      try {
+        const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+        const barcodes = await barcodeDetector.detect(canvas);
+        if (barcodes && barcodes.length > 0) {
+          qrText = barcodes[0].rawValue;
+        }
+      } catch (e) {}
+    }
+
+    // 2. jsQR 라이브러리 fallback
+    if (!qrText && typeof jsQR !== 'undefined') {
+      try {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "dontInvert"
+        });
+        if (code && code.data) {
+          qrText = code.data;
+        }
+      } catch (e) {}
+    }
+
+    // QR 코드 인식 성공 시
+    if (qrText) {
+      isScanningActive = false;
+      playCheckinBeep();
+      closeQrCameraScanner();
+      handleScannedQrData(qrText);
+      return;
+    }
+  }
+
+  if (isScanningActive) {
+    qrScanAnimationId = requestAnimationFrame(scanVideoFrame);
+  }
+}
+
+function handleScannedQrData(qrText) {
+  if (!qrText) return;
+  console.log('Scanned QR data:', qrText);
+
+  let userId = null;
+  let leader = null;
+  let team = null;
+
+  try {
+    if (qrText.includes('?') || qrText.includes('mode=checkin')) {
+      const urlObj = new URL(qrText.startsWith('http') ? qrText : 'https://dummy.local/' + qrText);
+      userId = urlObj.searchParams.get('userId');
+      leader = urlObj.searchParams.get('leader') || urlObj.searchParams.get('name');
+      team = urlObj.searchParams.get('team');
+    }
+  } catch (e) {
+    console.warn('URL parse error:', e);
+  }
+
+  // URL 파라미터가 없거나 단순 텍스트인 경우 adminUsersData에서 매칭
+  if (!userId && !leader) {
+    const matchedUser = adminUsersData.find(u =>
+      (u.id && qrText.includes(u.id)) ||
+      (u.name && qrText.includes(u.name)) ||
+      (u.nickname && qrText.includes(u.nickname))
+    );
+    if (matchedUser) {
+      userId = matchedUser.id;
+      leader = matchedUser.name || matchedUser.nickname;
+      team = matchedUser.team;
+    }
+  }
+
+  if (userId || leader) {
+    handleDirectLeaderCheckin(team, leader, userId);
+  } else {
+    alert(`위라클 파트너스 출석 QR 코드가 아닙니다.\n인식된 내용: ${qrText.slice(0, 80)}`);
+  }
 }
 
 // 팀장/파트너스 전용 QR 스캔 시 1초 다이렉트 출석 처리 (로그인 불필요)

@@ -1223,7 +1223,17 @@ let attendanceLogs = [];
 let monthlyAttendanceArchive = (function() {
   try {
     const saved = localStorage.getItem('weracle_monthly_attendance_archive');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(item => {
+      let cleanName = (item.name || '').trim();
+      const parts = cleanName.split(/\s+/);
+      if (parts.length === 2 && parts[0] === parts[1]) {
+        cleanName = parts[0];
+      }
+      return { ...item, name: cleanName };
+    });
   } catch (e) {
     return [];
   }
@@ -1249,11 +1259,16 @@ async function loadAttendanceFromSupabase() {
               timeFormatted = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}:${String(dt.getSeconds()).padStart(2, '0')}`;
             } catch(e) {}
           }
+          let cleanName = (r.name || '').trim();
+          const parts = cleanName.split(/\s+/);
+          if (parts.length === 2 && parts[0] === parts[1]) {
+            cleanName = parts[0];
+          }
           return {
             id: r.id,
             user_id: r.user_id,
             date: r.date || (r.checkin_time ? r.checkin_time.split('T')[0] : todayStr),
-            name: r.name,
+            name: cleanName,
             team: r.team || '미지정',
             type: r.checkin_type || '회사 정규 출근',
             time: timeFormatted,
@@ -1451,7 +1466,90 @@ window.closeLeaderQrModal = function() {
 };
 
 window.printLeaderQrCards = function() {
-  window.print();
+  const modal = document.getElementById('leaderQrModal');
+  if (modal) modal.style.display = 'flex';
+
+  const gridEl = document.getElementById('leaderQrGrid');
+  if (!gridEl) {
+    window.print();
+    return;
+  }
+
+  // 1. iframe 내부에서 실행 중인 경우 감지하여 전용 인쇄 창 호출
+  let isInsideIframe = false;
+  try {
+    isInsideIframe = window.self !== window.top;
+  } catch (e) {
+    isInsideIframe = true;
+  }
+
+  if (isInsideIframe) {
+    const printWindow = window.open('', '_blank', 'width=850,height=900');
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+          <meta charset="UTF-8">
+          <title>위라클 파트너스 전용 출근 QR 카드 인쇄</title>
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+            body { padding: 15mm; background: #fff; color: #000; }
+            .print-header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #0284c7; padding-bottom: 12px; }
+            .print-header h1 { font-size: 20px; color: #0f172a; font-weight: 800; }
+            .print-header p { font-size: 12px; color: #64748b; margin-top: 4px; }
+            #leaderQrGrid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 20px;
+            }
+            #leaderQrGrid > div {
+              background: #ffffff !important;
+              border: 1.5px solid #cbd5e1 !important;
+              border-radius: 14px !important;
+              padding: 20px 14px !important;
+              text-align: center !important;
+              display: flex !important;
+              flex-direction: column !important;
+              align-items: center !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+            @media print {
+              body { padding: 10mm; }
+              .no-print { display: none !important; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-header no-print">
+            <h1>👑 위라클 파트너스 전용 출근 QR 카드</h1>
+            <p>A4 용지에 출력 후 절취하여 각 팀장님/파트너스에게 배부해 주세요.</p>
+            <button onclick="window.print()" style="margin-top:10px; padding:8px 18px; background:#0284c7; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">🖨️ 인쇄 창 다시 열기</button>
+          </div>
+          <div id="leaderQrGrid">
+            ${gridEl.innerHTML}
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 350);
+            };
+          <\/script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      return;
+    }
+  }
+
+  // 2. 단독 창에서는 즉시 브라우저 인쇄 다이얼로그 호출
+  setTimeout(() => {
+    window.print();
+  }, 100);
 };
 
 function renderLeaderQrGrid() {
@@ -2143,7 +2241,7 @@ window.recordAttendanceCheckin = async function({ user, method = '스마트폰 Q
   const workLimit = (timePolicySettings && timePolicySettings.workTime) ? timePolicySettings.workTime : '10:00';
   const isLate = timeStr.slice(0, 5) > workLimit;
 
-  const checkinName = `${user.name} ${user.nickname || ''}`.trim();
+  const checkinName = (user.name || user.nickname || '파트너').trim();
   const checkinTeam = user.team || '미지정';
 
   const newLog = {
@@ -3008,77 +3106,53 @@ window.exportPerfToCSV = function() {
 // [4. 콘텐츠 연구소 (주제 제시 & 직원 의견 소통 라운지)]
 // =========================================================
 let currentLabTopic = {
-  id: 1,
-  title: "2030 사회초년생의 실손 및 간편 건강보험 첫 상담 클로징 전략",
-  desc: "최근 2030 세대의 1인 가구 증가에 맞춰 실무에서 가장 반응이 좋았던 화법, 자료, 가입 설득 노하우를 자유롭게 나눠주세요.",
-  startDate: "2026. 10. 10"
+  id: null,
+  title: "등록된 연구 주제가 없습니다",
+  desc: "관리자 콘솔 [5. 관리자 제어 콘솔 > 콘텐츠 연구소 관리]에서 새로운 연구 주제를 등록해 주세요.",
+  startDate: ""
 };
 
-let currentTopicIdeas = [
-  {
-    id: 1,
-    author: '정다은 프로',
-    team: '스타팀',
-    date: '방금 전',
-    content: '2030 고객은 긴 보험 약관 설명보다 노션(Notion)이나 카드뉴스 형태로 핵심 3대 보장(암·뇌·심)만 직관적으로 정리해 보내주면 오픈율과 가입 성사율이 2배 이상 높았습니다! 상담 초기 자료 공유 템플릿을 연구소 양식으로 공유합니다.',
-    likes: 12,
-    isLiked: false
-  },
-  {
-    id: 2,
-    author: '이영희 수석',
-    team: '영업 2팀',
-    date: '2시간 전',
-    content: '사회초년생 분들은 본인이 어떤 보험에 가입되어 있는지 부모님께 든 걸 잘 모르는 경우가 많습니다. "숨은 보험금 찾기"와 기존 증권 무료 진단을 먼저 가볍게 선물해주고 부족한 보장만 3~5만원대 간편플랜으로 제안하는 것이 클로징에 매우 주효했습니다.',
-    likes: 8,
-    isLiked: false
-  },
-  {
-    id: 3,
-    author: '김철수 팀장',
-    team: '스타팀',
-    date: '어제',
-    content: '실손 청구 대행 서비스를 카카오톡 채널로 자동화해두니 기존 고객분들이 직장 동료들을 자연스럽게 소개해주는 선순환이 생겼습니다. 청구 후기 릴스 영상 콘텐츠도 함께 제작해보면 좋을 것 같습니다.',
-    likes: 15,
-    isLiked: true
-  }
-];
+let currentTopicIdeas = [];
+let pastTopicsArchive = [];
 
-let pastTopicsArchive = [
-  {
-    id: 99,
-    title: "유병자 간편보험 비교 분석 및 거절고객 재상담 화법",
-    desc: "기존 가입 거절 이력이 있는 고객을 위한 신상품 인수 기준 및 플랜 제안 전략 공유",
-    period: "2026년 9월 4주",
-    ideaCount: 14,
-    ideas: [
-      { author: '박민준 팀장', team: '영업 3팀', content: '알릴의무 3개 고지사항만 체크하는 3.5.5 간편건강이 반응이 가장 좋았습니다.', date: '2026-09-28', likes: 9 },
-      { author: '강서윤 프로', team: '스타팀', content: '고혈압/당뇨 약 복용 중인 분들에게 부담보 없는 조건을 강조하니 청약 전환율이 올랐습니다.', date: '2026-09-27', likes: 6 }
-    ]
-  },
-  {
-    id: 98,
-    title: "4050 은퇴설계 및 치매·간병비 보험 클로징 자료",
-    desc: "가족력 걱정이 시작되는 4050 세대 맞춤형 간병인 사용일당 및 재가급여 플랜",
-    period: "2026년 9월 2주",
-    ideaCount: 18,
-    ideas: [
-      { author: '최유진 팀장', team: '비전팀', content: '간병비 실제 영수증 샘플을 보여주는 시각 자료의 효과가 매우 컸습니다.', date: '2026-09-14', likes: 11 },
-      { author: '윤지호 프로', team: '비전팀', content: '부모님 요양병원 입원 경험이 있는 자녀 세대에게 간병인 일당 20만원 한도를 짚어주면 바로 공감합니다.', date: '2026-09-12', likes: 7 }
-    ]
-  }
-];
-
-// 로컬 스토리지 데이터 복원
+// 로컬 스토리지 데이터 복원 (더미 샘플 배제 및 실제 등록 데이터만 복원)
 try {
   const savedTopic = localStorage.getItem('weracle_lab_current_topic');
-  if (savedTopic !== null) currentLabTopic = JSON.parse(savedTopic);
+  if (savedTopic !== null) {
+    const parsed = JSON.parse(savedTopic);
+    if (parsed && parsed.id && parsed.title && !parsed.title.includes('2030 사회초년생')) {
+      currentLabTopic = parsed;
+    } else if (parsed && parsed.title && parsed.title.includes('2030 사회초년생')) {
+      localStorage.removeItem('weracle_lab_current_topic');
+    }
+  }
 
   const savedIdeas = localStorage.getItem('weracle_lab_current_ideas');
-  if (savedIdeas !== null) currentTopicIdeas = JSON.parse(savedIdeas);
+  if (savedIdeas !== null) {
+    const parsed = JSON.parse(savedIdeas);
+    if (Array.isArray(parsed)) {
+      currentTopicIdeas = parsed.filter(item => 
+        item && item.author !== '정다은 프로' && item.author !== '이영희 수석' &&
+        !(item.author === '김철수 팀장' && item.content && item.content.includes('실손 청구 대행'))
+      );
+      if (currentTopicIdeas.length !== parsed.length) {
+        localStorage.setItem('weracle_lab_current_ideas', JSON.stringify(currentTopicIdeas));
+      }
+    }
+  }
 
   const savedArchive = localStorage.getItem('weracle_lab_past_archive');
-  if (savedArchive !== null) pastTopicsArchive = JSON.parse(savedArchive);
+  if (savedArchive !== null) {
+    const parsed = JSON.parse(savedArchive);
+    if (Array.isArray(parsed)) {
+      pastTopicsArchive = parsed.filter(t => 
+        t && !t.title?.includes('유병자 간편보험') && !t.title?.includes('4050 은퇴설계') && !t.title?.includes('2030 사회초년생')
+      );
+      if (pastTopicsArchive.length !== parsed.length) {
+        localStorage.setItem('weracle_lab_past_archive', JSON.stringify(pastTopicsArchive));
+      }
+    }
+  }
 } catch (e) {
   console.warn('Lab data localStorage load error:', e);
 }
@@ -3091,17 +3165,21 @@ if (Array.isArray(pastTopicsArchive) && pastTopicsArchive.length > 3) {
 // Supabase로부터 로드된 연구소 데이터 반영
 function applyLabDataFromSupabase(val) {
   if (!val || typeof val !== 'object') return;
-  if (val.currentTopic && val.currentTopic.title) {
+  if (val.currentTopic && val.currentTopic.title && !val.currentTopic.title.includes("2030 사회초년생") && val.currentTopic.id) {
     currentLabTopic = val.currentTopic;
     try { localStorage.setItem('weracle_lab_current_topic', JSON.stringify(currentLabTopic)); } catch (e) {}
   }
   if (Array.isArray(val.currentIdeas)) {
-    currentTopicIdeas = val.currentIdeas;
+    currentTopicIdeas = val.currentIdeas.filter(i => 
+      i && i.author !== '정다은 프로' && i.author !== '이영희 수석' &&
+      !(i.author === '김철수 팀장' && i.content && i.content.includes('실손 청구 대행'))
+    );
     try { localStorage.setItem('weracle_lab_current_ideas', JSON.stringify(currentTopicIdeas)); } catch (e) {}
   }
   if (Array.isArray(val.pastArchive)) {
-    // 최대 3개까지만 보관 (초과분 자동 삭제)
-    pastTopicsArchive = val.pastArchive.slice(0, 3);
+    pastTopicsArchive = val.pastArchive.filter(t => 
+      t && !t.title?.includes("유병자 간편보험") && !t.title?.includes("4050 은퇴설계") && !t.title?.includes("2030 사회초년생")
+    ).slice(0, 3);
     try { localStorage.setItem('weracle_lab_past_archive', JSON.stringify(pastTopicsArchive)); } catch (e) {}
   }
   renderCurrentTopicBanner();
@@ -3137,6 +3215,15 @@ function initContentLab() {
   if (Array.isArray(pastTopicsArchive) && pastTopicsArchive.length > 3) {
     pastTopicsArchive = pastTopicsArchive.slice(0, 3);
   }
+  const authorEl = document.getElementById('labIdeaAuthorName');
+  if (authorEl) {
+    const u = (typeof currentUser !== 'undefined' && currentUser) ||
+              (typeof currentProfile !== 'undefined' && currentProfile) ||
+              (parentWindow && (parentWindow.currentUser || parentWindow.currentProfile));
+    if (u && (u.name || u.nickname)) {
+      authorEl.innerText = `${u.name || u.nickname} (${u.team || '영업본부'})`;
+    }
+  }
   renderCurrentTopicBanner();
   renderIdeaFeed();
   renderPastTopicsList();
@@ -3147,18 +3234,40 @@ function renderCurrentTopicBanner() {
   const descEl = document.getElementById('currentTopicDesc');
   const countEl = document.getElementById('currentTopicIdeaCount');
 
-  if (titleEl) titleEl.innerText = `"${currentLabTopic.title}"`;
-  if (descEl) descEl.innerText = currentLabTopic.desc;
-  if (countEl) countEl.innerText = currentTopicIdeas.length;
+  const hasRealTopic = currentLabTopic && currentLabTopic.id && currentLabTopic.title && currentLabTopic.title !== '등록된 연구 주제가 없습니다';
+
+  if (titleEl) {
+    titleEl.innerText = hasRealTopic ? `"${currentLabTopic.title}"` : '등록된 연구 주제가 없습니다';
+  }
+  if (descEl) {
+    descEl.innerText = hasRealTopic 
+      ? (currentLabTopic.desc || '') 
+      : '관리자 콘솔 [연구소 주제 관리]에서 새로운 연구 주제를 등록해 주세요.';
+  }
+  if (countEl) countEl.innerText = hasRealTopic ? currentTopicIdeas.length : 0;
 }
 
 function renderIdeaFeed() {
   const container = document.getElementById('ideaFeedContainer');
   const countEl = document.getElementById('currentTopicIdeaCount');
-  if (countEl) countEl.innerText = currentTopicIdeas.length;
+  const hasRealTopic = currentLabTopic && currentLabTopic.id && currentLabTopic.title && currentLabTopic.title !== '등록된 연구 주제가 없습니다';
+  if (countEl) countEl.innerText = hasRealTopic ? currentTopicIdeas.length : 0;
   if (!container) return;
 
   container.innerHTML = '';
+
+  if (!hasRealTopic) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:48px 20px; background:#ffffff; border:1.5px dashed var(--border); border-radius:14px; color:var(--text-sub);">
+        <i class="fa-solid fa-lightbulb" style="font-size:36px; color:var(--text-muted); margin-bottom:12px; display:block;"></i>
+        <strong style="font-size:16px; color:var(--text-main);">현재 등록된 연구 주제가 없습니다.</strong>
+        <p style="font-size:13px; color:var(--text-sub); margin-top:6px; line-height:1.5;">
+          관리자 콘솔에서 새로운 연구 안건을 등록하면<br>파트너들과 실시간으로 아이디어 및 현장 노하우를 나눌 수 있습니다.
+        </p>
+      </div>
+    `;
+    return;
+  }
 
   if (currentTopicIdeas.length === 0) {
     container.innerHTML = `
@@ -3181,7 +3290,7 @@ function renderIdeaFeed() {
         <div class="idea-author">
           <div class="author-avatar"><i class="fa-solid fa-user"></i></div>
           <span>${item.author}</span>
-          <span style="font-size:12px; color:var(--text-sub); font-weight:normal;">(${item.team})</span>
+          <span style="font-size:12px; color:var(--text-sub); font-weight:normal;">(${item.team || '파트너'})</span>
         </div>
         <div class="idea-date">${item.date}</div>
       </div>
@@ -3205,7 +3314,7 @@ function renderPastTopicsList() {
 
   listEl.innerHTML = '';
   if (pastTopicsArchive.length === 0) {
-    listEl.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:12px;">보관된 지난 주제가 없습니다.</div>';
+    listEl.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:24px 12px;">보관된 지난 주제가 없습니다.</div>';
     return;
   }
 
@@ -3228,6 +3337,12 @@ function renderPastTopicsList() {
 }
 
 window.submitIdea = function() {
+  const hasRealTopic = currentLabTopic && currentLabTopic.id && currentLabTopic.title && currentLabTopic.title !== '등록된 연구 주제가 없습니다';
+  if (!hasRealTopic) {
+    alert('현재 진행 중인 연구 주제가 없습니다.\n관리자 콘솔에서 먼저 새로운 연구 주제를 등록해 주세요.');
+    return;
+  }
+
   const input = document.getElementById('ideaInput');
   if (!input) return;
   const content = input.value.trim();
@@ -3236,10 +3351,20 @@ window.submitIdea = function() {
     return;
   }
 
+  let authorName = '파트너';
+  let authorTeam = '영업본부';
+  const u = (typeof currentUser !== 'undefined' && currentUser) ||
+            (typeof currentProfile !== 'undefined' && currentProfile) ||
+            (parentWindow && (parentWindow.currentUser || parentWindow.currentProfile));
+  if (u) {
+    authorName = u.name || u.nickname || authorName;
+    authorTeam = u.team || authorTeam;
+  }
+
   currentTopicIdeas.unshift({
     id: Date.now(),
-    author: '김철수 팀장',
-    team: '스타팀',
+    author: authorName,
+    team: authorTeam,
     date: '방금 전',
     content: content,
     likes: 0,
@@ -3862,8 +3987,12 @@ window.adminDeletePartnerPerf = async function(idx) {
 function renderAdminTopicInfo() {
   const titleEl = document.getElementById('admCurrentTopicTitle');
   const countEl = document.getElementById('admCurrentIdeaCount');
-  if (titleEl) titleEl.innerText = `"${currentLabTopic.title}"`;
-  if (countEl) countEl.innerText = currentTopicIdeas.length;
+  const hasRealTopic = currentLabTopic && currentLabTopic.id && currentLabTopic.title && currentLabTopic.title !== '등록된 연구 주제가 없습니다';
+
+  if (titleEl) {
+    titleEl.innerText = hasRealTopic ? `"${currentLabTopic.title}"` : '등록된 연구 주제 없음';
+  }
+  if (countEl) countEl.innerText = hasRealTopic ? currentTopicIdeas.length : 0;
 }
 
 window.adminUpdateTopic = async function() {
@@ -3875,12 +4004,14 @@ window.adminUpdateTopic = async function() {
     return;
   }
 
+  const hasExistingTopic = currentLabTopic && currentLabTopic.id && currentLabTopic.title && currentLabTopic.title !== '등록된 연구 주제가 없습니다';
   const prevCount = currentTopicIdeas.length;
-  const confirmMsg = `새로운 연구 주제로 교체하시겠습니까?\n\n- 기존 주제: "${currentLabTopic.title}"\n- 등록된 기존 의견: ${prevCount}개\n\n※ 기존 주제는 '지난 연구 주제 보관함'으로 자동 이동됩니다.`;
-  if (!await showConfirm(confirmMsg, '연구 주제 교체')) return;
 
-  // 1. 기존 주제 및 등록된 의견들을 '지난 주제 보관함'으로 깔끔하게 이동 (최대 3개만 유지, 초과분 자동 삭제)
-  if (currentLabTopic.title) {
+  if (hasExistingTopic) {
+    const confirmMsg = `새로운 연구 주제로 교체하시겠습니까?\n\n- 기존 주제: "${currentLabTopic.title}"\n- 등록된 기존 의견: ${prevCount}개\n\n※ 기존 주제는 '지난 연구 주제 보관함'으로 자동 이동됩니다.`;
+    if (!await showConfirm(confirmMsg, '연구 주제 교체')) return;
+
+    // 1. 기존 주제 및 등록된 의견들을 '지난 주제 보관함'으로 깔끔하게 이동 (최대 3개만 유지, 초과분 자동 삭제)
     const today = new Date();
     const periodStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${Math.ceil(today.getDate() / 7)}주 마감`;
     pastTopicsArchive.unshift({
@@ -3895,6 +4026,9 @@ window.adminUpdateTopic = async function() {
     if (pastTopicsArchive.length > 3) {
       pastTopicsArchive = pastTopicsArchive.slice(0, 3);
     }
+  } else {
+    const confirmMsg = `새로운 연구 주제를 등록하시겠습니까?\n\n- 새 주제: "${title}"`;
+    if (!await showConfirm(confirmMsg, '연구 주제 등록')) return;
   }
 
   // 2. 새 주제로 세팅 & 현재 의견 목록 깨끗이 초기화
@@ -3917,17 +4051,22 @@ window.adminUpdateTopic = async function() {
   document.getElementById('admLabTitle').value = '';
   document.getElementById('admLabDesc').value = '';
 
-  alert(`새로운 연구 주제가 성공적으로 설정되었습니다!\n기존 주제(${prevCount}개 의견)는 '지난 연구 주제 보관함'으로 이동되었습니다.`);
+  if (hasExistingTopic) {
+    alert(`새로운 연구 주제가 성공적으로 설정되었습니다!\n기존 주제(${prevCount}개 의견)는 '지난 연구 주제 보관함'으로 이동되었습니다.`);
+  } else {
+    alert('새로운 연구 주제가 성공적으로 등록되었습니다!');
+  }
 };
 
 function renderAdminIdeaList() {
   const listEl = document.getElementById('admIdeaManageList');
   const countEl = document.getElementById('admIdeaManageCount');
-  if (countEl) countEl.innerText = currentTopicIdeas.length;
+  const hasRealTopic = currentLabTopic && currentLabTopic.id && currentLabTopic.title && currentLabTopic.title !== '등록된 연구 주제가 없습니다';
+  if (countEl) countEl.innerText = hasRealTopic ? currentTopicIdeas.length : 0;
   if (!listEl) return;
 
   listEl.innerHTML = '';
-  if (currentTopicIdeas.length === 0) {
+  if (!hasRealTopic || currentTopicIdeas.length === 0) {
     listEl.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:24px;">현재 주제에 등록된 의견이 없습니다. (깨끗한 상태)</div>';
     return;
   }
@@ -3937,7 +4076,7 @@ function renderAdminIdeaList() {
     row.className = 'admin-list-item';
     row.innerHTML = `
       <div style="flex:1; padding-right:10px;">
-        <strong>${item.author} (${item.team})</strong>: 
+        <strong>${item.author} (${item.team || '파트너'})</strong>: 
         <span style="color:var(--text-sub);">${item.content.slice(0, 45)}...</span>
         <span style="font-size:11px; color:var(--text-muted); margin-left:6px;">(공감 ${item.likes})</span>
       </div>

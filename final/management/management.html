@@ -29,36 +29,85 @@
   <!-- 인쇄 전용 스타일 -->
   <style>
     @media print {
+      /* 1. 인쇄 페이지 배경 및 전체 초기화 */
+      html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
       body * {
         visibility: hidden !important;
       }
-      #leaderQrPrintArea, #leaderQrPrintArea * {
+
+      /* 2. 파트너스 QR 인쇄 영역 및 모달 가시화 */
+      #leaderQrModal,
+      #leaderQrModal *,
+      #leaderQrPrintArea,
+      #leaderQrPrintArea * {
         visibility: visible !important;
       }
+
+      /* 3. 모달 오버레이를 일반 블록 레이아웃으로 변경 (어두운 배경 해제) */
+      #leaderQrModal {
+        position: static !important;
+        display: block !important;
+        background: none !important;
+        width: 100% !important;
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        inset: auto !important;
+        z-index: 999999 !important;
+      }
+
+      #leaderQrModal .modal-card {
+        position: static !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        background: #ffffff !important;
+      }
+
+      /* 모달 닫기 버튼, 푸터 인쇄 버튼 등 비인쇄 영역 숨김 */
+      #leaderQrModal .modal-header,
+      #leaderQrModal .modal-card > div:last-child {
+        display: none !important;
+      }
+
       #leaderQrPrintArea {
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100vw !important;
+        position: static !important;
+        width: 100% !important;
         height: auto !important;
         background: #ffffff !important;
-        padding: 15px !important;
+        padding: 10px !important;
         margin: 0 !important;
         overflow: visible !important;
       }
+
       #leaderQrGrid {
         display: grid !important;
         grid-template-columns: repeat(2, 1fr) !important;
-        gap: 20px !important;
+        gap: 16px !important;
+        page-break-inside: auto !important;
       }
-      #printableQrArea, #printableQrArea * {
-        visibility: visible !important;
-      }
-      #printableQrArea {
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100vw !important;
+
+      #leaderQrGrid > div {
+        border: 1.5px solid #94a3b8 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        padding: 16px !important;
+        background: #ffffff !important;
       }
     }
   </style>
@@ -680,9 +729,9 @@
         <div class="lab-header-banner">
           <div>
             <span class="lab-topic-tag"><i class="fa-solid fa-lightbulb"></i> 현재 진행 중인 연구 및 토론 주제</span>
-            <h2 class="lab-topic-title" id="currentTopicTitle">"2030 사회초년생의 실손 및 간편 건강보험 첫 상담 클로징 전략"</h2>
+            <h2 class="lab-topic-title" id="currentTopicTitle">등록된 연구 주제가 없습니다</h2>
             <p class="lab-topic-desc" id="currentTopicDesc">
-              최근 2030 세대의 1인 가구 증가에 맞춰 실무에서 가장 반응이 좋았던 화법, 자료, 가입 설득 노하우를 자유롭게 나눠주세요.
+              관리자 콘솔 [연구소 주제 관리]에서 새로운 연구 주제를 등록해 주세요.
             </p>
           </div>
           <div>
@@ -699,7 +748,7 @@
             <div class="idea-post-box">
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-weight:800; font-size:15px; color:var(--text-main);"> 내 아이디어 & 현장 노하우 나누기</span>
-                <span style="font-size:12px; color:var(--text-sub);">작성자: <strong>김철수 팀장</strong></span>
+                <span style="font-size:12px; color:var(--text-sub);">작성자: <strong id="labIdeaAuthorName">파트너</strong></span>
               </div>
               <textarea id="ideaInput" placeholder="이 주제에 대한 나만의 노하우, 현장 고객 반응, 실무 팁을 편하게 적어주세요..."></textarea>
               <div style="display:flex; justify-content:flex-end;">
@@ -1253,7 +1302,7 @@
                   <i class="fa-solid fa-clock-rotate-left"></i> 현재 진행 중인 주제
                 </div>
                 <div id="admCurrentTopicTitle" style="font-size:14px; font-weight:800; color:var(--text-main); line-height:1.4;">
-                  "2030 사회초년생의 실손 및 간편 건강보험 첫 상담 클로징 전략"
+                  등록된 연구 주제 없음
                 </div>
                 <div style="font-size:12px; color:var(--text-sub); margin-top:6px;">
                   현재 등록된 의견: <strong id="admCurrentIdeaCount" style="color:var(--primary);">0</strong>개

@@ -3371,6 +3371,14 @@ trySwitch();
         window.addEventListener('DOMContentLoaded', () => {
   if(window.authEvents) {
     window.authEvents.on('stateChange', async ({ event, session }) => {
+      if (event === 'SIGNED_IN') {
+        const currentMainFrame = document.getElementById('mainFrame');
+        if (currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html')) {
+          if (typeof showDashboardHome === 'function') {
+            showDashboardHome();
+          }
+        }
+      }
       if (event === 'SIGNED_IN' && session && session.provider_token) {
         try {
           if (window.sb) {
@@ -3841,12 +3849,28 @@ async function checkSession() {
         return;
     }
     try {
+        if (window.top && window.top !== window) {
+            try {
+                if (window.top.location.hash && window.top.location.hash.includes('access_token')) {
+                    if (!window.location.hash || !window.location.hash.includes('access_token')) {
+                        window.location.hash = window.top.location.hash;
+                    }
+                }
+            } catch(e) {}
+        }
         const { data, error } = await window.sb.auth.getSession();
         if (error) throw error;
         
         if (data && data.session) {
             window.currentUser = data.session.user;
             wIsLoggedIn = true;
+
+            const currentMainFrame = document.getElementById('mainFrame');
+            if (currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html')) {
+                if (typeof showDashboardHome === 'function') {
+                    showDashboardHome();
+                }
+            }
             
             if (data.session.provider_token) {
                 try {

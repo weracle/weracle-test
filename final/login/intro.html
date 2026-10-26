@@ -228,6 +228,12 @@
   </div>
 
   <script>
+    window.addEventListener('message', (e) => {
+      if (e.data && (e.data.type === 'SB_SESSION_SYNC' || e.data.type === 'AUTH_STATE_CHANGE') && e.data.user) {
+        goHome();
+      }
+    });
+
     function triggerGoogleLogin() {
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({ type: 'AUTH_SOCIAL', provider: 'google' }, '*');

@@ -1290,12 +1290,12 @@ function subscribeToAttendanceRealtime() {
   });
 }
 
-// 출결 & 교육 대상자: 관리자/본사 계정은 제외하고, 실무 파트너스(설계사/팀원 전원)가 자동으로 출결 및 교육 참여 대상자임
+// 출결 & 교육 대상자: 관리자/본사 계정은 제외하고, 파트너스('C' 권한 보유자 또는 family) 회원만 출결 및 교육 참여 대상자임
 function getPartnerAttendanceTargets() {
   return adminUsersData.filter(u => {
     // 관리자 직급, 관리자팀, 본사팀 등 관리자 계정은 출결/교육 대상에서 완벽히 제외
     if (u.user_grade === 'manager' || u.team === '관리자' || u.team === '본사') return false;
-    return (u.access_grades || '').includes('C') || u.user_grade === 'family' || u.user_grade === 'VIP' || (u.team && u.team.trim() !== '' && u.team !== '미지정');
+    return (u.access_grades || '').includes('C') || u.user_grade === 'family';
   });
 }
 
@@ -3936,12 +3936,8 @@ window.filterAdminUserList = function() {
   const filterTeam = document.getElementById('admUserFilterSelect')?.value || 'all';
 
   const filtered = adminUsersData.filter(user => {
-    // 1) 파트너스로 등록된 사람만 표시: 'C'(파트너스) 권한 보유자 또는 family / manager / VIP / 팀 배정 인원
-    const isPartner = (user.access_grades || '').includes('C') || 
-                      user.user_grade === 'family' || 
-                      user.user_grade === 'manager' || 
-                      user.user_grade === 'VIP' || 
-                      (user.team && user.team.trim() !== '' && user.team !== '미지정');
+    // 1) 파트너스로 등록된 사람만 표시: 'C'(파트너스) 권한 보유자 또는 family / manager 등급
+    const isPartner = (user.access_grades || '').includes('C') || user.user_grade === 'family' || user.user_grade === 'manager';
     if (!isPartner) return false;
 
     // 2) 검색어 (이름, 닉네임, 이메일)
@@ -4037,7 +4033,7 @@ window.filterAdminRoleList = function() {
 
     if (filterGrade === 'partner_only') {
       const hasC = (user.access_grades || '').includes('C');
-      const isFamily = user.user_grade === 'family' || user.user_grade === 'manager' || user.user_grade === 'VIP' || (user.team && user.team.trim() !== '' && user.team !== '미지정');
+      const isFamily = user.user_grade === 'family' || user.user_grade === 'manager';
       if (!hasC && !isFamily) return false;
     } else if (filterGrade === 'VIP') {
       if (user.user_grade !== 'VIP') return false;

@@ -33,6 +33,12 @@ window.addEventListener('message', (event) => {
 // =========================================================
 async function getSb() {
   if (window.sb) return window.sb;
+  if (!window.SUPABASE_CONFIG) {
+    window.SUPABASE_CONFIG = {
+      url: "https://tjohrovsvgnkrlqhjkwt.supabase.co",
+      anonKey: "sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR"
+    };
+  }
   if (typeof initSupabaseConfigOnly === 'function') {
     try {
       await initSupabaseConfigOnly();
@@ -339,18 +345,7 @@ function savePartnerCompanies() {
   }
 }
 
-let sampleSchedules = [
-  { id: 1, date: '2026-10-05', category: 'comp', title: '10월 전사 월례회의', time: '09:00', place: '본사 대강당', company: '', isNewbie: false, targetType: 'all', googleSynced: true },
-  { id: 2, date: '2026-10-08', category: 'edu', title: '신상품 약관 및 언더라이팅 특강', time: '14:00', place: '교육관 3층', company: '삼성생명', isNewbie: false, targetType: 'all', googleSynced: true },
-  { id: 3, date: '2026-10-14', category: 'edu', title: '2030 가망고객 상담 클로징 화법', time: '10:00', place: '온라인 Zoom', company: '메리츠화재', isNewbie: true, targetType: 'team', targetTeam: '스타팀', googleSynced: true },
-  { id: 4, date: '2026-10-17', category: 'comp', title: '3분기 우수 지점 시상식', time: '11:00', place: '본사 대강당', company: '', isNewbie: false, targetType: 'all', googleSynced: true },
-  { id: 5, date: '2026-10-22', category: 'edu', title: '신입 설계사 보험 기초 및 상품 입문', time: '10:00', place: '교육관 1층', company: '한화생명', isNewbie: true, targetType: 'all', googleSynced: true },
-  { id: 6, date: '2026-10-25', category: 'edu', title: '유병자 간편보험 집중 심화 교육', time: '14:00', place: '교육관 2층', company: 'DB손해보험', isNewbie: false, targetType: 'team', targetTeam: '비전팀', googleSynced: true },
-  { id: 7, date: '2026-10-28', category: 'comp', title: '영업본부 전략 워크숍', time: '13:00', place: '양재 aT센터', company: '', isNewbie: false, targetType: 'all', googleSynced: true },
-  { id: 8, date: '2026-11-02', category: 'comp', title: '11월 전사 정례회의 및 목표 선포식', time: '09:00', place: '본사 대강당', company: '', isNewbie: false, targetType: 'all', googleSynced: true },
-  { id: 9, date: '2026-11-05', category: 'edu', title: '연말정산 연계 절세 플랜 세일즈 특강', time: '14:00', place: '교육관 3층', company: '교보생명', isNewbie: false, targetType: 'all', googleSynced: true },
-  { id: 10, date: '2026-11-12', category: 'edu', title: '신입 FP 고객 발굴 및 초기 정착 세미나', time: '10:00', place: '교육관 1층', company: '신한라이프', isNewbie: true, targetType: 'team', targetTeam: '스타팀', googleSynced: true }
-];
+let sampleSchedules = [];
 
 let isPastSchedulesOpen = false;
 
@@ -475,7 +470,8 @@ function initSchedulesStorage() {
     if (saved !== null) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) {
-        sampleSchedules = parsed;
+        // 기존 샘플 더미 일정 배제
+        sampleSchedules = parsed.filter(s => s.title !== '10월 전사 월례회의' && s.title !== '신상품 약관 및 언더라이팅 특강');
         return;
       }
     }
@@ -496,42 +492,80 @@ async function loadSchedulesFromSupabase() {
   const sb = await getSb();
   if (sb) {
     try {
-      const { data, error } = await sb.from('partners_schedules').select('*').order('date', { ascending: false });
-      if (!error && Array.isArray(data)) {
-        if (data.length > 0) {
-          sampleSchedules = data.map(item => ({
+      // 1. 실제 운영 일정 테이블 schedules 우선 조회
+      let { data, error } = await sb.from('schedules').select('*').order('event_date', { ascending: false });
+
+      // schedules가 비어있고 partners_schedules에 데이터가 있으면 fallback
+      if (error || !data || data.length === 0) {
+        const res2 = await sb.from('partners_schedules').select('*').order('date', { ascending: false });
+        if (!res2.error && res2.data && res2.data.length > 0) {
+          data = res2.data;
+          error = null;
+        }
+      }
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const companyList = ['삼성화재', 'DB손해보험', 'DB손보', '현대해상', '메리츠화재', 'KB손해보험', 'KB손보', '한화손해보험', '한화손보', '흥국화재', '롯데손해보험', '라이나손보', '라이나생명', '삼성생명', '한화생명', '교보생명', '신한라이프', 'KB라이프', '동양생명', '미래에셋생명', 'DB생명', 'AIA생명', 'KDB생명', 'DGB생명', 'iM라이프', '흥국생명', '하나생명', '농협생명', '농협손보'];
+
+        sampleSchedules = data.map(item => {
+          const typeStr = item.type || '';
+          const isEdu = typeStr.includes('education') || item.category === 'edu';
+          const isNewb = typeStr.startsWith('newbie') || item.is_newbie || false;
+          const dateVal = item.event_date || item.date || '';
+          const timeVal = item.start_time ? (item.start_time.length > 5 ? item.start_time.slice(0, 5) : item.start_time) : (item.time || '09:00');
+
+          let comp = item.company || '';
+          if (!comp && item.title) {
+            for (const c of companyList) {
+              if (item.title.includes(c)) {
+                comp = c;
+                break;
+              }
+            }
+          }
+
+          return {
             id: item.id,
-            date: item.date,
-            time: item.time || '09:00',
-            category: item.category,
-            title: item.title,
-            place: item.place || '',
-            company: item.company || '',
-            isNewbie: item.is_newbie || false,
+            date: dateVal,
+            time: timeVal,
+            category: isEdu ? 'edu' : 'comp',
+            title: item.title || '',
+            place: item.place || item.description || '',
+            company: comp,
+            isNewbie: isNewb,
             targetType: item.target_type || 'all',
             targetTeam: item.target_team || '',
             targetEmails: item.target_emails || [],
             googleEventId: item.google_event_id || '',
             googleSynced: true
-          }));
-          saveSchedulesToStorage();
-        } else {
-          const saved = localStorage.getItem('weracle_partners_schedules');
-          if (saved !== null) {
-            try {
-              sampleSchedules = JSON.parse(saved);
-            } catch (e) {}
-          }
-        }
+          };
+        });
+
+        saveSchedulesToStorage();
         renderScheduleTimeline();
         renderCalendar();
         renderUpcomingSchedules();
         renderAdminScheduleList();
+        return;
       }
     } catch (e) {
-      console.warn('Supabase partners_schedules 로드 건너뜀:', e);
+      console.warn('Supabase schedules 로드 실패:', e);
     }
   }
+
+  const saved = localStorage.getItem('weracle_partners_schedules');
+  if (saved !== null) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        sampleSchedules = parsed.filter(s => s.title !== '10월 전사 월례회의' && s.title !== '신상품 약관 및 언더라이팅 특강');
+      }
+    } catch (e) {}
+  }
+  renderScheduleTimeline();
+  renderCalendar();
+  renderUpcomingSchedules();
+  renderAdminScheduleList();
 }
 
 async function syncScheduleToSupabaseAndGoogle(item, action = 'create') {
@@ -540,6 +574,20 @@ async function syncScheduleToSupabaseAndGoogle(item, action = 'create') {
   if (sb) {
     try {
       if (action === 'create') {
+        const typeVal = item.isNewbie ? (item.category === 'edu' ? 'newbie_education' : 'newbie_general') : (item.category === 'edu' ? 'normal_education' : 'normal_general');
+        const schedPayload = {
+          event_date: item.date,
+          start_time: item.time ? (item.time.length === 5 ? item.time + ':00' : item.time) : '09:00:00',
+          type: typeVal,
+          title: item.title,
+          description: item.place || ''
+        };
+        const { data, error } = await sb.from('schedules').insert([schedPayload]).select();
+        if (!error && data && data[0]) {
+          item.id = data[0].id;
+          saveSchedulesToStorage();
+        }
+
         const payload = {
           date: item.date,
           time: item.time,
@@ -553,12 +601,9 @@ async function syncScheduleToSupabaseAndGoogle(item, action = 'create') {
           target_emails: item.targetEmails || [],
           sync_status: 'synced'
         };
-        const { data, error } = await sb.from('partners_schedules').insert([payload]).select();
-        if (!error && data && data[0]) {
-          item.id = data[0].id;
-          saveSchedulesToStorage();
-        }
+        await sb.from('partners_schedules').insert([payload]);
       } else if (action === 'delete') {
+        await sb.from('schedules').delete().eq('id', item.id);
         await sb.from('partners_schedules').delete().eq('id', item.id);
       }
     } catch (e) {
@@ -1245,12 +1290,12 @@ function subscribeToAttendanceRealtime() {
   });
 }
 
-// 출결 & 교육 대상자: 관리자/본사 계정은 제외하고, 실무 파트너스(C 권한 보유자 또는 family) 전원이 자동으로 출결 및 교육 참여 대상자임
+// 출결 & 교육 대상자: 관리자/본사 계정은 제외하고, 실무 파트너스(설계사/팀원 전원)가 자동으로 출결 및 교육 참여 대상자임
 function getPartnerAttendanceTargets() {
   return adminUsersData.filter(u => {
     // 관리자 직급, 관리자팀, 본사팀 등 관리자 계정은 출결/교육 대상에서 완벽히 제외
     if (u.user_grade === 'manager' || u.team === '관리자' || u.team === '본사') return false;
-    return (u.access_grades || '').includes('C') || u.user_grade === 'family';
+    return (u.access_grades || '').includes('C') || u.user_grade === 'family' || u.user_grade === 'VIP' || (u.team && u.team.trim() !== '' && u.team !== '미지정');
   });
 }
 
@@ -2497,23 +2542,8 @@ window.exportAttendanceReportToCSV = function() {
 // =========================================================
 // [3. 파트너스 실적 및 팀별 목표 관리]
 // =========================================================
-let teamGoalsData = [
-  { team: '스타팀', leader: '정다은 프로', target: 50000000 },
-  { team: '비전팀', leader: '최유진 팀장', target: 40000000 },
-  { team: '영업 2팀', leader: '이영희 수석', target: 40000000 },
-  { team: '영업 3팀', leader: '박민준 팀장', target: 35000000 }
-];
-
-let performanceData = [
-  { rank: 1, name: '정다은 프로', team: '스타팀', count: 18, monthly: 24500000, target: 20000000, total: 185000000, status: '목표 초과' },
-  { rank: 2, name: '최유진 팀장', team: '비전팀', count: 14, monthly: 21000000, target: 20000000, total: 162000000, status: '목표 초과' },
-  { rank: 3, name: '이영희 수석', team: '영업 2팀', count: 11, monthly: 17500000, target: 18000000, total: 138000000, status: '달성 임박' },
-  { rank: 4, name: '박민준 팀장', team: '영업 3팀', count: 9, monthly: 15200000, target: 18000000, total: 121000000, status: '진행중' },
-  { rank: 5, name: '강서윤 프로', team: '스타팀', count: 8, monthly: 13400000, target: 15000000, total: 98000000, status: '진행중' },
-  { rank: 6, name: '윤지호 프로', team: '비전팀', count: 7, monthly: 11800000, target: 15000000, total: 84000000, status: '진행중' },
-  { rank: 7, name: '송태원 팀장', team: '영업 2팀', count: 6, monthly: 9800000, target: 15000000, total: 72000000, status: '진행중' },
-  { rank: 8, name: '김철수 팀장', team: '스타팀', count: 5, monthly: 7500000, target: 15000000, total: 60000000, status: '진행중' }
-];
+let teamGoalsData = [];
+let performanceData = [];
 
 let selectedTeamFilter = 'all';
 
@@ -2523,33 +2553,23 @@ function initPerformanceStorage() {
     if (savedPerf !== null) {
       const parsed = JSON.parse(savedPerf);
       if (Array.isArray(parsed)) {
-        performanceData = parsed;
+        // 샘플 더미 인원('정다은 프로', '최유진 팀장' 등) 배제
+        performanceData = parsed.filter(p => p.name !== '정다은 프로' && p.name !== '최유진 팀장' && p.name !== '이영희 수석' && p.name !== '박민준 팀장' && p.name !== '강서윤 프로' && p.name !== '윤지호 프로' && p.name !== '송태원 팀장' && p.name !== '김철수 팀장');
       }
     }
     const savedGoals = localStorage.getItem('weracle_team_goals_data');
     if (savedGoals !== null) {
       const parsedGoals = JSON.parse(savedGoals);
       if (Array.isArray(parsedGoals)) {
-        teamGoalsData = parsedGoals;
+        // 샘플 더미 팀('스타팀', '비전팀', '영업 2팀', '영업 3팀') 배제
+        teamGoalsData = parsedGoals.filter(t => t.team !== '스타팀' && t.team !== '비전팀' && t.team !== '영업 2팀' && t.team !== '영업 3팀' && t.team !== '영업 1팀' && t.team !== '영업1팀' && t.team !== '미지정' && t.team !== '관리자');
       }
     }
   } catch (e) {
     console.warn('실적 로컬 스토리지 로드 실패:', e);
   }
-  // '영업 1팀' 완벽 배제
+  // 팀 목표에서 '영업 1팀' 배제 유지
   teamGoalsData = teamGoalsData.filter(t => t.team !== '영업 1팀' && t.team !== '영업1팀' && t.team !== '미지정' && t.team !== '관리자');
-  performanceData.forEach(p => {
-    if (p.team === '영업 1팀' || p.team === '영업1팀') {
-      p.team = '미지정';
-    }
-  });
-  if (typeof adminUsersData !== 'undefined' && Array.isArray(adminUsersData)) {
-    adminUsersData.forEach(u => {
-      if (u.team === '영업 1팀' || u.team === '영업1팀') {
-        u.team = '미지정';
-      }
-    });
-  }
   savePerformanceStorage();
 }
 
@@ -3255,20 +3275,7 @@ window.closePastTopicModal = function() {
 // =========================================================
 // [5.  관리자 제어 콘솔 (스케줄/정책/실적/연구소/회원권한)]
 // =========================================================
-let adminUsersData = [
-  { id: 'usr-1', name: '김철수', nickname: '철수팀장', email: 'chulsoo@weracle.com', team: '스타팀', user_grade: 'family', access_grades: 'V,A,B,C', created_at: '2026-05-12' },
-  { id: 'usr-2', name: '이영희', nickname: '영희수석', email: 'younghee@weracle.com', team: '영업 2팀', user_grade: 'family', access_grades: 'V,A,B,C', created_at: '2026-06-20' },
-  { id: 'usr-3', name: '정다은', nickname: '다은프로', email: 'daeun@weracle.com', team: '스타팀', user_grade: 'family', access_grades: 'V,A,B,C', created_at: '2026-07-04' },
-  { id: 'usr-4', name: '박민준', nickname: '민준팀장', email: 'minjun@weracle.com', team: '영업 3팀', user_grade: 'family', access_grades: 'V,A,B,C', created_at: '2026-07-15' },
-  { id: 'usr-5', name: '최유진', nickname: '유진팀장', email: 'yujin@weracle.com', team: '비전팀', user_grade: 'family', access_grades: 'V,A,B,C', created_at: '2026-07-20' },
-  { id: 'usr-6', name: '홍길동', nickname: '길동프로', email: 'hong@naver.com', team: '비전팀', user_grade: 'family', access_grades: 'V,A,C', created_at: '2026-08-01' },
-  { id: 'usr-7', name: '강서윤', nickname: '서윤프로', email: 'seoyun@weracle.com', team: '스타팀', user_grade: 'family', access_grades: 'V,C', created_at: '2026-08-10' },
-  { id: 'usr-8', name: '송태원', nickname: '태원팀장', email: 'taewon@weracle.com', team: '영업 2팀', user_grade: 'family', access_grades: 'V,C', created_at: '2026-08-18' },
-  { id: 'usr-9', name: '윤지호', nickname: '지호프로', email: 'jiho@weracle.com', team: '비전팀', user_grade: 'family', access_grades: 'V,C', created_at: '2026-08-25' },
-  { id: 'usr-10', name: '관리자계정', nickname: '총괄운영자', email: 'admin@weracle.com', team: '본사', user_grade: 'manager', access_grades: 'V,A,B,C', created_at: '2026-01-01' },
-  { id: 'usr-11', name: '강동원', nickname: '동원고객', email: 'dongwon@gmail.com', team: '', user_grade: 'basic', access_grades: '', created_at: '2026-09-10' },
-  { id: 'usr-12', name: '이민호', nickname: '민호VIP', email: 'minho@naver.com', team: '', user_grade: 'VIP', access_grades: 'V', created_at: '2026-09-15' }
-];
+let adminUsersData = [];
 
 let currentTeamMemberSubTab = 1;
 
@@ -3908,7 +3915,7 @@ async function loadAdminUserList() {
       if (!error && Array.isArray(data) && data.length > 0) {
         adminUsersData = data.map(u => ({
           ...u,
-          name: u.name || u.nickname || '이름 없음',
+          name: u.nickname || u.name || (u.email ? u.email.split('@')[0] : '이름 없음'),
           nickname: u.nickname || '',
           team: u.team || '',
           access_grades: u.access_grades || '',
@@ -3929,8 +3936,12 @@ window.filterAdminUserList = function() {
   const filterTeam = document.getElementById('admUserFilterSelect')?.value || 'all';
 
   const filtered = adminUsersData.filter(user => {
-    // 1) 파트너스로 등록된 사람만 표시: 'C'(파트너스) 권한 보유자 또는 family / manager 등급
-    const isPartner = (user.access_grades || '').includes('C') || user.user_grade === 'family' || user.user_grade === 'manager';
+    // 1) 파트너스로 등록된 사람만 표시: 'C'(파트너스) 권한 보유자 또는 family / manager / VIP / 팀 배정 인원
+    const isPartner = (user.access_grades || '').includes('C') || 
+                      user.user_grade === 'family' || 
+                      user.user_grade === 'manager' || 
+                      user.user_grade === 'VIP' || 
+                      (user.team && user.team.trim() !== '' && user.team !== '미지정');
     if (!isPartner) return false;
 
     // 2) 검색어 (이름, 닉네임, 이메일)
@@ -4026,7 +4037,7 @@ window.filterAdminRoleList = function() {
 
     if (filterGrade === 'partner_only') {
       const hasC = (user.access_grades || '').includes('C');
-      const isFamily = user.user_grade === 'family' || user.user_grade === 'manager';
+      const isFamily = user.user_grade === 'family' || user.user_grade === 'manager' || user.user_grade === 'VIP' || (user.team && user.team.trim() !== '' && user.team !== '미지정');
       if (!hasC && !isFamily) return false;
     } else if (filterGrade === 'VIP') {
       if (user.user_grade !== 'VIP') return false;

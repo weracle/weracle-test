@@ -19,6 +19,43 @@
   
   <!-- 커스텀 스타일 -->
   <link rel="stylesheet" href="management.css?v=20261018_14">
+
+  <!-- 인쇄 전용 스타일 -->
+  <style>
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #leaderQrPrintArea, #leaderQrPrintArea * {
+        visibility: visible !important;
+      }
+      #leaderQrPrintArea {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100vw !important;
+        height: auto !important;
+        background: #ffffff !important;
+        padding: 15px !important;
+        margin: 0 !important;
+        overflow: visible !important;
+      }
+      #leaderQrGrid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 20px !important;
+      }
+      #printableQrArea, #printableQrArea * {
+        visibility: visible !important;
+      }
+      #printableQrArea {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100vw !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -196,34 +233,10 @@
           </div>
         </div>
 
-        <!-- [서브 1] 실시간 현장 QR 발급기 & 오늘 출석 현황 -->
+        <!-- [서브 1] 오늘 실시간 출석 현황 대시보드 -->
         <div id="qrSubViewLive">
-          <div class="qr-checkin-layout">
-            <!-- 좌측: 출입구 부착용 고정 QR 발급기 -->
-            <div class="qr-box-main">
-              <div style="font-size:15px; font-weight:800; color:var(--text-main);">
-                <i class="fa-solid fa-door-open" style="color:var(--primary);"></i> 회사 출입구 부착용 QR
-              </div>
-
-              <!-- 고정 QR 코드 생성 박스 -->
-              <div class="qr-canvas-wrap" id="qrcodeBox"></div>
-
-              <div style="margin:10px 0; text-align:center;">
-                <button class="btn-secondary" style="font-size:12px; padding:6px 14px; width:100%; border-color:#0284c7; color:#0284c7; font-weight:700;" onclick="openQrPrintModal()">
-                  <i class="fa-solid fa-print"></i> 출입구 부착용 QR 포스터 인쇄
-                </button>
-              </div>
-
-              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; font-size:11px; color:var(--text-sub); line-height:1.5;">
-                <div>⏰ <strong>정규 출근:</strong> 오전 10:00:00 기준 (초과 시 지각)</div>
-                <div style="margin-top:4px;"> <strong>오전 교육:</strong> 10:00 / 11:00 고정</div>
-                <div style="margin-top:4px; color:#0284c7; font-weight:600;">※ 전날 불참 신청자 외 전원(미투표자 포함) 출근 시 교육 자동 출석 연동!</div>
-              </div>
-            </div>
-
-            <!-- 우측: 오늘 실시간 출석 통계 & 현황 테이블 -->
-            <div>
-              <div class="attendance-status-bar">
+          <div>
+            <div class="attendance-status-bar">
                 <div class="att-stat-box">
                   <div class="att-stat-label">파트너스 전원</div>
                   <div class="att-stat-val" id="statTotal">0명</div>
@@ -295,7 +308,6 @@
                 </div>
               </div>
             </div>
-          </div>
         </div>
 
         <!-- [서브 신설] 교육 참석 사전 투표 관리 화면 (밤 12시 마감) -->
@@ -925,7 +937,24 @@
 
         <!-- [파트 2] 출근시간 및 교육시간 정책 설정 -->
         <div id="admSubPane2" class="admin-pane" style="display:none;">
-          <div style="max-width:720px; display:flex; flex-direction:column; gap:16px;">
+          <div style="max-width:760px; display:flex; flex-direction:column; gap:16px;">
+            
+            <!-- 👑 관리자 전용: 팀장님별 전용 출근 QR 발급 & 인쇄 카드 -->
+            <div style="background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border:1.5px solid #0284c7; padding:18px 22px; border-radius:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; box-shadow:0 2px 10px rgba(2,132,199,0.08);">
+              <div>
+                <div style="font-weight:900; font-size:15px; color:#0c4a6e; display:flex; align-items:center; gap:8px;">
+                  <i class="fa-solid fa-id-card-clip" style="color:#0284c7; font-size:20px;"></i> 👑 팀장님별 전용 출근 QR 발급 & 인쇄
+                </div>
+                <div style="font-size:12px; color:#0369a1; margin-top:4px; line-height:1.5;">
+                  각 팀장님이 스마트폰 기본 카메라로 본인 QR을 찍으면 구글 로그인 없이 즉시 출근 등록됩니다.<br>
+                  A4 용지에 명함/스티커 규격으로 인쇄하여 각 팀장님께 배부할 수 있습니다.
+                </div>
+              </div>
+              <button class="btn-primary" style="padding:11px 20px; font-size:13px; font-weight:800; background:linear-gradient(135deg, #0284c7, #2563eb); border:none; box-shadow:0 4px 12px rgba(2,132,199,0.3); white-space:nowrap;" onclick="openLeaderQrModal()">
+                <i class="fa-solid fa-qrcode"></i> 팀장님별 QR 발급 / 인쇄하기
+              </button>
+            </div>
+
             <p style="font-size:13px; color:var(--text-sub);">
               QR 스캔 시 출석/지각 여부를 자동으로 판정하는 기준 시각과 갱신 주기를 설정합니다.
             </p>
@@ -1088,7 +1117,10 @@
                     </h4>
                     <p style="font-size:12px; color:var(--text-sub); margin-top:2px;">팀을 생성하고 목표액을 설정합니다. 팀명을 변경하면 팀원들의 소속팀도 자동으로 일괄 동기화됩니다.</p>
                   </div>
-                  <div style="display:flex; gap:8px;">
+                  <div style="display:flex; gap:8px; align-items:center;">
+                    <button class="btn-primary" style="background:linear-gradient(135deg, #0284c7, #2563eb); border:none; font-weight:700;" onclick="openLeaderQrModal()">
+                      <i class="fa-solid fa-id-card-clip"></i> 👑 팀장 출근 QR 발급
+                    </button>
                     <button class="btn-secondary" onclick="adminAddNewTeam()"><i class="fa-solid fa-plus"></i> 새 팀 추가</button>
                     <button class="btn-primary" onclick="adminSaveAllTeamGoals()"><i class="fa-solid fa-floppy-disk"></i> 팀 목표 저장</button>
                   </div>
@@ -1483,31 +1515,38 @@
   </div>
 
   <!-- =========================================================
-       [A4 출입구 부착용 QR 포스터 인쇄 모달]
+       [팀장님별 전용 출근 QR 코드 목록 및 인쇄 모달]
        ========================================================= -->
-  <div id="qrPrintModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; z-index:9999;">
-    <div class="modal-card" style="width:520px; max-width:92vw; border-radius:16px; overflow:hidden;">
-      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--border);">
-        <h3 style="font-size:16px; font-weight:800; margin:0;"><i class="fa-solid fa-print"></i> 출입구 부착용 공식 QR 인쇄</h3>
-        <button onclick="closeQrPrintModal()" style="background:transparent; border:none; font-size:20px; cursor:pointer;">&times;</button>
+  <div id="leaderQrModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; z-index:9999;">
+    <div class="modal-card" style="width:740px; max-width:94vw; max-height:90vh; border-radius:18px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--border); background:#ffffff;">
+        <div>
+          <h3 style="font-size:16px; font-weight:800; margin:0; display:flex; align-items:center; gap:8px; color:var(--text-main);">
+            <i class="fa-solid fa-id-card-clip" style="color:var(--primary);"></i> 팀장님별 전용 출근 QR 코드
+          </h3>
+          <p style="font-size:11px; color:var(--text-muted); margin:4px 0 0 0;">
+            팀장님이 스마트폰 기본 카메라로 본인 QR을 찍으면 구글 로그인 없이 1초 만에 즉시 출석 등록됩니다.
+          </p>
+        </div>
+        <button onclick="closeLeaderQrModal()" style="background:transparent; border:none; font-size:22px; cursor:pointer; color:var(--text-muted);">&times;</button>
       </div>
-      <div style="padding:24px; text-align:center;" id="printableQrArea">
-        <div style="border:2px dashed #0284c7; border-radius:16px; padding:30px 20px; background:#f0f9ff;">
-          <div style="font-size:13px; font-weight:800; color:#0369a1; letter-spacing:1px; margin-bottom:4px;">WERACLE PARTNERS</div>
-          <h2 style="font-size:24px; font-weight:900; color:#0f172a; margin:0 0 16px 0;"> 출근 및 교육 출석 인증</h2>
-          <div id="printableQrBox" style="display:flex; justify-content:center; margin:16px auto;"></div>
-          <div style="font-size:15px; font-weight:800; color:#0284c7; margin-top:14px;">
-             스마트폰 기본 카메라로 스캔하세요
-          </div>
-          <div style="margin-top:12px; font-size:13px; color:#475569; line-height:1.6;">
-            • <strong>정규 출근:</strong> 오전 10:00:00 (초과 시 지각 자동 판정)<br>
-            • <strong>오전 교육:</strong> 10:00 / 11:00 (출근 스캔 시 자동 동시 출석)
-          </div>
+      
+      <div style="padding:20px; overflow-y:auto; flex:1; background:#f8fafc;" id="leaderQrPrintArea">
+        <div id="leaderQrGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:16px;">
+          <!-- JS에서 팀장님별 QR 카드가 동적으로 렌더링됨 -->
         </div>
       </div>
-      <div style="padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; background:#f8fafc;">
-        <button class="btn-secondary" onclick="closeQrPrintModal()">닫기</button>
-        <button class="btn-primary" onclick="printQrPoster()"><i class="fa-solid fa-print"></i> 지금 바로 인쇄하기</button>
+
+      <div style="padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:#ffffff;">
+        <span style="font-size:11px; color:var(--text-sub);">
+          💡 팀 관리에서 팀장님 이름을 수정하시면 QR도 자동 갱신됩니다.
+        </span>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-secondary" onclick="closeLeaderQrModal()">닫기</button>
+          <button class="btn-primary" onclick="printLeaderQrCards()">
+            <i class="fa-solid fa-print"></i> 전체 팀장 QR 인쇄하기
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1551,6 +1590,44 @@
 
       <div style="padding:10px 16px; background:#f1f5f9; border-top:1px solid #e2e8f0; text-align:right;">
         <button class="btn-secondary" style="font-size:11px; padding:4px 10px;" onclick="closeMobileCheckinModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       [팀장님 전용 QR 즉시 출석 완료 팝업 모달 (모바일 최적화)]
+       ========================================================= -->
+  <div id="leaderCheckinResultModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; z-index:12000; background:rgba(15,23,42,0.8); backdrop-filter:blur(4px);">
+    <div class="modal-card" style="width:390px; max-width:92vw; border-radius:22px; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.4); background:#ffffff; text-align:center;">
+      <div id="leaderCheckinHeader" style="background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; padding:28px 20px 20px 20px;">
+        <div id="leaderCheckinIcon" style="font-size:46px; margin-bottom:10px;">🎉</div>
+        <h3 id="leaderCheckinTitle" style="font-size:20px; font-weight:900; margin:0 0 6px 0;">출석체크 완료!</h3>
+        <p id="leaderCheckinSubtitle" style="font-size:13px; margin:0; opacity:0.95;">위라클 파트너스 팀장 출근 인증</p>
+      </div>
+
+      <div style="padding:22px 20px; background:#ffffff;">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:16px; margin-bottom:18px; text-align:left;">
+          <div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px;">출석 대상</div>
+          <div id="leaderCheckinTargetName" style="font-size:18px; font-weight:900; color:#0f172a; margin-bottom:12px;">--</div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; border-top:1px dashed #cbd5e1; padding-top:12px;">
+            <div>
+              <div style="font-size:11px; color:#64748b; font-weight:600;">출근 시각</div>
+              <div id="leaderCheckinTime" style="font-size:15px; font-weight:800; color:#0284c7;">--:--:--</div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:#64748b; font-weight:600;">출결 상태</div>
+              <div id="leaderCheckinStatus" style="font-size:15px; font-weight:800; color:#059669;">🟢 정상 출근</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="leaderCheckinEduNotice" style="font-size:12px; color:#0369a1; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px 12px; margin-bottom:18px; display:none; line-height:1.5; text-align:left;">
+        </div>
+
+        <button class="btn-primary" style="width:100%; padding:14px; font-size:15px; font-weight:800; border-radius:12px; background:linear-gradient(135deg, #0284c7, #2563eb); border:none; box-shadow:0 4px 12px rgba(2,132,199,0.35);" onclick="closeLeaderCheckinResultModal()">
+          확인 (창 닫기)
+        </button>
       </div>
     </div>
   </div>

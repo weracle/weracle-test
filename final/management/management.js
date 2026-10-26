@@ -1384,58 +1384,192 @@ function checkAndShowEduVotePopup() {
 }
 
 // =========================================================
-// [회사 출입구 부착용 고정 QR코드 생성 및 모바일 체크인]
+// [팀장님별 전용 출근 QR 모달 및 자동 출석 제어]
 // =========================================================
-function getEntranceCheckinUrl() {
-  const currentBase = window.location.origin + window.location.pathname;
-  return `${currentBase}?mode=checkin&target=office_entrance`;
-}
-
-function generateFixedEntranceQR() {
-  const qrUrl = getEntranceCheckinUrl();
-
-  const box = document.getElementById('qrcodeBox');
-  if (box) {
-    box.innerHTML = '';
-    new QRCode(box, {
-      text: qrUrl,
-      width: 130,
-      height: 130,
-      colorDark: "#0284c7",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.H
-    });
-  }
-
-  const printBox = document.getElementById('printableQrBox');
-  if (printBox) {
-    printBox.innerHTML = '';
-    new QRCode(printBox, {
-      text: qrUrl,
-      width: 220,
-      height: 220,
-      colorDark: "#0284c7",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.H
-    });
-  }
-}
-
-window.openQrPrintModal = function() {
-  const modal = document.getElementById('qrPrintModal');
-  if (modal) {
-    modal.style.display = 'flex';
-    generateFixedEntranceQR();
-  }
+window.openLeaderQrModal = function() {
+  const modal = document.getElementById('leaderQrModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  renderLeaderQrGrid();
 };
 
-window.closeQrPrintModal = function() {
-  const modal = document.getElementById('qrPrintModal');
+window.closeLeaderQrModal = function() {
+  const modal = document.getElementById('leaderQrModal');
   if (modal) modal.style.display = 'none';
 };
 
-window.printQrPoster = function() {
+window.printLeaderQrCards = function() {
   window.print();
+};
+
+function renderLeaderQrGrid() {
+  const grid = document.getElementById('leaderQrGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const currentBase = window.location.origin + window.location.pathname;
+
+  if (!teamGoalsData || teamGoalsData.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#64748b;">등록된 소속팀이 없습니다. 관리자 팀 설정에서 팀을 먼저 등록해 주세요.</div>';
+    return;
+  }
+
+  teamGoalsData.forEach((t, idx) => {
+    const rawLeader = (t.leader || '').trim();
+    const cleanLeader = rawLeader.replace(/팀장/g, '').trim() || `${t.team} 팀장`;
+    const checkinUrl = `${currentBase}?mode=checkin&team=${encodeURIComponent(t.team)}&leader=${encodeURIComponent(cleanLeader)}`;
+    const qrContainerId = `leaderQrCanvas_${idx}`;
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#ffffff; border:1.5px solid #cbd5e1; border-radius:14px; padding:18px 14px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.04); display:flex; flex-direction:column; align-items:center; break-inside:avoid;';
+    card.innerHTML = `
+      <div style="font-size:10px; font-weight:800; color:#0284c7; letter-spacing:1px; margin-bottom:2px;">WERACLE PARTNERS</div>
+      <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:2px;">🏢 ${t.team}</div>
+      <div style="font-size:16px; font-weight:900; color:#0369a1; margin-bottom:10px;">👑 ${cleanLeader} 팀장</div>
+      <div id="${qrContainerId}" style="display:flex; justify-content:center; margin-bottom:10px; padding:6px; background:#fff; border-radius:8px; border:1px solid #e2e8f0;"></div>
+      <div style="font-size:11px; font-weight:700; color:#334155; margin-bottom:4px;">스마트폰 카메라로 스캔</div>
+      <div style="font-size:10px; color:#16a34a; font-weight:700; line-height:1.3;">✔ 구글 로그인 없이 즉시 출석</div>
+    `;
+    grid.appendChild(card);
+
+    setTimeout(() => {
+      const box = document.getElementById(qrContainerId);
+      if (box && typeof QRCode !== 'undefined') {
+        box.innerHTML = '';
+        new QRCode(box, {
+          text: checkinUrl,
+          width: 130,
+          height: 130,
+          colorDark: "#0284c7",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      }
+    }, 40 * (idx + 1));
+  });
+}
+
+// 팀장 전용 QR 스캔 시 1초 다이렉트 출석 처리 (로그인 불필요)
+window.handleDirectLeaderCheckin = async function(team, leader) {
+  if (!leader) return;
+  const cleanLeader = String(leader).replace(/팀장/g, '').trim();
+  const todayStr = getTodayDateStr();
+
+  // 대상 팀장 찾기 (adminUsersData 매칭 시도, 없으면 가상 유저 객체 생성)
+  let user = adminUsersData.find(u => 
+    (u.name === cleanLeader || (u.nickname && u.nickname === cleanLeader)) &&
+    (!team || u.team === team)
+  );
+
+  if (!user) {
+    user = adminUsersData.find(u => u.name === cleanLeader || (u.nickname && u.nickname === cleanLeader));
+  }
+
+  if (!user) {
+    user = {
+      id: 'leader-' + (team || 'team') + '-' + cleanLeader,
+      name: cleanLeader,
+      team: team || '미지정',
+      nickname: '팀장'
+    };
+  }
+
+  // 중복 출석 확인
+  const alreadyChecked = attendanceLogs.some(l => 
+    (l.user_id && l.user_id === user.id) ||
+    (l.name && (l.name.includes(cleanLeader) || cleanLeader.includes(l.name)))
+  );
+
+  if (alreadyChecked) {
+    const existing = attendanceLogs.find(l => 
+      (l.user_id && l.user_id === user.id) ||
+      (l.name && (l.name.includes(cleanLeader) || cleanLeader.includes(l.name)))
+    );
+    showLeaderCheckinResultModal({
+      already: true,
+      name: cleanLeader,
+      team: user.team,
+      time: existing ? existing.time : '--:--',
+      isLate: existing ? existing.status === 'late' : false,
+      eduMsg: ''
+    });
+    return;
+  }
+
+  // 출석 즉시 기록 (Supabase 및 로컬 동시)
+  const res = await recordAttendanceCheckin({
+    user: user,
+    method: '팀장 전용 QR',
+    type: '회사 정규 출근'
+  });
+
+  if (res) {
+    showLeaderCheckinResultModal({
+      already: false,
+      name: cleanLeader,
+      team: res.checkinTeam || user.team,
+      time: res.timeStr,
+      isLate: res.isLate,
+      eduMsg: res.eduMsg
+    });
+  }
+};
+
+window.showLeaderCheckinResultModal = function({ already, name, team, time, isLate, eduMsg }) {
+  const modal = document.getElementById('leaderCheckinResultModal');
+  if (!modal) {
+    alert(`[${already ? '이미 출석 완료' : '출석체크 완료'}]\n• 대상: ${team ? '[' + team + '] ' : ''}${name} 팀장님\n• 출근시각: ${time}\n• 상태: ${isLate ? '지각' : '정상 출근'}${eduMsg ? '\n' + eduMsg : ''}`);
+    return;
+  }
+
+  const iconEl = document.getElementById('leaderCheckinIcon');
+  const titleEl = document.getElementById('leaderCheckinTitle');
+  const subEl = document.getElementById('leaderCheckinSubtitle');
+  const headerEl = document.getElementById('leaderCheckinHeader');
+  const nameEl = document.getElementById('leaderCheckinTargetName');
+  const timeEl = document.getElementById('leaderCheckinTime');
+  const statusEl = document.getElementById('leaderCheckinStatus');
+  const eduEl = document.getElementById('leaderCheckinEduNotice');
+
+  if (already) {
+    if (iconEl) iconEl.innerText = 'ℹ️';
+    if (titleEl) titleEl.innerText = '이미 출석 완료';
+    if (subEl) subEl.innerText = '오늘 이미 출석체크가 정상 기록되었습니다.';
+    if (headerEl) headerEl.style.background = 'linear-gradient(135deg, #475569, #334155)';
+  } else {
+    if (iconEl) iconEl.innerText = isLate ? '⏰' : '🎉';
+    if (titleEl) titleEl.innerText = isLate ? '출석 완료 (지각)' : '출석체크 완료!';
+    if (subEl) subEl.innerText = isLate ? '정규 출근 시간(10:00) 이후에 체크되었습니다.' : '위라클 파트너스 팀장 출근 인증 성공';
+    if (headerEl) headerEl.style.background = isLate ? 'linear-gradient(135deg, #d97706, #b45309)' : 'linear-gradient(135deg, #0284c7, #2563eb)';
+  }
+
+  if (nameEl) nameEl.innerText = `👑 ${team ? '[' + team + '] ' : ''}${name} 팀장님`;
+  if (timeEl) timeEl.innerText = time || '--:--:--';
+  if (statusEl) {
+    statusEl.innerText = isLate ? '⏰ 지각' : '🟢 정상 출근';
+    statusEl.style.color = isLate ? '#d97706' : '#059669';
+  }
+
+  if (eduEl) {
+    if (eduMsg) {
+      eduEl.innerText = eduMsg.trim();
+      eduEl.style.display = 'block';
+    } else {
+      eduEl.style.display = 'none';
+    }
+  }
+
+  modal.style.display = 'flex';
+
+  try {
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+  } catch (e) {}
+};
+
+window.closeLeaderCheckinResultModal = function() {
+  const modal = document.getElementById('leaderCheckinResultModal');
+  if (modal) modal.style.display = 'none';
 };
 
 // --- [모바일 현장 출근 체크인 모달 제어] ---
@@ -1472,6 +1606,14 @@ setInterval(updateMobileClock, 1000);
 function checkUrlCheckinMode() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('mode') === 'checkin') {
+    const leader = urlParams.get('leader');
+    const team = urlParams.get('team');
+    if (leader) {
+      setTimeout(() => {
+        handleDirectLeaderCheckin(team, leader);
+      }, 350);
+      return;
+    }
     setTimeout(() => {
       openMobileCheckinModal();
     }, 400);
@@ -1516,7 +1658,6 @@ function initAttendanceTargets() {
 
 function initQRCheckin() {
   initAttendanceTargets();
-  generateFixedEntranceQR();
 
   // 오늘 날짜 필터링
   const todayStr = getTodayDateStr();
@@ -3475,6 +3616,7 @@ window.adminSaveAllTeamGoals = function() {
   renderAdminTeamGoalsTable();
   renderAdminPerfTable();
   filterAdminUserList();
+  if (typeof renderLeaderQrGrid === 'function' && document.getElementById('leaderQrModal')?.style.display !== 'none') renderLeaderQrGrid();
 
   alert('팀별 목표 금액 및 팀 설정이 성공적으로 저장되었습니다!\n(회원 관리 소속팀 목록 자동 갱신 완료)');
 };

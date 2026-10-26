@@ -102,13 +102,17 @@
         page-break-inside: auto !important;
       }
 
-      #leaderQrGrid > div {
-        border: 1.5px solid #94a3b8 !important;
+      #leaderQrGrid > div,
+      #leaderQrGrid > .leader-qr-desk-card {
+        border: 2px solid #c5a059 !important;
+        border-radius: 16px !important;
         box-shadow: none !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
-        padding: 16px !important;
+        padding: 20px 16px !important;
         background: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
     }
   </style>
@@ -304,9 +308,6 @@
                 </div>
               </div>
               <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <button class="btn-success" style="background:linear-gradient(135deg, #059669, #10b981); border:none; padding:10px 18px; font-size:13px; font-weight:800; box-shadow:0 4px 12px rgba(16,185,129,0.25); white-space:nowrap; color:#fff; border-radius:10px; cursor:pointer;" onclick="openQrCameraScanner()">
-                  <i class="fa-solid fa-camera"></i> 카메라 켜서 QR 찍기
-                </button>
                 <button class="btn-primary" style="background:linear-gradient(135deg, #0284c7, #2563eb); border:none; padding:10px 18px; font-size:13px; font-weight:800; box-shadow:0 4px 12px rgba(2,132,199,0.25); white-space:nowrap;" onclick="openLeaderQrModal()">
                   <i class="fa-solid fa-id-card-clip"></i> 파트너스 출근 QR 보기 및 인쇄
                 </button>
@@ -1615,79 +1616,21 @@
           </div>
         </div>
 
-        <div id="leaderQrGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:16px;">
+        <div id="leaderQrGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:18px;">
           <!-- JS에서 팀장님별 QR 카드가 동적으로 렌더링됨 -->
         </div>
       </div>
 
       <div style="padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:#ffffff;">
         <span style="font-size:11px; color:var(--text-sub);">
-          💡 팀 관리에서 팀장님 이름을 수정하시면 QR도 자동 갱신됩니다.
+          💡 각 카드에서 직책(팀장, 지사장, 본부장 등)을 바로 변경하실 수 있으며, 인쇄 시에는 골드 직책 뱃지만 깔끔하게 인쇄됩니다.
         </span>
         <div style="display:flex; gap:8px; align-items:center;">
-          <button class="btn-success" style="background:#059669; color:#fff; border:none; padding:8px 14px; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;" onclick="openQrCameraScanner()">
-            <i class="fa-solid fa-camera"></i> 카메라로 직접 찍기
-          </button>
           <button class="btn-secondary" onclick="closeLeaderQrModal()">닫기</button>
           <button class="btn-primary" onclick="printLeaderQrCards()">
-            <i class="fa-solid fa-print"></i> 전체 팀장 QR 인쇄하기
+            <i class="fa-solid fa-print"></i> 전체 QR코드 인쇄하기
           </button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- =========================================================
-       [카메라 라이브 QR 출석 스캐너 모달]
-       ========================================================= -->
-  <div id="qrCameraScannerModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; z-index:10001; background:rgba(15,23,42,0.85); backdrop-filter:blur(4px);">
-    <div class="modal-card" style="width:460px; max-width:92vw; border-radius:20px; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); background:#ffffff;">
-      <div style="background:linear-gradient(135deg, #059669, #047857); color:#fff; padding:18px 20px; display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div style="width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:18px;">
-            <i class="fa-solid fa-camera"></i>
-          </div>
-          <div>
-            <h3 style="font-size:16px; font-weight:800; margin:0;">출석체크 카메라 스캐너</h3>
-            <p style="font-size:11px; margin:2px 0 0 0; opacity:0.9;">화면 사각형 안에 출근 QR 코드를 비춰주세요.</p>
-          </div>
-        </div>
-        <button onclick="closeQrCameraScanner()" style="background:transparent; border:none; color:#fff; font-size:24px; cursor:pointer; line-height:1;">&times;</button>
-      </div>
-
-      <div style="position:relative; width:100%; height:320px; background:#000000; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-        <!-- 비디오 피드 -->
-        <video id="qrScannerVideo" playsinline autoplay muted style="width:100%; height:100%; object-fit:cover;"></video>
-        <canvas id="qrScannerCanvas" style="display:none;"></canvas>
-
-        <!-- 스캔 뷰파인더 가이드 박스 -->
-        <div style="position:absolute; width:220px; height:220px; border:2px solid rgba(255,255,255,0.6); border-radius:16px; box-shadow:0 0 0 9999px rgba(0,0,0,0.5); pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; padding:10px;">
-          <!-- 모서리 하이라이트 -->
-          <div style="display:flex; justify-content:space-between;">
-            <span style="width:20px; height:20px; border-top:4px solid #10b981; border-left:4px solid #10b981; border-top-left-radius:6px;"></span>
-            <span style="width:20px; height:20px; border-top:4px solid #10b981; border-right:4px solid #10b981; border-top-right-radius:6px;"></span>
-          </div>
-          <!-- 스캔 레이저 라인 -->
-          <div id="qrScanLaser" style="width:100%; height:2px; background:linear-gradient(90deg, transparent, #10b981, #34d399, #10b981, transparent); box-shadow:0 0 8px #10b981; animation:qrLaserScan 2s infinite ease-in-out;"></div>
-          <div style="display:flex; justify-content:space-between;">
-            <span style="width:20px; height:20px; border-bottom:4px solid #10b981; border-left:4px solid #10b981; border-bottom-left-radius:6px;"></span>
-            <span style="width:20px; height:20px; border-bottom:4px solid #10b981; border-right:4px solid #10b981; border-bottom-right-radius:6px;"></span>
-          </div>
-        </div>
-
-        <!-- 카메라 안내 텍스트 -->
-        <div id="qrScannerStatus" style="position:absolute; bottom:14px; background:rgba(0,0,0,0.7); color:#fff; font-size:12px; font-weight:700; padding:6px 14px; border-radius:20px; display:flex; align-items:center; gap:6px;">
-          <span style="width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block;"></span> 카메라 준비 중...
-        </div>
-      </div>
-
-      <div style="padding:14px 18px; background:#f8fafc; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-        <button id="btnSwitchCamera" class="btn-secondary" style="font-size:12px; padding:6px 12px; display:flex; align-items:center; gap:6px;" onclick="switchCameraFacing()">
-          <i class="fa-solid fa-camera-rotate"></i> 카메라 전환
-        </button>
-        <button class="btn-secondary" style="font-size:12px; padding:6px 16px;" onclick="closeQrCameraScanner()">
-          닫기
-        </button>
       </div>
     </div>
   </div>

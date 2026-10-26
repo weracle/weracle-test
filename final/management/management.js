@@ -247,6 +247,9 @@ async function loadSettingsFromSupabase() {
         } else if (row.key === 'member_grades' && row.value) {
           memberGradesMap = { ...memberGradesMap, ...row.value };
           try { localStorage.setItem('weracle_member_grades', JSON.stringify(memberGradesMap)); } catch(e){}
+        } else if (row.key === 'member_positions' && row.value) {
+          memberPositionsMap = { ...memberPositionsMap, ...row.value };
+          try { localStorage.setItem('weracle_member_positions', JSON.stringify(memberPositionsMap)); } catch(e){}
         } else if (row.key === 'lab_data' && row.value) {
           if (typeof applyLabDataFromSupabase === 'function') {
             applyLabDataFromSupabase(row.value);
@@ -1456,9 +1459,69 @@ function checkAndShowEduVotePopup() {
 }
 
 // =========================================================
-// [팀장님별 전용 출근 QR 모달 및 자동 출석 제어]
+// [파트너스(팀장/지사장/본부장 등) 전용 출근 QR 모달 및 자동 출석 제어]
 // =========================================================
 let customQrDomain = localStorage.getItem('weracle_qr_domain') || '';
+let memberPositionsMap = {};
+try {
+  const savedPos = localStorage.getItem('weracle_member_positions');
+  if (savedPos) memberPositionsMap = JSON.parse(savedPos);
+} catch (e) {}
+
+// 회원 직책 조회 (1순위: 관리자 지정, 2순위: 프로필 속성, 3순위: 이름 내 직책어 자동 분리 인식)
+function getMemberPosition(user) {
+  if (!user) return '팀장';
+  const uid = user.id || user.name;
+  if (memberPositionsMap[uid]) return memberPositionsMap[uid];
+  if (user.email && memberPositionsMap[user.email]) return memberPositionsMap[user.email];
+  
+  if (user.position) return user.position;
+  if (user.job_title) return user.job_title;
+  if (user.title && !['basic', 'VIP', 'family', 'manager'].includes(user.title)) return user.title;
+  if (user.role && !['admin', 'manager', 'user'].includes(user.role)) return user.role;
+
+  // 이름이나 닉네임에서 직책 단어 자동 분리 인식 (지사장, 본부장, 지점장, 실장, 대표, 이사, 수석 등)
+  const fullName = (user.name || user.nickname || '').trim();
+  const knownTitles = ['총괄대표', '대표', '총괄본부장', '본부장', '부본부장', '지사장', '부지사장', '지점장', '부지점장', '실장', '팀장', '수석', '선임', '이사', '상무', '전무', '매니저', '설계사', 'FC', 'FP'];
+  for (const t of knownTitles) {
+    if (fullName.endsWith(t) || fullName.includes(t)) {
+      return t;
+    }
+  }
+
+  return '팀장';
+}
+
+// 직책 단어가 포함된 이름에서 순수 성함만 추출 (예: '김시화 지사장' -> '김시화')
+function getCleanMemberName(user, position) {
+  let name = (user.name || user.nickname || '파트너').trim();
+  if (position) {
+    name = name.replace(new RegExp(position + '$', 'g'), '').trim();
+    name = name.replace(new RegExp(position, 'g'), '').trim();
+  }
+  name = name.replace(/(지사장|본부장|지점장|팀장|실장|이사|대표|매니저|FC|FP)/g, '').trim();
+  return name || (user.name || '파트너');
+}
+
+// 수파베이스 DB 스키마 수정 없이 partners_settings 및 로컬 캐시에 직책 영구 저장
+window.updateMemberPosition = function(userId, newPos) {
+  if (!userId) return;
+  if (newPos === 'custom') {
+    const cur = memberPositionsMap[userId] || '팀장';
+    const entered = prompt('원하시는 직책을 직접 입력해 주세요:\n(예: 지사장, 본부장, 총괄, 실장, 이사, 대표, 수석 등)', cur);
+    if (entered === null) {
+      renderLeaderQrGrid();
+      return;
+    }
+    newPos = entered.trim() || '팀장';
+  }
+  memberPositionsMap[userId] = newPos;
+  try {
+    localStorage.setItem('weracle_member_positions', JSON.stringify(memberPositionsMap));
+  } catch(e){}
+  saveSettingToSupabase('member_positions', memberPositionsMap, '파트너스 회원 직책 설정');
+  renderLeaderQrGrid();
+};
 
 window.openLeaderQrModal = function() {
   const modal = document.getElementById('leaderQrModal');
@@ -1507,49 +1570,57 @@ window.printLeaderQrCards = function() {
   }
 
   if (isInsideIframe) {
-    const printWindow = window.open('', '_blank', 'width=850,height=900');
+    const printWindow = window.open('', '_blank', 'width=880,height=960');
     if (printWindow) {
       printWindow.document.write(`
         <!DOCTYPE html>
         <html lang="ko">
         <head>
           <meta charset="UTF-8">
-          <title>위라클 파트너스 전용 출근 QR 카드 인쇄</title>
+          <title>위라클 파트너스 출근 QR 카드 (A4 1/4 규격 인쇄)</title>
           <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
           <style>
-            * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
-            body { padding: 15mm; background: #fff; color: #000; }
-            .print-header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #0284c7; padding-bottom: 12px; }
-            .print-header h1 { font-size: 20px; color: #0f172a; font-weight: 800; }
-            .print-header p { font-size: 12px; color: #64748b; margin-top: 4px; }
+            * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { padding: 8mm; background: #fff; color: #000; }
+            .print-header { text-align: center; margin-bottom: 16px; border-bottom: 2px solid #c5a059; padding-bottom: 8px; }
+            .print-header h1 { font-size: 17px; color: #0f172a; font-weight: 800; letter-spacing: 0.5px; }
+            .print-header p { font-size: 11px; color: #78716c; margin-top: 3px; }
             #leaderQrGrid {
               display: grid;
               grid-template-columns: repeat(2, 1fr);
-              gap: 20px;
+              gap: 16px;
+              width: 100%;
             }
-            #leaderQrGrid > div {
+            .leader-qr-desk-card {
               background: #ffffff !important;
-              border: 1.5px solid #cbd5e1 !important;
-              border-radius: 14px !important;
-              padding: 20px 14px !important;
+              border: 2px solid #c5a059 !important;
+              border-radius: 16px !important;
+              padding: 16px 14px !important;
               text-align: center !important;
               display: flex !important;
               flex-direction: column !important;
+              justify-content: space-between !important;
               align-items: center !important;
               break-inside: avoid !important;
               page-break-inside: avoid !important;
+              position: relative !important;
+              overflow: hidden !important;
+              min-height: 128mm !important;
+              box-sizing: border-box !important;
             }
             @media print {
-              body { padding: 10mm; }
+              body { padding: 6mm; }
               .no-print { display: none !important; }
+              @page { size: A4 portrait; margin: 6mm; }
             }
           </style>
         </head>
         <body>
           <div class="print-header no-print">
-            <h1>👑 위라클 파트너스 전용 출근 QR 카드</h1>
-            <p>A4 용지에 출력 후 절취하여 각 팀장님/파트너스에게 배부해 주세요.</p>
-            <button onclick="window.print()" style="margin-top:10px; padding:8px 18px; background:#0284c7; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">🖨️ 인쇄 창 다시 열기</button>
+            <h1>👑 위라클 파트너스 출근 QR 명패 카드 (A4 1/4 사이즈)</h1>
+            <p>A4 1장에 4개씩 출력됩니다. 절취선에 맞춰 재단 후 개인 책상 액자/스탠드/파티션에 비치해 주세요.</p>
+            <button onclick="window.print()" style="margin-top:10px; padding:8px 18px; background:#b45309; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">🖨️ 인쇄 창 다시 열기</button>
           </div>
           <div id="leaderQrGrid">
             ${gridEl.innerHTML}
@@ -1601,8 +1672,7 @@ function renderLeaderQrGrid() {
       </div>
       <div>
         현재 로컬 컴퓨터(PC 내 파일)에서 실행 중이므로 스마트폰 일반 카메라로 스캔 시 연결할 웹 주소가 필요합니다.<br>
-        1. <strong>스마트폰 일반 카메라</strong>로 찍으시려면 실제 웹사이트에 업로드(배포)하신 주소를 위 <strong style="color:#0284c7;">'QR 연결 웹 주소'</strong>에 입력 후 [주소 저장]을 눌러주세요.<br>
-        2. 또는 화면 상단의 <strong style="color:#059669;">[📷 카메라로 직접 찍기]</strong> 버튼을 누르시면 웹 배포 없이도 화면 카메라로 즉시 0.1초 출석체크가 가능합니다!
+        실제 웹사이트에 업로드(배포)하신 웹 주소를 위 <strong style="color:#0284c7;">'QR 연결 웹 주소'</strong>에 입력 후 [주소 저장]을 눌러주시면 스마트폰 카메라로 비췄을 때 즉시 출석 사이트로 연결됩니다.
       </div>
     `;
     grid.appendChild(notice);
@@ -1617,21 +1687,67 @@ function renderLeaderQrGrid() {
   }
 
   targetUsers.forEach((u, idx) => {
-    const rawName = (u.name || u.nickname || '파트너').trim();
-    const cleanLeader = rawName.replace(/팀장/g, '').trim();
+    const userPosition = getMemberPosition(u);
+    const cleanLeader = getCleanMemberName(u, userPosition);
     const teamName = u.team || '영업 1팀';
-    const checkinUrl = `${currentBase}?mode=checkin&userId=${encodeURIComponent(u.id)}&team=${encodeURIComponent(teamName)}&leader=${encodeURIComponent(cleanLeader)}`;
+    const checkinUrl = `${currentBase}?mode=checkin&userId=${encodeURIComponent(u.id)}&team=${encodeURIComponent(teamName)}&leader=${encodeURIComponent(cleanLeader)}&position=${encodeURIComponent(userPosition)}`;
     const qrContainerId = `leaderQrCanvas_${idx}`;
 
     const card = document.createElement('div');
-    card.style.cssText = 'background:#ffffff; border:1.5px solid #cbd5e1; border-radius:14px; padding:18px 14px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.04); display:flex; flex-direction:column; align-items:center; break-inside:avoid;';
+    card.className = 'leader-qr-desk-card';
+    card.style.cssText = 'background:linear-gradient(180deg, #fffdfa 0%, #ffffff 60%, #fffdfa 100%); border:2px solid #c5a059; border-radius:18px; padding:18px 16px; text-align:center; box-shadow:0 6px 20px rgba(197,160,89,0.12); display:flex; flex-direction:column; justify-content:space-between; align-items:center; break-inside:avoid; position:relative; overflow:hidden; min-height:365px; box-sizing:border-box;';
     card.innerHTML = `
-      <div style="font-size:10px; font-weight:800; color:#0284c7; letter-spacing:1px; margin-bottom:2px;">WERACLE PARTNERS</div>
-      <div style="font-size:13px; font-weight:800; color:#0f172a; margin-bottom:2px;">🏢 ${teamName}</div>
-      <div style="font-size:16px; font-weight:900; color:#0369a1; margin-bottom:10px;">👑 ${cleanLeader} 팀장</div>
-      <div id="${qrContainerId}" style="width:140px; height:140px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; padding:6px; background:#fff; border-radius:8px; border:1px solid #e2e8f0; overflow:hidden;"></div>
-      <div style="font-size:11px; font-weight:700; color:#334155; margin-bottom:4px;">스마트폰 카메라 또는 화면 스캐너로 스캔</div>
-      <div style="font-size:10px; color:#16a34a; font-weight:700; line-height:1.3;">✔ 로그인 없이 1초 즉시 출석</div>
+      <!-- 상단 샴페인 골드 프리미엄 악센트 바 -->
+      <div style="position:absolute; top:0; left:0; right:0; height:6px; background:linear-gradient(90deg, #996515 0%, #d4af37 35%, #fef08a 50%, #d4af37 65%, #996515 100%);"></div>
+
+      <!-- 섬세한 안쪽 골드 이너 헤어라인 -->
+      <div style="position:absolute; top:6px; bottom:6px; left:6px; right:6px; border:1px solid rgba(197,160,89,0.25); border-radius:12px; pointer-events:none;"></div>
+
+      <!-- 1. 상단: 브랜드 & 소속팀 & 성함 (가독성 높은 타이포그래피) -->
+      <div style="width:100%; text-align:center; padding-top:4px; position:relative; z-index:1;">
+        <div style="font-size:13px; font-weight:900; letter-spacing:0.18em; color:#92400e; text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:6px;">
+          <i class="fa-solid fa-crown" style="font-size:12px; color:#d4af37;"></i> WERACLE PARTNERS
+        </div>
+        <div style="font-size:16px; font-weight:800; color:#57534e; margin-top:5px; letter-spacing:-0.2px;">
+          ${teamName}
+        </div>
+        <div style="font-size:26px; font-weight:900; color:#1c1917; letter-spacing:0.02em; margin-top:3px; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <span>${cleanLeader}</span>
+          <span style="font-size:13px; font-weight:800; color:#854d0e; background:#fefce8; border:1.5px solid #fde047; padding:3px 10px; border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">${userPosition}</span>
+        </div>
+
+        <!-- 직책 빠른 변경 셀렉터 (화면에서 변경 시 파트너스 설정에 자동 저장, 인쇄 시 자동 숨김) -->
+        <div class="no-print" style="margin-top:6px; display:flex; align-items:center; justify-content:center; gap:5px;">
+          <span style="font-size:11px; color:#78716c; font-weight:700;">직책:</span>
+          <select onchange="updateMemberPosition('${u.id}', this.value)" style="font-size:11px; font-weight:800; color:#854d0e; background:#fefce8; border:1px solid #fde047; border-radius:6px; padding:2px 8px; cursor:pointer;">
+            <option value="팀장" ${userPosition === '팀장' ? 'selected' : ''}>팀장</option>
+            <option value="지사장" ${userPosition === '지사장' ? 'selected' : ''}>지사장</option>
+            <option value="본부장" ${userPosition === '본부장' ? 'selected' : ''}>본부장</option>
+            <option value="지점장" ${userPosition === '지점장' ? 'selected' : ''}>지점장</option>
+            <option value="실장" ${userPosition === '실장' ? 'selected' : ''}>실장</option>
+            <option value="대표" ${userPosition === '대표' ? 'selected' : ''}>대표</option>
+            <option value="이사" ${userPosition === '이사' ? 'selected' : ''}>이사</option>
+            <option value="수석" ${userPosition === '수석' ? 'selected' : ''}>수석</option>
+            <option value="설계사" ${userPosition === '설계사' ? 'selected' : ''}>설계사</option>
+            <option value="custom" ${!['팀장','지사장','본부장','지점장','실장','대표','이사','수석','설계사'].includes(userPosition) ? 'selected' : ''}>✏️ 직접입력 (${userPosition})</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 2. 중앙: 시원하고 큼직한 순수 블랙 QR 박스 (골드 프레임) -->
+      <div style="margin:8px auto; padding:10px; background:#ffffff; border:1.5px solid #e7d8b8; border-radius:14px; box-shadow:0 2px 8px rgba(197,160,89,0.08); display:flex; flex-direction:column; align-items:center; position:relative; z-index:1;">
+        <div id="${qrContainerId}" style="width:185px; height:185px; display:flex; align-items:center; justify-content:center; background:#fff; border-radius:6px; overflow:hidden;"></div>
+        <div style="font-size:11px; font-weight:700; color:#a16207; margin-top:6px; display:flex; align-items:center; gap:4px;">
+          <i class="fa-solid fa-camera"></i> 스마트폰 카메라로 비추면 자동 인증
+        </div>
+      </div>
+
+      <!-- 3. 하단 문구 (옵션 C: 배경색 없는 미니멀 샴페인 골드 헤어라인 명패) -->
+      <div style="width:100%; background:#ffffff; border:1.5px solid #c5a059; border-radius:12px; padding:11px 12px; text-align:center; box-shadow:0 1px 3px rgba(197,160,89,0.06); position:relative; z-index:1;">
+        <div style="font-size:15px; font-weight:900; letter-spacing:-0.2px; color:#854d0e; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <i class="fa-solid fa-qrcode" style="font-size:15px; color:#c5a059;"></i> 사내 출퇴근 &amp; 교육인증 QR코드
+        </div>
+      </div>
     `;
     grid.appendChild(card);
 
@@ -1644,8 +1760,8 @@ function renderLeaderQrGrid() {
           try {
             new QRCode(box, {
               text: checkinUrl,
-              width: 140,
-              height: 140,
+              width: 185,
+              height: 185,
               colorDark: "#000000",
               colorLight: "#ffffff",
               correctLevel: QRCode.CorrectLevel.M
@@ -1656,8 +1772,8 @@ function renderLeaderQrGrid() {
           }
         }
         if (!qrcodeRendered) {
-          // CDN 지연 또는 로컬 환경 fallback 이미지 (고대비 순수 블랙)
-          box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&color=000000&data=${encodeURIComponent(checkinUrl)}" width="140" height="140" alt="출석 QR" style="border-radius:4px; display:block;" />`;
+          // CDN 지연 또는 로컬 환경 fallback 이미지 (고대비 순수 블랙, 큼직한 185px)
+          box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=185x185&color=000000&data=${encodeURIComponent(checkinUrl)}" width="185" height="185" alt="출석 QR" style="border-radius:4px; display:block;" />`;
         }
       }
     }, 40 * (idx + 1));

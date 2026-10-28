@@ -614,6 +614,39 @@
             transform: translateX(20px);
         }
 
+    
+        /* Brand Icon Selector */
+        .brand-icon-btn {
+            padding: 4px 10px;
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: 9999px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 32px;
+        }
+        .brand-icon-btn:hover {
+            border-color: #f97316;
+            transform: scale(1.1);
+        }
+        .brand-icon-btn.active {
+            background: #fff7ed;
+            border-color: #f97316;
+            box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.3);
+            font-weight: bold;
+        }
+        .brand-icon-btn.btn-none {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+        }
+
     </style>
 </head>
 <body>
@@ -683,23 +716,27 @@
                     <input type="text" id="input-brand-highlight" class="form-control" placeholder="예: 햄픽, 원더라이프, 노혜미" value="햄픽">
                 </div>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; margin-bottom:12px;">
-                <label style="display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--text-main); cursor:pointer;">
-                    <input type="checkbox" id="input-brand-sparkle" checked style="width:16px; height:16px; accent-color:#f97316;">
-                    ✨ 앞에 반짝이 아이콘 달기
-                </label>
-                <!-- 실시간 반짝이 글자 미리보기 배너 -->
-                <div class="brand-preview-banner">
-                    <span id="preview-sparkle">✨</span>
-                    <span id="preview-sub">기준이 다른</span>
-                    <strong class="preview-highlight-shiny" id="preview-highlight">햄픽</strong>
+            <div style="margin-top:10px; margin-bottom:14px; background:#f8fafc; border:1px solid var(--border-color); border-radius:14px; padding:12px 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <label class="form-label" style="margin-bottom:0; font-size:12.5px;">
+                        ✨ 브랜드 앞 아이콘 선택 <span class="sub">(클릭하여 변경)</span>
+                    </label>
+                    <!-- 실시간 반짝이 글자 미리보기 배너 -->
+                    <div class="brand-preview-banner" style="margin-top:0; padding:6px 12px; font-size:13px;">
+                        <span id="preview-sparkle">✨</span>
+                        <span id="preview-sub">기준이 다른</span>
+                        <strong class="preview-highlight-shiny" id="preview-highlight">햄픽</strong>
+                    </div>
                 </div>
+                <div class="brand-icon-palette" id="brand-icon-palette" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+                <input type="hidden" id="input-brand-icon" value="✨">
+                <input type="hidden" id="input-brand-sparkle" value="true">
             </div>
             <input type="hidden" id="input-brand-title" value="기준이 다른 햄픽">
 
             <div class="form-label">프로필 사진</div>
             <div class="avatar-uploader-box">
-                <img id="avatar-preview-img" src="https://i.ibb.co/4RxJsrsJ/Kakao-Talk-20260602-124409333.jpg" class="avatar-thumb-preview" alt="프로필 미리보기">
+                    document.getElementById('avatar-preview-img').src = DEFAULT_PLACEHOLDER_AVATAR;
                 <div class="avatar-uploader-info">
                     <button type="button" class="btn-upload-file" id="btn-trigger-upload">
                         <i class="fa-solid fa-camera"></i> 사진 업로드 (PC / 스마트폰)
@@ -1006,17 +1043,49 @@
             });
         }
 
+        
+        const BRAND_ICONS = ['✨', '⭐', '🌟', '🔥', '🍀', '👑', '💎', '💡', '🚀', '🎯', '🛡️', 'None'];
+        let selectedBrandIcon = '✨';
+
+        function initBrandIconPalette() {
+            const wrap = document.getElementById('brand-icon-palette');
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            BRAND_ICONS.forEach(icon => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'brand-icon-btn' + (icon === 'None' ? ' btn-none' : '') + (selectedBrandIcon === icon ? ' active' : '');
+                btn.textContent = icon === 'None' ? '없음' : icon;
+                btn.title = icon === 'None' ? '아이콘 없이 텍스트만 표시' : icon;
+                btn.addEventListener('click', () => {
+                    selectedBrandIcon = icon;
+                    document.getElementById('input-brand-icon').value = icon;
+                    initBrandIconPalette();
+                    updateBrandBanner();
+                    syncLivePreview();
+                });
+                wrap.appendChild(btn);
+            });
+        }
+
         // 브랜드 수식어 & 반짝이 배너 동기화
         function updateBrandBanner() {
             const sub = document.getElementById('input-brand-sub').value.trim();
             const highlight = document.getElementById('input-brand-highlight').value.trim() || '디지털 명함';
-            const sparkle = document.getElementById('input-brand-sparkle').checked;
+            const icon = selectedBrandIcon;
 
             const pSparkle = document.getElementById('preview-sparkle');
             const pSub = document.getElementById('preview-sub');
             const pHighlight = document.getElementById('preview-highlight');
 
-            if (pSparkle) pSparkle.style.display = sparkle ? 'inline' : 'none';
+            if (pSparkle) {
+                if (icon && icon !== 'None') {
+                    pSparkle.textContent = icon;
+                    pSparkle.style.display = 'inline';
+                } else {
+                    pSparkle.style.display = 'none';
+                }
+            }
             if (pSub) {
                 pSub.textContent = sub;
                 pSub.style.display = sub ? 'inline' : 'none';
@@ -1034,7 +1103,8 @@
             const card = {
                 brand_sub: document.getElementById('input-brand-sub').value.trim(),
                 brand_highlight: document.getElementById('input-brand-highlight').value.trim() || '디지털 명함',
-                show_sparkle: document.getElementById('input-brand-sparkle').checked,
+                brand_icon: selectedBrandIcon,
+                show_sparkle: selectedBrandIcon !== 'None',
                 brand_title: (document.getElementById('input-brand-sub').value.trim() + ' ' + (document.getElementById('input-brand-highlight').value.trim() || '디지털 명함')).trim(),
                 stickers: selectedJibbitz,
                 bgm: {
@@ -1138,7 +1208,9 @@
 
                 document.getElementById('input-brand-sub').value = bSub;
                 document.getElementById('input-brand-highlight').value = bHighlight;
-                document.getElementById('input-brand-sparkle').checked = bSparkle;
+                selectedBrandIcon = cardData.brand_icon || (bSparkle ? '✨' : 'None');
+                document.getElementById('input-brand-icon').value = selectedBrandIcon;
+                initBrandIconPalette();
                 updateBrandBanner();
 
                 // 지비츠 스티커 로드
@@ -1179,7 +1251,7 @@
                     document.getElementById('avatar-preview-img').src = avatar;
                     document.getElementById('input-avatar-url').value = avatar;
                 } else {
-                    document.getElementById('avatar-preview-img').src = 'https://i.ibb.co/4RxJsrsJ/Kakao-Talk-20260602-124409333.jpg';
+                    document.getElementById('avatar-preview-img').src = DEFAULT_PLACEHOLDER_AVATAR;
                     document.getElementById('input-avatar-url').value = '';
                 }
 
@@ -1206,54 +1278,66 @@
         if (uploadTriggerBtn && fileInput) {
             uploadTriggerBtn.addEventListener('click', () => fileInput.click());
 
-            fileInput.addEventListener('change', async (e) => {
+            // 이미지 압축 및 즉시 미리보기 처리 함수
+            function compressAndApplyImage(file) {
+                uploadTriggerBtn.disabled = true;
+                uploadTriggerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
+
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // 최대 가로/세로 1000px로 리사이징하여 용량 초경량화 (~100KB)
+                        const maxDim = 1000;
+                        let w = img.width;
+                        let h = img.height;
+
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) {
+                                h = Math.round((h * maxDim) / w);
+                                w = maxDim;
+                            } else {
+                                w = Math.round((w * maxDim) / h);
+                                h = maxDim;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+
+                        // 고품질 JPEG 85% 압축
+                        const compressedUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+                        // 미리보기 이미지 및 입력창 즉시 반영
+                        const prevImg = document.getElementById('avatar-preview-img');
+                        const urlInput = document.getElementById('input-avatar-url');
+                        if (prevImg) prevImg.src = compressedUrl;
+                        if (urlInput) urlInput.value = compressedUrl;
+
+                        // 스마트폰 실시간 뷰어 즉시 동기화
+                        syncLivePreview();
+                        showToast("✨ 프로필 사진이 즉시 반영되었습니다!");
+
+                        uploadTriggerBtn.disabled = false;
+                        uploadTriggerBtn.innerHTML = '<i class="fa-solid fa-camera"></i> 사진 변경 (PC / 스마트폰)';
+                    };
+                    img.onerror = function() {
+                        alert("이미지 파일을 읽을 수 없습니다.");
+                        uploadTriggerBtn.disabled = false;
+                        uploadTriggerBtn.innerHTML = '<i class="fa-solid fa-camera"></i> 사진 업로드 (PC / 스마트폰)';
+                    };
+                    img.src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-
-                if (file.size > 5 * 1024 * 1024) {
-                    alert("사진 용량은 최대 5MB까지 업로드 가능합니다.");
-                    return;
-                }
-
-                uploadTriggerBtn.disabled = true;
-                uploadTriggerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드 중...';
-
-                try {
-                    const ext = file.name.split('.').pop();
-                    const filePath = `avatars/${currentUserId}_${Date.now()}.${ext}`;
-
-                    // Supabase Storage 업로드 시도
-                    const { data: uploadData, error: uploadErr } = await window.sb.storage
-                        .from('card_assets')
-                        .upload(filePath, file, { upsert: true });
-
-                    if (!uploadErr && uploadData) {
-                        const { data: { publicUrl } } = window.sb.storage
-                            .from('card_assets')
-                            .getPublicUrl(filePath);
-
-                        document.getElementById('avatar-preview-img').src = publicUrl;
-                        document.getElementById('input-avatar-url').value = publicUrl;
-                        syncLivePreview();
-                        showToast("프로필 사진이 업로드되었습니다!");
-                    } else {
-                        // 스토리지 버킷이 없거나 실패할 경우 로컬 DataURL로 대체
-                        const reader = new FileReader();
-                        reader.onload = function(evt) {
-                            document.getElementById('avatar-preview-img').src = evt.target.result;
-                            document.getElementById('input-avatar-url').value = evt.target.result;
-                            syncLivePreview();
-                            showToast("프로필 사진이 적용되었습니다!");
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                } catch (err) {
-                    console.error("Upload error:", err);
-                    alert("사진 처리 중 오류가 발생했습니다: " + err.message);
-                } finally {
-                    uploadTriggerBtn.disabled = false;
-                    uploadTriggerBtn.innerHTML = '<i class="fa-solid fa-camera"></i> 사진 업로드 (PC / 스마트폰)';
-                }
+                compressAndApplyImage(file);
             });
         }
 
@@ -1298,11 +1382,13 @@
 
             const bSub = document.getElementById('input-brand-sub').value.trim();
             const bHighlight = document.getElementById('input-brand-highlight').value.trim() || '디지털 명함';
-            const bSparkle = document.getElementById('input-brand-sparkle').checked;
+            const bSparkle = selectedBrandIcon !== 'None';
+            const bIcon = selectedBrandIcon;
 
             const updatedCardData = {
                 brand_sub: bSub,
                 brand_highlight: bHighlight,
+                brand_icon: bIcon,
                 show_sparkle: bSparkle,
                 brand_title: (bSub ? bSub + ' ' : '') + bHighlight,
                 stickers: selectedJibbitz,

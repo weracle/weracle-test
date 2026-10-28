@@ -793,6 +793,24 @@ function renderScheduleTimeline() {
   const now = new Date();
   const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
+  // 상단 '오늘 날짜 기준' 배너 동적 갱신
+  try {
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    const dayOfWeek = dayNames[now.getDay()];
+    const dateFormatted = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${dayOfWeek})`;
+    const todayTextEl = document.getElementById('schedTodayText');
+    if (todayTextEl) {
+      todayTextEl.textContent = dateFormatted;
+    } else {
+      const pill = document.querySelector('.sched-today-pill');
+      if (pill) {
+        pill.innerHTML = `<i class="fa-solid fa-calendar-check" style="color:var(--primary);"></i> 오늘 <strong>${dateFormatted}</strong> 기준`;
+      }
+    }
+  } catch (e) {
+    console.warn("Update today pill error:", e);
+  }
+
   // 필터 적용
   const filtered = sampleSchedules.filter(s => {
     if (scheduleFilter === 'all') return true;

@@ -1418,6 +1418,79 @@
             pen: "'Nanum Pen Script', cursive"
         };
 
+        function notifyStickerDragged(index, x, y) {
+            const payload = { type: 'STICKER_DRAGGED', index, x, y };
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage(payload, '*');
+                }
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage(payload, '*');
+                }
+            } catch(e) {}
+
+            try {
+                if (window.BroadcastChannel) {
+                    const bc = new BroadcastChannel('weracle_card_channel');
+                    bc.postMessage(payload);
+                    bc.close();
+                }
+            } catch(e) {}
+
+            try {
+                ['weracle_preview_card_data', 'weracle_temp_card_data'].forEach(key => {
+                    const str = localStorage.getItem(key);
+                    if (str) {
+                        const parsed = JSON.parse(str);
+                        const target = parsed.card_data || parsed;
+                        if (target && Array.isArray(target.stickers) && target.stickers[index]) {
+                            if (typeof target.stickers[index] === 'object' && target.stickers[index] !== null) {
+                                target.stickers[index].x = x;
+                                target.stickers[index].y = y;
+                                target.stickers[index].pos = 'custom';
+                            }
+                            localStorage.setItem(key, JSON.stringify(parsed));
+                        }
+                    }
+                });
+            } catch(e) {}
+        }
+
+        function notifyLogoDragged(x, y) {
+            const payload = { type: 'LOGO_DRAGGED', x, y };
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage(payload, '*');
+                }
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage(payload, '*');
+                }
+            } catch(e) {}
+
+            try {
+                if (window.BroadcastChannel) {
+                    const bc = new BroadcastChannel('weracle_card_channel');
+                    bc.postMessage(payload);
+                    bc.close();
+                }
+            } catch(e) {}
+
+            try {
+                ['weracle_preview_card_data', 'weracle_temp_card_data'].forEach(key => {
+                    const str = localStorage.getItem(key);
+                    if (str) {
+                        const parsed = JSON.parse(str);
+                        const target = parsed.card_data || parsed;
+                        if (target) {
+                            target.logo_x = x;
+                            target.logo_y = y;
+                            localStorage.setItem(key, JSON.stringify(parsed));
+                        }
+                    }
+                });
+            } catch(e) {}
+        }
+
         function renderStickers(stickers) {
             const container = document.getElementById('jibbitz-container');
             if (!container) return;
@@ -1525,16 +1598,7 @@
                         badge.style.transition = 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
 
                         if (curX !== null && curY !== null) {
-                            try {
-                                if (window.parent && window.parent !== window) {
-                                    window.parent.postMessage({
-                                        type: 'STICKER_DRAGGED',
-                                        index: idx,
-                                        x: curX,
-                                        y: curY
-                                    }, '*');
-                                }
-                            } catch(err) {}
+                            notifyStickerDragged(idx, curX, curY);
                         }
                     }
 
@@ -1576,16 +1640,7 @@
                         document.removeEventListener('touchend', onTouchEnd);
                         badge.style.zIndex = '25';
                         if (curX !== null && curY !== null) {
-                            try {
-                                if (window.parent && window.parent !== window) {
-                                    window.parent.postMessage({
-                                        type: 'STICKER_DRAGGED',
-                                        index: idx,
-                                        x: curX,
-                                        y: curY
-                                    }, '*');
-                                }
-                            } catch(err) {}
+                            notifyStickerDragged(idx, curX, curY);
                         }
                     }
 
@@ -1644,15 +1699,7 @@
                     overlay.style.transition = 'box-shadow 0.15s ease';
 
                     if (curX !== null && curY !== null) {
-                        try {
-                            if (window.parent && window.parent !== window) {
-                                window.parent.postMessage({
-                                    type: 'LOGO_DRAGGED',
-                                    x: curX,
-                                    y: curY
-                                }, '*');
-                            }
-                        } catch(err) {}
+                        notifyLogoDragged(curX, curY);
                     }
                 }
 
@@ -1694,15 +1741,7 @@
                     overlay.style.transition = 'box-shadow 0.15s ease';
 
                     if (curX !== null && curY !== null) {
-                        try {
-                            if (window.parent && window.parent !== window) {
-                                window.parent.postMessage({
-                                    type: 'LOGO_DRAGGED',
-                                    x: curX,
-                                    y: curY
-                                }, '*');
-                            }
-                        } catch(err) {}
+                        notifyLogoDragged(curX, curY);
                     }
                 }
 

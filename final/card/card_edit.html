@@ -1511,6 +1511,11 @@
             { text: '🍀', pos: 'top-left' }
         ];
 
+        // 회사 / 소속 로고 상태 변수 (전역)
+        let currentLogoUrl = '';
+        let currentLogoX = null;
+        let currentLogoY = null;
+
         const STICKER_PRESETS = ['👑', '🍀', '🔥', '💎', '🏆', '⭐', '🎖️', '💖', '🚀', '☕', '💼', '🌸', 'VIP', '1위', '인기', '추천', 'BEST'];
 
         // 1. 브랜드 색상 팔레트 초기화
@@ -2068,11 +2073,20 @@
             initBrandIconPalette();
             updateBrandBanner();
 
-            // 스티커 로드 (하위 호환 지원)
+            // 스티커 로드 (하위 호환 지원 및 마우스 이동 좌표 x, y 유지)
             if (Array.isArray(cardData.stickers)) {
                 selectedStickers = cardData.stickers.map((st, idx) => {
                     if (typeof st === 'object' && st !== null) {
-                        return { text: st.text || st.content || '', pos: st.pos || 'top-right' };
+                        return {
+                            text: st.text || st.content || '',
+                            pos: st.pos || 'custom',
+                            x: (st.x !== undefined && st.x !== null) ? Number(st.x) : null,
+                            y: (st.y !== undefined && st.y !== null) ? Number(st.y) : null,
+                            font: st.font,
+                            bg: st.bg,
+                            color: st.color,
+                            border: st.border
+                        };
                     }
                     const defaultPositions = ['top-right', 'top-left', 'bottom-right', 'bottom-left', 'center-top', 'center-bottom'];
                     return { text: String(st), pos: defaultPositions[idx % defaultPositions.length] };
@@ -2300,10 +2314,6 @@
         }
 
         // 회사 / 소속 로고 처리 함수들 (전역)
-        let currentLogoUrl = '';
-        let currentLogoX = null;
-        let currentLogoY = null;
-
         function triggerLogoFileInput() {
             const fileInput = document.getElementById('file-logo-input');
             if (fileInput) fileInput.click();
@@ -2512,7 +2522,7 @@
                 brand_icon: bIcon,
                 show_sparkle: bSparkle,
                 brand_title: (bSub ? bSub + ' ' : '') + bHighlight,
-                stickers: selectedStickers,
+                stickers: Array.isArray(selectedStickers) ? [...selectedStickers] : [],
                 bgm: {
                     enabled: document.getElementById('input-bgm-enabled') ? document.getElementById('input-bgm-enabled').checked : false,
                     type: document.getElementById('select-bgm-type') ? document.getElementById('select-bgm-type').value : 'cafe',
@@ -2641,25 +2651,62 @@
 
             
             
-            // 스마트폰 화면에서 마우스로 스티커 및 로고를 드래그 이동했을 때 좌표 수신
-            window.addEventListener('message', (event) => {
-                if (event.data && event.data.type === 'STICKER_DRAGGED') {
-                    const { index, x, y } = event.data;
+            // 스마트폰 화면에서 마우스로 스티커 및 로고를 드래그 이동했을 때 좌표 수신 및 동기화
+            function handlePositionUpdate(type, data) {
+                if (type === 'STICKER_DRAGGED') {
+                    const { index, x, y } = data;
                     if (selectedStickers && selectedStickers[index]) {
                         selectedStickers[index].x = x;
                         selectedStickers[index].y = y;
                         selectedStickers[index].pos = 'custom';
                         renderActiveStickers();
-                        showToast(`🎯 스티커가 마우스 위치로 이동되었습니다! (${x}%, ${y}%)`);
+
+                        // 즉시 로컬스토리지 동기화
+                        try {
+                            const cur = collectCurrentCardData();
+                            localStorage.setItem('weracle_preview_card_data', JSON.stringify(cur));
+                            const slugInput = document.getElementById('input-card-slug');
+                            const cleanSlug = slugInput ? slugInput.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') : '';
+                            localStorage.setItem('weracle_temp_card_data', JSON.stringify({ slug: cleanSlug, card_data: cur }));
+                        } catch (e) {}
+
+                        showToast(`🎯 스티커 위치가 이동되었습니다! (${x}%, ${y}%)\n상단 [저장하기]를 누르면 서버에도 보관됩니다.`);
                     }
                 }
-                if (event.data && event.data.type === 'LOGO_DRAGGED') {
-                    const { x, y } = event.data;
+                if (type === 'LOGO_DRAGGED') {
+                    const { x, y } = data;
                     currentLogoX = x;
                     currentLogoY = y;
-                    showToast(`🎯 로고가 마우스 위치로 이동되었습니다! (${x}%, ${y}%)`);
+
+                    // 즉시 로컬스토리지 동기화
+                    try {
+                        const cur = collectCurrentCardData();
+                        localStorage.setItem('weracle_preview_card_data', JSON.stringify(cur));
+                        const slugInput = document.getElementById('input-card-slug');
+                        const cleanSlug = slugInput ? slugInput.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') : '';
+                        localStorage.setItem('weracle_temp_card_data', JSON.stringify({ slug: cleanSlug, card_data: cur }));
+                    } catch (e) {}
+
+                    showToast(`🎯 로고 위치가 이동되었습니다! (${x}%, ${y}%)\n상단 [저장하기]를 누르면 서버에도 보관됩니다.`);
+                }
+            }
+
+            window.addEventListener('message', (event) => {
+                if (event.data && (event.data.type === 'STICKER_DRAGGED' || event.data.type === 'LOGO_DRAGGED')) {
+                    handlePositionUpdate(event.data.type, event.data);
                 }
             });
+
+            try {
+                if (window.BroadcastChannel) {
+                    const bc = new BroadcastChannel('weracle_card_channel');
+                    bc.onmessage = (event) => {
+                        if (event.data && (event.data.type === 'STICKER_DRAGGED' || event.data.type === 'LOGO_DRAGGED')) {
+                            handlePositionUpdate(event.data.type, event.data);
+                        }
+                    };
+                }
+            } catch (e) {}
 
             // 아이프레임이 준비 완료 신호를 보냈을 때 즉시 실시간 동기화
             window.addEventListener('message', (event) => {

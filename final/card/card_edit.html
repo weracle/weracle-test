@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모바일 디지털 명함 에디터 | WERACLE</title>
+    
+    <!-- Supabase JS SDK & Auth Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../login/config.js"></script>
+    <script src="../login/auth.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" />
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-light: #e0f2fe;
+            --navy-dark: #0f172a;
+            --navy-card: #1e293b;
+            --bg-page: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        /* Top Header Navbar */
+        .editor-navbar {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-back {
+            background: #f1f5f9;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .brand-title {
+            font-size: 19px;
+            font-weight: 850;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .brand-tag {
+            font-size: 11px;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-weight: 750;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-action-outline {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 9px 16px;
+            border-radius: 12px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-action-outline:hover {
+            background: #f8fafc;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-save-primary {
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            border: none;
+            padding: 10px 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #ffffff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+            transition: all 0.2s;
+        }
+
+        .btn-save-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45);
+        }
+
+        .btn-save-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Main Workspace Container */
+        .workspace-container {
+            max-width: 1400px;
+            margin: 24px auto;
+            padding: 0 24px;
+            display: grid;
+            grid-template-columns: 1fr 470px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        @media (max-width: 1080px) {
+            .workspace-container {
+                grid-template-columns: 1fr;
+            }
+            .preview-sticky-col {
+                display: none !important;
+            }
+        }
+
+        /* Form Editor Card */
+        .editor-card {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            padding: 32px;
+        }
+
+        .section-header {
+            margin-bottom: 24px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-header h3 {
+            font-size: 18px;
+            font-weight: 850;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-header h3 i {
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .section-desc {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* URL Slug Box */
+        .slug-banner {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #bae6fd;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .slug-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 2px solid #38bdf8;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .slug-prefix {
+            padding: 12px 14px;
+            background: #f8fafc;
+            color: var(--text-sub);
+            font-size: 14px;
+            font-weight: 700;
+            border-right: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        .slug-input {
+            flex: 1;
+            border: none;
+            padding: 12px 14px;
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--primary);
+            outline: none;
+        }
+
+        .slug-input::placeholder {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        /* Form Controls */
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .form-item {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 750;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .form-label span.req {
+            color: #ef4444;
+            margin-left: 2px;
+        }
+
+        .form-label span.sub {
+            font-size: 11.5px;
+            font-weight: 500;
+            color: var(--text-sub);
+            margin-left: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            font-size: 14px;
+            color: var(--text-main);
+            background: #ffffff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 75px;
+            line-height: 1.55;
+        }
+
+        /* Avatar Upload Block */
+        .avatar-uploader-box {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: #f8fafc;
+            padding: 18px 20px;
+            border-radius: 16px;
+            border: 1px dashed #cbd5e1;
+            margin-bottom: 24px;
+        }
+
+        .avatar-thumb-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            object-fit: cover;
+            background: #ffffff;
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            flex-shrink: 0;
+        }
+
+        .avatar-uploader-info {
+            flex: 1;
+        }
+
+        .btn-upload-file {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 750;
+            color: var(--text-main);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-upload-file:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Right Preview Sticky Column */
+        .preview-sticky-col {
+            position: sticky;
+            top: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .preview-header-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 0 10px;
+        }
+
+        .preview-label {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .preview-live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10B981;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.6; }
+        }
+
+        /* Phone Mockup Frame */
+        .phone-mockup-frame {
+            width: 440px;
+            height: 800px;
+            background: #1E293B;
+            border-radius: 46px;
+            padding: 12px;
+            box-shadow: 0 25px 60px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255,255,255,0.08);
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .phone-notch {
+            width: 140px;
+            height: 22px;
+            background: #1E293B;
+            border-radius: 0 0 14px 14px;
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+        }
+
+        .phone-screen-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 36px;
+            background: #ffffff;
+            display: block;
+        }
+
+        /* Toast Popup */
+        .custom-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1e293b;
+            color: #ffffff;
+            padding: 14px 24px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+            z-index: 99999;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.25s ease;
+            pointer-events: none;
+        }
+
+        .custom-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    
+        /* Brand Sparkle Shimmer in Editor */
+        .brand-preview-banner {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 8px;
+        }
+        .preview-highlight-shiny {
+            font-weight: 900;
+            background: linear-gradient(to right, #EA580C 0%, #F97316 25%, #FFFFFF 50%, #F97316 75%, #EA580C 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine-effect 1.8s linear infinite;
+        }
+        @keyframes shine-effect {
+            0% { background-position: 0% center; }
+            100% { background-position: -200% center; }
+        }
+
+        /* Crocs Jibbitz Sticker Palette */
+        .jibbitz-editor-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 14px;
+        }
+        .btn-clear-jibbitz {
+            background: #fee2e2;
+            border: none;
+            color: #ef4444;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-clear-jibbitz:hover {
+            background: #fecaca;
+        }
+        .jibbitz-hint {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .jibbitz-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .jibbitz-item {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none;
+        }
+        .jibbitz-item:hover {
+            transform: scale(1.15) rotate(6deg);
+            border-color: #f97316;
+        }
+        .jibbitz-item.active {
+            background: #fff7ed;
+            border-color: #f97316;
+            box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.35);
+            transform: scale(1.1);
+        }
+        .jibbitz-selected-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-sub);
+            font-weight: 600;
+            min-height: 32px;
+        }
+        .selected-jibbitz-chip {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            padding: 3px 8px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+        }
+        .selected-jibbitz-chip .btn-del-chip {
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 11px;
+        }
+        .selected-jibbitz-chip .btn-del-chip:hover {
+            color: #ef4444;
+        }
+
+        /* BGM Editor Card */
+        .bgm-editor-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 14px;
+        }
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #f97316;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Top Navbar -->
+    <header class="editor-navbar">
+        <div class="navbar-brand">
+            <a href="../login/mypage.html" class="btn-back" title="마이페이지로 돌아가기">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <h1 class="brand-title">모바일 디지털 명함 에디터</h1>
+            <span class="brand-tag">Weracle Card v1.0</span>
+        </div>
+
+        <div class="navbar-actions">
+            <button type="button" class="btn-action-outline" id="btn-copy-card-link">
+                <i class="fa-regular fa-clone"></i> 내 명함 주소 복사
+            </button>
+            <a href="card.html" target="_blank" class="btn-action-outline" id="btn-open-preview">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> 새 창에서 보기
+            </a>
+            <button type="button" class="btn-save-primary" id="btn-save-all">
+                <i class="fa-solid fa-cloud-arrow-up"></i> 저장하기
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="workspace-container">
+        
+        <!-- Left: Form Controls Card -->
+        <div class="editor-card">
+            
+            <!-- 1. 고유 주소 설정 -->
+            <div class="slug-banner">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:14px; font-weight:850; color:#0369a1;">
+                        <i class="fa-solid fa-link"></i> 내 명함 고유 주소 (URL)
+                    </span>
+                    <span style="font-size:12px; color:#0284c7; font-weight:600;">고객에게 전송할 주소입니다</span>
+                </div>
+                <div class="slug-input-wrapper">
+                    <span class="slug-prefix" id="slug-domain-prefix">https://weracle.kr/c/</span>
+                    <input type="text" id="input-card-slug" class="slug-input" placeholder="mycard" spellcheck="false" autocomplete="off">
+                </div>
+                <div style="font-size:12px; color:#64748b; margin-top:8px;">
+                    * 영문 소문자, 숫자, 하이픈(-)만 사용하여 나만의 멋진 주소를 만들어보세요.
+                </div>
+            </div>
+
+            <!-- 2. 브랜드 타이틀 & 프로필 사진 -->
+            <div class="section-header">
+                <div>
+                    <h3><i class="fa-solid fa-id-card"></i> 기본 프로필 및 브랜딩</h3>
+                    <p class="section-desc">명함 상단에 노출될 타이틀과 프로필 사진을 설정합니다.</p>
+                </div>
+            </div>
+
+            <!-- 브랜드 타이틀 & 반짝이는 글자 설정 -->
+            <div class="form-grid-2">
+                <div>
+                    <label class="form-label">브랜드 수식어 <span class="sub">(앞부분 텍스트)</span></label>
+                    <input type="text" id="input-brand-sub" class="form-control" placeholder="예: 기준이 다른, 내 삶의 든든한" value="기준이 다른">
+                </div>
+                <div>
+                    <label class="form-label">반짝이는 강조 브랜드명 <span class="sub">(쉬머 광택 효과)</span></label>
+                    <input type="text" id="input-brand-highlight" class="form-control" placeholder="예: 햄픽, 원더라이프, 노혜미" value="햄픽">
+                </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; margin-bottom:12px;">
+                <label style="display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--text-main); cursor:pointer;">
+                    <input type="checkbox" id="input-brand-sparkle" checked style="width:16px; height:16px; accent-color:#f97316;">
+                    ✨ 앞에 반짝이 아이콘 달기
+                </label>
+                <!-- 실시간 반짝이 글자 미리보기 배너 -->
+                <div class="brand-preview-banner">
+                    <span id="preview-sparkle">✨</span>
+                    <span id="preview-sub">기준이 다른</span>
+                    <strong class="preview-highlight-shiny" id="preview-highlight">햄픽</strong>
+                </div>
+            </div>
+            <input type="hidden" id="input-brand-title" value="기준이 다른 햄픽">
+
+            <div class="form-label">프로필 사진</div>
+            <div class="avatar-uploader-box">
+                <img id="avatar-preview-img" src="https://i.ibb.co/4RxJsrsJ/Kakao-Talk-20260602-124409333.jpg" class="avatar-thumb-preview" alt="프로필 미리보기">
+                <div class="avatar-uploader-info">
+                    <button type="button" class="btn-upload-file" id="btn-trigger-upload">
+                        <i class="fa-solid fa-camera"></i> 사진 업로드 (PC / 스마트폰)
+                    </button>
+                    <input type="file" id="file-avatar-input" accept="image/*" style="display:none;">
+                    <div style="font-size:11.5px; color:#94a3b8; margin-top:6px;">권장: 가로세로 비율이 정돈된 깔끔한 인물 사진</div>
+                    <div style="margin-top:10px;">
+                        <input type="text" id="input-avatar-url" class="form-control" style="font-size:12px; padding:8px 12px;" placeholder="또는 직접 이미지 URL 링크 입력">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 크록스 지비츠(스티커) 꾸미기 -->
+            <div class="jibbitz-editor-box">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <label class="form-label" style="margin-bottom:0;">
+                        🧩 프로필 사진 지비츠(스티커) 꾸미기 <span class="sub">(최대 4개)</span>
+                    </label>
+                    <button type="button" class="btn-clear-jibbitz" id="btn-clear-jibbitz">전체 해제</button>
+                </div>
+                <div class="jibbitz-hint">
+                    크록스 신발에 지비츠를 달듯, 프로필 사진 모서리에 나만의 감성 스티커를 톡톡 올려보세요!
+                </div>
+                <div class="jibbitz-palette" id="jibbitz-palette"></div>
+                <div class="jibbitz-selected-row" id="jibbitz-selected-row">
+                    <span>선택된 지비츠:</span>
+                    <div id="jibbitz-chips-wrap" style="display:inline-flex; gap:6px; flex-wrap:wrap;"></div>
+                </div>
+            </div>
+
+            <div class="form-grid-2" style="margin-top:16px;">
+                <div>
+                    <label class="form-label">설계사 성함 <span class="req">*</span></label>
+                    <input type="text" id="input-name" class="form-control" placeholder="성함을 입력해 주세요">
+                </div>
+                <div>
+                    <label class="form-label">직책 <span class="sub">(예: 지사장, 팀장, 수석FC)</span></label>
+                    <input type="text" id="input-job-title" class="form-control" placeholder="직책 입력">
+                </div>
+            </div>
+
+            <div class="form-item">
+                <label class="form-label">소속 회사 및 지점</label>
+                <input type="text" id="input-company" class="form-control" placeholder="소속 회사 및 지점 입력">
+            </div>
+
+            <div class="form-grid-2">
+                <div>
+                    <label class="form-label">전문 분야 태그 1</label>
+                    <input type="text" id="input-tag-1" class="form-control" placeholder="전문 분야 (예: 보험분석 전문가)">
+                </div>
+                <div>
+                    <label class="form-label">전문 분야 태그 2</label>
+                    <input type="text" id="input-tag-2" class="form-control" placeholder="전문 분야 (예: 보장 리모델링 컨설턴트)">
+                </div>
+            </div>
+
+            <div class="form-item">
+                <label class="form-label">슬로건 / 한 줄 소개</label>
+                <textarea id="input-slogan" class="form-control" placeholder="고객님께 전달할 슬로건 / 소개글을 입력해 주세요."></textarea>
+            </div>
+
+            <!-- 3. 다이렉트 연락처 및 SNS 연결 -->
+            <div class="section-header" style="margin-top:36px;">
+                <div>
+                    <h3><i class="fa-solid fa-comments"></i> 다이렉트 연락처 및 SNS</h3>
+                    <p class="section-desc">버튼을 눌렀을 때 연결될 전화번호와 카톡, 인스타그램 링크입니다.</p>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div>
+                    <label class="form-label">전화 및 문자 번호 <span class="req">*</span></label>
+                    <input type="tel" id="input-phone" class="form-control" placeholder="010-0000-0000">
+                </div>
+                <div>
+                    <label class="form-label">오픈카카오톡 링크</label>
+                    <input type="url" id="input-kakao" class="form-control" placeholder="https://open.kakao.com/o/...">
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div>
+                    <label class="form-label">인스타그램 링크 또는 계정</label>
+                    <input type="text" id="input-instagram" class="form-control" placeholder="https://instagram.com/아이디">
+                </div>
+                <div>
+                    <label class="form-label">개인 홈페이지 또는 블로그</label>
+                    <input type="url" id="input-website" class="form-control" placeholder="http://www.위라클.com">
+                </div>
+            </div>
+
+            <div class="form-item">
+                <label class="form-label">홈페이지 버튼 이름</label>
+                <input type="text" id="input-website-label" class="form-control" placeholder="버튼명 (예: 위라클)">
+            </div>
+
+            <div class="form-item">
+                <label class="form-label">상담 가능 시간 안내</label>
+                <textarea id="input-work-hours" class="form-control" placeholder="상담 가능 시간: 09:00 ~ 24:00 (연중무휴)&#10;부재중일 경우 문자나 오픈카카오톡을 남겨주시면 가장 신속히 보장 진단 및 피드백을 전달해 드리겠습니다."></textarea>
+            </div>
+
+            <!-- 5. 고객 상담 예약 알림 설정 -->
+            <div class="section-header" style="margin-top:36px;">
+                <div>
+                    <h3><i class="fa-solid fa-bell"></i> 📩 고객 상담 예약 알림 설정</h3>
+                    <p class="section-desc">명함 방문자가 상담 예약을 신청하면 시스템 DB에 자동 누적되며 아래 이메일로 알림이 발송됩니다.</p>
+                </div>
+            </div>
+
+            <div class="form-item">
+                <label class="form-label">
+                    상담 예약 알림 수신 이메일 <span class="req">*</span> <span class="sub">(고객 예약 신청서가 이 메일로 자동 전송됩니다)</span>
+                </label>
+                <input type="email" id="input-consult-email" class="form-control" placeholder="예: your_email@naver.com">
+            </div>
+
+            
+
+            <!-- 하단 저장 버튼 -->
+            <div style="margin-top:36px; padding-top:20px; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end;">
+                <button type="button" class="btn-save-primary" id="btn-save-bottom" style="padding:14px 32px; font-size:15px;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> 변경사항 저장하기
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Right: Live Smartphone Preview -->
+        <div class="preview-sticky-col">
+            <div class="preview-header-bar">
+                <div class="preview-label">
+                    <span class="preview-live-dot"></span>
+                    <span>실시간 스마트폰 미리보기</span>
+                </div>
+                <div style="font-size:12px; color:#94a3b8;">입력 시 즉시 반영됩니다</div>
+            </div>
+
+            <div class="phone-mockup-frame">
+                <div class="phone-notch"></div>
+                <iframe id="phone-preview-iframe" class="phone-screen-iframe" src="card.html"></iframe>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Custom Toast Message -->
+    <div class="custom-toast" id="editor-toast">
+        <i class="fa-solid fa-circle-check" style="color: #10B981; font-size: 18px;"></i>
+        <span id="toast-message">저장되었습니다.</span>
+    </div>
+
+    <!-- LOGIC SCRIPT -->
+    <script>
+        // 전역 상태
+        let currentUserId = null;
+        let userProfile = null;
+        let cardData = {};
+
+        // 토스트 알림 함수
+        function showToast(msg) {
+            const toast = document.getElementById('editor-toast');
+            const toastMsg = document.getElementById('toast-message');
+            if (toast && toastMsg) {
+                toastMsg.textContent = msg;
+                toast.classList.add('show');
+                setTimeout(() => { toast.classList.remove('show'); }, 3000);
+            }
+        }
+
+        // 도메인 접두사 세팅
+        const domainPrefixEl = document.getElementById('slug-domain-prefix');
+        if (domainPrefixEl) {
+            domainPrefixEl.textContent = `${window.location.origin}/c/`;
+        }
+
+        // 실시간 미리보기 아이프레임 업데이트
+        
+        // 지비츠 스티커 목록
+        const JIBBITZ_LIST = ['👑', '🍀', '🕶️', '☕', '💼', '🎧', '💡', '🚀', '💖', '⭐', '🛡️', '🏆', '🐶', '🐱', '🔥', '💰', '🌈', '🎯', '🌿', '💎'];
+        let selectedJibbitz = [];
+
+        // 지비츠 팔레트 초기화
+        function initJibbitzPalette() {
+            const palette = document.getElementById('jibbitz-palette');
+            if (!palette) return;
+            palette.innerHTML = '';
+            JIBBITZ_LIST.forEach(emoji => {
+                const item = document.createElement('div');
+                item.className = 'jibbitz-item' + (selectedJibbitz.includes(emoji) ? ' active' : '');
+                item.textContent = emoji;
+                item.addEventListener('click', () => toggleJibbitz(emoji));
+                palette.appendChild(item);
+            });
+            renderSelectedJibbitzChips();
+        }
+
+        function toggleJibbitz(emoji) {
+            if (selectedJibbitz.includes(emoji)) {
+                selectedJibbitz = selectedJibbitz.filter(e => e !== emoji);
+            } else {
+                if (selectedJibbitz.length >= 4) {
+                    alert("지비츠 스티커는 최대 4개까지 달 수 있습니다.");
+                    return;
+                }
+                selectedJibbitz.push(emoji);
+            }
+            initJibbitzPalette();
+            syncLivePreview();
+        }
+
+        function renderSelectedJibbitzChips() {
+            const wrap = document.getElementById('jibbitz-chips-wrap');
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            if (selectedJibbitz.length === 0) {
+                wrap.innerHTML = '<span style="color:#94a3b8; font-style:italic;">선택된 스티커 없음</span>';
+                return;
+            }
+            selectedJibbitz.forEach(emoji => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-jibbitz-chip';
+                chip.innerHTML = `${emoji} <span class="btn-del-chip" title="제거">&times;</span>`;
+                chip.querySelector('.btn-del-chip').addEventListener('click', () => toggleJibbitz(emoji));
+                wrap.appendChild(chip);
+            });
+        }
+
+        const clearJibbitzBtn = document.getElementById('btn-clear-jibbitz');
+        if (clearJibbitzBtn) {
+            clearJibbitzBtn.addEventListener('click', () => {
+                selectedJibbitz = [];
+                initJibbitzPalette();
+                syncLivePreview();
+            });
+        }
+
+        // BGM 컨트롤러 설정
+        const bgmEnabledInput = document.getElementById('input-bgm-enabled');
+        const bgmOptionsPanel = document.getElementById('bgm-options-panel');
+        const bgmTypeSelect = document.getElementById('select-bgm-type');
+        const bgmYtBox = document.getElementById('box-youtube-url');
+        const bgmYtInput = document.getElementById('input-bgm-youtube-url');
+        const bgmTitleInput = document.getElementById('input-bgm-title');
+
+        if (bgmEnabledInput) {
+            bgmEnabledInput.addEventListener('change', () => {
+                bgmOptionsPanel.style.display = bgmEnabledInput.checked ? 'flex' : 'none';
+                syncLivePreview();
+            });
+        }
+        if (bgmTypeSelect) {
+            bgmTypeSelect.addEventListener('change', () => {
+                const isYt = bgmTypeSelect.value === 'youtube';
+                bgmYtBox.style.display = isYt ? 'block' : 'none';
+                if (!isYt && !bgmTitleInput.value) {
+                    const presetTitles = {
+                        cafe: '잔잔한 카페 피아노',
+                        lofi: '감성 충만 로파이 비트',
+                        acoustic: '따스한 어쿠스틱 기타',
+                        jazz: '이브닝 재즈 라운지'
+                    };
+                    bgmTitleInput.value = presetTitles[bgmTypeSelect.value] || '';
+                }
+                syncLivePreview();
+            });
+        }
+
+        // BGM 미리듣기 테스트용 Audio 객체
+        let testAudio = new Audio();
+        let isTestAudioPlaying = false;
+        const testBgmBtn = document.getElementById('btn-test-play-bgm');
+        const testBgmStatus = document.getElementById('test-bgm-status');
+        const testBgmText = document.getElementById('test-bgm-btn-text');
+
+        if (testBgmBtn) {
+            testBgmBtn.addEventListener('click', () => {
+                const type = bgmTypeSelect.value;
+                if (type === 'youtube') {
+                    alert("유튜브 음원은 오른쪽 스마트폰 미리보기 화면의 미니 LP판을 클릭하여 바로 들어보실 수 있습니다!");
+                    return;
+                }
+                const presetUrls = {
+                    cafe: 'https://assets.mixkit.co/music/preview/mixkit-peaceful-piano-24.mp3',
+                    lofi: 'https://assets.mixkit.co/music/preview/mixkit-chill-bro-494.mp3',
+                    acoustic: 'https://assets.mixkit.co/music/preview/mixkit-sun-and-his-daughter-581.mp3',
+                    jazz: 'https://assets.mixkit.co/music/preview/mixkit-jazz-lounge-vintage-piano-220.mp3'
+                };
+                if (isTestAudioPlaying) {
+                    testAudio.pause();
+                    isTestAudioPlaying = false;
+                    testBgmText.textContent = 'BGM 미리듣기 테스트';
+                    testBgmStatus.textContent = '';
+                } else {
+                    testAudio.src = presetUrls[type] || presetUrls.cafe;
+                    testAudio.play().then(() => {
+                        isTestAudioPlaying = true;
+                        testBgmText.textContent = '정지하기 (❚❚)';
+                        testBgmStatus.textContent = '🎵 테스트 음악 재생 중...';
+                    }).catch(e => {
+                        alert("오디오 재생 실패: " + e.message);
+                    });
+                }
+            });
+        }
+
+        // 브랜드 수식어 & 반짝이 배너 동기화
+        function updateBrandBanner() {
+            const sub = document.getElementById('input-brand-sub').value.trim();
+            const highlight = document.getElementById('input-brand-highlight').value.trim() || '디지털 명함';
+            const sparkle = document.getElementById('input-brand-sparkle').checked;
+
+            const pSparkle = document.getElementById('preview-sparkle');
+            const pSub = document.getElementById('preview-sub');
+            const pHighlight = document.getElementById('preview-highlight');
+
+            if (pSparkle) pSparkle.style.display = sparkle ? 'inline' : 'none';
+            if (pSub) {
+                pSub.textContent = sub;
+                pSub.style.display = sub ? 'inline' : 'none';
+            }
+            if (pHighlight) pHighlight.textContent = highlight;
+        }
+
+        function syncLivePreview() {
+
+            const iframe = document.getElementById('phone-preview-iframe');
+            if (!iframe || !iframe.contentWindow) return;
+
+            updateBrandBanner();
+
+            const card = {
+                brand_sub: document.getElementById('input-brand-sub').value.trim(),
+                brand_highlight: document.getElementById('input-brand-highlight').value.trim() || '디지털 명함',
+                show_sparkle: document.getElementById('input-brand-sparkle').checked,
+                brand_title: (document.getElementById('input-brand-sub').value.trim() + ' ' + (document.getElementById('input-brand-highlight').value.trim() || '디지털 명함')).trim(),
+                stickers: selectedJibbitz,
+                bgm: {
+                    enabled: document.getElementById('input-bgm-enabled').checked,
+                    type: document.getElementById('select-bgm-type').value,
+                    title: document.getElementById('input-bgm-title').value.trim() || '오늘의 추천 음악',
+                    youtube_url: document.getElementById('input-bgm-youtube-url').value.trim()
+                },
+                name: document.getElementById('input-name').value.trim() || '성함',
+                job_title: document.getElementById('input-job-title').value.trim() || '',
+                company: document.getElementById('input-company').value.trim() || '소속 지점',
+                tags: [
+                    document.getElementById('input-tag-1').value.trim(),
+                    document.getElementById('input-tag-2').value.trim()
+                ].filter(Boolean),
+                slogan: document.getElementById('input-slogan').value.trim() || '고객님의 든든한 내일을 위해, 오늘부터 빈틈없는 보장을 설계합니다.',
+                phone: document.getElementById('input-phone').value.trim() || '',
+                instagram: document.getElementById('input-instagram').value.trim() || '#',
+                kakao_talk: document.getElementById('input-kakao').value.trim() || '#',
+                website: document.getElementById('input-website').value.trim() || 'http://www.위라클.com',
+                website_label: document.getElementById('input-website-label').value.trim() || '위라클',
+                work_hours: document.getElementById('input-work-hours').value.trim() || '상담 가능 시간: 09:00 ~ 24:00 (연중무휴)',
+                avatar_url: document.getElementById('avatar-preview-img').src,
+                consult_email: document.getElementById('input-consult-email').value.trim()
+            };
+
+            iframe.contentWindow.postMessage({
+                type: 'UPDATE_CARD_PREVIEW',
+                card: card
+            }, '*');
+        }
+
+        // 입력 폼 변경 이벤트 등록
+        const formInputs = [
+            'input-brand-sub', 'input-brand-highlight', 'input-brand-sparkle', 'input-bgm-enabled', 'select-bgm-type', 'input-bgm-youtube-url', 'input-bgm-title', 'input-name', 'input-job-title', 'input-company',
+            'input-tag-1', 'input-tag-2', 'input-slogan', 'input-phone',
+            'input-instagram', 'input-kakao', 'input-website', 'input-website-label',
+            'input-work-hours'
+        ];
+
+        formInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', syncLivePreview);
+            }
+        });
+
+        // 프로필 사진 URL 직접 입력 시 미리보기 반영
+        const avatarUrlInput = document.getElementById('input-avatar-url');
+        if (avatarUrlInput) {
+            avatarUrlInput.addEventListener('input', (e) => {
+                const url = e.target.value.trim();
+                if (url) {
+                    document.getElementById('avatar-preview-img').src = url;
+                    syncLivePreview();
+                }
+            });
+        }
+
+        // 1. Supabase에서 사용자 프로필 불러오기
+        async function initEditor() {
+            while (!window.sb) {
+                await new Promise(r => setTimeout(r, 100));
+            }
+
+            const { data: { session } } = await window.sb.auth.getSession();
+            if (!session || !session.user) {
+                // 로그인되지 않은 경우 안내 후 로그인 팝업 또는 이동
+                alert("명함을 편집하시려면 로그인이 필요합니다.");
+                window.location.href = '../index.html';
+                return;
+            }
+
+            currentUserId = session.user.id;
+
+            const { data, error } = await window.sb
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUserId)
+                .single();
+
+            if (!error && data) {
+                userProfile = data;
+                cardData = data.card_data || {};
+
+                // 슬러그 기본값 생성 (없을 경우 닉네임 또는 이메일 기반 자동 세팅)
+                let slug = data.card_slug;
+                if (!slug) {
+                    slug = (data.nickname || session.user.email.split('@')[0])
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]/g, '');
+                    if (!slug) slug = 'card' + Math.floor(Math.random() * 8999 + 1000);
+                }
+                document.getElementById('input-card-slug').value = slug;
+
+                <!-- 폼 채우기: 사용자가 저장한 데이터가 있으면 채우고, 없으면 빈칸 유지 -->
+                // 브랜드 및 쉬머 반짝이 로드
+                const bSub = cardData.brand_sub !== undefined ? cardData.brand_sub : '기준이 다른';
+                const bHighlight = cardData.brand_highlight || cardData.brand_title || data.brand_name || '햄픽';
+                const bSparkle = cardData.show_sparkle !== false;
+
+                document.getElementById('input-brand-sub').value = bSub;
+                document.getElementById('input-brand-highlight').value = bHighlight;
+                document.getElementById('input-brand-sparkle').checked = bSparkle;
+                updateBrandBanner();
+
+                // 지비츠 스티커 로드
+                if (Array.isArray(cardData.stickers)) {
+                    selectedJibbitz = [...cardData.stickers];
+                } else {
+                    selectedJibbitz = [];
+                }
+                initJibbitzPalette();
+
+                // BGM 배경음악 로드
+                const bgm = cardData.bgm || { enabled: false, type: 'cafe', title: '잔잔한 카페 피아노' };
+                document.getElementById('input-bgm-enabled').checked = !!bgm.enabled;
+                document.getElementById('bgm-options-panel').style.display = bgm.enabled ? 'flex' : 'none';
+                document.getElementById('select-bgm-type').value = bgm.type || 'cafe';
+                document.getElementById('input-bgm-youtube-url').value = bgm.youtube_url || '';
+                document.getElementById('box-youtube-url').style.display = (bgm.type === 'youtube') ? 'block' : 'none';
+                document.getElementById('input-bgm-title').value = bgm.title || '잔잔한 카페 피아노';
+                document.getElementById('input-name').value = cardData.name || data.name || data.nickname || '';
+                document.getElementById('input-job-title').value = cardData.job_title || data.job_title || '';
+                document.getElementById('input-company').value = cardData.company || data.company || '';
+                
+                const tags = Array.isArray(cardData.tags) ? cardData.tags : [];
+                document.getElementById('input-tag-1').value = tags[0] || '';
+                document.getElementById('input-tag-2').value = tags[1] || '';
+
+                document.getElementById('input-slogan').value = cardData.slogan || data.slogan || '';
+                document.getElementById('input-phone').value = cardData.phone || data.phone || data.contact_phone || '';
+                document.getElementById('input-instagram').value = cardData.instagram || data.instagram_url || '';
+                document.getElementById('input-kakao').value = cardData.kakao_talk || data.kakao_url || '';
+                document.getElementById('input-website').value = cardData.website || data.website_url || '';
+                document.getElementById('input-website-label').value = cardData.website_label || '';
+                document.getElementById('input-work-hours').value = cardData.work_hours || '';
+                document.getElementById('input-consult-email').value = cardData.consult_email || data.email || '';
+
+                const avatar = cardData.avatar_url || data.avatar_url || '';
+                if (avatar) {
+                    document.getElementById('avatar-preview-img').src = avatar;
+                    document.getElementById('input-avatar-url').value = avatar;
+                } else {
+                    document.getElementById('avatar-preview-img').src = 'https://i.ibb.co/4RxJsrsJ/Kakao-Talk-20260602-124409333.jpg';
+                    document.getElementById('input-avatar-url').value = '';
+                }
+
+                // 새 창 미리보기 링크 갱신
+                updatePreviewButtonUrl(slug);
+
+                // 실시간 미리보기 전송
+                setTimeout(syncLivePreview, 600);
+            }
+        }
+
+        // 새 창 미리보기 버튼 URL 설정
+        function updatePreviewButtonUrl(slug) {
+            const btn = document.getElementById('btn-open-preview');
+            if (btn) {
+                btn.href = `card.html?u=${encodeURIComponent(slug)}`;
+            }
+        }
+
+        // 2. 사진 파일 업로드 처리 (Supabase Storage: card_assets)
+        const uploadTriggerBtn = document.getElementById('btn-trigger-upload');
+        const fileInput = document.getElementById('file-avatar-input');
+
+        if (uploadTriggerBtn && fileInput) {
+            uploadTriggerBtn.addEventListener('click', () => fileInput.click());
+
+            fileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (file.size > 5 * 1024 * 1024) {
+                    alert("사진 용량은 최대 5MB까지 업로드 가능합니다.");
+                    return;
+                }
+
+                uploadTriggerBtn.disabled = true;
+                uploadTriggerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 업로드 중...';
+
+                try {
+                    const ext = file.name.split('.').pop();
+                    const filePath = `avatars/${currentUserId}_${Date.now()}.${ext}`;
+
+                    // Supabase Storage 업로드 시도
+                    const { data: uploadData, error: uploadErr } = await window.sb.storage
+                        .from('card_assets')
+                        .upload(filePath, file, { upsert: true });
+
+                    if (!uploadErr && uploadData) {
+                        const { data: { publicUrl } } = window.sb.storage
+                            .from('card_assets')
+                            .getPublicUrl(filePath);
+
+                        document.getElementById('avatar-preview-img').src = publicUrl;
+                        document.getElementById('input-avatar-url').value = publicUrl;
+                        syncLivePreview();
+                        showToast("프로필 사진이 업로드되었습니다!");
+                    } else {
+                        // 스토리지 버킷이 없거나 실패할 경우 로컬 DataURL로 대체
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                            document.getElementById('avatar-preview-img').src = evt.target.result;
+                            document.getElementById('input-avatar-url').value = evt.target.result;
+                            syncLivePreview();
+                            showToast("프로필 사진이 적용되었습니다!");
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                } catch (err) {
+                    console.error("Upload error:", err);
+                    alert("사진 처리 중 오류가 발생했습니다: " + err.message);
+                } finally {
+                    uploadTriggerBtn.disabled = false;
+                    uploadTriggerBtn.innerHTML = '<i class="fa-solid fa-camera"></i> 사진 업로드 (PC / 스마트폰)';
+                }
+            });
+        }
+
+        // 3. Supabase DB 저장 로직
+        async function saveCardSettings() {
+            if (!currentUserId || !window.sb) {
+                alert("로그인 세션이 확인되지 않습니다.");
+                return;
+            }
+
+            const rawSlug = document.getElementById('input-card-slug').value.trim();
+            const cleanSlug = rawSlug.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+
+            if (!cleanSlug) {
+                alert("내 명함 고유 주소(영문/숫자)를 입력해 주세요.");
+                document.getElementById('input-card-slug').focus();
+                return;
+            }
+
+            const name = document.getElementById('input-name').value.trim();
+            if (!name) {
+                alert("설계사 성함을 입력해 주세요.");
+                document.getElementById('input-name').focus();
+                return;
+            }
+
+            const saveBtn = document.getElementById('btn-save-all');
+            const bottomBtn = document.getElementById('btn-save-bottom');
+            
+            const setBtnLoading = (loading) => {
+                [saveBtn, bottomBtn].forEach(b => {
+                    if (b) {
+                        b.disabled = loading;
+                        b.innerHTML = loading 
+                            ? '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...' 
+                            : '<i class="fa-solid fa-cloud-arrow-up"></i> 저장하기';
+                    }
+                });
+            };
+
+            setBtnLoading(true);
+
+            const bSub = document.getElementById('input-brand-sub').value.trim();
+            const bHighlight = document.getElementById('input-brand-highlight').value.trim() || '디지털 명함';
+            const bSparkle = document.getElementById('input-brand-sparkle').checked;
+
+            const updatedCardData = {
+                brand_sub: bSub,
+                brand_highlight: bHighlight,
+                show_sparkle: bSparkle,
+                brand_title: (bSub ? bSub + ' ' : '') + bHighlight,
+                stickers: selectedJibbitz,
+                bgm: {
+                    enabled: document.getElementById('input-bgm-enabled').checked,
+                    type: document.getElementById('select-bgm-type').value,
+                    title: document.getElementById('input-bgm-title').value.trim() || '오늘의 추천 음악',
+                    youtube_url: document.getElementById('input-bgm-youtube-url').value.trim()
+                },
+                name: name,
+                job_title: document.getElementById('input-job-title').value.trim(),
+                company: document.getElementById('input-company').value.trim(),
+                tags: [
+                    document.getElementById('input-tag-1').value.trim(),
+                    document.getElementById('input-tag-2').value.trim()
+                ].filter(Boolean),
+                slogan: document.getElementById('input-slogan').value.trim(),
+                phone: document.getElementById('input-phone').value.trim(),
+                instagram: document.getElementById('input-instagram').value.trim(),
+                kakao_talk: document.getElementById('input-kakao').value.trim(),
+                website: document.getElementById('input-website').value.trim(),
+                website_label: document.getElementById('input-website-label').value.trim(),
+                work_hours: document.getElementById('input-work-hours').value.trim(),
+                avatar_url: document.getElementById('input-avatar-url').value.trim() || document.getElementById('avatar-preview-img').src,
+                consult_email: document.getElementById('input-consult-email').value.trim(),
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                // 1. 슬러그 중복 확인 (다른 사용자가 이미 선점했는지)
+                const { data: existingUser } = await window.sb
+                    .from('profiles')
+                    .select('id')
+                    .eq('card_slug', cleanSlug)
+                    .neq('id', currentUserId)
+                    .maybeSingle();
+
+                if (existingUser) {
+                    alert(`'${cleanSlug}' 주소는 이미 다른 회원이 사용 중입니다.\n다른 주소를 입력해 주세요.`);
+                    setBtnLoading(false);
+                    return;
+                }
+
+                // 2. profiles 테이블 업데이트
+                const { error: updateErr } = await window.sb
+                    .from('profiles')
+                    .update({
+                        card_slug: cleanSlug,
+                        card_data: updatedCardData,
+                        avatar_url: updatedCardData.avatar_url,
+                        nickname: name
+                    })
+                    .eq('id', currentUserId);
+
+                if (updateErr) throw updateErr;
+
+                updatePreviewButtonUrl(cleanSlug);
+                syncLivePreview();
+                showToast("✨ 디지털 명함 설정이 완벽하게 저장되었습니다!");
+            } catch (err) {
+                console.error("Save error:", err);
+                alert("저장 중 오류가 발생했습니다: " + err.message);
+            } finally {
+                setBtnLoading(false);
+            }
+        }
+
+        document.getElementById('btn-save-all').addEventListener('click', saveCardSettings);
+        document.getElementById('btn-save-bottom').addEventListener('click', saveCardSettings);
+
+        // 4. 명함 링크 복사하기
+        document.getElementById('btn-copy-card-link').addEventListener('click', () => {
+            const slug = document.getElementById('input-card-slug').value.trim() || 'my';
+            const fullUrl = `${window.location.origin}/c/${encodeURIComponent(slug)}`;
+            
+            navigator.clipboard.writeText(fullUrl).then(() => {
+                showToast(`📋 명함 링크가 복사되었습니다!\n${fullUrl}`);
+            }).catch(() => {
+                prompt("아래 주소를 복사해 주세요:", fullUrl);
+            });
+        });
+
+        // 5. 초기 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            initEditor();
+
+            // 아이프레임 로드 완료 시 미리보기 동기화
+            const iframe = document.getElementById('phone-preview-iframe');
+            if (iframe) {
+                iframe.onload = () => {
+                    setTimeout(syncLivePreview, 300);
+                };
+            }
+        });
+    </script>
+</body>
+</html>

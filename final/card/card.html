@@ -31,7 +31,7 @@
                     <div class="brand-logo-container" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <span class="brand-logo-fallback" id="card-brand-title">
                             <span class="brand-sparkle-star" id="brand-sparkle-icon">✨</span>
-                            <span id="brand-sub-text">기준이 다른</span>
+                            <span id="brand-sub-text">내 삶의 든든한</span>
                             <strong id="brand-title-strong">디지털 명함</strong>
                         </span>
                     </div>
@@ -400,17 +400,17 @@
             position: relative;
             background: linear-gradient(
                 to right, 
-                #EA580C 0%, 
-                #F97316 25%, 
+                var(--brand-color-dark, #EA580C) 0%, 
+                var(--brand-color-main, #F97316) 25%, 
                 #FFFFFF 50%, 
-                #F97316 75%, 
-                #EA580C 100%
+                var(--brand-color-main, #F97316) 75%, 
+                var(--brand-color-dark, #EA580C) 100%
             );
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: shine-effect 1.8s linear infinite;
-            text-shadow: 0 0 12px rgba(249, 115, 22, 0.2);
+            text-shadow: 0 0 12px var(--brand-color-glow, rgba(249, 115, 22, 0.25));
             display: inline-block;
         }
 
@@ -979,68 +979,74 @@
             100% { transform: scale(1.18) rotate(15deg); }
         }
 
-        /* Crocs Jibbitz Stickers Container & Badges */
+        /* Card Floating Stickers (Emoji & Text Badges) */
         .premium-littly-card-root .jibbitz-container {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             pointer-events: none;
             z-index: 10;
         }
-        .premium-littly-card-root .jibbitz-badge {
+        .premium-littly-card-root .card-sticker-item {
             position: absolute;
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.94);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 2.5px solid #ffffff;
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+            pointer-events: auto;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 23px;
-            pointer-events: auto;
-            cursor: pointer;
-            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            user-select: none;
+            z-index: 25;
         }
-        .premium-littly-card-root .jibbitz-badge:hover {
-            transform: scale(1.22) rotate(10deg) !important;
+        .premium-littly-card-root .card-sticker-item:hover {
+            transform: scale(1.22) rotate(6deg) !important;
         }
-        .premium-littly-card-root .jibbitz-pos-0 {
-            top: 22px;
-            right: 22px;
-            animation: jibbitz-float-1 3.2s ease-in-out infinite alternate;
+        /* Emoji Round Sticker */
+        .premium-littly-card-root .card-sticker-emoji {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2.5px solid #ffffff;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            font-size: 24px;
         }
-        .premium-littly-card-root .jibbitz-pos-1 {
-            top: 18px;
-            left: 18px;
-            animation: jibbitz-float-2 3.6s ease-in-out infinite alternate;
+        /* Text Pill Sticker */
+        .premium-littly-card-root .card-sticker-text {
+            padding: 7px 16px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid #ffffff;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            font-size: 13px;
+            font-weight: 900;
+            color: #0f172a;
+            white-space: nowrap;
+            letter-spacing: -0.3px;
         }
-        .premium-littly-card-root .jibbitz-pos-2 {
-            bottom: 96px;
-            right: 20px;
-            animation: jibbitz-float-3 3.4s ease-in-out infinite alternate;
-        }
-        .premium-littly-card-root .jibbitz-pos-3 {
-            bottom: 96px;
-            left: 20px;
-            animation: jibbitz-float-4 3.8s ease-in-out infinite alternate;
-        }
-        @keyframes jibbitz-float-1 {
+        /* Positions: Safe from card overlap */
+        .card-sticker-pos-top-right, .jibbitz-pos-0 { top: 22px; right: 20px; animation: sticker-float-1 3.2s ease-in-out infinite alternate; }
+        .card-sticker-pos-top-left, .jibbitz-pos-1 { top: 22px; left: 20px; animation: sticker-float-2 3.6s ease-in-out infinite alternate; }
+        .card-sticker-pos-bottom-right, .jibbitz-pos-2 { bottom: 100px; right: 20px; animation: sticker-float-3 3.4s ease-in-out infinite alternate; }
+        .card-sticker-pos-bottom-left, .jibbitz-pos-3 { bottom: 100px; left: 20px; animation: sticker-float-4 3.8s ease-in-out infinite alternate; }
+        .card-sticker-pos-center-top { top: 20px; left: 50%; transform: translateX(-50%); animation: sticker-float-1 3.2s ease-in-out infinite alternate; }
+        .card-sticker-pos-center-bottom { bottom: 100px; left: 50%; transform: translateX(-50%); animation: sticker-float-2 3.6s ease-in-out infinite alternate; }
+        @keyframes sticker-float-1 {
             0% { transform: translateY(0px) rotate(-3deg); }
             100% { transform: translateY(-7px) rotate(5deg); }
         }
-        @keyframes jibbitz-float-2 {
+        @keyframes sticker-float-2 {
             0% { transform: translateY(0px) rotate(4deg); }
             100% { transform: translateY(-6px) rotate(-6deg); }
         }
-        @keyframes jibbitz-float-3 {
+        @keyframes sticker-float-3 {
             0% { transform: translateY(0px) rotate(-5deg); }
             100% { transform: translateY(-7px) rotate(4deg); }
         }
-        @keyframes jibbitz-float-4 {
+        @keyframes sticker-float-4 {
             0% { transform: translateY(0px) rotate(3deg); }
             100% { transform: translateY(-6px) rotate(-5deg); }
         }
@@ -1167,6 +1173,14 @@
     <script>
         // 카드 데이터 바인딩 함수
         
+        
+        window.__cardMessageListenerRegistered = true;
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'UPDATE_CARD_PREVIEW') {
+                applyCardData(event.data.card);
+            }
+        });
+    
         // BGM 프리셋 무료 음원 목록 (고품질 저작권 프리 CDN 스트리밍)
         const BGM_PRESETS = {
             cafe: {
@@ -1323,16 +1337,64 @@
             }
         }
 
+        const BRAND_COLOR_THEMES = {
+            '#f97316': { dark: '#ea580c', main: '#f97316', glow: 'rgba(249, 115, 22, 0.3)' },
+            '#0284c7': { dark: '#0369a1', main: '#0284c7', glow: 'rgba(2, 132, 199, 0.3)' },
+            '#d97706': { dark: '#b45309', main: '#d97706', glow: 'rgba(217, 119, 6, 0.3)' },
+            '#7c3aed': { dark: '#6d28d9', main: '#7c3aed', glow: 'rgba(124, 58, 237, 0.3)' },
+            '#059669': { dark: '#047857', main: '#059669', glow: 'rgba(5, 150, 105, 0.3)' },
+            '#e11d48': { dark: '#be123c', main: '#e11d48', glow: 'rgba(225, 29, 72, 0.3)' },
+            '#1e293b': { dark: '#0f172a', main: '#334155', glow: 'rgba(30, 41, 59, 0.25)' },
+            '#0891b2': { dark: '#0e7490', main: '#0891b2', glow: 'rgba(8, 145, 178, 0.3)' }
+        };
+
+        function applyBrandColorToElement(el, hex) {
+            if (!el) return;
+            const theme = BRAND_COLOR_THEMES[hex] || {
+                dark: hex,
+                main: hex,
+                glow: 'rgba(0,0,0,0.18)'
+            };
+            el.style.setProperty('--brand-color-dark', theme.dark);
+            el.style.setProperty('--brand-color-main', theme.main);
+            el.style.setProperty('--brand-color-glow', theme.glow);
+            el.style.background = `linear-gradient(to right, ${theme.dark} 0%, ${theme.main} 25%, #FFFFFF 50%, ${theme.main} 75%, ${theme.dark} 100%)`;
+            el.style.backgroundSize = '200% auto';
+            el.style.webkitBackgroundClip = 'text';
+            el.style.webkitTextFillColor = 'transparent';
+        }
+
         function renderStickers(stickers) {
             const container = document.getElementById('jibbitz-container');
             if (!container) return;
             container.innerHTML = '';
             const list = Array.isArray(stickers) ? stickers.filter(Boolean) : [];
-            list.slice(0, 4).forEach((emoji, idx) => {
+            const defaultPositions = ['top-right', 'top-left', 'bottom-right', 'bottom-left', 'center-top', 'center-bottom'];
+
+            list.slice(0, 6).forEach((item, idx) => {
+                let text = '';
+                let pos = defaultPositions[idx % defaultPositions.length];
+
+                if (typeof item === 'object' && item !== null) {
+                    text = item.text || item.content || '';
+                    pos = item.pos || item.position || pos;
+                } else if (typeof item === 'string') {
+                    if (item.includes(':')) {
+                        const parts = item.split(':');
+                        text = parts[0];
+                        pos = parts[1] || pos;
+                    } else {
+                        text = item;
+                    }
+                }
+
+                if (!text) return;
+
                 const badge = document.createElement('div');
-                badge.className = 'jibbitz-badge jibbitz-pos-' + idx;
-                badge.textContent = emoji;
-                badge.title = '나만의 지비츠 스티커!';
+                const isSingleEmoji = (Array.from(text).length <= 2 && /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u.test(text));
+                badge.className = `card-sticker-item ${isSingleEmoji ? 'card-sticker-emoji' : 'card-sticker-text'} card-sticker-pos-${pos}`;
+                badge.textContent = text;
+                badge.title = `스티커: ${text}`;
                 container.appendChild(badge);
             });
         }
@@ -1366,11 +1428,12 @@
                 }
             }
             if (brandSub) {
-                brandSub.textContent = (card.brand_sub !== undefined) ? card.brand_sub : '기준이 다른';
+                brandSub.textContent = (card.brand_sub !== undefined) ? card.brand_sub : '내 삶의 든든한';
                 brandSub.style.display = brandSub.textContent ? 'inline' : 'none';
             }
             if (brandStrong) {
                 brandStrong.textContent = card.brand_highlight || card.brand_title || '디지털 명함';
+                applyBrandColorToElement(brandStrong, card.brand_color || '#f97316');
             }
 
             // 크록스 지비츠 스티커 렌더링
@@ -1497,7 +1560,7 @@
 
             if (!slug) {
                 applyCardData({
-                    brand_sub: "기준이 다른",
+                    brand_sub: "내 삶의 든든한",
                     brand_highlight: "디지털 명함",
                     show_sparkle: true,
                     stickers: [],
@@ -1513,7 +1576,7 @@
                     website: "http://www.위라클.com",
                     website_label: "위라클",
                     work_hours: "상담 가능 시간: 09:00 ~ 24:00 (연중무휴)",
-                            avatar_url: raw.avatar_url || data.avatar_url || DEFAULT_PLACEHOLDER_AVATAR
+                            avatar_url: DEFAULT_PLACEHOLDER_AVATAR
                 });
                 return;
             }
@@ -1538,7 +1601,7 @@
                     if (!error && data) {
                         const raw = data.card_data || {};
                         applyCardData({
-                            brand_sub: raw.brand_sub !== undefined ? raw.brand_sub : '기준이 다른',
+                            brand_sub: raw.brand_sub !== undefined ? raw.brand_sub : '내 삶의 든든한',
                             brand_highlight: raw.brand_highlight || raw.brand_title || data.brand_name || '디지털 명함',
                             show_sparkle: raw.show_sparkle !== false,
                             stickers: raw.stickers || ['👑', '🍀'],
@@ -1563,6 +1626,18 @@
             } catch (err) {
                 console.warn("[Card] Load error:", err);
             }
+
+            // 로컬스토리지 임시 데이터가 있는지 확인 (로컬 테스트 및 체험 모드 지원)
+            try {
+                const localStr = localStorage.getItem('weracle_temp_card_data');
+                if (localStr) {
+                    const parsed = JSON.parse(localStr);
+                    if (parsed && parsed.card_data) {
+                        applyCardData(parsed.card_data);
+                        return;
+                    }
+                }
+            } catch(e) {}
 
             applyCardData({
                 brand_title: "디지털 명함",

@@ -813,7 +813,7 @@
                         <!-- 탭 링크 -->
                         <div class="sb-mypage-tab-wrap" style="width: 200px; border-right: 1px solid #e2edf7; background: #ffffff; padding: 20px 0; flex-shrink: 0;">
                             <button class="sb-mypage-tab-btn ${this.activeTab==='posts'?'active':''}" data-tab="posts">내가 쓴 글 (${this.myPosts.length})</button>
-                            <button class="sb-mypage-tab-btn ${this.activeTab==='comments'?'active':''}" data-tab="comments">내가 쓴 댓글 (${this.myComments.length})</button>
+                            <button class="sb-mypage-tab-btn ${this.activeTab==='card'?'active':''}" data-tab="card"><i class="fa-solid fa-id-card" style="margin-right:6px; color:#0284c7;"></i> 디지털 명함</button>
                         </div>
 
                         <!-- 탭 컨텐츠 목록 -->
@@ -881,42 +881,56 @@
                 html += `</div>`;
                 return html;
 
-            } else if (this.activeTab === 'comments') {
-                let html = this.renderCategoryFilter('comments');
-                const filteredComments = this.myComments.filter(c => {
-                    const cat = c.posts?.category;
-                    const subcat = c.posts?.subcategory;
-                    if (this.activeCommentCategory === 'all') return true;
-                    if (this.activeCommentCategory === 'video') return cat === 'video';
-                    if (this.activeCommentCategory === 'general') return cat === 'general';
-                    return cat === 'general' && subcat === this.activeCommentCategory;
-                });
-
-                if (filteredComments.length === 0) {
-                    html += `<div style="text-align:center; padding:60px 0; color:#4b5563; font-size:13px; background:#fff; border-radius:12px; border:1px solid #e2edf7;"> 해당 카테고리에 등록한 댓글이 존재하지 않습니다.</div>`;
-                    return html;
-                }
-                
-                html += `<div style="display:flex; flex-direction:column; gap:10px;">`;
-                html += filteredComments.map(c => {
-                    const p = c.posts || {};
-                    const tagLabel = p.category === 'video' ? '교육 동영상' : (p.subcategory === 'freetalk' ? '자유소통' : (p.subcategory === 'counseling' ? '고민상담' : (p.subcategory === 'episode' ? '영업 에피소드' : (p.subcategory === 'qna' ? '질문과 답변' : (p.subcategory === 'lounge' ? '우수 라운지' : '커뮤니티')))));
-                    const badgeClass = p.category === 'video' ? 'sb-badge-VIP' : 'sb-badge-normal';
-                    return `
-                        <div class="sb-mypage-list-item" style="display:flex; justify-content:space-between; align-items:center; padding:16px 18px; border-radius:12px; border:1px solid #e2edf7; background:#fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'" onmouseout="this.style.transform='none'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)'">
-                            <div style="flex:1; text-align:left; padding-right:16px; min-width:0;">
-                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                                    <span class="sb-badge ${badgeClass}" style="font-size:9.5px; padding:3px 6px; border-radius:4px; opacity:0.8;">${tagLabel}</span>
-                                    <span style="font-size:11.5px; font-weight:600; color:#4b5563;">${new Date(c.created_at).toLocaleString()}</span>
+            } else if (this.activeTab === 'card') {
+                const currentUserId = window.currentUser ? window.currentUser.id : '';
+                const cardViewUrl = currentUserId ? `../card/card.html?id=${encodeURIComponent(currentUserId)}` : `../card/card.html`;
+                const cardEditUrl = `../card/card_edit.html`;
+                return `
+                    <div style="background:#ffffff; border-radius:16px; border:1px solid #e2e8f0; padding:28px 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); text-align:left;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; border-bottom:1px solid #f1f5f9; padding-bottom:20px; margin-bottom:20px;">
+                            <div style="display:flex; align-items:center; gap:14px;">
+                                <div style="width:50px; height:50px; border-radius:14px; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px; box-shadow:0 4px 12px rgba(2,132,199,0.3);">
+                                    <i class="fa-solid fa-id-card"></i>
                                 </div>
-                                <p style="margin:0; font-size:14px; color:var(--sb-primary); font-weight:700; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${this.escapeHtml(c.content)}</p>
+                                <div>
+                                    <h3 style="margin:0; font-size:18px; font-weight:800; color:#0f172a;">모바일 디지털 명함</h3>
+                                    <p style="margin:4px 0 0 0; font-size:13px; color:#64748b;">나만의 링크형 스마트 프로필 명함을 만들고 고객 및 지인에게 공유하세요.</p>
+                                </div>
                             </div>
-                            <button class="sb-btn-delete-comment" data-comment-id="${c.id}" style="background:var(--sb-bg); border:1px solid #e2edf7; border-radius:6px; padding:6px 12px; color:#dc2626; font-size:12px; cursor:pointer; font-weight:800; white-space:nowrap; transition:0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='var(--sb-bg)'">삭제 </button>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <a href="${cardEditUrl}" class="sb-btn sb-btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:10px; font-size:13.5px; text-decoration:none; color:#fff; background:#0284c7;">
+                                    <i class="fa-solid fa-pen-to-square"></i> 명함 에디터 열기
+                                </a>
+                                <a href="${cardViewUrl}" target="_blank" class="sb-btn sb-btn-secondary" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:10px; font-size:13.5px; text-decoration:none; color:#334155; background:#f8fafc; border:1px solid #cbd5e1;">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> 내 명함 보기
+                                </a>
+                            </div>
                         </div>
-                    `;
-                }).join('');
-                html += `</div>`;
-                return html;
+
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-bottom:24px;">
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+                                <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">명함 주소 (URL)</div>
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    <input type="text" id="sb-my-card-url-input" readonly value="${window.location.origin}/card/card.html${currentUserId ? '?id='+currentUserId : ''}" style="width:100%; font-size:12px; padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; color:#334155;" />
+                                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('sb-my-card-url-input').value); alert('명함 주소가 클립보드에 복사되었습니다!');" style="white-space:nowrap; padding:8px 12px; font-size:12px; font-weight:700; background:#0284c7; color:#fff; border:none; border-radius:8px; cursor:pointer;">
+                                        복사
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+                                <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">실시간 동기화 및 편집</div>
+                                <p style="margin:0; font-size:12.5px; color:#475569; line-height:1.5;">에디터에서 정보를 입력하면 우측 스마트폰 화면에 즉시 실시간으로 반영됩니다.</p>
+                            </div>
+                        </div>
+
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:16px; display:flex; align-items:center; gap:12px;">
+                            <i class="fa-solid fa-circle-check" style="color:#16a34a; font-size:20px;"></i>
+                            <div style="font-size:13px; color:#166534;">
+                                <strong>상담 예약 알림 기능 탑재:</strong> 명함 내 '간편 상담 예약' 버튼을 통해 고객이 신청 시 안내 이메일 발송 및 데이터가 자동 연동됩니다.
+                            </div>
+                        </div>
+                    </div>
+                `;
 
             } else if (this.activeTab === 'orders') {
                 if (this.myOrders.length === 0) {

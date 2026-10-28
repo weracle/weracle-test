@@ -4001,7 +4001,7 @@ window.adminAddSchedule = function() {
   const targetUserId = targetType === 'personal' ? (targetUserEl?.value || '') : '';
   const targetUserName = targetType === 'personal' ? (targetUserEl?.options[targetUserEl.selectedIndex]?.text || '') : '';
   const remindTime = document.getElementById('admSchedRemindTime')?.value || '30m';
-  const remind1d = document.getElementById('admSchedRemind1d')?.checked !== false;
+  const remind1d = document.getElementById('admSchedRemind1d') ? document.getElementById('admSchedRemind1d').checked : true;
 
   const remindLabels = {
     '0': '정시',
@@ -4066,7 +4066,7 @@ window.adminAddSchedule = function() {
   const detailMsg = cat === 'edu' 
     ? `\n- 주관 회사: ${company || '자체 교육'}\n- 루키 구분: ${isNewbie ? ' 신입 전용' : '일반'}`
     : '';
-  alert(`새 일정이 성공적으로 등록되었습니다!\n 수파베이스 DB 저장 완료\n 공식 구글 캘린더(boheomdapda@gmail.com) 동기화 & ${remindLabel} 스마트폰 알림 예약 완료!${targetMsg}${detailMsg}`);
+  alert(`새 일정이 성공적으로 등록되었습니다!\n 수파베이스 DB 저장 완료\n 공식 구글 캘린더(boheomdapda@gmail.com) 동기화 & 스마트폰 자동 알림 예약 완료!${targetMsg}${detailMsg}`);
 };
 
 window.adminDeleteSchedule = async function(id) {

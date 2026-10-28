@@ -578,6 +578,67 @@
     stepperWrap.innerHTML = html;
   }
 
+  // 9. URL 파라미터(CRM 고객 클릭 등) 자동 입력 연동
+  let hasAutoFilledUrlParams = false;
+  function autoFillFromUrlParams() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const name = params.get('client_name') || params.get('name') || '';
+      const phone = params.get('client_phone') || params.get('phone') || '';
+      const jumin = params.get('client_jumin') || params.get('jumin') || params.get('rrn') || '';
+      const comp = params.get('insurance_company') || params.get('company') || '';
+
+      if (!name && !phone && !jumin && !comp) return;
+
+      // 보험사 자동 선택 (Step 2 화면)
+      if (comp) {
+        const compSelect = document.getElementById('companySelect');
+        if (compSelect && compSelect.options.length > 0) {
+          for (let i = 0; i < compSelect.options.length; i++) {
+            const optVal = compSelect.options[i].value || compSelect.options[i].text;
+            if (optVal && (optVal.includes(comp) || comp.includes(optVal))) {
+              compSelect.selectedIndex = i;
+              if (typeof window.checkFaxRequirement === 'function') {
+                window.checkFaxRequirement();
+              }
+              break;
+            }
+          }
+        }
+      }
+
+      // 동적 폼 필드 입력 (Step 3 화면 생성 시)
+      function setVal(id, v) {
+        const el = document.getElementById(id);
+        if (el && v && (!el.value || el.value.trim() === '')) {
+          el.value = v;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+
+      const insNameEl = document.getElementById('insName');
+      if (insNameEl) {
+        const cleanRrn = jumin.replace(/[^0-9]/g, '');
+        const cleanPhone = phone.replace(/[^0-9-]/g, '');
+
+        if (name) setVal('insName', name);
+        if (cleanRrn) setVal('insRrn', cleanRrn);
+        if (cleanPhone) setVal('insPhone', cleanPhone);
+
+        if (name && !document.getElementById('contName')?.value) {
+          setVal('contName', name);
+          if (cleanRrn) setVal('contRrn', cleanRrn);
+          if (cleanPhone) setVal('contPhone', cleanPhone);
+          setVal('contRelation', '본인');
+        }
+        hasAutoFilledUrlParams = true;
+      }
+    } catch (err) {
+      console.warn('[CustomerPicker] autoFillFromUrlParams error:', err);
+    }
+  }
+
   // slides-container 감시자 등록 (동적 슬라이드 렌더링 시 자동 부착)
   function initObserver() {
     const targetNode = document.getElementById('slides-container');
@@ -589,17 +650,24 @@
     const observer = new MutationObserver(function () {
       attachButtonsToForm();
       updateStepperBar();
+      if (!hasAutoFilledUrlParams) {
+        autoFillFromUrlParams();
+      }
     });
 
     observer.observe(targetNode, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     attachButtonsToForm();
     updateStepperBar();
+    autoFillFromUrlParams();
 
     // claim-step 전환 감시 (step2 -> step_dyn_flow 진입 시)
     const contentArea = document.querySelector('.content-area');
     if (contentArea) {
       const stepObserver = new MutationObserver(function () {
         updateStepperBar();
+        if (!hasAutoFilledUrlParams) {
+          autoFillFromUrlParams();
+        }
       });
       stepObserver.observe(contentArea, { attributes: true, subtree: true, attributeFilter: ['class'] });
     }
@@ -609,10 +677,12 @@
   document.addEventListener('DOMContentLoaded', function () {
     initDataSync();
     initObserver();
+    setTimeout(autoFillFromUrlParams, 300);
   });
 
   window.attachCustomerPickerButtons = attachButtonsToForm;
   window.updateStepperBar = updateStepperBar;
+  window.autoFillFromUrlParams = autoFillFromUrlParams;
 
 })();
 

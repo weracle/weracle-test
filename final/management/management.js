@@ -279,12 +279,134 @@ async function syncFromCloudOnStartup() {
         await loadPerformanceFromSupabase();
       }
       await loadAdminUserList();
+      await resolveCurrentUser();
+      applyUserAccessControl();
       await loadAttendanceFromSupabase();
       subscribeToAttendanceRealtime();
+      subscribeToSchedulesRealtime();
       console.log(' 클라우드 데이터 동기화 완료');
     }
   } catch (err) {
     console.warn('클라우드 동기화 중 오류 (로컬 모드로 계속 작동):', err);
+  }
+}
+
+// =========================================================
+// [보안 & 사용자 권한 제어: 최고 관리자(manager/본사) vs 일반 파트너스 분기]
+// =========================================================
+let currentAppUser = null;
+
+async function resolveCurrentUser() {
+  const parentWin = window.parent !== window ? window.parent : null;
+  let u = (parentWin && parentWin.currentProfile) || (parentWin && parentWin.currentUser);
+
+  if (!u && typeof currentProfile !== 'undefined' && currentProfile) u = currentProfile;
+  if (!u && typeof currentUser !== 'undefined' && currentUser) u = currentUser;
+
+  // Supabase 세션 직접 조회
+  if (!u) {
+    try {
+      const sb = await getSb();
+      if (sb && sb.auth) {
+        const { data } = await sb.auth.getSession();
+        if (data && data.session && data.session.user) {
+          const sUser = data.session.user;
+          const { data: prof } = await sb.from('profiles').select('*').eq('id', sUser.id).maybeSingle();
+          u = prof ? { ...sUser, ...prof } : sUser;
+        }
+      }
+    } catch (e) {}
+  }
+
+  // URL 쿼리 파라미터 기반 권한 시뮬레이션 지원 (?role=admin 또는 ?role=partner)
+  const params = new URLSearchParams(window.location.search);
+  const qRole = params.get('role') || params.get('mode');
+  if (qRole === 'admin') {
+    if (!u) u = { id: 'admin-temp', name: '최고 관리자', user_grade: 'manager', team: '관리자' };
+    else u.user_grade = 'manager';
+  } else if (qRole === 'partner') {
+    if (!u) u = { id: 'partner-temp', name: '김시화', nickname: '김시화', user_grade: 'VIP', team: '영업 1팀' };
+    else {
+      u.user_grade = 'VIP';
+      u.team = '영업 1팀';
+    }
+  }
+
+  currentAppUser = u;
+  if (u) {
+    window.currentUser = u;
+    window.currentProfile = u;
+  }
+  return u;
+}
+
+function isCurrentUserAdmin() {
+  const u = currentAppUser || 
+            (typeof currentProfile !== 'undefined' && currentProfile) || 
+            (typeof currentUser !== 'undefined' && currentUser) ||
+            (window.parent !== window && (window.parent.currentProfile || window.parent.currentUser));
+
+  // 로컬 파일(file:///) 환경에서 로그인 정보가 없는 개발 모드인 경우
+  if (!u && window.location.protocol === 'file:') {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('role') === 'partner') return false;
+    return true; 
+  }
+
+  if (!u) return false;
+
+  // 관리자 판별 조건:
+  // 1. user_grade === 'manager' 또는 'admin'
+  if (u.user_grade === 'manager' || u.user_grade === 'admin') return true;
+  // 2. 소속팀이 '관리자' 또는 '본사'
+  if (u.team === '관리자' || u.team === '본사') return true;
+  // 3. access_grades에 'ADMIN' 또는 'M' 등이 있는 경우
+  if ((u.access_grades || '').includes('ADMIN') || (u.access_grades || '').includes('M')) return true;
+
+  return false;
+}
+
+function applyUserAccessControl() {
+  const adminTabBtn = document.querySelector('.tab-btn.admin-tab[data-tab="tab-admin"]');
+  const badgeEl = document.getElementById('currentUserBadge');
+  const isAdmin = isCurrentUserAdmin();
+
+  if (isAdmin) {
+    // [관리자 모드] 5번 관리자 설정 탭 정상 노출
+    if (adminTabBtn) {
+      adminTabBtn.style.display = '';
+    }
+    if (badgeEl) {
+      const uName = (currentAppUser && (currentAppUser.name || currentAppUser.nickname)) ? (currentAppUser.name || currentAppUser.nickname) : '관리자';
+      badgeEl.className = 'user-badge admin-badge';
+      badgeEl.style.cssText = 'background:#fef2f2; color:#b91c1c; border:1.5px solid #fecaca; font-weight:800; padding:6px 14px; border-radius:20px; font-size:12px; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.04);';
+      badgeEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> 최고 관리자 모드 (${uName})`;
+    }
+  } else {
+    // [일반 파트너스 모드] 5번 관리자 설정 탭 완전 차단 & 숨김 (1~4번 탭만 이용)
+    if (adminTabBtn) {
+      adminTabBtn.style.display = 'none';
+      if (adminTabBtn.classList.contains('active')) {
+        switchTab('schedule');
+      }
+    }
+    const adminPane = document.getElementById('tab-admin');
+    if (adminPane && adminPane.classList.contains('active')) {
+      adminPane.classList.remove('active');
+      const schedPane = document.getElementById('tab-schedule');
+      if (schedPane) schedPane.classList.add('active');
+    }
+
+    if (badgeEl) {
+      const teamName = (currentAppUser && currentAppUser.team) || '파트너스';
+      const userName = (currentAppUser && (currentAppUser.name || currentAppUser.nickname)) || '파트너';
+      const userPos = typeof getMemberPosition === 'function' && currentAppUser ? getMemberPosition(currentAppUser) : '팀장';
+      const cleanName = typeof getCleanMemberName === 'function' && currentAppUser ? getCleanMemberName(currentAppUser, userPos) : userName;
+
+      badgeEl.className = 'user-badge partner-badge';
+      badgeEl.style.cssText = 'background:#eff6ff; color:#1e40af; border:1.5px solid #bfdbfe; font-weight:800; padding:6px 14px; border-radius:20px; font-size:12px; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(30,64,175,0.06);';
+      badgeEl.innerHTML = `<i class="fa-solid fa-crown" style="color:#2563eb;"></i> 파트너스 (${teamName} ${cleanName} ${userPos})`;
+    }
   }
 }
 
@@ -300,6 +422,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initContentLab();
   initAdminConsole();
 
+  // 권한 평가 및 UI 즉시 적용
+  resolveCurrentUser().then(() => {
+    applyUserAccessControl();
+  });
+
   // Supabase 비동기 클라우드 실시간 동기화 실행
   syncFromCloudOnStartup();
 });
@@ -310,8 +437,17 @@ function initTabs() {
   const tabPanes = document.querySelectorAll('.tab-pane');
 
   tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
       const targetId = btn.getAttribute('data-tab');
+
+      // 보안 검증: 관리자 설정 탭 접근 시 권한 확인
+      if (targetId === 'tab-admin' && !isCurrentUserAdmin()) {
+        e.preventDefault();
+        e.stopPropagation();
+        alert('🔒 관리자(본사) 권한이 있는 계정만 접근할 수 있는 메뉴입니다.');
+        switchTab('schedule');
+        return;
+      }
 
       tabBtns.forEach(b => b.classList.remove('active'));
       tabPanes.forEach(p => p.classList.remove('active'));
@@ -324,6 +460,10 @@ function initTabs() {
 }
 
 window.switchTab = function(tabKey) {
+  if (tabKey === 'admin' && !isCurrentUserAdmin()) {
+    alert('🔒 관리자(본사) 권한이 있는 계정만 접근할 수 있는 메뉴입니다.');
+    return;
+  }
   const btn = document.querySelector(`.tab-btn[data-tab="tab-${tabKey}"]`);
   if (btn) btn.click();
 };
@@ -674,7 +814,8 @@ async function syncScheduleToSupabaseAndGoogle(item, action = 'create') {
         } : { useDefault: true }
       };
 
-      const gRes = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+      const targetCalId = encodeURIComponent(googleCalSettings.calId || 'boheomdapda@gmail.com');
+      let gRes = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${targetCalId}/events`, {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + gAuthToken,
@@ -683,13 +824,25 @@ async function syncScheduleToSupabaseAndGoogle(item, action = 'create') {
         body: JSON.stringify(eventPayload)
       });
 
+      // 만약 특정 캘린더 ID로 404/403 응답 시 primary 캘린더로 자동 fallback
+      if (!gRes.ok && (googleCalSettings.calId || 'boheomdapda@gmail.com') !== 'primary') {
+        gRes = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + gAuthToken,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(eventPayload)
+        });
+      }
+
       if (gRes.ok) {
         const gData = await gRes.json().catch(() => ({}));
         if (gData && gData.id) {
           item.googleEventId = gData.id;
           saveSchedulesToStorage();
         }
-        console.log(' Google Calendar API 직접 등록 성공 (통합스케줄러와 동일):', item.title);
+        console.log(' Google Calendar API 직접 등록 성공 (boheomdapda 연동):', item.title);
       } else {
         console.warn('Google Calendar API 등록 응답 오류 상태:', gRes.status);
       }
@@ -698,10 +851,17 @@ async function syncScheduleToSupabaseAndGoogle(item, action = 'create') {
     }
   } else if (gAuthToken && action === 'delete' && item.googleEventId) {
     try {
-      await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(item.googleEventId)}`, {
+      const targetCalId = encodeURIComponent(googleCalSettings.calId || 'boheomdapda@gmail.com');
+      let delRes = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${targetCalId}/events/${encodeURIComponent(item.googleEventId)}`, {
         method: "DELETE",
         headers: { "Authorization": "Bearer " + gAuthToken }
       });
+      if (!delRes.ok && (googleCalSettings.calId || 'boheomdapda@gmail.com') !== 'primary') {
+        await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(item.googleEventId)}`, {
+          method: "DELETE",
+          headers: { "Authorization": "Bearer " + gAuthToken }
+        });
+      }
       console.log(' Google Calendar API 일정 삭제 성공');
     } catch (e) {
       console.warn('Google Calendar API 삭제 오류:', e);
@@ -1360,6 +1520,27 @@ function subscribeToAttendanceRealtime() {
   });
 }
 
+// 실시간 스케줄 변동 구독 리스너 (어떤 관리자가 일정을 등록/수정/삭제해도 모든 관리자 및 파트너스에 실시간 자동 동기화)
+function subscribeToSchedulesRealtime() {
+  getSb().then(sb => {
+    if (!sb) return;
+    try {
+      sb.channel('public:schedules_realtime_sync')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => {
+          console.log('⚡ 실시간 스케줄 변동 감지 (schedules) -> 최신 일정 동기화');
+          loadSchedulesFromSupabase();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'partners_schedules' }, () => {
+          console.log('⚡ 실시간 파트너스 스케줄 변동 감지 (partners_schedules) -> 최신 일정 동기화');
+          loadSchedulesFromSupabase();
+        })
+        .subscribe();
+    } catch (e) {
+      console.warn('Schedules Realtime 구독 실패:', e);
+    }
+  });
+}
+
 // 출결 & 교육 대상자: 관리자/본사 계정은 제외하고, 파트너스('C' 권한 보유자 또는 family) 회원만 출결 및 교육 참여 대상자임
 function getPartnerAttendanceTargets() {
   return adminUsersData.filter(u => {
@@ -1468,20 +1649,7 @@ window.submitPopupVote = function(voteChoice) {
 };
 
 function isCurrentUserAdminOrManager() {
-  const u = (typeof currentUser !== 'undefined' && currentUser) || (typeof currentProfile !== 'undefined' && currentProfile);
-  if (u) {
-    if (u.user_grade === 'manager' || u.team === '관리자' || u.team === '본사') return true;
-    const targetUsers = getPartnerAttendanceTargets();
-    if (u.id && !targetUsers.some(t => t.id === u.id)) return true;
-    return false;
-  }
-  
-  // 로그인 정보가 없거나 최고 관리자 모드로 접속 중인 경우
-  const badge = document.getElementById('currentUserBadge');
-  if (badge && badge.innerText.includes('관리자')) {
-    return true;
-  }
-  return false;
+  return isCurrentUserAdmin();
 }
 
 function checkAndShowEduVotePopup() {

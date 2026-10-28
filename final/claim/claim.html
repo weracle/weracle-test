@@ -31,13 +31,24 @@
         <div class="step-title">청구 분야 선택</div>
         <div class="step-desc">안전하고 빠른 보험금 청구 시스템입니다. 원하시는 청구 분야를 선택해 주세요.</div>
         <div class="radio-group">
-          <label onclick="window.location.href='claim_disease.html?v=115084'"> 질병 / 상해 보험</label>
-          <label onclick="window.location.href='claim_pet.html?v=115084'"> 펫 보험</label>
-          <label onclick="window.location.href='claim_life.html?v=115084'"> 생명보험 질병/재해</label>
-          <label onclick="window.location.href='claim_liability.html?v=115084'"> 배상 책임 보험</label>
-          <label onclick="window.location.href='claim_property.html?v=115084'"> 재물 보험</label>
+          <label onclick="navigateWithParams('claim_disease.html')"> 질병 / 상해 보험</label>
+          <label onclick="navigateWithParams('claim_pet.html')"> 펫 보험</label>
+          <label onclick="navigateWithParams('claim_life.html')"> 생명보험 질병/재해</label>
+          <label onclick="navigateWithParams('claim_liability.html')"> 배상 책임 보험</label>
+          <label onclick="navigateWithParams('claim_property.html')"> 재물 보험</label>
         </div>
       </div>
     </div>
+    <script>
+      function navigateWithParams(target) {
+        var search = window.location.search;
+        if (search) {
+          var sep = target.indexOf('?') !== -1 ? '&' : '?';
+          window.location.href = target + sep + search.replace(/^\?/, '');
+        } else {
+          window.location.href = target;
+        }
+      }
+    </script>
 </body>
 </html>

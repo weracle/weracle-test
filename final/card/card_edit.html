@@ -734,7 +734,159 @@
             transform: scale(1.05) !important;
         }
     
+    
+        /* Editor Tabs Navigation */
+        .editor-tabs-nav {
+            display: flex;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+        .editor-tab-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 11px 14px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            white-space: nowrap;
+        }
+        .editor-tab-btn:hover {
+            color: #0f172a;
+            background: rgba(255, 255, 255, 0.6);
+        }
+        .editor-tab-btn.active {
+            background: #ffffff;
+            color: #0284c7;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+            font-weight: 850;
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+            animation: fadeInTab 0.22s ease-out;
+        }
+        @keyframes fadeInTab {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tab-pane-header {
+            margin-bottom: 18px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 12px;
+        }
+        .tab-pane-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 850;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-pane-header h3 i {
+            color: #0284c7;
+        }
+        .tab-pane-desc {
+            margin: 4px 0 0 0;
+            font-size: 12.5px;
+            color: #64748b;
+        }
+        .tab-nav-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid #f1f5f9;
+        }
+        .btn-tab-nav {
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 750;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+        }
+        .btn-tab-nav:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+        .btn-tab-next {
+            background: #0284c7;
+            border-color: #0284c7;
+            color: #ffffff;
+        }
+        .btn-tab-next:hover {
+            background: #0369a1;
+            border-color: #0369a1;
+        }
+
+    
+        /* Custom Sticker Studio Styles */
+        .btn-font-chip {
+            padding: 5px 12px;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-font-chip:hover {
+            border-color: #0284c7;
+        }
+        .btn-font-chip.active {
+            background: #eff6ff;
+            border-color: #0284c7;
+            color: #0284c7;
+            font-weight: 800;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+        }
+        .btn-sticker-color-chip {
+            padding: 4px 10px;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 9999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-sticker-color-chip:hover {
+            border-color: #0284c7;
+        }
+        .btn-sticker-color-chip.active {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+        }
+
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Black+Han+Sans&family=Gaegu:wght@700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -752,8 +904,8 @@
             <button type="button" class="btn-action-outline" id="btn-copy-card-link">
                 <i class="fa-regular fa-clone"></i> 내 명함 주소 복사
             </button>
-            <a href="card.html" target="_blank" class="btn-action-outline" id="btn-open-preview">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> 새 창에서 보기
+            <a href="card.html" target="_blank" class="btn-action-outline" id="btn-open-preview" title="모바일 버전에서 보기">
+                <i class="fa-solid fa-mobile-screen-button"></i> 모바일 버전에서 보기
             </a>
             <button type="button" class="btn-save-primary" id="btn-save-all">
                 <i class="fa-solid fa-cloud-arrow-up"></i> 저장하기
@@ -783,7 +935,29 @@
                 </div>
             </div>
 
-            <!-- 1. 고유 주소 설정 -->
+            <!-- Editor Navigation Tabs -->
+            <div class="editor-tabs-nav">
+                <button type="button" class="editor-tab-btn active" data-tab="tab-profile" onclick="switchEditorTab('tab-profile')">
+                    <i class="fa-solid fa-user-tie"></i> 기본 프로필
+                </button>
+                <button type="button" class="editor-tab-btn" data-tab="tab-brand" onclick="switchEditorTab('tab-brand')">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> 브랜딩 & 스티커
+                </button>
+                <button type="button" class="editor-tab-btn" data-tab="tab-contact" onclick="switchEditorTab('tab-contact')">
+                    <i class="fa-solid fa-phone-volume"></i> 연락처 & SNS
+                </button>
+                <button type="button" class="editor-tab-btn" data-tab="tab-consult" onclick="switchEditorTab('tab-consult')">
+                    <i class="fa-solid fa-calendar-check"></i> 상담 예약 & BGM
+                </button>
+            </div>
+
+            <!-- TAB 1: 기본 프로필 (주소, 사진, 이름, 직책, 소속, 태그, 슬로건) -->
+            <div id="tab-profile" class="tab-pane active">
+                <div class="tab-pane-header">
+                    <h3><i class="fa-solid fa-id-card"></i> 기본 프로필 및 고유 주소</h3>
+                    <p class="tab-pane-desc">명함의 고유 주소와 대표 프로필 사진, 인적 사항을 입력합니다.</p>
+                </div>
+                <!-- 1. 고유 주소 설정 -->
             <div class="slug-banner">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:14px; font-weight:850; color:#0369a1;">
@@ -800,15 +974,71 @@
                 </div>
             </div>
 
-            <!-- 2. 브랜드 타이틀 & 프로필 사진 -->
-            <div class="section-header">
-                <div>
-                    <h3><i class="fa-solid fa-id-card"></i> 기본 프로필 및 브랜딩</h3>
-                    <p class="section-desc">명함 상단에 노출될 타이틀과 프로필 사진을 설정합니다.</p>
+            
+                <div class="form-label">프로필 사진</div>
+            <div class="avatar-uploader-box">
+                <img id="avatar-preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 480' width='400' height='480'%3E%3Crect width='400' height='480' fill='%23F1F5F9'/%3E%3Ccircle cx='200' cy='180' r='75' fill='%23CBD5E1'/%3E%3Cpath d='M80 440 C80 320, 140 280, 200 280 C260 280, 320 320, 320 440 Z' fill='%23CBD5E1'/%3E%3Crect x='120' y='410' width='160' height='32' rx='16' fill='%230284C7'/%3E%3Ctext x='200' y='431' font-family='sans-serif' font-size='12' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3E%ED%94%84%EB%A1%9C%ED%95%84%20%EC%82%AC%EC%A7%84%20%EB%93%B1%EB%A1%9D%3C/text%3E%3C/svg%3E" class="avatar-thumb-preview" alt="프로필 미리보기" style="cursor:pointer;" title="클릭하여 내 사진 선택" onclick="triggerAvatarFileInput()">
+                <div class="avatar-uploader-info">
+                    <button type="button" class="btn-upload-file" id="btn-trigger-upload" style="cursor:pointer;" onclick="triggerAvatarFileInput()">
+                        <i class="fa-solid fa-camera"></i> 사진 업로드 (내 컴퓨터 / 스마트폰)
+                    </button>
+                    <input type="file" id="file-avatar-input" accept="image/*" style="display:none;" onchange="handleAvatarFileSelect(this)">
+                    <div style="font-size:11.5px; color:#64748b; margin-top:6px;">권장: 가로세로 비율이 정돈된 깔끔한 인물 사진 (자동 최적화)</div>
+                    <div style="margin-top:10px;">
+                        <input type="text" id="input-avatar-url" class="form-control" style="font-size:12px; padding:8px 12px;" placeholder="또는 직접 이미지 URL 링크 입력">
+                    </div>
                 </div>
             </div>
 
-            <!-- 브랜드 타이틀 & 반짝이는 글자 설정 -->
+            
+                <div class="form-grid-2" style="margin-top:16px;">
+                <div>
+                    <label class="form-label">설계사 성함 <span class="req">*</span></label>
+                    <input type="text" id="input-name" class="form-control" placeholder="성함을 입력해 주세요">
+                </div>
+                <div>
+                    <label class="form-label">직책 <span class="sub">(예: 지사장, 팀장, 수석FC)</span></label>
+                    <input type="text" id="input-job-title" class="form-control" placeholder="직책 입력">
+                </div>
+            </div>
+
+            <div class="form-item">
+                <label class="form-label">소속 회사 및 지점</label>
+                <input type="text" id="input-company" class="form-control" placeholder="소속 회사 및 지점 입력">
+            </div>
+
+            <div class="form-grid-2">
+                <div>
+                    <label class="form-label">전문 분야 태그 1</label>
+                    <input type="text" id="input-tag-1" class="form-control" placeholder="전문 분야 (예: 보험분석 전문가)">
+                </div>
+                <div>
+                    <label class="form-label">전문 분야 태그 2</label>
+                    <input type="text" id="input-tag-2" class="form-control" placeholder="전문 분야 (예: 보장 리모델링 컨설턴트)">
+                </div>
+            </div>
+
+            <div class="form-item">
+                <label class="form-label">슬로건 / 한 줄 소개</label>
+                <textarea id="input-slogan" class="form-control" placeholder="고객님께 전달할 슬로건 / 소개글을 입력해 주세요."></textarea>
+            </div>
+
+            
+                <div class="tab-nav-footer">
+                    <div></div>
+                    <button type="button" class="btn-tab-nav btn-tab-next" onclick="switchEditorTab('tab-brand')">
+                        다음: 브랜딩 & 스티커 <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 2: 브랜딩 & 스티커 (수식어, 강조명, 색상, 아이콘, 명함 스티커) -->
+            <div id="tab-brand" class="tab-pane">
+                <div class="tab-pane-header">
+                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i> 브랜드 타이틀 & 스티커 꾸미기</h3>
+                    <p class="tab-pane-desc">상단에 반짝이는 브랜드명 색상과 프로필 사진 위 감성 스티커를 꾸며보세요.</p>
+                </div>
+                <!-- 브랜드 타이틀 & 반짝이는 글자 설정 -->
             <div class="form-grid-2">
                 <div>
                     <label class="form-label">브랜드 앞 수식어 <span class="sub">(앞부분 텍스트)</span></label>
@@ -848,22 +1078,8 @@
             </div>
             <input type="hidden" id="input-brand-title" value="내 삶의 든든한 디지털 명함">
 
-            <div class="form-label">프로필 사진</div>
-            <div class="avatar-uploader-box">
-                <img id="avatar-preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 480' width='400' height='480'%3E%3Crect width='400' height='480' fill='%23F1F5F9'/%3E%3Ccircle cx='200' cy='180' r='75' fill='%23CBD5E1'/%3E%3Cpath d='M80 440 C80 320, 140 280, 200 280 C260 280, 320 320, 320 440 Z' fill='%23CBD5E1'/%3E%3Crect x='120' y='410' width='160' height='32' rx='16' fill='%230284C7'/%3E%3Ctext x='200' y='431' font-family='sans-serif' font-size='12' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3E%ED%94%84%EB%A1%9C%ED%95%84%20%EC%82%AC%EC%A7%84%20%EB%93%B1%EB%A1%9D%3C/text%3E%3C/svg%3E" class="avatar-thumb-preview" alt="프로필 미리보기" style="cursor:pointer;" title="클릭하여 사진 변경">
-                <div class="avatar-uploader-info">
-                    <button type="button" class="btn-upload-file" id="btn-trigger-upload" style="cursor:pointer;">
-                        <i class="fa-solid fa-camera"></i> 사진 업로드 (PC / 스마트폰)
-                    </button>
-                    <input type="file" id="file-avatar-input" accept="image/*" style="display:none;">
-                    <div style="font-size:11.5px; color:#64748b; margin-top:6px;">권장: 가로세로 비율이 정돈된 깔끔한 인물 사진</div>
-                    <div style="margin-top:10px;">
-                        <input type="text" id="input-avatar-url" class="form-control" style="font-size:12px; padding:8px 12px;" placeholder="또는 직접 이미지 URL 링크 입력">
-                    </div>
-                </div>
-            </div>
-
-            <!-- 스티커로 디지털 명함 꾸미기 -->
+            
+                <!-- 스티커로 디지털 명함 꾸미기 -->
             <div class="sticker-editor-box" style="background:#f8fafc; border:1px solid var(--border-color); border-radius:14px; padding:16px; margin-bottom:16px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <label class="form-label" style="margin-bottom:0; font-size:13.5px; font-weight:800; color:#0f172a;">
@@ -873,9 +1089,12 @@
                         전체 삭제
                     </button>
                 </div>
-                <p style="font-size:12px; color:#64748b; margin:0 0 12px 0; line-height:1.4;">
-                    추천 스티커를 클릭하거나, 직접 원하는 텍스트(예: VIP, 1위, 추천, 친절상담)를 입력하고 원하는 위치를 선택하여 배치해보세요!
-                </p>
+                <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 14px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-hand-pointer" style="color:#0284c7; font-size:16px;"></i>
+                    <div style="font-size:12.5px; color:#1e40af; line-height:1.4;">
+                        <strong>마우스로 자유 이동:</strong> 우측 스마트폰 화면의 스티커를 <strong>마우스로 꾹 잡고 드래그</strong>하면 원하는 위치 어디든 자유롭게 이동할 수 있습니다!
+                    </div>
+                </div>
 
                 <!-- 1. 추천 스티커 팔레트 -->
                 <div style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:6px;">
@@ -883,67 +1102,89 @@
                 </div>
                 <div class="sticker-preset-palette" id="sticker-preset-palette" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;"></div>
 
-                <!-- 2. 직접 텍스트 / 이모티콘 스티커 추가 도구 -->
-                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:14px;">
-                    <div style="font-size:11.5px; font-weight:700; color:#0284c7; margin-bottom:8px;">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> 나만의 텍스트 & 위치 지정 스티커 만들기
+                <!-- 2. 나만의 맞춤 텍스트 스티커 스튜디오 (폰트, 색상, 위치) -->
+                <div class="custom-sticker-studio" style="background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:16px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <span style="font-size:13px; font-weight:800; color:#0284c7; display:inline-flex; align-items:center; gap:6px;">
+                            <i class="fa-solid fa-paintbrush"></i> 나만의 텍스트 스티커 스튜디오
+                        </span>
+                        <span style="font-size:11.5px; color:#64748b;">폰트와 색상을 정해 나만의 뱃지를 만들어보세요</span>
                     </div>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                        <input type="text" id="input-custom-sticker-text" placeholder="문구 입력 (예: VIP, 1위, BEST, 🌸)" maxlength="8" style="flex:1; min-width:140px; padding:8px 12px; font-size:12.5px; border:1px solid #cbd5e1; border-radius:8px; outline:none;">
-                        <select id="select-custom-sticker-pos" style="padding:8px 10px; font-size:12px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; color:#334155; font-weight:600;">
-                            <option value="top-right">우측 상단 ↗</option>
-                            <option value="top-left">좌측 상단 ↖</option>
-                            <option value="bottom-right">우측 하단 ↘</option>
-                            <option value="bottom-left">좌측 하단 ↙</option>
-                            <option value="center-top">중앙 상단 ⬆</option>
-                            <option value="center-bottom">중앙 하단 ⬇</option>
-                        </select>
-                        <button type="button" id="btn-add-custom-sticker" style="padding:8px 14px; background:#0284c7; color:#fff; font-size:12px; font-weight:700; border:none; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                            <i class="fa-solid fa-plus"></i> 추가하기
+
+                    <!-- 1. 문구 입력 -->
+                    <div style="margin-bottom:12px;">
+                        <label class="form-label" style="font-size:12px; margin-bottom:4px;">스티커 문구 (최대 12자)</label>
+                        <input type="text" id="input-custom-sticker-text" placeholder="예: 👑 VIP, 🥇 1위, 든든한 파트너, 친절상담" maxlength="12" class="form-control" style="font-size:13px; padding:8px 12px;" value="👑 VIP" oninput="updateCustomStickerPreview()">
+                    </div>
+
+                    <!-- 2. 폰트 스타일 선택 -->
+                    <div style="margin-bottom:12px;">
+                        <label class="form-label" style="font-size:12px; margin-bottom:6px;">폰트 스타일</label>
+                        <div class="font-style-chips" style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button type="button" class="btn-font-chip active" data-font="sans" style="font-family:'Pretendard', sans-serif;" onclick="setStickerFont('sans')">깔끔 고딕</button>
+                            <button type="button" class="btn-font-chip" data-font="myeongjo" style="font-family:'Nanum Myeongjo', serif; font-weight:bold;" onclick="setStickerFont('myeongjo')">품격 명조</button>
+                            <button type="button" class="btn-font-chip" data-font="black" style="font-family:'Black Han Sans', sans-serif;" onclick="setStickerFont('black')">강렬 볼드</button>
+                            <button type="button" class="btn-font-chip" data-font="gaegu" style="font-family:'Gaegu', cursive; font-size:14px; font-weight:bold;" onclick="setStickerFont('gaegu')">감성 손글씨</button>
+                            <button type="button" class="btn-font-chip" data-font="pen" style="font-family:'Nanum Pen Script', cursive; font-size:15px;" onclick="setStickerFont('pen')">펜 필기체</button>
+                        </div>
+                    </div>
+
+                    <!-- 3. 색상 테마 선택 -->
+                    <div style="margin-bottom:14px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label class="form-label" style="font-size:12px; margin-bottom:0;">스티커 색상 테마</label>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:11px; color:#64748b;">직접 배색:</span>
+                                <label style="display:flex; align-items:center; gap:3px; font-size:11px; color:#475569;">
+                                    배경 <input type="color" id="input-sticker-bg-custom" value="#facc15" style="width:20px; height:20px; border:none; cursor:pointer; background:none;">
+                                </label>
+                                <label style="display:flex; align-items:center; gap:3px; font-size:11px; color:#475569;">
+                                    글자 <input type="color" id="input-sticker-color-custom" value="#0f172a" style="width:20px; height:20px; border:none; cursor:pointer; background:none;">
+                                </label>
+                            </div>
+                        </div>
+                        <div class="sticker-color-chips" id="sticker-color-chips" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+                    </div>
+
+                    <!-- 4. 실시간 스티커 미리보기 & 추가 버튼 바 -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:11.5px; font-weight:700; color:#64748b;">스티커 미리보기:</span>
+                            <div id="custom-sticker-live-badge" style="padding:6px 15px; border-radius:9999px; background:linear-gradient(135deg, #facc15, #eab308); color:#0f172a; border:2px solid #fef08a; font-size:13px; font-weight:900; box-shadow:0 4px 12px rgba(0,0,0,0.12); display:inline-flex; align-items:center; font-family:'Pretendard', sans-serif;">
+                                👑 VIP
+                            </div>
+                        </div>
+                        <button type="button" id="btn-add-custom-sticker" style="padding:9px 18px; background:#0284c7; color:#fff; font-size:13px; font-weight:800; border:none; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:0.2s;">
+                            <i class="fa-solid fa-plus"></i> 스티커 생성 & 부착하기
                         </button>
                     </div>
                 </div>
 
                 <!-- 3. 현재 부착된 스티커 목록 & 위치 조절 -->
                 <div style="font-size:11.5px; font-weight:700; color:#475569; margin-bottom:6px;">
-                    현재 부착된 스티커 (<span id="sticker-count-badge">0</span>/6) - 위치 변경 가능
+                    현재 부착된 스티커 (<span id="sticker-count-badge">0</span>/6) - 💡 우측 스마트폰 화면에서 마우스로 자유롭게 끌어다 옮길 수 있습니다
                 </div>
                 <div id="active-stickers-list" style="display:flex; flex-wrap:wrap; gap:8px; min-height:36px; align-items:center; background:#ffffff; border:1px dashed #cbd5e1; border-radius:10px; padding:8px 12px;"></div>
             </div>
 
-            <div class="form-grid-2" style="margin-top:16px;">
-                <div>
-                    <label class="form-label">설계사 성함 <span class="req">*</span></label>
-                    <input type="text" id="input-name" class="form-control" placeholder="성함을 입력해 주세요">
-                </div>
-                <div>
-                    <label class="form-label">직책 <span class="sub">(예: 지사장, 팀장, 수석FC)</span></label>
-                    <input type="text" id="input-job-title" class="form-control" placeholder="직책 입력">
-                </div>
-            </div>
-
-            <div class="form-item">
-                <label class="form-label">소속 회사 및 지점</label>
-                <input type="text" id="input-company" class="form-control" placeholder="소속 회사 및 지점 입력">
-            </div>
-
-            <div class="form-grid-2">
-                <div>
-                    <label class="form-label">전문 분야 태그 1</label>
-                    <input type="text" id="input-tag-1" class="form-control" placeholder="전문 분야 (예: 보험분석 전문가)">
-                </div>
-                <div>
-                    <label class="form-label">전문 분야 태그 2</label>
-                    <input type="text" id="input-tag-2" class="form-control" placeholder="전문 분야 (예: 보장 리모델링 컨설턴트)">
+            
+                <div class="tab-nav-footer">
+                    <button type="button" class="btn-tab-nav btn-tab-prev" onclick="switchEditorTab('tab-profile')">
+                        <i class="fa-solid fa-arrow-left"></i> 이전: 기본 프로필
+                    </button>
+                    <button type="button" class="btn-tab-nav btn-tab-next" onclick="switchEditorTab('tab-contact')">
+                        다음: 연락처 & SNS <i class="fa-solid fa-arrow-right"></i>
+                    </button>
                 </div>
             </div>
 
-            <div class="form-item">
-                <label class="form-label">슬로건 / 한 줄 소개</label>
-                <textarea id="input-slogan" class="form-control" placeholder="고객님께 전달할 슬로건 / 소개글을 입력해 주세요."></textarea>
-            </div>
-
-            <!-- 3. 다이렉트 연락처 및 SNS 연결 -->
+            <!-- TAB 3: 연락처 & SNS (전화번호, 인스타, 카톡, 홈페이지, 상담 시간) -->
+            <div id="tab-contact" class="tab-pane">
+                <div class="tab-pane-header">
+                    <h3><i class="fa-solid fa-phone-volume"></i> 다이렉트 연락처 및 SNS 연결</h3>
+                    <p class="tab-pane-desc">고객이 원클릭으로 전화, 문자, 카톡 상담을 진행할 수 있는 채널을 등록합니다.</p>
+                </div>
+                <!-- 3. 다이렉트 연락처 및 SNS 연결 -->
             <div class="section-header" style="margin-top:36px;">
                 <div>
                     <h3><i class="fa-solid fa-comments"></i> 다이렉트 연락처 및 SNS</h3>
@@ -983,7 +1224,42 @@
                 <textarea id="input-work-hours" class="form-control" placeholder="상담 가능 시간: 09:00 ~ 24:00 (연중무휴)&#10;부재중일 경우 문자나 오픈카카오톡을 남겨주시면 가장 신속히 보장 진단 및 피드백을 전달해 드리겠습니다."></textarea>
             </div>
 
-            <!-- 4. 감성 배경음악 (BGM 플레이어) -->
+            
+                <div class="tab-nav-footer">
+                    <button type="button" class="btn-tab-nav btn-tab-prev" onclick="switchEditorTab('tab-brand')">
+                        <i class="fa-solid fa-arrow-left"></i> 이전: 브랜딩 & 스티커
+                    </button>
+                    <button type="button" class="btn-tab-nav btn-tab-next" onclick="switchEditorTab('tab-consult')">
+                        다음: 상담 예약 & BGM <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 4: 상담 예약 & BGM (예약 알림 수신 이메일, 배경음악 설정) -->
+            <div id="tab-consult" class="tab-pane">
+                <div class="tab-pane-header">
+                    <h3><i class="fa-solid fa-calendar-check"></i> 간편 상담 예약 & 배경음악(BGM)</h3>
+                    <p class="tab-pane-desc">고객 상담 예약 접수 알림을 받을 이메일과 명함 분위기를 돋우는 배경음악을 설정합니다.</p>
+                </div>
+                <!-- 5. 고객 상담 예약 알림 설정 -->
+            <div class="section-header" style="margin-top:36px;">
+                <div>
+                    <h3><i class="fa-solid fa-bell"></i> 📩 고객 상담 예약 알림 설정</h3>
+                    <p class="section-desc">명함 방문자가 상담 예약을 신청하면 시스템 DB에 자동 누적되며 아래 이메일로 알림이 발송됩니다.</p>
+                </div>
+            </div>
+
+            <div class="form-item">
+                <label class="form-label">
+                    상담 예약 알림 수신 이메일 <span class="req">*</span> <span class="sub">(고객 예약 신청서가 이 메일로 자동 전송됩니다)</span>
+                </label>
+                <input type="email" id="input-consult-email" class="form-control" placeholder="예: your_email@naver.com">
+            </div>
+
+            
+
+            
+                <!-- 4. 감성 배경음악 (BGM 플레이어) -->
             <div class="section-header" style="margin-top:36px;">
                 <div>
                     <h3><i class="fa-solid fa-music"></i> 🎵 감성 배경음악 (BGM 플레이어)</h3>
@@ -1034,24 +1310,15 @@
                 </div>
             </div>
 
-            <!-- 5. 고객 상담 예약 알림 설정 -->
-            <div class="section-header" style="margin-top:36px;">
-                <div>
-                    <h3><i class="fa-solid fa-bell"></i> 📩 고객 상담 예약 알림 설정</h3>
-                    <p class="section-desc">명함 방문자가 상담 예약을 신청하면 시스템 DB에 자동 누적되며 아래 이메일로 알림이 발송됩니다.</p>
+            
+                <div class="tab-nav-footer">
+                    <button type="button" class="btn-tab-nav btn-tab-prev" onclick="switchEditorTab('tab-contact')">
+                        <i class="fa-solid fa-arrow-left"></i> 이전: 연락처 & SNS
+                    </button>
+                    <div></div>
                 </div>
             </div>
-
-            <div class="form-item">
-                <label class="form-label">
-                    상담 예약 알림 수신 이메일 <span class="req">*</span> <span class="sub">(고객 예약 신청서가 이 메일로 자동 전송됩니다)</span>
-                </label>
-                <input type="email" id="input-consult-email" class="form-control" placeholder="예: your_email@naver.com">
-            </div>
-
-            
-
-            <!-- 하단 저장 버튼 -->
+<!-- 하단 저장 버튼 -->
             <div style="margin-top:36px; padding-top:20px; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end;">
                 <button type="button" class="btn-save-primary" id="btn-save-bottom" style="padding:14px 32px; font-size:15px;">
                     <i class="fa-solid fa-cloud-arrow-up"></i> 변경사항 저장하기
@@ -1149,7 +1416,8 @@
                     selectedBrandColor = opt.hex;
                     document.getElementById('input-brand-color').value = opt.hex;
                     document.getElementById('input-brand-color-custom').value = opt.hex;
-                    initBrandColorPalette();
+                    initTabs();
+            initBrandColorPalette();
                     updateBrandBanner();
                     syncLivePreview();
                 });
@@ -1247,6 +1515,150 @@
         }
 
         // 3. 스티커 초기화 및 렌더링 (원클릭 토글 & 실시간 연동)
+        
+        // 스티커 스튜디오 프리셋 & 상태
+        const STICKER_COLOR_PRESETS = [
+            { id: 'gold', name: '로열 골드', bg: 'linear-gradient(135deg, #facc15, #eab308)', color: '#0f172a', border: '#fef08a' },
+            { id: 'blue', name: '오션 블루', bg: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', border: '#7dd3fc' },
+            { id: 'black', name: '올블랙', bg: '#0f172a', color: '#ffffff', border: '#475569' },
+            { id: 'pink', name: '로즈 핑크', bg: 'linear-gradient(135deg, #f43f5e, #e11d48)', color: '#ffffff', border: '#fecdd3' },
+            { id: 'green', name: '에메랄드', bg: 'linear-gradient(135deg, #10b981, #059669)', color: '#ffffff', border: '#a7f3d0' },
+            { id: 'orange', name: '선셋 오렌지', bg: 'linear-gradient(135deg, #f97316, #ea580c)', color: '#ffffff', border: '#fed7aa' },
+            { id: 'white', name: '퓨어 글래스', bg: 'rgba(255, 255, 255, 0.95)', color: '#0f172a', border: '#ffffff' },
+            { id: 'purple', name: '네온 바이올렛', bg: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', color: '#ffffff', border: '#ddd6fe' }
+        ];
+
+        let curStickerFont = 'sans';
+        let curStickerBg = STICKER_COLOR_PRESETS[0].bg;
+        let curStickerColor = STICKER_COLOR_PRESETS[0].color;
+        let curStickerBorder = STICKER_COLOR_PRESETS[0].border;
+
+        const STICKER_FONT_MAP = {
+            sans: "'Pretendard', sans-serif",
+            myeongjo: "'Nanum Myeongjo', serif",
+            black: "'Black Han Sans', sans-serif",
+            gaegu: "'Gaegu', cursive",
+            pen: "'Nanum Pen Script', cursive"
+        };
+
+        function updateCustomStickerPreview() {
+            const badge = document.getElementById('custom-sticker-live-badge');
+            const textInput = document.getElementById('input-custom-sticker-text');
+            if (!badge || !textInput) return;
+
+            const text = textInput.value.trim() || '스티커 문구';
+            badge.textContent = text;
+            badge.style.fontFamily = STICKER_FONT_MAP[curStickerFont] || STICKER_FONT_MAP.sans;
+            badge.style.background = curStickerBg;
+            badge.style.color = curStickerColor;
+            badge.style.borderColor = curStickerBorder;
+        }
+        window.updateCustomStickerPreview = updateCustomStickerPreview;
+
+        function setStickerFont(fontKey) {
+            curStickerFont = fontKey;
+            document.querySelectorAll('.btn-font-chip').forEach(btn => {
+                if (btn.getAttribute('data-font') === fontKey) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            updateCustomStickerPreview();
+        }
+        window.setStickerFont = setStickerFont;
+
+        function initCustomStickerStudio() {
+            // 폰트 선택 버튼 이벤트
+            document.querySelectorAll('.btn-font-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.btn-font-chip').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    curStickerFont = btn.getAttribute('data-font');
+                    updateCustomStickerPreview();
+                });
+            });
+
+            // 색상 테마 칩 생성
+            const colorWrap = document.getElementById('sticker-color-chips');
+            if (colorWrap) {
+                colorWrap.innerHTML = '';
+                STICKER_COLOR_PRESETS.forEach((preset, idx) => {
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'btn-sticker-color-chip' + (idx === 0 ? ' active' : '');
+                    chip.innerHTML = `<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${preset.bg}; margin-right:5px; box-shadow:0 1px 3px rgba(0,0,0,0.15);"></span>${preset.name}`;
+                    chip.addEventListener('click', () => {
+                        document.querySelectorAll('.btn-sticker-color-chip').forEach(c => c.classList.remove('active'));
+                        chip.classList.add('active');
+                        curStickerBg = preset.bg;
+                        curStickerColor = preset.color;
+                        curStickerBorder = preset.border;
+                        updateCustomStickerPreview();
+                    });
+                    colorWrap.appendChild(chip);
+                });
+            }
+
+            // 직접 컬러 피커 이벤트
+            const bgInput = document.getElementById('input-sticker-bg-custom');
+            const colorInput = document.getElementById('input-sticker-color-custom');
+            if (bgInput) {
+                bgInput.oninput = (e) => {
+                    curStickerBg = e.target.value;
+                    curStickerBorder = e.target.value;
+                    document.querySelectorAll('.btn-sticker-color-chip').forEach(c => c.classList.remove('active'));
+                    updateCustomStickerPreview();
+                };
+            }
+            if (colorInput) {
+                colorInput.oninput = (e) => {
+                    curStickerColor = e.target.value;
+                    document.querySelectorAll('.btn-sticker-color-chip').forEach(c => c.classList.remove('active'));
+                    updateCustomStickerPreview();
+                };
+            }
+
+            // 텍스트 입력 시 실시간 미리보기 갱신
+            const textInput = document.getElementById('input-custom-sticker-text');
+            if (textInput) {
+                textInput.addEventListener('input', updateCustomStickerPreview);
+            }
+
+            // 스티커 생성 & 부착 버튼 이벤트
+            const addBtn = document.getElementById('btn-add-custom-sticker');
+            if (addBtn && textInput) {
+                addBtn.onclick = () => {
+                    const text = textInput.value.trim();
+                    if (!text) {
+                        alert('스티커에 넣을 문구를 입력해 주세요.');
+                        textInput.focus();
+                        return;
+                    }
+                    if (selectedStickers.length >= 6) {
+                        alert('스티커는 최대 6개까지 부착할 수 있습니다.');
+                        return;
+                    }
+                    const spot = getNextAvailableSpot();
+                    selectedStickers.push({
+                        text: text,
+                        font: curStickerFont,
+                        bg: curStickerBg,
+                        color: curStickerColor,
+                        border: curStickerBorder,
+                        x: spot.x,
+                        y: spot.y,
+                        pos: "custom"
+                    });
+                    initStickersUi();
+                    syncLivePreview();
+                    showToast(`✨ '${text}' 스티커가 부착되었습니다! 우측 화면에서 마우스로 드래그해보세요.`);
+                };
+            }
+
+            updateCustomStickerPreview();
+        }
+
         function initStickersUi() {
             // 추천 스티커 팔레트
             const presetWrap = document.getElementById('sticker-preset-palette');
@@ -1312,18 +1724,25 @@
                     alert('스티커는 최대 6개까지 부착할 수 있습니다.');
                     return;
                 }
-                const targetPos = getNextAvailablePosition();
-                selectedStickers.push({ text: text, pos: targetPos });
+                const spot = getNextAvailableSpot();
+                selectedStickers.push({ text: text, x: spot.x, y: spot.y, pos: "custom" });
             }
             initStickersUi();
             syncLivePreview();
         }
 
-        function getNextAvailablePosition() {
-            const allPositions = ['top-right', 'top-left', 'bottom-right', 'bottom-left', 'center-top', 'center-bottom'];
-            const used = selectedStickers.map(s => s.pos);
-            const found = allPositions.find(p => !used.includes(p));
-            return found || allPositions[selectedStickers.length % allPositions.length];
+        const DEFAULT_MOUSE_SPOTS = [
+            { x: 80, y: 18 },
+            { x: 20, y: 18 },
+            { x: 80, y: 68 },
+            { x: 20, y: 68 },
+            { x: 50, y: 16 },
+            { x: 50, y: 70 }
+        ];
+
+        function getNextAvailableSpot() {
+            const spot = DEFAULT_MOUSE_SPOTS[selectedStickers.length % DEFAULT_MOUSE_SPOTS.length];
+            return { x: spot.x, y: spot.y };
         }
 
         function addSticker(text, pos = null) {
@@ -1331,8 +1750,8 @@
                 alert('스티커는 최대 6개까지 부착할 수 있습니다.');
                 return;
             }
-            const targetPos = pos || getNextAvailablePosition();
-            selectedStickers.push({ text: text, pos: targetPos });
+            const spot = getNextAvailableSpot();
+            selectedStickers.push({ text: text, x: spot.x, y: spot.y, pos: "custom" });
             initStickersUi();
             syncLivePreview();
         }
@@ -1346,52 +1765,79 @@
             listWrap.innerHTML = '';
 
             if (selectedStickers.length === 0) {
-                listWrap.innerHTML = '<span style="font-size:12px; color:#94a3b8;">부착된 스티커가 없습니다. 위의 추천 스티커를 클릭해보세요!</span>';
+                listWrap.innerHTML = '<span style="font-size:12px; color:#94a3b8;">부착된 스티커가 없습니다. 위의 추천 스티커를 클릭하거나 직접 만들어보세요!</span>';
                 return;
             }
 
             selectedStickers.forEach((st, idx) => {
                 const card = document.createElement('div');
                 card.className = 'active-sticker-card';
+                card.style.display = 'inline-flex';
+                card.style.alignItems = 'center';
+                card.style.gap = '6px';
+                card.style.background = '#f8fafc';
+                card.style.border = '1px solid #cbd5e1';
+                card.style.borderRadius = '9999px';
+                card.style.padding = '4px 10px 4px 6px';
 
-                const label = document.createElement('strong');
-                label.textContent = st.text;
-                label.style.marginRight = '4px';
+                // 미니 스티커 뱃지 표시
+                const badgePill = document.createElement('span');
+                badgePill.style.padding = '3px 10px';
+                badgePill.style.borderRadius = '9999px';
+                badgePill.style.fontSize = '12px';
+                badgePill.style.fontWeight = '850';
+                badgePill.style.display = 'inline-flex';
+                badgePill.style.alignItems = 'center';
 
-                const sel = document.createElement('select');
-                const posOptions = [
-                    { val: 'top-right', label: '우측 상단 ↗' },
-                    { val: 'top-left', label: '좌측 상단 ↖' },
-                    { val: 'bottom-right', label: '우측 하단 ↘' },
-                    { val: 'bottom-left', label: '좌측 하단 ↙' },
-                    { val: 'center-top', label: '중앙 상단 ⬆' },
-                    { val: 'center-bottom', label: '중앙 하단 ⬇' }
-                ];
-                posOptions.forEach(opt => {
-                    const o = document.createElement('option');
-                    o.value = opt.val;
-                    o.textContent = opt.label;
-                    if (st.pos === opt.val) o.selected = true;
-                    sel.appendChild(o);
-                });
-                sel.onchange = (e) => {
-                    st.pos = e.target.value;
-                    syncLivePreview();
-                };
+                if (st.bg) badgePill.style.background = st.bg;
+                else badgePill.style.background = '#ffffff';
 
+                if (st.color) badgePill.style.color = st.color;
+                else badgePill.style.color = '#0f172a';
+
+                if (st.border) badgePill.style.border = `1.5px solid ${st.border}`;
+                else badgePill.style.border = '1.5px solid #e2e8f0';
+
+                if (st.font && STICKER_FONT_MAP[st.font]) {
+                    badgePill.style.fontFamily = STICKER_FONT_MAP[st.font];
+                }
+
+                badgePill.textContent = st.text;
+
+                // 마우스 배치 안내 아이콘 뱃지
+                const posHint = document.createElement('span');
+                posHint.style.fontSize = '11px';
+                posHint.style.color = '#64748b';
+                posHint.style.fontWeight = '600';
+                if (st.x !== undefined && st.y !== undefined) {
+                    posHint.innerHTML = `<i class="fa-solid fa-arrows-up-down-left-right" style="color:#0284c7; margin-right:2px;"></i> ${st.x}%, ${st.y}%`;
+                    posHint.title = '마우스로 드래그하여 옮긴 위치입니다.';
+                } else {
+                    posHint.innerHTML = `<i class="fa-solid fa-hand-pointer" style="color:#0284c7; margin-right:2px;"></i> 드래그 이동`;
+                    posHint.title = '우측 스마트폰 화면에서 마우스로 잡고 원하는 위치로 옮겨보세요!';
+                }
+
+                // 삭제 버튼
                 const delBtn = document.createElement('button');
                 delBtn.type = 'button';
                 delBtn.className = 'btn-remove-sticker';
                 delBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
                 delBtn.title = '스티커 삭제';
+                delBtn.style.background = 'none';
+                delBtn.style.border = 'none';
+                delBtn.style.color = '#94a3b8';
+                delBtn.style.cursor = 'pointer';
+                delBtn.style.fontSize = '13px';
+                delBtn.style.padding = '0 2px';
+                delBtn.style.marginLeft = '4px';
                 delBtn.onclick = () => {
                     selectedStickers.splice(idx, 1);
                     initStickersUi();
                     syncLivePreview();
                 };
 
-                card.appendChild(label);
-                card.appendChild(sel);
+                card.appendChild(badgePill);
+                card.appendChild(posHint);
                 card.appendChild(delBtn);
                 listWrap.appendChild(card);
             });
@@ -1400,7 +1846,7 @@
         // 실시간 미리보기 동기화
         function syncLivePreview() {
             try {
-                const iframe = document.getElementById('live-preview-frame');
+                const iframe = document.getElementById('phone-preview-iframe') || document.getElementById('live-preview-frame');
                 if (!iframe || !iframe.contentWindow) return;
 
                 const getVal = (id) => {
@@ -1579,6 +2025,46 @@
             setTimeout(syncLivePreview, 400);
         }
 
+        // 탭 전환 기능
+        function switchEditorTab(tabId) {
+            const btns = document.querySelectorAll('.editor-tab-btn');
+            btns.forEach(btn => {
+                if (btn.getAttribute('data-tab') === tabId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            const panes = document.querySelectorAll('.tab-pane');
+            panes.forEach(pane => {
+                if (pane.id === tabId) {
+                    pane.classList.add('active');
+                } else {
+                    pane.classList.remove('active');
+                }
+            });
+
+            // 탭 변경 시 부드럽게 상단으로 스크롤 정돈
+            const card = document.querySelector('.editor-card');
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.switchEditorTab = switchEditorTab;
+
+        function initTabs() {
+            const btns = document.querySelectorAll('.editor-tab-btn');
+            btns.forEach(btn => {
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    const tabId = btn.getAttribute('data-tab');
+                    switchEditorTab(tabId);
+                };
+            });
+        }
+        window.initTabs = initTabs;
+
         async function initEditor() {
             let waitCount = 0;
             while (!window.sb && waitCount < 20) {
@@ -1645,8 +2131,23 @@
             }
         }
 
-        // 2. 아바타 이미지 압축 업로드 (로컬 즉시 반영 & Supabase 지원)
+        // 사진 업로드 트리거 및 파일 처리 함수 (전역)
+        function triggerAvatarFileInput() {
+            const fileInput = document.getElementById('file-avatar-input');
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+        window.triggerAvatarFileInput = triggerAvatarFileInput;
+
+        function handleAvatarFileSelect(input) {
+            if (!input || !input.files || !input.files[0]) return;
+            compressAndApplyImage(input.files[0]);
+        }
+        window.handleAvatarFileSelect = handleAvatarFileSelect;
+
         function compressAndApplyImage(file) {
+            if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
@@ -1682,14 +2183,13 @@
                     
                     // 우측 스마트폰 화면에 즉시 실시간 전송
                     syncLivePreview();
-                    showToast('📸 프로필 사진이 적용되었습니다!');
+                    showToast('📸 프로필 사진이 업로드되었습니다!');
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
 
-        // 사진 업로드 버튼 및 이미지 클릭 이벤트 확실하게 연결
         function initAvatarUploader() {
             const uploadBtn = document.getElementById('btn-trigger-upload');
             const fileInput = document.getElementById('file-avatar-input');
@@ -1709,6 +2209,7 @@
                 };
             }
         }
+        window.initAvatarUploader = initAvatarUploader;
 
         // 3. DB 또는 로컬 저장 로직
         async function saveCardSettings() {
@@ -1843,9 +2344,12 @@
 
         // 5. 초기 실행 & 전체 입력창 실시간 동기화
         document.addEventListener('DOMContentLoaded', () => {
+            initTabs();
             initBrandColorPalette();
             initBrandIconPalette();
             initStickersUi();
+            initCustomStickerStudio();
+            initAvatarUploader();
             initEditor();
 
             // 모든 폼 요소에 실시간 입력/변경 이벤트 연결
@@ -1862,6 +2366,29 @@
                     }
                     syncLivePreview();
                 });
+            });
+
+            
+            
+            // 스마트폰 화면에서 마우스로 스티커를 드래그 이동했을 때 좌표 수신
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'STICKER_DRAGGED') {
+                    const { index, x, y } = event.data;
+                    if (selectedStickers && selectedStickers[index]) {
+                        selectedStickers[index].x = x;
+                        selectedStickers[index].y = y;
+                        selectedStickers[index].pos = 'custom';
+                        renderActiveStickers();
+                        showToast(`🎯 스티커가 마우스 위치로 이동되었습니다! (${x}%, ${y}%)`);
+                    }
+                }
+            });
+
+            // 아이프레임이 준비 완료 신호를 보냈을 때 즉시 실시간 동기화
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'CARD_PREVIEW_READY') {
+                    syncLivePreview();
+                }
             });
 
             // 아이프레임 로드 완료 시 즉시 실시간 미리보기 동기화

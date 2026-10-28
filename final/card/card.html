@@ -10,7 +10,7 @@
     <!-- Lucide Icons & 실시간 화면 캡처 렌더링 엔진(html2canvas) Script Loader -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Black+Han+Sans&family=Gaegu:wght@700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -1175,6 +1175,12 @@
         
         
         window.__cardMessageListenerRegistered = true;
+        // Notify parent editor that card preview is ready
+        try {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'CARD_PREVIEW_READY' }, '*');
+            }
+        } catch(e) {}
         window.addEventListener('message', (event) => {
             if (event.data && event.data.type === 'UPDATE_CARD_PREVIEW') {
                 applyCardData(event.data.card);
@@ -1364,6 +1370,15 @@
             el.style.webkitTextFillColor = 'transparent';
         }
 
+        
+        const STICKER_FONT_MAP = {
+            sans: "'Pretendard', sans-serif",
+            myeongjo: "'Nanum Myeongjo', serif",
+            black: "'Black Han Sans', sans-serif",
+            gaegu: "'Gaegu', cursive",
+            pen: "'Nanum Pen Script', cursive"
+        };
+
         function renderStickers(stickers) {
             const container = document.getElementById('jibbitz-container');
             if (!container) return;
@@ -1374,10 +1389,14 @@
             list.slice(0, 6).forEach((item, idx) => {
                 let text = '';
                 let pos = defaultPositions[idx % defaultPositions.length];
+                let customX = null;
+                let customY = null;
 
                 if (typeof item === 'object' && item !== null) {
                     text = item.text || item.content || '';
                     pos = item.pos || item.position || pos;
+                    if (item.x !== undefined && item.x !== null) customX = parseFloat(item.x);
+                    if (item.y !== undefined && item.y !== null) customY = parseFloat(item.y);
                 } else if (typeof item === 'string') {
                     if (item.includes(':')) {
                         const parts = item.split(':');
@@ -1392,9 +1411,149 @@
 
                 const badge = document.createElement('div');
                 const isSingleEmoji = (Array.from(text).length <= 2 && /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u.test(text));
-                badge.className = `card-sticker-item ${isSingleEmoji ? 'card-sticker-emoji' : 'card-sticker-text'} card-sticker-pos-${pos}`;
+                badge.className = `card-sticker-item ${isSingleEmoji ? 'card-sticker-emoji' : 'card-sticker-text'}`;
+
+                // 커스텀 폰트 및 색상 적용
+                if (typeof item === 'object' && item !== null) {
+                    if (item.font && STICKER_FONT_MAP[item.font]) {
+                        badge.style.fontFamily = STICKER_FONT_MAP[item.font];
+                    }
+                    if (item.bg) {
+                        badge.style.background = item.bg;
+                    }
+                    if (item.color) {
+                        badge.style.color = item.color;
+                    }
+                    if (item.border) {
+                        badge.style.borderColor = item.border;
+                    }
+                }
+
+                if (customX !== null && customY !== null && !isNaN(customX) && !isNaN(customY)) {
+                    badge.style.left = customX + '%';
+                    badge.style.top = customY + '%';
+                    badge.style.right = 'auto';
+                    badge.style.bottom = 'auto';
+                    badge.style.transform = 'translate(-50%, -50%)';
+                } else {
+                    badge.classList.add(`card-sticker-pos-${pos}`);
+                }
+
                 badge.textContent = text;
-                badge.title = `스티커: ${text}`;
+                badge.title = `🖱️ 마우스로 드래그하여 원하는 위치로 옮겨보세요! (${text})`;
+                badge.style.cursor = 'grab';
+                badge.style.touchAction = 'none';
+
+                // ==========================================
+                // 마우스 드래그 앤 드롭 이동 이벤트
+                // ==========================================
+                badge.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const wrapper = document.querySelector('.large-profile-wrapper');
+                    if (!wrapper) return;
+                    
+                    const rect = wrapper.getBoundingClientRect();
+                    badge.style.cursor = 'grabbing';
+                    badge.style.animation = 'none';
+                    badge.style.zIndex = '9999';
+                    badge.style.transition = 'none';
+
+                    let curX = customX;
+                    let curY = customY;
+
+                    function onMouseMove(me) {
+                        me.preventDefault();
+                        let xp = ((me.clientX - rect.left) / rect.width) * 100;
+                        let yp = ((me.clientY - rect.top) / rect.height) * 100;
+                        xp = Math.max(5, Math.min(95, xp));
+                        yp = Math.max(5, Math.min(85, yp));
+
+                        badge.style.left = xp + '%';
+                        badge.style.top = yp + '%';
+                        badge.style.right = 'auto';
+                        badge.style.bottom = 'auto';
+                        badge.style.transform = 'translate(-50%, -50%)';
+                        curX = parseFloat(xp.toFixed(1));
+                        curY = parseFloat(yp.toFixed(1));
+                    }
+
+                    function onMouseUp(ue) {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                        badge.style.cursor = 'grab';
+                        badge.style.zIndex = '25';
+                        badge.style.transition = 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+                        if (curX !== null && curY !== null) {
+                            try {
+                                if (window.parent && window.parent !== window) {
+                                    window.parent.postMessage({
+                                        type: 'STICKER_DRAGGED',
+                                        index: idx,
+                                        x: curX,
+                                        y: curY
+                                    }, '*');
+                                }
+                            } catch(err) {}
+                        }
+                    }
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+
+                // ==========================================
+                // 모바일 터치 드래그 이동 이벤트
+                // ==========================================
+                badge.addEventListener('touchstart', function(e) {
+                    const touch = e.touches[0];
+                    const wrapper = document.querySelector('.large-profile-wrapper');
+                    if (!wrapper) return;
+                    const rect = wrapper.getBoundingClientRect();
+                    badge.style.animation = 'none';
+                    badge.style.zIndex = '9999';
+
+                    let curX = customX;
+                    let curY = customY;
+
+                    function onTouchMove(te) {
+                        const t = te.touches[0];
+                        let xp = ((t.clientX - rect.left) / rect.width) * 100;
+                        let yp = ((t.clientY - rect.top) / rect.height) * 100;
+                        xp = Math.max(5, Math.min(95, xp));
+                        yp = Math.max(5, Math.min(85, yp));
+                        badge.style.left = xp + '%';
+                        badge.style.top = yp + '%';
+                        badge.style.right = 'auto';
+                        badge.style.bottom = 'auto';
+                        badge.style.transform = 'translate(-50%, -50%)';
+                        curX = parseFloat(xp.toFixed(1));
+                        curY = parseFloat(yp.toFixed(1));
+                    }
+
+                    function onTouchEnd() {
+                        document.removeEventListener('touchmove', onTouchMove);
+                        document.removeEventListener('touchend', onTouchEnd);
+                        badge.style.zIndex = '25';
+                        if (curX !== null && curY !== null) {
+                            try {
+                                if (window.parent && window.parent !== window) {
+                                    window.parent.postMessage({
+                                        type: 'STICKER_DRAGGED',
+                                        index: idx,
+                                        x: curX,
+                                        y: curY
+                                    }, '*');
+                                }
+                            } catch(err) {}
+                        }
+                    }
+
+                    document.addEventListener('touchmove', onTouchMove, { passive: false });
+                    document.addEventListener('touchend', onTouchEnd);
+                }, { passive: true });
+
                 container.appendChild(badge);
             });
         }

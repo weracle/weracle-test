@@ -1995,11 +1995,14 @@
                 }
 
                 if (client) {
-                    const { data, error } = await client
-                        .from('profiles')
-                        .select('*')
-                        .or(`card_slug.eq.${slug},id.eq.${slug}`)
-                        .maybeSingle();
+                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+                    let profileQuery = client.from('profiles').select('*');
+                    if (isUuid) {
+                        profileQuery = profileQuery.or(`card_slug.eq.${slug},id.eq.${slug}`);
+                    } else {
+                        profileQuery = profileQuery.eq('card_slug', slug);
+                    }
+                    const { data, error } = await profileQuery.maybeSingle();
 
                     if (!error && data && data.card_data && Object.keys(data.card_data).length > 0) {
                         const raw = data.card_data || {};

@@ -1485,15 +1485,30 @@
         function getBaseCardUrl() {
             let origin = window.location.origin;
             if (!origin || origin === 'null' || window.location.protocol === 'file:') {
-                origin = 'https://weracle.kr';
+                origin = 'https://www.weraclelab.com';
             }
             return origin;
         }
 
-        // 도메인 접두사 세팅
+        // 실제 작동 보장되는 직통 카드 주소 생성 (어떤 하위폴더/호스팅에서도 100% 작동)
+        function getDirectCardUrl(slug) {
+            const clean = encodeURIComponent(slug || 'my');
+            try {
+                return new URL(`card.html?u=${clean}`, window.location.href).href;
+            } catch(e) {
+                return `${getBaseCardUrl()}/final/card/card.html?u=${clean}`;
+            }
+        }
+
+        // 도메인 접두사 세팅 (직접 연결 주소로 표시)
         const domainPrefixEl = document.getElementById('slug-domain-prefix');
         if (domainPrefixEl) {
-            domainPrefixEl.textContent = `${getBaseCardUrl()}/c/`;
+            try {
+                const u = new URL('card.html?u=', window.location.href);
+                domainPrefixEl.textContent = `${u.origin}${u.pathname}?u=`;
+            } catch(e) {
+                domainPrefixEl.textContent = `${getBaseCardUrl()}/final/card/card.html?u=`;
+            }
         }
 
         // 실시간 미리보기 아이프레임 업데이트
@@ -2695,7 +2710,7 @@
 
                 updatePreviewButtonUrl(cleanSlug);
                 syncLivePreview();
-                const shareUrl = `${getBaseCardUrl()}/c/${cleanSlug}`;
+                const shareUrl = getDirectCardUrl(cleanSlug);
                 showToast(`✨ 디지털 명함 설정이 안전하게 저장되었습니다!\n주소: ${shareUrl}`);
             } catch (err) {
                 console.error("Save error:", err);
@@ -2712,7 +2727,7 @@
         document.getElementById('btn-copy-card-link').addEventListener('click', () => {
             const slug = document.getElementById('input-card-slug').value.trim() || 'my';
             const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'my';
-            const fullUrl = `${getBaseCardUrl()}/c/${encodeURIComponent(cleanSlug)}`;
+            const fullUrl = getDirectCardUrl(cleanSlug);
             
             navigator.clipboard.writeText(fullUrl).then(() => {
                 showToast(`📋 명함 주소가 복사되었습니다!\n${fullUrl}\n\n고객에게 전송하여 모바일 명함을 공유하세요.`);

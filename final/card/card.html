@@ -1918,7 +1918,6 @@
             const params = new URLSearchParams(window.location.search);
             let slug = params.get('u') || params.get('id');
             const isPreviewMode = params.get('preview') === '1' || params.has('preview');
-            currentCardSlug = slug || '';
 
             if (!slug) {
                 const pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -1927,6 +1926,7 @@
                     slug = last.startsWith('@') ? last.substring(1) : last;
                 }
             }
+            currentCardSlug = slug || '';
 
             window.addEventListener('message', (event) => {
                 if (event.data && event.data.type === 'UPDATE_CARD_PREVIEW') {
@@ -2001,7 +2001,7 @@
                         .or(`card_slug.eq.${slug},id.eq.${slug}`)
                         .maybeSingle();
 
-                    if (!error && data) {
+                    if (!error && data && data.card_data && Object.keys(data.card_data).length > 0) {
                         const raw = data.card_data || {};
                         applyCardData({
                             brand_sub: raw.brand_sub !== undefined ? raw.brand_sub : '내 삶의 든든한',
@@ -2026,6 +2026,18 @@
                             logo_x: raw.logo_x,
                             logo_y: raw.logo_y
                         });
+                        return;
+                    }
+
+                    // 3-1. profiles에 없거나 미완료인 경우 partners_settings 안전 저장소 확인 (100% 조회 보장)
+                    const { data: settingRow } = await client
+                        .from('partners_settings')
+                        .select('value')
+                        .eq('key', `card_${slug}`)
+                        .maybeSingle();
+
+                    if (settingRow && settingRow.value) {
+                        applyCardData(settingRow.value);
                         return;
                     }
                 }

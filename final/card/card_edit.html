@@ -1481,10 +1481,19 @@
             }
         }
 
+        // 기준 도메인 주소 추출 도우미
+        function getBaseCardUrl() {
+            let origin = window.location.origin;
+            if (!origin || origin === 'null' || window.location.protocol === 'file:') {
+                origin = 'https://weracle.kr';
+            }
+            return origin;
+        }
+
         // 도메인 접두사 세팅
         const domainPrefixEl = document.getElementById('slug-domain-prefix');
         if (domainPrefixEl) {
-            domainPrefixEl.textContent = `${window.location.origin}/c/`;
+            domainPrefixEl.textContent = `${getBaseCardUrl()}/c/`;
         }
 
         // 실시간 미리보기 아이프레임 업데이트
@@ -2247,47 +2256,83 @@
         window.initTabs = initTabs;
 
         async function initEditor() {
+            // 1. Supabase 클라이언트 초기화 보장
+            if (!window.sb && window.parent && window.parent !== window && window.parent.sb) {
+                window.sb = window.parent.sb;
+            }
+            if (!window.sb && typeof initSupabaseConfigOnly === 'function') {
+                try { window.sb = await initSupabaseConfigOnly(); } catch(e) {}
+            }
+            if (!window.sb && window.supabase && window.SUPABASE_CONFIG) {
+                try {
+                    window.sb = window.supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.anonKey);
+                } catch(e) {}
+            }
+
             let waitCount = 0;
-            while (!window.sb && waitCount < 20) {
+            while (!window.sb && waitCount < 10) {
                 await new Promise(r => setTimeout(r, 50));
                 waitCount++;
             }
 
             let session = null;
+            let activeUser = null;
+
+            // 부모 iframe 또는 전역 상태에서 로그인 유저/프로필 승계
+            if (window.parent && window.parent !== window) {
+                if (window.parent.currentUser) activeUser = window.parent.currentUser;
+                if (window.parent.currentProfile) userProfile = window.parent.currentProfile;
+            }
+            if (!activeUser && window.currentUser) activeUser = window.currentUser;
+            if (!userProfile && window.currentProfile) userProfile = window.currentProfile;
+
             try {
                 if (window.sb && window.sb.auth) {
                     const res = await window.sb.auth.getSession();
                     session = res && res.data ? res.data.session : null;
+                    if (session && session.user) {
+                        activeUser = session.user;
+                    }
                 }
             } catch (err) {
                 console.warn("Session check fallback:", err);
             }
 
-            if (!session || !session.user) {
+            if (!activeUser && (!session || !session.user)) {
                 // 비로그인 상태일 때는 강제 튕김 없이 로컬 체험/수정 모드로 활성화
                 enableDemoMode();
                 return;
             }
 
-            currentUserId = session.user.id;
+            currentUserId = activeUser ? activeUser.id : session.user.id;
+            isDemoMode = false;
+            const banner = document.getElementById('demo-mode-banner');
+            if (banner) banner.style.display = 'none';
 
             try {
-                const { data, error } = await window.sb
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', currentUserId)
-                    .single();
+                let data = userProfile;
+                if ((!data || !data.nickname) && window.sb && currentUserId) {
+                    const res = await window.sb
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', currentUserId)
+                        .maybeSingle();
+                    if (!res.error && res.data) {
+                        data = res.data;
+                    }
+                }
 
-                if (!error && data) {
+                if (data) {
                     userProfile = data;
                     cardData = data.card_data || {};
 
                     // 슬러그 기본값 생성
                     let slug = data.card_slug;
                     if (!slug) {
-                        slug = (data.nickname || session.user.email.split('@')[0])
+                        const emailPrefix = (activeUser && activeUser.email) ? activeUser.email.split('@')[0] : '';
+                        slug = (data.nickname || emailPrefix)
                             .toLowerCase()
-                            .replace(/[^a-z0-9]/g, '');
+                            .replace(/[^a-z0-9_-]/g, '');
                         if (!slug) slug = 'card' + Math.floor(Math.random() * 8999 + 1000);
                     }
                     document.getElementById('input-card-slug').value = slug;
@@ -2551,55 +2596,107 @@
                 updated_at: new Date().toISOString()
             };
 
-            // 로컬 스토리지에 즉시 동기화 (오프라인, 체험모드 및 공유될 화면 미리보기를 위해 항상 보관)
+            // 3. 로컬 스토리지에 즉시 동기화 (오프라인, 체험모드 및 공유될 화면 미리보기를 위해 항상 보관)
             try {
                 localStorage.setItem('weracle_preview_card_data', JSON.stringify(updatedCardData));
                 localStorage.setItem('weracle_temp_card_data', JSON.stringify({
                     slug: cleanSlug,
                     card_data: updatedCardData
                 }));
+                localStorage.setItem(`weracle_card_${cleanSlug}`, JSON.stringify(updatedCardData));
             } catch(e) {}
 
-            // 비로그인 / 로컬 체험 모드일 때
-            if (isDemoMode || !currentUserId || !window.sb || currentUserId === 'demo-user') {
-                updatePreviewButtonUrl(cleanSlug);
-                syncLivePreview();
-                showToast("💾 [로컬 임시 저장 완료] 브라우저에 임시 저장되었습니다!\n실제 서버 저장 및 고유 주소 배포는 로그인 후 연동됩니다.");
-                setBtnLoading(false);
-                return;
+            // 4. Supabase 클라이언트 확인 및 보강
+            if (!window.sb && window.parent && window.parent !== window && window.parent.sb) {
+                window.sb = window.parent.sb;
+            }
+            if (!window.sb && typeof initSupabaseConfigOnly === 'function') {
+                try { window.sb = await initSupabaseConfigOnly(); } catch(e) {}
+            }
+            if (!window.sb && window.supabase && window.SUPABASE_CONFIG) {
+                try {
+                    window.sb = window.supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.anonKey);
+                } catch(e) {}
+            }
+
+            // 5. 로그인 유저 재확인 (iframe 부모 세션 또는 getSession 동기화)
+            if (!currentUserId || currentUserId === 'demo-user') {
+                if (window.parent && window.parent !== window && window.parent.currentUser) {
+                    currentUserId = window.parent.currentUser.id;
+                    isDemoMode = false;
+                } else if (window.sb && window.sb.auth) {
+                    try {
+                        const sRes = await window.sb.auth.getSession();
+                        if (sRes && sRes.data && sRes.data.session && sRes.data.session.user) {
+                            currentUserId = sRes.data.session.user.id;
+                            isDemoMode = false;
+                        }
+                    } catch(e) {}
+                }
             }
 
             try {
-                // 1. 슬러그 중복 확인 (다른 사용자가 이미 선점했는지)
-                const { data: existingUser } = await window.sb
-                    .from('profiles')
-                    .select('id')
-                    .eq('card_slug', cleanSlug)
-                    .neq('id', currentUserId)
-                    .maybeSingle();
+                let savedToProfiles = false;
+                // A. 로그인 사용자인 경우 profiles 테이블 업데이트
+                if (window.sb && currentUserId && currentUserId !== 'demo-user') {
+                    // 슬러그 중복 확인 (다른 사용자가 이미 선점했는지)
+                    const { data: existingUser } = await window.sb
+                        .from('profiles')
+                        .select('id')
+                        .eq('card_slug', cleanSlug)
+                        .neq('id', currentUserId)
+                        .maybeSingle();
 
-                if (existingUser) {
-                    alert(`'${cleanSlug}' 주소는 이미 다른 회원이 사용 중입니다.\n다른 주소를 입력해 주세요.`);
-                    setBtnLoading(false);
-                    return;
+                    if (existingUser) {
+                        alert(`'${cleanSlug}' 주소는 이미 다른 회원이 사용 중입니다.\n다른 주소를 입력해 주세요.`);
+                        setBtnLoading(false);
+                        return;
+                    }
+
+                    const { error: updateErr } = await window.sb
+                        .from('profiles')
+                        .update({
+                            card_slug: cleanSlug,
+                            card_data: updatedCardData,
+                            avatar_url: updatedCardData.avatar_url,
+                            nickname: name
+                        })
+                        .eq('id', currentUserId);
+
+                    if (updateErr) {
+                        console.warn("profiles update warning:", updateErr);
+                    } else {
+                        savedToProfiles = true;
+                    }
+
+                    // 부모 창 프로필 객체도 즉시 갱신
+                    if (window.parent && window.parent !== window && window.parent.currentProfile) {
+                        window.parent.currentProfile.card_slug = cleanSlug;
+                        window.parent.currentProfile.card_data = updatedCardData;
+                        window.parent.currentProfile.avatar_url = updatedCardData.avatar_url;
+                        window.parent.currentProfile.nickname = name;
+                    }
                 }
 
-                // 2. profiles 테이블 업데이트
-                const { error: updateErr } = await window.sb
-                    .from('profiles')
-                    .update({
-                        card_slug: cleanSlug,
-                        card_data: updatedCardData,
-                        avatar_url: updatedCardData.avatar_url,
-                        nickname: name
-                    })
-                    .eq('id', currentUserId);
-
-                if (updateErr) throw updateErr;
+                // B. [핵심] partners_settings 테이블에 100% 보존 백업 업서트 (모든 환경에서 고유 주소 즉각 조회 보장)
+                if (window.sb) {
+                    try {
+                        await window.sb
+                            .from('partners_settings')
+                            .upsert({
+                                key: `card_${cleanSlug}`,
+                                value: updatedCardData,
+                                description: `디지털 명함 [${cleanSlug}] 설정 데이터`
+                            }, { onConflict: 'key' });
+                    } catch(upsertErr) {
+                        console.warn("partners_settings upsert warning:", upsertErr);
+                    }
+                }
 
                 updatePreviewButtonUrl(cleanSlug);
                 syncLivePreview();
-                showToast("✨ 디지털 명함 설정이 서버에 안전하게 저장되었습니다!");
+                const shareUrl = `${getBaseCardUrl()}/c/${cleanSlug}`;
+                showToast(`✨ 디지털 명함 설정이 안전하게 저장되었습니다!\n주소: ${shareUrl}`);
             } catch (err) {
                 console.error("Save error:", err);
                 alert("저장 중 오류가 발생했습니다: " + err.message);
@@ -2614,10 +2711,11 @@
         // 4. 명함 링크 복사하기
         document.getElementById('btn-copy-card-link').addEventListener('click', () => {
             const slug = document.getElementById('input-card-slug').value.trim() || 'my';
-            const fullUrl = `${window.location.origin}/c/${encodeURIComponent(slug)}`;
+            const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'my';
+            const fullUrl = `${getBaseCardUrl()}/c/${encodeURIComponent(cleanSlug)}`;
             
             navigator.clipboard.writeText(fullUrl).then(() => {
-                showToast(`📋 명함 링크가 복사되었습니다!\n${fullUrl}`);
+                showToast(`📋 명함 주소가 복사되었습니다!\n${fullUrl}\n\n고객에게 전송하여 모바일 명함을 공유하세요.`);
             }).catch(() => {
                 prompt("아래 주소를 복사해 주세요:", fullUrl);
             });

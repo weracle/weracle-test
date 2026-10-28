@@ -66,6 +66,10 @@
                 <!-- LARGE PROFILE IMAGE CARD AT THE TOP -->
                 <div class="large-profile-wrapper">
                     <img id="planner-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 480' width='400' height='480'%3E%3Crect width='400' height='480' fill='%23F1F5F9'/%3E%3Ccircle cx='200' cy='180' r='75' fill='%23CBD5E1'/%3E%3Cpath d='M80 440 C80 320, 140 280, 200 280 C260 280, 320 320, 320 440 Z' fill='%23CBD5E1'/%3E%3Crect x='120' y='410' width='160' height='32' rx='16' fill='%230284C7'/%3E%3Ctext x='200' y='431' font-family='sans-serif' font-size='12' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3E%ED%94%84%EB%A1%9C%ED%95%84%20%EC%82%AC%EC%A7%84%20%EB%93%B1%EB%A1%9D%3C/text%3E%3C/svg%3E" class="large-profile-img" alt="프로필 이미지" crossorigin="anonymous">
+                    <!-- BRAND / COMPANY LOGO OVERLAY -->
+                    <div class="card-logo-overlay" id="card-logo-overlay" style="display:none;" title="🖱️ 마우스로 드래그하여 로고 위치를 이동해보세요!">
+                        <img id="card-logo-img" src="" alt="로고" draggable="false">
+                    </div>
                     <!-- CROCS JIBBITZ STICKERS LAYER -->
                     <div class="jibbitz-container" id="jibbitz-container"></div>
                 </div>
@@ -158,7 +162,7 @@
           실시간 이미지 캡처용 럭셔리 실물 명함 가상 템일릿 (Hidden Capture Frame - 세로형 idHAIR 스타일 버전)
           - 웹 명함에는 보이지 않으며, 다운로드 버튼을 누르는 순간 브라우저 내부 백그라운드 공간에서 구워지는 프리미엄 가상 템플릿입니다.
         -->
-        <div id="luxury-image-card-template" style="position: absolute; left: -9999px; top: -9999px; width: 480px; height: 780px; background-color: #F8FAFC; font-family: 'Pretendard', sans-serif; display: flex; flex-direction: column; align-items: stretch; border-radius: 0; box-shadow: none; z-index: -999; overflow: hidden; color: #0F172A; box-sizing: border-box; position: relative;">
+        <div id="luxury-image-card-template" style="display: none !important;">
             
             <!-- 1. Upper Section (Orange Background with Info & Avatar) -->
             <div style="height: 360px; background-color: #EA580C; padding: 96px 28px 24px 28px; box-sizing: border-box; display: flex; flex-direction: row; justify-content: space-between; align-items: flex-end; position: relative;">
@@ -345,14 +349,14 @@
         .premium-littly-card-root .app-container {
             width: 100%;
             max-width: 460px;
-            min-height: 100vh;
+            min-height: auto;
             background-color: var(--bg-body);
             display: flex;
             flex-direction: column;
             position: relative;
             box-shadow: 0 15px 50px rgba(0, 0, 0, 0.35); /* PC 화면에서 스마트폰 기기처럼 보이게 하는 고급스러운 외곽 섀도우 */
             transition: var(--transition-theme);
-            padding-bottom: 120px; /* 스크롤 숨통을 위한 하단 여백 */
+            padding-bottom: 24px;
             overflow-x: hidden;
             border-radius: 36px; /* PC에서는 둥근 모서리 스마트폰 느낌 */
             margin: 20px auto !important; /* 좌우 마진 auto 강제로 PC 정중앙 안착 보장 */
@@ -365,12 +369,15 @@
             .premium-littly-card-root {
                 align-items: flex-start;
                 background-color: var(--bg-body); /* 모바일은 빈 여백이 없으므로 배경색 일치 */
+                min-height: 100%;
             }
             .premium-littly-card-root .app-container {
                 max-width: 100%;
+                min-height: 100%;
                 border-radius: 0;
                 box-shadow: none;
                 margin: 0;
+                padding-bottom: 20px;
             }
         }
 
@@ -461,6 +468,41 @@
 
         .premium-littly-card-root .large-profile-wrapper:hover .large-profile-img {
             transform: scale(1.03);
+        }
+
+        /* Brand / Company Logo Overlay on Profile Image */
+        .premium-littly-card-root .card-logo-overlay {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            z-index: 30;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+            transition: box-shadow 0.15s ease;
+            max-width: 140px;
+        }
+
+        .premium-littly-card-root .card-logo-overlay:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .premium-littly-card-root .card-logo-overlay img {
+            max-width: 110px;
+            max-height: 42px;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
         }
 
         /* Profile Info Details Card */
@@ -853,14 +895,11 @@
             color: #4CAF50;
         }
 
-        /* 하단 고정 보험 상담 예약 버튼 프리미엄 레이아웃 & 스타일 */
+        /* 하단 보험 상담 예약 버튼 레이아웃 & 스타일 */
         .premium-littly-card-root .bottom-sticky-action {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 16px 20px 24px 20px;
-            background: linear-gradient(to top, #F6F5EF 75%, rgba(246, 245, 239, 0) 100%);
+            position: relative;
+            padding: 4px 20px 8px 20px;
+            background: transparent;
             z-index: 90;
         }
 
@@ -1558,6 +1597,120 @@
             });
         }
 
+        // ==========================================
+        // 회사 / 소속 로고 드래그 앤 드롭 이동 이벤트
+        // ==========================================
+        function initLogoDrag() {
+            const overlay = document.getElementById('card-logo-overlay');
+            if (!overlay || overlay.dataset.dragInitialized) return;
+            overlay.dataset.dragInitialized = 'true';
+
+            // 마우스 드래그
+            overlay.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const wrapper = document.querySelector('.large-profile-wrapper');
+                if (!wrapper) return;
+
+                const rect = wrapper.getBoundingClientRect();
+                overlay.style.cursor = 'grabbing';
+                overlay.style.zIndex = '9999';
+                overlay.style.transition = 'none';
+
+                let curX = null;
+                let curY = null;
+
+                function onMouseMove(me) {
+                    me.preventDefault();
+                    let xp = ((me.clientX - rect.left) / rect.width) * 100;
+                    let yp = ((me.clientY - rect.top) / rect.height) * 100;
+                    xp = Math.max(8, Math.min(92, xp));
+                    yp = Math.max(5, Math.min(85, yp));
+
+                    overlay.style.left = xp + '%';
+                    overlay.style.top = yp + '%';
+                    overlay.style.right = 'auto';
+                    overlay.style.bottom = 'auto';
+                    overlay.style.transform = 'translate(-50%, -50%)';
+                    curX = parseFloat(xp.toFixed(1));
+                    curY = parseFloat(yp.toFixed(1));
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    overlay.style.cursor = 'grab';
+                    overlay.style.zIndex = '30';
+                    overlay.style.transition = 'box-shadow 0.15s ease';
+
+                    if (curX !== null && curY !== null) {
+                        try {
+                            if (window.parent && window.parent !== window) {
+                                window.parent.postMessage({
+                                    type: 'LOGO_DRAGGED',
+                                    x: curX,
+                                    y: curY
+                                }, '*');
+                            }
+                        } catch(err) {}
+                    }
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            // 모바일 터치 드래그
+            overlay.addEventListener('touchstart', function(e) {
+                const wrapper = document.querySelector('.large-profile-wrapper');
+                if (!wrapper) return;
+                const rect = wrapper.getBoundingClientRect();
+                overlay.style.zIndex = '9999';
+                overlay.style.transition = 'none';
+
+                let curX = null;
+                let curY = null;
+
+                function onTouchMove(te) {
+                    const t = te.touches[0];
+                    let xp = ((t.clientX - rect.left) / rect.width) * 100;
+                    let yp = ((t.clientY - rect.top) / rect.height) * 100;
+                    xp = Math.max(8, Math.min(92, xp));
+                    yp = Math.max(5, Math.min(85, yp));
+
+                    overlay.style.left = xp + '%';
+                    overlay.style.top = yp + '%';
+                    overlay.style.right = 'auto';
+                    overlay.style.bottom = 'auto';
+                    overlay.style.transform = 'translate(-50%, -50%)';
+                    curX = parseFloat(xp.toFixed(1));
+                    curY = parseFloat(yp.toFixed(1));
+                }
+
+                function onTouchEnd() {
+                    document.removeEventListener('touchmove', onTouchMove);
+                    document.removeEventListener('touchend', onTouchEnd);
+                    overlay.style.zIndex = '30';
+                    overlay.style.transition = 'box-shadow 0.15s ease';
+
+                    if (curX !== null && curY !== null) {
+                        try {
+                            if (window.parent && window.parent !== window) {
+                                window.parent.postMessage({
+                                    type: 'LOGO_DRAGGED',
+                                    x: curX,
+                                    y: curY
+                                }, '*');
+                            }
+                        } catch(err) {}
+                    }
+                }
+
+                document.addEventListener('touchmove', onTouchMove, { passive: false });
+                document.addEventListener('touchend', onTouchEnd);
+            }, { passive: true });
+        }
+
         function applyCardData(card) {
             if (!card) return;
             currentCardData = Object.assign(currentCardData || {}, card);
@@ -1570,6 +1723,30 @@
 
             if (card.name) {
                 document.title = `${card.name} ${card.job_title || ''} | 디지털 명함`;
+            }
+
+            // 회사 / 소속 로고 렌더링
+            const logoOverlay = document.getElementById('card-logo-overlay');
+            const logoImg = document.getElementById('card-logo-img');
+            if (logoOverlay && logoImg) {
+                if (card.logo_url) {
+                    logoImg.src = card.logo_url;
+                    logoOverlay.style.display = 'inline-flex';
+                    if (card.logo_x !== undefined && card.logo_x !== null && card.logo_y !== undefined && card.logo_y !== null) {
+                        logoOverlay.style.left = card.logo_x + '%';
+                        logoOverlay.style.top = card.logo_y + '%';
+                        logoOverlay.style.transform = 'translate(-50%, -50%)';
+                    } else {
+                        // 기본값: 이미지 맨왼쪽 위쪽
+                        logoOverlay.style.left = '18px';
+                        logoOverlay.style.top = '18px';
+                        logoOverlay.style.transform = 'none';
+                    }
+                    initLogoDrag();
+                } else {
+                    logoOverlay.style.display = 'none';
+                    logoImg.src = '';
+                }
             }
 
             // 브랜드 타이틀 & 쉬머 반짝이 효과 렌더링
@@ -1701,6 +1878,7 @@
         async function loadCardData() {
             const params = new URLSearchParams(window.location.search);
             let slug = params.get('u') || params.get('id');
+            const isPreviewMode = params.get('preview') === '1' || params.has('preview');
             currentCardSlug = slug || '';
 
             if (!slug) {
@@ -1717,7 +1895,33 @@
                 }
             });
 
+            // 로컬스토리지에 저장된 미리보기 / 임시 데이터 확인
+            let localCardData = null;
+            try {
+                const previewStr = localStorage.getItem('weracle_preview_card_data');
+                const tempStr = localStorage.getItem('weracle_temp_card_data');
+                if (previewStr) {
+                    localCardData = JSON.parse(previewStr);
+                } else if (tempStr) {
+                    const parsed = JSON.parse(tempStr);
+                    localCardData = (parsed && parsed.card_data) ? parsed.card_data : parsed;
+                }
+            } catch(e) {
+                console.warn("[Card] Failed to parse local card data:", e);
+            }
+
+            // 1. 에디터에서 '공유될 화면 미리보기'를 누른 경우, 로컬 데이터를 즉시 최우선 적용
+            if (isPreviewMode && localCardData) {
+                applyCardData(localCardData);
+                return;
+            }
+
+            // 2. 주소(slug)가 없는 경우 로컬 데이터가 있으면 로드, 없으면 기본 견본 표시
             if (!slug) {
+                if (localCardData) {
+                    applyCardData(localCardData);
+                    return;
+                }
                 applyCardData({
                     brand_sub: "내 삶의 든든한",
                     brand_highlight: "디지털 명함",
@@ -1735,11 +1939,12 @@
                     website: "http://www.위라클.com",
                     website_label: "위라클",
                     work_hours: "상담 가능 시간: 09:00 ~ 24:00 (연중무휴)",
-                            avatar_url: DEFAULT_PLACEHOLDER_AVATAR
+                    avatar_url: DEFAULT_PLACEHOLDER_AVATAR
                 });
                 return;
             }
 
+            // 3. 주소(slug)가 있는 경우 Supabase 서버 조회
             try {
                 let client = window.sb;
                 if (!client && typeof initSupabaseConfigOnly === 'function') {
@@ -1777,7 +1982,10 @@
                             website: raw.website || data.website_url || 'http://www.위라클.com',
                             website_label: raw.website_label || '위라클',
                             work_hours: raw.work_hours || '상담 가능 시간: 09:00 ~ 24:00 (연중무휴)',
-                            avatar_url: raw.avatar_url || data.avatar_url || DEFAULT_PLACEHOLDER_AVATAR
+                            avatar_url: raw.avatar_url || data.avatar_url || DEFAULT_PLACEHOLDER_AVATAR,
+                            logo_url: raw.logo_url || data.logo_url || '',
+                            logo_x: raw.logo_x,
+                            logo_y: raw.logo_y
                         });
                         return;
                     }
@@ -1786,17 +1994,11 @@
                 console.warn("[Card] Load error:", err);
             }
 
-            // 로컬스토리지 임시 데이터가 있는지 확인 (로컬 테스트 및 체험 모드 지원)
-            try {
-                const localStr = localStorage.getItem('weracle_temp_card_data');
-                if (localStr) {
-                    const parsed = JSON.parse(localStr);
-                    if (parsed && parsed.card_data) {
-                        applyCardData(parsed.card_data);
-                        return;
-                    }
-                }
-            } catch(e) {}
+            // 4. Supabase 서버에 없거나 조회 실패 시 로컬 임시 데이터 적용 (체험 모드 및 로컬 저장본)
+            if (localCardData) {
+                applyCardData(localCardData);
+                return;
+            }
 
             applyCardData({
                 brand_title: "디지털 명함",
@@ -1811,12 +2013,16 @@
                 website: "http://www.위라클.com",
                 website_label: "위라클",
                 work_hours: "상담 가능 시간: 09:00 ~ 24:00 (연중무휴)",
-                            avatar_url: raw.avatar_url || data.avatar_url || DEFAULT_PLACEHOLDER_AVATAR
+                avatar_url: DEFAULT_PLACEHOLDER_AVATAR,
+                logo_url: '',
+                logo_x: null,
+                logo_y: null
             });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             loadCardData();
+            initLogoDrag();
             // Initiate Lucide Icons inside scoped root
             lucide.createIcons();
 

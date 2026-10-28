@@ -355,6 +355,85 @@
             color: var(--primary);
         }
 
+        /* Logo Uploader Block */
+        .logo-uploader-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: #f8fafc;
+            border: 1.5px dashed #cbd5e1;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .logo-uploader-box:hover {
+            border-color: #0284c7;
+            background: #f0f9ff;
+        }
+
+        .logo-thumb-wrapper {
+            width: 80px;
+            height: 64px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            padding: 4px;
+            transition: all 0.2s;
+        }
+
+        .logo-thumb-wrapper:hover {
+            border-color: #0284c7;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+        }
+
+        .logo-thumb-preview {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .logo-thumb-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .logo-uploader-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .btn-clear-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .btn-clear-logo:hover {
+            background: #fca5a5;
+            color: #b91c1c;
+        }
+
         /* Right Preview Sticky Column */
         .preview-sticky-col {
             position: sticky;
@@ -397,23 +476,24 @@
 
         /* Phone Mockup Frame */
         .phone-mockup-frame {
-            width: 440px;
-            height: 800px;
+            width: 400px;
+            height: 720px;
+            max-height: calc(100vh - 130px);
             background: #1E293B;
-            border-radius: 46px;
-            padding: 12px;
+            border-radius: 44px;
+            padding: 11px;
             box-shadow: 0 25px 60px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255,255,255,0.08);
             position: relative;
             box-sizing: border-box;
         }
 
         .phone-notch {
-            width: 140px;
-            height: 22px;
+            width: 120px;
+            height: 20px;
             background: #1E293B;
             border-radius: 0 0 14px 14px;
             position: absolute;
-            top: 12px;
+            top: 11px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 20;
@@ -904,8 +984,8 @@
             <button type="button" class="btn-action-outline" id="btn-copy-card-link">
                 <i class="fa-regular fa-clone"></i> 내 명함 주소 복사
             </button>
-            <a href="card.html" target="_blank" class="btn-action-outline" id="btn-open-preview" title="모바일 버전에서 보기">
-                <i class="fa-solid fa-mobile-screen-button"></i> 모바일 버전에서 보기
+            <a href="card.html?preview=1" target="_blank" class="btn-action-outline" id="btn-open-preview" title="공유될 화면 미리보기" onclick="handleOpenPreviewClick(event)">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> 공유될 화면 미리보기
             </a>
             <button type="button" class="btn-save-primary" id="btn-save-all">
                 <i class="fa-solid fa-cloud-arrow-up"></i> 저장하기
@@ -986,6 +1066,38 @@
                     <div style="font-size:11.5px; color:#64748b; margin-top:6px;">권장: 가로세로 비율이 정돈된 깔끔한 인물 사진 (자동 최적화)</div>
                     <div style="margin-top:10px;">
                         <input type="text" id="input-avatar-url" class="form-control" style="font-size:12px; padding:8px 12px;" placeholder="또는 직접 이미지 URL 링크 입력">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 소속 / 회사 로고 (프로필 사진 위에 마우스로 자유롭게 배치) -->
+            <div class="form-label" style="margin-top:18px; display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fa-solid fa-shield-halved" style="color:#0284c7;"></i> 소속 / 회사 로고 <span class="sub">(프로필 사진 위에 표시)</span></span>
+                <span style="font-size:11.5px; color:#0284c7; font-weight:600;"><i class="fa-solid fa-arrows-up-down-left-right"></i> 마우스로 위치 이동 가능</span>
+            </div>
+            <div class="logo-uploader-box">
+                <div class="logo-thumb-wrapper" style="cursor:pointer;" title="클릭하여 로고 이미지 업로드" onclick="triggerLogoFileInput()">
+                    <img id="logo-preview-img" src="" class="logo-thumb-preview" alt="로고 미리보기" style="display:none;">
+                    <div id="logo-placeholder" class="logo-thumb-placeholder">
+                        <i class="fa-solid fa-shield-halved" style="font-size:22px; color:#94a3b8; margin-bottom:4px;"></i>
+                        <span style="font-size:11px; font-weight:700; color:#64748b;">로고 등록</span>
+                    </div>
+                </div>
+                <div class="logo-uploader-info">
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="btn-upload-file" id="btn-trigger-logo-upload" style="cursor:pointer; flex:1;" onclick="triggerLogoFileInput()">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i> 로고 파일 업로드 (PNG 추천)
+                        </button>
+                        <button type="button" class="btn-clear-logo" id="btn-clear-logo" style="cursor:pointer;" onclick="clearLogo()" title="로고 제거">
+                            <i class="fa-solid fa-trash-can"></i> 삭제
+                        </button>
+                    </div>
+                    <input type="file" id="file-logo-input" accept="image/*" style="display:none;" onchange="handleLogoFileSelect(this)">
+                    <div style="font-size:11.5px; color:#64748b; margin-top:6px;">
+                        * 배경이 투명한 PNG 로고를 권장합니다. 기본 위치는 사진 맨 왼쪽 위입니다.
+                    </div>
+                    <div style="margin-top:8px;">
+                        <input type="text" id="input-logo-url" class="form-control" style="font-size:12px; padding:7px 12px;" placeholder="또는 직접 로고 이미지 URL 링크 입력" oninput="onLogoUrlInput(this.value)">
                     </div>
                 </div>
             </div>
@@ -1843,52 +1955,87 @@
             });
         }
 
+        // 현재 작성 중인 명함 데이터 수집
+        function collectCurrentCardData() {
+            const getVal = (id) => {
+                const el = document.getElementById(id);
+                return el ? el.value.trim() : '';
+            };
+
+            const getChecked = (id) => {
+                const el = document.getElementById(id);
+                return el ? el.checked : false;
+            };
+
+            const avatarUrl = getVal('input-avatar-url') || (document.getElementById('avatar-preview-img') ? document.getElementById('avatar-preview-img').src : '');
+            const logoUrl = getVal('input-logo-url') || currentLogoUrl || (document.getElementById('logo-preview-img') && document.getElementById('logo-preview-img').style.display !== 'none' ? document.getElementById('logo-preview-img').src : '');
+
+            return {
+                brand_sub: getVal('input-brand-sub'),
+                brand_highlight: getVal('input-brand-highlight') || '디지털 명함',
+                brand_color: selectedBrandColor || '#f97316',
+                brand_icon: selectedBrandIcon,
+                show_sparkle: selectedBrandIcon !== 'None',
+                brand_title: (getVal('input-brand-sub') ? getVal('input-brand-sub') + ' ' : '') + (getVal('input-brand-highlight') || '디지털 명함'),
+                stickers: Array.isArray(selectedStickers) ? [...selectedStickers] : [],
+                logo_url: logoUrl,
+                logo_x: currentLogoX,
+                logo_y: currentLogoY,
+                bgm: {
+                    enabled: getChecked('input-bgm-enabled'),
+                    type: getVal('select-bgm-type') || 'cafe',
+                    title: getVal('input-bgm-title') || '오늘의 추천 음악',
+                    youtube_url: getVal('input-bgm-youtube-url')
+                },
+                name: getVal('input-name') || '성함',
+                job_title: getVal('input-job-title'),
+                company: getVal('input-company'),
+                tags: [getVal('input-tag-1'), getVal('input-tag-2')].filter(Boolean),
+                slogan: getVal('input-slogan'),
+                phone: getVal('input-phone'),
+                instagram: getVal('input-instagram'),
+                kakao_talk: getVal('input-kakao'),
+                website: getVal('input-website'),
+                website_label: getVal('input-website-label'),
+                work_hours: getVal('input-work-hours'),
+                avatar_url: avatarUrl,
+                consult_email: getVal('input-consult-email')
+            };
+        }
+        window.collectCurrentCardData = collectCurrentCardData;
+
+        // 공유될 화면 미리보기 클릭 핸들러
+        function handleOpenPreviewClick(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            const cardData = collectCurrentCardData();
+            const slugInput = document.getElementById('input-card-slug');
+            const cleanSlug = slugInput ? slugInput.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') : '';
+
+            try {
+                localStorage.setItem('weracle_preview_card_data', JSON.stringify(cardData));
+                localStorage.setItem('weracle_temp_card_data', JSON.stringify({
+                    slug: cleanSlug,
+                    card_data: cardData
+                }));
+            } catch (err) {
+                console.warn('localStorage save failed in handleOpenPreviewClick:', err);
+            }
+
+            const targetUrl = cleanSlug ? `card.html?preview=1&u=${encodeURIComponent(cleanSlug)}` : `card.html?preview=1`;
+            window.open(targetUrl, '_blank');
+        }
+        window.handleOpenPreviewClick = handleOpenPreviewClick;
+
         // 실시간 미리보기 동기화
         function syncLivePreview() {
             try {
+                const previewData = collectCurrentCardData();
+                try {
+                    localStorage.setItem('weracle_preview_card_data', JSON.stringify(previewData));
+                } catch (e) {}
+
                 const iframe = document.getElementById('phone-preview-iframe') || document.getElementById('live-preview-frame');
                 if (!iframe || !iframe.contentWindow) return;
-
-                const getVal = (id) => {
-                    const el = document.getElementById(id);
-                    return el ? el.value.trim() : '';
-                };
-
-                const getChecked = (id) => {
-                    const el = document.getElementById(id);
-                    return el ? el.checked : false;
-                };
-
-                const avatarUrl = getVal('input-avatar-url') || (document.getElementById('avatar-preview-img') ? document.getElementById('avatar-preview-img').src : '');
-
-                const previewData = {
-                    brand_sub: getVal('input-brand-sub'),
-                    brand_highlight: getVal('input-brand-highlight') || '디지털 명함',
-                    brand_color: selectedBrandColor || '#f97316',
-                    brand_icon: selectedBrandIcon,
-                    show_sparkle: selectedBrandIcon !== 'None',
-                    brand_title: (getVal('input-brand-sub') ? getVal('input-brand-sub') + ' ' : '') + (getVal('input-brand-highlight') || '디지털 명함'),
-                    stickers: selectedStickers,
-                    bgm: {
-                        enabled: getChecked('input-bgm-enabled'),
-                        type: getVal('select-bgm-type') || 'cafe',
-                        title: getVal('input-bgm-title') || '오늘의 추천 음악',
-                        youtube_url: getVal('input-bgm-youtube-url')
-                    },
-                    name: getVal('input-name') || '성함',
-                    job_title: getVal('input-job-title'),
-                    company: getVal('input-company'),
-                    tags: [getVal('input-tag-1'), getVal('input-tag-2')].filter(Boolean),
-                    slogan: getVal('input-slogan'),
-                    phone: getVal('input-phone'),
-                    instagram: getVal('input-instagram'),
-                    kakao_talk: getVal('input-kakao'),
-                    website: getVal('input-website'),
-                    website_label: getVal('input-website-label'),
-                    work_hours: getVal('input-work-hours'),
-                    avatar_url: avatarUrl,
-                    consult_email: getVal('input-consult-email')
-                };
 
                 iframe.contentWindow.postMessage({
                     type: 'UPDATE_CARD_PREVIEW',
@@ -1978,6 +2125,23 @@
                 document.getElementById('avatar-preview-img').src = DEFAULT_PLACEHOLDER_AVATAR;
                 document.getElementById('input-avatar-url').value = '';
             }
+
+            // 로고 정보 로드
+            currentLogoUrl = cardData.logo_url || fallbackUser.logo_url || '';
+            currentLogoX = (cardData.logo_x !== undefined && cardData.logo_x !== null) ? cardData.logo_x : null;
+            currentLogoY = (cardData.logo_y !== undefined && cardData.logo_y !== null) ? cardData.logo_y : null;
+
+            const logoUrlInput = document.getElementById('input-logo-url');
+            if (logoUrlInput) logoUrlInput.value = currentLogoUrl;
+            const logoPreviewImg = document.getElementById('logo-preview-img');
+            const logoPlaceholder = document.getElementById('logo-placeholder');
+            if (currentLogoUrl) {
+                if (logoPreviewImg) { logoPreviewImg.src = currentLogoUrl; logoPreviewImg.style.display = 'block'; }
+                if (logoPlaceholder) logoPlaceholder.style.display = 'none';
+            } else {
+                if (logoPreviewImg) { logoPreviewImg.src = ''; logoPreviewImg.style.display = 'none'; }
+                if (logoPlaceholder) logoPlaceholder.style.display = 'flex';
+            }
         }
 
         function enableDemoMode() {
@@ -2000,6 +2164,9 @@
                 brand_icon: '✨',
                 show_sparkle: true,
                 stickers: ['👑', '🍀'],
+                logo_url: '',
+                logo_x: null,
+                logo_y: null,
                 bgm: { enabled: false, type: 'cafe', title: '잔잔한 카페 피아노' },
                 name: '홍길동',
                 job_title: '공인 보험 재정 플래너',
@@ -2127,9 +2294,108 @@
         function updatePreviewButtonUrl(slug) {
             const btn = document.getElementById('btn-open-preview');
             if (btn) {
-                btn.href = `card.html?u=${encodeURIComponent(slug)}`;
+                const clean = slug ? encodeURIComponent(slug) : '';
+                btn.href = clean ? `card.html?preview=1&u=${clean}` : `card.html?preview=1`;
             }
         }
+
+        // 회사 / 소속 로고 처리 함수들 (전역)
+        let currentLogoUrl = '';
+        let currentLogoX = null;
+        let currentLogoY = null;
+
+        function triggerLogoFileInput() {
+            const fileInput = document.getElementById('file-logo-input');
+            if (fileInput) fileInput.click();
+        }
+        window.triggerLogoFileInput = triggerLogoFileInput;
+
+        function handleLogoFileSelect(input) {
+            if (!input || !input.files || !input.files[0]) return;
+            compressAndApplyLogo(input.files[0]);
+        }
+        window.handleLogoFileSelect = handleLogoFileSelect;
+
+        function compressAndApplyLogo(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 360;
+                    const MAX_HEIGHT = 160;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+                        const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+                        width = Math.round(width * ratio);
+                        height = Math.round(height * ratio);
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, width, height);
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const logoDataUrl = canvas.toDataURL('image/png');
+                    currentLogoUrl = logoDataUrl;
+
+                    const previewImg = document.getElementById('logo-preview-img');
+                    const placeholder = document.getElementById('logo-placeholder');
+                    if (previewImg) {
+                        previewImg.src = logoDataUrl;
+                        previewImg.style.display = 'block';
+                    }
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
+                    }
+                    const logoUrlInput = document.getElementById('input-logo-url');
+                    if (logoUrlInput) logoUrlInput.value = logoDataUrl;
+
+                    syncLivePreview();
+                    showToast('🛡️ 회사 / 소속 로고가 등록되었습니다! 스마트폰 화면에서 마우스로 원하는 위치로 옮겨보세요.');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        window.compressAndApplyLogo = compressAndApplyLogo;
+
+        function onLogoUrlInput(val) {
+            val = (val || '').trim();
+            currentLogoUrl = val;
+            const previewImg = document.getElementById('logo-preview-img');
+            const placeholder = document.getElementById('logo-placeholder');
+            if (val) {
+                if (previewImg) { previewImg.src = val; previewImg.style.display = 'block'; }
+                if (placeholder) placeholder.style.display = 'none';
+            } else {
+                if (previewImg) { previewImg.src = ''; previewImg.style.display = 'none'; }
+                if (placeholder) placeholder.style.display = 'flex';
+            }
+            syncLivePreview();
+        }
+        window.onLogoUrlInput = onLogoUrlInput;
+
+        function clearLogo() {
+            currentLogoUrl = '';
+            currentLogoX = null;
+            currentLogoY = null;
+            const fileInput = document.getElementById('file-logo-input');
+            if (fileInput) fileInput.value = '';
+            const logoUrlInput = document.getElementById('input-logo-url');
+            if (logoUrlInput) logoUrlInput.value = '';
+            const previewImg = document.getElementById('logo-preview-img');
+            const placeholder = document.getElementById('logo-placeholder');
+            if (previewImg) { previewImg.src = ''; previewImg.style.display = 'none'; }
+            if (placeholder) placeholder.style.display = 'flex';
+            syncLivePreview();
+            showToast('🗑️ 로고가 제거되었습니다.');
+        }
+        window.clearLogo = clearLogo;
 
         // 사진 업로드 트리거 및 파일 처리 함수 (전역)
         function triggerAvatarFileInput() {
@@ -2268,19 +2534,24 @@
                 website_label: document.getElementById('input-website-label').value.trim(),
                 work_hours: document.getElementById('input-work-hours').value.trim(),
                 avatar_url: document.getElementById('input-avatar-url').value.trim() || (document.getElementById('avatar-preview-img') ? document.getElementById('avatar-preview-img').src : ''),
+                logo_url: currentLogoUrl || (document.getElementById('input-logo-url') ? document.getElementById('input-logo-url').value.trim() : '') || '',
+                logo_x: currentLogoX,
+                logo_y: currentLogoY,
                 consult_email: document.getElementById('input-consult-email').value.trim(),
                 updated_at: new Date().toISOString()
             };
 
+            // 로컬 스토리지에 즉시 동기화 (오프라인, 체험모드 및 공유될 화면 미리보기를 위해 항상 보관)
+            try {
+                localStorage.setItem('weracle_preview_card_data', JSON.stringify(updatedCardData));
+                localStorage.setItem('weracle_temp_card_data', JSON.stringify({
+                    slug: cleanSlug,
+                    card_data: updatedCardData
+                }));
+            } catch(e) {}
+
             // 비로그인 / 로컬 체험 모드일 때
             if (isDemoMode || !currentUserId || !window.sb || currentUserId === 'demo-user') {
-                try {
-                    localStorage.setItem('weracle_temp_card_data', JSON.stringify({
-                        slug: cleanSlug,
-                        card_data: updatedCardData
-                    }));
-                } catch(e) {}
-
                 updatePreviewButtonUrl(cleanSlug);
                 syncLivePreview();
                 showToast("💾 [로컬 임시 저장 완료] 브라우저에 임시 저장되었습니다!\n실제 서버 저장 및 고유 주소 배포는 로그인 후 연동됩니다.");
@@ -2370,7 +2641,7 @@
 
             
             
-            // 스마트폰 화면에서 마우스로 스티커를 드래그 이동했을 때 좌표 수신
+            // 스마트폰 화면에서 마우스로 스티커 및 로고를 드래그 이동했을 때 좌표 수신
             window.addEventListener('message', (event) => {
                 if (event.data && event.data.type === 'STICKER_DRAGGED') {
                     const { index, x, y } = event.data;
@@ -2381,6 +2652,12 @@
                         renderActiveStickers();
                         showToast(`🎯 스티커가 마우스 위치로 이동되었습니다! (${x}%, ${y}%)`);
                     }
+                }
+                if (event.data && event.data.type === 'LOGO_DRAGGED') {
+                    const { x, y } = event.data;
+                    currentLogoX = x;
+                    currentLogoY = y;
+                    showToast(`🎯 로고가 마우스 위치로 이동되었습니다! (${x}%, ${y}%)`);
                 }
             });
 

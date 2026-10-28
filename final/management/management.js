@@ -332,10 +332,18 @@ window.switchTab = function(tabKey) {
 // =========================================================
 // [1. 교육 스케줄 및 회사 스케줄]
 // =========================================================
-// [1. 교육 스케줄 및 회사 스케줄]
-// =========================================================
-let currentYear = 2026;
-let currentMonth = 10;
+// 오늘 날짜 반환 (YYYY-MM-DD 형식)
+function getTodayDateStr() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+const _initNow = new Date();
+let currentYear = _initNow.getFullYear();
+let currentMonth = _initNow.getMonth() + 1;
 let scheduleFilter = 'all';
 
 // 제휴 원수사 / 보험사 기본 목록 및 로컬 스토리지 연동
@@ -731,6 +739,10 @@ async function syncScheduleToSupabaseAndGoogle(item, action = 'create') {
 function initSchedule() {
   initSchedulesStorage();
   initGoogleCalSettings();
+  const admDateInput = document.getElementById('admSchedDate');
+  if (admDateInput) {
+    admDateInput.value = getTodayDateStr();
+  }
   renderScheduleTimeline();
   renderCalendar();
   renderUpcomingSchedules();
@@ -777,8 +789,9 @@ window.togglePastSchedules = function() {
 // [오늘 기준 세로형 타임라인 렌더링]
 // =========================================================
 function renderScheduleTimeline() {
-  const todayStr = '2026-10-17';
-  const todayDate = new Date(2026, 9, 17);
+  const todayStr = getTodayDateStr();
+  const now = new Date();
+  const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   // 필터 적용
   const filtered = sampleSchedules.filter(s => {
@@ -842,8 +855,12 @@ function renderScheduleTimeline() {
       `;
     } else {
       upcomingEvents.forEach(item => {
-        const parts = item.date.split('-');
+        if (!item.date) return;
+        const dateStr = item.date.split('T')[0].trim();
+        const parts = dateStr.split('-');
+        if (parts.length < 3) return;
         const itemDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        if (isNaN(itemDate.getTime())) return;
         const diffTime = itemDate.getTime() - todayDate.getTime();
         const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
         const isToday = diffDays === 0;
@@ -857,7 +874,7 @@ function renderScheduleTimeline() {
           <!-- 좌측 날짜 컬럼 -->
           <div class="timeline-date-col">
             <div class="dday-pill ${isToday ? 'today' : ''}">
-              ${isToday ? 'TODAY' : `D-${diffDays}`}
+              ${isToday ? 'TODAY' : diffDays > 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`}
             </div>
             <div class="date-big">${parts[1]}.${parts[2]}</div>
             <div class="date-dayname ${dayOfWeek === '일' ? 'sun' : dayOfWeek === '토' ? 'sat' : ''}">
@@ -888,7 +905,7 @@ function renderScheduleTimeline() {
               </button>
             ` : `
               <span class="timeline-dday-text">
-                ${diffDays}일 후 예정
+                ${diffDays > 0 ? `${diffDays}일 후 예정` : `${Math.abs(diffDays)}일 전`}
               </span>
             `}
           </div>
@@ -909,10 +926,13 @@ function renderScheduleTimeline() {
       pastListEl.innerHTML = `<div style="text-align:center; padding:18px; color:var(--text-muted); font-size:12px;">보관된 지난 일정이 없습니다.</div>`;
     } else {
       pastEvents.forEach(item => {
-        const parts = item.date.split('-');
+        if (!item.date) return;
+        const dateStr = item.date.split('T')[0].trim();
+        const parts = dateStr.split('-');
+        if (parts.length < 3) return;
         const itemDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
         const dayOfWeekNames = ['일', '월', '화', '수', '목', '금', '토'];
-        const dayOfWeek = dayOfWeekNames[itemDate.getDay()];
+        const dayOfWeek = isNaN(itemDate.getTime()) ? '' : dayOfWeekNames[itemDate.getDay()];
 
         const card = document.createElement('div');
         card.className = 'timeline-card is-past';
@@ -984,7 +1004,7 @@ function renderCalendar() {
 
   const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
   const lastDate = new Date(currentYear, currentMonth, 0).getDate();
-  const todayStr = '2026-10-17';
+  const todayStr = getTodayDateStr();
 
   for (let i = 0; i < firstDay; i++) {
     const emptyCell = document.createElement('div');

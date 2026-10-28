@@ -1275,6 +1275,125 @@ border-color: #a7f3d0;
 color: #065f46;
 }
 
+/* --- 통합 헤더 프로필 & 구글 스마트 연동 스타일 --- */
+.avatar-wrap {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+.avatar-sync-dot {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    box-sizing: content-box;
+    transition: all 0.2s ease;
+}
+.avatar-sync-dot.connected {
+    background-color: #10b981;
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.4);
+}
+.avatar-sync-dot.expired {
+    background-color: #ef4444;
+    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.4);
+    animation: pulse-red-dot 1.8s infinite;
+}
+@keyframes pulse-red-dot {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+    70% { transform: scale(1.15); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.google-alert-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    border-radius: 9999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.12);
+}
+.google-alert-pill-btn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    transform: translateY(-1px);
+}
+
+.dd-google-card {
+    margin: 10px 14px 6px 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+.dd-google-card.connected {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+}
+.dd-google-card.expired {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+.dd-google-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.dd-google-status-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 800;
+}
+.dd-google-card.connected .dd-google-status-title {
+    color: #15803d;
+}
+.dd-google-card.expired .dd-google-status-title {
+    color: #b91c1c;
+}
+.dd-google-timer {
+    font-size: 11px;
+    color: #16a34a;
+    font-weight: 700;
+}
+.dd-google-card-desc {
+    font-size: 11px;
+    line-height: 1.4;
+    color: #64748b;
+}
+.dd-google-card.expired .dd-google-card-desc {
+    color: #991b1b;
+}
+.dd-google-reconnect-btn {
+    border: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 750;
+    cursor: pointer;
+    background: #dc2626;
+    color: #ffffff;
+    transition: background 0.15s ease;
+    box-shadow: 0 1px 2px rgba(220, 38, 38, 0.2);
+}
+.dd-google-reconnect-btn:hover {
+    background: #b91c1c;
+}
+
 </style>
 <style id="navy-toss-theme">
 /* =========================================
@@ -2909,11 +3028,12 @@ transform: translateY(-2px);
                 <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 <span>전체메뉴</span>
             </button>
-            <div id="googleAuthUI" style="display:none; align-items: center; gap: 6px;">
-                <div id="googleStatusBadge" style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:9999px; font-size:12px; font-weight:600; background:#f8fafc; color:#475569; border:1px solid #e2e8f0; transition:all 0.2s; white-space:nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+            <!-- 구글 연동 스마트 알림 버튼 (만료 시에만 헤더에 노출) -->
+            <div id="googleAuthUI" style="display:none; align-items: center;">
+                <button type="button" id="googleHeaderAlertBtn" class="google-alert-pill-btn" onclick="triggerGoogleLogin(true)">
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="13" height="13">
-                    <span id="googleStatusText">구글 연동 확인중</span>
-                </div>
+                    <span id="googleAlertBtnText">⚠️ 구글 재연동</span>
+                </button>
             </div>
             <div class="pb-login-info" id="pbLoginInfo">
                 <button type="button" class="header-login-btn" onclick="openAuthModal('login')">
@@ -3378,6 +3498,10 @@ trySwitch();
             showDashboardHome();
           }
         }
+        if (typeof checkSession === 'function') checkSession();
+      }
+      if (event === 'SIGNED_OUT') {
+        if (typeof updateProfileUI === 'function') updateProfileUI(null, null);
       }
       if (event === 'SIGNED_IN' && session && session.provider_token) {
         try {
@@ -3865,6 +3989,20 @@ async function checkSession() {
             window.currentUser = data.session.user;
             wIsLoggedIn = true;
 
+            // OAuth 리다이렉트 후 브라우저 주소창의 긴 해시(#access_token=...) 깔끔하게 자동 정리
+            if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('provider_token'))) {
+                try {
+                    history.replaceState(null, '', window.location.pathname + window.location.search);
+                } catch(e) {}
+            }
+            if (window.top && window.top !== window) {
+                try {
+                    if (window.top.location.hash && (window.top.location.hash.includes('access_token') || window.top.location.hash.includes('provider_token'))) {
+                        window.top.history.replaceState(null, '', window.top.location.pathname + window.top.location.search);
+                    }
+                } catch(e) {}
+            }
+
             const currentMainFrame = document.getElementById('mainFrame');
             if (currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html')) {
                 if (typeof showDashboardHome === 'function') {
@@ -4113,172 +4251,172 @@ openAuthModal('login');
 
 window.updateProfileUI = updateProfileUI;
 function updateProfileUI(user, profile) {
-    // 1. 구글 연동 배너 업데이트 로직
     const authUI = document.getElementById('googleAuthUI');
-    const statusBadge = document.getElementById('googleStatusBadge');
-    const statusText = document.getElementById('googleStatusText');
-    if (authUI && statusBadge && statusText) {
-        if (!user) {
-            authUI.style.display = 'none';
-        } else {
-            authUI.style.display = 'inline-flex';
-            if (profile && profile.google_access_token) {
-                // 구글 연동 완료 상태 (클린 토스 네이비 스타일)
-                statusBadge.style.background = '#f0fdf4';
-                statusBadge.style.color = '#15803d';
-                statusBadge.style.border = '1px solid #bbf7d0';
-                statusBadge.style.borderRadius = '9999px';
-                statusBadge.style.padding = '4px 8px';
-                statusBadge.style.fontSize = '11.5px';
-                statusBadge.style.fontWeight = '600';
-                statusBadge.style.cursor = 'default';
-                statusBadge.onclick = null;
-                
-                // 타이머 설정 및 연장 버튼
-                if (window.googleTimerInterval) clearInterval(window.googleTimerInterval);
-                const updateTimer = () => {
-                    const savedTime = parseInt(localStorage.getItem('g_token_time') || '0', 10);
-                    const now = Date.now();
-                    const diffMs = (savedTime + 3600000) - now;
-                    if (diffMs > 0) {
-                        const m = Math.floor(diffMs / 60000).toString().padStart(2, '0');
-                        const s = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
-                        statusText.innerText = '구글 연동됨 (' + m + ':' + s + ')';
-                        statusBadge.style.background = '#f0fdf4';
-                        statusBadge.style.color = '#15803d';
-                        statusBadge.style.border = '1px solid #bbf7d0';
-                    } else {
-                        statusText.innerText = '구글 연동 만료';
-                        statusBadge.style.background = '#fef2f2';
-                        statusBadge.style.color = '#b91c1c';
-                        statusBadge.style.border = '1px solid #fecaca';
-                    }
-                };
-                updateTimer();
-                window.googleTimerInterval = setInterval(updateTimer, 1000);
-                
-                let btn = document.getElementById('googleConnectBtn');
-                if (!btn) {
-                    btn = document.createElement('button');
-                    btn.id = 'googleConnectBtn';
-                    authUI.appendChild(btn);
-                }
-                btn.innerText = '재연동';
-                btn.className = 'google-reconnect-pill-btn';
-                btn.style.cssText = 'background: #ffffff; border: 1px solid #cbd5e1; font-size: 11.5px; color: #475569; cursor: pointer; padding: 4px 10px; border-radius: 9999px; font-weight: 600; margin-left: 2px; transition: all 0.2s; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.04);';
-                btn.onmouseenter = () => { btn.style.background = '#f8fafc'; btn.style.borderColor = '#94a3b8'; btn.style.color = '#0f172a'; };
-                btn.onmouseleave = () => { btn.style.background = '#ffffff'; btn.style.borderColor = '#cbd5e1'; btn.style.color = '#475569'; };
-                btn.onclick = () => triggerGoogleLogin(true);
-
-            } else {
-                // 구글 연동 안 됨 상태
-                statusBadge.style.background = '#fef2f2';
-                statusBadge.style.color = '#b91c1c';
-                statusBadge.style.border = '1px solid #fecaca';
-                statusBadge.style.borderRadius = '9999px';
-                statusBadge.style.padding = '4px 10px';
-                statusBadge.style.fontSize = '12px';
-                statusBadge.style.fontWeight = '600';
-                statusBadge.style.cursor = 'default';
-                statusBadge.onclick = null;
-                statusText.innerText = '구글 연동 안됨';
-                
-                // 연동하기 버튼
-                let btn = document.getElementById('googleConnectBtn');
-                if (!btn) {
-                    btn = document.createElement('button');
-                    btn.id = 'googleConnectBtn';
-                    authUI.appendChild(btn);
-                }
-                btn.innerText = '연동하기';
-                btn.className = 'google-reconnect-pill-btn';
-                btn.style.cssText = 'background: #0284c7; border: 1px solid #0284c7; font-size: 11.5px; color: #ffffff; cursor: pointer; padding: 4px 12px; border-radius: 9999px; font-weight: 600; margin-left: 2px; transition: all 0.2s; white-space: nowrap; box-shadow: 0 1px 2px rgba(2,132,199,0.2);';
-                btn.onmouseenter = () => { btn.style.background = '#0369a1'; btn.style.borderColor = '#0369a1'; };
-                btn.onmouseleave = () => { btn.style.background = '#0284c7'; btn.style.borderColor = '#0284c7'; };
-                btn.onclick = () => triggerGoogleLogin(false);
-            }
-        }
-    }
-
     const pbLoginInfo = document.getElementById('pbLoginInfo');
     if (!pbLoginInfo) return;
 
-    if (user) {
-const displayName = (profile && profile.full_name) ? profile.full_name : (profile && profile.nickname ? profile.nickname : user.email.split('@')[0]);
-const grade = (profile && profile.user_grade) ? profile.user_grade : 'basic';
-let badgeStyle = 'badge-user';
-let label = '일반(basic)';
-if(grade === 'manager') { badgeStyle = 'badge-admin'; label = '관리자'; }
-else if(grade === 'premium') { badgeStyle = 'badge-pro'; label = '유료(premium)'; }
-else if(grade === 'family') { badgeStyle = 'badge-pro'; label = '위라클 식구'; }
-else { badgeStyle = 'badge-user'; label = '일반(basic)'; }
+    if (!user) {
+        if (window.googleTimerInterval) {
+            clearInterval(window.googleTimerInterval);
+            window.googleTimerInterval = null;
+        }
+        if (authUI) authUI.style.display = 'none';
+        pbLoginInfo.innerHTML = `
+            <button type="button" class="header-login-btn" onclick="event.stopPropagation(); openAuthModal('login');">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                <span>로그인</span>
+            </button>
+        `;
+        pbLoginInfo.onclick = null;
+        return;
+    }
 
-let avatarHtml = profile?.avatar_url 
-? `<img src="${profile.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" onerror="this.outerHTML='<svg viewBox=\'0 0 24 24\' width=\'60%\' height=\'60%\' fill=\'#9ca3af\'><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'">`
-: `<svg viewBox="0 0 24 24" width="60%" height="60%" fill="#9ca3af"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+    const displayName = (profile && profile.full_name) ? profile.full_name : (profile && profile.nickname ? profile.nickname : user.email.split('@')[0]);
+    const grade = (profile && profile.user_grade) ? profile.user_grade : 'basic';
+    let badgeStyle = 'badge-user';
+    let label = '일반(basic)';
+    if(grade === 'manager') { badgeStyle = 'badge-admin'; label = '관리자'; }
+    else if(grade === 'premium') { badgeStyle = 'badge-pro'; label = '유료(premium)'; }
+    else if(grade === 'family') { badgeStyle = 'badge-pro'; label = '위라클 식구'; }
+    else { badgeStyle = 'badge-user'; label = '일반(basic)'; }
 
-pbLoginInfo.innerHTML = `
-                <div style="width: 28px; height: 28px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; border: 1px solid #e5e7eb; flex-shrink: 0;">${avatarHtml}</div>
-                <span style="font-weight:700; color:#1f2937; white-space: nowrap;">${displayName}님</span>
-                <span class="user-email-preview" style="font-size:12px; color:#6b7280; font-weight:500; white-space: nowrap;">[ ${user.email.split('@')[0]} ]</span>
-                <span class="w-gate-badge ${badgeStyle}" style="margin-left:2px; padding:2px 8px; font-size:11px; border-radius:12px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">${label}</span>
-                <svg class="pb-login-arrow" style="width:14px;height:14px;color:#9ca3af;margin-left:2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                
-                <div class="pb-login-dropdown" id="pbLoginDropdown" onclick="event.stopPropagation();">
-                    <div style="padding: 18px 20px; display: flex; gap: 14px; align-items: center; background: #f8fafc; border-bottom: 1px solid #f1f5f9;">
-                        <div style="width: 46px; height: 46px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1.5px solid #e2e8f0; flex-shrink: 0; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">${avatarHtml}</div>
-                        <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-size: 14.5px; font-weight: 700; color: #0f172a; white-space: nowrap;">${displayName}님</span>
-                                <span class="w-gate-badge ${badgeStyle}" style="padding: 2px 7px; border-radius: 9999px; font-size: 10.5px; margin: 0; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 700;">${label}</span>
-                            </div>
-                            <div style="font-size: 12px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.email}</div>
-                        </div>
+    let avatarHtml = profile?.avatar_url 
+    ? `<img src="${profile.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" onerror="this.outerHTML='<svg viewBox=\'0 0 24 24\' width=\'60%\' height=\'60%\' fill=\'#9ca3af\'><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'">`
+    : `<svg viewBox="0 0 24 24" width="60%" height="60%" fill="#9ca3af"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+
+    // 구글 연동 상태 계산
+    const hasGoogleToken = !!(profile && profile.google_access_token);
+    const savedTime = parseInt(localStorage.getItem('g_token_time') || '0', 10);
+    const diffMs = (savedTime + 3600000) - Date.now();
+    const isGoogleConnected = hasGoogleToken && (diffMs > 0);
+
+    pbLoginInfo.innerHTML = `
+        <div class="avatar-wrap">
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; border: 1px solid #e5e7eb; overflow:hidden;">${avatarHtml}</div>
+            <div id="headerAvatarSyncDot" class="avatar-sync-dot ${isGoogleConnected ? 'connected' : 'expired'}" title="${isGoogleConnected ? '구글 시트 연동 정상' : '구글 연동 만료됨 (재연동 필요)'}"></div>
+        </div>
+        <span style="font-weight:700; color:#1f2937; white-space: nowrap;">${displayName}님</span>
+        <span class="user-email-preview" style="font-size:12px; color:#6b7280; font-weight:500; white-space: nowrap;">[ ${user.email.split('@')[0]} ]</span>
+        <span class="w-gate-badge ${badgeStyle}" style="margin-left:2px; padding:2px 8px; font-size:11px; border-radius:12px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">${label}</span>
+        <svg class="pb-login-arrow" style="width:14px;height:14px;color:#9ca3af;margin-left:2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        
+        <div class="pb-login-dropdown" id="pbLoginDropdown" onclick="event.stopPropagation();">
+            <div style="padding: 16px 20px 14px 20px; display: flex; gap: 14px; align-items: center; background: #f8fafc; border-bottom: 1px solid #f1f5f9;">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1.5px solid #e2e8f0; flex-shrink: 0; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">${avatarHtml}</div>
+                <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 14.5px; font-weight: 700; color: #0f172a; white-space: nowrap;">${displayName}님</span>
+                        <span class="w-gate-badge ${badgeStyle}" style="padding: 2px 7px; border-radius: 9999px; font-size: 10.5px; margin: 0; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 700;">${label}</span>
                     </div>
-                    <div style="padding: 6px 0;">
-                        <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='card/card_edit.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item" style="color:#0284c7; font-weight:750; background:#f0f9ff; border-radius:8px; margin:2px 8px;">
-                            <svg style="width:16px;height:16px;color:#0284c7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" stroke-width="2"/><circle cx="9" cy="10" r="2" stroke-width="2"/><line x1="15" y1="8" x2="17" y2="8" stroke-width="2"/><line x1="15" y1="12" x2="17" y2="12" stroke-width="2"/><line x1="7" y1="16" x2="17" y2="16" stroke-width="2"/></svg>
-                            <span>🪪 내 디지털 명함</span>
-                        </a>
-                        <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='login/myposts.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
-                            <svg style="width:16px;height:16px;color:#64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <span>내가 쓴 글</span>
-                        </a>
-                        <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openMyPageFromSidebar ? window.openMyPageFromSidebar() : alert('마이페이지 기능 준비중');" class="pb-dropdown-item">
-                            <svg style="width:16px;height:16px;color:#64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                            <span>마이페이지</span>
-                        </a>
-                        <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openLinkedGoogleSheet ? window.openLinkedGoogleSheet() : alert('연동된 시트 기능 준비중');" class="pb-dropdown-item">
-                            <svg style="width:16px;height:16px;color:#10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"></path></svg>
-                            <span>연동된 시트 보기</span>
-                        </a>
-                        <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.loginToWeracleTalk ? window.loginToWeracleTalk() : alert('로그인 기능 준비중');" class="pb-dropdown-item" style="color: #0284c7;">
-                            <svg style="width:16px;height:16px;color:#0284c7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                            <span>위라클톡 PC앱 로그인</span>
-                        </a>
+                    <div style="font-size: 12px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.email}</div>
+                </div>
+            </div>
+
+            <!-- 드롭다운 내부 구글 시트 연동 전용 카드 -->
+            <div id="dropdownGoogleSyncCard" class="dd-google-card ${isGoogleConnected ? 'connected' : 'expired'}">
+                <div class="dd-google-card-header">
+                    <div class="dd-google-status-title">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="14" height="14">
+                        <span id="ddGoogleStatusTitleText">${isGoogleConnected ? '구글 시트 연동 정상' : '구글 연동 만료됨'}</span>
                     </div>
-                    <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
-                    <div style="padding: 0 0 4px 0;">
-                        <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); handleLogout();" class="pb-dropdown-item logout" style="color: #ef4444;">
-                            <svg style="width:16px;height:16px;stroke:#ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                            <span>로그아웃</span>
-                        </a>
+                    <div id="ddGoogleActionSlot">
+                        ${isGoogleConnected 
+                            ? `<span class="dd-google-timer" id="ddGoogleTimerText">--:--</span>` 
+                            : `<button type="button" class="dd-google-reconnect-btn" onclick="event.stopPropagation(); triggerGoogleLogin(true);">1초 재연동</button>`}
                     </div>
                 </div>
-            `;
+                <div class="dd-google-card-desc" id="ddGoogleDescText">
+                    ${isGoogleConnected ? '고객 및 스케줄 데이터가 실시간 자동 백업 중입니다.' : '연동이 만료되어도 위라클 로그인은 안전하게 유지됩니다.'}
+                </div>
+            </div>
+
+            <div style="padding: 6px 0;">
+                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='card/card_edit.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item" style="color:#0284c7; font-weight:750; background:#f0f9ff; border-radius:8px; margin:2px 8px;">
+                    <svg style="width:16px;height:16px;color:#0284c7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" stroke-width="2"/><circle cx="9" cy="10" r="2" stroke-width="2"/><line x1="15" y1="8" x2="17" y2="8" stroke-width="2"/><line x1="15" y1="12" x2="17" y2="12" stroke-width="2"/><line x1="7" y1="16" x2="17" y2="16" stroke-width="2"/></svg>
+                    <span>🪪 내 디지털 명함</span>
+                </a>
+                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='login/myposts.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
+                    <svg style="width:16px;height:16px;color:#64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>내가 쓴 글</span>
+                </a>
+                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openMyPageFromSidebar ? window.openMyPageFromSidebar() : alert('마이페이지 기능 준비중');" class="pb-dropdown-item">
+                    <svg style="width:16px;height:16px;color:#64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    <span>마이페이지</span>
+                </a>
+                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openLinkedGoogleSheet ? window.openLinkedGoogleSheet() : alert('연동된 시트 기능 준비중');" class="pb-dropdown-item">
+                    <svg style="width:16px;height:16px;color:#10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"></path></svg>
+                    <span>연동된 시트 보기</span>
+                </a>
+                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.loginToWeracleTalk ? window.loginToWeracleTalk() : alert('로그인 기능 준비중');" class="pb-dropdown-item" style="color: #0284c7;">
+                    <svg style="width:16px;height:16px;color:#0284c7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    <span>위라클톡 PC앱 로그인</span>
+                </a>
+            </div>
+            <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
+            <div style="padding: 0 0 4px 0;">
+                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); handleLogout();" class="pb-dropdown-item logout" style="color: #ef4444;">
+                    <svg style="width:16px;height:16px;stroke:#ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span>로그아웃</span>
+                </a>
+            </div>
+        </div>
+    `;
+
     pbLoginInfo.onclick = function(e) {
         e.stopPropagation();
         this.classList.toggle('open');
     };
-} else {
-pbLoginInfo.innerHTML = `
-                <button type="button" class="header-login-btn" onclick="event.stopPropagation(); openAuthModal('login');">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                    <span>로그인</span>
-                </button>
-            `;
-pbLoginInfo.onclick = function() { openAuthModal('login'); };
-}
+
+    // 실시간 동기화 타이머 & 스마트 알림 제어 루프
+    if (window.googleTimerInterval) clearInterval(window.googleTimerInterval);
+    const syncGoogleStatusTick = () => {
+        if (!window.currentUser) return;
+        const curProfile = window.currentProfile;
+        const hasToken = !!(curProfile && curProfile.google_access_token);
+        const sTime = parseInt(localStorage.getItem('g_token_time') || '0', 10);
+        const diff = (sTime + 3600000) - Date.now();
+        const active = hasToken && (diff > 0);
+
+        // 1. 헤더 아바타 상태등(점) 동기화
+        const dot = document.getElementById('headerAvatarSyncDot');
+        if (dot) {
+            dot.className = 'avatar-sync-dot ' + (active ? 'connected' : 'expired');
+            dot.title = active ? '구글 시트 연동 정상' : '구글 연동 만료됨 (재연동 필요)';
+        }
+
+        // 2. 헤더 스마트 알림 버튼 (연동 만료 시에만 헤더에 나타남)
+        if (authUI) {
+            authUI.style.display = active ? 'none' : 'inline-flex';
+            const alertText = document.getElementById('googleAlertBtnText');
+            if (alertText) {
+                alertText.innerText = hasToken ? '⚠️ 구글 재연동' : '구글 연동하기';
+            }
+        }
+
+        // 3. 드롭다운 내부 구글 카드 동기화
+        const ddCard = document.getElementById('dropdownGoogleSyncCard');
+        const titleEl = document.getElementById('ddGoogleStatusTitleText');
+        const actionSlot = document.getElementById('ddGoogleActionSlot');
+        const descEl = document.getElementById('ddGoogleDescText');
+
+        if (ddCard && titleEl && actionSlot && descEl) {
+            if (active) {
+                ddCard.className = 'dd-google-card connected';
+                titleEl.innerText = '구글 시트 동기화 정상';
+                const mm = Math.floor(diff / 60000).toString().padStart(2, '0');
+                const ss = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                actionSlot.innerHTML = `<span class="dd-google-timer" id="ddGoogleTimerText">${mm}:${ss} 남음</span>`;
+                descEl.innerText = '고객 및 스케줄 데이터가 실시간 자동 백업 중입니다.';
+            } else {
+                ddCard.className = 'dd-google-card expired';
+                titleEl.innerText = hasToken ? '구글 연동 만료됨' : '구글 연동 안됨';
+                actionSlot.innerHTML = `<button type="button" class="dd-google-reconnect-btn" onclick="event.stopPropagation(); triggerGoogleLogin(true);">1초 재연동</button>`;
+                descEl.innerText = '연동이 만료되어도 위라클 로그인은 안전하게 유지됩니다.';
+            }
+        }
+    };
+    syncGoogleStatusTick();
+    window.googleTimerInterval = setInterval(syncGoogleStatusTick, 1000);
 
 // 모바일 메뉴 시트 로그인 배너 동기화
 const mBanner = document.getElementById('mobileAuthBanner');

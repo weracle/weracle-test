@@ -39,6 +39,10 @@ return originalWindowAdd.call(this, type, listener, options);
 <script>
 window.addEventListener('message', (event) => {
 if (!event.data) return;
+if (event.data.type === 'ALERT' || event.data.type === 'SHOW_ALERT') {
+    window.showWeracleAlert(event.data.message || event.data.msg, { type: event.data.alertType || event.data.type });
+    return;
+}
 if (event.data.type === 'AUTH_LOGIN') {
 window.sb.auth.signInWithPassword({ email: event.data.email, password: event.data.password })
 .then(({error}) => {
@@ -1084,16 +1088,17 @@ box-shadow: 0 2px 8px rgba(30, 92, 148, 0.25);
     position: absolute;
     top: calc(100% + 10px);
     right: 0;
-    width: 280px;
+    width: 300px;
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
+    border-radius: 18px;
     box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.16), 0 8px 16px -4px rgba(15, 23, 42, 0.08);
     display: none;
     flex-direction: column;
     z-index: 9999 !important;
     overflow: hidden;
-    padding-bottom: 8px;
+    padding: 8px;
+    box-sizing: border-box;
     animation: pbDropdownSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes pbDropdownSlide {
@@ -1109,25 +1114,207 @@ box-shadow: 0 2px 8px rgba(30, 92, 148, 0.25);
 .pb-login-info.open .pb-login-dropdown {
     display: flex !important;
 }
+
+/* 통일된 일관 드롭다운 아이템 (패딩 이동 없이 글자 튀어나감 완전 방지) */
 .pb-dropdown-item {
-    padding: 11px 20px;
-    font-size: 13.5px;
+    padding: 8px 10px;
+    font-size: 13px;
     font-weight: 600;
     color: #334155;
     text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 12px;
-    transition: all 0.18s ease;
+    justify-content: space-between;
+    border-radius: 9px;
+    transition: all 0.15s ease;
     border-bottom: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    margin: 1px 0;
 }
 .pb-dropdown-item:hover {
-    background: #f8fafc;
-    color: #0284c7;
-    padding-left: 23px;
+    background: #f1f5f9;
+    color: #0f172a;
 }
-.pb-dropdown-item:last-child {
-    border-bottom: none;
+.pb-dropdown-item.logout {
+    color: #ef4444;
+}
+.pb-dropdown-item.logout:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.dd-item-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+.dd-icon-box {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+.pb-dropdown-item:hover .dd-icon-box {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+.dd-icon-box.blue { background: #e0f2fe; color: #0284c7; }
+.dd-icon-box.green { background: #ecfdf5; color: #059669; }
+.dd-icon-box.sky { background: #e0f7fa; color: #00838f; }
+.dd-icon-box.red { background: #fef2f2; color: #ef4444; }
+.pb-dropdown-item.logout:hover .dd-icon-box.red { background: #fee2e2; color: #dc2626; }
+
+.dd-item-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.dd-item-badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 1.5px 6px;
+    border-radius: 6px;
+    background: #e0f2fe;
+    color: #0284c7;
+}
+.dd-section-label {
+    font-size: 10.5px;
+    font-weight: 750;
+    color: #94a3b8;
+    padding: 5px 8px 3px 8px;
+    letter-spacing: -0.2px;
+}
+.dd-divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 4px 2px;
+}
+
+/* 위라클 프리미엄 커스텀 모달 스타일 */
+.w-custom-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999999;
+    background: rgba(15, 23, 42, 0.48);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.w-custom-modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+.w-custom-modal-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 350px;
+    border-radius: 22px;
+    padding: 28px 24px 22px 24px;
+    text-align: center;
+    box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(226, 232, 240, 0.85);
+    transform: translateY(14px) scale(0.95);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.22s ease;
+}
+.w-custom-modal-overlay.active .w-custom-modal-card {
+    transform: translateY(0) scale(1);
+}
+.w-custom-modal-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    margin: 0 auto 16px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+.w-custom-modal-icon.success {
+    background: #ecfdf5;
+    color: #059669;
+    border: 2px solid #a7f3d0;
+}
+.w-custom-modal-icon.info {
+    background: #f0f9ff;
+    color: #0284c7;
+    border: 2px solid #bae6fd;
+}
+.w-custom-modal-icon.warning {
+    background: #fffbeb;
+    color: #d97706;
+    border: 2px solid #fde68a;
+}
+.w-custom-modal-icon.error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 2px solid #fecaca;
+}
+.w-custom-modal-title {
+    font-size: 17.5px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+}
+.w-custom-modal-desc {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #475569;
+    word-break: keep-all;
+    margin-bottom: 22px;
+    white-space: pre-line;
+}
+.w-custom-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+.w-custom-modal-btn {
+    flex: 1;
+    height: 46px;
+    border-radius: 12px;
+    font-size: 14.5px;
+    font-weight: 750;
+    border: none;
+    cursor: pointer;
+    transition: all 0.16s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.w-custom-modal-btn.confirm {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.32);
+}
+.w-custom-modal-btn.confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(2, 132, 199, 0.42);
+    filter: brightness(1.04);
+}
+.w-custom-modal-btn.confirm:active {
+    transform: translateY(0);
+}
+.w-custom-modal-btn.cancel {
+    background: #f1f5f9;
+    color: #64748b;
+}
+.w-custom-modal-btn.cancel:hover {
+    background: #e2e8f0;
+    color: #334155;
 }
 
 /* 두 번째 줄 (Light Sky Blue Bar) */
@@ -3526,37 +3713,112 @@ trySwitch();
 let authTab = "login"; // "login" | "signup"
 let wIsLoggedIn = false; // Track login status
 
-function safeAlert(msg) {
-console.log(msg);
-try {
-alert(msg);
-} catch (e) {
-// 아임웹 iframe 모달/alert 차단 정책 우회용 프리미엄 토스트 레이어
-const toast = document.createElement('div');
-toast.style.position = 'fixed';
-toast.style.top = '24px';
-toast.style.left = '50%';
-toast.style.transform = 'translateX(-50%)';
-toast.style.backgroundColor = '#113f67';
-toast.style.color = '#ffffff';
-toast.style.padding = '14px 28px';
-toast.style.borderRadius = '8px';
-toast.style.zIndex = '1000000';
-toast.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.15)';
-toast.style.fontSize = '14px';
-toast.style.fontWeight = '700';
-toast.style.fontFamily = "'Pretendard', sans-serif";
-toast.style.textAlign = 'center';
-toast.style.whiteSpace = 'nowrap';
-toast.innerText = msg;
-document.body.appendChild(toast);
-setTimeout(() => {
-toast.style.opacity = '0';
-toast.style.transition = 'opacity 0.4s ease';
-setTimeout(() => toast.remove(), 400);
-}, 3500);
+// ========================================================
+// [ 위라클 프리미엄 커스텀 모달 / 확인창 시스템 ]
+// 브라우저 기본 alert를 감성적이고 모던한 UI로 완전 대체
+// ========================================================
+window.showWeracleAlert = function(message, options = {}) {
+    return new Promise((resolve) => {
+        let overlay = document.getElementById('wCustomModalOverlay');
+        if (!overlay) {
+            const div = document.createElement('div');
+            div.id = 'wCustomModalOverlay';
+            div.className = 'w-custom-modal-overlay';
+            div.innerHTML = `
+                <div class="w-custom-modal-card">
+                    <div class="w-custom-modal-icon" id="wCustomModalIcon"></div>
+                    <div class="w-custom-modal-title" id="wCustomModalTitle">알림</div>
+                    <div class="w-custom-modal-desc" id="wCustomModalDesc"></div>
+                    <div class="w-custom-modal-actions" id="wCustomModalActions"></div>
+                </div>
+            `;
+            document.body.appendChild(div);
+            overlay = div;
+        }
+
+        const iconEl = overlay.querySelector('#wCustomModalIcon');
+        const titleEl = overlay.querySelector('#wCustomModalTitle');
+        const descEl = overlay.querySelector('#wCustomModalDesc');
+        const actionsEl = overlay.querySelector('#wCustomModalActions');
+
+        const msgStr = String(message || '');
+        let type = options.type;
+        if (!type) {
+            if (/로그인|성공|완료|발송되었습니다|저장되었습니다/.test(msgStr)) type = 'success';
+            else if (/실패|오류|에러|불가/.test(msgStr)) type = 'error';
+            else if (/만료|주의|경고/.test(msgStr)) type = 'warning';
+            else type = 'info';
+        }
+
+        let defaultTitle = '알림';
+        let iconSvg = '';
+        if (type === 'success') {
+            defaultTitle = options.title || '성공 안내';
+            iconEl.className = 'w-custom-modal-icon success';
+            iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+        } else if (type === 'error') {
+            defaultTitle = options.title || '오류 발생';
+            iconEl.className = 'w-custom-modal-icon error';
+            iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        } else if (type === 'warning') {
+            defaultTitle = options.title || '확인 필요';
+            iconEl.className = 'w-custom-modal-icon warning';
+            iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+        } else {
+            defaultTitle = options.title || '안내';
+            iconEl.className = 'w-custom-modal-icon info';
+            iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+        }
+
+        iconEl.innerHTML = iconSvg;
+        titleEl.innerText = options.title || defaultTitle;
+        descEl.innerText = msgStr;
+
+        const isConfirmMode = !!options.isConfirm;
+        actionsEl.innerHTML = isConfirmMode
+            ? `<button type="button" class="w-custom-modal-btn cancel" id="wModalCancelBtn">${options.cancelText || '취소'}</button>
+               <button type="button" class="w-custom-modal-btn confirm" id="wModalConfirmBtn">${options.confirmText || '확인'}</button>`
+            : `<button type="button" class="w-custom-modal-btn confirm" id="wModalConfirmBtn">${options.confirmText || '확인'}</button>`;
+
+        const closeModal = (result) => {
+            overlay.classList.remove('active');
+            window.removeEventListener('keydown', handleKeyDown);
+            if (result && options.onConfirm) options.onConfirm();
+            if (!result && options.onCancel) options.onCancel();
+            resolve(result);
+        };
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') closeModal(false);
+            if (e.key === 'Enter') closeModal(true);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+
+        const confirmBtn = actionsEl.querySelector('#wModalConfirmBtn');
+        if (confirmBtn) confirmBtn.onclick = () => closeModal(true);
+        const cancelBtn = actionsEl.querySelector('#wModalCancelBtn');
+        if (cancelBtn) cancelBtn.onclick = () => closeModal(false);
+
+        overlay.onclick = (e) => {
+            if (e.target === overlay) closeModal(false);
+        };
+
+        requestAnimationFrame(() => {
+            overlay.classList.add('active');
+            if (confirmBtn) confirmBtn.focus();
+        });
+    });
+};
+
+function safeAlert(msg, type) {
+    console.log(msg);
+    window.showWeracleAlert(msg, { type: type });
 }
-}
+
+// 브라우저 기본 alert를 커스텀 확인창으로 오버라이드
+window.alert = function(msg) {
+    window.showWeracleAlert(msg);
+};
 
 window.addEventListener('message', function(event) {
 if (event.data && event.data.type === 'DASHBOARD_READY') {
@@ -4301,22 +4563,23 @@ function updateProfileUI(user, profile) {
         <svg class="pb-login-arrow" style="width:14px;height:14px;color:#9ca3af;margin-left:2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
         
         <div class="pb-login-dropdown" id="pbLoginDropdown" onclick="event.stopPropagation();">
-            <div style="padding: 16px 20px 14px 20px; display: flex; gap: 14px; align-items: center; background: #f8fafc; border-bottom: 1px solid #f1f5f9;">
-                <div style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1.5px solid #e2e8f0; flex-shrink: 0; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">${avatarHtml}</div>
-                <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 14.5px; font-weight: 700; color: #0f172a; white-space: nowrap;">${displayName}님</span>
-                        <span class="w-gate-badge ${badgeStyle}" style="padding: 2px 7px; border-radius: 9999px; font-size: 10.5px; margin: 0; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 700;">${label}</span>
+            <!-- 1. 프로필 요약 카드 -->
+            <div style="padding: 10px 12px; display: flex; gap: 10px; align-items: center; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; margin-bottom: 6px;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1.5px solid #cbd5e1; flex-shrink: 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">${avatarHtml}</div>
+                <div style="display: flex; flex-direction: column; min-width: 0; flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 14px; font-weight: 800; color: #0f172a; white-space: nowrap;">${displayName}님</span>
+                        <span class="w-gate-badge ${badgeStyle}" style="padding: 1.5px 6px; border-radius: 9999px; font-size: 10px; margin: 0; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 750;">${label}</span>
                     </div>
-                    <div style="font-size: 12px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.email}</div>
+                    <div style="font-size: 11.5px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px;">${user.email}</div>
                 </div>
             </div>
 
-            <!-- 드롭다운 내부 구글 시트 연동 전용 카드 -->
+            <!-- 2. 드롭다운 내부 구글 시트 연동 전용 카드 -->
             <div id="dropdownGoogleSyncCard" class="dd-google-card ${isGoogleConnected ? 'connected' : 'expired'}">
                 <div class="dd-google-card-header">
                     <div class="dd-google-status-title">
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="14" height="14">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="13" height="13">
                         <span id="ddGoogleStatusTitleText">${isGoogleConnected ? '구글 시트 연동 정상' : '구글 연동 만료됨'}</span>
                     </div>
                     <div id="ddGoogleActionSlot">
@@ -4326,39 +4589,59 @@ function updateProfileUI(user, profile) {
                     </div>
                 </div>
                 <div class="dd-google-card-desc" id="ddGoogleDescText">
-                    ${isGoogleConnected ? '고객 및 스케줄 데이터가 실시간 자동 백업 중입니다.' : '연동이 만료되어도 위라클 로그인은 안전하게 유지됩니다.'}
+                    ${isGoogleConnected ? '고객 및 스케줄 실시간 백업 중' : '만료되어도 위라클 로그인은 유지됩니다.'}
                 </div>
             </div>
 
-            <div style="padding: 6px 0;">
-                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='card/card_edit.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item" style="color:#0284c7; font-weight:750; background:#f0f9ff; border-radius:8px; margin:2px 8px;">
-                    <svg style="width:16px;height:16px;color:#0284c7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" stroke-width="2"/><circle cx="9" cy="10" r="2" stroke-width="2"/><line x1="15" y1="8" x2="17" y2="8" stroke-width="2"/><line x1="15" y1="12" x2="17" y2="12" stroke-width="2"/><line x1="7" y1="16" x2="17" y2="16" stroke-width="2"/></svg>
-                    <span>🪪 내 디지털 명함</span>
-                </a>
-                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='login/myposts.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
-                    <svg style="width:16px;height:16px;color:#64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <span>내가 쓴 글</span>
-                </a>
-                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openMyPageFromSidebar ? window.openMyPageFromSidebar() : alert('마이페이지 기능 준비중');" class="pb-dropdown-item">
-                    <svg style="width:16px;height:16px;color:#64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    <span>마이페이지</span>
-                </a>
-                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openLinkedGoogleSheet ? window.openLinkedGoogleSheet() : alert('연동된 시트 기능 준비중');" class="pb-dropdown-item">
-                    <svg style="width:16px;height:16px;color:#10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"></path></svg>
-                    <span>연동된 시트 보기</span>
-                </a>
-                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.loginToWeracleTalk ? window.loginToWeracleTalk() : alert('로그인 기능 준비중');" class="pb-dropdown-item" style="color: #0284c7;">
-                    <svg style="width:16px;height:16px;color:#0284c7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                    <span>위라클톡 PC앱 로그인</span>
-                </a>
-            </div>
-            <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
-            <div style="padding: 0 0 4px 0;">
-                <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); handleLogout();" class="pb-dropdown-item logout" style="color: #ef4444;">
-                    <svg style="width:16px;height:16px;stroke:#ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    <span>로그아웃</span>
-                </a>
-            </div>
+            <!-- 3. 메뉴 리스트 (일관된 구조 & 아이콘) -->
+            <div class="dd-section-label">내 업무 & 활동</div>
+            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='card/card_edit.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
+                <div class="dd-item-left">
+                    <span class="dd-icon-box blue"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" stroke-width="2"/><circle cx="9" cy="10" r="2" stroke-width="2"/><line x1="15" y1="8" x2="17" y2="8" stroke-width="2"/><line x1="15" y1="12" x2="17" y2="12" stroke-width="2"/><line x1="7" y1="16" x2="17" y2="16" stroke-width="2"/></svg></span>
+                    <span class="dd-item-text">내 디지털 명함</span>
+                </div>
+                <span class="dd-item-badge">편집</span>
+            </a>
+
+            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='login/myposts.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
+                <div class="dd-item-left">
+                    <span class="dd-icon-box"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></span>
+                    <span class="dd-item-text">내가 쓴 글</span>
+                </div>
+            </a>
+
+            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openMyPageFromSidebar ? window.openMyPageFromSidebar() : safeAlert('현재 마이페이지 기능을 준비 중입니다.\n빠른 시일 내에 오픈하겠습니다.', 'info');" class="pb-dropdown-item">
+                <div class="dd-item-left">
+                    <span class="dd-icon-box"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></span>
+                    <span class="dd-item-text">마이페이지</span>
+                </div>
+            </a>
+
+            <div class="dd-divider"></div>
+            <div class="dd-section-label">도구 & 연동</div>
+
+            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openLinkedGoogleSheet ? window.openLinkedGoogleSheet() : safeAlert('연동된 구글 시트를 확인합니다.', 'info');" class="pb-dropdown-item">
+                <div class="dd-item-left">
+                    <span class="dd-icon-box green"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"></path></svg></span>
+                    <span class="dd-item-text">연동된 시트 보기</span>
+                </div>
+            </a>
+
+            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.loginToWeracleTalk ? window.loginToWeracleTalk() : safeAlert('위라클톡 PC앱 간편 로그인을 실행합니다.', 'info');" class="pb-dropdown-item">
+                <div class="dd-item-left">
+                    <span class="dd-icon-box sky"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg></span>
+                    <span class="dd-item-text">위라클톡 PC앱 로그인</span>
+                </div>
+            </a>
+
+            <div class="dd-divider"></div>
+
+            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); showWeracleAlert('정말 위라클에서 로그아웃 하시겠습니까?', { isConfirm: true, title: '로그아웃 확인', confirmText: '로그아웃', onConfirm: () => handleLogout() });" class="pb-dropdown-item logout">
+                <div class="dd-item-left">
+                    <span class="dd-icon-box red"><svg style="width:14px;height:14px;stroke:#ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg></span>
+                    <span class="dd-item-text">로그아웃</span>
+                </div>
+            </a>
         </div>
     `;
 

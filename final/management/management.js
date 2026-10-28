@@ -627,8 +627,10 @@ async function syncScheduleToSupabaseAndGoogle(item, action = 'create') {
         };
         await sb.from('partners_schedules').insert([payload]);
       } else if (action === 'delete') {
-        await sb.from('schedules').delete().eq('id', item.id);
-        await sb.from('partners_schedules').delete().eq('id', item.id);
+        if (item.id) {
+          try { await sb.from('schedules').delete().eq('id', item.id); } catch(e) {}
+          try { await sb.from('partners_schedules').delete().eq('id', item.id); } catch(e) {}
+        }
       }
     } catch (e) {
       console.warn('Supabase schedule sync error:', e);
@@ -3955,8 +3957,18 @@ function renderAdminScheduleList() {
           ${item.title}
         </div>
       </div>
-      <button class="btn-danger" style="padding:4px 10px; font-size:12px; white-space:nowrap;" onclick="adminDeleteSchedule(${item.id})">삭제</button>
     `;
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-danger';
+    delBtn.style.cssText = 'padding:5px 12px; font-size:12px; white-space:nowrap; cursor:pointer; font-weight:700; border-radius:6px;';
+    delBtn.textContent = '삭제';
+    delBtn.onclick = (e) => {
+      e.preventDefault();
+      adminDeleteSchedule(item.id);
+    };
+    row.appendChild(delBtn);
+
     listEl.appendChild(row);
   });
 }
@@ -4070,17 +4082,30 @@ window.adminAddSchedule = function() {
 };
 
 window.adminDeleteSchedule = async function(id) {
-  const target = sampleSchedules.find(s => s.id === id);
-  if (!await showConfirm('이 일정을 삭제하시겠습니까?\n(클라우드 DB 및 연동된 캘린더에서도 함께 삭제됩니다)', '일정 삭제')) return;
+  const target = sampleSchedules.find(s => String(s.id) === String(id));
+  const confirmed = await showConfirm('이 일정을 삭제하시겠습니까?\n(클라우드 DB 및 연동된 캘린더에서도 함께 삭제됩니다)', '일정 삭제');
+  if (!confirmed) return;
+
   if (target) {
-    await syncScheduleToSupabaseAndGoogle(target, 'delete');
+    try {
+      await syncScheduleToSupabaseAndGoogle(target, 'delete');
+    } catch (e) {
+      console.warn('Sync delete error:', e);
+    }
   }
-  sampleSchedules = sampleSchedules.filter(s => s.id !== id);
+
+  sampleSchedules = sampleSchedules.filter(s => String(s.id) !== String(id));
   saveSchedulesToStorage();
   renderScheduleTimeline();
   renderCalendar();
   renderUpcomingSchedules();
   renderAdminScheduleList();
+
+  if (typeof showAlert === 'function') {
+    showAlert('일정이 성공적으로 삭제되었습니다.', '삭제 완료');
+  } else {
+    alert('일정이 성공적으로 삭제되었습니다.');
+  }
 };
 
 // 2. 관리자: 출결 시간 및 출석률 평가 정책 설정 저장

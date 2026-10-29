@@ -1331,7 +1331,8 @@ async function confirmAndSendFax() {
   let plannerPhone = planner.phone || planner.mobile || (planner.card_data && planner.card_data.phone) || localStorage.getItem('user_phone') || '';
   let plannerName = planner.nickname || planner.name || (planner.card_data && planner.card_data.name) || '담당자';
 
-  if (!plannerPhone) {
+  let cleanPlannerCheck = (plannerPhone || '').replace(/[^0-9]/g, '');
+  if (!cleanPlannerCheck || cleanPlannerCheck.length < 10) {
     const inputPhone = prompt('알림톡 전송 결과를 수신할 담당 설계사님의 휴대폰번호를 입력해 주세요.\n(예: 010-1234-5678)', '');
     if (inputPhone && inputPhone.trim()) {
       plannerPhone = inputPhone.trim();

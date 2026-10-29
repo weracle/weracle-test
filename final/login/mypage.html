@@ -777,15 +777,17 @@
             }
 
             const { data: { session } } = await sb.auth.getSession().catch(() => ({ data: { session: null } }));
-            window.currentUser = session ? session.user : null;
+            window.currentUser = session?.user || (window.parent && window.parent.currentUser) || null;
+            window.currentProfile = window.currentProfile || (window.parent && window.parent.currentProfile) || null;
 
             if (!window.currentUser) {
                 const isPreview = window.location.search.includes('preview=login') || 
                                   (window.parent && window.parent.location && window.parent.location.search && window.parent.location.search.includes('preview=login')) ||
-                                  (window.parent && window.parent.isLoggedIn);
+                                  (window.parent && (window.parent.isLoggedIn || window.parent.wIsLoggedIn));
                 if (isPreview) {
-                    window.currentUser = { email: 'weracle_pro@partners.com' };
-                    window.currentProfile = {
+                    window.currentUser = (window.parent && window.parent.currentUser) || { id: 'preview-planner-01', email: 'weracle_pro@partners.com' };
+                    window.currentProfile = (window.parent && window.parent.currentProfile) || {
+                        id: 'preview-planner-01',
                         nickname: '위라클 파트너',
                         company: '위라클 파트너스 본부',
                         phone: '010-8765-4321',
@@ -1061,15 +1063,16 @@
         bindEvents() {
             // Hover effect for inline edit buttons
             this.container.querySelectorAll('.sb-btn-inline-edit').forEach(btn => {
-                btn.addEventListener('mouseover', (e) => { e.target.style.background = '#f8fafc'; e.target.style.color = '#0284c7'; e.target.style.borderColor = '#0284c7'; });
-                btn.addEventListener('mouseout', (e) => { e.target.style.background = '#f1f5f9'; e.target.style.color = '#4b5563'; e.target.style.borderColor = '#cbd5e1'; });
+                btn.addEventListener('mouseover', (e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#0284c7'; e.currentTarget.style.borderColor = '#0284c7'; });
+                btn.addEventListener('mouseout', (e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#4b5563'; e.currentTarget.style.borderColor = '#cbd5e1'; });
                 
                 btn.addEventListener('click', async (e) => {
-                    const field = e.target.getAttribute('data-field');
-                    const profile = window.currentProfile;
+                    const targetBtn = e.currentTarget;
+                    const field = targetBtn.getAttribute('data-field');
+                    const profile = window.currentProfile || {};
 
                     if (field === 'nickname') {
-                        const val = prompt('새로운 닉네임을 입력하세요:', profile.nickname);
+                        const val = prompt('새로운 닉네임을 입력하세요:', profile.nickname || '');
                         if (val !== null && val.trim() !== '') this.updateProfileField('nickname', val.trim());
                     } else if (field === 'company') {
                         const val = prompt('새로운 소속을 입력하세요:', profile.company || '');
@@ -1078,9 +1081,11 @@
                         const val = prompt('새로운 연락처를 입력하세요:', profile.phone || '');
                         if (val !== null) this.updateProfileField('phone', val.trim());
                     } else if (field === 'avatar') {
-                        this.container.querySelector('#sb-avatar-file-input').click();
+                        const avatarInput = this.container.querySelector('#sb-avatar-file-input') || document.getElementById('sb-avatar-file-input');
+                        if (avatarInput) avatarInput.click();
                     } else if (field === 'logo') {
-                        this.container.querySelector('#sb-logo-file-input').click();
+                        const logoInput = this.container.querySelector('#sb-logo-file-input') || document.getElementById('sb-logo-file-input');
+                        if (logoInput) logoInput.click();
                     }
                 });
             });
@@ -1142,13 +1147,28 @@
             try {
                 const updateData = {};
                 updateData[field] = value;
-                const { error } = await sb.from('profiles').update(updateData).eq('id', window.currentUser.id);
-                if (error) throw error;
+                if (window.currentUser && window.currentUser.id && !String(window.currentUser.id).startsWith('preview') && sb) {
+                    try {
+                        const { error } = await sb.from('profiles').update(updateData).eq('id', window.currentUser.id);
+                        if (error) console.warn("Supabase profile update:", error.message);
+                    } catch (errDb) {
+                        console.warn("Supabase update error:", errDb);
+                    }
+                }
                 
                 if (window.currentProfile) window.currentProfile[field] = value;
-                if (window.parent && window.parent.currentProfile) window.parent.currentProfile[field] = value;
+                if (window.parent && window.parent.currentProfile) {
+                    window.parent.currentProfile[field] = value;
+                    if (typeof window.parent.updateProfileUI === 'function') {
+                        window.parent.updateProfileUI(window.parent.currentUser, window.parent.currentProfile);
+                    }
+                }
                 
-                if (typeof authEvents !== 'undefined' && authEvents.emit) {
+                try {
+                    localStorage.setItem('cached_profile', JSON.stringify(window.currentProfile));
+                } catch(e){}
+                
+                if (typeof authEvents !== 'undefined' && authEvents && authEvents.emit) {
                     authEvents.emit('stateChange', { event: 'PROFILE_UPDATED', session: null, profile: window.currentProfile });
                 }
                 

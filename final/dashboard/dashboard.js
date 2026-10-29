@@ -11,7 +11,16 @@ document.getElementById = function(id) {
 };
 
 // --- 전역 상태 변수 ---
-const parentWindow = window.parent;
+function getParentProp(prop) {
+  try {
+    if (window.parent && window.parent !== window) {
+      return window.parent[prop];
+    }
+  } catch(e) {}
+  return null;
+}
+
+const parentProfile = getParentProp('currentProfile');
 let crmData = [];
 let targetData = [];
 let crmEventsList = [];   // 파싱된 모든 CRM 고객 이벤트 리스트
@@ -24,7 +33,7 @@ let checkDataInterval = null;
 
 // 구글 토큰 초기화 (메모리, 상위 프레임, 로컬스토리지 순차 탐색)
 window.gToken = window.gToken || 
-  (parentWindow && parentWindow.currentProfile && parentWindow.currentProfile.google_access_token) || 
+  (parentProfile && parentProfile.google_access_token) || 
   localStorage.getItem('google_access_token') || 
   '';
 
@@ -55,8 +64,8 @@ function handleGoogleSyncClick() {
       updateGoogleStatusUI();
     });
   } else {
-    if (parentWindow && parentWindow !== window) {
-      parentWindow.postMessage({ type: 'REQUEST_GOOGLE_LOGIN' }, '*');
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'REQUEST_GOOGLE_LOGIN' }, '*');
     } else {
       alert("구글 연동을 위해 상위 플랫폼 로그인이 필요합니다.");
     }
@@ -842,18 +851,19 @@ function closeCrmEventModal() {
 // 7. 상단 프로필, 실적 통계 및 데이터 동기화
 // ==========================================
 function updateDashboardV3Stats() {
-  if (!parentWindow || !parentWindow.currentProfile) return;
-  const p = parentWindow.currentProfile;
+  const p = getParentProp('currentProfile');
+  if (!p) return;
   const elInfo = document.getElementById('dashPlannerInfo');
   if (elInfo) elInfo.innerText = (p.company || '소속 미기입') + ' |  ' + (p.phone || '번호 미기입');
 
-  if (parentWindow.globalCustomerData && parentWindow.globalCustomerData.length > 0) {
+  const globalCust = getParentProp('globalCustomerData');
+  if (globalCust && globalCust.length > 0) {
     let thisMonthCount = 0;
     let thisMonthAmount = 0;
     const now = new Date();
     const thisMonthStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
 
-    parentWindow.globalCustomerData.forEach(row => {
+    globalCust.forEach(row => {
       for (let i = 1; i <= 3; i++) {
         let d = row['보험' + i + '_체결일'];
         let pr = row['보험' + i + '_보험료'];
@@ -872,9 +882,11 @@ function updateDashboardV3Stats() {
 }
 
 function loadDataAndRender() {
-  if (parentWindow && parentWindow.globalCustomerData && parentWindow.globalCustomerData.length > 0) {
-    crmData = parentWindow.globalCustomerData;
-    if (parentWindow.globalTargetData) targetData = parentWindow.globalTargetData;
+  const globalCust = getParentProp('globalCustomerData');
+  if (globalCust && globalCust.length > 0) {
+    crmData = globalCust;
+    const globalTgt = getParentProp('globalTargetData');
+    if (globalTgt) targetData = globalTgt;
   } else {
     try {
       const localData = localStorage.getItem('demo_crm_data');
@@ -900,8 +912,8 @@ async function initDashboard() {
     }
   }
 
-  if (parentWindow && parentWindow.currentProfile) {
-    const profile = parentWindow.currentProfile;
+  const profile = getParentProp('currentProfile');
+  if (profile) {
     const welcomeMsgEl = document.getElementById('welcome-msg');
     if (welcomeMsgEl) welcomeMsgEl.innerText = `${profile.nickname || '설계사'} 님, 환영합니다!`;
 
@@ -938,8 +950,8 @@ async function initDashboard() {
   loadDataAndRender();
   updateDashboardV3Stats();
 
-  if (!window.gToken && parentWindow && parentWindow !== window) {
-    parentWindow.postMessage({ type: 'REQUEST_GOOGLE_TOKEN' }, '*');
+  if (!window.gToken && window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'REQUEST_GOOGLE_TOKEN' }, '*');
   }
 
   if (window.gToken) {
@@ -948,9 +960,10 @@ async function initDashboard() {
 
   if (!checkDataInterval) {
     checkDataInterval = setInterval(() => {
-      if (parentWindow && parentWindow.globalCustomerData && parentWindow.globalCustomerData.length > 0) {
-        if (crmData.length !== parentWindow.globalCustomerData.length) {
-          crmData = parentWindow.globalCustomerData;
+      const gCust = getParentProp('globalCustomerData');
+      if (gCust && gCust.length > 0) {
+        if (crmData.length !== gCust.length) {
+          crmData = gCust;
           analyzeCrmData();
           renderV3Calendar();
           updateDashboardV3Stats();
@@ -962,6 +975,7 @@ async function initDashboard() {
 
 function sendResize() {
   if (window.parent && window.parent !== window) {
+    if (window.innerWidth > 900) return;
     window.parent.postMessage({ type: 'CRM_RESIZE', height: document.body.scrollHeight }, '*');
   }
 }
@@ -1040,7 +1054,7 @@ function renderInsWidget() {
     items.forEach((ins) => {
       groupHtml += `
         <a href="${ins.link}" target="_blank" class="ins-sidebar-item" title="${ins.name}">
-          <img class="ins-sidebar-logo" src="${ins.logoUrl}" alt="${ins.name}">
+          <img class="ins-sidebar-logo" src="${ins.logoUrl}" alt="${ins.name}" onerror="this.onerror=null; this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.opacity='1'; this.nextElementSibling.style.transform='none';}">
           <span class="ins-sidebar-text">${ins.name}</span>
         </a>`;
     });
@@ -1055,6 +1069,12 @@ function toggleWidget(show) {
   if (sidebar) sidebar.style.display = show ? 'flex' : 'none';
 }
 
+// 34개 보험사 사이드바 즉각 실행 및 다중 생명주기 바인딩
+try { renderInsWidget(); } catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderInsWidget);
+}
+
 // ==========================================
 // 9. 초기화 및 이벤트 바인딩
 // ==========================================
@@ -1062,6 +1082,11 @@ document.addEventListener('DOMContentLoaded', () => {
   renderInsWidget();
 });
 
-window.onload = initDashboard;
-setInterval(sendResize, 600);
-setTimeout(sendResize, 150);
+window.onload = function() {
+  renderInsWidget();
+  initDashboard();
+};
+if (window.innerWidth <= 900) {
+  setInterval(sendResize, 600);
+  setTimeout(sendResize, 150);
+}

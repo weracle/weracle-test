@@ -1193,7 +1193,7 @@
         btn.disabled = false;
 
         // 전송 전 파일 확인창(PDF 미리보기 팝업 모달) 열기
-        openPdfPreviewModal(doc, fileName, payload.company, targetFaxNum, pdfBase64);
+        openPdfPreviewModal(doc, fileName, payload.company, targetFaxNum, pdfBase64, userName);
 
     } catch (e) { 
         alert("청구서 생성에 실패하였습니다: " + e.message); 
@@ -1215,13 +1215,15 @@ let currentGeneratedPdfFileName = '';
 let currentGeneratedPdfBase64 = '';
 let currentTargetFaxNumber = '';
 let currentTargetCompanyName = '';
+let currentTargetClientName = '';
 
-function openPdfPreviewModal(doc, fileName, company, faxNum, pdfBase64) {
+function openPdfPreviewModal(doc, fileName, company, faxNum, pdfBase64, clientName) {
   currentGeneratedPdfDoc = doc;
   currentGeneratedPdfFileName = fileName;
   currentGeneratedPdfBase64 = pdfBase64;
   currentTargetFaxNumber = faxNum || '';
   currentTargetCompanyName = company || '';
+  currentTargetClientName = clientName || (document.getElementById('insName') && document.getElementById('insName').value.trim()) || (document.getElementById('userName') && document.getElementById('userName').value.trim()) || '고객';
 
   const modal = document.getElementById('pdfPreviewModal');
   const iframe = document.getElementById('pdfPreviewIframe');
@@ -1307,7 +1309,26 @@ async function confirmAndSendFax() {
     return;
   }
 
-  // 3. 실제 서버리스 API 호출 (/api/send-fax)
+  // 3. 담당 설계사 정보(프로필) 및 추가 파라미터 추출
+  const planner = (window.parent && window.parent.currentProfile) || window.currentProfile || {};
+  let plannerPhone = planner.phone || planner.mobile || (planner.card_data && planner.card_data.phone) || localStorage.getItem('user_phone') || '';
+  let plannerName = planner.nickname || planner.name || (planner.card_data && planner.card_data.name) || '담당자';
+
+  if (!plannerPhone) {
+    const inputPhone = prompt('알림톡 전송 결과를 수신할 담당 설계사님의 휴대폰번호를 입력해 주세요.\n(예: 010-1234-5678)', '');
+    if (inputPhone && inputPhone.trim()) {
+      plannerPhone = inputPhone.trim();
+      try { localStorage.setItem('user_phone', plannerPhone); } catch(e){}
+    }
+  }
+
+  const pageCount = currentGeneratedPdfDoc ? currentGeneratedPdfDoc.internal.getNumberOfPages() : 1;
+  let callCenter = '1588-1001';
+  if (window.INSURANCE_FAX_DATA && window.INSURANCE_FAX_DATA.faxList && window.INSURANCE_FAX_DATA.faxList[currentTargetCompanyName]) {
+    callCenter = window.INSURANCE_FAX_DATA.faxList[currentTargetCompanyName].phone || callCenter;
+  }
+
+  // 4. 실제 서버리스 API 호출 (/api/send-fax)
   try {
     const response = await fetch('/api/send-fax', {
       method: 'POST',
@@ -1315,13 +1336,19 @@ async function confirmAndSendFax() {
       body: JSON.stringify({
         receiverNumber: cleanFaxNumber,
         receiverName: currentTargetCompanyName + ' 보상과',
-        pdfBase64: currentGeneratedPdfBase64
+        pdfBase64: currentGeneratedPdfBase64,
+        plannerPhone: plannerPhone,
+        plannerName: plannerName,
+        clientName: currentTargetClientName || '고객',
+        companyName: currentTargetCompanyName,
+        callCenter: callCenter,
+        pageCount: pageCount
       })
     });
 
     const result = await response.json();
     if (result.success) {
-      alert('팩스 전송이 성공적으로 접수되었습니다!\n(접수번호: ' + result.receiptNum + ')\n\n확인용 PDF 파일도 기기에 저장합니다.');
+      alert('팩스 전송 및 알림톡 접수 안내가 정상 처리되었습니다!\n(접수번호: ' + result.receiptNum + ')\n\n통신사 전송 완료 시 카카오톡 알림톡으로 최종 결과가 안내됩니다.\n확인용 PDF 파일도 기기에 저장합니다.');
       downloadCurrentPdf();
       closePdfPreviewModal();
       location.reload();

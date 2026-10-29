@@ -333,8 +333,8 @@ filter: drop-shadow(0 0 4px rgba(0, 230, 246, 0.5));
 }
 
 /* --- 오른쪽 메인 대시보드 워크스페이스 --- */
-.main-workspace { position: relative; box-sizing: border-box; flex: 1; padding: 24px 30px; max-width: 100%; margin: 0; width: 100%; transition: all 0.4s ease; overflow-x: hidden; }
-@media (min-width: 769px) { .main-workspace { padding-right: 70px !important; } .main-workspace.iframe-active { padding-right: 0px !important; } }
+.main-workspace { position: relative; box-sizing: border-box; flex: 1; padding: 0 !important; max-width: 100%; margin: 0; width: 100%; transition: all 0.4s ease; overflow-x: hidden; }
+@media (min-width: 769px) { .main-workspace { padding-right: 0px !important; } .main-workspace.iframe-active { padding-right: 0px !important; } }
 .main-workspace.iframe-active { padding: 0px; }
 .main-workspace.iframe-active #mainFrame { border-radius: 0px !important; box-shadow: none !important; }
 .grid-container { box-sizing: border-box; display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; width: 100%; }
@@ -2156,35 +2156,92 @@ transform: translateY(-2px);
 .pb-layout {
     display: flex !important;
     flex-direction: column !important;
-    min-height: 100vh;
     width: 100%;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
     background: var(--pb-bg, #f8fafc) !important;
 }
 .pb-sidebar {
     display: none !important;
 }
-.pb-right-wrapper {
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: visible !important;
+
+@media (min-width: 1281px) {
+    html, body {
+        height: 100% !important;
+        overflow: hidden !important;
+    }
+    .pb-layout {
+        height: 100vh !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
+    }
+    .pb-right-wrapper {
+        height: calc(100vh - 74px) !important;
+        max-height: calc(100vh - 74px) !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        flex: 1 !important;
+    }
+    .pb-main-wrapper {
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        flex: 1 !important;
+    }
+    .main-workspace {
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        flex: 1 !important;
+    }
+    .pb-content-area.iframe-active {
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    .main-workspace.iframe-active #mainFrame {
+        height: 100% !important;
+        min-height: 100% !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
 }
-.pb-main-wrapper {
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: visible !important;
-}
-.main-workspace {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
+
+@media (max-width: 1280px) {
+    .pb-layout {
+        min-height: 100vh;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+    .pb-right-wrapper {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+    .pb-main-wrapper {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+    .main-workspace {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
 }
 
 .top-global-nav {
@@ -2487,11 +2544,11 @@ transform: translateY(-2px);
     z-index: 110;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1280px) {
     .nav-menu-tabs { display: none !important; }
-    .top-global-nav { height: 60px !important; }
-    .top-global-nav.open { height: 60px !important; }
-    .top-nav-inner { height: 60px !important; padding: 0 16px; }
+    .top-global-nav { height: 56px !important; min-height: 56px !important; }
+    .top-global-nav.open { height: 56px !important; min-height: 56px !important; }
+    .top-nav-inner { height: 56px !important; padding: 0 14px; }
 }
 
 /* === 모양: 4번 심볼 + 디자인: 5번 지오메트릭 핀테크(28px 클린 아웃라인) + 빛나는 확대 호버 효과 === */
@@ -2614,222 +2671,369 @@ transform: translateY(-2px);
     transform: translateX(4px) scale(1.03) !important;
 }
 
-/* === 모바일 전용 업무 허브 (네이티브 핀테크 앱 스타일, 인위적 테두리 완전 배제) === */
-@media (min-width: 901px) {
-    #mobileWorkHub {
+/* === PC vs 모바일 화면 크기 실시간 자동 반응형 분기 (1280px 기준) === */
+@media (min-width: 1281px) {
+    #mobileWorkHub, #mobileBottomSheet, .mobile-bottom-sheet {
         display: none !important;
     }
 }
-@media (max-width: 900px) {
+@media (max-width: 1280px) {
     #dashboardHome {
         display: none !important;
     }
     #mobileWorkHub {
-        display: block;
-        max-width: 540px;
-        margin: 0 auto;
-        padding: 20px 16px 60px;
+        display: block !important;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 12px 14px 90px;
     }
     .main-workspace.iframe-active #mobileWorkHub {
         display: none !important;
     }
 }
 
-.m-hub-header {
-    margin-bottom: 22px;
+/* 모바일 스케줄러 헤더 카드 (줄바꿈 원천 차단) */
+.m-sched-header-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
-.m-hub-badge {
-    display: inline-flex;
+.m-sched-date-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.m-sched-date-badge {
+    display: flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 14px;
-    background: #ffffff;
-    color: #0284c7;
-    border-radius: 20px;
-    font-size: 12.5px;
-    font-weight: 700;
-    margin-bottom: 10px;
-    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
-    border: 1px solid #edf2f7;
+    white-space: nowrap;
 }
-.m-hub-title {
-    font-size: 22px;
+.m-sched-date-badge i {
+    color: #0284c7;
+    font-size: 15px;
+}
+.m-sched-date-badge span:first-of-type {
+    font-size: 15px;
     font-weight: 800;
     color: #0f172a;
-    letter-spacing: -0.6px;
-    margin-bottom: 5px;
+    white-space: nowrap;
 }
-.m-hub-desc {
-    font-size: 13.5px;
-    color: #64748b;
-    letter-spacing: -0.3px;
+.m-sched-today-pill {
+    font-size: 11px;
+    font-weight: 750;
+    color: #0284c7;
+    background: #e0f2fe;
+    padding: 1.5px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
 }
-
-.m-categories-section {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-/* 네이티브 앱 카드: 인위적인 원색 테두리를 없애고 부드러운 순백 카드 + 자연스러운 음영 적용 */
-.m-cat-card, .mobile-menu-card {
-    background: #ffffff !important;
-    border: 1px solid #edf2f7 !important;
-    border-radius: 18px !important;
-    padding: 18px 18px !important;
-    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.03) !important;
-}
-
-.m-cat-head, .mobile-card-head {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding-bottom: 14px !important;
-    border-bottom: 1px solid #f8fafc !important;
-    margin-bottom: 12px !important;
-}
-
-.m-head-left, .mobile-head-left {
+.m-sched-nav-btns {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.m-sched-nav-btn {
+    width: 26px;
+    height: 26px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 6px;
+    font-size: 10px;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+}
+.m-sched-nav-btn:active {
+    background: #f1f5f9;
 }
 
-/* 아이콘 칩: 부드러운 라운드 스퀘어 배지 */
-.m-cat-pill, .mobile-card-pill {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 12px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
+/* 필터 칩 바 (가로 스크롤 가능, 줄바꿈 완전 차단) */
+.m-sched-filter-scroll {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 2px;
 }
-.m-cat-pill svg, .mobile-card-pill svg {
-    width: 22px !important;
-    height: 22px !important;
-    stroke-width: 1.4 !important;
-    fill: none !important;
-    stroke-linecap: round !important;
-    stroke-linejoin: round !important;
+.m-sched-filter-scroll::-webkit-scrollbar {
+    display: none;
 }
-
-.m-cat-title, .mobile-card-title {
-    font-size: 16px !important;
-    font-weight: 800 !important;
-    color: #0f172a !important;
-    letter-spacing: -0.4px !important;
-}
-
-/* 카테고리별 아담한 텍스트 태그 */
-.m-tag {
-    font-size: 11px;
-    font-weight: 700;
+.m-filter-chip {
     padding: 3px 9px;
     border-radius: 12px;
-    letter-spacing: -0.2px;
-}
-
-/* 서브메뉴 버튼들: 조잡한 컬러 테두리 대신 고급스러운 무채색 소프트 타일 */
-.m-cat-links, .mobile-card-links {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-}
-
-.m-cat-links a, .mobile-sub-btn {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 13px 14px !important;
-    background: #f8fafc !important;
-    border: 1px solid #edf2f7 !important;
-    border-radius: 12px !important;
-    color: #1e293b !important;
-    font-size: 13.5px !important;
-    font-weight: 600 !important;
-    text-decoration: none !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-    letter-spacing: -0.3px !important;
-}
-
-.m-cat-links a:active, .mobile-sub-btn:active {
-    background: #f1f5f9 !important;
-    transform: scale(0.985) !important;
-}
-
-.m-cat-links a .m-chevron, .mobile-sub-btn .m-chevron {
-    color: #94a3b8;
-    transition: transform 0.15s ease, color 0.15s ease;
-}
-.m-cat-links a:active .m-chevron, .mobile-sub-btn:active .m-chevron {
+    font-size: 11px;
+    font-weight: 750;
+    background: #f8fafc;
     color: #475569;
-    transform: translateX(2px);
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
 }
+.m-filter-chip.active {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+}
+.m-filter-chip.green {
+    background: #f0fdf4;
+    color: #166534;
+    border-color: #bbf7d0;
+}
+.m-filter-chip.green.active {
+    background: #16a34a;
+    color: #ffffff;
+    border-color: #16a34a;
+}
+.m-filter-chip.pink {
+    background: #fff1f2;
+    color: #9f1239;
+    border-color: #fecdd3;
+}
+.m-filter-chip.pink.active {
+    background: #e11d48;
+    color: #ffffff;
+    border-color: #e11d48;
+}
+.m-filter-chip.amber {
+    background: #fffbeb;
+    color: #92400e;
+    border-color: #fde68a;
+}
+.m-filter-chip.amber.active {
+    background: #d97706;
+    color: #ffffff;
+    border-color: #d97706;
+}
+.m-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+.dot-green { background: #22c55e; }
+.dot-pink { background: #f43f5e; }
+.dot-amber { background: #eab308; }
 
-/* ======================================================== */
-/* 색상 톤: 아이콘 칩과 태그에만 섬세하게 적용 (과도한 테두리 일체 없음) */
-/* ======================================================== */
-
-/* 1. 고객관리 (스카이 블루) */
-.theme-blue .m-cat-pill, .theme-blue .mobile-card-pill {
-    background: #f0f7ff !important;
+/* 일정 목록 컨테이너 & 카드 (AI 인위적 원색 테두리 배제, 홈페이지 실물 스케줄러 일치) */
+.m-sched-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
 }
-.theme-blue .m-cat-pill svg, .theme-blue .mobile-card-pill svg {
-    stroke: #0284c7 !important;
+.cal-v-event-item {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 13px 15px;
+    border: 1px solid #edf2f7;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.theme-blue .m-tag {
-    background: #e0f2fe;
-    color: #0369a1;
+.cal-v-event-item:active {
+    transform: scale(0.99);
+    background: #f8fafc;
 }
-
-/* 2. 보험인사이트 (에메랄드 그린) */
-.theme-green .m-cat-pill, .theme-green .mobile-card-pill {
-    background: #f0fdf4 !important;
+.cal-card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }
-.theme-green .m-cat-pill svg, .theme-green .mobile-card-pill svg {
-    stroke: #059669 !important;
+.cal-v-event-badge {
+    font-size: 11px;
+    font-weight: 750;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
 }
-.theme-green .m-tag {
-    background: #dcfce7;
-    color: #047857;
+.cal-v-event-badge.google {
+    background: #eff6ff;
+    color: #1d4ed8;
 }
-
-/* 3. 영업전략 (웜 앰버 골드) */
-.theme-amber .m-cat-pill, .theme-amber .mobile-card-pill {
-    background: #fffbeb !important;
+.cal-v-event-badge.bday {
+    background: #fff1f2;
+    color: #be123c;
 }
-.theme-amber .m-cat-pill svg, .theme-amber .mobile-card-pill svg {
-    stroke: #d97706 !important;
-}
-.theme-amber .m-tag {
-    background: #fef3c7;
+.cal-v-event-badge.expiry {
+    background: #fffbeb;
     color: #b45309;
 }
+.cal-v-action-btn {
+    border: none;
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 750;
+    padding: 4px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+}
+.cal-v-action-btn:hover, .cal-v-action-btn:active {
+    background: #e2e8f0;
+}
+.cal-v-event-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.35;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+.cal-v-event-sub {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.35;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
 
-/* 4. 브랜딩 (로열 퍼플) */
-.theme-purple .m-cat-pill, .theme-purple .mobile-card-pill {
-    background: #faf5ff !important;
-}
-.theme-purple .m-cat-pill svg, .theme-purple .mobile-card-pill svg {
-    stroke: #7c3aed !important;
-}
-.theme-purple .m-tag {
-    background: #f3e8ff;
-    color: #6d28d9;
+/* ========================================================
+   📱 모바일 슬라이딩 바텀 시트 (헤더_프로필_구글연동_디자인시안.html 100% 동일)
+   ======================================================== */
+@media (min-width: 1281px) {
+    #mobileBottomSheet,
+    .mobile-bottom-sheet {
+        display: none !important;
+    }
 }
 
-/* 5. 위라클 (인디고 블루) */
-.theme-indigo .m-cat-pill, .theme-indigo .mobile-card-pill {
-    background: #f5f7ff !important;
-}
-.theme-indigo .m-cat-pill svg, .theme-indigo .mobile-card-pill svg {
-    stroke: #4f46e5 !important;
-}
-.theme-indigo .m-tag {
-    background: #e0e7ff;
-    color: #4338ca;
+@media (max-width: 1280px) {
+    /* 슬라이딩 바텀 시트 */
+    .mobile-bottom-sheet {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: #ffffff !important;
+        border-top-left-radius: 24px !important;
+        border-top-right-radius: 24px !important;
+        box-shadow: 0 -8px 25px rgba(15, 23, 42, 0.14) !important;
+        border-top: 1px solid #e2e8f0 !important;
+        z-index: 2147483647 !important;
+        transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        transform: translateY(0) !important; /* 기본: 열려있음 */
+        display: block !important;
+        visibility: visible !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 쏙 숨겨진 상태 (핸들 바 높이 46px만 남음) */
+    .mobile-bottom-sheet.collapsed {
+        transform: translateY(calc(100% - 46px)) !important;
+    }
+
+    .sheet-drag-handle-bar {
+        padding: 8px 16px 10px 16px !important;
+        cursor: pointer !important;
+        text-align: center !important;
+        background: #ffffff !important;
+        border-top-left-radius: 24px !important;
+        border-top-right-radius: 24px !important;
+        user-select: none !important;
+    }
+    .sheet-drag-handle-bar:hover {
+        background: #f8fafc !important;
+    }
+    .sheet-pill-bar {
+        width: 40px !important;
+        height: 4.5px !important;
+        background: #cbd5e1 !important;
+        border-radius: 9999px !important;
+        margin: 0 auto 6px auto !important;
+    }
+    .sheet-handle-text {
+        font-size: 11px !important;
+        font-weight: 750 !important;
+        color: #0284c7 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+    }
+
+    .sheet-menu-scroll-box {
+        max-height: 260px !important;
+        overflow-y: auto !important;
+        padding-bottom: 14px !important;
+    }
+
+    .sheet-menu-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
+        padding: 4px 14px 18px 14px !important;
+        background: #ffffff !important;
+    }
+
+    .sheet-menu-tile {
+        background: #f8fafc !important;
+        border: 1px solid #f1f5f9 !important;
+        border-radius: 12px !important;
+        padding: 12px 6px !important;
+        text-align: center !important;
+        cursor: pointer !important;
+        transition: all 0.16s ease !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 6px !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+    .sheet-menu-tile:hover, .sheet-menu-tile:active {
+        background: #e0f2fe !important;
+        border-color: #bae6fd !important;
+        transform: scale(0.97) !important;
+    }
+    .sheet-tile-icon {
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 14px !important;
+    }
+    .sheet-tile-label {
+        font-size: 11px !important;
+        font-weight: 750 !important;
+        color: #1e293b !important;
+        white-space: nowrap !important;
+    }
+
+    .main-workspace.iframe-active {
+        padding-bottom: 50px !important;
+        box-sizing: border-box !important;
+    }
 }
 
 /* 독립 분리된 구독서비스 둥근 라운드형(Pill Capsule) 버튼 */
@@ -2883,16 +3087,9 @@ transform: translateY(-2px);
     transform: translateY(0) scale(0.98) !important;
 }
 
-@media (max-width: 900px) {
-    .header-sub-pill-btn {
-        height: 32px !important;
-        padding: 0 11px !important;
-        font-size: 12px !important;
-        gap: 5px !important;
-    }
-    .header-sub-pill-btn svg {
-        width: 15px !important;
-        height: 15px !important;
+@media (max-width: 768px) {
+    .header-sub-pill-btn, .mobile-all-menu-btn {
+        display: none !important;
     }
 }
 
@@ -3072,9 +3269,7 @@ transform: translateY(-2px);
     color: #0284c7;
 }
 
-@media (max-width: 900px) {
-    .mobile-all-menu-btn { display: flex !important; }
-}
+
 
 </style>
 
@@ -3237,165 +3432,85 @@ transform: translateY(-2px);
 <!-- 메인 영역 -->
 <main class="pb-main-wrapper">
 <div class="pb-content-area main-workspace iframe-active">
-<iframe id="mainFrame" name="mainFrame" src="dashboard/dashboard.html" scrolling="auto" style="display: block; border-top: 1px solid #e2e8f0; background: #ffffff;"></iframe>
+<iframe id="mainFrame" name="mainFrame" src="dashboard/dashboard.html?v=202610291225" scrolling="auto" style="display: block; border-top: 1px solid #e2e8f0; background: #ffffff;"></iframe>
 <iframe id="workerFrame" name="workerFrame" src="crm/crm_test.html?mode=headless&v=20261004213200" style="display: none;"></iframe>
 
 
 
-<!-- 모바일 전용 업무 바로가기 허브 (모바일에서는 대시보드 대신 업무 바로가기 제공) -->
+<!-- 모바일 전용 스마트 스케줄러 허브 -->
 <div class="mobile-work-hub" id="mobileWorkHub">
-    <!-- 모바일 타이틀 & 날짜 -->
-    <div class="m-hub-header">
-        <div class="m-hub-badge">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <span>2026. 08. 08 (토)</span>
+    <!-- 모바일 스케줄러 헤더 (줄바꿈 원천 차단) -->
+    <div class="m-sched-header-card">
+        <!-- 1행: 날짜(좌) + 넘김 버튼(우) -->
+        <div class="m-sched-date-row">
+            <div class="m-sched-date-badge">
+                <i class="fa-regular fa-calendar-days"></i>
+                <span id="mobileTodayDateText">2026년 10월 29일</span>
+                <span class="m-sched-today-pill">오늘</span>
+            </div>
+            <div class="m-sched-nav-btns">
+                <button type="button" class="m-sched-nav-btn" onclick="typeof safeAlert === 'function' ? safeAlert('이전 날짜 일정으로 이동합니다.', 'info') : alert('이전 날짜 일정으로 이동합니다.')"><i class="fa-solid fa-chevron-left"></i></button>
+                <button type="button" class="m-sched-nav-btn" onclick="typeof safeAlert === 'function' ? safeAlert('다음 날짜 일정으로 이동합니다.', 'info') : alert('다음 날짜 일정으로 이동합니다.')"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
         </div>
-        <h2 class="m-hub-title">영업 및 고객 업무 포털</h2>
-        <p class="m-hub-desc">필요한 업무를 터치하여 바로 시작하세요.</p>
+
+        <!-- 2행: 필터 칩 바 (가로 스크롤 가능, 줄바꿈 완전 차단) -->
+        <div class="m-sched-filter-scroll">
+            <span class="m-filter-chip active" onclick="filterMobileSchedule('all', this)">전체 4</span>
+            <span class="m-filter-chip green" onclick="filterMobileSchedule('google', this)"><span class="m-dot dot-green"></span>내 일정 2</span>
+            <span class="m-filter-chip pink" onclick="filterMobileSchedule('bday', this)"><span class="m-dot dot-pink"></span>생일 1</span>
+            <span class="m-filter-chip amber" onclick="filterMobileSchedule('expiry', this)"><span class="m-dot dot-amber"></span>만기 1</span>
+        </div>
     </div>
 
-    <!-- 전체 업무 카테고리 -->
-    <div class="m-categories-section">
-        <!-- 1. 고객관리 -->
-        <div class="m-cat-card theme-blue">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </div>
-                    <span class="m-cat-title">고객관리</span>
-                </div>
-                <span class="m-tag">고객 / 청구</span>
+    <!-- 일정 목록 (AI 원색 테두리 배제, 홈페이지 실물 스케줄러 일치) -->
+    <div class="m-sched-list" id="mobileScheduleList">
+        <!-- 1. 구글 캘린더 미팅 -->
+        <div class="cal-v-event-item" data-cat="google">
+            <div class="cal-card-top-row">
+                <span class="cal-v-event-badge google"><i class="fa-regular fa-clock"></i> 10:30 ~ 11:30</span>
+                <button type="button" class="cal-v-action-btn" onclick="location.href='tel:01012345678'">
+                    <i class="fa-solid fa-phone"></i> 연결
+                </button>
             </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('고객관리', '고객관리', 'crm/crm_test.html')">
-                    <span>고객관리 (CRM)</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('고객관리', '보험금 청구', 'claim/claim.html')">
-                    <span>보험금 청구</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-            </div>
+            <div class="cal-v-event-title">홍길동 고객 보장 리모델링 상담</div>
+            <div class="cal-v-event-sub"><i class="fa-solid fa-location-dot" style="color: #94a3b8; margin-right: 3px;"></i>스타벅스 강남점 (2층) · 신규 보장 분석 자료 전달</div>
         </div>
 
-        <!-- 2. 보험인사이트 -->
-        <div class="m-cat-card theme-green">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.5 8.5L13.5 13.5L9.5 9.5L5.5 13.5"/></svg>
-                    </div>
-                    <span class="m-cat-title">보험인사이트</span>
-                </div>
-                <span class="m-tag">시장 / 분석</span>
+        <!-- 2. 구글 캘린더 증권 전달 -->
+        <div class="cal-v-event-item" data-cat="google">
+            <div class="cal-card-top-row">
+                <span class="cal-v-event-badge google"><i class="fa-regular fa-clock"></i> 14:00 ~ 15:00</span>
+                <button type="button" class="cal-v-action-btn" onclick="location.href='tel:01098765432'">
+                    <i class="fa-solid fa-phone"></i> 연결
+                </button>
             </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('보험인사이트', '영업 소식지', 'insight/insight_news_v4.html?v=V20261006_4')">
-                    <span>영업 소식지</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('보험인사이트', '한장 비교표', 'insight/insight_compare_v2.html?v=V20261006_2')">
-                    <span>한장 비교표</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('보험인사이트', '보험 영상', 'insight/video.html')" style="grid-column: span 2;">
-                    <span>보험 영상</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-            </div>
+            <div class="cal-v-event-title">김영희 고객 가입 증권 서류 전달</div>
+            <div class="cal-v-event-sub"><i class="fa-solid fa-location-dot" style="color: #94a3b8; margin-right: 3px;"></i>성남시 분당구 고객 자택 방문 · 증권 바인더 전달</div>
         </div>
 
-        <!-- 3. 영업전략 -->
-        <div class="m-cat-card theme-amber">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
-                    </div>
-                    <span class="m-cat-title">영업전략</span>
-                </div>
-                <span class="m-tag">타겟 / 플랜</span>
+        <!-- 3. CRM 고객 생일 알림 -->
+        <div class="cal-v-event-item" data-cat="bday">
+            <div class="cal-card-top-row">
+                <span class="cal-v-event-badge bday"><i class="fa-solid fa-cake-candles"></i> 오늘 생일</span>
+                <button type="button" class="cal-v-action-btn" onclick="typeof showWeracleAlert === 'function' ? showWeracleAlert('김철수 고객님께 생일 축하 카톡 메시지를 전송합니다.', { type: 'success', title: '생일 안부톡' }) : alert('김철수 고객님께 생일 축하 카톡 메시지를 전송합니다.')">
+                    <i class="fa-solid fa-comment"></i> 축하톡
+                </button>
             </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('영업전략', '타겟 관리', 'strategy/target_test.html')">
-                    <span>타겟 관리</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('영업전략', '전략 플랜', 'strategy/strategy_plan.html')">
-                    <span>전략 플랜</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-            </div>
+            <div class="cal-v-event-title">김철수 고객님 생일 축하</div>
+            <div class="cal-v-event-sub">010-5555-1234 · 모바일 커피 쿠폰 및 축하 안부톡 발송 대상</div>
         </div>
 
-        <!-- 4. 브랜딩 -->
-        <div class="m-cat-card theme-purple">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="10" y1="3" x2="6" y2="9"/><line x1="14" y1="3" x2="18" y2="9"/><line x1="12" y1="21" x2="9" y2="9"/><line x1="12" y1="21" x2="15" y2="9"/></svg>
-                    </div>
-                    <span class="m-cat-title">브랜딩</span>
-                </div>
-                <span class="m-tag">자료 / 마켓</span>
+        <!-- 4. CRM 자동차/일반 만기 알림 -->
+        <div class="cal-v-event-item" data-cat="expiry">
+            <div class="cal-card-top-row">
+                <span class="cal-v-event-badge expiry"><i class="fa-solid fa-car"></i> 만기 도래</span>
+                <button type="button" class="cal-v-action-btn" onclick="loadSubPage('고객관리', '고객관리', 'crm/crm_test.html')">
+                    <i class="fa-solid fa-arrow-right"></i> 확인
+                </button>
             </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('브랜딩', '보장 분석', 'branding/pdf_p.html')">
-                    <span>보장 분석</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('브랜딩', '데일리 뉴스', 'branding/dailynews.html')">
-                    <span>데일리 뉴스</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('브랜딩', '브랜딩 마켓', 'branding/branding.html')" style="grid-column: span 2;">
-                    <span>브랜딩 마켓</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-            </div>
-        </div>
-
-        <!-- 5. 위라클 -->
-        <div class="m-cat-card theme-indigo">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><path d="M2 19h20v2H2z"/><path d="M2 5l4 9 6-6 6 6 4-9v12H2z"/></svg>
-                    </div>
-                    <span class="m-cat-title">위라클</span>
-                </div>
-                <span class="m-tag">파트너</span>
-            </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('위라클', '파트너스', 'management/management.html')" style="grid-column: span 2;">
-                    <span>파트너스</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-            </div>
-        </div>
-
-        <!-- 6. 구독서비스 (신규 독립 허브 카드 + 둥근 라운드형 아이콘) -->
-        <div class="m-cat-card theme-rose">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 10a4 4 0 0 1 6.8-1.5L17 10"/><polyline points="17 6.5 17 10 13.5 10"/><path d="M15.5 14a4 4 0 0 1-6.8 1.5L7 14"/><polyline points="7 17.5 7 14 10.5 14"/></svg>
-                    </div>
-                    <span class="m-cat-title">구독서비스</span>
-                </div>
-                <span class="m-tag">멤버십</span>
-            </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('구독서비스', '구독 플랜', 'subscription/subscription.html')">
-                    <span>구독 플랜</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('구독서비스', '결제/구독 관리', 'subscription/subscription.html')">
-                    <span>결제/구독 관리</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-            </div>
+            <div class="cal-v-event-title">박철수 고객 운전자보험 갱신 안내</div>
+            <div class="cal-v-event-sub">DB손해보험 운전자보험 만기 D-30일 도래 건 (갱신 안내 통화)</div>
         </div>
     </div>
 </div>
@@ -3553,1891 +3668,188 @@ transform: translateY(-2px);
 </div>
 </div>
 
-<script>
-function togglePopbillSidebar() {
-  const sidebar = document.getElementById('pbSidebar');
-  const restoreBtn = document.getElementById('restoreHamburger');
-  if(sidebar) {
-    sidebar.classList.toggle('hidden');
-    if(restoreBtn) {
-      if(sidebar.classList.contains('hidden')) {
-        restoreBtn.style.display = 'flex';
-      } else {
-        restoreBtn.style.display = 'none';
-      }
-    }
-  }
-}
-
-
-
-function updatePopbillMenu(element) {
-  const items = document.querySelectorAll('.pb-menu-item');
-  items.forEach(i => i.classList.remove('active'));
-  if(element) {
-    element.classList.add('active');
-    const titleSpan = element.querySelector('.pb-menu-text');
-    if(titleSpan) {
-      let menuId = element.getAttribute('data-menu');
-      if(!menuId) menuId = titleSpan.innerText.replace('\n', ' ').trim();
-      document.getElementById('pbHeaderTitle').innerText = menuId;
-      
-      const tabsMap = {
-        '홈': [],
-        '고객관리': [{name:'고객관리', href:'crm/crm_test.html'}, {name:'보험금 청구', href:'claim/claim.html'}, {name:'언더라이팅', href:'underwriting/underwriting.html'}, {name:'숨은보험금찾기', href:'hiddenclaim/hiddenclaim.html'}],
-        '보험인사이트': [{name:'영업 소식지', href:'insight/insight_news_v4.html?v=V20261006_4'}, {name:'한장 비교표', href:'insight/insight_compare_v2.html?v=V20261006_2'}, {name:'보험 영상', href:'insight/video.html'}],
-        '영업전략': [{name:'타겟 관리', href:'strategy/target_test.html'}, {name:'전략 플랜', href:'strategy/strategy_plan.html'}],
-        '브랜딩': [{name:'보장 분석', href:'branding/pdf_p.html'}, {name:'데일리 뉴스', href:'branding/dailynews.html'}, {name:'브랜딩 마켓', href:'branding/branding.html'}],
-        '커뮤니티': [],
-        '위라클': [{name:'파트너스', href:'management/management.html'}],
-        '구독서비스': [{name:'구독 플랜', href:'subscription/subscription.html'}, {name:'결제/구독 관리', href:'subscription/subscription.html'}]
-      };
-      
-      const tabs = tabsMap[menuId] || [];
-      const tabsContainer = document.getElementById('pb-dynamic-tabs');
-      if(tabsContainer) {
-        tabsContainer.innerHTML = '';
-        tabsContainer.style.display = 'flex';
-        tabsContainer.style.height = '100%';
-        tabsContainer.style.justifyContent = 'flex-start';
-        tabsContainer.style.marginLeft = '30px';
-        
-        tabs.forEach((tab, index) => {
-          const btn = document.createElement('button');
-          btn.className = 'sub-tab-btn' + (index === 0 ? ' active' : '');
-          btn.innerText = tab.name;
-          btn.onclick = (e) => {
-            tabsContainer.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            if(tab.href && tab.href !== '#') {
-              const iframe = document.getElementById('mainFrame');
-              if(iframe) iframe.src = tab.href + '?v=' + new Date().getTime();
-            }
-          };
-          tabsContainer.appendChild(btn);
-        });
-      }
-    }
-  }
-}
-
-window.switchGlobalTab = function(tabId, iframeFuncName, tabElement) {
-const tabs = document.querySelectorAll('.pb-gnb-tab');
-tabs.forEach(t => t.classList.remove('active'));
-if (tabElement) tabElement.classList.add('active');
-
-const iframe = document.getElementById('mainFrame');
-if (!iframe) return;
-
-let msgType = '';
-if (iframeFuncName === 'filterVideoSubcategory') msgType = 'FILTER_VIDEO';
-else if (iframeFuncName === 'switchCommunityTab') msgType = 'FILTER_COMMUNITY';
-else if (iframeFuncName === 'switchWmTab') msgType = 'FILTER_WM_TAB';
-else if (iframeFuncName === 'switchCrmTab') msgType = 'FILTER_CRM_TAB';
-
-const trySwitch = (retries = 20) => {
-let success = false;
-try {
-if (iframe.contentWindow && typeof iframe.contentWindow[iframeFuncName] === 'function') {
-iframe.contentWindow[iframeFuncName](tabId);
-success = true;
-}
-} catch(e) {
-// CORS Blocked, use postMessage
-if (iframe.contentWindow && msgType) {
-iframe.contentWindow.postMessage({ type: msgType, tab: tabId }, '*');
-success = true;
-}
-}
-
-if (!success && retries > 0) {
-// Even postMessage failed (maybe contentWindow is null before load), or function isn't ready
-// Send postMessage anyway, as iframes might be listening as soon as they load
-if (iframe.contentWindow && msgType) {
-iframe.contentWindow.postMessage({ type: msgType, tab: tabId }, '*');
-}
-setTimeout(() => trySwitch(retries - 1), 100);
-} else if (!success) {
-console.error("Iframe function not found after retries:", iframeFuncName);
-}
-};
-trySwitch();
-};
-
-// Init Supabase Auth State Change Listener (ASCII ONLY)
-// pb-login-outside-closer
-        document.addEventListener('click', (e) => {
-            const pb = document.getElementById('pbLoginInfo');
-            if (pb && pb.classList.contains('open') && !pb.contains(e.target)) {
-                pb.classList.remove('open');
-                const nav = document.getElementById('topGlobalNav');
-                if (nav) nav.style.overflow = '';
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', () => {
-  if(window.authEvents) {
-    window.authEvents.on('stateChange', async ({ event, session }) => {
-      if (event === 'SIGNED_IN') {
-        const currentMainFrame = document.getElementById('mainFrame');
-        if (currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html')) {
-          if (typeof showDashboardHome === 'function') {
-            showDashboardHome();
-          }
-        }
-        if (typeof checkSession === 'function') checkSession();
-      }
-      if (event === 'SIGNED_OUT') {
-        if (typeof updateProfileUI === 'function') updateProfileUI(null, null);
-      }
-      if (event === 'SIGNED_IN' && session && session.provider_token) {
-        try {
-          if (window.sb) {
-            await window.sb.from('profiles').update({ google_access_token: session.provider_token }).eq('id', session.user.id);
-          }
-          if (window.currentProfile) window.currentProfile.google_access_token = session.provider_token;
-          localStorage.setItem('g_access_token', session.provider_token);
-          
-          const iframe = document.getElementById('mainFrame');
-          if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: session.provider_token }, '*');
-            const wf1 = document.getElementById('workerFrame'); 
-            if (wf1 && wf1.contentWindow) wf1.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: session.provider_token }, '*');
-          }
-        } catch(e) { console.error('Error saving provider_token:', e); }
-      }
-    });
-  }
-});
-
-let authTab = "login"; // "login" | "signup"
-let wIsLoggedIn = false; // Track login status
-
-// ========================================================
-// [ 위라클 프리미엄 커스텀 모달 / 확인창 시스템 ]
-// 브라우저 기본 alert를 감성적이고 모던한 UI로 완전 대체
-// ========================================================
-window.showWeracleAlert = function(message, options = {}) {
-    return new Promise((resolve) => {
-        let overlay = document.getElementById('wCustomModalOverlay');
-        if (!overlay) {
-            const div = document.createElement('div');
-            div.id = 'wCustomModalOverlay';
-            div.className = 'w-custom-modal-overlay';
-            div.innerHTML = `
-                <div class="w-custom-modal-card">
-                    <div class="w-custom-modal-icon" id="wCustomModalIcon"></div>
-                    <div class="w-custom-modal-title" id="wCustomModalTitle">알림</div>
-                    <div class="w-custom-modal-desc" id="wCustomModalDesc"></div>
-                    <div class="w-custom-modal-actions" id="wCustomModalActions"></div>
-                </div>
-            `;
-            document.body.appendChild(div);
-            overlay = div;
-        }
-
-        const iconEl = overlay.querySelector('#wCustomModalIcon');
-        const titleEl = overlay.querySelector('#wCustomModalTitle');
-        const descEl = overlay.querySelector('#wCustomModalDesc');
-        const actionsEl = overlay.querySelector('#wCustomModalActions');
-
-        const msgStr = String(message || '');
-        let type = options.type;
-        if (!type) {
-            if (/로그인|성공|완료|발송되었습니다|저장되었습니다/.test(msgStr)) type = 'success';
-            else if (/실패|오류|에러|불가/.test(msgStr)) type = 'error';
-            else if (/만료|주의|경고/.test(msgStr)) type = 'warning';
-            else type = 'info';
-        }
-
-        let defaultTitle = '알림';
-        let iconSvg = '';
-        if (type === 'success') {
-            defaultTitle = options.title || '성공 안내';
-            iconEl.className = 'w-custom-modal-icon success';
-            iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
-        } else if (type === 'error') {
-            defaultTitle = options.title || '오류 발생';
-            iconEl.className = 'w-custom-modal-icon error';
-            iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
-        } else if (type === 'warning') {
-            defaultTitle = options.title || '확인 필요';
-            iconEl.className = 'w-custom-modal-icon warning';
-            iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
-        } else {
-            defaultTitle = options.title || '안내';
-            iconEl.className = 'w-custom-modal-icon info';
-            iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
-        }
-
-        iconEl.innerHTML = iconSvg;
-        titleEl.innerText = options.title || defaultTitle;
-        descEl.innerText = msgStr;
-
-        const isConfirmMode = !!options.isConfirm;
-        actionsEl.innerHTML = isConfirmMode
-            ? `<button type="button" class="w-custom-modal-btn cancel" id="wModalCancelBtn">${options.cancelText || '취소'}</button>
-               <button type="button" class="w-custom-modal-btn confirm" id="wModalConfirmBtn">${options.confirmText || '확인'}</button>`
-            : `<button type="button" class="w-custom-modal-btn confirm" id="wModalConfirmBtn">${options.confirmText || '확인'}</button>`;
-
-        const closeModal = (result) => {
-            overlay.classList.remove('active');
-            window.removeEventListener('keydown', handleKeyDown);
-            if (result && options.onConfirm) options.onConfirm();
-            if (!result && options.onCancel) options.onCancel();
-            resolve(result);
-        };
-
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') closeModal(false);
-            if (e.key === 'Enter') closeModal(true);
-        };
-        window.addEventListener('keydown', handleKeyDown);
-
-        const confirmBtn = actionsEl.querySelector('#wModalConfirmBtn');
-        if (confirmBtn) confirmBtn.onclick = () => closeModal(true);
-        const cancelBtn = actionsEl.querySelector('#wModalCancelBtn');
-        if (cancelBtn) cancelBtn.onclick = () => closeModal(false);
-
-        overlay.onclick = (e) => {
-            if (e.target === overlay) closeModal(false);
-        };
-
-        requestAnimationFrame(() => {
-            overlay.classList.add('active');
-            if (confirmBtn) confirmBtn.focus();
-        });
-    });
-};
-
-function safeAlert(msg, type) {
-    console.log(msg);
-    window.showWeracleAlert(msg, { type: type });
-}
-
-// 브라우저 기본 alert를 커스텀 확인창으로 오버라이드
-window.alert = function(msg) {
-    window.showWeracleAlert(msg);
-};
-
-window.addEventListener('message', function(event) {
-if (event.data && event.data.type === 'DASHBOARD_READY') {
-  if (window.globalCustomerData && window.globalCustomerData.length > 0) {
-    const mf = document.getElementById('mainFrame');
-    if (mf && mf.contentWindow) {
-      mf.contentWindow.postMessage({
-        type: 'syncData',
-        data: window.globalCustomerData,
-        crmContacts: window.crmContactsData || [],
-        targetData: window.globalTargetData || []
-      }, '*');
-    }
-  }
-  const wf = document.getElementById('workerFrame');
-  if (wf && wf.contentWindow) wf.contentWindow.postMessage(event.data, '*');
-  return;
-}
-if (event.data && event.data.type === 'SAVE_TARGET') {
-const wf = document.getElementById('workerFrame');
-if (wf && wf.contentWindow) wf.contentWindow.postMessage(event.data, '*');
-return;
-}
-if (event.data && (event.data.type === 'SAVE_TARGET_CSV' || event.data.type === 'SAVE_CONTACTS_SHEET' || event.data.type === 'SAVE_BLACKLIST_SHEET' || event.data.type === 'INIT_TOWER_SHEETS' || event.data.type === 'UPDATE_CONTACT_STATUS')) {
-  const wf = document.getElementById('workerFrame');
-  if (wf && wf.contentWindow) wf.contentWindow.postMessage(event.data, '*');
-}
-if (event.data && event.data.type === 'requestSyncData') {
-  if (window.globalCustomerData && window.globalCustomerData.length > 0) {
-    const mf = document.getElementById('mainFrame');
-    if (mf && mf.contentWindow) {
-      mf.contentWindow.postMessage({
-        type: 'syncData',
-        data: window.globalCustomerData,
-        crmContacts: window.crmContactsData || [],
-        targetData: window.globalTargetData || []
-      }, '*');
-    }
-  }
-  const wf = document.getElementById('workerFrame');
-  if (wf && wf.contentWindow) wf.contentWindow.postMessage(event.data, '*');
-}
-if (event.data && event.data.type === 'workerAuthFailed') {
-  const mf = document.getElementById('mainFrame');
-  if (mf && mf.contentWindow) mf.contentWindow.postMessage(event.data, '*');
-}
-if (event.data && event.data.type === 'syncData') {
-  window.globalCustomerData = event.data.data || [];
-  window.globalTargetData = event.data.targetData || [];
-  window.crmContactsData = event.data.crmContacts || [];
-  try {
-    if (window.globalCustomerData.length > 0) {
-      localStorage.setItem('demo_crm_data', JSON.stringify(window.globalCustomerData));
-    }
-  } catch(e) {}
-
-  const mf = document.getElementById('mainFrame');
-  if (mf && mf.contentWindow) mf.contentWindow.postMessage(event.data, '*');
-
-  if (typeof updateIndexDashboard === 'function') {
-    updateIndexDashboard(event.data.data || [], event.data.targetData || [], event.data.metrics);
-  }
-  return;
-}
-if (event.data && event.data.type === 'REQUEST_GOOGLE_LOGIN') {
-triggerGoogleLogin();
-} else if (event.data && event.data.type === 'REQUEST_GOOGLE_TOKEN') {
-const token = (window.currentProfile && window.currentProfile.google_access_token) || localStorage.getItem('google_access_token');
-const mf = document.getElementById('mainFrame');
-if (token && mf && mf.contentWindow) {
-  mf.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: token }, '*');
-}
-} else if (event.data && event.data.type === 'requestLogo') {
-if (window.currentProfile && window.currentProfile.logo_url && event.source) {
-event.source.postMessage({ type: 'setLogo', data: window.currentProfile.logo_url }, '*');
-}
-}
-});
-
-// --- Google Identity Services (GIS) Logic ---
-let googleTokenClient;
-const GOOGLE_CLIENT_ID = "281609603311-j6ie378elv518odovep2rjemeaffb40b.apps.googleusercontent.com";
-const SCOPES = "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events";
-
-function initGoogleClient() {
-if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
-googleTokenClient = google.accounts.oauth2.initTokenClient({
-client_id: GOOGLE_CLIENT_ID,
-scope: SCOPES,
-callback: async (tokenResponse) => {
-if (tokenResponse && tokenResponse.access_token) {
-console.log(" Google login successful. Saving token to Supabase...");
-
-// Save to Supabase
-if (window.sb && window.currentUser) {
-await window.sb.from('profiles').update({
-google_access_token: tokenResponse.access_token
-}).eq('id', window.currentUser.id);
-
-// Update local profile
-if (window.currentProfile) {
-window.currentProfile.google_access_token = tokenResponse.access_token;
-}
-}
-
-// Update UI
-updateProfileUI(window.currentUser, window.currentProfile);
-
-// Broadcast to Iframe
-const iframe = document.getElementById('mainFrame');
-if (iframe && iframe.contentWindow) {
-iframe.contentWindow.postMessage({
-type: 'GOOGLE_TOKEN',
-token: tokenResponse.access_token
-}, '*');
-}
-const wf = document.getElementById('workerFrame');
-if (wf && wf.contentWindow) {
-wf.contentWindow.postMessage({
-type: 'GOOGLE_TOKEN',
-token: tokenResponse.access_token
-}, '*');
-}
-
-localStorage.setItem('g_token_time', Date.now().toString()); // GIS 키 발급 시간 저장!
-localStorage.setItem('google_access_token', tokenResponse.access_token);
-if (window.currentProfile) {
-    window.currentProfile.google_access_token = tokenResponse.access_token;
-    if (typeof updateProfileUI === "function") updateProfileUI(window.currentUser, window.currentProfile);
-}
-safeAlert("구글 계정이 성공적으로 연동되었습니다.");
-}
-}
-});
-} else {
-setTimeout(initGoogleClient, 100);
-}
-}
-initGoogleClient();
-
-function triggerGoogleLogin(isSilent = false) {
-if (!googleTokenClient) {
-safeAlert("구글 연동 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
-return;
-}
-if (!window.currentUser) {
-openAuthModal('login');
-return;
-}
-// Request token
-googleTokenClient.requestAccessToken();
-}
-// ------------------------------------------
-
-// 비동기 통신 타임아웃 제어 헬퍼
-function promiseTimeout(promise, ms) {
-let id;
-const timeout = new Promise((_, reject) => {
-id = setTimeout(() => reject(new Error("Timeout")), ms);
-});
-return Promise.race([promise, timeout]).finally(() => clearTimeout(id));
-}
-
-function showDashboard(btn) {
-if (typeof toggleWidget === 'function') toggleWidget(false);
-
-
-document.querySelector('.main-workspace').classList.add('iframe-active');
-const dbHome = document.getElementById('dashboardHome');
-if (dbHome) dbHome.style.display = 'none';
-
-const frame = document.getElementById('mainFrame');
-if (frame) {
-frame.style.display = 'block';    
-frame.src = 'dashboard/dashboard.html?v=' + new Date().getTime();
-}
-
-const authCont = document.getElementById('w-auth-workspace-container');
-if (authCont) authCont.style.display = 'none';
-
-if (btn) updateActiveMenu(btn);
-const insSidebar = document.getElementById('ins-sidebar');
-if (insSidebar) insSidebar.style.display = 'none'; 
-
-// 모바일 닫기
-if (window.innerWidth <= 768) toggleSidebar();
-}
-
-function loadFrame(element) {
-if (typeof toggleWidget === 'function') toggleWidget(false);
-
-
-if (!wIsLoggedIn && !element.classList.contains('allow-guest')) {
-safeAlert("로그인이 필요한 서비스입니다. 로그인을 먼저 진행해 주세요.");
-focusAuthForm();
-return false;
-}
-
-document.querySelector('.main-workspace').classList.add('iframe-active');
-document.getElementById('dashboardHome').style.display = 'none'; 
-const wAuth = document.getElementById('w-auth-workspace-container'); if (wAuth) wAuth.style.display = 'none';
-const insSidebar = document.getElementById('ins-sidebar');
-if (insSidebar) insSidebar.style.display = 'none';
-
-const frame = document.getElementById('mainFrame');
-if(frame) {
-frame.style.display = 'block';    
-const href = element.getAttribute('href');
-if (href && href !== '#') {
-frame.src = href;
-}
-}
-
-window.scrollTo(0, 0);            
-updateActiveMenu(element);
-
-if (typeof toggleSidebar === 'function' && window.innerWidth <= 768) {
-toggleSidebar();
-}
-return true;
-}
-
-function updateActiveMenu(element) {
-const items = document.querySelectorAll('.menu-item, .pb-menu-item, .tab-item');
-items.forEach(i => i.classList.remove('active'));
-if(element) element.classList.add('active');
-}
-</script>
-<!-- UI 보조 스크립트 -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-const iframe = document.getElementById('mainFrame');
-if (!iframe) return;
-
-// 1. 크로스도메인(Vercel 등) 연동을 위한 postMessage 수신 처리
-window.addEventListener('message', (event) => {
-if (event.data && event.data.type === 'CRM_RESIZE') {
-const newHeight = Math.max(800, parseInt(event.data.height));
-const currentHeight = parseInt(iframe.style.height) || 0;
-// 무한 팽창 루프 방지: 높이 차이가 10px 이상 날 때만 반영
-if (Math.abs(currentHeight - newHeight) > 10) {
-iframe.style.height = newHeight + 'px';
-}
-}
-// 자식 iframe(CRM)에서 세션 요청 신호가 왔을 때 즉시 전송
-else if (event.data && event.data.type === 'CRM_TOKEN_UPDATED') {
-    console.log(" Received updated CRM tokens from iframe.");
-    if (event.data.google_sheet_id) {
-        localStorage.setItem('g_sheet_id', event.data.google_sheet_id);
-        if (window.currentProfile) window.currentProfile.google_sheet_id = event.data.google_sheet_id;
-        
-        // Update Supabase DB since iframe cannot do it
-        if (window.sb && window.currentUser) {
-            window.sb.from('profiles').update({ google_sheet_id: event.data.google_sheet_id })
-                .eq('id', window.currentUser.id)
-                .then(({error}) => { if (error) console.error("Failed to sync sheet ID to Supabase:", error); });
-        }
-    }
-}
-else if (event.data && (event.data.type === 'CRM_REQUEST_SESSION' || event.data.type === 'REQUEST_SESSION')) {
-        const waitForSession = async () => {
-            while(typeof isSessionChecked === 'undefined' || !isSessionChecked) { await new Promise(r => setTimeout(r, 100)); }
-            if (window.currentUser) {
-                console.log(' Received session request from child. Syncing session...');
-                event.source.postMessage({
-                    type: 'SB_SESSION_SYNC',
-                    user: window.currentUser,
-                    profile: window.currentProfile || {
-                        nickname: window.currentUser.user_metadata?.nickname || window.currentUser.email.split('@')[0],
-                        user_grade: 'normal',
-                        avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + window.currentUser.id
-                    }
-                }, '*');
-                const gToken = localStorage.getItem('g_access_token') || (window.currentProfile ? window.currentProfile.google_access_token : null);
-                if (gToken) {
-                    event.source.postMessage({ type: 'GOOGLE_TOKEN', token: gToken }, '*');
-                }
-            }
-        };
-        waitForSession();
-    }
-});
-// 2. 동일 도메인 연동을 위한 직접 감지 처리
-
-// 3. (긴급복구) URL 파라미터 전달 로직
-const urlParams = new URLSearchParams(window.location.search);
-const forceSheetId = urlParams.get('force_sheet_id');
-if (forceSheetId && iframe && iframe.contentWindow) {
-    iframe.contentWindow.postMessage({ type: 'FORCE_SHEET_ID', sheetId: forceSheetId }, '*');
-    setTimeout(() => {
-        iframe.contentWindow.postMessage({ type: 'FORCE_SHEET_ID', sheetId: forceSheetId }, '*');
-    }, 1500); // 딜레이를 주어 iframe 로딩 후에도 한번 더 전송
-}
-
-iframe.addEventListener('load', function() {
-try {
-if (window.currentUser && window.currentProfile) {
-iframe.contentWindow.postMessage({
-type: 'SB_SESSION_SYNC',
-user: window.currentUser,
-profile: window.currentProfile
-}, '*');
-}
-
-if (iframe.contentWindow.location.hostname === window.location.hostname || window.location.hostname === '') {
-const resizeIframe = () => {
-try {
-const body = iframe.contentWindow.document.body;
-const html = iframe.contentWindow.document.documentElement;
-if (body && html) {
-const height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
-if (height > 100) iframe.style.height = height + 'px';
-}
-} catch (e) {}
-};
-resizeIframe();
-if (window.iframeResizeInterval) clearInterval(window.iframeResizeInterval);
-window.iframeResizeInterval = setInterval(resizeIframe, 500);
-}
-} catch (e) {
-console.warn("Iframe same-origin auto-resize skipped (Cross-Origin detected):", e);
-const currentHeight = parseInt(iframe.style.height) || 0;
-if (currentHeight < 800) {
-iframe.style.height = '1000px';
-}
-}
-});
-});
-
-// ==========================================================
-//  로컬 개발 환경용 라우팅 도우미 (localhost 접속 시 자동 리다이렉션)
-// ==========================================================
-document.addEventListener('DOMContentLoaded', () => {
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-console.log(" Local Development Mode detected! Rewriting iframe targets to local files.");
-const menuLinks = document.querySelectorAll('.side-menu a, .menu-item');
-menuLinks.forEach(link => {
-const href = link.getAttribute('href');
-if (href) {
-if (href.includes('/89')) {
-link.setAttribute('href', '/vercel-crm/index.html');
-} else if (href.includes('/82')) {
-link.setAttribute('href', '/video_gallery_integrated.html');
-} else if (href.includes('/181')) {
-link.setAttribute('href', '/community_board_integrated.html');
-} else if (href.includes('/182')) {
-link.setAttribute('href', '/shop_integrated.html');
-}
-}
-});
-}
-});
-
-// 마이페이지 이동 패치
-window.openLinkedGoogleSheet = function() {
-const sheetId = localStorage.getItem('g_sheet_id');
-if (sheetId) {
-window.open('https://docs.google.com/spreadsheets/d/' + sheetId + '/edit', '_blank');
-} else {
-alert('연동된 구글 시트를 찾을 수 없습니다.');
-}
-};
-
-window.loginToWeracleTalk = function() {
-    if (!window.currentUser) {
-        alert("먼저 위라클 홈페이지에 로그인해 주세요.");
-        if (typeof openAuthModal === "function") openAuthModal("login");
-        return;
-    }
-    const profile = window.currentProfile || {};
-    const payload = {
-        action: "login",
-        user_id: window.currentUser.id,
-        email: window.currentUser.email,
-        nickname: profile.nickname || (window.currentUser.email ? window.currentUser.email.split("@")[0] : "위라클회원"),
-        user_grade: profile.user_grade || "VIP",
-        google_sheet_id: profile.google_sheet_id || "",
-        phone: profile.phone || "",
-        google_access_token: localStorage.getItem("g_access_token") || profile.google_access_token || ""
-    };
-
-    fetch("http://127.0.0.1:48291/api/bridge_content", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    }).then(res => {
-        window.location.href = "weracle://login?data=" + encodeURIComponent(JSON.stringify(payload));
-    }).catch(err => {
-        window.location.href = "weracle://login?data=" + encodeURIComponent(JSON.stringify(payload));
-    });
-};
-
-window.openMyPageFromSidebar = function() {
-document.querySelector('.main-workspace').classList.add('iframe-active');
-document.getElementById('dashboardHome').style.display = 'none'; 
-const frame = document.getElementById('mainFrame');
-frame.style.display = 'block';    
-frame.src = "login/mypage.html?v=" + Date.now();                  
-window.scrollTo(0, 0);
-const dd = document.getElementById('pbLoginDropdown'); if (dd) dd.classList.remove('show');
-
-            
-
-const items = document.querySelectorAll('.menu-item, .pb-menu-item, .tab-item');
-items.forEach(item => item.classList.remove('active'));
-if (window.innerWidth <= 768) toggleSidebar();
-};
-// --- Recovered Auth Logic ---
-let isSessionChecked = false;
-async function checkSession() {
-    if (!window.sb || !window.sb.auth) {
-        console.log('Waiting for Supabase client...');
-        setTimeout(checkSession, 500);
-        return;
-    }
-    try {
-        if (window.top && window.top !== window) {
-            try {
-                if (window.top.location.hash && window.top.location.hash.includes('access_token')) {
-                    if (!window.location.hash || !window.location.hash.includes('access_token')) {
-                        window.location.hash = window.top.location.hash;
-                    }
-                }
-            } catch(e) {}
-        }
-        const { data, error } = await window.sb.auth.getSession();
-        if (error) throw error;
-        
-        if (data && data.session) {
-            window.currentUser = data.session.user;
-            wIsLoggedIn = true;
-
-            // OAuth 리다이렉트 후 브라우저 주소창의 긴 해시(#access_token=...) 깔끔하게 자동 정리
-            if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('provider_token'))) {
-                try {
-                    history.replaceState(null, '', window.location.pathname + window.location.search);
-                } catch(e) {}
-            }
-            if (window.top && window.top !== window) {
-                try {
-                    if (window.top.location.hash && (window.top.location.hash.includes('access_token') || window.top.location.hash.includes('provider_token'))) {
-                        window.top.history.replaceState(null, '', window.top.location.pathname + window.top.location.search);
-                    }
-                } catch(e) {}
-            }
-
-            const currentMainFrame = document.getElementById('mainFrame');
-            if (currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html')) {
-                if (typeof showDashboardHome === 'function') {
-                    showDashboardHome();
-                }
-            }
-            
-            if (data.session.provider_token) {
-                try {
-                    const gisTime = parseInt(localStorage.getItem('g_token_time') || '0');
-                    const loginTime = new Date(data.session.user.last_sign_in_at).getTime();
-                    if (loginTime > gisTime) {
-                        await window.sb.from('profiles').update({ google_access_token: data.session.provider_token }).eq('id', window.currentUser.id);
-                        localStorage.setItem('g_access_token', data.session.provider_token);
-                        localStorage.setItem('g_token_time', Date.now().toString()); 
-                    }
-                } catch(e) {}
-            }
-            
-            const { data: profile } = await window.sb.from('profiles').select('*').eq('id', window.currentUser.id).single();
-            window.currentProfile = profile;
-            
-            if(profile && !profile.phone && profile.user_grade !== 'manager' && profile.user_grade !== 'admin') {
-                document.getElementById('w-onboarding-modal').style.display = 'flex';
-            }
-            
-            const latestGToken = localStorage.getItem('g_access_token') || (profile ? profile.google_access_token : null);
-            if (latestGToken) {
-                try { localStorage.setItem('g_access_token', latestGToken); } catch(e){}
-                const iframe = document.getElementById('mainFrame');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: latestGToken }, '*');
-                }
-                const wf = document.getElementById('workerFrame');
-                if (wf && wf.contentWindow) {
-                    wf.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: latestGToken }, '*');
-                }
-            }
-            
-            updateProfileUI(window.currentUser, profile);
-            if (window.location.hash.includes("app_login")) {
-                setTimeout(() => { if (typeof window.loginToWeracleTalk === "function") window.loginToWeracleTalk(); }, 500);
-            }
-            
-            const sessionMsg = {
-                type: 'SB_SESSION_SYNC',
-                user: window.currentUser,
-                profile: profile || {
-                    nickname: window.currentUser.user_metadata?.nickname || window.currentUser.email.split('@')[0],
-                    user_grade: 'normal',
-                    avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + window.currentUser.id
-                }
-            };
-            const mainFrame = document.getElementById('mainFrame');
-            if (mainFrame && mainFrame.contentWindow) mainFrame.contentWindow.postMessage(sessionMsg, '*');
-            const workerFrame = document.getElementById('workerFrame');
-            if (workerFrame && workerFrame.contentWindow) workerFrame.contentWindow.postMessage(sessionMsg, '*');
-            
-            const wAuth = document.getElementById('w-auth-workspace-container');
-            if (wAuth && wAuth.style.display !== 'none') {
-                wAuth.style.display = 'none';
-            }
-        } else {
-            // [개발 및 디자인 검토용] 로그인 상태 미리보기 모드 지원
-            const urlParams = new URLSearchParams(window.location.search);
-            const isPreviewLogin = urlParams.get('preview') === 'login' || localStorage.getItem('weracle_preview_login') === 'true';
-            if (isPreviewLogin) {
-                const mockUser = {
-                    id: 'preview-planner-01',
-                    email: 'planner@weracle.com',
-                    user_metadata: { full_name: '홍길동', nickname: '홍길동' },
-                    last_sign_in_at: new Date().toISOString()
-                };
-                const mockProfile = {
-                    id: 'preview-planner-01',
-                    full_name: '홍길동',
-                    nickname: '홍길동',
-                    user_grade: 'premium',
-                    phone: '010-1234-5678',
-                    avatar_url: ''
-                };
-                window.currentUser = mockUser;
-                window.currentProfile = mockProfile;
-                wIsLoggedIn = true;
-                updateProfileUI(mockUser, mockProfile);
-                console.log('로그인 상태 미리보기 활성화됨');
-                return;
-            }
-
-            wIsLoggedIn = false;
-            updateProfileUI(null, null);
-            if (typeof showDashboardHome === 'function') showDashboardHome();
-        }
-    } catch (err) {
-        console.error("Session check error:", err);
-        wIsLoggedIn = false;
-        updateProfileUI(null, null);
-        if (typeof showDashboardHome === 'function') showDashboardHome();
-    } finally {
-        isSessionChecked = true;
-    }
-}
-
-function renderAuthPanel() {
-const inner = document.getElementById("w-auth-card-inner");
-if (!inner) return;
-inner.innerHTML = `
-    <div style="text-align: center; margin-bottom: 28px;">
-        <span style="font-family:'Outfit'; font-size: 28px; font-weight:900; color:#113f67; letter-spacing:-1.2px;">WERACLE <span style="color:#1e5c94;">LAB</span></span>
-        <p style="color:#64748b; font-size: 14px; margin-top: 6px; font-weight: 500; letter-spacing: -0.3px;">스마트 보험 청구 플랫폼</p>
-    </div>
-    <div style="background: #e0f2fe; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
-        <p style="color:#0369a1; font-size: 13.5px; font-weight: 700; line-height: 1.5; margin: 0;">
-             고객 일정 및 달력 자동 연동을 위해<br>반드시 <span style="color:#113f67;">Google 계정</span>으로 시작해 주세요.
-        </p>
-    </div>
-    <button onclick="handleSocial('google')" class="w-auth-submit-btn" style="height: 56px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 12px; background: #ffffff; color: #374151; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:24px; height:24px;" alt="Google" />
-        Google 계정으로 3초 만에 시작하기
-    </button>
-    <div style="margin-top: 24px; font-size: 12px; color: #94a3b8; text-align: center;">
-        가입 시 위라클의 이용약관 및 개인정보처리방침에 동의하게 됩니다.
-    </div>
-`;
-}
-
-function toggleAuthTab(tab) {
-authTab = tab;
-renderAuthPanel();
-}
-
-async function execEmailLogin(e) {
-e.preventDefault();
-const email = document.getElementById('g-login-email').value;
-const password = document.getElementById('g-login-password').value;
-try {
-const { error } = await window.sb.auth.signInWithPassword({ email, password });
-if (error) throw error;
-safeAlert("로그인 되었습니다!");
-const wAuth = document.getElementById('w-auth-workspace-container'); if (wAuth) wAuth.style.display = 'none';
-showDashboard(document.querySelector('.menu-item'));
-showDashboard(document.querySelector('.pb-menu-item'));
-checkSession(); // 새로고침 효과
-} catch (err) {
-safeAlert("로그인 실패: " + err.message);
-}
-}
-
-async function execResetPassword(e) {
-e.preventDefault();
-const email = document.getElementById('g-reset-email').value;
-try {
-const { error } = await window.sb.auth.resetPasswordForEmail(email, {
-redirectTo: window.location.origin + window.location.pathname
-});
-if (error) throw error;
-safeAlert("비밀번호 재설정 링크가 이메일로 전송되었습니다. 이메일함을 확인해주세요.");
-toggleAuthTab('login');
-} catch (err) {
-safeAlert("오류 발생: " + err.message);
-}
-}
-
-async function execEmailSignup(e) {
-e.preventDefault();
-const email = document.getElementById('g-signup-email').value;
-const password = document.getElementById('g-signup-password').value;
-const nickname = document.getElementById('g-signup-nickname').value;
-try {
-const { error } = await window.sb.auth.signUp({ email, password, options: { data: { nickname } } });
-if (error) throw error;
-safeAlert("회원가입 완료! 로그인해주세요.");
-toggleAuthTab('login');
-} catch (err) {
-safeAlert("회원가입 실패: " + err.message);
-}
-}
-
-async function handleSocial(provider) {
-try {
-const redirectUrl = (window.top && window.top !== window) ? window.top.location.href.split('?')[0].split('#')[0] : window.location.href.split('?')[0].split('#')[0];
-const options = { 
-  redirectTo: redirectUrl,
-  skipBrowserRedirect: true
-};
-if (provider === 'google') {
-options.scopes = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events';
-options.queryParams = { access_type: 'offline' };
-
-}
-const { data, error } = await window.sb.auth.signInWithOAuth({
-provider,
-options
-});
-if (error) throw error;
-if (data && data.url) {
-  if (window.top) {
-    window.top.location.href = data.url;
-  } else {
-    window.location.href = data.url;
-  }
-}
-} catch (err) {
-safeAlert("소셜 로그인 에러: " + err.message);
-}
-}
-
-function openAuthModal(type) {
-    const iframe = document.getElementById('mainFrame');
-    if (iframe) {
-        const targetSrc = 'login/intro.html?v=' + Date.now() + '#' + (typeof type !== 'undefined' && type ? type : 'login');
-        iframe.style.display = 'block';
-        iframe.src = targetSrc;
-    }
-    const mainWorkspace = document.querySelector('.main-workspace');
-    if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
-    const dashboardHome = document.getElementById('dashboardHome');
-    if (dashboardHome) dashboardHome.style.display = 'none';
-
-    // 네비게이션 탭 비활성화
-    const navColItems = document.querySelectorAll('.nav-col-item');
-    if (navColItems) {
-        navColItems.forEach(t => t.classList.remove('active'));
-    }
-    const pbTitle = document.getElementById('pbHeaderTitle');
-    if (pbTitle) pbTitle.innerText = '로그인';
-    window.scrollTo(0, 0);
-}
-
-window.openServiceLink = function(url) {
-    if (!url || url === '#') return;
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-        window.open(url, '_blank');
-    } else if (url.includes('claim')) {
-        loadSubPage('고객관리', '보험금 청구', url);
-    } else if (url.includes('pdf_p') || url.includes('branding')) {
-        loadSubPage('브랜딩', '보장 분석', url);
-    } else {
-        loadSubPage('홈', '홈', url);
-    }
-};
-
-function focusAuthForm() {
-openAuthModal('login');
-}
-
-window.updateProfileUI = updateProfileUI;
-function updateProfileUI(user, profile) {
-    const authUI = document.getElementById('googleAuthUI');
-    const pbLoginInfo = document.getElementById('pbLoginInfo');
-    if (!pbLoginInfo) return;
-
-    if (!user) {
-        if (window.googleTimerInterval) {
-            clearInterval(window.googleTimerInterval);
-            window.googleTimerInterval = null;
-        }
-        if (authUI) authUI.style.display = 'none';
-        pbLoginInfo.innerHTML = `
-            <button type="button" class="header-login-btn" onclick="event.stopPropagation(); openAuthModal('login');">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                <span>로그인</span>
-            </button>
-        `;
-        pbLoginInfo.onclick = null;
-        return;
-    }
-
-    const displayName = (profile && profile.full_name) ? profile.full_name : (profile && profile.nickname ? profile.nickname : user.email.split('@')[0]);
-    const grade = (profile && profile.user_grade) ? profile.user_grade : 'basic';
-    let badgeStyle = 'badge-user';
-    let label = '일반(basic)';
-    if(grade === 'manager') { badgeStyle = 'badge-admin'; label = '관리자'; }
-    else if(grade === 'premium') { badgeStyle = 'badge-pro'; label = '유료(premium)'; }
-    else if(grade === 'family') { badgeStyle = 'badge-pro'; label = '위라클 식구'; }
-    else { badgeStyle = 'badge-user'; label = '일반(basic)'; }
-
-    let avatarHtml = profile?.avatar_url 
-    ? `<img src="${profile.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" onerror="this.outerHTML='<svg viewBox=\'0 0 24 24\' width=\'60%\' height=\'60%\' fill=\'#9ca3af\'><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'">`
-    : `<svg viewBox="0 0 24 24" width="60%" height="60%" fill="#9ca3af"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
-
-    // 구글 연동 상태 계산
-    const hasGoogleToken = !!(profile && profile.google_access_token);
-    const savedTime = parseInt(localStorage.getItem('g_token_time') || '0', 10);
-    const diffMs = (savedTime + 3600000) - Date.now();
-    const isGoogleConnected = hasGoogleToken && (diffMs > 0);
-
-    pbLoginInfo.innerHTML = `
-        <div class="avatar-wrap">
-            <div style="width: 28px; height: 28px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; border: 1px solid #e5e7eb; overflow:hidden;">${avatarHtml}</div>
-            <div id="headerAvatarSyncDot" class="avatar-sync-dot ${isGoogleConnected ? 'connected' : 'expired'}" title="${isGoogleConnected ? '구글 시트 연동 정상' : '구글 연동 만료됨 (재연동 필요)'}"></div>
-        </div>
-        <span style="font-weight:700; color:#1f2937; white-space: nowrap;">${displayName}님</span>
-        <span class="user-email-preview" style="font-size:12px; color:#6b7280; font-weight:500; white-space: nowrap;">[ ${user.email.split('@')[0]} ]</span>
-        <span class="w-gate-badge ${badgeStyle}" style="margin-left:2px; padding:2px 8px; font-size:11px; border-radius:12px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">${label}</span>
-        <svg class="pb-login-arrow" style="width:14px;height:14px;color:#9ca3af;margin-left:2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-        
-        <div class="pb-login-dropdown" id="pbLoginDropdown" onclick="event.stopPropagation();">
-            <!-- 1. 프로필 요약 카드 -->
-            <div style="padding: 10px 12px; display: flex; gap: 10px; align-items: center; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; margin-bottom: 6px;">
-                <div style="width: 38px; height: 38px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1.5px solid #cbd5e1; flex-shrink: 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">${avatarHtml}</div>
-                <div style="display: flex; flex-direction: column; min-width: 0; flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <span style="font-size: 14px; font-weight: 800; color: #0f172a; white-space: nowrap;">${displayName}님</span>
-                        <span class="w-gate-badge ${badgeStyle}" style="padding: 1.5px 6px; border-radius: 9999px; font-size: 10px; margin: 0; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 750;">${label}</span>
-                    </div>
-                    <div style="font-size: 11.5px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px;">${user.email}</div>
-                </div>
-            </div>
-
-            <!-- 2. 드롭다운 내부 구글 시트 연동 전용 카드 -->
-            <div id="dropdownGoogleSyncCard" class="dd-google-card ${isGoogleConnected ? 'connected' : 'expired'}">
-                <div class="dd-google-card-header">
-                    <div class="dd-google-status-title">
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="13" height="13">
-                        <span id="ddGoogleStatusTitleText">${isGoogleConnected ? '구글 시트 연동 정상' : '구글 연동 만료됨'}</span>
-                    </div>
-                    <div id="ddGoogleActionSlot">
-                        ${isGoogleConnected 
-                            ? `<span class="dd-google-timer" id="ddGoogleTimerText">--:--</span>` 
-                            : `<button type="button" class="dd-google-reconnect-btn" onclick="event.stopPropagation(); triggerGoogleLogin(true);">1초 재연동</button>`}
-                    </div>
-                </div>
-                <div class="dd-google-card-desc" id="ddGoogleDescText">
-                    ${isGoogleConnected ? '고객 및 스케줄 실시간 백업 중' : '만료되어도 위라클 로그인은 유지됩니다.'}
-                </div>
-            </div>
-
-            <!-- 3. 메뉴 리스트 (일관된 구조 & 아이콘) -->
-            <div class="dd-section-label">내 업무 & 활동</div>
-            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='card/card_edit.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
-                <div class="dd-item-left">
-                    <span class="dd-icon-box blue"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" stroke-width="2"/><circle cx="9" cy="10" r="2" stroke-width="2"/><line x1="15" y1="8" x2="17" y2="8" stroke-width="2"/><line x1="15" y1="12" x2="17" y2="12" stroke-width="2"/><line x1="7" y1="16" x2="17" y2="16" stroke-width="2"/></svg></span>
-                    <span class="dd-item-text">내 디지털 명함</span>
-                </div>
-                <span class="dd-item-badge">편집</span>
-            </a>
-
-            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='login/myposts.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
-                <div class="dd-item-left">
-                    <span class="dd-icon-box"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></span>
-                    <span class="dd-item-text">내가 쓴 글</span>
-                </div>
-            </a>
-
-            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openMyPageFromSidebar ? window.openMyPageFromSidebar() : safeAlert('현재 마이페이지 기능을 준비 중입니다.\n빠른 시일 내에 오픈하겠습니다.', 'info');" class="pb-dropdown-item">
-                <div class="dd-item-left">
-                    <span class="dd-icon-box"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></span>
-                    <span class="dd-item-text">마이페이지</span>
-                </div>
-            </a>
-
-            <div class="dd-divider"></div>
-            <div class="dd-section-label">도구 & 연동</div>
-
-            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openLinkedGoogleSheet ? window.openLinkedGoogleSheet() : safeAlert('연동된 구글 시트를 확인합니다.', 'info');" class="pb-dropdown-item">
-                <div class="dd-item-left">
-                    <span class="dd-icon-box green"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"></path></svg></span>
-                    <span class="dd-item-text">연동된 시트 보기</span>
-                </div>
-            </a>
-
-            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.loginToWeracleTalk ? window.loginToWeracleTalk() : safeAlert('위라클톡 PC앱 간편 로그인을 실행합니다.', 'info');" class="pb-dropdown-item">
-                <div class="dd-item-left">
-                    <span class="dd-icon-box sky"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg></span>
-                    <span class="dd-item-text">위라클톡 PC앱 로그인</span>
-                </div>
-            </a>
-
-            <div class="dd-divider"></div>
-
-            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); showWeracleAlert('정말 위라클에서 로그아웃 하시겠습니까?', { isConfirm: true, title: '로그아웃 확인', confirmText: '로그아웃', onConfirm: () => handleLogout() });" class="pb-dropdown-item logout">
-                <div class="dd-item-left">
-                    <span class="dd-icon-box red"><svg style="width:14px;height:14px;stroke:#ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg></span>
-                    <span class="dd-item-text">로그아웃</span>
-                </div>
-            </a>
-        </div>
-    `;
-
-    pbLoginInfo.onclick = function(e) {
-        e.stopPropagation();
-        this.classList.toggle('open');
-    };
-
-    // 실시간 동기화 타이머 & 스마트 알림 제어 루프
-    if (window.googleTimerInterval) clearInterval(window.googleTimerInterval);
-    const syncGoogleStatusTick = () => {
-        if (!window.currentUser) return;
-        const curProfile = window.currentProfile;
-        const hasToken = !!(curProfile && curProfile.google_access_token);
-        const sTime = parseInt(localStorage.getItem('g_token_time') || '0', 10);
-        const diff = (sTime + 3600000) - Date.now();
-        const active = hasToken && (diff > 0);
-
-        // 1. 헤더 아바타 상태등(점) 동기화
-        const dot = document.getElementById('headerAvatarSyncDot');
-        if (dot) {
-            dot.className = 'avatar-sync-dot ' + (active ? 'connected' : 'expired');
-            dot.title = active ? '구글 시트 연동 정상' : '구글 연동 만료됨 (재연동 필요)';
-        }
-
-        // 2. 헤더 스마트 알림 버튼 (연동 만료 시에만 헤더에 나타남)
-        if (authUI) {
-            authUI.style.display = active ? 'none' : 'inline-flex';
-            const alertText = document.getElementById('googleAlertBtnText');
-            if (alertText) {
-                alertText.innerText = hasToken ? '⚠️ 구글 재연동' : '구글 연동하기';
-            }
-        }
-
-        // 3. 드롭다운 내부 구글 카드 동기화
-        const ddCard = document.getElementById('dropdownGoogleSyncCard');
-        const titleEl = document.getElementById('ddGoogleStatusTitleText');
-        const actionSlot = document.getElementById('ddGoogleActionSlot');
-        const descEl = document.getElementById('ddGoogleDescText');
-
-        if (ddCard && titleEl && actionSlot && descEl) {
-            if (active) {
-                ddCard.className = 'dd-google-card connected';
-                titleEl.innerText = '구글 시트 동기화 정상';
-                const mm = Math.floor(diff / 60000).toString().padStart(2, '0');
-                const ss = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-                actionSlot.innerHTML = `<span class="dd-google-timer" id="ddGoogleTimerText">${mm}:${ss} 남음</span>`;
-                descEl.innerText = '고객 및 스케줄 데이터가 실시간 자동 백업 중입니다.';
-            } else {
-                ddCard.className = 'dd-google-card expired';
-                titleEl.innerText = hasToken ? '구글 연동 만료됨' : '구글 연동 안됨';
-                actionSlot.innerHTML = `<button type="button" class="dd-google-reconnect-btn" onclick="event.stopPropagation(); triggerGoogleLogin(true);">1초 재연동</button>`;
-                descEl.innerText = '연동이 만료되어도 위라클 로그인은 안전하게 유지됩니다.';
-            }
-        }
-    };
-    syncGoogleStatusTick();
-    window.googleTimerInterval = setInterval(syncGoogleStatusTick, 1000);
-
-// 모바일 메뉴 시트 로그인 배너 동기화
-const mBanner = document.getElementById('mobileAuthBanner');
-if (mBanner) {
-    if (user) {
-        const displayName = (profile && profile.full_name) ? profile.full_name : (profile && profile.nickname ? profile.nickname : user.email.split('@')[0]);
-        mBanner.innerHTML = `
-            <div>
-                <div style="font-size: 13.5px; font-weight: 700; color: #113f67;">${displayName}님 환영합니다</div>
-                <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">${user.email}</div>
-            </div>
-            <button type="button" onclick="toggleMobileFullMenu(false); handleLogout();" style="padding: 7px 14px; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">
-                로그아웃
-            </button>
-        `;
-    } else {
-        mBanner.innerHTML = `
-            <div>
-                <div style="font-size: 13.5px; font-weight: 700; color: #113f67;">로그인하기</div>
-                <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">더 많은 기능을 편리하게 사용하세요</div>
-            </div>
-            <button type="button" onclick="toggleMobileFullMenu(false); openAuthModal('login');" style="padding: 7px 15px; background: #1e5c94; color: #ffffff; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
-                로그인
-            </button>
-        `;
-    }
-}
-
-const iframe = document.getElementById('mainFrame');
-if (iframe && (!iframe.getAttribute('src') || iframe.getAttribute('src') === 'about:blank')) {
-    if (typeof showDashboardHome === 'function') {
-        showDashboardHome();
-    }
-}
-} 
-
-window.togglePreviewLogin = function() {
-    const current = localStorage.getItem('weracle_preview_login') === 'true';
-    if (current) {
-        localStorage.removeItem('weracle_preview_login');
-    } else {
-        localStorage.setItem('weracle_preview_login', 'true');
-    }
-    window.location.reload();
-};
-
-async function handleLogout() {
-  try {
-      localStorage.removeItem('weracle_preview_login');
-      localStorage.removeItem('g_sheet_id');
-      localStorage.removeItem('g_access_token');
-      localStorage.removeItem('google_access_token');
-      if (window.sb) {
-          await window.sb.auth.signOut();
-      }
-  } catch(e) {}
-  
-  window.currentUser = null;
-  window.currentProfile = null;
-  wIsLoggedIn = false;
-  updateProfileUI(null, null);
-  safeAlert('로그아웃 되었습니다.');
-  window.location.reload();
-}
-
-document.addEventListener('DOMContentLoaded', () => { 
-try { checkSession(); } catch(e) { alert('Init Error: ' + e.message); } 
-});
-
-
-
-</script>
-<style>
-</style>
-
-
-
-<script>
-
-</script>
-
-
-<script>
-function updateIndexDashboard(crmData, targetData, metrics) {
-if (!crmData) return;
-
-let total = crmData.length, contracted = 0, prospect = 0, newThisMonth = 0;
-let nonLifeAmount = 0, lifeAmount = 0, achievedCountThisMonth = 0;
-let prevNonLife = 0, prevLife = 0;
-
-const today = new Date();
-const currentMonthStr = today.toISOString().substring(0, 7);
-const todayYear = today.getFullYear();
-const todayMonth = today.getMonth() + 1;
-const prevMonthStr = todayMonth === 1 ? `${todayYear - 1}-12` : `${todayYear}-${String(todayMonth - 1).padStart(2, '0')}`;
-
-crmData.forEach(client => {
-const status = client['상태'] || client['고객상태'] || '';
-if (status.includes('체결') || status.includes('계약')) contracted++; 
-else if (status.includes('관심') || status.includes('가망')) prospect++;
-
-const insStr = String(client['가입내역'] || '');
-if (!insStr.trim()) return;
-
-// 파싱 로직 (가입내역에서 보험료, 체결일, 분류 등 추출)
-// 예: [체결일: 2023-10-15] [분류: 생명보험] [보험료: 100000]
-// 줄바꿈이나 콤마로 구분된 항목들을 파싱
-const records = insStr.split('\n');
-records.forEach(record => {
-    if(!record.trim()) return;
-    
-    // 체결일 추출 (예: 2026-09-10)
-    let recordDate = '';
-    const dateMatch = record.match(/20\d{2}-\d{2}-\d{2}/);
-    if(dateMatch) recordDate = dateMatch[0].substring(0, 7);
-    
-    // 보험료 추출
-    let premium = 0;
-    const premMatch = record.match(/([0-9,]+)원?/);
-    if(premMatch) premium = parseInt(premMatch[1].replace(/,/g, '')) || 0;
-    
-    const isLife = record.includes('생명') || record.includes('종신') || record.includes('연금');
-    
-    if (recordDate === currentMonthStr) {
-        if(isLife) lifeAmount += premium;
-        else nonLifeAmount += premium;
-        achievedCountThisMonth++;
-    } else if (recordDate === prevMonthStr) {
-        if(isLife) prevLife += premium;
-        else prevNonLife += premium;
-    }
-});
-});
-
-let targetObj = targetData.find(t => t['기준월'] === currentMonthStr) || { '손보_목표': 1000000, '생보_목표': 1000000, '목표건수': 10, '이번달_다짐': '화이팅!' };
-
-// Override with metrics only if metrics has valid non-zero data (to prevent 0 overwriting valid parsed data)
-if (metrics && (metrics.lifePremium > 0 || metrics.nonLifePremium > 0)) {
-nonLifeAmount = metrics.nonLifePremium || nonLifeAmount;
-lifeAmount = metrics.lifePremium || lifeAmount;
-achievedCountThisMonth = metrics.achievedCountThisMonth || achievedCountThisMonth;
-}
-
-const targetCount = parseInt(targetObj['목표건수'] || '0') || 10;
-const achieveRate = targetCount > 0 ? Math.min(100, Math.round((achievedCountThisMonth / targetCount) * 100)) : 100;
-
-const elAchieveRate = document.getElementById('idx-dash-achieve-rate');
-const elAchieveText = document.getElementById('idx-dash-achieve-text');
-const elProgressBar = document.getElementById('idx-dash-progress-bar');
-if (elAchieveRate) elAchieveRate.innerHTML = `${achieveRate}<span class="metric-unit">%</span>`;
-if (elAchieveText) elAchieveText.innerText = `목표 ${targetCount}건 / 체결 ${achievedCountThisMonth}건`;
-if (elProgressBar) elProgressBar.style.width = `${achieveRate}%`;
-
-const elNewClients = document.getElementById('idx-dash-new-clients');
-const elNewClientsText = document.getElementById('idx-dash-new-clients-text');
-if (elNewClients) elNewClients.innerText = achievedCountThisMonth;
-if (elNewClientsText) elNewClientsText.innerText = `당월 신규 체결 건수`;
-
-const elTotalClients = document.getElementById('idx-dash-total-clients');
-const elClientStatus = document.getElementById('idx-dash-client-status');
-    // --- ANTIGRAVITY TOP STATUS UPDATE ---
-    let countConsult = 0;
-    let countCare = 0;
-    crmData.forEach(client => {
-        const s = client['상태'] || client['고객상태'] || '';
-        if (s.includes('상담') || s.includes('설계')) countConsult++;
-        if (s.includes('케어') || s.includes('집중')) countCare++;
-    });
-    
-    const elTopTotal = document.getElementById('idx-dash-top-total');
-    if(elTopTotal) elTopTotal.innerText = total + "명";
-    
-    const elTopProspect = document.getElementById('idx-dash-top-prospect');
-    if(elTopProspect) elTopProspect.innerHTML = prospect + `<span style="font-size:14px; font-weight:400; color:#64748b; margin-left:4px;">명</span>`;
-    
-    const elTopConsult = document.getElementById('idx-dash-top-consult');
-    if(elTopConsult) elTopConsult.innerHTML = countConsult + `<span style="font-size:14px; font-weight:400; color:#64748b; margin-left:4px;">명</span>`;
-    
-    const elTopContract = document.getElementById('idx-dash-top-contract');
-    if(elTopContract) elTopContract.innerHTML = contracted + `<span style="font-size:14px; font-weight:400; color:#64748b; margin-left:4px;">명</span>`;
-    
-    const elTopCare = document.getElementById('idx-dash-top-care');
-    if(elTopCare) elTopCare.innerHTML = countCare + `<span style="font-size:14px; font-weight:400; color:#64748b; margin-left:4px;">명</span>`;
-if (elTotalClients) elTotalClients.innerText = total;
-if (elClientStatus) {
-elClientStatus.innerHTML = `
-                <div style="display:flex; gap:12px; align-items:center; margin-top:10px;">
-                  <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05)); color: #059669; padding: 7px 16px; border-radius: 24px; font-size: 15px; font-weight: 700; display:flex; align-items:center; gap:8px; box-shadow: 0 3px 8px rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.2); cursor: pointer;" onclick="if(window.openDynamicList) window.openDynamicList('status', '체결');">
-                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow: 0 0 6px rgba(16,185,129,0.6);"></span>
-                    체결 ${contracted}명
-                  </div>
-                  <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05)); color: #2563eb; padding: 7px 16px; border-radius: 24px; font-size: 15px; font-weight: 700; display:flex; align-items:center; gap:8px; box-shadow: 0 3px 8px rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.2); cursor: pointer;" onclick="if(window.openDynamicList) window.openDynamicList('status', '관심');">
-                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#3b82f6; box-shadow: 0 0 6px rgba(59,130,246,0.6);"></span>
-                    관심 ${prospect}명
-                  </div>
-                </div>
-              `;
-}
-
-const formatChange = (curr, prev) => {
-if (prev === 0) return curr > 0 ? `<span class="up" style="color:#10b981;">▲ ${Math.round(curr/10000)}만</span>` : `<span style="color:#94a3b8;">-</span>`;
-const diff = curr - prev;
-if (diff > 0) return `<span class="up" style="color:#10b981;">▲ ${Math.round(diff/10000)}만</span>`;
-if (diff < 0) return `<span class="down" style="color:#ef4444;">▼ ${Math.round(Math.abs(diff)/10000)}만</span>`;
-return `<span style="color:#94a3b8;">-</span>`;
-};
-
-const elCompareLife = document.getElementById('idx-dash-compare-life');
-const elCompareNonLife = document.getElementById('idx-dash-compare-nonlife');
-const elCompareText = document.getElementById('idx-dash-compare-text');
-if (elCompareLife) elCompareLife.innerHTML = formatChange(lifeAmount, prevLife);
-if (elCompareNonLife) elCompareNonLife.innerHTML = formatChange(nonLifeAmount, prevNonLife);
-
-const elLife = document.getElementById('idx-dash-life');
-const elNonLife = document.getElementById('idx-dash-nonlife');
-const elTotalAmount = document.getElementById('idx-dash-total-amount');
-
-if (elLife) elLife.innerText = lifeAmount.toLocaleString() + '원';
-if (elNonLife) elNonLife.innerText = nonLifeAmount.toLocaleString() + '원';
-if (elTotalAmount) elTotalAmount.innerText = (lifeAmount + nonLifeAmount).toLocaleString() + '원';
-
-const totalAmount = lifeAmount + nonLifeAmount;
-const prevTotalAmount = prevLife + prevNonLife;
-if (elCompareText) {
-if (prevTotalAmount === 0) elCompareText.innerText = '전월 체결 데이터 없음';
-else if (totalAmount > prevTotalAmount) elCompareText.innerText = '전월 대비 성장 중!';
-else if (totalAmount < prevTotalAmount) elCompareText.innerText = '전월 대비 실적 저조';
-else elCompareText.innerText = '전월과 동일한 페이스';
-}
-
-const dashResolutionText = document.getElementById('dashResolutionText');
-    // --- ANTIGRAVITY DASHBOARD DYNAMIC UPDATE ---
-    const checkIsTodayIdx = function(dateStr) {
-        if (!dateStr) return false;
-        const clean = String(dateStr).replace(/[^0-9]/g, '');
-        const td = new Date();
-        const md = String(td.getMonth() + 1).padStart(2, '0') + String(td.getDate()).padStart(2, '0');
-        if (clean.length === 4) return clean === md;
-        if (clean.length >= 8) return clean.substring(4, 8) === md;
-        if (clean.length === 6) return clean.substring(2, 6) === md;
-        return false;
-    };
-    const insightCount = {};
-    crmData.forEach(c => {
-        let tags = String(c['터치인사이트'] || '').split(',').map(t=>t.trim()).filter(t=>t);
-        tags.forEach(t => { insightCount[t] = (insightCount[t] || 0) + 1; });
-    });
-    const elInsightList = document.getElementById('dash-insight-list');
-    if (elInsightList) {
-        let insightHtml = '';
-        Object.entries(insightCount).sort((a,b)=>b[1]-a[1]).slice(0, 10).forEach(([tag, count]) => {
-            insightHtml += `<div style="display:inline-block; background:#f1f5f9; padding:6px 12px; border-radius:20px; font-size:13px; font-weight:600; color:#334155; margin:0 6px 6px 0; cursor:pointer; border:1px solid #e2e8f0; transition:0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'" onclick="if(window.openDynamicList) window.openDynamicList('insight', '${tag}');">#${tag} (${count})</div>`;
-        });
-        if(!insightHtml) insightHtml = '<span style="color:#94a3b8;font-size:13px;">데이터가 없습니다.</span>';
-        elInsightList.innerHTML = insightHtml;
-    }
-
-    const todayBirth = crmData.filter(c => {
-        const b = String(c['생일'] || "");
-        return checkIsTodayIdx(b);
-    });
-    const elBirthList = document.getElementById('dash-birth-list');
-    if (elBirthList) {
-        let bHtml = '';
-        todayBirth.slice(0, 5).forEach(c => {
-            bHtml += `<div style="padding:8px 12px; background:#fffbf1; border-left:4px solid #f59e0b; margin-bottom:8px; border-radius:4px; font-size:13px; font-weight:600; cursor:pointer;" onclick="if(window.openDynamicList) window.openDynamicList('birth', '${currentMonthStr.substring(5,7)}');">${c['고객명'] || c['대표자명']} (${c['생일']})</div>`;
-        });
-        if(todayBirth.length > 5) bHtml += `<div style="font-size:12px; color:#64748b; text-align:center; cursor:pointer;" onclick="if(window.openDynamicList) window.openDynamicList('birth', '${currentMonthStr.substring(5,7)}');">+ ${todayBirth.length - 5}명 더보기</div>`;
-        if(!bHtml) bHtml = '<span style="color:#94a3b8;font-size:13px;">해당 고객이 없습니다.</span>';
-        elBirthList.innerHTML = bHtml;
-    }
-
-    const todaySang = crmData.filter(c => {
-        const s = String(c['상령일'] || "");
-        return checkIsTodayIdx(s);
-    });
-    const elSangList = document.getElementById('dash-sang-list');
-    if (elSangList) {
-        let sHtml = '';
-        todaySang.slice(0, 5).forEach(c => {
-            sHtml += `<div style="padding:8px 12px; background:#f5f3ff; border-left:4px solid #8b5cf6; margin-bottom:8px; border-radius:4px; font-size:13px; font-weight:600; cursor:pointer;" onclick="if(window.openDynamicList) window.openDynamicList('sang', '${currentMonthStr.substring(5,7)}');">${c['고객명'] || c['대표자명']} (${c['상령일']})</div>`;
-        });
-        if(todaySang.length > 5) sHtml += `<div style="font-size:12px; color:#64748b; text-align:center; cursor:pointer;" onclick="if(window.openDynamicList) window.openDynamicList('sang', '${currentMonthStr.substring(5,7)}');">+ ${todaySang.length - 5}명 더보기</div>`;
-        if(!sHtml) sHtml = '<span style="color:#94a3b8;font-size:13px;">해당 고객이 없습니다.</span>';
-        elSangList.innerHTML = sHtml;
-    }
-
-    const elInsSelect = document.getElementById('ins-comp-select');
-    if (elInsSelect && !elInsSelect.hasAttribute('data-bound')) {
-        elInsSelect.setAttribute('data-bound', 'true');
-        elInsSelect.addEventListener('change', function() {
-            if(window.openDynamicList) window.openDynamicList('insurance', this.value);
-        });
-    }
-
-if (dashResolutionText && targetObj['이번달_다짐']) {
-dashResolutionText.innerText = `"${targetObj['이번달_다짐']}"`;
-}
-}
-window.openDynamicList = function(type, val) {
-    const crmBtn = document.querySelector('.pb-menu-item[href*="crm_test"]');
-    if (crmBtn && typeof showDashboard === 'function') {
-        showDashboard(crmBtn);
-    }
-    setTimeout(() => {
-        const mf = document.getElementById('mainFrame');
-        if (mf && mf.contentWindow) {
-            mf.contentWindow.postMessage({ type: 'APPLY_FILTER', filterType: type, value: val }, '*');
-        }
-    }, 300);
-};
-</script>
-    <!-- 필수 정보 입력 모달 (최초 1회) -->
-    <div id="w-onboarding-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center;">
-        <div style="background: #fff; width: 400px; padding: 40px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: center;">
-            <h2 style="margin: 0 0 10px 0; font-size: 24px; color: #0f172a;"> 환영합니다!</h2>
-            <p style="margin: 0 0 24px 0; font-size: 14px; color: #64748b; line-height: 1.5;">워라클 CRM을 완벽하게 이용하시려면<br><b>휴대폰 번호</b> 등록이 꼭 필요합니다.<br>(카카오 알림톡 및 팩스 발송 시 사용됩니다)</p>
-            
-            <input type="text" id="w-onboarding-phone" placeholder="휴대폰 번호 (- 없이 입력)" style="width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; margin-bottom: 12px; box-sizing: border-box;">
-            
-            <button onclick="submitOnboarding()" style="width: 100%; padding: 14px; background: #0369a1; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer;">시작하기</button>
+<!-- 💡 모바일 전용 슬라이딩 바텀 시트 (헤더_프로필_구글연동_디자인시안.html 100% 동일 구현) -->
+<div class="mobile-bottom-sheet" id="mobileBottomSheet">
+    <!-- 드래그 & 클릭 핸들 바 (46px) -->
+    <div class="sheet-drag-handle-bar" onclick="toggleMobileSheetManually()">
+        <div class="sheet-pill-bar"></div>
+        <div class="sheet-handle-text" id="sheetHandleText">
+            <i class="fa-solid fa-chevron-down"></i>
+            <span>원하는 기능을 탭하세요 (탭 시 자동 숨김)</span>
         </div>
     </div>
 
-    <script>
-    async function submitOnboarding() {
-        const phone = document.getElementById('w-onboarding-phone').value.trim();
-        if(!phone || phone.length < 10) {
-            alert('정확한 휴대폰 번호를 입력해주세요.');
-            return;
-        }
-        try {
-            const { data: { user } } = await window.sb.auth.getUser();
-            await window.sb.from('profiles').update({ phone: phone }).eq('id', user.id);
-            document.getElementById('w-onboarding-modal').style.display = 'none';
-            alert('등록이 완료되었습니다. 워라클 CRM에 오신 것을 환영합니다!');
-            
-            // 프로필 정보 즉시 갱신
-            const { data: updatedProfile } = await window.sb.from('profiles').select('*').eq('id', user.id).single();
-            if(updatedProfile) {
-                window.currentProfile = updatedProfile;
-            }
-        } catch(e) {
-            console.error(e);
-            alert('오류가 발생했습니다.');
-        }
-    }
-    </script>
-
-<!-- 하이픈 스타일 글로벌 탑 네비게이션 인터랙션 및 프레임 제어 스크립트 -->
-<script>
-    const topNav = document.getElementById('topGlobalNav');
-    const navMenuTabs = document.getElementById('navMenuTabs');
-    const navColItems = document.querySelectorAll('.nav-col-item');
-
-    function loadSubPage(menuName, subName, url) {
-        if (topNav) {
-            topNav.classList.remove('open');
-            navColItems.forEach(i => i.classList.remove('list--active'));
-        }
-
-        // 탭 활성화 상태 변경
-        navColItems.forEach(t => {
-            const span = t.querySelector('.nav-col-tab span');
-            if (span && span.innerText.trim() === menuName) {
-                t.classList.add('active');
-            } else {
-                t.classList.remove('active');
-            }
-        });
-
-        // 헤더 타이틀 동기화
-        const pbTitle = document.getElementById('pbHeaderTitle');
-        if (pbTitle) pbTitle.innerText = menuName;
-
-        if (url === 'home' || url === '' || !url || url === 'dashboard/dashboard.html') {
-            showDashboardHome();
-            return;
-        }
-
-        const dbHome = document.getElementById('dashboardHome');
-        if (dbHome) dbHome.style.display = 'none';
-        const mHub = document.getElementById('mobileWorkHub');
-        if (mHub) mHub.style.display = 'none';
-
-        const frame = document.getElementById('mainFrame');
-        if (frame) {
-            frame.style.display = 'block';
-            frame.src = url;
-        }
-
-        const authCont = document.getElementById('w-auth-workspace-container');
-        if (authCont) authCont.style.display = 'none';
-
-        const mainWorkspace = document.querySelector('.main-workspace');
-        if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
-
-        window.scrollTo(0, 0);
-    }
-    window.loadSubPage = loadSubPage;
-    window.switchNavTab = function(el, url) {
-        const item = el ? el.closest('.nav-col-item') : null;
-        const name = item ? item.getAttribute('data-tab') : '';
-        loadSubPage(name, name, url);
-    };
-    window.switchNavTabByName = function(name, url) {
-        loadSubPage(name, name, url);
-    };
-
-    const allNavItems = document.querySelectorAll('.nav-col-item');
-    if (allNavItems && allNavItems.length > 0) {
-        allNavItems.forEach(item => {
-            item.addEventListener('mouseenter', () => {
-                const hasSub = item.getAttribute('data-has-sub') !== 'false';
-                if (hasSub) {
-                    if (topNav) topNav.classList.add('open');
-                    allNavItems.forEach(i => i.classList.remove('list--active'));
-                    item.classList.add('list--active');
-                } else {
-                    // 홈 등 서브메뉴 없는 항목은 드롭다운 닫기
-                    if (topNav) topNav.classList.remove('open');
-                    allNavItems.forEach(i => i.classList.remove('list--active'));
-                }
-            });
-        });
-    }
-
-    if (navMenuTabs) {
-        navMenuTabs.addEventListener('mouseleave', () => {
-            if (topNav) topNav.classList.remove('open');
-            navColItems.forEach(i => i.classList.remove('list--active'));
-        });
-    }
-
-    function showDashboardHome() {
-        if (topNav) {
-            topNav.classList.remove('open');
-            navColItems.forEach(i => i.classList.remove('list--active'));
-        }
-
-        navColItems.forEach(t => t.classList.remove('active'));
-        const homeTab = document.querySelector('.nav-col-item[data-tab="홈"]') || document.querySelector('.nav-col-item[data-tab="home"]');
-        if (homeTab) homeTab.classList.add('active');
-
-        const dbHome = document.getElementById('dashboardHome');
-        if (dbHome) dbHome.style.display = 'none';
-
-        const mHub = document.getElementById('mobileWorkHub');
-        if (mHub && window.innerWidth <= 900) {
-            mHub.style.display = 'block';
-            const frame = document.getElementById('mainFrame');
-            if (frame) frame.style.display = 'none';
-        } else {
-            if (mHub) mHub.style.display = 'none';
-            const frame = document.getElementById('mainFrame');
-            if (frame) {
-                frame.style.display = 'block';
-                if (!frame.src || !frame.src.includes('dashboard/dashboard.html')) {
-                    frame.src = 'dashboard/dashboard.html';
-                }
-            }
-        }
-
-        const authCont = document.getElementById('w-auth-workspace-container');
-        if (authCont) authCont.style.display = 'none';
-
-        const mainWorkspace = document.querySelector('.main-workspace');
-        if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
-
-        const pbTitle = document.getElementById('pbHeaderTitle');
-        if (pbTitle) pbTitle.innerText = '대시보드';
-
-        window.scrollTo(0, 0);
-    }
-
-    function switchNavTab(el, targetUrl) {
-        if (topNav) {
-            topNav.classList.remove('open');
-            navColItems.forEach(i => i.classList.remove('list--active'));
-        }
-
-        navColItems.forEach(t => t.classList.remove('active'));
-        const parentItem = el ? el.closest('.nav-col-item') : null;
-        if (parentItem) parentItem.classList.add('active');
-
-        if (targetUrl === 'home') {
-            showDashboardHome();
-            return;
-        }
-
-        const dbHome = document.getElementById('dashboardHome');
-        if (dbHome) dbHome.style.display = 'none';
-        const mHub = document.getElementById('mobileWorkHub');
-        if (mHub) mHub.style.display = 'none';
-
-        const frame = document.getElementById('mainFrame');
-        if (frame) {
-            frame.style.display = 'block';
-            frame.src = targetUrl;
-        }
-
-        const authCont = document.getElementById('w-auth-workspace-container');
-        if (authCont) authCont.style.display = 'none';
-
-        const mainWorkspace = document.querySelector('.main-workspace');
-        if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
-
-        window.scrollTo(0, 0);
-    }
-
-    function switchNavTabByName(name, url) {
-        if (topNav) {
-            topNav.classList.remove('open');
-            navColItems.forEach(i => i.classList.remove('list--active'));
-        }
-
-        navColItems.forEach(t => {
-            const titleSpan = t.querySelector('.nav-col-tab span');
-            if (titleSpan && titleSpan.innerText.includes(name)) {
-                t.classList.add('active');
-            } else {
-                t.classList.remove('active');
-            }
-        });
-
-        if (url === 'home') {
-            showDashboardHome();
-            return;
-        }
-
-        const dbHome = document.getElementById('dashboardHome');
-        if (dbHome) dbHome.style.display = 'none';
-        const mHub = document.getElementById('mobileWorkHub');
-        if (mHub) mHub.style.display = 'none';
-
-        const frame = document.getElementById('mainFrame');
-        if (frame) {
-            frame.style.display = 'block';
-            frame.src = url;
-        }
-
-        const authCont = document.getElementById('w-auth-workspace-container');
-        if (authCont) authCont.style.display = 'none';
-
-        const mainWorkspace = document.querySelector('.main-workspace');
-        if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
-
-        window.scrollTo(0, 0);
-    }
-
-    // 하위 호환성 전역 바인딩
-    window.loadFrameDirect = switchNavTabByName;
-    window.showDashboardHome = showDashboardHome;
-    window.switchNavTab = switchNavTab;
-    window.switchNavTabByName = switchNavTabByName;
-    showDashboardHome();
-</script>
-
-
-<!-- 모바일 전용: 쫙 다 펼쳐지는 전체메뉴 바텀시트 모달 (토스 스타일) -->
-<div class="mobile-fullmenu-modal" id="mobileFullMenuModal" onclick="if(event.target === this) toggleMobileFullMenu(false)">
-    <div class="mobile-fullmenu-sheet">
-        <div class="mobile-sheet-header">
-            <div class="mobile-sheet-title">
-                <span>WERACLE LAB 서비스 전체 메뉴</span>
+    <!-- 3x3 (9개) 대칭 그리드 메뉴 서랍 -->
+    <div class="sheet-menu-scroll-box" id="sheetMenuScrollBox">
+        <div class="sheet-menu-grid">
+            <!-- [1행: 핵심 영업] -->
+            <div class="sheet-menu-tile" onclick="selectMobileFeature('card', '🪪 디지털 명함')">
+                <span class="sheet-tile-icon" style="background: #e0f2fe; color: #0284c7;"><i class="fa-regular fa-id-badge"></i></span>
+                <span class="sheet-tile-label">디지털 명함</span>
             </div>
-            <button class="mobile-sheet-close" onclick="toggleMobileFullMenu(false)">&times;</button>
-        </div>
-        <div class="mobile-sheet-body">
-            <!-- 모바일 로그인 배너 -->
-            <div id="mobileAuthBanner" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin-bottom: 16px; background: #f0f7ff; border: 1px solid #bae6fd; border-radius: 12px;">
-                <div>
-                    <div style="font-size: 13.5px; font-weight: 700; color: #113f67;">로그인하기</div>
-                    <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">더 많은 기능을 편리하게 사용하세요</div>
-                </div>
-                <button type="button" onclick="toggleMobileFullMenu(false); openAuthModal('login');" style="padding: 7px 15px; background: #1e5c94; color: #ffffff; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
-                    로그인
-                </button>
+            <div class="sheet-menu-tile" onclick="selectMobileFeature('crm', '👥 고객관리')">
+                <span class="sheet-tile-icon" style="background: #ecfdf5; color: #059669;"><i class="fa-solid fa-users"></i></span>
+                <span class="sheet-tile-label">고객관리</span>
+            </div>
+            <div class="sheet-menu-tile" onclick="selectMobileFeature('claim', '📄 보험금 청구')">
+                <span class="sheet-tile-icon" style="background: #eff6ff; color: #3b82f6;"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+                <span class="sheet-tile-label">보험금 청구</span>
             </div>
 
-            <!-- 1. 홈 -->
-            <div class="mobile-menu-card">
-                <div class="mobile-card-head">
-                    <div class="mobile-card-pill">
-                        <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 20V10.5z"/><polyline points="9 21.5 9 13 15 13 15 21.5"/></svg>
-                    </div>
-                    <span class="mobile-card-title">홈</span>
-                </div>
-                <div class="mobile-card-links" style="grid-template-columns: 1fr;">
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); showDashboardHome();">
-                        <span>메인 업무 홈 바로가기</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                </div>
+            <!-- [2행: 자료 & 미디어] -->
+            <div class="sheet-menu-tile" onclick="selectMobileFeature('dailynews', '🗞️ 데일리 뉴스')">
+                <span class="sheet-tile-icon" style="background: #fefce8; color: #ca8a04;"><i class="fa-regular fa-newspaper"></i></span>
+                <span class="sheet-tile-label">데일리 뉴스</span>
+            </div>
+            <div class="sheet-menu-tile" onclick="selectMobileFeature('video', '🎥 보험 영상')">
+                <span class="sheet-tile-icon" style="background: #fef2f2; color: #dc2626;"><i class="fa-regular fa-circle-play"></i></span>
+                <span class="sheet-tile-label">보험 영상</span>
+            </div>
+            <div class="sheet-menu-tile" onclick="selectMobileFeature('branding', '🛍️ 브랜딩 마켓')">
+                <span class="sheet-tile-icon" style="background: #fff7ed; color: #ea580c;"><i class="fa-solid fa-store"></i></span>
+                <span class="sheet-tile-label">브랜딩 마켓</span>
             </div>
 
-            <!-- 2. 고객관리 -->
-            <div class="mobile-menu-card theme-blue">
-                <div class="mobile-card-head">
-                    <div class="mobile-card-pill">
-                        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </div>
-                    <span class="mobile-card-title">고객관리</span>
-                </div>
-                <div class="mobile-card-links">
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('고객관리', '고객관리', 'crm/crm_test.html');">
-                        <span>고객관리</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('고객관리', '보험금 청구', 'claim/claim.html');">
-                        <span>보험금 청구</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                </div>
+            <!-- [3행: 연동 & 관리] -->
+            <div class="sheet-menu-tile" onclick="handleMobileGoogleSync()">
+                <span class="sheet-tile-icon" style="background: #e6f4ea; color: #16a34a;"><i class="fa-solid fa-table"></i></span>
+                <span class="sheet-tile-label">구글시트 연동</span>
             </div>
-
-            <!-- 3. 보험인사이트 -->
-            <div class="mobile-menu-card theme-green">
-                <div class="mobile-card-head">
-                    <div class="mobile-card-pill">
-                        <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.5 8.5L13.5 13.5L9.5 9.5L5.5 13.5"/></svg>
-                    </div>
-                    <span class="mobile-card-title">보험인사이트</span>
-                </div>
-                <div class="mobile-card-links">
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('보험인사이트', '영업 소식지', 'insight/insight_news_v4.html?v=V20261006_4');">
-                        <span>영업 소식지</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('보험인사이트', '한장 비교표', 'insight/insight_compare_v2.html?v=V20261006_2');">
-                        <span>한장 비교표</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('보험인사이트', '보험 영상', 'insight/video.html');" style="grid-column: span 2;">
-                        <span>보험 영상</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                </div>
+            <div class="sheet-menu-tile" onclick="selectMobileFeature('subscription', '💳 구독서비스')">
+                <span class="sheet-tile-icon" style="background: #f8fafc; color: #334155;"><i class="fa-solid fa-credit-card"></i></span>
+                <span class="sheet-tile-label">구독서비스</span>
             </div>
-
-            <!-- 4. 영업전략 -->
-            <div class="mobile-menu-card theme-amber">
-                <div class="mobile-card-head">
-                    <div class="mobile-card-pill">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
-                    </div>
-                    <span class="mobile-card-title">영업전략</span>
-                </div>
-                <div class="mobile-card-links">
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('영업전략', '타겟 관리', 'strategy/target_test.html');">
-                        <span>타겟 관리</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('영업전략', '전략 플랜', 'strategy/strategy_plan.html');">
-                        <span>전략 플랜</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- 5. 브랜딩 -->
-            <div class="mobile-menu-card theme-purple">
-                <div class="mobile-card-head">
-                    <div class="mobile-card-pill">
-                        <svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="10" y1="3" x2="6" y2="9"/><line x1="14" y1="3" x2="18" y2="9"/><line x1="12" y1="21" x2="9" y2="9"/><line x1="12" y1="21" x2="15" y2="9"/></svg>
-                    </div>
-                    <span class="mobile-card-title">브랜딩</span>
-                </div>
-                <div class="mobile-card-links">
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('브랜딩', '보장 분석', 'branding/pdf_p.html');">
-                        <span>보장 분석</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('브랜딩', '데일리 뉴스', 'branding/dailynews.html');">
-                        <span>데일리 뉴스</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('브랜딩', '브랜딩 마켓', 'branding/branding.html');" style="grid-column: span 2;">
-                        <span>브랜딩 마켓</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- 6. 위라클 -->
-            <div class="mobile-menu-card theme-indigo">
-                <div class="mobile-card-head">
-                    <div class="mobile-card-pill">
-                        <svg viewBox="0 0 24 24"><path d="M2 19h20v2H2z"/><path d="M2 5l4 9 6-6 6 6 4-9v12H2z"/></svg>
-                    </div>
-                    <span class="mobile-card-title">위라클</span>
-                </div>
-                <div class="mobile-card-links">
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('위라클', '파트너스', 'management/management.html');" style="grid-column: span 2;">
-                        <span>파트너스</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- 7. 구독서비스 -->
-            <div class="mobile-menu-card theme-rose">
-                <div class="mobile-card-head">
-                    <div class="mobile-card-pill">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 10a4 4 0 0 1 6.8-1.5L17 10"/><polyline points="17 6.5 17 10 13.5 10"/><path d="M15.5 14a4 4 0 0 1-6.8 1.5L7 14"/><polyline points="7 17.5 7 14 10.5 14"/></svg>
-                    </div>
-                    <span class="mobile-card-title">구독서비스</span>
-                </div>
-                <div class="mobile-card-links">
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('구독서비스', '구독 플랜', 'subscription/subscription.html');">
-                        <span>구독 플랜</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('구독서비스', '결제/구독 관리', 'subscription/subscription.html');">
-                        <span>결제/구독 관리</span>
-                        <span style="color:#94a3b8;">→</span>
-                    </a>
-                </div>
+            <div class="sheet-menu-tile" onclick="selectMobileFeature('management', '👑 위라클 파트너스')">
+                <span class="sheet-tile-icon" style="background: #f0fdfa; color: #0d9488;"><i class="fa-solid fa-crown"></i></span>
+                <span class="sheet-tile-label">파트너스</span>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-function toggleMobileFullMenu(show) {
-    const modal = document.getElementById('mobileFullMenuModal');
-    if (!modal) return;
-    if (show) {
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    } else {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-}
-window.toggleMobileFullMenu = toggleMobileFullMenu;
 </script>
 
+<script>
+// =========================================
+// [ 모바일 바텀시트 슬라이딩 & 풀 인터랙션 제어 (헤더_프로필_구글연동_디자인시안.html 100% 동일) ]
+// =========================================
+let isSheetCollapsed = false;
+
+function toggleMobileSheetManually() {
+    isSheetCollapsed = !isSheetCollapsed;
+    updateSheetStateUI();
+}
+
+function updateSheetStateUI() {
+    const sheet = document.getElementById('mobileBottomSheet');
+    const handleText = document.getElementById('sheetHandleText');
+    if (!sheet) return;
+
+    if (isSheetCollapsed) {
+        sheet.classList.add('collapsed');
+        if (handleText) {
+            handleText.innerHTML = '<i class="fa-solid fa-chevron-up"></i> <span>⬆️ 메뉴 선택하기 (탭하여 서랍 열기)</span>';
+        }
+    } else {
+        sheet.classList.remove('collapsed');
+        if (handleText) {
+            handleText.innerHTML = '<i class="fa-solid fa-chevron-down"></i> <span>원하는 기능을 탭하세요 (탭 시 자동 숨김)</span>';
+        }
+    }
+}
+
+function selectMobileFeature(featureKey, featureName) {
+    if (featureKey === 'home') {
+        showDashboardHome();
+    } else if (featureKey === 'card') {
+        loadSubPage('디지털 명함', '디지털 명함', 'card/card_edit.html');
+    } else if (featureKey === 'crm') {
+        loadSubPage('고객관리', '고객관리', 'crm/crm_test.html');
+    } else if (featureKey === 'claim') {
+        loadSubPage('고객관리', '보험금 청구', 'claim/claim.html');
+    } else if (featureKey === 'dailynews') {
+        loadSubPage('브랜딩', '데일리 뉴스', 'branding/dailynews.html');
+    } else if (featureKey === 'video') {
+        loadSubPage('보험인사이트', '보험 영상', 'insight/video.html');
+    } else if (featureKey === 'branding') {
+        loadSubPage('브랜딩', '브랜딩 마켓', 'branding/branding.html');
+    } else if (featureKey === 'subscription') {
+        loadSubPage('구독서비스', '구독서비스', 'subscription/subscription.html');
+    } else if (featureKey === 'management') {
+        loadSubPage('위라클', '파트너스', 'management/management.html');
+    } else if (featureKey === 'mypage') {
+        loadSubPage('설정', '마이페이지', 'settings/mypage.html');
+    }
+
+    // 메뉴를 선택하면 내용이 시원하게 보이도록 메뉴바가 자동으로 쏙 접힘(Hide)!
+    isSheetCollapsed = true;
+    updateSheetStateUI();
+}
+
+function handleMobileGoogleSync() {
+    if (typeof triggerGoogleLogin === 'function') {
+        triggerGoogleLogin(true);
+    } else if (typeof safeAlert === 'function') {
+        safeAlert('구글 시트 실시간 재연동을 실행합니다.', 'info');
+    } else {
+        alert('구글 시트 실시간 재연동을 실행합니다.');
+    }
+}
+
+function filterMobileSchedule(cat, el) {
+    const chips = document.querySelectorAll('.m-filter-chip');
+    chips.forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+
+    const items = document.querySelectorAll('#mobileScheduleList .cal-v-event-item');
+    items.forEach(item => {
+        if (cat === 'all' || item.getAttribute('data-cat') === cat) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// 하위 호환성 글로벌 바인딩
+window.toggleMobileSheetManually = toggleMobileSheetManually;
+window.selectMobileFeature = selectMobileFeature;
+window.handleMobileGoogleSync = handleMobileGoogleSync;
+window.filterMobileSchedule = filterMobileSchedule;
+window.updateSheetStateUI = updateSheetStateUI;
+
+// 모바일 날짜 초기화 & 뷰포트 반응 설정
+document.addEventListener('DOMContentLoaded', () => {
+    const dateEl = document.getElementById('mobileTodayDateText');
+    if (dateEl) {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = now.getMonth() + 1;
+        const d = now.getDate();
+        dateEl.innerText = `${y}년 ${m}월 ${d}일`;
+    }
+    showDashboardHome();
+});
+
+// 💡 화면 크기를 줄이거나 늘릴 때 실시간으로 모바일/PC 자동 인식 및 즉시 전환 (1280px 기준)!
+let lastIsMobileState = window.innerWidth <= 1280;
+window.addEventListener('resize', () => {
+    const isMobile = window.innerWidth <= 1280;
+    if (isMobile !== lastIsMobileState) {
+        lastIsMobileState = isMobile;
+        const mainWorkspace = document.querySelector('.main-workspace');
+        const frame = document.getElementById('mainFrame');
+        const isViewingSubpage = mainWorkspace && mainWorkspace.classList.contains('iframe-active') && frame && frame.src && !frame.src.includes('dashboard/dashboard.html');
+        
+        if (isViewingSubpage) {
+            isSheetCollapsed = true;
+            updateSheetStateUI();
+        } else {
+            showDashboardHome();
+        }
+    }
+});
+</script>
 </body>
 
 

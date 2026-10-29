@@ -1560,7 +1560,10 @@ color: #065f46;
 .dd-google-card-desc {
     font-size: 11px;
     line-height: 1.4;
-    color: #64748b;
+    color: #166534;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .dd-google-card.expired .dd-google-card-desc {
     color: #991b1b;
@@ -4553,10 +4556,17 @@ function updateProfileUI(user, profile) {
     : `<svg viewBox="0 0 24 24" width="60%" height="60%" fill="#9ca3af"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
 
     // 구글 연동 상태 계산
-    const hasGoogleToken = !!(profile && profile.google_access_token);
-    const savedTime = parseInt(localStorage.getItem('g_token_time') || '0', 10);
+    const hasGoogleToken = !!(profile && profile.google_access_token) || !!localStorage.getItem('g_access_token');
+    let savedTime = parseInt(localStorage.getItem('g_token_time') || '0', 10);
+    if (hasGoogleToken && savedTime === 0) {
+        savedTime = Date.now();
+        localStorage.setItem('g_token_time', savedTime.toString());
+    }
     const diffMs = (savedTime + 3600000) - Date.now();
     const isGoogleConnected = hasGoogleToken && (diffMs > 0);
+    const mmInit = Math.max(0, Math.floor(diffMs / 60000)).toString().padStart(2, '0');
+    const ssInit = Math.max(0, Math.floor((diffMs % 60000) / 1000)).toString().padStart(2, '0');
+    const initialTimerStr = `${mmInit}:${ssInit}`;
 
     pbLoginInfo.innerHTML = `
         <div class="avatar-wrap">
@@ -4581,7 +4591,25 @@ function updateProfileUI(user, profile) {
                 </div>
             </div>
 
-            <!-- 2. 메뉴 리스트 (일관된 구조 & 아이콘) -->
+            <!-- 2. 드롭다운 내부 구글 연동 카드 -->
+            <div id="dropdownGoogleSyncCard" class="dd-google-card ${isGoogleConnected ? 'connected' : 'expired'}">
+                <div class="dd-google-card-header">
+                    <div class="dd-google-status-title">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="13" height="13">
+                        <span id="ddGoogleStatusTitleText">${isGoogleConnected ? '구글 연동 정상' : '구글 연동 만료됨'}</span>
+                    </div>
+                    <div id="ddGoogleActionSlot">
+                        ${isGoogleConnected 
+                            ? `<span class="dd-google-timer" id="ddGoogleTimerText">${initialTimerStr}</span>` 
+                            : `<button type="button" class="dd-google-reconnect-btn" onclick="event.stopPropagation(); triggerGoogleLogin(true);">1초 재연동</button>`}
+                    </div>
+                </div>
+                <div class="dd-google-card-desc" id="ddGoogleDescText">
+                    ${isGoogleConnected ? '고객·일정 실시간 백업 중' : '만료 시 1초 재연동이 필요합니다.'}
+                </div>
+            </div>
+
+            <!-- 3. 메뉴 리스트 (일관된 구조 & 아이콘) -->
             <div class="dd-section-label">내 업무 & 활동</div>
             <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='card/card_edit.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
                 <div class="dd-item-left">
@@ -4643,8 +4671,12 @@ function updateProfileUI(user, profile) {
     const syncGoogleStatusTick = () => {
         if (!window.currentUser) return;
         const curProfile = window.currentProfile;
-        const hasToken = !!(curProfile && curProfile.google_access_token);
-        const sTime = parseInt(localStorage.getItem('g_token_time') || '0', 10);
+        const hasToken = !!(curProfile && curProfile.google_access_token) || !!localStorage.getItem('g_access_token');
+        let sTime = parseInt(localStorage.getItem('g_token_time') || '0', 10);
+        if (hasToken && sTime === 0) {
+            sTime = Date.now();
+            localStorage.setItem('g_token_time', sTime.toString());
+        }
         const diff = (sTime + 3600000) - Date.now();
         const active = hasToken && (diff > 0);
 
@@ -4664,7 +4696,27 @@ function updateProfileUI(user, profile) {
             }
         }
 
-// 드롭다운 내부 구글 카드 비활성화됨
+        // 3. 드롭다운 내부 구글 카드 동기화
+        const ddCard = document.getElementById('dropdownGoogleSyncCard');
+        const titleEl = document.getElementById('ddGoogleStatusTitleText');
+        const actionSlot = document.getElementById('ddGoogleActionSlot');
+        const descEl = document.getElementById('ddGoogleDescText');
+
+        if (ddCard && titleEl && actionSlot && descEl) {
+            if (active) {
+                ddCard.className = 'dd-google-card connected';
+                titleEl.innerText = '구글 연동 정상';
+                const mm = Math.max(0, Math.floor(diff / 60000)).toString().padStart(2, '0');
+                const ss = Math.max(0, Math.floor((diff % 60000) / 1000)).toString().padStart(2, '0');
+                actionSlot.innerHTML = `<span class="dd-google-timer" id="ddGoogleTimerText">${mm}:${ss}</span>`;
+                descEl.innerText = '고객·일정 실시간 백업 중';
+            } else {
+                ddCard.className = 'dd-google-card expired';
+                titleEl.innerText = hasToken ? '구글 연동 만료됨' : '구글 연동 안됨';
+                actionSlot.innerHTML = `<button type="button" class="dd-google-reconnect-btn" onclick="event.stopPropagation(); triggerGoogleLogin(true);">1초 재연동</button>`;
+                descEl.innerText = '만료 시 1초 재연동이 필요합니다.';
+            }
+        }
     };
     syncGoogleStatusTick();
     window.googleTimerInterval = setInterval(syncGoogleStatusTick, 1000);

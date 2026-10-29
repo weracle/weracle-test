@@ -1083,13 +1083,43 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            const img = new Image();
-            img.crossOrigin = 'Anonymous';
-            img.src = String(row[formUrlKey]).trim();
-            
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = () => reject(new Error('양식 이미지를 불러오는데 실패했습니다: ' + img.src));
+            const rawFormUrl = String(row[formUrlKey]).trim();
+            const img = await new Promise((resolve, reject) => {
+                let resolved = false;
+                const tryResolve = (targetImg) => {
+                    if (!resolved) {
+                        resolved = true;
+                        resolve(targetImg);
+                    }
+                };
+
+                // 1차: 원본 로딩
+                const primary = new Image();
+                primary.crossOrigin = 'Anonymous';
+                primary.onload = () => tryResolve(primary);
+                primary.onerror = () => loadProxy();
+
+                // 2차: CDN 프록시 (ImgBB CORS/TLS/지연 완벽 우회)
+                const loadProxy = () => {
+                    if (resolved) return;
+                    const proxy = new Image();
+                    proxy.crossOrigin = 'Anonymous';
+                    proxy.onload = () => tryResolve(proxy);
+                    proxy.onerror = () => {
+                        if (!resolved) {
+                            resolved = true;
+                            reject(new Error('양식 이미지를 불러오는데 실패했습니다: ' + rawFormUrl));
+                        }
+                    };
+                    proxy.src = 'https://images.weserv.nl/?url=' + encodeURIComponent(rawFormUrl);
+                };
+
+                // 원본이 2.5초 이상 응답 없으면 프록시 병렬 시도
+                setTimeout(() => {
+                    if (!resolved) loadProxy();
+                }, 2500);
+
+                primary.src = rawFormUrl;
             });
             
             // 기존 좌표계가 800px 기준으로 세팅되었을 확률이 매우 높으므로 800으로 스케일링합니다.

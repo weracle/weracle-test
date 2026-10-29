@@ -170,18 +170,29 @@ module.exports = async function handler(req, res) {
     const sender = senderNumber || process.env.POPBILL_SENDER || '0318755188';
     const cleanReceiver = receiverNumber.replace(/[^0-9]/g, '');
 
-    faxService.sendFAX(
-      corpNum,
-      sender,
-      cleanReceiver,
-      receiverName || '보험금청구담당자',
-      [tempFilePath], // file array
-      '', // reserveDT (즉시 전송)
-      '', // UserID
-      '', // SenderName
-      false, // AdsYN
-      '보험금청구서류', // Title
-      '', // RequestNum
+    const faxOptions = {
+      SenderNum: sender,
+      SenderName: '',
+      Receiver: cleanReceiver,
+      ReceiverName: receiverName || '보험금청구담당자',
+      FilePaths: [tempFilePath],
+      ReserveDT: '',
+      AdsYN: false,
+      Title: '보험금청구서류',
+      RequestNum: ''
+    };
+
+    const sendFn = typeof faxService.sendFax === 'function' 
+      ? (s, e) => faxService.sendFax(corpNum, faxOptions, s, e)
+      : (typeof faxService.sendFAX === 'function'
+        ? (s, e) => faxService.sendFAX(corpNum, sender, cleanReceiver, receiverName || '보험금청구담당자', [tempFilePath], '', '', '', false, '보험금청구서류', '', s, e)
+        : null);
+
+    if (!sendFn) {
+      throw new Error('팝빌 FaxService 전송 함수(sendFax)를 찾을 수 없습니다.');
+    }
+
+    sendFn(
       async (receiptNum) => {
         try {
           if (tempFilePath && fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);

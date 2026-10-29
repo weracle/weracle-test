@@ -1083,43 +1083,48 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            const rawFormUrl = String(row[formUrlKey]).trim();
+                        const rawFormUrl = String(row[formUrlKey]).trim();
+            // ImgBB 원본은 간헐적 TLS 행/CORS 차단 문제가 있으므로 고속 CDN 프록시를 1차로 로드
+            const cdnProxyUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent(rawFormUrl);
+            
             const img = await new Promise((resolve, reject) => {
                 let resolved = false;
-                const tryResolve = (targetImg) => {
+                const tryResolve = (targetImg, srcLabel) => {
                     if (!resolved) {
                         resolved = true;
+                        console.log('[양식 로딩 성공]', srcLabel);
                         resolve(targetImg);
                     }
                 };
 
-                // 1차: 원본 로딩
-                const primary = new Image();
-                primary.crossOrigin = 'Anonymous';
-                primary.onload = () => tryResolve(primary);
-                primary.onerror = () => loadProxy();
+                // 1차: Cloudflare 기반 고속 CDN 프록시 로드 (확실한 CORS 헤더 및 캐시)
+                const proxyImg = new Image();
+                proxyImg.crossOrigin = 'Anonymous';
+                proxyImg.onload = () => tryResolve(proxyImg, 'CDN 프록시');
+                proxyImg.onerror = () => loadDirect();
 
-                // 2차: CDN 프록시 (ImgBB CORS/TLS/지연 완벽 우회)
-                const loadProxy = () => {
+                // 2차: 프록시 실패 시 원본 직접 로드
+                const loadDirect = () => {
                     if (resolved) return;
-                    const proxy = new Image();
-                    proxy.crossOrigin = 'Anonymous';
-                    proxy.onload = () => tryResolve(proxy);
-                    proxy.onerror = () => {
+                    console.warn('[CDN 프록시 실패, 원본 재시도]', rawFormUrl);
+                    const directImg = new Image();
+                    directImg.crossOrigin = 'Anonymous';
+                    directImg.onload = () => tryResolve(directImg, '원본 서버');
+                    directImg.onerror = () => {
                         if (!resolved) {
                             resolved = true;
                             reject(new Error('양식 이미지를 불러오는데 실패했습니다: ' + rawFormUrl));
                         }
                     };
-                    proxy.src = 'https://images.weserv.nl/?url=' + encodeURIComponent(rawFormUrl);
+                    directImg.src = rawFormUrl;
                 };
 
-                // 원본이 2.5초 이상 응답 없으면 프록시 병렬 시도
+                // CDN 프록시가 4초 내 응답 없을 때 원본 병렬 시도
                 setTimeout(() => {
-                    if (!resolved) loadProxy();
-                }, 2500);
+                    if (!resolved) loadDirect();
+                }, 4000);
 
-                primary.src = rawFormUrl;
+                proxyImg.src = cdnProxyUrl;
             });
             
             // 기존 좌표계가 800px 기준으로 세팅되었을 확률이 매우 높으므로 800으로 스케일링합니다.

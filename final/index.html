@@ -3508,6 +3508,12 @@ transform: translateY(-2px);
 </div>
 </div>
 
+
+
+</div>
+
+<!-- 홈 하단 영역: 업무 바로가기 그리드 & 푸터 (홈 대시보드 하단에 상시 노출) -->
+<div id="homeBottomSection" class="dashboard-modern" style="padding: 10px 30px 40px 30px; width: 100%; box-sizing: border-box;">
 <!-- Bottom: Quick Links Grid -->
 <div class="dashboard-links-section">
 <h3 class="links-title">업무 바로가기</h3>
@@ -3544,7 +3550,6 @@ transform: translateY(-2px);
 </div>
 <p style="margin-top: 15px; color: var(--text-muted); font-size: 12px;">© Wekreat. All rights reserved.</p>
 </div>
-
 </div>
 
 
@@ -4483,6 +4488,7 @@ function openAuthModal(type) {
     if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
     const dashboardHome = document.getElementById('dashboardHome');
     if (dashboardHome) dashboardHome.style.display = 'none';
+    const bSec = document.getElementById('homeBottomSection'); if (bSec) bSec.style.display = 'none';
 
     // 네비게이션 탭 비활성화
     const navColItems = document.querySelectorAll('.nav-col-item');
@@ -4575,32 +4581,14 @@ function updateProfileUI(user, profile) {
                 </div>
             </div>
 
-            <!-- 2. 드롭다운 내부 구글 시트 연동 전용 카드 -->
-            <div id="dropdownGoogleSyncCard" class="dd-google-card ${isGoogleConnected ? 'connected' : 'expired'}">
-                <div class="dd-google-card-header">
-                    <div class="dd-google-status-title">
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="13" height="13">
-                        <span id="ddGoogleStatusTitleText">${isGoogleConnected ? '구글 시트 연동 정상' : '구글 연동 만료됨'}</span>
-                    </div>
-                    <div id="ddGoogleActionSlot">
-                        ${isGoogleConnected 
-                            ? `<span class="dd-google-timer" id="ddGoogleTimerText">--:--</span>` 
-                            : `<button type="button" class="dd-google-reconnect-btn" onclick="event.stopPropagation(); triggerGoogleLogin(true);">1초 재연동</button>`}
-                    </div>
-                </div>
-                <div class="dd-google-card-desc" id="ddGoogleDescText">
-                    ${isGoogleConnected ? '고객 및 스케줄 실시간 백업 중' : '만료되어도 위라클 로그인은 유지됩니다.'}
-                </div>
-            </div>
-
-            <!-- 3. 메뉴 리스트 (일관된 구조 & 아이콘) -->
+            <!-- 2. 메뉴 리스트 (일관된 구조 & 아이콘) -->
             <div class="dd-section-label">내 업무 & 활동</div>
             <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='card/card_edit.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
                 <div class="dd-item-left">
                     <span class="dd-icon-box blue"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" stroke-width="2"/><circle cx="9" cy="10" r="2" stroke-width="2"/><line x1="15" y1="8" x2="17" y2="8" stroke-width="2"/><line x1="15" y1="12" x2="17" y2="12" stroke-width="2"/><line x1="7" y1="16" x2="17" y2="16" stroke-width="2"/></svg></span>
                     <span class="dd-item-text">내 디지털 명함</span>
                 </div>
-                <span class="dd-item-badge">편집</span>
+                
             </a>
 
             <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='login/myposts.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
@@ -4676,27 +4664,7 @@ function updateProfileUI(user, profile) {
             }
         }
 
-        // 3. 드롭다운 내부 구글 카드 동기화
-        const ddCard = document.getElementById('dropdownGoogleSyncCard');
-        const titleEl = document.getElementById('ddGoogleStatusTitleText');
-        const actionSlot = document.getElementById('ddGoogleActionSlot');
-        const descEl = document.getElementById('ddGoogleDescText');
-
-        if (ddCard && titleEl && actionSlot && descEl) {
-            if (active) {
-                ddCard.className = 'dd-google-card connected';
-                titleEl.innerText = '구글 시트 동기화 정상';
-                const mm = Math.floor(diff / 60000).toString().padStart(2, '0');
-                const ss = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-                actionSlot.innerHTML = `<span class="dd-google-timer" id="ddGoogleTimerText">${mm}:${ss} 남음</span>`;
-                descEl.innerText = '고객 및 스케줄 데이터가 실시간 자동 백업 중입니다.';
-            } else {
-                ddCard.className = 'dd-google-card expired';
-                titleEl.innerText = hasToken ? '구글 연동 만료됨' : '구글 연동 안됨';
-                actionSlot.innerHTML = `<button type="button" class="dd-google-reconnect-btn" onclick="event.stopPropagation(); triggerGoogleLogin(true);">1초 재연동</button>`;
-                descEl.innerText = '연동이 만료되어도 위라클 로그인은 안전하게 유지됩니다.';
-            }
-        }
+// 드롭다운 내부 구글 카드 비활성화됨
     };
     syncGoogleStatusTick();
     window.googleTimerInterval = setInterval(syncGoogleStatusTick, 1000);
@@ -5082,6 +5050,7 @@ window.openDynamicList = function(type, val) {
 
         const dbHome = document.getElementById('dashboardHome');
         if (dbHome) dbHome.style.display = 'none';
+        const bSec = document.getElementById('homeBottomSection'); if (bSec) bSec.style.display = 'none';
         const mHub = document.getElementById('mobileWorkHub');
         if (mHub) mHub.style.display = 'none';
 
@@ -5145,6 +5114,7 @@ window.openDynamicList = function(type, val) {
         if (homeTab) homeTab.classList.add('active');
 
         const dbHome = document.getElementById('dashboardHome');
+        const bSec = document.getElementById('homeBottomSection'); if (bSec) bSec.style.display = 'block';
         if (dbHome) dbHome.style.display = 'none';
 
         const mHub = document.getElementById('mobileWorkHub');
@@ -5192,6 +5162,7 @@ window.openDynamicList = function(type, val) {
 
         const dbHome = document.getElementById('dashboardHome');
         if (dbHome) dbHome.style.display = 'none';
+        const bSec = document.getElementById('homeBottomSection'); if (bSec) bSec.style.display = 'none';
         const mHub = document.getElementById('mobileWorkHub');
         if (mHub) mHub.style.display = 'none';
 
@@ -5232,6 +5203,7 @@ window.openDynamicList = function(type, val) {
 
         const dbHome = document.getElementById('dashboardHome');
         if (dbHome) dbHome.style.display = 'none';
+        const bSec = document.getElementById('homeBottomSection'); if (bSec) bSec.style.display = 'none';
         const mHub = document.getElementById('mobileWorkHub');
         if (mHub) mHub.style.display = 'none';
 

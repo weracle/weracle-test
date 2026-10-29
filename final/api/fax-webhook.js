@@ -151,7 +151,7 @@ function sendAlimtalk(corpNum, templateCode, sender, content, receiver, receiver
         },
         (error) => {
           console.warn(`[Webhook Alimtalk Attempt Warning] 코드: ${templateCode}, 에러: ${error.code} - ${error.message}`);
-          if (altType === 'C' && (error.code === -30000007 || error.code === -30000008 || error.code === -30000006)) {
+          if (altType === 'C' && (error.code === -30000007 || error.code === -30000008 || error.code === -30000006 || error.code === -15001014)) {
             trySend('');
           } else {
             resolve({ success: false, error });

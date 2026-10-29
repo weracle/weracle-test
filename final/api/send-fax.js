@@ -73,8 +73,8 @@ function sendAlimtalk(corpNum, templateCode, sender, content, receiver, receiver
         },
         (error) => {
           console.warn(`[Alimtalk Attempt Warning] 코드: ${templateCode}, 에러: ${error.code} - ${error.message}`);
-          // 발신번호 미등록(-30000007, -30000008, -30000006) 시 대체문자 없이 순수 알림톡으로 재전송
-          if (altType === 'C' && (error.code === -30000007 || error.code === -30000008 || error.code === -30000006)) {
+          // 발신번호 미등록(-30000007, -30000008, -30000006, -15001014) 시 대체문자 없이 순수 알림톡으로 재전송
+          if (altType === 'C' && (error.code === -30000007 || error.code === -30000008 || error.code === -30000006 || error.code === -15001014)) {
             console.log('[Alimtalk] 대체문자 없이 순수 알림톡으로 재시도합니다...');
             trySend('');
           } else {

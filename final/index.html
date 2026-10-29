@@ -4272,7 +4272,7 @@ document.querySelector('.main-workspace').classList.add('iframe-active');
 document.getElementById('dashboardHome').style.display = 'none'; 
 const frame = document.getElementById('mainFrame');
 frame.style.display = 'block';    
-frame.src = "mypage.html";                  
+frame.src = "login/mypage.html";                  
 window.scrollTo(0, 0);            
 
 const items = document.querySelectorAll('.menu-item, .pb-menu-item, .tab-item');
@@ -4461,10 +4461,10 @@ safeAlert("소셜 로그인 에러: " + err.message);
 function openAuthModal(type) {
 const iframe = document.getElementById('mainFrame');
 if (iframe) {
-const targetSrc = 'intro.html#' + (typeof type !== 'undefined' && type ? type : 'login');
+const targetSrc = 'login/intro.html#' + (typeof type !== 'undefined' && type ? type : 'login');
 iframe.style.display = 'block';
 try {
-if (iframe.getAttribute('src') && iframe.getAttribute('src').startsWith('intro.html') && iframe.contentWindow) {
+if (iframe.getAttribute('src') && iframe.getAttribute('src').startsWith('login/intro.html') && iframe.contentWindow) {
 iframe.contentWindow.location.hash = (typeof type !== 'undefined' && type ? type : 'login');
 iframe.contentWindow.scrollTo(0, 0);
 } else {
@@ -5075,20 +5075,31 @@ window.openDynamicList = function(type, val) {
         const homeTab = document.querySelector('.nav-col-item[data-tab="home"]');
         if (homeTab) homeTab.classList.add('active');
 
+        const isMobile = window.innerWidth <= 1280;
         const dbHome = document.getElementById('dashboardHome');
-        if (dbHome && window.innerWidth > 900) dbHome.style.display = 'block';
+        if (dbHome) dbHome.style.display = 'none';
 
         const mHub = document.getElementById('mobileWorkHub');
-        if (mHub && window.innerWidth <= 900) mHub.style.display = 'block';
-
         const frame = document.getElementById('mainFrame');
-        if (frame) frame.style.display = 'none';
+        const mainWorkspace = document.querySelector('.main-workspace');
+
+        if (isMobile) {
+            if (mHub) mHub.style.display = 'block';
+            if (frame) frame.style.display = 'none';
+            if (mainWorkspace) mainWorkspace.classList.remove('iframe-active');
+        } else {
+            if (mHub) mHub.style.display = 'none';
+            if (frame) {
+                frame.style.display = 'block';
+                if (!frame.src || !frame.src.includes('dashboard.html')) {
+                    frame.src = 'dashboard/dashboard.html?v=' + Date.now();
+                }
+            }
+            if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
+        }
 
         const authCont = document.getElementById('w-auth-workspace-container');
         if (authCont) authCont.style.display = 'none';
-
-        const mainWorkspace = document.querySelector('.main-workspace');
-        if (mainWorkspace) mainWorkspace.classList.remove('iframe-active');
 
         window.scrollTo(0, 0);
     }
@@ -5437,7 +5448,7 @@ function selectMobileFeature(featureKey, featureName) {
     } else if (featureKey === 'management') {
         loadSubPage('위라클', '파트너스', 'management/management.html');
     } else if (featureKey === 'mypage') {
-        loadSubPage('설정', '마이페이지', 'settings/mypage.html');
+        loadSubPage('설정', '마이페이지', 'login/mypage.html');
     }
 
     // 메뉴를 선택하면 내용이 시원하게 보이도록 메뉴바가 자동으로 쏙 접힘(Hide)!

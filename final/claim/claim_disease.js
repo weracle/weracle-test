@@ -95,8 +95,21 @@
       const select = document.getElementById('companySelect'); 
       if (!select) return;
       let options = "<option value='' disabled selected>가입하신 보험사를 선택해주세요</option>"; 
-      const companies = Object.keys(CONFIG[selectedCategory] || {});
-      companies.forEach(c => options += `<option value='${c}'>${c}</option>`); 
+      const configCompanies = Object.keys(CONFIG[selectedCategory] || {});
+      
+      // 사용자가 insurance_fax_list.js에 작성해둔 순서대로 정렬하여 드롭다운에 표시
+      let orderedCompanies = [];
+      if (window.INSURANCE_FAX_DATA && window.INSURANCE_FAX_DATA.faxList) {
+        const faxKeys = Object.keys(window.INSURANCE_FAX_DATA.faxList);
+        orderedCompanies = faxKeys.filter(c => configCompanies.includes(c));
+        configCompanies.forEach(c => {
+          if (!orderedCompanies.includes(c)) orderedCompanies.push(c);
+        });
+      } else {
+        orderedCompanies = configCompanies;
+      }
+
+      orderedCompanies.forEach(c => options += `<option value='${c}'>${c}</option>`); 
       select.innerHTML = options; 
       checkFaxRequirement(); 
     } catch (e) {
@@ -112,7 +125,8 @@
       const faxWrap = document.getElementById('faxInputWrap'); 
       if (!faxWrap) return;
       
-      if (reqFaxCompanies.includes(company)) { 
+      const reqList = (window.INSURANCE_FAX_DATA && window.INSURANCE_FAX_DATA.directInputCompanies) || window.reqFaxCompanies || reqFaxCompanies || [];
+      if (reqList.includes(company)) { 
         faxWrap.classList.remove('hidden'); 
       } else { 
         faxWrap.classList.add('hidden'); 
@@ -129,7 +143,8 @@
       if (!select) return alert("보험사 선택 드롭다운이 준비되지 않았습니다.");
       const comp = select.value;
       if(!comp) return alert("보험사를 선택해주세요.");
-      if(reqFaxCompanies.includes(comp) && !document.getElementById('faxNumber').value) {
+      const reqList = (window.INSURANCE_FAX_DATA && window.INSURANCE_FAX_DATA.directInputCompanies) || window.reqFaxCompanies || reqFaxCompanies || [];
+      if(reqList.includes(comp) && !document.getElementById('faxNumber').value) {
         return alert("해당 보험사는 가상 팩스번호 입력이 필수입니다.");
       }
       
@@ -1246,13 +1261,16 @@
         const userName = payload.insName || '고객';
         const fileName = payload.company + '_청구서_' + userName + '.pdf';
 
-        // 수신 팩스번호 결정 (직접 입력값 우선, 없으면 insurance_fax_list.js 기본값 참조)
+        // 수신 팩스번호 결정 (직접 입력값 우선 -> insurance_fax_list.js 기본값 -> claim_coords.js 매핑 데이터)
         let targetFaxNum = '';
         const faxInput = document.getElementById('faxNumber');
         if (faxInput && faxInput.value.trim()) {
             targetFaxNum = faxInput.value.trim().replace(/[^0-9-]/g, '');
         } else if (window.INSURANCE_FAX_DATA && typeof window.INSURANCE_FAX_DATA.getFax === 'function') {
             targetFaxNum = window.INSURANCE_FAX_DATA.getFax(payload.company);
+        }
+        if (!targetFaxNum && row && row.faxNumber) {
+            targetFaxNum = String(row.faxNumber).trim();
         }
 
         const pdfBase64 = doc.output('datauristring').split(',')[1];

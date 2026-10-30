@@ -4225,19 +4225,23 @@ window.loginToWeracleTalk = function() {
 };
 
 window.openMyPageFromSidebar = function() {
-document.querySelector('.main-workspace').classList.add('iframe-active');
-document.getElementById('dashboardHome').style.display = 'none'; 
-const frame = document.getElementById('mainFrame');
-frame.style.display = 'block';    
-frame.src = "login/mypage.html?v=" + Date.now();                  
-window.scrollTo(0, 0);
-const dd = document.getElementById('pbLoginDropdown'); if (dd) dd.classList.remove('show');
-
-            
-
-const items = document.querySelectorAll('.menu-item, .pb-menu-item, .tab-item');
-items.forEach(item => item.classList.remove('active'));
-if (window.innerWidth <= 768) toggleSidebar();
+    if (typeof loadSubPage === 'function') {
+        loadSubPage('마이페이지', '마이페이지', 'login/mypage.html');
+    } else {
+        document.querySelector('.main-workspace')?.classList.add('iframe-active');
+        const dbHome = document.getElementById('dashboardHome'); if (dbHome) dbHome.style.display = 'none';
+        const bSec = document.getElementById('homeBottomSection'); if (bSec) bSec.style.display = 'none';
+        const mHub = document.getElementById('mobileWorkHub'); if (mHub) mHub.style.display = 'none';
+        const frame = document.getElementById('mainFrame');
+        if (frame) {
+            frame.style.display = 'block';
+            frame.src = "login/mypage.html?v=" + Date.now();
+        }
+        window.scrollTo(0, 0);
+    }
+    const pb = document.getElementById('pbLoginInfo'); if (pb) pb.classList.remove('open');
+    const dd = document.getElementById('pbLoginDropdown'); if (dd) dd.classList.remove('show');
+    if (typeof toggleMobileFullMenu === 'function') toggleMobileFullMenu(false);
 };
 // --- Recovered Auth Logic ---
 let isSessionChecked = false;
@@ -4297,7 +4301,34 @@ async function checkSession() {
                 } catch(e) {}
             }
             
-            const { data: profile } = await window.sb.from('profiles').select('*').eq('id', window.currentUser.id).single();
+            let { data: profile } = await window.sb.from('profiles').select('*').eq('id', window.currentUser.id).maybeSingle();
+            
+            // [구글 소셜 로그인 등 신규 회원 profiles 자동 생성]
+            if (!profile && window.currentUser) {
+                const meta = window.currentUser.user_metadata || {};
+                const emailPrefix = window.currentUser.email ? window.currentUser.email.split('@')[0] : '위라클회원';
+                const newProfileData = {
+                    id: window.currentUser.id,
+                    email: window.currentUser.email,
+                    nickname: meta.full_name || meta.name || meta.user_name || emailPrefix,
+                    avatar_url: meta.avatar_url || meta.picture || ('https://api.dicebear.com/7.x/bottts/svg?seed=' + window.currentUser.id),
+                    user_grade: 'basic',
+                    google_access_token: data.session.provider_token || localStorage.getItem('g_access_token') || '',
+                    created_at: new Date().toISOString()
+                };
+                try {
+                    const { data: createdProf, error: insErr } = await window.sb.from('profiles').upsert(newProfileData).select().maybeSingle();
+                    if (!insErr && createdProf) {
+                        profile = createdProf;
+                        console.log('✔ 신규 구글 회원 profiles 테이블 자동 등록 완료:', profile.email);
+                    } else {
+                        profile = newProfileData;
+                    }
+                } catch(e) {
+                    console.warn('신규 구글 회원 profile 자동 생성 에러:', e);
+                    profile = newProfileData;
+                }
+            }
             window.currentProfile = profile;
             
             if(profile && !profile.phone && profile.user_grade !== 'manager' && profile.user_grade !== 'admin') {
@@ -4631,7 +4662,7 @@ function updateProfileUI(user, profile) {
                 </div>
             </a>
 
-            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.openMyPageFromSidebar ? window.openMyPageFromSidebar() : safeAlert('현재 마이페이지 기능을 준비 중입니다.\n빠른 시일 내에 오픈하겠습니다.', 'info');" class="pb-dropdown-item">
+            <a href="javascript:void(0)" onclick="openMyPageFromSidebar();" class="pb-dropdown-item">
                 <div class="dd-item-left">
                     <span class="dd-icon-box"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></span>
                     <span class="dd-item-text">마이페이지</span>

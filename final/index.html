@@ -3522,16 +3522,26 @@ transform: translateY(-2px);
 
 <!-- 홈 하단 영역: 업무 바로가기 그리드 & 푸터 (홈 대시보드 하단에 상시 노출) -->
 <div id="homeBottomSection" class="dashboard-modern" style="padding: 10px 30px 40px 30px; width: 100%; box-sizing: border-box;">
+<!-- Bottom: Quick Links Grid -->
+<div class="dashboard-links-section">
+<h3 class="links-title">업무 바로가기</h3>
+<div class="modern-quick-grid">
+<button class="m-quick-btn" onclick="openServiceLink('https://weraclelab.imweb.me/63')"><i class="fa-solid fa-building-shield"></i>보험사 연락처/약관</button>
+<button class="m-quick-btn" onclick="openServiceLink('https://www.kidi.or.kr')"><i class="fa-solid fa-chart-line"></i>보험개발원</button>
+<button class="m-quick-btn" onclick="openServiceLink('#')"><i class="fa-solid fa-file-invoice"></i>보험청구 바로가기</button>
+<button class="m-quick-btn" onclick="openServiceLink('#')"><i class="fa-solid fa-magnifying-glass-chart"></i>보장분석 바로가기</button>
+<button class="m-quick-btn" onclick="openServiceLink('https://www.inbi.or.kr/')"><i class="fa-solid fa-graduation-cap"></i>보험연수원</button>
+<button class="m-quick-btn" onclick="openServiceLink('https://www.knia.or.kr')"><i class="fa-solid fa-umbrella"></i>손해보험협회</button>
+<button class="m-quick-btn" onclick="openServiceLink('https://www.klia.or.kr')"><i class="fa-solid fa-heart-pulse"></i>생명보험협회</button>
+<button class="m-quick-btn" onclick="openServiceLink('https://www.silson24.or.kr/')"><i class="fa-solid fa-notes-medical"></i>실손24</button>
+</div>
+</div>
+
 <!-- Footer -->
 <div class="vlab-card col-12" style="background: transparent; box-shadow: none; border: none; padding: 20px 0; margin-top: 20px;">
 <div style="display: flex; gap: 15px; margin-bottom: 15px; font-weight: 700; color: var(--primary);">
 <a href="login/terms.html" target="_blank" style="color: inherit; text-decoration: none; cursor: pointer;">이용약관</a>
 <a href="login/privacy.html" target="_blank" style="color: inherit; text-decoration: none; cursor: pointer;">개인정보처리방침</a>
-<span style="color: #cbd5e1; margin: 0 5px;">|</span>
-<button type="button" onclick="downloadDesktopShortcut()" style="display: inline-flex; align-items: center; gap: 8px; background: #ffffff; border: 1.5px solid #0284c7; padding: 5px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(2, 132, 199, 0.08); vertical-align: middle;" onmouseover="this.style.background='#f0f9ff'; this.style.borderColor='#0284c7'; this.style.boxShadow='0 2px 8px rgba(2, 132, 199, 0.18)';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#0284c7'; this.style.boxShadow='0 1px 3px rgba(2, 132, 199, 0.08)';" title="바탕화면 바로가기 다운로드">
-<span style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1;">WERACLE <span style="color: #0284c7;">LAB</span></span>
-<span style="font-size: 11px; font-weight: 700; color: #ffffff; background: #0284c7; padding: 2px 7px; border-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif; line-height: 1.2;">바로가기</span>
-</button>
 </div>
 <div style="display: flex; flex-direction: column; gap: 5px; color: var(--text-muted); font-size: 14px; line-height: 1.6;">
 <div style="display: flex; flex-wrap: wrap; gap: 15px;">
@@ -5514,46 +5524,4 @@ function toggleMobileFullMenu(show) {
 window.toggleMobileFullMenu = toggleMobileFullMenu;
 </script>
 
-<script>
-// PWA Service Worker 등록
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-}
-
-let deferredInstallPrompt = null;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredInstallPrompt = e;
-});
-
-function downloadDesktopShortcut() {
-    // 1. 브라우저 네이티브 설치 창 (클릭 즉시 바탕화면에 위라클 아이콘 생성)
-    if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        deferredInstallPrompt.userChoice.then(() => {
-            deferredInstallPrompt = null;
-        });
-        return;
-    }
-
-    // 2. 바로가기 파일 즉시 다운로드 (다운로드 폴더)
-    try {
-        const siteUrl = "https://www.weraclelab.com/";
-        const shortcutContent = "[InternetShortcut]\r\nURL=" + siteUrl + "\r\nIconIndex=0\r\nIconFile=" + siteUrl + "favicon.ico\r\n";
-        const dataUri = 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(shortcutContent);
-        
-        const link = document.createElement('a');
-        link.href = dataUri;
-        link.setAttribute('download', 'WERACLE LAB.url');
-        document.body.appendChild(link);
-        link.click();
-        setTimeout(() => {
-            document.body.removeChild(link);
-        }, 1000);
-    } catch (err) {
-        console.error(err);
-    }
-}
-window.downloadDesktopShortcut = downloadDesktopShortcut;
-</script>
 </body>

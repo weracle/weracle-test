@@ -4180,6 +4180,19 @@ function renderAdminScheduleList() {
       </div>
     `;
 
+    const btnGroup = document.createElement('div');
+    btnGroup.style.cssText = 'display:flex; gap:6px; align-items:center;';
+
+    const syncBtn = document.createElement('button');
+    syncBtn.className = 'btn-secondary';
+    syncBtn.style.cssText = 'padding:5px 10px; font-size:11px; white-space:nowrap; cursor:pointer; font-weight:700; border-radius:6px; color:#4285F4; border-color:#93c5fd; background:#eff6ff;';
+    syncBtn.innerHTML = '<i class="fa-brands fa-google"></i> 구글 전송';
+    syncBtn.onclick = (e) => {
+      e.preventDefault();
+      adminSyncSingleScheduleToGoogle(item.id);
+    };
+    btnGroup.appendChild(syncBtn);
+
     const delBtn = document.createElement('button');
     delBtn.className = 'btn-danger';
     delBtn.style.cssText = 'padding:5px 12px; font-size:12px; white-space:nowrap; cursor:pointer; font-weight:700; border-radius:6px;';
@@ -4188,7 +4201,9 @@ function renderAdminScheduleList() {
       e.preventDefault();
       adminDeleteSchedule(item.id);
     };
-    row.appendChild(delBtn);
+    btnGroup.appendChild(delBtn);
+
+    row.appendChild(btnGroup);
 
     listEl.appendChild(row);
   });
@@ -4300,6 +4315,137 @@ window.adminAddSchedule = function() {
     ? `\n- 주관 회사: ${company || '자체 교육'}\n- 루키 구분: ${isNewbie ? ' 신입 전용' : '일반'}`
     : '';
   alert(`새 일정이 성공적으로 등록되었습니다!\n 수파베이스 DB 저장 완료\n 공식 구글 캘린더(boheomdapda@gmail.com) 동기화 & 스마트폰 자동 알림 예약 완료!${targetMsg}${detailMsg}`);
+};
+
+async function sendScheduleEventToGoogle(item, gAuthToken) {
+  const sDate = item.date || item.event_date;
+  const sTime = item.time || (item.start_time ? item.start_time.slice(0, 5) : '09:00');
+  const startDateTime = new Date(`${sDate}T${sTime}:00`).toISOString();
+  const endDateTime = new Date(new Date(startDateTime).getTime() + 60 * 60 * 1000).toISOString();
+
+  let remindersOverrides = [];
+  const rTime = item.remindTime || (item.remind10m ? '10m' : '30m');
+  if (rTime === '10m') remindersOverrides.push({ method: 'popup', minutes: 10 });
+  else if (rTime === '30m') remindersOverrides.push({ method: 'popup', minutes: 30 });
+  else if (rTime === '1h') remindersOverrides.push({ method: 'popup', minutes: 60 });
+  else if (rTime === '2h') remindersOverrides.push({ method: 'popup', minutes: 120 });
+  else if (rTime === '0') remindersOverrides.push({ method: 'popup', minutes: 0 });
+  if (item.remind1d) remindersOverrides.push({ method: 'popup', minutes: 1440 });
+
+  let desc = '위라클 파트너스 공식 일정';
+  if (item.company) desc += '\n주관: ' + item.company;
+  if (item.isNewbie) desc += '\n구분: 신입 전용 교육';
+
+  const eventPayload = {
+    summary: item.title,
+    description: desc,
+    start: { dateTime: startDateTime, timeZone: 'Asia/Seoul' },
+    end: { dateTime: endDateTime, timeZone: 'Asia/Seoul' },
+    reminders: remindersOverrides.length > 0 ? {
+      useDefault: false,
+      overrides: remindersOverrides
+    } : { useDefault: true }
+  };
+
+  const targetCalId = encodeURIComponent(googleCalSettings.calId || 'boheomdapda@gmail.com');
+  let gRes = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${targetCalId}/events`, {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + gAuthToken,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(eventPayload)
+  });
+
+  if (!gRes.ok && (googleCalSettings.calId || 'boheomdapda@gmail.com') !== 'primary') {
+    gRes = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + gAuthToken,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(eventPayload)
+    });
+  }
+
+  return gRes;
+}
+
+window.adminSyncSingleScheduleToGoogle = async function(id) {
+  const target = sampleSchedules.find(s => String(s.id) === String(id));
+  if (!target) return;
+
+  const gAuthToken = window.gToken || 
+    localStorage.getItem('g_access_token') || 
+    localStorage.getItem('google_access_token') || 
+    (parentWindow && parentWindow.currentProfile && parentWindow.currentProfile.google_access_token) ||
+    (window.parent && window.parent.currentProfile && window.parent.currentProfile.google_access_token);
+
+  if (!gAuthToken) {
+    alert('구글 캘린더 연동 권한(토큰)을 찾을 수 없습니다.\n먼저 구글 계정으로 로그인되어 있는지 확인해 주세요.');
+    return;
+  }
+
+  try {
+    const res = await sendScheduleEventToGoogle(target, gAuthToken);
+    if (res && res.ok) {
+      const gData = await res.json().catch(() => ({}));
+      if (gData && gData.id) target.googleEventId = gData.id;
+      target.googleSynced = true;
+      saveSchedulesToStorage();
+      renderAdminScheduleList();
+      alert(`[ ${target.title}] 일정이 공식 구글 캘린더(boheomdapda@gmail.com)로 성공적으로 전송되었습니다!`);
+    } else {
+      alert(`구글 캘린더 전송 실패 (상태코드: ${res ? res.status : '오류'})\n구글 권한이 만료되었을 수 있으니 상단 프로필에서 '1초 재연동' 후 다시 시도해 주세요.`);
+    }
+  } catch(e) {
+    alert('전송 중 오류 발생: ' + e.message);
+  }
+};
+
+window.adminSyncAllSchedulesToGoogle = async function() {
+  const gAuthToken = window.gToken || 
+    localStorage.getItem('g_access_token') || 
+    localStorage.getItem('google_access_token') || 
+    (parentWindow && parentWindow.currentProfile && parentWindow.currentProfile.google_access_token) ||
+    (window.parent && window.parent.currentProfile && window.parent.currentProfile.google_access_token);
+
+  if (!gAuthToken) {
+    alert('구글 캘린더 연동 권한(토큰)을 찾을 수 없습니다.\n먼저 구글 계정으로 로그인되어 있는지 확인해 주세요.');
+    return;
+  }
+
+  const confirmed = await showConfirm(
+    `수파베이스에 등록된 사내 일정(${sampleSchedules.length}건)을 공식 구글 캘린더(${googleCalSettings.calId || 'boheomdapda@gmail.com'})로 전송하시겠습니까?`,
+    '구글 캘린더 일괄 전송'
+  );
+  if (!confirmed) return;
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (const item of sampleSchedules) {
+    try {
+      const res = await sendScheduleEventToGoogle(item, gAuthToken);
+      if (res && res.ok) {
+        successCount++;
+        const gData = await res.json().catch(() => ({}));
+        if (gData && gData.id) item.googleEventId = gData.id;
+        item.googleSynced = true;
+      } else {
+        failCount++;
+      }
+    } catch(e) {
+      failCount++;
+      console.warn('일정 전송 에러:', e);
+    }
+  }
+
+  saveSchedulesToStorage();
+  renderAdminScheduleList();
+  renderScheduleTimeline();
+
+  alert(` 구글 캘린더 전송 완료!\n- 성공: ${successCount}건\n- 실패: ${failCount}건\n공식 구글 캘린더 및 스마트폰 알림에 정상 반영되었습니다.`);
 };
 
 window.adminDeleteSchedule = async function(id) {

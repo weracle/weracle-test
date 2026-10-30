@@ -1084,9 +1084,8 @@
             const ctx = canvas.getContext('2d');
             
                         const rawFormUrl = String(row[formUrlKey]).trim();
-            // ImgBB 원본은 간헐적 TLS 행/CORS 차단 문제가 있으므로 고속 CDN 프록시를 1차로 로드
-            const cdnProxyUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent(rawFormUrl);
-            
+            const isHttp = rawFormUrl.startsWith('http://') || rawFormUrl.startsWith('https://');
+
             const img = await new Promise((resolve, reject) => {
                 let resolved = false;
                 const tryResolve = (targetImg, srcLabel) => {
@@ -1097,34 +1096,68 @@
                     }
                 };
 
-                // 1차: Cloudflare 기반 고속 CDN 프록시 로드 (확실한 CORS 헤더 및 캐시)
-                const proxyImg = new Image();
-                proxyImg.crossOrigin = 'Anonymous';
-                proxyImg.onload = () => tryResolve(proxyImg, 'CDN 프록시');
-                proxyImg.onerror = () => loadDirect();
+                if (isHttp) {
+                    // ImgBB 원본은 간헐적 TLS 행/CORS 차단 문제가 있으므로 고속 CDN 프록시를 1차로 로드
+                    const cdnProxyUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent(rawFormUrl);
+                    const proxyImg = new Image();
+                    proxyImg.crossOrigin = 'Anonymous';
+                    proxyImg.onload = () => tryResolve(proxyImg, 'CDN 프록시');
+                    proxyImg.onerror = () => loadDirect();
 
-                // 2차: 프록시 실패 시 원본 직접 로드
-                const loadDirect = () => {
-                    if (resolved) return;
-                    console.warn('[CDN 프록시 실패, 원본 재시도]', rawFormUrl);
-                    const directImg = new Image();
-                    directImg.crossOrigin = 'Anonymous';
-                    directImg.onload = () => tryResolve(directImg, '원본 서버');
-                    directImg.onerror = () => {
-                        if (!resolved) {
-                            resolved = true;
-                            reject(new Error('양식 이미지를 불러오는데 실패했습니다: ' + rawFormUrl));
-                        }
+                    const loadDirect = () => {
+                        if (resolved) return;
+                        console.warn('[CDN 프록시 실패, 원본 재시도]', rawFormUrl);
+                        const directImg = new Image();
+                        directImg.crossOrigin = 'Anonymous';
+                        directImg.onload = () => tryResolve(directImg, '원본 서버');
+                        directImg.onerror = () => {
+                            if (!resolved) {
+                                resolved = true;
+                                reject(new Error('양식 이미지를 불러오는데 실패했습니다: ' + rawFormUrl));
+                            }
+                        };
+                        directImg.src = rawFormUrl;
                     };
-                    directImg.src = rawFormUrl;
-                };
 
-                // CDN 프록시가 4초 내 응답 없을 때 원본 병렬 시도
-                setTimeout(() => {
-                    if (!resolved) loadDirect();
-                }, 4000);
+                    setTimeout(() => {
+                        if (!resolved) loadDirect();
+                    }, 4000);
 
-                proxyImg.src = cdnProxyUrl;
+                    proxyImg.src = cdnProxyUrl;
+                } else {
+                    // 로컬 상대 경로 로딩 (CORS 차단 없이 0.01초 즉시 로드)
+                    // 사용자가 claim/1_질병상해 또는 claim/forms/1_질병상해 어디에 올렸든 자동 대응
+                    const cleanPath = rawFormUrl.replace(/^(\.\/|\/)/, '');
+                    const candidateUrls = [
+                        rawFormUrl,
+                        cleanPath,
+                        'forms/' + cleanPath.replace(/^forms\//, ''),
+                        cleanPath.replace(/^forms\//, ''),
+                        '/claim/' + cleanPath,
+                        '/claim/forms/' + cleanPath.replace(/^forms\//, ''),
+                        '../claim/' + cleanPath
+                    ];
+                    const uniqueCandidates = [...new Set(candidateUrls)];
+
+                    let attemptIdx = 0;
+                    const tryNextCandidate = () => {
+                        if (resolved) return;
+                        if (attemptIdx >= uniqueCandidates.length) {
+                            resolved = true;
+                            reject(new Error('로컬 양식 이미지를 찾을 수 없습니다: ' + rawFormUrl));
+                            return;
+                        }
+                        const curUrl = uniqueCandidates[attemptIdx++];
+                        const localImg = new Image();
+                        localImg.onload = () => tryResolve(localImg, '로컬: ' + curUrl);
+                        localImg.onerror = () => {
+                            console.warn('[로컬 경로 재시도]', curUrl);
+                            tryNextCandidate();
+                        };
+                        localImg.src = curUrl;
+                    };
+                    tryNextCandidate();
+                }
             });
             
             // 기존 좌표계가 800px 기준으로 세팅되었을 확률이 매우 높으므로 800으로 스케일링합니다.

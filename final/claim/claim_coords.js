@@ -1590,7 +1590,7 @@ window.mappingData = {
     "현대해상_질병상해":  {
                       "company":  "현대해상",
                       "faxNumber":  "05077746060",
-                      "formUrl_P1":  "https://i.ibb.co/v6fqfgBL/AIG-115.jpg",
+                      "formUrl_P1":  "1_질병상해/현대해상_P1.jpg",
                       "autoTransfer_Top":  "808",
                       "autoTransfer_Left":  "186",
                       "guidePhone_Top":  "398",
@@ -1625,15 +1625,15 @@ window.mappingData = {
                       "sigClaimant_name_Left":  "488",
                       "sigClaimant_Top":  "944",
                       "sigClaimant_Left":  "649",
-                      "formUrl_P2":  "https://i.ibb.co/fVYR9zzz/AIG-118.jpg",
+                      "formUrl_P2":  "1_질병상해/현대해상_P2.jpg",
                       "sigClaimant_name_P2_Top":  "843",
                       "sigClaimant_name_P2_Left":  "328",
                       "sigClaimant_P2_Top":  "837",
                       "sigClaimant_P2_Left":  "566",
                       "writeDate_P2_Top":  "785",
                       "writeDate_P2_Left":  "164",
-                      "formUrl_P7":  "https://i.ibb.co/zTpD1D13/AIG-116.jpg",
-                      "formUrl_P8":  "https://i.ibb.co/nqwm983f/AIG-117.jpg"
+                      "formUrl_P7":  "1_질병상해/현대해상_P7.jpg",
+                      "formUrl_P8":  "1_질병상해/현대해상_P8.jpg"
                   },
     "현대해상_배상":  {
                     "company":  "현대해상",

@@ -340,13 +340,28 @@ async function resolveCurrentUser() {
   return u;
 }
 
+function canAccessPartners(u) {
+  if (!u && window.location.protocol === 'file:') {
+    return true; // 로컬 개발 편의
+  }
+  if (!u) return false;
+
+  const gradeStr = ((u.user_grade || '') + ',' + (u.access_grades || '') + ',' + (u.role || '')).toLowerCase();
+  const grades = gradeStr.split(',').map(s => s.trim());
+  if (grades.includes('family') || grades.includes('m') || grades.includes('manager') || grades.includes('admin')) {
+    return true;
+  }
+  if (u.team === '관리자' || u.team === '본사') return true;
+  return false;
+}
+
 function isCurrentUserAdmin() {
   const u = currentAppUser || 
             (typeof currentProfile !== 'undefined' && currentProfile) || 
             (typeof currentUser !== 'undefined' && currentUser) ||
             (window.parent !== window && (window.parent.currentProfile || window.parent.currentUser));
 
-  // 로컬 파일(file:///) 환경에서 로그인 정보가 없는 개발 모드인 경우
+  // 로컬 파일(file:///) 환경에서 개발 모드인 경우
   if (!u && window.location.protocol === 'file:') {
     const params = new URLSearchParams(window.location.search);
     if (params.get('role') === 'partner') return false;
@@ -355,18 +370,56 @@ function isCurrentUserAdmin() {
 
   if (!u) return false;
 
-  // 관리자 판별 조건:
-  // 1. user_grade === 'manager' 또는 'admin'
-  if (u.user_grade === 'manager' || u.user_grade === 'admin') return true;
-  // 2. 소속팀이 '관리자' 또는 '본사'
+  // [위라클 파트너스 영역 최고 관리자 판별 조건]
+  // user_grade 또는 access_grades 에 'm', 'admin', 'manager' 포함 여부 (대소문자 무관, 'vip, m' 포함)
+  const gradeStr = ((u.user_grade || '') + ',' + (u.access_grades || '') + ',' + (u.role || '')).toLowerCase();
+  const grades = gradeStr.split(',').map(s => s.trim());
+  if (grades.includes('m') || grades.includes('admin') || grades.includes('manager')) return true;
+
+  // 소속팀이 '관리자' 또는 '본사'
   if (u.team === '관리자' || u.team === '본사') return true;
-  // 3. access_grades에 'ADMIN' 또는 'M' 등이 있는 경우
-  if ((u.access_grades || '').includes('ADMIN') || (u.access_grades || '').includes('M')) return true;
 
   return false;
 }
 
 function applyUserAccessControl() {
+  const u = currentAppUser || 
+            (typeof currentProfile !== 'undefined' && currentProfile) || 
+            (typeof currentUser !== 'undefined' && currentUser) ||
+            (window.parent !== window && (window.parent.currentProfile || window.parent.currentUser));
+
+  const hasAccess = canAccessPartners(u);
+
+  // [접근 차단] family, 관리자(m 포함)가 아닌 일반 계정은 파트너스 컨텐츠 전체 차단
+  let blockOverlay = document.getElementById('partnersAccessBlockOverlay');
+  if (!hasAccess) {
+    if (!blockOverlay) {
+      blockOverlay = document.createElement('div');
+      blockOverlay.id = 'partnersAccessBlockOverlay';
+      blockOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#f8fafc; z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center; font-family:Pretendard,sans-serif;';
+      blockOverlay.innerHTML = `
+        <div style="background:#ffffff; padding:36px 32px; border-radius:18px; border:1px solid #e2e8f0; box-shadow:0 10px 25px rgba(0,0,0,0.06); max-width:440px; width:100%;">
+          <div style="width:56px; height:56px; border-radius:50%; background:#fef2f2; color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:24px; margin:0 auto 16px auto;">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <h2 style="font-size:20px; font-weight:800; color:#0f172a; margin-bottom:8px;">위라클 파트너스 접근 제한</h2>
+          <p style="font-size:13.5px; color:#64748b; line-height:1.6; margin-bottom:24px;">
+            위라클 파트너스는 승인된 <strong>식구(family)</strong> 및 <strong>관리자</strong> 전용 공간입니다.<br>
+            일반 회원 계정으로는 캘린더 및 파트너스 데이터를 열람하실 수 없습니다.
+          </p>
+          <button onclick="if(window.parent && window.parent.loadSubPage){window.parent.loadSubPage('홈','홈','home');}else{history.back();}" style="background:#0f172a; color:#ffffff; border:none; padding:12px 24px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">
+            홈으로 돌아가기
+          </button>
+        </div>
+      `;
+      document.body.appendChild(blockOverlay);
+    }
+    blockOverlay.style.display = 'flex';
+    return;
+  } else {
+    if (blockOverlay) blockOverlay.style.display = 'none';
+  }
+
   const adminTabBtn = document.querySelector('.tab-btn.admin-tab[data-tab="tab-admin"]');
   const badgeEl = document.getElementById('currentUserBadge');
   const isAdmin = isCurrentUserAdmin();
@@ -383,7 +436,7 @@ function applyUserAccessControl() {
       badgeEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> 최고 관리자 모드 (${uName})`;
     }
   } else {
-    // [일반 파트너스 모드] 5번 관리자 설정 탭 완전 차단 & 숨김 (1~4번 탭만 이용)
+    // [식구(family) 모드] 5번 관리자 설정 탭 완전 차단 & 숨김 (1~4번 탭만 이용)
     if (adminTabBtn) {
       adminTabBtn.style.display = 'none';
       if (adminTabBtn.classList.contains('active')) {
@@ -398,14 +451,14 @@ function applyUserAccessControl() {
     }
 
     if (badgeEl) {
-      const teamName = (currentAppUser && currentAppUser.team) || '파트너스';
+      const teamName = (currentAppUser && currentAppUser.team) || '식구';
       const userName = (currentAppUser && (currentAppUser.name || currentAppUser.nickname)) || '파트너';
       const userPos = typeof getMemberPosition === 'function' && currentAppUser ? getMemberPosition(currentAppUser) : '팀장';
       const cleanName = typeof getCleanMemberName === 'function' && currentAppUser ? getCleanMemberName(currentAppUser, userPos) : userName;
 
       badgeEl.className = 'user-badge partner-badge';
       badgeEl.style.cssText = 'background:#eff6ff; color:#1e40af; border:1.5px solid #bfdbfe; font-weight:800; padding:6px 14px; border-radius:20px; font-size:12px; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(30,64,175,0.06);';
-      badgeEl.innerHTML = `<i class="fa-solid fa-crown" style="color:#2563eb;"></i> 파트너스 (${teamName} ${cleanName} ${userPos})`;
+      badgeEl.innerHTML = `<i class="fa-solid fa-crown" style="color:#2563eb;"></i> 위라클 식구 (${teamName} ${cleanName} ${userPos})`;
     }
   }
 }
@@ -4884,6 +4937,8 @@ function renderAdminRoleTable(users) {
           <option value="VIP" ${u.user_grade === 'VIP' ? 'selected' : ''}> VIP 결제회원</option>
           <option value="family" ${u.user_grade === 'family' ? 'selected' : ''}> 위라클식구</option>
           <option value="manager" ${u.user_grade === 'manager' ? 'selected' : ''}> 관리자(manager)</option>
+          <option value="vip, m" ${u.user_grade === 'vip, m' ? 'selected' : ''}> VIP + 파트너스관리자 (vip, m)</option>
+          <option value="m" ${u.user_grade === 'm' ? 'selected' : ''}> 파트너스관리자 (m)</option>
         </select>
       </td>
 

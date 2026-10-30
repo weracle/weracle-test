@@ -49,15 +49,23 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid token or user not found' });
     }
 
-    // 4. 요청한 유저가 진짜 'admin'인지 DB에서 확인
+    // 4. 요청한 유저가 파트너스 관리자 권한(admin, manager, 또는 등급에 m 포함)을 가졌는지 DB에서 확인
     const { data: adminProfile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('role')
+      .select('role, user_grade, access_grades, team')
       .eq('id', user.id)
       .single();
 
-    if (profileError || !adminProfile || (adminProfile.user_grade !== 'admin' && adminProfile.user_grade !== 'manager')) {
-      return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    if (profileError || !adminProfile) {
+      return res.status(403).json({ error: 'Forbidden: Profile not found' });
+    }
+
+    const gradeStr = ((adminProfile.user_grade || '') + ',' + (adminProfile.access_grades || '') + ',' + (adminProfile.role || '')).toLowerCase();
+    const grades = gradeStr.split(',').map(s => s.trim());
+    const isPartnersAdmin = grades.includes('m') || grades.includes('admin') || grades.includes('manager') || adminProfile.team === '관리자' || adminProfile.team === '본사';
+
+    if (!isPartnersAdmin) {
+      return res.status(403).json({ error: 'Forbidden: Partners admin access required' });
     }
 
     // 5. 요청받은 업데이트 작업 수행

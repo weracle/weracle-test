@@ -2308,12 +2308,17 @@ transform: translateY(-2px);
 }
 .nav-col-item {
     position: relative;
-    width: 86px;
-    min-width: 80px;
+    width: 96px;
+    min-width: 90px;
     height: 74px;
     transition: background-color 200ms ease, box-shadow 200ms ease;
     background-color: #ffffff;
     border-radius: 8px 8px 0 0;
+}
+.nav-col-item[data-tab="브랜딩"],
+.nav-col-item[data-tab="위라클"] {
+    width: 104px;
+    min-width: 98px;
 }
 .nav-col-item.nav-home-item {
     width: 68px;
@@ -2422,7 +2427,7 @@ transform: translateY(-2px);
     color: #ffffff !important;
 }
 
-/* 2뎁스 하위 메뉴 드롭다운 열 */
+/* 2뎁스 하위 메뉴 드롭다운 열 (대칭 좌우 여백 및 중앙정렬 완벽 보정) */
 .nav-col-sub {
     position: absolute;
     top: 74px;
@@ -2431,7 +2436,7 @@ transform: translateY(-2px);
     min-height: 180px;
     height: 180px;
     box-sizing: border-box;
-    padding: 16px 12px 24px;
+    padding: 16px 6px 24px;
     opacity: 0;
     visibility: hidden;
     z-index: 2;
@@ -2439,6 +2444,30 @@ transform: translateY(-2px);
     transition: opacity 250ms ease, background-color 200ms ease;
     text-align: center;
     border-bottom: 2px solid transparent;
+    border-radius: 0 0 8px 8px;
+}
+.nav-col-sub ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+}
+.nav-col-sub ul li {
+    width: 100%;
+    text-align: center;
+}
+.nav-col-sub ul li a {
+    display: block;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+    padding: 5px 4px !important;
+    white-space: nowrap;
 }
 .top-global-nav.open .nav-col-sub {
     opacity: 1;
@@ -3187,6 +3216,7 @@ transform: translateY(-2px);
                     <div class="nav-col-sub">
                         <ul>
                             <li><a onclick="loadSubPage('브랜딩', '위라클 브랜딩', 'branding/branding.html')">위라클 브랜딩</a></li>
+                            <li><a onclick="loadSubPage('브랜딩', '디지털 명함', 'card/card.html')">디지털 명함</a></li>
                             <li><a onclick="loadSubPage('브랜딩', '브랜딩 마켓', 'branding/market.html')">브랜딩 마켓</a></li>
                         </ul>
                     </div>
@@ -3195,12 +3225,15 @@ transform: translateY(-2px);
                 <!-- 6. 위라클 -->
                 <li class="nav-col-item" data-tab="위라클">
                     <a class="nav-col-tab" onclick="loadSubPage('위라클', '파트너스', 'management/management.html')">
-                        <svg viewBox="0 0 24 24"><path d="M2 19h20v2H2z"/><path d="M2 5l4 9 6-6 6 6 4-9v12H2z"/></svg>
+                        <div class="icon-pill">
+                            <svg viewBox="0 0 24 24"><path d="M2 19h20v2H2z"/><path d="M2 5l4 9 6-6 6 6 4-9v12H2z"/></svg>
+                        </div>
                         <span>위라클</span>
                     </a>
                     <div class="nav-col-sub">
                         <ul>
                             <li><a onclick="loadSubPage('위라클', '파트너스', 'management/management.html')">파트너스</a></li>
+                            <li><a onclick="loadSubPage('위라클', '광고관리', 'management/management.html?tab=ad')">광고관리</a></li>
                         </ul>
                     </div>
                 </li>
@@ -3357,6 +3390,10 @@ transform: translateY(-2px);
                     <span>위라클 브랜딩</span>
                     <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </a>
+                <a onclick="loadSubPage('브랜딩', '디지털 명함', 'card/card.html')">
+                    <span>디지털 명함</span>
+                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
                 <a onclick="loadSubPage('브랜딩', '브랜딩 마켓', 'branding/market.html')">
                     <span>브랜딩 마켓</span>
                     <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -3376,8 +3413,12 @@ transform: translateY(-2px);
                 <span class="m-tag">파트너</span>
             </div>
             <div class="m-cat-links">
-                <a onclick="loadSubPage('위라클', '파트너스', 'management/management.html')" style="grid-column: span 2;">
+                <a onclick="loadSubPage('위라클', '파트너스', 'management/management.html')">
                     <span>파트너스</span>
+                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+                <a onclick="loadSubPage('위라클', '광고관리', 'management/management.html?tab=ad')">
+                    <span>광고관리</span>
                     <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </a>
             </div>
@@ -3585,9 +3626,9 @@ function updatePopbillMenu(element) {
         '고객관리': [{name:'고객관리', href:'crm/crm_test.html'}, {name:'보험금 청구', href:'claim/claim.html'}, {name:'언더라이팅', href:'underwriting/underwriting.html'}, {name:'숨은보험금찾기', href:'hiddenclaim/hiddenclaim.html'}],
         '보험인사이트': [{name:'영업 소식지', href:'insight/insight_news_v4.html?v=V20261006_4'}, {name:'한장 비교표', href:'insight/insight_compare_v2.html?v=V20261006_2'}, {name:'보험 영상', href:'insight/video.html'}],
         '영업전략': [{name:'타겟 관리', href:'strategy/target_test.html'}, {name:'전략 플랜', href:'strategy/strategy_plan.html'}, {name:'보장 분석', href:'branding/pdf_p.html'}, {name:'데일리 뉴스', href:'branding/dailynews.html'}],
-        '브랜딩': [{name:'위라클 브랜딩', href:'branding/branding.html'}, {name:'브랜딩 마켓', href:'branding/market.html'}],
+        '브랜딩': [{name:'위라클 브랜딩', href:'branding/branding.html'}, {name:'디지털 명함', href:'card/card.html'}, {name:'브랜딩 마켓', href:'branding/market.html'}],
         '커뮤니티': [],
-        '위라클': [{name:'파트너스', href:'management/management.html'}],
+        '위라클': [{name:'파트너스', href:'management/management.html'}, {name:'광고관리', href:'management/management.html?tab=ad'}],
         '구독서비스': [{name:'구독 플랜', href:'subscription/subscription.html'}, {name:'결제/구독 관리', href:'subscription/subscription.html'}]
       };
       
@@ -5058,39 +5099,129 @@ window.openDynamicList = function(type, val) {
     }, 300);
 };
 </script>
-    <!-- 필수 정보 입력 모달 (최초 1회) -->
-    <div id="w-onboarding-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center;">
-        <div style="background: #fff; width: 400px; padding: 40px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: center;">
-            <h2 style="margin: 0 0 10px 0; font-size: 24px; color: #0f172a;"> 환영합니다!</h2>
-            <p style="margin: 0 0 24px 0; font-size: 14px; color: #64748b; line-height: 1.5;">워라클 CRM을 완벽하게 이용하시려면<br><b>휴대폰 번호</b> 등록이 꼭 필요합니다.<br>(카카오 알림톡 및 팩스 발송 시 사용됩니다)</p>
+    <!-- 필수 프로필 등록 온보딩 모달 (최초 1회: 소속, 직책, 성함, 연락처, 닉네임) -->
+    <div id="w-onboarding-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px); z-index: 99999; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+        <div style="background: #ffffff; width: 100%; max-width: 440px; padding: 36px 32px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); text-align: left; box-sizing: border-box; max-height: 90vh; overflow-y: auto;">
+            <div style="text-align: center; margin-bottom: 22px;">
+                <div style="width: 52px; height: 52px; background: #e0f2fe; color: #0284c7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 12px;">👨‍💼</div>
+                <h2 style="margin: 0 0 6px 0; font-size: 22px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px;">위라클에 오신 것을 환영합니다!</h2>
+                <p style="margin: 0; font-size: 13.5px; color: #64748b; line-height: 1.55; word-break: keep-all;">성공적인 세일즈 지원과 맞춤 모바일 명함 연동을 위해<br><b style="color: #0284c7;">최초 1회 프로필 정보</b>를 등록해 주세요.</p>
+            </div>
             
-            <input type="text" id="w-onboarding-phone" placeholder="휴대폰 번호 (- 없이 입력)" style="width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; margin-bottom: 12px; box-sizing: border-box;">
-            
-            <button onclick="submitOnboarding()" style="width: 100%; padding: 14px; background: #0369a1; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer;">시작하기</button>
+            <form onsubmit="event.preventDefault(); submitOnboarding();" style="display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 5px;">성함 (실명) <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="w-onboarding-name" placeholder="예: 홍길동" required style="width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 14px; box-sizing: border-box; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="this.style.borderColor='#cbd5e1'">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 5px;">소속 회사/지점 <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="w-onboarding-company" placeholder="예: OO생명 강남지점" required style="width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 14px; box-sizing: border-box; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="this.style.borderColor='#cbd5e1'">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 5px;">직책 <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="w-onboarding-position" placeholder="예: 팀장 / 지점장 / FC" required style="width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 14px; box-sizing: border-box; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="this.style.borderColor='#cbd5e1'">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 5px;">연락처 (휴대폰 번호) <span style="color:#ef4444;">*</span></label>
+                    <input type="tel" id="w-onboarding-phone" placeholder="예: 010-1234-5678" required style="width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 14px; box-sizing: border-box; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="this.style.borderColor='#cbd5e1'">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 5px;">플랫폼 닉네임 <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="w-onboarding-nickname" placeholder="플랫폼 활동 닉네임" required style="width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 14px; box-sizing: border-box; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="this.style.borderColor='#cbd5e1'">
+                </div>
+
+                <button type="submit" style="width: 100%; margin-top: 10px; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 12px; font-size: 15.5px; font-weight: 800; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);">
+                    프로필 등록 완료 & 시작하기
+                </button>
+            </form>
         </div>
     </div>
 
     <script>
     async function submitOnboarding() {
+        const name = document.getElementById('w-onboarding-name').value.trim();
+        const company = document.getElementById('w-onboarding-company').value.trim();
+        const position = document.getElementById('w-onboarding-position').value.trim();
         const phone = document.getElementById('w-onboarding-phone').value.trim();
-        if(!phone || phone.length < 10) {
-            alert('정확한 휴대폰 번호를 입력해주세요.');
+        const nickname = document.getElementById('w-onboarding-nickname').value.trim();
+
+        if(!name || !company || !position || !phone || !nickname) {
+            alert('모든 필수 항목을 입력해 주세요.');
             return;
         }
+
         try {
             const { data: { user } } = await window.sb.auth.getUser();
-            await window.sb.from('profiles').update({ phone: phone }).eq('id', user.id);
+            if (!user) {
+                alert('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+                return;
+            }
+
+            const updatePayload = {
+                phone: phone,
+                company: company,
+                nickname: nickname,
+                name: name,
+                position: position
+            };
+
+            // 1. Supabase profiles 테이블 업데이트
+            try {
+                await window.sb.from('profiles').update(updatePayload).eq('id', user.id);
+            } catch(e) {
+                console.warn('profiles update non-fatal:', e);
+                // 혹시 DB 컬럼이 일부 없더라도 필수 컬럼만 재시도
+                try {
+                    await window.sb.from('profiles').update({
+                        phone: phone,
+                        company: company,
+                        nickname: nickname
+                    }).eq('id', user.id);
+                } catch(e2) {}
+            }
+
+            // 2. Supabase auth user_metadata에 JSON 데이터 안전 동시 백업
+            try {
+                await window.sb.auth.updateUser({
+                    data: {
+                        name: name,
+                        company: company,
+                        position: position,
+                        phone: phone,
+                        nickname: nickname
+                    }
+                });
+            } catch(e) {}
+
+            // 3. 로컬 프로필 객체 및 캐시 즉시 갱신
+            if (window.currentProfile) {
+                Object.assign(window.currentProfile, updatePayload);
+            } else {
+                window.currentProfile = updatePayload;
+            }
+            try {
+                localStorage.setItem('cached_profile', JSON.stringify(window.currentProfile));
+            } catch(e) {}
+
             document.getElementById('w-onboarding-modal').style.display = 'none';
-            alert('등록이 완료되었습니다. 워라클 CRM에 오신 것을 환영합니다!');
-            
-            // 프로필 정보 즉시 갱신
-            const { data: updatedProfile } = await window.sb.from('profiles').select('*').eq('id', user.id).single();
-            if(updatedProfile) {
-                window.currentProfile = updatedProfile;
+            alert(`${name} ${position}님, 프로필 등록이 완료되었습니다. 워라클에 오신 것을 환영합니다!`);
+
+            // 대시보드 및 상단 프로필 실시간 반영
+            if (typeof updateProfileUI === 'function') {
+                updateProfileUI(user, window.currentProfile);
+            }
+            const iframe = document.getElementById('mainFrame');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.location.reload();
             }
         } catch(e) {
-            console.error(e);
-            alert('오류가 발생했습니다.');
+            console.error('Onboarding error:', e);
+            alert('등록 중 오류가 발생했습니다: ' + (e.message || e));
         }
     }
     </script>
@@ -5448,6 +5579,10 @@ window.openDynamicList = function(type, val) {
                         <span>위라클 브랜딩</span>
                         <span style="color:#94a3b8;">→</span>
                     </a>
+                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('브랜딩', '디지털 명함', 'card/card.html');">
+                        <span>디지털 명함</span>
+                        <span style="color:#94a3b8;">→</span>
+                    </a>
                     <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('브랜딩', '브랜딩 마켓', 'branding/market.html');">
                         <span>브랜딩 마켓</span>
                         <span style="color:#94a3b8;">→</span>
@@ -5464,8 +5599,12 @@ window.openDynamicList = function(type, val) {
                     <span class="mobile-card-title">위라클</span>
                 </div>
                 <div class="mobile-card-links">
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('위라클', '파트너스', 'management/management.html');" style="grid-column: span 2;">
+                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('위라클', '파트너스', 'management/management.html');">
                         <span>파트너스</span>
+                        <span style="color:#94a3b8;">→</span>
+                    </a>
+                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('위라클', '광고관리', 'management/management.html?tab=ad');">
+                        <span>광고관리</span>
                         <span style="color:#94a3b8;">→</span>
                     </a>
                 </div>

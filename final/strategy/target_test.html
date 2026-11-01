@@ -2221,11 +2221,39 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                 const ctx = cvs.getContext('2d');
                 ctx.drawImage(img, 0, 0);
 
-                if (useLogo && customLogo && customLogo.src) {
-                    const logoH = Math.max(img.height * 0.08, 40); 
-                    const logoW = (customLogo.width / customLogo.height) * logoH;
-                    const pad = img.width * 0.03;
-                    ctx.drawImage(customLogo, img.width - logoW - pad, pad, logoW, logoH);
+                const isLogoReady = customLogo && customLogo.src && ((customLogo.naturalWidth || customLogo.width) > 0);
+                if (useLogo && isLogoReady) {
+                    const logoNaturalW = customLogo.naturalWidth || customLogo.width;
+                    const logoNaturalH = customLogo.naturalHeight || customLogo.height;
+                    const logoH = Math.max(img.height * 0.095, 60); 
+                    let logoW = (logoNaturalW / logoNaturalH) * logoH;
+                    if (logoW > img.width * 0.38) logoW = img.width * 0.38;
+
+                    const padding = img.width * 0.035;
+                    const padX = logoH * 0.22;
+                    const padY = logoH * 0.16;
+                    const boxW = logoW + (padX * 2);
+                    const boxH = logoH + (padY * 2);
+                    const boxX = img.width - boxW - padding;
+                    const boxY = padding;
+                    const radius = Math.min(boxH / 2, 16 * (img.height / 800));
+
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.18)';
+                    ctx.shadowBlur = Math.max(6, img.height * 0.012);
+                    ctx.shadowOffsetY = Math.max(2, img.height * 0.004);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.90)';
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(boxX, boxY, boxW, boxH, radius);
+                    else ctx.rect(boxX, boxY, boxW, boxH);
+                    ctx.fill();
+
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.lineWidth = Math.max(1, img.height * 0.002);
+                    ctx.stroke();
+                    ctx.restore();
+
+                    ctx.drawImage(customLogo, boxX + padX, boxY + padY, logoW, logoH);
                 }
                 callback(cvs.toDataURL('image/jpeg', 0.9)); 
             };

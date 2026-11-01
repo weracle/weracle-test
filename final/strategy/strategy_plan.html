@@ -347,9 +347,9 @@
     <div class="top-menu-wrapper" style="display: flex; align-items: center; gap: 32px;">
     <div class="t-tab active" style="font-size: 16px; font-weight: 800; color: #0284c7; padding-bottom: 8px; border-bottom: 3px solid #0284c7; margin: 0; letter-spacing: -0.5px; cursor: pointer;">세일즈전략</div>
     <div class="filter-buttons" style="display: flex; gap: 10px;">
-        <button class="filter-item sales-link active" data-gid="1628117194">손보전략</button>
+        <button class="filter-item sales-link active" data-gid="779884536">보장성</button>
+        <button class="filter-item sales-link" data-gid="1628117194">손보전략</button>
         <button class="filter-item sales-link" data-gid="1751391635">생보전략</button>
-        <button class="filter-item sales-link" data-gid="779884536">보장성</button>
         <button class="filter-item sales-link" data-gid="185061505">보장성기타</button>
     </div>
     <div class="ss-top-search" style="position: relative; flex: 1; max-width: 800px; margin-left: 32px;">
@@ -370,7 +370,7 @@
                 <!-- 1단계: 썸네일 리스트 -->
                 <div id="ssListView" style="display: flex; flex-direction: column; flex: 1;">
                     <div class="ss-header" style="justify-content: flex-start; gap: 24px; border-bottom: 2px solid var(--border); padding-bottom: 16px;">
-    <div class="ss-title" id="ssMainTitle" style="font-size: 20px; flex-shrink: 0;">손보전략 <span style="font-size: 16px; color: #86868b; font-weight: 600;">최신콘텐츠</span></div>
+    <div class="ss-title" id="ssMainTitle" style="font-size: 20px; flex-shrink: 0;">보장성 <span style="font-size: 16px; color: #86868b; font-weight: 600;">최신콘텐츠</span></div>
     <div class="ss-sub-tabs" id="ssSubTabContainer" style="display: flex; flex: 1; gap: 10px; margin: 0; padding: 0; border: none; align-items: center;"></div>
     <select class="month-selector" id="ssMonthSelector" onchange="applySsFilters()" style="flex-shrink: 0; outline: none;"></select>
     <script>
@@ -609,7 +609,7 @@
       });
       // ========== 로고 세팅 (끝) ==========
 
-document.addEventListener('DOMContentLoaded', function() { setTimeout(function(){ initSalesStrategy('\uc190\ubcf4\uc804\ub7b5'); }, 100); });
+document.addEventListener('DOMContentLoaded', function() { setTimeout(function(){ initSalesStrategy('보장성'); }, 100); });
       document.addEventListener('DOMContentLoaded', function() {
           if (window.parent !== window) window.parent.postMessage({ type: 'requestLogo' }, '*');
 
@@ -668,20 +668,20 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
       //  [확인됨] 세일즈전략 구글 시트 ID 및 하위 탭 GID 매핑 테이블
       const SALES_SPREADSHEET_ID = '1tIKC7qB-80FYR31eCIO3pEhbEVIRHK9fGm_Cfejtj_U';
       const ssCategoryGidMap = {
+          '보장성': { '종합플랜': '500555388', '3대 진단비': '1989704367', '3대 치료&생활비': '908792265', '수술비': '2092190411', '간병&입원': '1042562448' },
           '손보전략': { '운전자': '991351614', '펫보험': '543054837', '주택화재': '396645140', '재물보험': '628831710' },
           '생보전략': { '연금': '806511873', '종신': '721094981', '정기': '1051077714' },
-          '보장성': { '종합플랜': '500555388', '3대 진단비': '1989704367', '3대 치료&생활비': '908792265', '수술비': '2092190411', '간병&입원': '1042562448' },
           '보장성기타': { '치매장기요양': '1771369839', '후유장해': '1226644003', '치아': '1122325477', '기타': '8645056' }
       };
 
       const ssCategoryMap = {
+          '보장성': Object.keys(ssCategoryGidMap['보장성']),
           '손보전략': Object.keys(ssCategoryGidMap['손보전략']),
           '생보전략': Object.keys(ssCategoryGidMap['생보전략']),
-          '보장성': Object.keys(ssCategoryGidMap['보장성']),
           '보장성기타': Object.keys(ssCategoryGidMap['보장성기타'])
       };
 
-      let ssCurrentMainCat = '손보전략';
+      let ssCurrentMainCat = '보장성';
       let ssCurrentSubCat = '전체';
       let ssCurrentPage = 1;
       const SS_ITEMS_PER_PAGE = 15;
@@ -1217,11 +1217,51 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
                   const ctx = canvas.getContext('2d');
                   ctx.drawImage(img, 0, 0);
 
-                  if (useLogo && customLogo && customLogo.src && customLogo.isLoaded && customLogo.width > 0) {
-                      const logoH = Math.max(img.height * 0.06, 40); 
-                      const logoW = (customLogo.width / customLogo.height) * logoH;
-                      const padding = img.width * 0.04;
-                      ctx.drawImage(customLogo, img.width - logoW - padding, padding, logoW, logoH);
+                  // 로고 크기 확대 및 배경색에 구애받지 않는 화이트 반투명 캡슐 효과
+                  const isLogoReady = customLogo && customLogo.src && (customLogo.isLoaded || customLogo.complete) && ((customLogo.naturalWidth || customLogo.width) > 0);
+                  if (useLogo && isLogoReady) {
+                      const logoNaturalW = customLogo.naturalWidth || customLogo.width;
+                      const logoNaturalH = customLogo.naturalHeight || customLogo.height;
+                      
+                      // [요청 반영] 로고 크기 확대 (기존 6% -> 9.5% 상향, 최소 높이 60px)
+                      const logoH = Math.max(img.height * 0.095, 60); 
+                      let logoW = (logoNaturalW / logoNaturalH) * logoH;
+                      if (logoW > img.width * 0.38) {
+                          logoW = img.width * 0.38;
+                      }
+
+                      // 여백 및 반투명 캡슐 영역 계산
+                      const padding = img.width * 0.035;
+                      const padX = logoH * 0.22;
+                      const padY = logoH * 0.16;
+                      const boxW = logoW + (padX * 2);
+                      const boxH = logoH + (padY * 2);
+                      const boxX = img.width - boxW - padding;
+                      const boxY = padding;
+                      const radius = Math.min(boxH / 2, 16 * (img.height / 800));
+
+                      // [요청 반영] 다양한 배경색에서도 로고가 또렷하게 보이도록 은은한 화이트 반투명 백드롭 적용
+                      ctx.save();
+                      ctx.shadowColor = 'rgba(0, 0, 0, 0.18)';
+                      ctx.shadowBlur = Math.max(6, img.height * 0.012);
+                      ctx.shadowOffsetY = Math.max(2, img.height * 0.004);
+                      ctx.fillStyle = 'rgba(255, 255, 255, 0.90)'; // 부드러운 화이트 반투명
+                      ctx.beginPath();
+                      if (ctx.roundRect) {
+                          ctx.roundRect(boxX, boxY, boxW, boxH, radius);
+                      } else {
+                          ctx.rect(boxX, boxY, boxW, boxH);
+                      }
+                      ctx.fill();
+
+                      // 은은한 외곽선으로 고급스러운 테두리 마감
+                      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+                      ctx.lineWidth = Math.max(1, img.height * 0.002);
+                      ctx.stroke();
+                      ctx.restore();
+
+                      // 중앙에 로고 선명하게 렌더링
+                      ctx.drawImage(customLogo, boxX + padX, boxY + padY, logoW, logoH);
                   }
                   
                   const base64Result = canvas.toDataURL('image/jpeg', 0.9);

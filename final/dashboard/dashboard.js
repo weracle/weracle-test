@@ -140,25 +140,68 @@ function switchCalendarView(mode) {
 // ==========================================================================
 function copyMyCardLink() {
   const profile = getParentProp('currentProfile') || window.currentProfile;
-  const uid = (profile && (profile.card_slug || profile.id)) || (window.currentUser && window.currentUser.id) || '';
-  
-  let href = window.location.href;
-  let cardUrl = '';
-  if (href.includes('/dashboard/')) {
-    cardUrl = href.substring(0, href.indexOf('/dashboard/')) + '/card/card.html';
-  } else {
-    cardUrl = window.location.origin + '/card/card.html';
+  const currentUser = getParentProp('currentUser') || window.currentUser;
+
+  // 1. 도메인 추출 (배포 도메인 우선 적용)
+  let baseDomain = window.location.origin;
+  if (!baseDomain || baseDomain === 'null' || window.location.protocol === 'file:' || baseDomain.includes('localhost') || baseDomain.includes('127.0.0.1')) {
+    baseDomain = 'https://weracle.kr';
   }
-  if (uid) cardUrl += '?u=' + encodeURIComponent(uid);
+
+  // 2. 단축 슬러그(slug) 우선순위 추출 (디지털 명함 에디터와 100% 동일)
+  let slug = '';
+  if (profile && profile.card_slug && String(profile.card_slug).trim()) {
+    slug = String(profile.card_slug).trim();
+  }
+  
+  if (!slug) {
+    try {
+      const cp = localStorage.getItem('cached_profile');
+      if (cp) {
+        const p = JSON.parse(cp);
+        if (p && p.card_slug && String(p.card_slug).trim()) {
+          slug = String(p.card_slug).trim();
+        }
+      }
+    } catch(e) {}
+  }
+
+  if (!slug) {
+    try {
+      const prev = localStorage.getItem('weracle_preview_card_data');
+      if (prev) {
+        const p = JSON.parse(prev);
+        const s = p.card_slug || (p.card_data && p.card_data.card_slug);
+        if (s && String(s).trim()) {
+          slug = String(s).trim();
+        }
+      }
+    } catch(e) {}
+  }
+
+  if (!slug && profile && profile.nickname) {
+    slug = String(profile.nickname).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  }
+
+  if (!slug && currentUser && currentUser.email) {
+    slug = currentUser.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  }
+
+  if (!slug) {
+    slug = 'my';
+  }
+
+  const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'my';
+  const shortCardUrl = `${baseDomain}/c/${cleanSlug}`;
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(cardUrl).then(() => {
-      alert('📋 모바일 디지털 명함 링크가 복사되었습니다!\n\n' + cardUrl);
+    navigator.clipboard.writeText(shortCardUrl).then(() => {
+      alert(`📋 모바일 디지털 명함 단축 링크가 복사되었습니다!\n\n${shortCardUrl}\n\n고객에게 카카오톡 또는 문자로 전달해 보세요.`);
     }).catch(() => {
-      prompt('아래 명함 링크를 복사하여 전달하세요:', cardUrl);
+      prompt('아래 명함 링크를 복사하여 전달하세요:', shortCardUrl);
     });
   } else {
-    prompt('아래 명함 링크를 복사하여 전달하세요:', cardUrl);
+    prompt('아래 명함 링크를 복사하여 전달하세요:', shortCardUrl);
   }
 }
 

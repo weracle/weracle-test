@@ -884,6 +884,7 @@
         }
         renderDashboard() {
             const profile = window.currentProfile || {};
+            const userMeta = (window.currentUser && window.currentUser.user_metadata) ? window.currentUser.user_metadata : {};
             const userGradeLower = (profile.user_grade || 'basic').toLowerCase();
             let gradeBadge = `<span class="weracle-badge weracle-badge-basic weracle-badge" style="font-size:12px; padding:4px 10px; border-radius:12px; font-weight:700;">일반회원(Basic)</span>`;
             if (userGradeLower === 'vip' || userGradeLower === 'premium') {
@@ -903,6 +904,68 @@
             targetBillingDate.setHours(0, 0, 0, 0);
             const diffDays = Math.ceil((targetBillingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
             const ddayText = diffDays > 0 ? `D-${diffDays}일 남음` : (diffDays === 0 ? '오늘 결제일' : `결제 완료 (D+${Math.abs(diffDays)})`);
+
+            // Device list logic for max 3 devices
+            const uid = window.currentUser ? window.currentUser.id : 'guest';
+            let devicesList = [];
+            try {
+                const storedDevs = localStorage.getItem('weracle_user_devices_' + uid);
+                if (storedDevs) {
+                    devicesList = JSON.parse(storedDevs);
+                } else if (userMeta.registered_devices && Array.isArray(userMeta.registered_devices)) {
+                    devicesList = userMeta.registered_devices;
+                }
+            } catch(e) {
+                devicesList = [];
+            }
+            if (!devicesList || devicesList.length === 0) {
+                const currentDevId = localStorage.getItem('weracle_device_id') || 'dev_curr';
+                const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+                const isMac = /Macintosh|Mac OS X/i.test(navigator.userAgent);
+                const devType = isMobile ? '스마트폰' : (isMac ? 'Mac/노트북' : 'Windows PC');
+                devicesList = [{
+                    id: currentDevId,
+                    name: devType + ' (현재 접속 기기)',
+                    type: devType,
+                    registered_at: new Date().toLocaleDateString('ko-KR'),
+                    is_current: true
+                }];
+                try {
+                    localStorage.setItem('weracle_user_devices_' + uid, JSON.stringify(devicesList));
+                } catch(e) {}
+            }
+
+            const currentDevId = localStorage.getItem('weracle_device_id');
+            const devicesListHtml = devicesList.map((dev, idx) => {
+                const isCurrent = dev.is_current || (currentDevId && dev.id === currentDevId) || idx === 0;
+                let iconClass = 'fa-desktop';
+                if (dev.type && dev.type.includes('스마트폰')) iconClass = 'fa-mobile-screen-button';
+                else if (dev.type && (dev.type.includes('노트북') || dev.type.includes('Mac'))) iconClass = 'fa-laptop';
+
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                            <div style="width: 36px; height: 36px; border-radius: 8px; background: ${isCurrent ? '#e0f2fe' : '#f1f5f9'}; color: ${isCurrent ? '#0284c7' : '#64748b'}; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
+                                <i class="fa-solid ${iconClass}"></i>
+                            </div>
+                            <div style="min-width: 0;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 13.5px; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${this.escapeHtml(dev.name || '내 기기')}</span>
+                                    ${isCurrent ? `<span style="font-size: 10px; background: #0284c7; color: #fff; padding: 1px 6px; border-radius: 9999px; font-weight: 800;">현재 접속 중</span>` : ''}
+                                </div>
+                                <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">
+                                    ${this.escapeHtml(dev.type || 'PC')} · 등록일: ${dev.registered_at || '최근'}
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" onclick="window.mypageInstance.removeDevice('${dev.id}')" style="background: #ffffff; border: 1px solid #fca5a5; color: #ef4444; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='#fff'">
+                                삭제
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
             const btnStyle = "font-size: 11.5px; padding: 4px 10px; border-radius: 6px; background: #f1f5f9; color: #4b5563; border: 1px solid #cbd5e1; cursor: pointer; font-weight: 700; transition: all 0.2s; box-sizing: border-box; flex-shrink: 0;";
 
@@ -979,12 +1042,19 @@
                                 </div>
                             </div>
 
-                            <!-- 1. 기본 정보 -->
+                            <!-- 1. 기본 정보 (실명, 소속, 직책, 연락처 완비) -->
                             <div style="width: 100%; background: #ffffff; border-radius: 12px; padding: 0 0 18px 0; border-bottom: 1px solid #e2edf7; box-sizing: border-box;">
                                 <h4 style="font-size: 15px; font-weight: 800; color: #0284c7; margin: 0 0 14px 0;">
                                     <i class="fa-solid fa-user-circle"></i> 기본 정보
                                 </h4>
                                 
+                                <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items: center; flex-wrap: nowrap; gap: 8px;">
+                                    <span style="color:#64748b; font-weight:600; font-size: 13.5px; flex-shrink: 0;">성함 (실명)</span>
+                                    <div style="display:flex; align-items:center; gap: 8px; min-width: 0;">
+                                        <span style="font-weight:700; color:#1e293b; font-size: 13.5px;">${this.escapeHtml(profile.name || userMeta.name || profile.nickname || '설계사')}</span>
+                                        <button class="sb-btn-inline-edit" data-field="name" style="${btnStyle}">변경</button>
+                                    </div>
+                                </div>
                                 <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items: center; flex-wrap: nowrap; gap: 8px;">
                                     <span style="color:#64748b; font-weight:600; font-size: 13.5px; flex-shrink: 0;">이메일 (아이디)</span>
                                     <span style="font-weight:700; color:#1e293b; font-size: 13.5px; word-break: break-all; text-align: right;">${window.currentUser ? window.currentUser.email : (profile.email || 'weracle_pro@partners.com')}</span>
@@ -992,14 +1062,21 @@
                                 <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items: center; flex-wrap: nowrap; gap: 8px;">
                                     <span style="color:#64748b; font-weight:600; font-size: 13.5px; flex-shrink: 0;">소속 지점</span>
                                     <div style="display:flex; align-items:center; gap: 8px; min-width: 0;">
-                                        <span style="font-weight:700; color:#1e293b; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${this.escapeHtml(profile.company || '위라클 파트너스 본부')}</span>
+                                        <span style="font-weight:700; color:#1e293b; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${this.escapeHtml(profile.company || userMeta.company || '위라클 파트너스 본부')}</span>
                                         <button class="sb-btn-inline-edit" data-field="company" style="${btnStyle}">변경</button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items: center; flex-wrap: nowrap; gap: 8px;">
+                                    <span style="color:#64748b; font-weight:600; font-size: 13.5px; flex-shrink: 0;">직책</span>
+                                    <div style="display:flex; align-items:center; gap: 8px; min-width: 0;">
+                                        <span style="font-weight:700; color:#1e293b; font-size: 13.5px;">${this.escapeHtml(profile.position || userMeta.position || '지점장')}</span>
+                                        <button class="sb-btn-inline-edit" data-field="position" style="${btnStyle}">변경</button>
                                     </div>
                                 </div>
                                 <div style="display:flex; justify-content:space-between; align-items: center; flex-wrap: nowrap; gap: 8px;">
                                     <span style="color:#64748b; font-weight:600; font-size: 13.5px; flex-shrink: 0;">연락처</span>
                                     <div style="display:flex; align-items:center; gap: 8px; min-width: 0;">
-                                        <span style="font-weight:700; color:#1e293b; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${this.escapeHtml(profile.phone || '010-8765-4321')}</span>
+                                        <span style="font-weight:700; color:#1e293b; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${this.escapeHtml(profile.phone || userMeta.phone || '010-8765-4321')}</span>
                                         <button class="sb-btn-inline-edit" data-field="phone" style="${btnStyle}">변경</button>
                                     </div>
                                 </div>
@@ -1051,6 +1128,33 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- 4. 등록된 로그인 기기 관리 (최대 3대: PC, 노트북, 스마트폰) -->
+                            <div style="width: 100%; background: #ffffff; border-radius: 14px; padding: 18px 20px; border: 1px solid #e2edf7; box-sizing: border-box; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                                    <div>
+                                        <h4 style="font-size: 15px; font-weight: 800; color: #0284c7; margin: 0 0 3px 0;">
+                                            <i class="fa-solid fa-laptop-medical"></i> 등록된 로그인 기기 관리
+                                        </h4>
+                                        <span style="font-size: 12px; color: #64748b;">보안을 위해 계정당 최대 3대(PC/노트북/폰)까지 등록 가능합니다.</span>
+                                    </div>
+                                    <span style="font-size: 12px; font-weight: 800; background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 20px;" id="device-count-badge">
+                                        ${devicesList.length} / 3대 등록됨
+                                    </span>
+                                </div>
+
+                                <div id="mypage-device-list" style="display: flex; flex-direction: column; gap: 8px;">
+                                    ${devicesListHtml}
+                                </div>
+
+                                ${devicesList.length < 3 ? `
+                                    <div style="margin-top: 12px; text-align: right;">
+                                        <button type="button" onclick="window.mypageInstance.registerCurrentDevice()" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0284c7; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                                            <i class="fa-solid fa-plus"></i> 현재 기기 신규 등록
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
                         
                     </div>
@@ -1060,7 +1164,70 @@
             this.bindEvents();
         }
 
+        async removeDevice(devId) {
+            if (!confirm('이 기기를 등록 해제하시겠습니까?\n해제 후 새로운 기기를 최대 3대까지 등록할 수 있습니다.')) return;
+            const uid = window.currentUser?.id;
+            try {
+                let devList = [];
+                const stored = localStorage.getItem('weracle_user_devices_' + uid);
+                if (stored) devList = JSON.parse(stored);
+                devList = devList.filter(d => d.id !== devId);
+                localStorage.setItem('weracle_user_devices_' + uid, JSON.stringify(devList));
+
+                if (window.sb && window.currentUser) {
+                    await window.sb.auth.updateUser({ data: { registered_devices: devList } });
+                }
+                alert('기기 등록이 해제되었습니다.');
+                this.renderDashboard();
+            } catch(e) {
+                console.error('Failed to remove device:', e);
+                alert('기기 삭제 중 오류가 발생했습니다.');
+            }
+        }
+
+        async registerCurrentDevice() {
+            const uid = window.currentUser?.id;
+            try {
+                let devId = localStorage.getItem('weracle_device_id');
+                if (!devId) {
+                    devId = 'dev_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+                    localStorage.setItem('weracle_device_id', devId);
+                }
+                const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+                const isMac = /Macintosh|Mac OS X/i.test(navigator.userAgent);
+                const devType = isMobile ? '스마트폰' : (isMac ? 'Mac/노트북' : 'Windows PC');
+                const customName = prompt('등록할 기기의 별칭을 입력하세요:', devType + ' (내 기기)');
+                if (!customName) return;
+
+                let devList = [];
+                const stored = localStorage.getItem('weracle_user_devices_' + uid);
+                if (stored) devList = JSON.parse(stored);
+                if (devList.length >= 3) {
+                    alert('최대 등록 기기 수(3대)를 초과했습니다. 기존 기기를 삭제한 후 다시 시도해 주세요.');
+                    return;
+                }
+
+                devList.push({
+                    id: devId,
+                    name: customName,
+                    type: devType,
+                    registered_at: new Date().toLocaleDateString('ko-KR'),
+                    is_current: true
+                });
+
+                localStorage.setItem('weracle_user_devices_' + uid, JSON.stringify(devList));
+                if (window.sb && window.currentUser) {
+                    await window.sb.auth.updateUser({ data: { registered_devices: devList } });
+                }
+                alert('현재 기기가 성공적으로 등록되었습니다!');
+                this.renderDashboard();
+            } catch(e) {
+                alert('기기 등록 중 오류가 발생했습니다.');
+            }
+        }
+
         bindEvents() {
+            const userMeta = (window.currentUser && window.currentUser.user_metadata) ? window.currentUser.user_metadata : {};
             // Hover effect for inline edit buttons
             this.container.querySelectorAll('.sb-btn-inline-edit').forEach(btn => {
                 btn.addEventListener('mouseover', (e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#0284c7'; e.currentTarget.style.borderColor = '#0284c7'; });
@@ -1077,6 +1244,12 @@
                     } else if (field === 'company') {
                         const val = prompt('새로운 소속을 입력하세요:', profile.company || '');
                         if (val !== null) this.updateProfileField('company', val.trim());
+                    } else if (field === 'name') {
+                        const val = prompt('새로운 실명을 입력하세요:', profile.name || userMeta.name || '');
+                        if (val !== null && val.trim() !== '') this.updateProfileField('name', val.trim());
+                    } else if (field === 'position') {
+                        const val = prompt('새로운 직책을 입력하세요:', profile.position || userMeta.position || '');
+                        if (val !== null && val.trim() !== '') this.updateProfileField('position', val.trim());
                     } else if (field === 'phone') {
                         const val = prompt('새로운 연락처를 입력하세요:', profile.phone || '');
                         if (val !== null) this.updateProfileField('phone', val.trim());
@@ -1153,6 +1326,13 @@
                         if (error) console.warn("Supabase profile update:", error.message);
                     } catch (errDb) {
                         console.warn("Supabase update error:", errDb);
+                    }
+                    try {
+                        const metaObj = {};
+                        metaObj[field] = value;
+                        await sb.auth.updateUser({ data: metaObj });
+                    } catch (errMeta) {
+                        console.warn("Supabase meta update:", errMeta);
                     }
                 }
                 

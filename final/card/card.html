@@ -338,7 +338,7 @@
             flex-direction: column !important;
             justify-content: center !important;
             align-items: center !important; /* PC에서는 세로/가로 정중앙 정렬 강제 */
-            background-color: #1E293B; /* PC 모니터용 고급 다크 슬레이트 백그라운드 */
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); /* 연한 하늘색 배경 */
             transition: var(--transition-theme);
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
             margin: 0 auto !important;
@@ -1955,10 +1955,44 @@
                 return;
             }
 
-            // 2. 주소(slug)가 없는 경우 로컬 데이터가 있으면 로드, 없으면 기본 견본 표시
+            // 2. 주소(slug)가 없는 경우 상위 프레임 프로필/로컬 데이터가 있으면 로드, 없으면 기본 견본 표시
             if (!slug) {
+                const pProf = (window.parent && window.parent !== window && window.parent.currentProfile) ? window.parent.currentProfile : null;
+                let cProf = null;
+                try {
+                    const stored = localStorage.getItem('cached_profile');
+                    if (stored) cProf = JSON.parse(stored);
+                } catch(e) {}
+                const prof = pProf || cProf;
+
                 if (localCardData) {
                     applyCardData(localCardData);
+                    return;
+                }
+                if (prof && prof.card_data && Object.keys(prof.card_data).length > 0) {
+                    applyCardData(prof.card_data);
+                    return;
+                }
+                if (prof) {
+                    applyCardData({
+                        brand_sub: "내 삶의 든든한",
+                        brand_highlight: "디지털 명함",
+                        show_sparkle: true,
+                        stickers: ['👑', '🍀'],
+                        bgm: { enabled: false, type: "cafe", title: "잔잔한 카페 피아노" },
+                        name: prof.name || prof.nickname || "성함",
+                        job_title: prof.position || "직책",
+                        company: prof.company || "소속 지점",
+                        tags: ["전문상담", "보장분석"],
+                        slogan: "고객님의 든든한 내일을 위해 빈틈없는 보장을 설계합니다.",
+                        phone: prof.phone || "",
+                        instagram: "#",
+                        kakao_talk: "#",
+                        website: "http://www.위라클.com",
+                        website_label: "위라클",
+                        work_hours: "상담 가능 시간: 09:00 ~ 24:00 (연중무휴)",
+                        avatar_url: prof.avatar_url || DEFAULT_PLACEHOLDER_AVATAR
+                    });
                     return;
                 }
                 applyCardData({
@@ -2054,21 +2088,31 @@
                 return;
             }
 
+            let pCached = null;
+            try {
+                if (window.parent && window.parent.currentProfile) {
+                    pCached = window.parent.currentProfile;
+                } else {
+                    const c = localStorage.getItem('cached_profile');
+                    if (c) pCached = JSON.parse(c);
+                }
+            } catch(e){}
+
             applyCardData({
-                brand_title: "디지털 명함",
-                name: "성함 미등록",
-                job_title: "",
-                company: "소속 지점을 등록해 주세요",
-                tags: ["전문상담"],
-                slogan: "아직 등록된 소개글이 없습니다. 에디터에서 나만의 명함을 꾸며보세요.",
-                phone: "",
+                brand_title: (pCached && pCached.nickname) ? pCached.nickname + "의 명함" : "디지털 명함",
+                name: (pCached && (pCached.name || pCached.nickname)) || "김태훈",
+                job_title: (pCached && pCached.position) || "지점장",
+                company: (pCached && pCached.company) || "위라클 파트너스 본부",
+                tags: ["전문상담", "보장분석", "맞춤설계"],
+                slogan: (pCached && pCached.slogan) || "고객님의 든든한 금융 파트너가 되어 드리겠습니다.",
+                phone: (pCached && pCached.phone) || "010-8765-4321",
                 instagram: "#",
                 kakao_talk: "#",
                 website: "http://www.위라클.com",
                 website_label: "위라클",
                 work_hours: "상담 가능 시간: 09:00 ~ 24:00 (연중무휴)",
-                avatar_url: DEFAULT_PLACEHOLDER_AVATAR,
-                logo_url: '',
+                avatar_url: (pCached && pCached.avatar_url) || DEFAULT_PLACEHOLDER_AVATAR,
+                logo_url: (pCached && pCached.logo_url) || '',
                 logo_x: null,
                 logo_y: null
             });

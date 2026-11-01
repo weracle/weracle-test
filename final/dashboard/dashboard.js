@@ -134,6 +134,162 @@ function switchCalendarView(mode) {
   renderV3Calendar();
 }
 
+
+// ==========================================================================
+// [신규 기능] 명함링크 복사 & 연동 시트보기 & 포털 바로가기 (Items 3, 6-1, 6-2)
+// ==========================================================================
+function copyMyCardLink() {
+  const profile = getParentProp('currentProfile') || window.currentProfile;
+  const uid = (profile && (profile.card_slug || profile.id)) || (window.currentUser && window.currentUser.id) || '';
+  
+  let href = window.location.href;
+  let cardUrl = '';
+  if (href.includes('/dashboard/')) {
+    cardUrl = href.substring(0, href.indexOf('/dashboard/')) + '/card/card.html';
+  } else {
+    cardUrl = window.location.origin + '/card/card.html';
+  }
+  if (uid) cardUrl += '?u=' + encodeURIComponent(uid);
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(cardUrl).then(() => {
+      alert('📋 모바일 디지털 명함 링크가 복사되었습니다!\n\n' + cardUrl);
+    }).catch(() => {
+      prompt('아래 명함 링크를 복사하여 전달하세요:', cardUrl);
+    });
+  } else {
+    prompt('아래 명함 링크를 복사하여 전달하세요:', cardUrl);
+  }
+}
+
+function openConnectedSheet() {
+  const profile = getParentProp('currentProfile') || window.currentProfile;
+  const sheetId = localStorage.getItem('g_sheet_id') || localStorage.getItem('user_spreadsheet_id') || (profile && profile.google_sheet_id);
+  if (sheetId) {
+    window.open(`https://docs.google.com/spreadsheets/d/${sheetId}/edit`, '_blank');
+  } else {
+    if (confirm('현재 연결된 구글 시트 ID를 찾을 수 없습니다.\n고객관리(CRM) 페이지로 이동하여 시트를 연동하시겠습니까?')) {
+      if (window.parent && typeof window.parent.loadSubPage === 'function') {
+        window.parent.loadSubPage('고객관리', '고객관리', 'crm/crm_test.html');
+      } else {
+        window.open('https://docs.google.com/spreadsheets/', '_blank');
+      }
+    }
+  }
+}
+
+function openClaimPage() {
+  if (window.parent && typeof window.parent.loadSubPage === 'function') {
+    window.parent.loadSubPage('고객관리', '보험금 청구', 'claim/claim.html');
+  } else {
+    window.location.href = '../claim/claim.html';
+  }
+}
+
+function openAnalysisPage() {
+  if (window.parent && typeof window.parent.loadSubPage === 'function') {
+    window.parent.loadSubPage('영업전략', '보장 분석', 'branding/pdf_p.html');
+  } else {
+    window.location.href = '../branding/pdf_p.html';
+  }
+}
+
+function openInsurerContacts() {
+  if (window.parent && typeof window.parent.loadSubPage === 'function') {
+    window.parent.loadSubPage('고객관리', '보험금 청구', 'claim/claim.html#contacts');
+  } else {
+    window.location.href = '../claim/claim.html#contacts';
+  }
+}
+
+// -------------------------------------------------------------
+// 프로모션 슬라이더 제어 (Item 6-3)
+// -------------------------------------------------------------
+function renderPromoSlide() {
+  const area = document.getElementById('promoSliderArea');
+  const counter = document.getElementById('promoSlideCounter');
+  if (!area) return;
+
+  const item = PROMO_IMAGES[currentPromoIdx] || PROMO_IMAGES[0];
+  if (counter) counter.innerText = `${currentPromoIdx + 1} / ${PROMO_IMAGES.length}`;
+
+  area.innerHTML = `
+    <div style="width:100%; height:100%; position:relative; cursor:pointer;" onclick="${item.link && item.link !== '#' ? `window.open('${item.link}', '_blank')` : ''}">
+      <img src="${item.src}" alt="${item.title}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\\'promo-placeholder\\\'><div style=\\\'font-size:26px;\\\'>📢</div><div class=\\\'promo-placeholder-title\\\'>${escapeHtml(item.title)}</div><div class=\\\'promo-placeholder-desc\\\'>지점 및 본부 주요 시책 & 공지사항 (${currentPromoIdx + 1}/${PROMO_IMAGES.length})</div><div style=\\\'font-size:11px; color:#0284c7; font-weight:600;\\\'>이미지 파일: ${item.src}</div></div>';" style="width:100%; height:100%; object-fit:cover; border-radius:10px;">
+    </div>
+  `;
+}
+
+function prevPromoSlide() {
+  currentPromoIdx = (currentPromoIdx - 1 + PROMO_IMAGES.length) % PROMO_IMAGES.length;
+  renderPromoSlide();
+}
+
+function nextPromoSlide() {
+  currentPromoIdx = (currentPromoIdx + 1) % PROMO_IMAGES.length;
+  renderPromoSlide();
+}
+
+// -------------------------------------------------------------
+// 영업 인사이트 영상 슬라이더 제어 (Item 6-4, 9)
+// -------------------------------------------------------------
+function getYouTubeEmbedUrl(url) {
+  if (!url) return '';
+  let videoId = '';
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  if (match && match[2].length === 11) {
+    videoId = match[2];
+  } else if (url.length === 11) {
+    videoId = url;
+  }
+  return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0` : url;
+}
+
+function renderVideoSlide() {
+  const area = document.getElementById('videoSliderArea');
+  const counter = document.getElementById('videoSlideCounter');
+  if (!area) return;
+
+  const item = SALES_INSIGHT_VIDEOS[currentVideoIdx] || SALES_INSIGHT_VIDEOS[0];
+  if (counter) counter.innerText = `${currentVideoIdx + 1} / ${SALES_INSIGHT_VIDEOS.length}`;
+
+  const embedUrl = getYouTubeEmbedUrl(item.url);
+
+  area.innerHTML = `
+    <div class="video-frame-container">
+      <iframe src="${embedUrl}" title="${escapeHtml(item.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <div class="video-info-box">
+      <div class="video-info-title">${escapeHtml(item.title)}</div>
+      <div class="video-info-sub">${escapeHtml(item.subtitle || item.desc || '')}</div>
+    </div>
+  `;
+}
+
+function prevVideoSlide() {
+  currentVideoIdx = (currentVideoIdx - 1 + SALES_INSIGHT_VIDEOS.length) % SALES_INSIGHT_VIDEOS.length;
+  renderVideoSlide();
+}
+
+function nextVideoSlide() {
+  currentVideoIdx = (currentVideoIdx + 1) % SALES_INSIGHT_VIDEOS.length;
+  renderVideoSlide();
+}
+
+// 전역 window 바인딩 (onclick 완벽 작동 보장)
+window.copyMyCardLink = copyMyCardLink;
+window.openConnectedSheet = openConnectedSheet;
+window.openClaimPage = openClaimPage;
+window.openAnalysisPage = openAnalysisPage;
+window.openInsurerContacts = openInsurerContacts;
+window.prevPromoSlide = prevPromoSlide;
+window.nextPromoSlide = nextPromoSlide;
+window.prevVideoSlide = prevVideoSlide;
+window.nextVideoSlide = nextVideoSlide;
+window.renderPromoSlide = renderPromoSlide;
+window.renderVideoSlide = renderVideoSlide;
+
 function getStartOfWeek(date) {
   const d = new Date(date);
   const day = d.getDay(); // 0: 일요일, 1: 월요일 ...
@@ -525,10 +681,13 @@ function renderV3Calendar() {
   else {
     if (headerRow) {
       headerRow.style.display = 'grid';
-      const colDays = ["일 (Sun)", "월 (Mon)", "화 (Tue)", "수 (Wed)", "목 (Thu)", "금 (Fri)", "토 (Sat)"];
+      headerRow.style.gridTemplateColumns = 'repeat(7, minmax(0, 1fr))';
+      headerRow.style.gap = '6px';
+      headerRow.style.width = '100%';
+      const colDays = ["일", "월", "화", "수", "목", "금", "토"];
       headerRow.innerHTML = colDays.map((name, i) => {
         const color = i === 0 ? "var(--danger)" : (i === 6 ? "var(--primary)" : "var(--text-muted)");
-        return `<div style="color:${color}; font-weight:700; font-size:12px; text-align:center; padding:6px 0;">${name}</div>`;
+        return `<div style="color:${color}; font-weight:800; font-size:12px; text-align:center; padding:6px 0; background:#f8fafc; border-radius:6px; border:1px solid #e2e8f0;">${name}</div>`;
       }).join('');
     }
     grid.className = 'cal-grid-monthly';

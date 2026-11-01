@@ -1817,13 +1817,21 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
             headerContainer.style.alignItems = 'flex-start';
             headerContainer.innerHTML = `
                 ${paginationHtml}
-                <div style="display:flex; justify-content: space-between; align-items: center; width: 100%; padding-top: 4px;">
-                    <label style="font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
-                        <input type="checkbox" id="selectAllCb" style="width: 16px; height: 16px; cursor: pointer;"> 
-                        <span id="selectedCountText">${selectedCount > 0 ? `(${selectedCount}명 선택됨)` : '현재 그룹 전체선택'}</span>
-                    </label>
-                    <span id="customer-count" style="font-size: 13.5px; color: var(--title-blue); font-weight: 800;">
-                        ${filteredData.length > 100 ? `${GroupManager.getCurrentPage()}그룹 (${currentGroupData.length}명) / ` : ''}총 ${filteredData.length}명
+                <div style="display:flex; justify-content: space-between; align-items: center; width: 100%; padding-top: 5px; gap: 6px; flex-wrap: wrap;">
+                    <div style="display:flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 12.5px; font-weight: 700; display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--text-main);">
+                            <input type="checkbox" id="selectAllCb" style="width: 15px; height: 15px; cursor: pointer;"> 
+                            <span>현재그룹 (${currentGroupData.length}명)</span>
+                        </label>
+                        ${filteredData.length > 100 ? `
+                        <label style="font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #0284c7; background: #f0f9ff; padding: 2px 7px; border-radius: 6px; border: 1px solid #bae6fd;">
+                            <input type="checkbox" id="selectAllEntireGroupsCb" style="width: 15px; height: 15px; cursor: pointer;"> 
+                            <span>전체그룹 선택 (${filteredData.length.toLocaleString()}명)</span>
+                        </label>
+                        ` : ''}
+                    </div>
+                    <span id="selectedCountText" style="font-size: 12px; color: #64748b; font-weight: 700;">
+                        ${selectedCount > 0 ? `<b style="color:#0284c7;">${selectedCount.toLocaleString()}명</b> 선택` : ''}
                     </span>
                 </div>
             `;
@@ -1875,27 +1883,40 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
         // 체크박스 제어 및 그룹 간 체크 보존
         function attachCheckboxLogic(currentGroupData, filteredData) {
             const selectAllCb = document.getElementById('selectAllCb');
+            const selectAllEntireGroupsCb = document.getElementById('selectAllEntireGroupsCb');
             const itemCbs = document.querySelectorAll('.customer-checkbox');
             const countText = document.getElementById('selectedCountText');
 
             const refreshCountDisplay = () => {
                 const totalChecked = GroupManager.getSelectedCount();
                 if (countText) {
-                    countText.innerText = totalChecked > 0 ? `(${totalChecked}명 선택됨)` : '현재 그룹 전체선택';
+                    countText.innerHTML = totalChecked > 0 ? `<b style="color:#0284c7;">${totalChecked.toLocaleString()}명</b> 선택` : '';
                 }
                 if (selectAllCb) {
-                    const allCurrentSelected = currentGroupData.length > 0 && currentGroupData.every(c => GroupManager.isCustomerSelected(c.phone));
-                    selectAllCb.checked = allCurrentSelected;
+                    selectAllCb.checked = GroupManager.isAllCurrentGroupSelected();
+                }
+                if (selectAllEntireGroupsCb) {
+                    selectAllEntireGroupsCb.checked = GroupManager.isAllEntireListSelected();
                 }
             };
 
             refreshCountDisplay();
 
-            // 전체 선택 체크박스
+            // 현재 그룹 전체 선택/해제
             if (selectAllCb) {
                 selectAllCb.onchange = (e) => {
                     const checked = e.target.checked;
                     GroupManager.toggleSelectAllCurrentGroup(checked);
+                    itemCbs.forEach(cb => { cb.checked = checked; });
+                    refreshCountDisplay();
+                };
+            }
+
+            // [전체그룹 선택] 모든 그룹의 전체 고객(1,600명+) 일괄 선택/해제
+            if (selectAllEntireGroupsCb) {
+                selectAllEntireGroupsCb.onchange = (e) => {
+                    const checked = e.target.checked;
+                    GroupManager.toggleSelectAllEntireList(checked);
                     itemCbs.forEach(cb => { cb.checked = checked; });
                     refreshCountDisplay();
                 };
@@ -2124,11 +2145,22 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
             const cardEl = document.getElementById(`card-${cardIndex}`);
             if (!cardEl) return;
 
-            // 1. 우측 고객 목록에서 선택된 고객들 수집
+            // 1. 우측 고객 목록에서 선택된 고객들 수집 (GroupManager 전수 연동)
             const selectedCustomers = [];
-            if (window.currentBaseData) {
+            const gmSelected = (typeof GroupManager !== 'undefined' && GroupManager.getSelectedCustomers)
+                ? GroupManager.getSelectedCustomers()
+                : [];
+
+            if (gmSelected.length > 0) {
+                gmSelected.forEach(cust => {
+                    let rawName = cust.originalName || cust.name || "";
+                    let safeName = rawName.replace(/[^\uAC00-\uD7A3a-zA-Z0-9\s()]/g, '').trim();
+                    let phone = cust.phone || extractCustomerPhone(cust) || (cust.crmData ? extractCustomerPhone(cust.crmData) : "");
+                    selectedCustomers.push({ name: safeName || "고객", phone: phone, crmData: cust.crmData || cust });
+                });
+            } else if (window.currentBaseData) {
                 window.currentBaseData.forEach(cust => {
-                    if (cust.isChecked) {
+                    if (cust.isChecked || (typeof GroupManager !== 'undefined' && GroupManager.isCustomerSelected(cust.phone))) {
                         let rawName = cust.originalName || cust.name || "";
                         let safeName = rawName.replace(/[^\uAC00-\uD7A3a-zA-Z0-9\s()]/g, '').trim();
                         let phone = cust.phone || extractCustomerPhone(cust) || (cust.crmData ? extractCustomerPhone(cust.crmData) : "");
@@ -2603,11 +2635,21 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
 
    async function executeKakaoMacro(modalId) {
             selectedModalId = modalId;
-           const selectedCustomers = [];
-            //  [장바구니 마법 6] 파이썬 매크로로 넘길 때도 눈에 보이는 화면이 아닌, 장바구니를 털어서 보냅니다!
-            if (window.currentBaseData) {
+            const selectedCustomers = [];
+            const gmSelectedMacro = (typeof GroupManager !== 'undefined' && GroupManager.getSelectedCustomers)
+                ? GroupManager.getSelectedCustomers()
+                : [];
+
+            if (gmSelectedMacro.length > 0) {
+                gmSelectedMacro.forEach(cust => {
+                    let rawName = cust.originalName || cust.name || "";
+                    let safeName = rawName.replace(/[^\uAC00-\uD7A3a-zA-Z0-9\s()]/g, '').trim();
+                    let phone = cust.phone || extractCustomerPhone(cust) || (cust.crmData ? extractCustomerPhone(cust.crmData) : "");
+                    selectedCustomers.push({ name: safeName || "고객", phone: phone });
+                });
+            } else if (window.currentBaseData) {
                 window.currentBaseData.forEach(cust => {
-                    if (cust.isChecked) {
+                    if (cust.isChecked || (typeof GroupManager !== 'undefined' && GroupManager.isCustomerSelected(cust.phone))) {
                         let rawName = cust.originalName || cust.name || "";
                         let safeName = rawName.replace(/[^\uAC00-\uD7A3a-zA-Z0-9\s()]/g, '').trim();
                         let phone = cust.phone || extractCustomerPhone(cust) || (cust.crmData ? extractCustomerPhone(cust.crmData) : "");

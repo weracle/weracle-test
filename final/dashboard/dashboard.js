@@ -2,6 +2,46 @@
 // 위라클 대시보드 - 스마트 캘린더 & 핵심 비즈니스 로직 (dashboard.js)
 // ==========================================
 
+// ==========================================================================
+// [설정 1] 영업 인사이트 유튜브 영상 목록 (Item 6-4, 9)
+// 유튜브 영상 주소(https://www.youtube.com/watch?v=...) 또는 공유링크(https://youtu.be/...)를 
+// 아래 목록에 자유롭게 추가/수정하시면 대시보드 우측 영상 슬라이더에서 즉시 재생됩니다.
+// ==========================================================================
+const SALES_INSIGHT_VIDEOS = [
+  {
+    title: "설계사 세일즈 화법 & 실전 클로징 노하우",
+    subtitle: "고객의 거절을 극복하고 계약 체결로 이끄는 핵심 화법",
+    url: "https://www.youtube.com/watch?v=ScMzIvxBSi4"
+  },
+  {
+    title: "상령일 도래 고객 맞춤 보장분석 공략법",
+    subtitle: "보험료 인상 전 골든타임 리모델링 성공 전략",
+    url: "https://www.youtube.com/watch?v=ScMzIvxBSi4"
+  },
+  {
+    title: "신계약 창출을 위한 고객 DB 터치 프로세스",
+    subtitle: "기계약자 추가 업셀링 및 충성 고객 소개 유치 기법",
+    url: "https://www.youtube.com/watch?v=ScMzIvxBSi4"
+  }
+];
+
+// ==========================================================================
+// [설정 2] 이달의 프로모션 배너 이미지 목록 (Item 6-3)
+// 깃허브 또는 dashboard/images/ 경로에 promo_1.png ~ promo_5.png 이름으로 
+// 이미지를 저장하시면 슬라이더에 자동으로 반영됩니다.
+// ==========================================================================
+const PROMO_IMAGES = [
+  { title: "이달의 핵심 영업 시책 & 프로모션 1", src: "images/promo_1.png", link: "#" },
+  { title: "본부 주요 공지사항 & 특별 캠페인 2", src: "images/promo_2.png", link: "#" },
+  { title: "신상품 런칭 기념 특별 인센티브 3", src: "images/promo_3.png", link: "#" },
+  { title: "우수 설계사(MDRT) 시상 규정 안내 4", src: "images/promo_4.png", link: "#" },
+  { title: "월말 마감 전략 세미나 일정 5", src: "images/promo_5.png", link: "#" }
+];
+
+let currentPromoIdx = 0;
+let currentVideoIdx = 0;
+
+
 // --- SAFEGUARD V3 (미존재 요소 참조 에러 방지) ---
 const originalGetElementById = document.getElementById.bind(document);
 document.getElementById = function(id) {
@@ -102,7 +142,13 @@ function getStartOfWeek(date) {
 }
 
 function navigateWeek(offset) {
-  currentCalDate.setDate(currentCalDate.getDate() + (offset * 7));
+  if (calViewMode === 'horizontal') {
+    // 가로형 월간 뷰일 때는 1달 단위로 이전/다음 달 이동 (Item 5)
+    currentCalDate.setMonth(currentCalDate.getMonth() + offset);
+  } else {
+    // 세로형 주간 뷰일 때는 1주일 단위로 이동
+    currentCalDate.setDate(currentCalDate.getDate() + (offset * 7));
+  }
   renderV3Calendar();
   fetchGoogleCalendarEvents();
 }
@@ -171,11 +217,11 @@ function analyzeCrmData() {
   const thisYear = currentCalDate.getFullYear();
 
   crmData.forEach(client => {
-    const name = client['고객명'] || client['성명'] || '고객';
+    const name = client['고객명'] || client['성명'] || client['대표자명'] || client['상호명'] || '고객';
     const phone = client['연락처'] || client['폰번호'] || client['휴대폰'] || '';
-    const prod = client['상품명'] || client['보험사'] || '보험계약';
+    const mainProd = client['상품명'] || client['보험사'] || '보험계약';
 
-    // 1)  생일 (Birthday)
+    // 1) 생일 (Birthday)
     const bday = parseClientBirthday(client);
     if (bday) {
       [-1, 0, 1].forEach(yearOffset => {
@@ -186,14 +232,14 @@ function analyzeCrmData() {
           type: 'bday',
           name: name,
           phone: phone,
-          prod: prod,
+          prod: mainProd,
           fullDate: `${y}-${mm}-${dd}`,
-          title: ` [생일] ${name}`,
-          note: `${name} 고객님의 생일입니다. 축하 인사 및 안부 전화를 건네보세요!`
+          title: `🎂 [생일] ${name}`,
+          note: `${name} 고객님의 생일입니다. 따뜻한 축하 인사와 안부 전화를 건네보세요!`
         });
       });
 
-      // 2)  상령일 (Insurance Age Increase Date: 생년월일 + 6개월)
+      // 2) 상령일 (Insurance Age Increase Date: 생년월일 + 6개월)
       let sangMonth = bday.month + 6;
       let sangYearOffset = 0;
       if (sangMonth > 12) {
@@ -210,79 +256,106 @@ function analyzeCrmData() {
           type: 'sang',
           name: name,
           phone: phone,
-          prod: prod,
+          prod: mainProd,
           fullDate: `${y}-${mm}-${dd}`,
-          title: ` [상령일] ${name}`,
+          title: `📈 [상령일] ${name}`,
           note: `상령일 도래: 보험나이가 1세 증가하기 직전입니다. 보험료 인상 전 맞춤 보장 리모델링을 제안하세요!`
         });
       });
     }
 
-    // 3) 계약 만기 및 갱신일 (Expiry / Renewal)
-    const rDateStr = (client['갱신일'] || client['만기일'] || client['자동차_만기일'] || '').toString().trim();
-    if (rDateStr) {
-      let rawNums = rDateStr.replace(/[^0-9]/g, '');
-      let cleanDate = '';
-      if (rawNums.length >= 8) {
-        cleanDate = `${rawNums.substring(0, 4)}-${rawNums.substring(4, 6)}-${rawNums.substring(6, 8)}`;
-      } else if (rawNums.length === 4) {
-        cleanDate = `${rawNums.substring(0, 2)}-${rawNums.substring(2, 4)}`;
-      } else {
-        cleanDate = rDateStr.split('T')[0].replace(/\s+/g, '').replace(/[\.\/]/g, '-');
-      }
+    // 3) 계약 만기 및 갱신일, 결제일 파싱 (고객 본체 + 가입내역 JSON + 보험관리 연동 리스트)
+    extractContractEvents(client, name, phone, mainProd, thisYear);
 
-      if (cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    let insList = [];
+    if (Array.isArray(client['보험가입리스트'])) {
+      insList.push(...client['보험가입리스트']);
+    }
+    const rawIns = client['가입내역'] || client['보험가입내역'] || client['insurance'];
+    if (rawIns) {
+      if (Array.isArray(rawIns)) {
+        insList.push(...rawIns);
+      } else if (typeof rawIns === 'string' && (rawIns.trim().startsWith('[') || rawIns.trim().startsWith('{'))) {
+        try {
+          const parsed = JSON.parse(rawIns);
+          if (Array.isArray(parsed)) insList.push(...parsed);
+          else if (typeof parsed === 'object') insList.push(parsed);
+        } catch(e) {}
+      }
+    }
+
+    insList.forEach(ins => {
+      const prodName = ins['상품명'] || ins['보험사명'] || ins['보험종류'] || mainProd;
+      extractContractEvents(ins, name, phone, prodName, thisYear);
+    });
+  });
+
+  renderV3Calendar();
+}
+
+function extractContractEvents(item, name, phone, prod, thisYear) {
+  if (!item) return;
+
+  // 만기일 / 갱신일
+  const rDateStr = (item['갱신일'] || item['만기일'] || item['자동차_만기일'] || '').toString().trim();
+  if (rDateStr) {
+    let rawNums = rDateStr.replace(/[^0-9]/g, '');
+    let cleanDate = '';
+    if (rawNums.length >= 8) {
+      cleanDate = `${rawNums.substring(0, 4)}-${rawNums.substring(4, 6)}-${rawNums.substring(6, 8)}`;
+    } else if (rawNums.length === 4) {
+      cleanDate = `${rawNums.substring(0, 2)}-${rawNums.substring(2, 4)}`;
+    } else {
+      cleanDate = rDateStr.split('T')[0].replace(/\s+/g, '').replace(/[\.\/]/g, '-');
+    }
+
+    if (cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      crmEventsList.push({
+        type: 'expiry',
+        name: name,
+        phone: phone,
+        prod: prod,
+        fullDate: cleanDate,
+        title: `📑 [만기·갱신] ${name}`,
+        note: `${name} 고객님의 계약(${prod}) 만기/갱신일입니다. 사전 연장 및 만기 환급금 상담을 진행하세요.`
+      });
+    } else if (cleanDate.match(/^\d{2}-\d{2}$/)) {
+      [-1, 0, 1].forEach(yearOffset => {
         crmEventsList.push({
           type: 'expiry',
           name: name,
           phone: phone,
           prod: prod,
-          fullDate: cleanDate,
-          title: ` [만기·갱신] ${name}`,
-          note: `${name} 고객님의 계약 만기/갱신일입니다. 사전 연장 및 만기 환급금 상담을 진행하세요.`
+          fullDate: `${thisYear + yearOffset}-${cleanDate}`,
+          title: `📑 [만기·갱신] ${name}`,
+          note: `${name} 고객님의 계약(${prod}) 만기/갱신일입니다. 사전 연장 및 만기 환급금 상담을 진행하세요.`
         });
-      } else if (cleanDate.match(/^\d{2}-\d{2}$/)) {
-        [-1, 0, 1].forEach(yearOffset => {
-          crmEventsList.push({
-            type: 'expiry',
-            name: name,
-            phone: phone,
-            prod: prod,
-            fullDate: `${thisYear + yearOffset}-${cleanDate}`,
-            title: ` [만기·갱신] ${name}`,
-            note: `${name} 고객님의 계약 만기/갱신일입니다. 사전 연장 및 만기 환급금 상담을 진행하세요.`
-          });
-        });
-      }
+      });
     }
+  }
 
-    // 4)  보험료 결제일 (Payment Day)
-    const payDayRaw = client['결제일'] || client['납입일'] || '';
-    const payDay = parseInt(payDayRaw.toString().replace(/[^0-9]/g, ''), 10);
-    if (payDay && payDay >= 1 && payDay <= 31) {
-      const startOfWeek = getStartOfWeek(currentCalDate);
-      for (let i = 0; i < 7; i++) {
-        let dDate = new Date(startOfWeek);
-        dDate.setDate(dDate.getDate() + i);
-        if (dDate.getDate() === payDay) {
-          const y = dDate.getFullYear();
-          const m = String(dDate.getMonth() + 1).padStart(2, '0');
-          const d = String(dDate.getDate()).padStart(2, '0');
-          crmEventsList.push({
-            type: 'pay',
-            name: name,
-            phone: phone,
-            prod: prod,
-            fullDate: `${y}-${m}-${d}`,
-            title: ` [결제] ${name}`,
-            note: `${name} 고객님의 정기 보험료 결제일(${payDay}일)입니다. 통장 잔고 및 정상 출금 여부를 체크하세요.`
-          });
-        }
-      }
+  // 보험료 결제일 (Payment Day - 앞뒤 2달 매월 자동 생성)
+  const payDayRaw = item['결제일'] || item['납입일'] || '';
+  const payDay = parseInt(payDayRaw.toString().replace(/[^0-9]/g, ''), 10);
+  if (payDay && payDay >= 1 && payDay <= 31) {
+    for (let mOffset = -2; mOffset <= 2; mOffset++) {
+      let targetD = new Date(thisYear, currentCalDate.getMonth() + mOffset, 1);
+      const y = targetD.getFullYear();
+      const m = targetD.getMonth() + 1;
+      const lastDayOfMonth = new Date(y, m, 0).getDate();
+      const actualDay = Math.min(payDay, lastDayOfMonth);
+      const fullDateStr = `${y}-${String(m).padStart(2, '0')}-${String(actualDay).padStart(2, '0')}`;
+      crmEventsList.push({
+        type: 'pay',
+        name: name,
+        phone: phone,
+        prod: prod,
+        fullDate: fullDateStr,
+        title: `💳 [결제] ${name}`,
+        note: `${name} 고객님의 정기 보험료 결제일(${payDay}일)입니다. 통장 잔고 및 정상 출금 여부를 체크하세요.`
+      });
     }
-  });
-
-  renderV3Calendar();
+  }
 }
 
 // ==========================================
@@ -296,63 +369,43 @@ function renderV3Calendar() {
 
   grid.innerHTML = "";
 
-  const startOfWeek = getStartOfWeek(currentCalDate);
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-  // 헤더 기간 텍스트 업데이트
-  const sm = startOfWeek.getMonth() + 1;
-  const em = endOfWeek.getMonth() + 1;
-  if (periodText) {
-    if (sm === em) {
-      periodText.innerText = `${startOfWeek.getFullYear()}. ${String(sm).padStart(2, "0")} (${startOfWeek.getDate()}일 ~ ${endOfWeek.getDate()}일)`;
-    } else {
-      periodText.innerText = `${startOfWeek.getFullYear()}. ${String(sm).padStart(2, "0")}.${startOfWeek.getDate()} ~ ${String(em).padStart(2, "0")}.${endOfWeek.getDate()}`;
-    }
-  }
-
-  // 이번 주 7일 날짜 배열 구성
-  const weekDates = [];
-  for (let i = 0; i < 7; i++) {
-    let d = new Date(startOfWeek);
-    d.setDate(d.getDate() + i);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    weekDates.push(`${y}-${m}-${day}`);
-  }
-
-  // 필터별 카운트 계산
-  const counts = { all: 0, google: 0, bday: 0, sang: 0, expiry: 0, pay: 0 };
-  agentEvents.forEach(e => {
-    if (weekDates.includes(e.fullDate)) {
-      counts.google++;
-      counts.all++;
-    }
-  });
-  crmEventsList.forEach(e => {
-    if (weekDates.includes(e.fullDate)) {
-      if (counts[e.type] !== undefined) counts[e.type]++;
-      counts.all++;
-    }
-  });
-
-  const countAllEl = document.getElementById('count-all'); if (countAllEl) countAllEl.innerText = counts.all;
-  const countGoogleEl = document.getElementById('count-google'); if (countGoogleEl) countGoogleEl.innerText = counts.google;
-  const countBdayEl = document.getElementById('count-bday'); if (countBdayEl) countBdayEl.innerText = counts.bday;
-  const countSangEl = document.getElementById('count-sang'); if (countSangEl) countSangEl.innerText = counts.sang;
-  const countExpiryEl = document.getElementById('count-expiry'); if (countExpiryEl) countExpiryEl.innerText = counts.expiry;
-  const countPayEl = document.getElementById('count-pay'); if (countPayEl) countPayEl.innerText = counts.pay;
-
   const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
   const todayStr = new Date().toISOString().split('T')[0];
 
   // ----------------------------------------------------
-  // [A]  세로 타임라인 뷰 (Vertical Agenda - 기본 모드)
+  // [A] 세로 타임라인 뷰 (Vertical Agenda - 주간 7일)
   // ----------------------------------------------------
   if (calViewMode === 'vertical') {
     if (headerRow) headerRow.style.display = 'none';
     grid.className = 'cal-vertical-timeline';
+
+    const startOfWeek = getStartOfWeek(currentCalDate);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    // 헤더 기간 텍스트
+    const sm = startOfWeek.getMonth() + 1;
+    const em = endOfWeek.getMonth() + 1;
+    if (periodText) {
+      if (sm === em) {
+        periodText.innerText = `${startOfWeek.getFullYear()}. ${String(sm).padStart(2, "0")} (${startOfWeek.getDate()}일 ~ ${endOfWeek.getDate()}일)`;
+      } else {
+        periodText.innerText = `${startOfWeek.getFullYear()}. ${String(sm).padStart(2, "0")}.${startOfWeek.getDate()} ~ ${String(em).padStart(2, "0")}.${endOfWeek.getDate()}`;
+      }
+    }
+
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+      let d = new Date(startOfWeek);
+      d.setDate(d.getDate() + i);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      weekDates.push(`${y}-${m}-${day}`);
+    }
+
+    // 주간 필터 카운트
+    updateFilterCounts(weekDates);
 
     for (let i = 0; i < 7; i++) {
       const fullDateStr = weekDates[i];
@@ -467,7 +520,7 @@ function renderV3Calendar() {
     }
   } 
   // ----------------------------------------------------
-  // [B] 가로 7열 달력 뷰 (Horizontal Grid)
+  // [B] 가로형 달력 뷰 (월 일정 전체가 보이는 월간 7열 그리드 달력 - Item 5)
   // ----------------------------------------------------
   else {
     if (headerRow) {
@@ -475,16 +528,70 @@ function renderV3Calendar() {
       const colDays = ["일 (Sun)", "월 (Mon)", "화 (Tue)", "수 (Wed)", "목 (Thu)", "금 (Fri)", "토 (Sat)"];
       headerRow.innerHTML = colDays.map((name, i) => {
         const color = i === 0 ? "var(--danger)" : (i === 6 ? "var(--primary)" : "var(--text-muted)");
-        return `<div style="color:${color};">${name}</div>`;
+        return `<div style="color:${color}; font-weight:700; font-size:12px; text-align:center; padding:6px 0;">${name}</div>`;
       }).join('');
     }
-    grid.className = 'cal-grid';
+    grid.className = 'cal-grid-monthly';
 
-    for (let i = 0; i < 7; i++) {
-      const fullDateStr = weekDates[i];
-      const dDate = new Date(startOfWeek);
-      dDate.setDate(dDate.getDate() + i);
-      const dd = dDate.getDate();
+    const curYear = currentCalDate.getFullYear();
+    const curMonth = currentCalDate.getMonth(); // 0-based
+
+    if (periodText) {
+      periodText.innerText = `${curYear}. ${String(curMonth + 1).padStart(2, "0")}월 전체 일정`;
+    }
+
+    // 당월의 1일 및 마지막 일자
+    const firstDayObj = new Date(curYear, curMonth, 1);
+    const lastDayObj = new Date(curYear, curMonth + 1, 0);
+    const firstDayOfWeek = firstDayObj.getDay(); // 0(일) ~ 6(토)
+    const daysInMonth = lastDayObj.getDate();
+
+    // 월간 달력 전체 일자 생성 (이전 달 꼬리 + 당월 + 다음 달 머리 = 7의 배수)
+    const monthCalendarDates = [];
+
+    // 이전 달 꼬리
+    const prevMonthLastDay = new Date(curYear, curMonth, 0).getDate();
+    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+      const dNum = prevMonthLastDay - i;
+      const prevD = new Date(curYear, curMonth - 1, dNum);
+      monthCalendarDates.push({
+        dateObj: prevD,
+        dateNum: dNum,
+        fullDateStr: formatYMD(prevD),
+        isCurrentMonth: false
+      });
+    }
+
+    // 당월 일자
+    for (let d = 1; d <= daysInMonth; d++) {
+      const thisD = new Date(curYear, curMonth, d);
+      monthCalendarDates.push({
+        dateObj: thisD,
+        dateNum: d,
+        fullDateStr: formatYMD(thisD),
+        isCurrentMonth: true
+      });
+    }
+
+    // 다음 달 머리
+    const remainingCells = (7 - (monthCalendarDates.length % 7)) % 7;
+    for (let d = 1; d <= remainingCells; d++) {
+      const nextD = new Date(curYear, curMonth + 1, d);
+      monthCalendarDates.push({
+        dateObj: nextD,
+        dateNum: d,
+        fullDateStr: formatYMD(nextD),
+        isCurrentMonth: false
+      });
+    }
+
+    // 월간 전체 일자에 대한 필터 카운트 업데이트
+    const allFullDates = monthCalendarDates.map(c => c.fullDateStr);
+    updateFilterCounts(allFullDates);
+
+    // 각 셀 렌더링
+    monthCalendarDates.forEach(cellData => {
+      const { fullDateStr, dateNum, isCurrentMonth } = cellData;
       const isToday = (fullDateStr === todayStr);
 
       const dayGoogleEvents = agentEvents.filter(e => e.fullDate === fullDateStr);
@@ -507,42 +614,75 @@ function renderV3Calendar() {
       }
 
       let eventsHtml = "";
-      const maxShow = 4;
+      const maxShow = 3;
       if (displayEvents.length > 0) {
         eventsHtml = displayEvents.slice(0, maxShow).map(item => {
           if (item.isGoogle) {
             const e = item.raw;
-            return `<div class="cal-event-chip cal-event-google" onclick="openGoogleEventDetail('${e.id}')" title="클릭하여 상세 정보 보기 및 삭제">
-              <i class="fa-solid fa-clock" style="font-size:10px;"></i>
+            return `<div class="cal-event-chip cal-event-google" onclick="openGoogleEventDetail('${e.id}')" title="클릭하여 상세 보기">
+              <i class="fa-solid fa-clock" style="font-size:9px;"></i>
               <span>${escapeHtml(item.title)}</span>
             </div>`;
           } else {
             const e = item.raw;
-            return `<div class="cal-event-chip cal-event-${e.type}" onclick="openCrmEventDetail('${e.type}', '${escapeJs(e.name)}', '${escapeJs(e.phone)}', '${escapeJs(e.prod)}', '${escapeJs(e.note)}', '${fullDateStr}')" title="클릭하여 세일즈 가이드 및 바로 연락">
+            return `<div class="cal-event-chip cal-event-${e.type}" onclick="openCrmEventDetail('${e.type}', '${escapeJs(e.name)}', '${escapeJs(e.phone)}', '${escapeJs(e.prod)}', '${escapeJs(e.note)}', '${fullDateStr}')" title="클릭하여 세일즈 가이드 확인">
               <span>${escapeHtml(item.title)}</span>
             </div>`;
           }
         }).join('');
 
         if (displayEvents.length > maxShow) {
-          eventsHtml += `<div class="cal-event-more">+${displayEvents.length - maxShow}개 더보기</div>`;
+          eventsHtml += `<div class="cal-event-more">+ ${displayEvents.length - maxShow}개 더보기</div>`;
         }
-      } else {
-        eventsHtml = `<div style="color:#cbd5e1; font-size:11px; text-align:center; padding-top:20px;">-</div>`;
       }
 
       const cell = document.createElement("div");
-      cell.className = `cal-cell-day${isToday ? ' is-today' : ''}`;
+      cell.className = `cal-cell-monthly${isToday ? ' is-today' : ''}${!isCurrentMonth ? ' other-month' : ''}`;
       cell.innerHTML = `
-        <div class="cal-day-header">
-          <span class="cal-day-num${isToday ? ' today' : ''}">${dd}</span>
-          <span class="cal-day-weekday">${isToday ? '오늘' : ''}</span>
+        <div class="cal-cell-monthly-head">
+          <span class="cal-monthly-num">${dateNum}</span>
+          ${isToday ? '<span class="cal-today-pill" style="font-size:9px; padding:1px 4px;">오늘</span>' : ''}
         </div>
-        <div class="cal-events-wrap">${eventsHtml}</div>
+        <div class="cal-monthly-events">${eventsHtml}</div>
       `;
+      cell.onclick = (e) => {
+        if (!e.target.closest('.cal-event-chip') && !e.target.closest('.cal-event-more')) {
+          openScheduleModalForDate(fullDateStr);
+        }
+      };
       grid.appendChild(cell);
-    }
+    });
   }
+}
+
+function formatYMD(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function updateFilterCounts(dateList) {
+  const counts = { all: 0, google: 0, bday: 0, sang: 0, expiry: 0, pay: 0 };
+  agentEvents.forEach(e => {
+    if (dateList.includes(e.fullDate)) {
+      counts.google++;
+      counts.all++;
+    }
+  });
+  crmEventsList.forEach(e => {
+    if (dateList.includes(e.fullDate)) {
+      if (counts[e.type] !== undefined) counts[e.type]++;
+      counts.all++;
+    }
+  });
+
+  const countAllEl = document.getElementById('count-all'); if (countAllEl) countAllEl.innerText = counts.all;
+  const countGoogleEl = document.getElementById('count-google'); if (countGoogleEl) countGoogleEl.innerText = counts.google;
+  const countBdayEl = document.getElementById('count-bday'); if (countBdayEl) countBdayEl.innerText = counts.bday;
+  const countSangEl = document.getElementById('count-sang'); if (countSangEl) countSangEl.innerText = counts.sang;
+  const countExpiryEl = document.getElementById('count-expiry'); if (countExpiryEl) countExpiryEl.innerText = counts.expiry;
+  const countPayEl = document.getElementById('count-pay'); if (countPayEl) countPayEl.innerText = counts.pay;
 }
 
 function getCrmBadgeText(type) {
@@ -881,24 +1021,115 @@ function updateDashboardV3Stats() {
   }
 }
 
-function loadDataAndRender() {
+async function loadDataAndRender() {
   const globalCust = getParentProp('globalCustomerData');
   if (globalCust && globalCust.length > 0) {
     crmData = globalCust;
     const globalTgt = getParentProp('globalTargetData');
     if (globalTgt) targetData = globalTgt;
   } else {
+    // 1. Check persistent localStorage cache
     try {
-      const localData = localStorage.getItem('demo_crm_data');
-      if (localData) crmData = JSON.parse(localData);
+      const cached = localStorage.getItem('weracle_crm_cached_data');
+      if (cached) {
+        crmData = JSON.parse(cached);
+      }
     } catch(e) {}
+
+    // 2. If still empty, check google sheet directly using gToken
+    if ((!crmData || crmData.length === 0) && window.gToken) {
+      const profile = getParentProp('currentProfile');
+      const sheetId = localStorage.getItem('g_sheet_id') || localStorage.getItem('user_spreadsheet_id') || (profile && profile.google_sheet_id);
+      if (sheetId) {
+        try {
+          const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/weraclecrm!A:Z`, {
+            headers: { Authorization: `Bearer ${window.gToken}` }
+          });
+          if (res.ok) {
+            const d = await res.json();
+            if (d.values && d.values.length > 1) {
+              const headers = d.values[0];
+              crmData = d.values.slice(1).map(row => {
+                const obj = {};
+                headers.forEach((h, i) => { obj[h] = row[i] || ''; });
+                return obj;
+              });
+              try { localStorage.setItem('weracle_crm_cached_data', JSON.stringify(crmData)); } catch(e){}
+            }
+          }
+        } catch(err) {
+          console.warn('Failed to fetch CRM sheet directly in dashboard:', err);
+        }
+      }
+    }
+
+    // 3. Fallback to demo CRM data to ensure calendar is never blank
+    if (!crmData || crmData.length === 0) {
+      try {
+        const localData = localStorage.getItem('demo_crm_data');
+        if (localData) {
+          crmData = JSON.parse(localData);
+        } else {
+          crmData = getInitialMockData();
+          localStorage.setItem('demo_crm_data', JSON.stringify(crmData));
+        }
+      } catch(e) {}
+    }
   }
 
   analyzeCrmData();
   renderV3Calendar();
 }
 
+function getInitialMockData() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  return [
+    {
+      '고객명': '김영수',
+      '폰번호': '010-3456-7890',
+      '주민번호': '880315-1******',
+      '생일': `${y}-${m}-15`,
+      '가입내역': JSON.stringify([
+        { '보험사명': '삼성화재', '상품명': '무배당 마이컴포트 종합보험', '만기일': `${y}-${m}-25`, '결제일': '15', '보험료': '125,000' }
+      ])
+    },
+    {
+      '고객명': '이정민',
+      '폰번호': '010-8765-4321',
+      '주민번호': '920820-2******',
+      '생일': `${y}-${m}-08`,
+      '가입내역': JSON.stringify([
+        { '보험사명': '현대해상', '상품명': '굿앤굿어린이종합보험', '만기일': `${y}-${m}-18`, '결제일': '20', '보험료': '89,000' }
+      ])
+    },
+    {
+      '고객명': '박서준',
+      '폰번호': '010-2345-6789',
+      '주민번호': '851125-1******',
+      '생일': `${y}-${m}-22`,
+      '가입내역': JSON.stringify([
+        { '보험사명': 'DB손해보험', '상품명': '프로미라이프 참좋은운전자보험', '만기일': `${y}-${m}-28`, '결제일': '10', '보험료': '45,000' }
+      ])
+    },
+    {
+      '고객명': '최유진',
+      '폰번호': '010-5678-1234',
+      '주민번호': '950610-2******',
+      '생일': `${y}-${m}-12`,
+      '가입내역': JSON.stringify([
+        { '보험사명': '메리츠화재', '상품명': '알파Plus보장보험', '만기일': `${y}-${m}-30`, '결제일': '25', '보험료': '160,000' }
+      ])
+    }
+  ];
+}
+
 async function initDashboard() {
+  // 슬라이더 초기 렌더링 (Items 6-3, 6-4)
+  renderPromoSlide();
+  renderVideoSlide();
+
   // 뷰 모드 버튼 상태 동기화
   const btnV = document.getElementById('btnViewVertical');
   const btnH = document.getElementById('btnViewHorizontal');
@@ -994,6 +1225,11 @@ window.addEventListener("message", (event) => {
     analyzeCrmData();
     renderV3Calendar();
     updateDashboardV3Stats();
+  }
+  if (event.data && event.data.type === 'CRM_DATA_SYNC') {
+    crmData = event.data.data || [];
+    analyzeCrmData();
+    renderV3Calendar();
   }
 });
 

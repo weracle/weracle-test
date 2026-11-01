@@ -27,6 +27,15 @@
         <h1 style="font-size: 18px; font-weight: bold; color: var(--text-dark); margin: 0;"><span id="welcome-msg">설계사님 환영합니다</span></h1>
         <p style="font-size: 13px; color: var(--text-muted); margin: 2px 0 0 0;" id="dashPlannerInfo">소속 | 📱 연락처</p>
       </div>
+      <!-- 우측 여백: 명함링크 복사 & 연동된 시트보기 버튼 (Item 3) -->
+      <div class="planner-quick-actions" style="display: flex; gap: 8px; margin-left: 12px;">
+        <button type="button" class="dash-top-btn" onclick="copyMyCardLink()" title="모바일 디지털 명함 링크를 복사합니다.">
+          <i class="fa-solid fa-id-card"></i> 명함링크 복사
+        </button>
+        <button type="button" class="dash-top-btn" onclick="openConnectedSheet()" title="고객관리 연동 구글 스프레드시트를 새 창에서 엽니다.">
+          <i class="fa-solid fa-table"></i> 연동된 시트보기
+        </button>
+      </div>
     </div>
     <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px;">
       <div id="quota-summary" style="display: flex; gap: 10px;"></div>
@@ -108,43 +117,62 @@
       <div id="dashboardCalendarGrid" class="cal-vertical-timeline"></div>
     </div>
 
-    <!-- RIGHT COLUMN: 편의서비스, 업무지원포털, 프로모션 배너 (나란히 세로 배치) -->
+    <!-- RIGHT COLUMN: 배너가 위로 가고 업무지원 포털 바로가기가 아래로 가는 깔끔한 콕핏 구조 (Item 6) -->
     <div class="dashboard-side-panel">
-      <!-- 2-1. 편의서비스 & 공식 업무포털 바로가기 -->
+      <!-- 2-1. 이달의 프로모션 배너 슬라이더 (5장 이미지 & < > 슬라이드) (Item 6-3) -->
+      <div class="side-slider-card">
+        <div class="slider-card-head">
+          <div class="slider-title-wrap">
+            <span class="slider-badge promo"><i class="fa-solid fa-bullhorn"></i> 프로모션</span>
+            <h4 class="slider-card-title">이달의 주요 시책 & 프로모션</h4>
+          </div>
+          <div class="slider-controls">
+            <button type="button" class="slider-arrow-btn" onclick="prevPromoSlide()" title="이전 이미지"><i class="fa-solid fa-chevron-left"></i></button>
+            <span class="slider-counter" id="promoSlideCounter">1 / 5</span>
+            <button type="button" class="slider-arrow-btn" onclick="nextPromoSlide()" title="다음 이미지"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="slider-content-area" id="promoSliderArea">
+          <!-- dashboard.js에서 동적으로 5장 이미지 렌더링 -->
+        </div>
+      </div>
+
+      <!-- 2-2. 영업 인사이트 콘텐츠 (영상 슬라이더 & 유튜브 링크) (Item 6-4) -->
+      <div class="side-slider-card">
+        <div class="slider-card-head">
+          <div class="slider-title-wrap">
+            <span class="slider-badge insight"><i class="fa-brands fa-youtube"></i> 영업인사이트</span>
+            <h4 class="slider-card-title">설계사 세일즈 노하우 영상</h4>
+          </div>
+          <div class="slider-controls">
+            <button type="button" class="slider-arrow-btn" onclick="prevVideoSlide()" title="이전 영상"><i class="fa-solid fa-chevron-left"></i></button>
+            <span class="slider-counter" id="videoSlideCounter">1 / 3</span>
+            <button type="button" class="slider-arrow-btn" onclick="nextVideoSlide()" title="다음 영상"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="slider-video-area" id="videoSliderArea">
+          <!-- dashboard.js에서 동적으로 유튜브 영상 렌더링 -->
+        </div>
+      </div>
+
+      <!-- 2-3. 업무 지원 & 포털 바로가기 (배너 아래로 배치) -->
       <div class="side-widget-card">
         <h3 class="widget-title"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> 업무 지원 & 포털 바로가기</h3>
         
         <div class="widget-subtitle"><i class="fa-solid fa-mobile-screen" style="color:#0ea5e9;"></i> 스마트 솔루션</div>
         <div class="modern-quick-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 15px;">
-          <button class="m-quick-btn" onclick="parent.openServiceLink('#')"><i class="fa-solid fa-file-invoice"></i>보험청구</button>
-          <button class="m-quick-btn" onclick="parent.openServiceLink('#')"><i class="fa-solid fa-magnifying-glass-chart"></i>보장분석</button>
+          <button type="button" class="m-quick-btn" onclick="openClaimPage()"><i class="fa-solid fa-file-invoice"></i>보험청구</button>
+          <button type="button" class="m-quick-btn" onclick="openAnalysisPage()"><i class="fa-solid fa-magnifying-glass-chart"></i>보장분석</button>
         </div>
 
         <div class="widget-subtitle"><i class="fa-solid fa-laptop-file" style="color:#0ea5e9;"></i> 공식 지원 포털</div>
         <div class="modern-quick-grid" style="grid-template-columns: repeat(3, 1fr);">
-          <button class="m-quick-btn" onclick="parent.openServiceLink('https://www.kidi.or.kr')"><i class="fa-solid fa-chart-line"></i>보험개발원</button>
-          <button class="m-quick-btn" onclick="parent.openServiceLink('https://www.inbi.or.kr/')"><i class="fa-solid fa-graduation-cap"></i>보험연수원</button>
-          <button class="m-quick-btn" onclick="parent.openServiceLink('https://www.knia.or.kr')"><i class="fa-solid fa-umbrella"></i>손해보험</button>
-          <button class="m-quick-btn" onclick="parent.openServiceLink('https://www.klia.or.kr')"><i class="fa-solid fa-heart-pulse"></i>생명보험</button>
-          <button class="m-quick-btn" onclick="parent.openServiceLink('https://www.silson24.or.kr/')"><i class="fa-solid fa-notes-medical"></i>실손24</button>
-          <button class="m-quick-btn" onclick="parent.openServiceLink('#')"><i class="fa-solid fa-address-book"></i>연락처</button>
-        </div>
-      </div>
-
-      <!-- 2-2. 프로모션 배너 (광고판) & 이미지 첨부 -->
-      <div class="side-promo-wrap">
-        <!-- 광고판 배너 -->
-        <div class="promo-box" onmouseover="this.style.borderColor='#0284c7'; this.style.backgroundColor='#f0f9ff'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.backgroundColor='#f8fafc'">
-          <i class="fa-solid fa-bullhorn" style="font-size:24px; color:#0284c7;"></i>
-          <span class="promo-title">이달의 프로모션 배너</span>
-          <span class="promo-desc">지점 및 본부 주요 시책 & 공지사항</span>
-        </div>
-
-        <!-- 이미지 첨부 박스 -->
-        <div class="promo-box" onmouseover="this.style.borderColor='#94a3b8'; this.style.backgroundColor='#f1f5f9'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.backgroundColor='#f8fafc'">
-          <i class="fa-solid fa-image" style="font-size:24px; color:#94a3b8;"></i>
-          <span class="promo-title">설계사 전용 이미지 첨부</span>
-          <span class="promo-desc">상담 자료 및 고객 서류 보관</span>
+          <button type="button" class="m-quick-btn" onclick="window.open('https://www.kidi.or.kr', '_blank')"><i class="fa-solid fa-chart-line"></i>보험개발원</button>
+          <button type="button" class="m-quick-btn" onclick="window.open('https://www.inbi.or.kr/', '_blank')"><i class="fa-solid fa-graduation-cap"></i>보험연수원</button>
+          <button type="button" class="m-quick-btn" onclick="window.open('https://www.knia.or.kr', '_blank')"><i class="fa-solid fa-umbrella"></i>손해보험</button>
+          <button type="button" class="m-quick-btn" onclick="window.open('https://www.klia.or.kr', '_blank')"><i class="fa-solid fa-heart-pulse"></i>생명보험</button>
+          <button type="button" class="m-quick-btn" onclick="window.open('https://www.silson24.or.kr/', '_blank')"><i class="fa-solid fa-notes-medical"></i>실손24</button>
+          <button type="button" class="m-quick-btn" onclick="openInsurerContacts()"><i class="fa-solid fa-address-book"></i>연락처</button>
         </div>
       </div>
     </div>

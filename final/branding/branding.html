@@ -1986,33 +1986,42 @@
         }
 
         .channel-action-card {
-            background: linear-gradient(135deg, #090e1a 0%, #1e293b 100%);
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1.5px solid #bae6fd;
             border-radius: 18px;
             padding: 24px 28px;
-            color: #ffffff;
+            color: #0f172a;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 20px;
-            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.08);
         }
 
         .channel-text-wrap h5 {
-            font-size: 16px;
+            font-size: 16.5px;
             font-weight: 800;
             margin: 0 0 6px 0;
-            color: #ffffff;
+            color: #0f172a;
             letter-spacing: -0.3px;
         }
 
         .channel-text-wrap p {
-            font-size: 13px;
-            color: #94a3b8;
+            font-size: 13.5px;
+            color: #475569;
             margin: 0;
-            line-height: 1.5;
+            line-height: 1.55;
         }
 
-        .btn-channel-apply {
+        .channel-btn-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-channel-apply,
+        .btn-channel-inquiry {
             background: #fee500;
             color: #191919;
             border: none;
@@ -2030,10 +2039,36 @@
             box-shadow: 0 4px 12px rgba(254, 229, 0, 0.25);
         }
 
-        .btn-channel-apply:hover {
+        .btn-channel-apply:hover,
+        .btn-channel-inquiry:hover {
             background: #fdd800;
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(254, 229, 0, 0.35);
+        }
+
+        .btn-channel-pay {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 13px 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+        }
+
+        .btn-channel-pay:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.5);
+            color: #ffffff;
         }
 
         @media (max-width: 860px) {
@@ -2044,8 +2079,16 @@
                 flex-direction: column;
                 align-items: flex-start;
                 padding: 20px;
+                gap: 16px;
             }
-            .btn-channel-apply {
+            .channel-btn-group {
+                width: 100%;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .btn-channel-apply,
+            .btn-channel-inquiry,
+            .btn-channel-pay {
                 width: 100%;
                 justify-content: center;
             }
@@ -3907,22 +3950,36 @@
                         </div>
                     </div>
 
-                    <!-- 카카오톡 채널 신청 안내 카드 -->
+                    <!-- 카카오톡 채널 문의 및 결제 안내 카드 -->
                     <div class="channel-action-card">
                         <div class="channel-text-wrap">
-                            <h5>위라클 공식 카카오톡 채널로 신청하기</h5>
-                            <p>공식 채널을 통해 1:1 상담 및 서비스 신청이 즉시 접수됩니다.<br>궁금하신 점도 채널 채팅으로 편하게 문의해주세요.</p>
+                            <h5>위라클 공식 카카오 채널 문의 및 결제 안내</h5>
+                            <p>공식 채널을 통해 1:1 상담 및 맞춤 문의가 즉시 진행됩니다.<br>궁금하신 점은 채널 채팅으로 편하게 문의하시고, 바로 결제를 원하시면 결제하기를 이용해 주세요.</p>
                         </div>
-                        <a href="http://pf.kakao.com" target="_blank" class="btn-channel-apply">
-                            <i class="fa-solid fa-comment" style="color: #191919;"></i>
-                            <span>카카오톡 채널로 신청하기</span>
-                        </a>
+                        <div class="channel-btn-group">
+                            <a href="http://pf.kakao.com" target="_blank" class="btn-channel-inquiry">
+                                <i class="fa-solid fa-comment" style="color: #191919;"></i>
+                                <span>카카오 채널로 문의하기</span>
+                            </a>
+                            <a href="javascript:void(0)" onclick="handleBrandingPayment()" class="btn-channel-pay">
+                                <i class="fa-solid fa-credit-card"></i>
+                                <span>브랜딩 결제하기</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 <script>
+        // 브랜딩 결제하기 버튼 클릭 핸들러
+        function handleBrandingPayment() {
+            if (window.parent && typeof window.parent.loadSubPage === 'function') {
+                window.parent.loadSubPage('구독서비스', '결제/구독 관리', 'subscription/subscription.html?tab=pricing');
+            } else {
+                window.location.href = '../subscription/subscription.html?tab=pricing';
+            }
+        }
         
         // 어떻게 활용할까: 실제 활용 이미지 토글
         function toggleToolPreview(index) {

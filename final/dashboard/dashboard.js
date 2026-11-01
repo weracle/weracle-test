@@ -1502,26 +1502,99 @@ function renderInsWidget() {
   container.innerHTML = renderGroup('손해보험', nonLife) + renderGroup('생명보험', life);
 }
 
+function renderPortalWidget() {
+  const container = document.getElementById('ins-portal-list');
+  if (!container) return;
+
+  const smartSolutions = [
+    { name: '보험금 청구', emoji: '📄', action: 'openClaimPage()' },
+    { name: '보장 분석', emoji: '📊', action: 'openAnalysisPage()' }
+  ];
+
+  const officialPortals = [
+    { name: '실손24', emoji: '🏥', link: 'https://www.silson24.or.kr/' },
+    { name: '34개사 연락처', emoji: '📞', action: 'openInsurerContacts()' },
+    { name: '보험개발원', emoji: '📈', link: 'https://www.kidi.or.kr' },
+    { name: '보험연수원', emoji: '🎓', link: 'https://www.inbi.or.kr/' },
+    { name: '손해보험협회', emoji: '☂️', link: 'https://www.knia.or.kr' },
+    { name: '생명보험협회', emoji: '❤️', link: 'https://www.klia.or.kr' }
+  ];
+
+  const renderGroup = (title, items) => {
+    let groupHtml = `<div class="ins-group-title">${title}</div>`;
+    items.forEach((item) => {
+      const isLink = !!item.link;
+      groupHtml += `
+        <a href="${isLink ? item.link : 'javascript:void(0)'}" ${isLink ? 'target="_blank"' : `onclick="${item.action}"`} class="ins-sidebar-item" title="${item.name}">
+          <div class="ins-sidebar-logo">${item.emoji}</div>
+          <span class="ins-sidebar-text">${item.name}</span>
+        </a>`;
+    });
+    return groupHtml;
+  };
+
+  container.innerHTML = renderGroup('스마트 솔루션', smartSolutions) + renderGroup('공식 지원 포털', officialPortals);
+}
+
+function switchSidebarTab(tab) {
+  const btnIns = document.getElementById('tabBtnIns');
+  const btnPortal = document.getElementById('tabBtnPortal');
+  const centerBadge = document.getElementById('centerBadge');
+  const listIns = document.getElementById('ins-sidebar-list');
+  const listPortal = document.getElementById('ins-portal-list');
+  if (!listIns || !listPortal) return;
+
+  if (tab === 'ins') {
+    if (btnIns) btnIns.classList.add('active');
+    if (btnPortal) btnPortal.classList.remove('active');
+    if (centerBadge) centerBadge.innerHTML = '🔗';
+    listPortal.style.display = 'none';
+    listIns.style.display = 'flex';
+    listIns.style.animation = 'slideDownFade 0.2s ease forwards';
+  } else {
+    if (btnPortal) btnPortal.classList.add('active');
+    if (btnIns) btnIns.classList.remove('active');
+    if (centerBadge) centerBadge.innerHTML = '⚡';
+    listIns.style.display = 'none';
+    listPortal.style.display = 'flex';
+    listPortal.style.animation = 'slideDownFade 0.2s ease forwards';
+  }
+}
+window.switchSidebarTab = switchSidebarTab;
+
+function toggleSidebarTab() {
+  const listPortal = document.getElementById('ins-portal-list');
+  const isPortal = listPortal && listPortal.style.display !== 'none';
+  switchSidebarTab(isPortal ? 'ins' : 'portal');
+}
+window.toggleSidebarTab = toggleSidebarTab;
+
+function initSmartSidebar() {
+  renderInsWidget();
+  renderPortalWidget();
+  switchSidebarTab('portal');
+}
+
 function toggleWidget(show) {
   const sidebar = document.getElementById('ins-sidebar');
   if (sidebar) sidebar.style.display = show ? 'flex' : 'none';
 }
 
-// 34개 보험사 사이드바 즉각 실행 및 다중 생명주기 바인딩
-try { renderInsWidget(); } catch(e) {}
+// 스마트 퀵 바 즉각 실행 및 다중 생명주기 바인딩
+try { initSmartSidebar(); } catch(e) {}
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', renderInsWidget);
+  document.addEventListener('DOMContentLoaded', initSmartSidebar);
 }
 
 // ==========================================
 // 9. 초기화 및 이벤트 바인딩
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-  renderInsWidget();
+  initSmartSidebar();
 });
 
 window.onload = function() {
-  renderInsWidget();
+  initSmartSidebar();
   initDashboard();
 };
 if (window.innerWidth <= 900) {

@@ -180,15 +180,33 @@
   </div>
 </div>
 
-<!-- 우측 플로팅 원클릭 보험사 사이드바 -->
+<!-- 우측 플로팅 스마트 퀵 바 (업무지원 포털 우선 노출 + 보험사 전산) -->
 <div class="ins-sidebar-container" id="ins-sidebar">
-  <div class="ins-sidebar-header" style="text-align: center; padding: 8px 0; color: #64748b; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: center; align-items: center;">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-    </svg>
+  <div class="ins-sidebar-header">
+    <!-- 축소 상태(55px): 이모티콘 완벽 가운데 정렬 토글 뱃지 (⚡ 업무포털 / 🔗 보험사) -->
+    <div class="ins-collapsed-icons" id="insCollapsedIcons">
+      <button type="button" class="ins-center-badge" id="centerBadge" onclick="toggleSidebarTab()" title="클릭하여 모드 전환 (⚡ 업무포털 / 🔗 보험사)">
+        ⚡
+      </button>
+    </div>
+    <!-- 확장 상태(175px): 텍스트 알약 탭 -->
+    <div class="ins-sidebar-tabs" id="insSidebarTabs">
+      <button type="button" class="ins-tab-pill active" id="tabBtnPortal" onclick="switchSidebarTab('portal')">
+        <span style="font-size:12px; margin-right:4px;">⚡</span>
+        업무포털
+      </button>
+      <button type="button" class="ins-tab-pill" id="tabBtnIns" onclick="switchSidebarTab('ins')">
+        <span style="font-size:12px; margin-right:4px;">🔗</span>
+        보험사
+      </button>
+    </div>
   </div>
-  <div class="ins-sidebar-scroll" id="ins-sidebar-list">
+  <!-- 1. 업무지원 포털 리스트 (기본으로 먼저 노출) -->
+  <div class="ins-sidebar-scroll" id="ins-portal-list">
+    <!-- dashboard.js에서 동적으로 포털/솔루션 렌더링 -->
+  </div>
+  <!-- 2. 보험사 전산 리스트 (보험사 탭 클릭 시 표시) -->
+  <div class="ins-sidebar-scroll" id="ins-sidebar-list" style="display:none;">
     <!-- dashboard.js에서 동적으로 34개 보험사 렌더링 -->
   </div>
 </div>

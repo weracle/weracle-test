@@ -825,8 +825,8 @@
                 <input type="text" class="search-input" placeholder="이름 또는 연락처 검색...">
             </div>
             <div class="right-tabs" id="right-tabs-container">
-                <div class="r-tab active" id="r-tab-target"> CRM 고객</div>
-                <div class="r-tab" id="r-tab-all"> 전체 고객</div>
+                <div class="r-tab active" id="r-tab-target">고객관리</div>
+                <div class="r-tab" id="r-tab-all">연락처 고객</div>
             </div>
             <div class="list-header" style="border-top: 1px solid var(--border);">
                 <label style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
@@ -1206,7 +1206,7 @@
                 searchInput.addEventListener('input', function() {
                     currentPage = 1; // 검색 시 무조건 1페이지로 초기화
                     const isAllTab = document.querySelector('.r-tab.active').id === 'r-tab-all';
-                    updateCustomerList(isAllTab ? 'all' : 'targeted', currentLeftMenuTitle);
+                    updateCustomerList(isAllTab ? 'contacts' : 'crm', currentLeftMenuTitle);
                 });
             }
 
@@ -1259,8 +1259,8 @@
                     
                     //  [수정] 탭을 숨기지 않고 살려두며, 기본값을 CRM 등록 고객으로 세팅!
                     rightTabsContainer.style.display = 'flex'; 
-                    rTabTarget.innerText = ' CRM 고객';
-                    rTabAll.innerText = ' 전체 고객';
+                    rTabTarget.innerText = '고객관리';
+                    rTabAll.innerText = '연락처 고객';
                     rTabTarget.classList.add('active'); rTabAll.classList.remove('active');
                     updateCustomerList('crm', currentLeftMenuTitle);
                 });
@@ -1293,17 +1293,15 @@
             });
 
                         rTabTarget.addEventListener('click', function() {
-                this.classList.add('active'); rTabAll.classList.remove('active');
-                if (currentLeftMenuTitle === '데일리뉴스' || currentLeftMenuTitle === '보장분석') {
-                    updateCustomerList('crm', currentLeftMenuTitle);
-                } else {
-                    updateCustomerList('targeted', currentLeftMenuTitle);
-                }
+                this.classList.add('active'); 
+                rTabAll.classList.remove('active');
+                updateCustomerList('crm', currentLeftMenuTitle);
             });
 
             rTabAll.addEventListener('click', function() {
-                this.classList.add('active'); rTabTarget.classList.remove('active');
-                updateCustomerList('all', currentLeftMenuTitle);
+                this.classList.add('active'); 
+                rTabTarget.classList.remove('active');
+                updateCustomerList('contacts', currentLeftMenuTitle);
             });
 
             
@@ -1345,25 +1343,10 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                         //  우측 탭을 항상 노출하여 'CRM 고객(타겟)'과 '전체 고객'을 자유롭게 오갈 수 있도록 보장!
                         rightTabsContainer.style.display = 'flex'; 
 
-                        if (menuTitle === '데일리뉴스' || menuTitle === '보장분석') {
-                            rTabTarget.innerText = ' CRM 고객';
-                            rTabAll.innerText = ' 전체 고객';
-                            rTabAll.classList.add('active'); 
-                            rTabTarget.classList.remove('active');
-                            updateCustomerList('all', menuTitle);
-                        } else if (menuTitle.includes('생일') || menuTitle.includes('만기') || menuTitle.includes('상령일')) {
-                            rTabTarget.innerText = ' CRM 고객 (' + menuTitle + ')';
-                            rTabAll.innerText = ' 전체 고객';
-                            rTabTarget.classList.add('active'); 
-                            rTabAll.classList.remove('active');
-                            updateCustomerList('targeted', menuTitle);
-                        } else {
-                            rTabTarget.innerText = ' CRM 고객';
-                            rTabAll.innerText = ' 전체 고객';
-                            rTabTarget.classList.add('active'); 
-                            rTabAll.classList.remove('active');
-                            updateCustomerList('targeted', menuTitle);
-                        } 
+                        // 메뉴 클릭 시 기본적으로 왼쪽(고객관리) 탭을 활성화하여 순수 고객관리 리스트 노출
+                        rTabTarget.classList.add('active');
+                        rTabAll.classList.remove('active');
+                        updateCustomerList('crm', menuTitle); 
 
                         document.querySelectorAll('.img-square').forEach(el => {
                             el.classList.remove('daily-ratio', 'a4-ratio'); 
@@ -1702,51 +1685,75 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
             listContainer.innerHTML = ''; 
             let baseData = [];
 
-            // 1. 전체 고객 목록 vs 타겟 고객 목록 분기
             const localBlacklist = JSON.parse(localStorage.getItem('weracle_blacklist') || '[]');
-            const isAllTab = (targetType === 'all');
+            const isContactsTab = (targetType === 'contacts' || targetType === 'all');
 
-            if (isAllTab) {
-                baseData = (mergedList || []).map(c => ({
+            // [핵심 1: 순수 고객관리(CRM) 리스트 - 연락처 명단 100% 완전 배제]
+            // 오직 weraclecrm 기반의 pureCrmList만 사용하며, 외부 연락처/가망고객은 일체 합치지 않습니다.
+            let crmCustomerList = (window.pureCrmList || []).map(c => ({
+                ...c,
+                tag: '고객관리',
+                color: '#0284c7'
+            }));
+
+            // [핵심 2: 휴대폰 등록 연락처 고객 리스트]
+            // 휴대폰/CSV로 등록한 고객 명단(mergedList)은 오른쪽 탭에서만 전담 노출
+            const phoneContactsList = (mergedList || []).filter(c => {
+                const p = String(c.phone || '').replace(/[^0-9]/g, '');
+                return !localBlacklist.includes(p);
+            });
+
+            // [핵심 3: 현재 메뉴가 추천 타겟 분류 대상인지 확인]
+            const hasTargetingRules = (typeof TargetEngine !== 'undefined' && TargetEngine.isTargetingMenu)
+                ? TargetEngine.isTargetingMenu(menuTitle)
+                : false;
+
+            if (isContactsTab) {
+                // ========================================================
+                // [오른쪽 탭: 휴대폰으로 등록한 연락처 고객 리스트]
+                // ========================================================
+                baseData = phoneContactsList.map(c => ({
                     ...c,
-                    targetBadge: { text: '전체 고객', color: '#64748b', bg: '#f1f5f9' }
+                    targetBadge: { text: '연락처 고객', color: '#64748b', bg: '#f1f5f9' }
                 }));
-                titleElement.innerText = '전체 고객 명단';
+                titleElement.innerText = '연락처 등록 고객 명단';
             } else {
-                const combinedMap = new Map();
-                (window.pureCrmList || []).forEach(c => { 
-                    const cleanP = String(c.phone || '').replace(/[^0-9]/g, '');
-                    if (cleanP) combinedMap.set(cleanP, c);
-                });
-                (mergedList || []).forEach(c => { 
-                    const cleanP = String(c.phone || '').replace(/[^0-9]/g, '');
-                    if (cleanP) combinedMap.set(cleanP, c);
-                });
-                
-                let candidateList = Array.from(combinedMap.values()).filter(c => c.tag !== ' 신규 가망고객');
+                // ========================================================
+                // [왼쪽 탭: 순수 고객관리(CRM) 리스트]
+                // ========================================================
+                if (hasTargetingRules) {
+                    // A. 추천 타겟 분류가 되는 파트 (생일, 상령일, 만기, 연금, 간병 등)
+                    // -> 순수 고객관리 고객 중 해당 추천 조건에 맞는 고객만 정밀 필터링
+                    baseData = crmCustomerList.filter(c => {
+                        const status = TargetEngine.getCustomerTargetStatus(c, menuTitle);
+                        if (status && status.match) {
+                            c.targetBadge = { text: status.badge, color: status.badgeColor, bg: status.badgeBg };
+                            c._sortOrder = (status.sortOrder != null) ? status.sortOrder : 999;
+                            c._priority = (status.priority != null) ? status.priority : 99;
+                            return true;
+                        }
+                        return false;
+                    });
 
-                // [정밀 타겟팅 엔진 가동]
-                baseData = candidateList.filter(c => {
-                    const status = TargetEngine.getCustomerTargetStatus(c, menuTitle);
-                    if (status && status.match) {
-                        c.targetBadge = { text: status.badge, color: status.badgeColor, bg: status.badgeBg };
-                        c._sortOrder = (status.sortOrder != null) ? status.sortOrder : 999;
-                        c._priority = (status.priority != null) ? status.priority : 99;
-                        return true;
-                    }
-                    return false;
-                });
+                    // 오늘 생일, 당일 상령일, D-Day 순 우선 정렬
+                    baseData.sort((a, b) => {
+                        if (a._priority !== b._priority) return a._priority - b._priority;
+                        return a._sortOrder - b._sortOrder;
+                    });
 
-                // 오늘 생일, 오늘 상령일, D-Day 순서로 우선 정렬
-                baseData.sort((a, b) => {
-                    if (a._priority !== b._priority) return a._priority - b._priority;
-                    return a._sortOrder - b._sortOrder;
-                });
-
-                titleElement.innerText = '추천 타겟 (' + menuTitle + ')';
+                    titleElement.innerText = '고객관리 추천 타겟 (' + menuTitle + ')';
+                } else {
+                    // B. 추천 타겟 분류가 안 되는 파트 (데일리뉴스, 보장분석, 안부인사 등)
+                    // -> 연락처 명단은 완전히 빠지고 순수 고객관리 전체 명단이 그대로 출력!
+                    baseData = crmCustomerList.map(c => ({
+                        ...c,
+                        targetBadge: { text: '고객관리', color: '#0284c7', bg: '#e0f2fe' }
+                    }));
+                    titleElement.innerText = '고객관리 전체 명단 (' + menuTitle + ')';
+                }
             }
 
-            // 2. 블랙리스트 제외 적용
+            // 블랙리스트 제외 적용
             if (localBlacklist.length > 0) {
                 baseData = baseData.filter(c => {
                     const p = String(c.phone || '').replace(/[^0-9]/g, '');
@@ -1754,35 +1761,29 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                 });
             }
 
-            // 3. 우측 탭 개수 동적 업데이트
+            // 탭 명칭 및 카운트 동적 갱신
             const rTabTargetEl = document.getElementById('r-tab-target');
             const rTabAllEl = document.getElementById('r-tab-all');
             if (rTabTargetEl && rTabAllEl) {
-                const allCleanCount = (mergedList || []).filter(c => {
-                    const p = String(c.phone || '').replace(/[^0-9]/g, '');
-                    return !localBlacklist.includes(p);
-                }).length;
+                const contactsCount = phoneContactsList.length;
+                let crmCount = 0;
 
-                const combinedMap = new Map();
-                (window.pureCrmList || []).forEach(c => { 
-                    const p = String(c.phone || '').replace(/[^0-9]/g, '');
-                    if (p) combinedMap.set(p, c);
-                });
-                (mergedList || []).forEach(c => { 
-                    const p = String(c.phone || '').replace(/[^0-9]/g, '');
-                    if (p) combinedMap.set(p, c);
-                });
-                let candidateList = Array.from(combinedMap.values()).filter(c => c.tag !== ' 신규 가망고객');
-                
-                let targetCleanCount = candidateList.filter(c => {
-                    const status = TargetEngine.getCustomerTargetStatus(c, menuTitle);
-                    if (!status || !status.match) return false;
-                    const p = String(c.phone || '').replace(/[^0-9]/g, '');
-                    return !localBlacklist.includes(p);
-                }).length;
-
-                rTabTargetEl.innerText = ` 추천 타겟 (${targetCleanCount})`;
-                rTabAllEl.innerText = ` 전체 고객 (${allCleanCount})`;
+                if (hasTargetingRules) {
+                    crmCount = crmCustomerList.filter(c => {
+                        const status = TargetEngine.getCustomerTargetStatus(c, menuTitle);
+                        if (!status || !status.match) return false;
+                        const p = String(c.phone || '').replace(/[^0-9]/g, '');
+                        return !localBlacklist.includes(p);
+                    }).length;
+                    rTabTargetEl.innerText = ' 고객관리 (추천 ' + crmCount + '명)';
+                } else {
+                    crmCount = crmCustomerList.filter(c => {
+                        const p = String(c.phone || '').replace(/[^0-9]/g, '');
+                        return !localBlacklist.includes(p);
+                    }).length;
+                    rTabTargetEl.innerText = ' 고객관리 (' + crmCount + '명)';
+                }
+                rTabAllEl.innerText = ' 연락처 고객 (' + contactsCount + '명)';
             }
 
             // 메뉴 변경 시 이전 선택 초기화
@@ -1914,7 +1915,7 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
         // GroupManager 페이지 변경 콜백 등록
         GroupManager.init(function(newPage) {
             const isAllTab = document.querySelector('.r-tab.active') && document.querySelector('.r-tab.active').id === 'r-tab-all';
-            updateCustomerList(isAllTab ? 'all' : 'targeted', currentLeftMenuTitle);
+            updateCustomerList(isAllTab ? 'contacts' : 'crm', currentLeftMenuTitle);
         });
 
         async function fetchDailyNews() {

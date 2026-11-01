@@ -59,7 +59,18 @@ const TargetEngine = (function() {
 
         if (birthMonth >= 1 && birthMonth <= 12 && birthDay >= 1 && birthDay <= 31) {
             const age = birthYear ? (curYear - birthYear) : null;
-            return {
+                function isTargetingMenu(menuTitle) {
+        if (!menuTitle) return false;
+        const nonTargeting = ['데일리뉴스', '보장분석', '안부', '라이프케어', '내 PC 콘텐츠 등록'];
+        for (let nt of nonTargeting) {
+            if (menuTitle.includes(nt)) return false;
+        }
+        const targetingKeywords = ['생일', '상령일', '만기', '연금', '간병', '입원', '치료비', '3대질병', '암', '운전자'];
+        return targetingKeywords.some(k => menuTitle.includes(k));
+    }
+
+    return {
+        isTargetingMenu: isTargetingMenu,
                 year: birthYear,
                 month: birthMonth,
                 day: birthDay,
@@ -355,7 +366,18 @@ const TargetEngine = (function() {
         return { match: true, badge: '추천 대상', badgeColor: '#475569', badgeBg: '#f8fafc', priority: 1 };
     }
 
+    function isTargetingMenu(menuTitle) {
+        if (!menuTitle) return false;
+        const nonTargeting = ['데일리뉴스', '보장분석', '안부', '라이프케어', '내 PC 콘텐츠 등록'];
+        for (let nt of nonTargeting) {
+            if (menuTitle.includes(nt)) return false;
+        }
+        const targetingKeywords = ['생일', '상령일', '만기', '연금', '간병', '입원', '치료비', '3대질병', '암', '운전자'];
+        return targetingKeywords.some(k => menuTitle.includes(k));
+    }
+
     return {
+        isTargetingMenu: isTargetingMenu,
         parseClientBirthday: parseClientBirthday,
         parseDateString: parseDateString,
         extractAllClientContracts: extractAllClientContracts,

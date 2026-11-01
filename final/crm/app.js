@@ -1480,6 +1480,15 @@ initYearFilterOptions();
 initClientDatalist();
 updateQuickFilterCounts();
 renderTable();
+try {
+    localStorage.setItem('weracle_crm_cached_data', JSON.stringify(globalCustomerData));
+} catch(e) {}
+if (window.parent && window.parent !== window) {
+    try {
+        window.parent.globalCustomerData = globalCustomerData;
+        window.parent.postMessage({ type: 'CRM_DATA_SYNC', data: globalCustomerData }, '*');
+    } catch(e) {}
+}
 } catch (err) {
 console.error("CRM Data load error:", err);
 if (err.status === 401) {

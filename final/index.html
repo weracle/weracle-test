@@ -3216,7 +3216,7 @@ transform: translateY(-2px);
                     <div class="nav-col-sub">
                         <ul>
                             <li><a onclick="loadSubPage('브랜딩', '위라클 브랜딩', 'branding/branding.html')">위라클 브랜딩</a></li>
-                            <li><a onclick="loadSubPage('브랜딩', '디지털 명함', 'card/card.html')">디지털 명함</a></li>
+                            <li><a onclick="loadSubPage('브랜딩', '디지털 명함', 'card/card_edit.html')">디지털 명함</a></li>
                             <li><a onclick="loadSubPage('브랜딩', '브랜딩 마켓', 'branding/market.html')">브랜딩 마켓</a></li>
                         </ul>
                     </div>
@@ -3390,7 +3390,7 @@ transform: translateY(-2px);
                     <span>위라클 브랜딩</span>
                     <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </a>
-                <a onclick="loadSubPage('브랜딩', '디지털 명함', 'card/card.html')">
+                <a onclick="loadSubPage('브랜딩', '디지털 명함', 'card/card_edit.html')">
                     <span>디지털 명함</span>
                     <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </a>
@@ -3626,7 +3626,7 @@ function updatePopbillMenu(element) {
         '고객관리': [{name:'고객관리', href:'crm/crm_test.html'}, {name:'보험금 청구', href:'claim/claim.html'}, {name:'언더라이팅', href:'underwriting/underwriting.html'}, {name:'숨은보험금찾기', href:'hiddenclaim/hiddenclaim.html'}],
         '보험인사이트': [{name:'영업 소식지', href:'insight/insight_news_v4.html?v=V20261006_4'}, {name:'한장 비교표', href:'insight/insight_compare_v2.html?v=V20261006_2'}, {name:'보험 영상', href:'insight/video.html'}],
         '영업전략': [{name:'타겟 관리', href:'strategy/target_test.html'}, {name:'전략 플랜', href:'strategy/strategy_plan.html'}, {name:'보장 분석', href:'branding/pdf_p.html'}, {name:'데일리 뉴스', href:'branding/dailynews.html'}],
-        '브랜딩': [{name:'위라클 브랜딩', href:'branding/branding.html'}, {name:'디지털 명함', href:'card/card.html'}, {name:'브랜딩 마켓', href:'branding/market.html'}],
+        '브랜딩': [{name:'위라클 브랜딩', href:'branding/branding.html'}, {name:'디지털 명함', href:'card/card_edit.html'}, {name:'브랜딩 마켓', href:'branding/market.html'}],
         '커뮤니티': [],
         '위라클': [{name:'파트너스', href:'management/management.html'}, {name:'광고관리', href:'management/management.html?tab=ad'}],
         '구독서비스': [{name:'구독 플랜', href:'subscription/subscription.html'}, {name:'결제/구독 관리', href:'subscription/subscription.html'}]
@@ -4360,9 +4360,23 @@ async function checkSession() {
                     profile = newProfileData;
                 }
             }
+            const meta = window.currentUser ? (window.currentUser.user_metadata || {}) : {};
+            if (profile) {
+                profile.phone = profile.phone || meta.phone || localStorage.getItem('user_phone_' + window.currentUser?.id) || '';
+                profile.name = profile.name || meta.name || '';
+                profile.company = profile.company || meta.company || '';
+                profile.position = profile.position || meta.position || '';
+                profile.nickname = profile.nickname || meta.nickname || '';
+            }
             window.currentProfile = profile;
             
-            if(profile && !profile.phone && profile.user_grade !== 'manager' && profile.user_grade !== 'admin') {
+            // 기기 등록 자동 동기화 (최대 3대)
+            if (window.currentUser && typeof syncUserDeviceRegistration === 'function') {
+                syncUserDeviceRegistration(window.currentUser);
+            }
+            
+            const isDone = (profile && profile.phone) || (meta && meta.phone) || (meta && meta.onboarding_done) || (window.currentUser && localStorage.getItem('onboarding_done_' + window.currentUser.id));
+            if(!isDone && profile && profile.user_grade !== 'manager' && profile.user_grade !== 'admin') {
                 document.getElementById('w-onboarding-modal').style.display = 'flex';
             }
             
@@ -5143,6 +5157,61 @@ window.openDynamicList = function(type, val) {
     </div>
 
     <script>
+    // 기기 지문 및 등록 관리 함수 (최대 3대)
+    function syncUserDeviceRegistration(user) {
+        if (!user) return;
+        try {
+            let devId = localStorage.getItem('weracle_device_id');
+            if (!devId) {
+                devId = 'dev_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+                localStorage.setItem('weracle_device_id', devId);
+            }
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const isMac = /Macintosh|Mac OS X/i.test(navigator.userAgent);
+            let devType = isMobile ? '스마트폰' : (isMac ? 'Mac/노트북' : 'Windows PC');
+            let devName = devType + ' (' + (navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Browser') + ')';
+            
+            let devList = [];
+            try {
+                const stored = localStorage.getItem('weracle_user_devices_' + user.id);
+                if (stored) devList = JSON.parse(stored);
+            } catch(e) {}
+            
+            if (!Array.isArray(devList) || devList.length === 0) {
+                const metaDev = user.user_metadata?.registered_devices;
+                if (Array.isArray(metaDev) && metaDev.length > 0) devList = metaDev;
+            }
+            
+            const existingIdx = devList.findIndex(d => d.id === devId);
+            const nowStr = new Date().toLocaleDateString('ko-KR');
+            if (existingIdx !== -1) {
+                devList[existingIdx].last_login = nowStr;
+                devList[existingIdx].is_current = true;
+            } else {
+                if (devList.length < 3) {
+                    devList.push({
+                        id: devId,
+                        name: devName,
+                        type: devType,
+                        registered_at: nowStr,
+                        last_login: nowStr,
+                        is_current: true
+                    });
+                }
+            }
+            
+            devList.forEach(d => { d.is_current = (d.id === devId); });
+            localStorage.setItem('weracle_user_devices_' + user.id, JSON.stringify(devList));
+            
+            if (window.sb) {
+                window.sb.auth.updateUser({ data: { registered_devices: devList } }).catch(() => {});
+            }
+        } catch(err) {
+            console.warn('Device sync error:', err);
+        }
+    }
+    window.syncUserDeviceRegistration = syncUserDeviceRegistration;
+
     async function submitOnboarding() {
         const name = document.getElementById('w-onboarding-name').value.trim();
         const company = document.getElementById('w-onboarding-company').value.trim();
@@ -5172,17 +5241,18 @@ window.openDynamicList = function(type, val) {
 
             // 1. Supabase profiles 테이블 업데이트
             try {
-                await window.sb.from('profiles').update(updatePayload).eq('id', user.id);
-            } catch(e) {
-                console.warn('profiles update non-fatal:', e);
-                // 혹시 DB 컬럼이 일부 없더라도 필수 컬럼만 재시도
-                try {
+                const { error: pErr } = await window.sb.from('profiles').update(updatePayload).eq('id', user.id);
+                if (pErr) {
+                    console.warn('profiles update full payload notice:', pErr.message);
+                    // 혹시 DB 컬럼(name, position 등)이 없더라도 기본 컬럼으로 재시도
                     await window.sb.from('profiles').update({
                         phone: phone,
                         company: company,
                         nickname: nickname
                     }).eq('id', user.id);
-                } catch(e2) {}
+                }
+            } catch(e) {
+                console.warn('profiles update non-fatal:', e);
             }
 
             // 2. Supabase auth user_metadata에 JSON 데이터 안전 동시 백업
@@ -5193,20 +5263,32 @@ window.openDynamicList = function(type, val) {
                         company: company,
                         position: position,
                         phone: phone,
-                        nickname: nickname
+                        nickname: nickname,
+                        onboarding_done: true
                     }
                 });
             } catch(e) {}
 
-            // 3. 로컬 프로필 객체 및 캐시 즉시 갱신
+            // 3. 로컬 스토리지 및 캐시 영구 저장
+            try {
+                localStorage.setItem('onboarding_done_' + user.id, 'true');
+                localStorage.setItem('user_phone_' + user.id, phone);
+            } catch(e) {}
+
             if (window.currentProfile) {
                 Object.assign(window.currentProfile, updatePayload);
+                window.currentProfile.onboarding_done = true;
             } else {
-                window.currentProfile = updatePayload;
+                window.currentProfile = Object.assign({ onboarding_done: true }, updatePayload);
             }
             try {
                 localStorage.setItem('cached_profile', JSON.stringify(window.currentProfile));
             } catch(e) {}
+
+            // 기기 등록
+            if (typeof syncUserDeviceRegistration === 'function') {
+                syncUserDeviceRegistration(user);
+            }
 
             document.getElementById('w-onboarding-modal').style.display = 'none';
             alert(`${name} ${position}님, 프로필 등록이 완료되었습니다. 워라클에 오신 것을 환영합니다!`);
@@ -5579,7 +5661,7 @@ window.openDynamicList = function(type, val) {
                         <span>위라클 브랜딩</span>
                         <span style="color:#94a3b8;">→</span>
                     </a>
-                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('브랜딩', '디지털 명함', 'card/card.html');">
+                    <a class="mobile-sub-btn" onclick="toggleMobileFullMenu(false); loadSubPage('브랜딩', '디지털 명함', 'card/card_edit.html');">
                         <span>디지털 명함</span>
                         <span style="color:#94a3b8;">→</span>
                     </a>

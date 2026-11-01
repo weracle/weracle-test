@@ -44,95 +44,41 @@ const GroupManager = (function() {
     function renderGroupPaginationHtml() {
         const total = currentFilteredList.length;
         if (total <= ITEMS_PER_GROUP) {
-            // 100명 이하일 경우: 불필요한 그룹 탭을 숨김
+            // 100명 이하일 경우: 불필요한 그룹 선택창을 숨김
             return '';
         }
 
         const totalPages = Math.ceil(total / ITEMS_PER_GROUP);
-        let html = '<div class="group-control-box" style="width: 100%; display: flex; flex-direction: column; gap: 5px; padding: 4px 0 8px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px;">';
+        const prevDisabled = (currentGroupPage === 1);
+        const nextDisabled = (currentGroupPage === totalPages);
 
-        if (totalPages <= 5) {
-            // [5그룹 이하: 컴팩트 칩 탭]
-            html += '<div style="display: flex; gap: 6px; overflow-x: auto; padding: 2px 0; align-items: center;">';
-            for (let i = 1; i <= totalPages; i++) {
-                const startNum = (i - 1) * ITEMS_PER_GROUP + 1;
-                const endNum = Math.min(i * ITEMS_PER_GROUP, total);
-                const isActive = (i === currentGroupPage);
-                const chipStyle = isActive 
-                    ? 'background: #0284c7; color: #ffffff; border: 1.5px solid #0284c7; font-weight: 800; box-shadow: 0 2px 6px rgba(2,132,199,0.25);'
-                    : 'background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-weight: 600;';
+        let html = `
+        <div class="group-control-box" style="width: 100%; display: flex; align-items: center; gap: 6px; padding: 4px 0 8px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px;">
+            <button type="button" onclick="GroupManager.changeGroupPage(${currentGroupPage - 1})" 
+                ${prevDisabled ? 'disabled style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #cbd5e1; cursor: default; display: flex; align-items: center; justify-content: center; font-size: 11px;"' : 'style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; transition: all 0.15s;"'}>
+                ◀
+            </button>
 
-                html += `<button type="button" onclick="GroupManager.changeGroupPage(${i})" 
-                    style="flex-shrink: 0; padding: 4px 10px; border-radius: 8px; font-size: 11.5px; cursor: pointer; transition: all 0.15s; ${chipStyle}">
-                    ${i}그룹 (${startNum}~${endNum}명)
-                </button>`;
-            }
-            html += '</div>';
-        } else {
-            // [6그룹 이상 ~ 40그룹+: 스마트 네비게이션 + 10단위 대분류 탭]
-            
-            // 1. 상단 퀵 셀렉터 (이전 / 드롭다운 / 다음)
-            html += '<div style="display: flex; align-items: center; gap: 5px; width: 100%;">';
-            
-            const prevDisabled = (currentGroupPage === 1);
-            html += `<button type="button" onclick="GroupManager.changeGroupPage(${currentGroupPage - 1})" ${prevDisabled ? 'disabled style="width: 28px; height: 28px; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; color: #cbd5e1; cursor: default; display: flex; align-items: center; justify-content: center; font-size: 11px;"' : 'style="width: 28px; height: 28px; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;"'}>◀</button>`;
+            <select onchange="GroupManager.changeGroupPage(parseInt(this.value, 10))" 
+                style="flex: 1; height: 30px; font-size: 12.5px; font-weight: 700; color: #1e293b; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 10px; cursor: pointer; outline: none; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        `;
 
-            html += '<select onchange="GroupManager.changeGroupPage(parseInt(this.value, 10))" style="flex: 1; height: 28px; font-size: 11.5px; font-weight: 700; color: #1e293b; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; cursor: pointer; outline: none;">';
-            for (let p = 1; p <= totalPages; p++) {
-                const s = (p - 1) * ITEMS_PER_GROUP + 1;
-                const e = Math.min(p * ITEMS_PER_GROUP, total);
-                html += `<option value="${p}" ${p === currentGroupPage ? 'selected' : ''}>${p}그룹 (${s.toLocaleString()}~${e.toLocaleString()}명) / 총 ${totalPages}그룹</option>`;
-            }
-            html += '</select>';
-
-            const nextDisabled = (currentGroupPage === totalPages);
-            html += `<button type="button" onclick="GroupManager.changeGroupPage(${currentGroupPage + 1})" ${nextDisabled ? 'disabled style="width: 28px; height: 28px; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; color: #cbd5e1; cursor: default; display: flex; align-items: center; justify-content: center; font-size: 11px;"' : 'style="width: 28px; height: 28px; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;"'}>▶</button>`;
-            html += '</div>';
-
-            // 2. 대단위 탭 (10그룹 단위 세그먼트: 1~10그룹, 11~20그룹...)
-            if (totalPages > 10) {
-                const currentTier = Math.floor((currentGroupPage - 1) / 10);
-                html += '<div style="display: flex; gap: 4px; overflow-x: auto; padding: 2px 0;">';
-                const totalTiers = Math.ceil(totalPages / 10);
-                for (let t = 0; t < totalTiers; t++) {
-                    const tStart = t * 10 + 1;
-                    const tEnd = Math.min((t + 1) * 10, totalPages);
-                    const isTierActive = (t === currentTier);
-                    const tierStyle = isTierActive 
-                        ? 'background: #0f172a; color: #ffffff; border: 1px solid #0f172a;'
-                        : 'background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;';
-                    html += `<button type="button" onclick="GroupManager.changeGroupPage(${tStart})" style="flex-shrink: 0; padding: 3px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700; cursor: pointer; ${tierStyle}">
-                        ${tStart}~${tEnd}그룹
-                    </button>`;
-                }
-                html += '</div>';
-            }
-
-            // 3. 소단위 세부 그룹 칩스 (현재 대단위 안의 그룹 번호들)
-            let chipStart = 1;
-            let chipEnd = totalPages;
-            if (totalPages > 10) {
-                const currentTier = Math.floor((currentGroupPage - 1) / 10);
-                chipStart = currentTier * 10 + 1;
-                chipEnd = Math.min(chipStart + 9, totalPages);
-            }
-
-            html += '<div style="display: flex; gap: 4px; overflow-x: auto; padding: 2px 0;">';
-            for (let i = chipStart; i <= chipEnd; i++) {
-                const s = (i - 1) * ITEMS_PER_GROUP + 1;
-                const e = Math.min(i * ITEMS_PER_GROUP, total);
-                const isActive = (i === currentGroupPage);
-                const chipStyle = isActive
-                    ? 'background: #0284c7; color: #ffffff; border: 1px solid #0284c7; font-weight: 800; box-shadow: 0 2px 6px rgba(2,132,199,0.25);'
-                    : 'background: #ffffff; color: #334155; border: 1px solid #cbd5e1; font-weight: 600;';
-                html += `<button type="button" onclick="GroupManager.changeGroupPage(${i})" title="${s.toLocaleString()}~${e.toLocaleString()}명" style="flex-shrink: 0; padding: 3px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.15s; ${chipStyle}">
-                    ${i}그룹
-                </button>`;
-            }
-            html += '</div>';
+        for (let p = 1; p <= totalPages; p++) {
+            const s = (p - 1) * ITEMS_PER_GROUP + 1;
+            const e = Math.min(p * ITEMS_PER_GROUP, total);
+            html += `<option value="${p}" ${p === currentGroupPage ? 'selected' : ''}>${p}그룹 (${s.toLocaleString()}~${e.toLocaleString()}명) / 총 ${totalPages}그룹</option>`;
         }
 
-        html += '</div>';
+        html += `
+            </select>
+
+            <button type="button" onclick="GroupManager.changeGroupPage(${currentGroupPage + 1})" 
+                ${nextDisabled ? 'disabled style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #cbd5e1; cursor: default; display: flex; align-items: center; justify-content: center; font-size: 11px;"' : 'style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; transition: all 0.15s;"'}>
+                ▶
+            </button>
+        </div>
+        `;
+
         return html;
     }
 

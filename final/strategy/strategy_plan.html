@@ -59,7 +59,7 @@
       .lnb-nested-link:hover { color: var(--primary); background: #f8fafc; }
       .lnb-nested-link.active { color: var(--primary); font-weight: 600; border-left: 3px solid var(--primary); background: transparent; }
     
-      .insight-content { flex: 1; padding: 16px 24px 24px 24px; overflow: hidden; background: transparent; position: relative; min-height: 0; }
+      .insight-content { flex: 1; padding: 12px 24px 20px 24px; overflow: hidden; background: transparent; position: relative; min-height: 0; }
       #insightFrame { display: block; width: 100%; height: 100%; border: none; border-radius: 0; box-shadow: none; background: transparent; }
       
       ::-webkit-scrollbar { width: 6px; }
@@ -94,7 +94,7 @@
       /* =========================================
          [기존] 세일즈전략 썸네일 리스트 (1단계)
          ========================================= */
-      .ss-workspace { flex: 1; display: flex; flex-direction: column; padding: 32px 40px; overflow-y: auto; background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.03); min-height: 0; }
+      .ss-workspace { flex: 1; display: flex; flex-direction: column; padding: 20px 24px; overflow-y: auto; background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.03); min-height: 0; }
       #ssListView { display: flex; flex-direction: column; flex: 1; }
       .ss-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
       .ss-title { font-size: 24px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
@@ -329,34 +329,71 @@
       .ss-zoom-next { right: 32px; }
       .ss-zoom-indicator { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; backdrop-filter: blur(4px); z-index: 100001; }
     
-      .top-menu-wrapper { background: #fff; margin: 16px 24px 0 24px; border-radius: 20px; border: 1px solid #e2e8f0; flex-shrink: 0; padding: 20px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); z-index: 10; box-sizing: border-box; }
-      .filter-buttons { display: flex; gap: 10px; overflow-x: auto; }
-      .filter-item { padding: 10px 20px; border-radius: 20px; border: 1px solid #e2e8f0; background: #fff; color: #475569; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-      .filter-item.active { background: #0284c7; color: #fff; border-color: #0284c7; box-shadow: 0 4px 12px rgba(17,63,103,0.2); }
-      .filter-item:hover:not(.active) { background: #f8fafc; border-color: #cbd5e1; }
+      .bento-panel.filter-panel {
+          flex-shrink: 0;
+          box-sizing: border-box;
+      }
+      .theme-tabs { display: flex; gap: 24px; border-bottom: 1px solid #e2e8f0; margin-bottom: 10px; align-items: flex-end; }
+      .t-tab { padding-bottom: 8px; cursor: pointer; font-size: 16px; font-weight: 700; color: #64748b; border-bottom: 3px solid transparent; transition: 0.2s; white-space: nowrap; user-select: none; }
+      .t-tab:hover:not(.active) { color: #0284c7; }
+      .t-tab.active { color: #0284c7; border-bottom: 3px solid #0284c7; font-weight: 800; }
       
-      /* 하위 탭 디자인 타겟관리와 동일하게 */
-      .pill-tab { padding: 8px 20px; font-size: 15px; font-weight: 700; border-radius: 20px; border: 1px solid var(--border); background: #f8fafc; color: #475569; cursor: pointer; transition: all 0.2s; letter-spacing: -0.3px; }
-      .pill-tab:hover { background: #f0f4f8; color: var(--primary); }
+      /* 하위 알약 탭 디자인: 타겟관리와 완벽히 동일 */
+      .pill-tab { padding: 6px 16px; font-size: 13.5px; font-weight: 700; border-radius: 20px; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; cursor: pointer; transition: all 0.2s; letter-spacing: -0.3px; }
+      .pill-tab:hover { background: #f0f4f8; color: #0284c7; border-color: #cbd5e1; }
       .pill-tab.active { background: #ffffff; color: #0284c7; border-color: #0284c7; font-weight: 800; box-shadow: 0 4px 12px rgba(17,63,103,0.06); }
 </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- [기존] 좌측 LNB 및 한장비교표 전체 항목 완벽 복원 -->
-    <div class="top-menu-wrapper" style="display: flex; align-items: center; gap: 32px;">
-    <div class="t-tab active" style="font-size: 16px; font-weight: 800; color: #0284c7; padding-bottom: 8px; border-bottom: 3px solid #0284c7; margin: 0; letter-spacing: -0.5px; cursor: pointer;">세일즈전략</div>
-    <div class="filter-buttons" style="display: flex; gap: 10px;">
-        <button class="filter-item sales-link active" data-gid="779884536">보장성</button>
-        <button class="filter-item sales-link" data-gid="1628117194">손보전략</button>
-        <button class="filter-item sales-link" data-gid="1751391635">생보전략</button>
-        <button class="filter-item sales-link" data-gid="185061505">보장성기타</button>
+    <!-- [개편] 타겟관리와 완벽히 통일된 초슬림 Bento Filter Panel (중앙 확대 검색창) -->
+    <div class="bento-panel filter-panel" style="margin: 14px 24px 0 24px; padding: 12px 24px 14px; background: #fff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; flex-shrink: 0;">
+        <!-- 1행: 대메뉴 탭 (좌측) + 중앙 확대 스마트 검색창 + 우측 월 선택 -->
+        <div class="theme-tabs" style="display: flex; gap: 20px; border-bottom: 1px solid #e2e8f0; margin-bottom: 12px; align-items: flex-end; justify-content: space-between;">
+            <!-- 좌측 대메뉴 탭 -->
+            <div style="display: flex; gap: 20px; align-items: flex-end; flex-shrink: 0;">
+                <div class="t-tab filter-item sales-link active" data-gid="779884536">보장성</div>
+                <div class="t-tab filter-item sales-link" data-gid="1628117194">손보전략</div>
+                <div class="t-tab filter-item sales-link" data-gid="1751391635">생보전략</div>
+                <div class="t-tab filter-item sales-link" data-gid="185061505">보장성기타</div>
+            </div>
+
+            <!-- [요청 반영] 중앙: 조금 더 크고 돋보이는 스마트 검색창 -->
+            <div class="ss-center-search" style="flex: 1; max-width: 480px; margin: 0 20px 6px 20px; position: relative;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 15px; color: #0284c7;"></i>
+                <input type="text" id="ssMainSearchInput" placeholder="어떤 보험 콘텐츠를 찾으시나요? (예: 암보험, 간병인)" onkeyup="applySsFilters()" style="width: 100%; padding: 9px 18px 9px 42px; border-radius: 25px; border: 1.5px solid #0284c7; font-size: 14px; font-weight: 600; color: #1e293b; outline: none; transition: all 0.2s; background: #ffffff; box-sizing: border-box; box-shadow: 0 2px 8px rgba(2,132,199,0.06);" onfocus="this.style.borderColor='#0284c7'; this.style.boxShadow='0 0 0 4px rgba(2,132,199,0.12)';" onblur="this.style.boxShadow='0 2px 8px rgba(2,132,199,0.06)';">
+            </div>
+
+            <!-- 우측 월 선택 셀렉터 -->
+            <div style="margin-bottom: 6px; flex-shrink: 0;">
+                <select class="month-selector" id="ssMonthSelector" onchange="applySsFilters()" style="padding: 7px 14px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-size: 13px; font-weight: 700; color: #334155; background: #f8fafc; outline: none; cursor: pointer;"></select>
+            </div>
+        </div>
+
+        <!-- 2행: 하위 카테고리 알약 탭 (전폭 활용) -->
+        <div style="display: flex; align-items: center; justify-content: flex-start;">
+            <div class="ss-sub-tabs" id="ssSubTabContainer" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;"></div>
+            <div id="ssMainTitle" style="display: none;"></div>
+        </div>
+
+        <script>
+            (function() {
+                const selector = document.getElementById('ssMonthSelector');
+                if (!selector) return;
+                const now = new Date();
+                for (let i = 0; i < 12; i++) {
+                    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const option = document.createElement('option');
+                    option.value = y + "-" + m;
+                    option.text = y + "년 " + (d.getMonth() + 1) + "월";
+                    if (i === 0) option.selected = true;
+                    selector.appendChild(option);
+                }
+            })();
+        </script>
     </div>
-    <div class="ss-top-search" style="position: relative; flex: 1; max-width: 800px; margin-left: 32px;">
-        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 26px; top: 50%; transform: translateY(-50%); font-size: 26px; color: #0284c7;"></i>
-        <input type="text" id="ssMainSearchInput" placeholder="어떤 보험 콘텐츠를 찾으시나요? (예: 암보험, 삼성화재, 간병인)" onkeyup="applySsFilters()" style="width: 100%; padding: 18px 24px 18px 68px; border-radius: 30px; border: 2px solid #0284c7; font-size: 17px; font-weight: 700; color: #1e293b; outline: none; transition: all 0.2s; background: #fff; box-sizing: border-box; box-shadow: 0 4px 12px rgba(2,132,199,0.05);" onfocus="this.style.boxShadow='0 6px 20px rgba(2,132,199,0.15)';" onblur="this.style.boxShadow='0 4px 12px rgba(2,132,199,0.05)';">
-    </div>
-</div>
     
     <main class="insight-content">
         <!-- 기존 iframe / studioContainer (숨김) -->
@@ -369,27 +406,7 @@
                 
                 <!-- 1단계: 썸네일 리스트 -->
                 <div id="ssListView" style="display: flex; flex-direction: column; flex: 1;">
-                    <div class="ss-header" style="justify-content: flex-start; gap: 24px; border-bottom: 2px solid var(--border); padding-bottom: 16px;">
-    <div class="ss-title" id="ssMainTitle" style="font-size: 20px; flex-shrink: 0;">보장성 <span style="font-size: 16px; color: #86868b; font-weight: 600;">최신콘텐츠</span></div>
-    <div class="ss-sub-tabs" id="ssSubTabContainer" style="display: flex; flex: 1; gap: 10px; margin: 0; padding: 0; border: none; align-items: center;"></div>
-    <select class="month-selector" id="ssMonthSelector" onchange="applySsFilters()" style="flex-shrink: 0; outline: none;"></select>
-    <script>
-        (function() {
-            const selector = document.getElementById('ssMonthSelector');
-            const now = new Date();
-            for (let i = 0; i < 12; i++) {
-                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                const y = d.getFullYear();
-                const m = String(d.getMonth() + 1).padStart(2, '0');
-                const option = document.createElement('option');
-                option.value = y + "-" + m;
-                option.text = y + "년 " + (d.getMonth() + 1) + "월";
-                if (i === 0) option.selected = true;
-                selector.appendChild(option);
-            }
-        })();
-    </script>
-</div>
+                    
                     <div class="ss-grid" id="ssContentGrid"></div>
                     <div class="ss-pagination" id="ssPagination"></div>
                 </div>
@@ -1242,10 +1259,10 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
 
                       // [요청 반영] 다양한 배경색에서도 로고가 또렷하게 보이도록 은은한 화이트 반투명 백드롭 적용
                       ctx.save();
-                      ctx.shadowColor = 'rgba(0, 0, 0, 0.18)';
+                      ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
                       ctx.shadowBlur = Math.max(6, img.height * 0.012);
                       ctx.shadowOffsetY = Math.max(2, img.height * 0.004);
-                      ctx.fillStyle = 'rgba(255, 255, 255, 0.90)'; // 부드러운 화이트 반투명
+                      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)'; // 부드러운 화이트 반투명
                       ctx.beginPath();
                       if (ctx.roundRect) {
                           ctx.roundRect(boxX, boxY, boxW, boxH, radius);
@@ -1255,7 +1272,7 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
                       ctx.fill();
 
                       // 은은한 외곽선으로 고급스러운 테두리 마감
-                      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+                      ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
                       ctx.lineWidth = Math.max(1, img.height * 0.002);
                       ctx.stroke();
                       ctx.restore();

@@ -842,11 +842,13 @@
         /* 실제 A4 스타일 뷰어 영역 */
         .preview-viewport {
             background: #475569;
-            padding: 24px;
+            padding: 28px 20px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow-x: auto;
+            overflow: hidden;
+            position: relative;
         }
 
         .real-doc-sheet {
@@ -864,6 +866,117 @@
             user-select: none;
             overflow: hidden;
             font-family: 'Malgun Gothic', 'Pretendard', sans-serif;
+        }
+
+        
+        /* 내용 탭 가로 슬라이더 스타일 */
+        .report-slider-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .report-slider-track-wrap {
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            position: relative;
+            border-radius: 4px;
+        }
+
+        .report-slider-track {
+            display: flex;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 300%;
+        }
+
+        .report-slide {
+            width: 33.3333%;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slider-arrow {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(0,0,0,0.08);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0f172a;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+        .slider-arrow:hover {
+            background: #ffffff;
+            transform: scale(1.1);
+            color: #0284c7;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+        }
+
+        .slider-pagination-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+        }
+        .slider-dots {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .slider-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.35);
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .slider-dot.active {
+            background: #38bdf8;
+            width: 24px;
+            border-radius: 12px;
+        }
+        .slider-page-counter {
+            font-size: 13px;
+            font-weight: 700;
+            color: #f1f5f9;
+            letter-spacing: 0.5px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .preview-img-sheet {
+            padding: 0 !important;
+            background: #ffffff !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.35);
+        }
+
+        .sample-report-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: 4px;
+            background: #ffffff;
         }
 
         /* 1. 맞춤형 표지 (Cover) 실사 뷰 */
@@ -1442,7 +1555,7 @@
                         <span>보장 브랜딩 완성본 실제 예시</span>
                     </div>
 
-                    <!-- 탭 스위처: 표지와 본문 리포트 전환 -->
+                    <!-- 탭 스위처: 2개 탭 (맞춤 표지 vs KB 분석표) -->
                     <div class="preview-tab-switcher">
                         <button type="button" class="preview-tab-btn active" id="btnTabCover" onclick="switchPreviewTab('cover')">
                             <i class="fa-solid fa-book-open"></i> 맞춤 표지
@@ -1456,192 +1569,53 @@
                 <!-- A4 실사 리포트 뷰어 영역 -->
                 <div class="preview-viewport">
                     
-                    <!-- [탭 1] 나만의 맞춤 브랜딩 표지 (실제 Cover 생성 알고리즘 결과) -->
-                    <div class="real-doc-sheet" id="tabCoverDoc">
-                        <div class="cover-blob-cyan"></div>
-                        <div class="cover-blob-navy"></div>
-                        
-                        <div class="cover-glass-card">
-                            <!-- 로고 영역 -->
-                            <div class="cover-top-logo">
-                                <div class="cover-logo-pill">
-                                    <span class="badge-mybrand">MY BRAND</span>
-                                    <span class="brand-name">WERACLE PARTNERS</span>
-                                </div>
-                            </div>
-
-                            <!-- 중앙 타이틀 & 고객 메시지 -->
-                            <div class="cover-center-content">
-                                <div class="cover-report-title">보장분석 보고서</div>
-                                <div class="cover-title-line"></div>
-                                <div class="cover-client-greeting">
-                                    <div class="cover-client-name">홍길동 <span style="font-size:16px; color:#1e293b; font-weight:600;">님을 위해</span></div>
-                                    <div class="cover-client-sub">꼼꼼하게 준비했습니다.</div>
-                                </div>
-
-                                <!-- 4개 체크리스트 메모지 -->
-                                <div class="cover-checklist-grid">
-                                    <div class="checklist-memo">
-                                        <i class="fa-solid fa-circle-check"></i>
-                                        <span>전체 계약리스트 분석</span>
-                                    </div>
-                                    <div class="checklist-memo">
-                                        <i class="fa-solid fa-circle-check"></i>
-                                        <span>상품별 가입담보 상세</span>
-                                    </div>
-                                    <div class="checklist-memo">
-                                        <i class="fa-solid fa-circle-check"></i>
-                                        <span>전체 담보 종합 진단</span>
-                                    </div>
-                                    <div class="checklist-memo">
-                                        <i class="fa-solid fa-circle-check"></i>
-                                        <span>상품별 진단 현황</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 하단 담당자 바 & 안내문구 -->
-                            <div class="cover-bottom-bar">
-                                <div class="cover-agent-capsule">
-                                    담당자: 홍길동 팀장 &nbsp;&nbsp;|&nbsp;&nbsp; 연락처: 010-1234-5678
-                                </div>
-                                <p class="cover-disclaimer">
-                                    본 자료는 한국신용정보원의 보험신용정보조회서를 바탕으로 작성된 고객 이해를 돕기 위한 참고용 리포트입니다.
-                                </p>
-                            </div>
-                        </div>
+                    <!-- [탭 1: 표지] 단독 1장 표지 (보장분석1.jpg) -->
+                    <div class="real-doc-sheet preview-img-sheet" id="tabCoverDoc" style="display: flex;">
+                        <img src="images/보장분석1.jpg" alt="맞춤 표지" class="sample-report-img">
                     </div>
 
-                    <!-- [탭 2] KB손해보험 본문 리포트 실제 가공본 -->
-                    <div class="real-doc-sheet" id="tabReportDoc">
-                        <!-- 실제 문서 헤더 -->
-                        <div class="real-kb-header">
-                            <div class="kb-header-left">
-                                <h3>보장분석 종합진단 결과지</h3>
-                                <p>고객명: <b>홍길동</b> (1985.04.12) &nbsp;|&nbsp; 분석기준일: 2026.11.01</p>
+                    <!-- [탭 2: 내용] 가로 슬라이더 3장 (1P 표지 제외, 2P~4P 내용만) -->
+                    <div id="tabReportDoc" style="display: none; flex-direction: column; align-items: center; width: 100%;">
+                        <div class="report-slider-container">
+                            <button type="button" class="slider-arrow arrow-left" onclick="slideReport(-1)" aria-label="이전 페이지">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            
+                            <div class="report-slider-track-wrap">
+                                <div class="report-slider-track" id="reportSliderTrack">
+                                    <div class="report-slide">
+                                        <div class="real-doc-sheet preview-img-sheet">
+                                            <img src="images/보장분석3.png" alt="전체 계약리스트" class="sample-report-img">
+                                        </div>
+                                    </div>
+                                    <div class="report-slide">
+                                        <div class="real-doc-sheet preview-img-sheet">
+                                            <img src="images/보장분석4.png" alt="상품별 가입담보상세" class="sample-report-img">
+                                        </div>
+                                    </div>
+                                    <div class="report-slide">
+                                        <div class="real-doc-sheet preview-img-sheet">
+                                            <img src="images/보장분석2.png" alt="상품별 진단현황" class="sample-report-img">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="kb-header-right-logo">
-                                <span class="branding-tag"><i class="fa-solid fa-wand-magic-sparkles"></i> 설계사 로고 자동 삽입</span>
-                                <span class="brand-title">WERACLE LAB</span>
-                            </div>
+
+                            <button type="button" class="slider-arrow arrow-right" onclick="slideReport(1)" aria-label="다음 페이지">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
                         </div>
 
-                        <!-- 섹션 1: 전체계약리스트 -->
-                        <div class="kb-section-wrap">
-                            <div class="kb-section-title-bar">
-                                <div class="kb-navy-bar"></div>
-                                <span class="kb-title-cyan-marker">전체계약리스트</span>
+                        <!-- 슬라이더 인디케이터 (페이지 번호 및 닷) -->
+                        <div class="slider-pagination-wrap">
+                            <div class="slider-dots" id="sliderDots">
+                                <span class="slider-dot active" onclick="goToReportSlide(0)"></span>
+                                <span class="slider-dot" onclick="goToReportSlide(1)"></span>
+                                <span class="slider-dot" onclick="goToReportSlide(2)"></span>
                             </div>
-                            <table class="kb-real-table">
-                                <thead>
-                                    <tr>
-                                        <th>구분</th>
-                                        <th>보험회사</th>
-                                        <th>증권번호</th>
-                                        <th>상품명</th>
-                                        <th>상태</th>
-                                        <th>월보험료</th>
-                                        <th>진단</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>손보</td>
-                                        <td>KB손해보험</td>
-                                        <td>2022-209***</td>
-                                        <td class="text-left">(무)KB 5.10.10 플러스건강보험</td>
-                                        <td>정상</td>
-                                        <td class="text-right">128,400원</td>
-                                        <td><span class="sym-circle">○ 충분</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>생보</td>
-                                        <td>한화생명</td>
-                                        <td>2019-142***</td>
-                                        <td class="text-left">(무)시그니처 암보험(갱신형)</td>
-                                        <td>정상</td>
-                                        <td class="text-right">45,000원</td>
-                                        <td><span class="sym-tri">△ 부족</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>손보</td>
-                                        <td>DB손해보험</td>
-                                        <td>2021-381***</td>
-                                        <td class="text-left">(무)프로미라이프 참좋은운전자보험</td>
-                                        <td>정상</td>
-                                        <td class="text-right">25,000원</td>
-                                        <td><span class="sym-circle">○ 충분</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div class="kb-table-summary">
-                                <span>총 계약건수: <b>3건</b></span>
-                                <span>합계 월납입보험료: <b style="color:#0284c7;">198,400원</b></span>
-                            </div>
-                        </div>
-
-                        <!-- 섹션 2: 전체담보진단 -->
-                        <div class="kb-section-wrap" style="margin-top: 10px;">
-                            <div class="kb-section-title-bar">
-                                <div class="kb-navy-bar"></div>
-                                <span class="kb-title-cyan-marker">전체담보진단</span>
-                            </div>
-                            <table class="kb-real-table">
-                                <thead>
-                                    <tr>
-                                        <th>분류</th>
-                                        <th>주요 진단 담보명</th>
-                                        <th>가입금액</th>
-                                        <th>권장기준</th>
-                                        <th>진단결과</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>3대진단</td>
-                                        <td class="text-left">일반암 진단비 (유사암제외)</td>
-                                        <td class="text-right">3,000만원</td>
-                                        <td class="text-right">5,000만원</td>
-                                        <td><span class="sym-tri">△ 부족</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>3대진단</td>
-                                        <td class="text-left">뇌혈관질환 진단비</td>
-                                        <td class="text-right">1,000만원</td>
-                                        <td class="text-right">2,000만원</td>
-                                        <td><span class="sym-tri">△ 부족</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>3대진단</td>
-                                        <td class="text-left">허혈성심장질환 진단비</td>
-                                        <td class="text-right">2,000만원</td>
-                                        <td class="text-right">2,000만원</td>
-                                        <td><span class="sym-circle">○ 충분</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>수술/치료</td>
-                                        <td class="text-left">질병 및 상해 종수술비 (1~5종)</td>
-                                        <td class="text-right">300만원</td>
-                                        <td class="text-right">300만원</td>
-                                        <td><span class="sym-circle">○ 충분</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>치료특약</td>
-                                        <td class="text-left">표적항암약물허가치료비</td>
-                                        <td class="text-right" style="color:#e74c3c;">- (미가입)</td>
-                                        <td class="text-right">5,000만원</td>
-                                        <td><span class="sym-cross">✕ 미가입</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- 실제 문서 푸터 -->
-                        <div class="kb-real-disclaimer">
-                            ※ 본 자료는 한국신용정보원의 보험계약 정보를 바탕으로 KB손해보험 전산에서 분석한 자료를 재가공한 맞춤형 리포트입니다. 실제 보장 내역은 해당 보험사의 약관 및 증권을 기준으로 합니다.
+                            <span class="slider-page-counter" id="sliderPageCounter">1 / 3 페이지</span>
                         </div>
                     </div>
-
                 </div>
 
                 <!-- 특징 혜택 불릿 바 -->
@@ -2710,6 +2684,40 @@
 
 <script>
 
+        let currentReportSlide = 0;
+    const totalReportSlides = 3;
+
+    function updateReportSlider() {
+        const track = document.getElementById('reportSliderTrack');
+        const counter = document.getElementById('sliderPageCounter');
+        const dots = document.querySelectorAll('.slider-dot');
+        
+        if (track) {
+            track.style.transform = 'translateX(-' + (currentReportSlide * (100 / totalReportSlides)) + '%)';
+        }
+        
+        dots.forEach((dot, idx) => {
+            if (idx === currentReportSlide) dot.classList.add('active');
+            else dot.classList.remove('active');
+        });
+        
+        if (counter) {
+            counter.textContent = (currentReportSlide + 1) + ' / 3 페이지';
+        }
+    }
+
+    function slideReport(dir) {
+        currentReportSlide += dir;
+        if (currentReportSlide < 0) currentReportSlide = totalReportSlides - 1;
+        if (currentReportSlide >= totalReportSlides) currentReportSlide = 0;
+        updateReportSlider();
+    }
+
+    function goToReportSlide(idx) {
+        currentReportSlide = idx;
+        updateReportSlider();
+    }
+
     function switchPreviewTab(tab) {
         var btnCover = document.getElementById('btnTabCover');
         var btnReport = document.getElementById('btnTabReport');
@@ -2726,9 +2734,9 @@
             btnCover.classList.remove('active');
             docReport.style.display = 'flex';
             docCover.style.display = 'none';
+            updateReportSlider();
         }
     }
-
 </script>
 </body>
 </html>

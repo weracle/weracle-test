@@ -85,7 +85,16 @@
         .header-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; padding-bottom: 16px;}
 
    /* 좌측: 필터 리스트 ( 메뉴 2개 추가를 위한 다이어트 UI) */
-        .filter-list { padding: 4px 0 0; display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; }
+        .filter-list { 
+            padding: 4px 0 0; 
+            display: flex; 
+            flex-direction: row; 
+            gap: 8px; 
+            flex-wrap: wrap; 
+            max-height: 84px; 
+            overflow-y: auto; 
+            scrollbar-width: thin;
+        }
         .filter-item {
             border-radius: 12px; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px;
             cursor: pointer; transition: all 0.2s ease; border: 1.5px solid #e2e8f0; background: #f8fafc;
@@ -702,7 +711,7 @@
     <div class="filter-list"></div>
 
         </div>
-        <div class="content-panel" style="flex: 1; min-height: 0; background: #fff; border-radius: 20px; padding: 16px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center;  overflow: visible; flex: 1 0 auto;">
+        <div class="content-panel" style="flex: 1; min-height: 0; background: #fff; border-radius: 20px; padding: 16px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
             <div class="main-tabs" style="display: none;">
                 <div class="c-tab active" id="tab-target">오늘의 추천 타겟</div>
                 <div class="c-tab" id="tab-product">이달의 추천 상품</div>
@@ -1339,6 +1348,10 @@ function attachFilterEvents() {
 
 const menuTitle = this.querySelector(".filter-title").innerText.trim();
                         currentLeftMenuTitle = menuTitle;
+                        const cp = document.querySelector('.content-panel');
+                        if (cp && typeof cp.scrollIntoView === 'function') {
+                            cp.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
 
                         //  우측 탭을 항상 노출하여 'CRM 고객(타겟)'과 '전체 고객'을 자유롭게 오갈 수 있도록 보장!
                         rightTabsContainer.style.display = 'flex'; 

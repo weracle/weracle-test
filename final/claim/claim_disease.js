@@ -1232,6 +1232,34 @@
                                 sigImg.src = 'data:image/png;base64,' + textToDraw;
                                 await new Promise(r => { sigImg.onload = r; sigImg.onerror = r; });
                                 ctx.drawImage(sigImg, x - 60, y - 30, 120, 60); // 서명을 뱃지 중앙(x, y)에 완벽하게 일치시키고 비율을 맞춤
+                            } else if (f === 'accDetails') {
+                                const maxWidth = Math.max(200, 740 - x);
+                                const lineHeight = 24;
+                                const origFont = ctx.font;
+                                ctx.font = "16px 'Malgun Gothic', 'Pretendard', sans-serif";
+                                
+                                const paragraphs = String(textToDraw).split(/\r?\n/);
+                                let curY = y + 4;
+                                for (let p = 0; p < paragraphs.length; p++) {
+                                    const paragraph = paragraphs[p];
+                                    let currentLine = '';
+                                    for (let c = 0; c < paragraph.length; c++) {
+                                        const char = paragraph[c];
+                                        const testLine = currentLine + char;
+                                        if (ctx.measureText(testLine).width > maxWidth && currentLine.length > 0) {
+                                            ctx.fillText(currentLine, x, curY);
+                                            curY += lineHeight;
+                                            currentLine = char;
+                                        } else {
+                                            currentLine = testLine;
+                                        }
+                                    }
+                                    if (currentLine.length > 0) {
+                                        ctx.fillText(currentLine, x, curY);
+                                        curY += lineHeight;
+                                    }
+                                }
+                                ctx.font = origFont;
                             } else {
                                 ctx.fillText(textToDraw, x, y + 8); // 시각적 중앙을 맞추기 위해 약간 아래로(y+8) 보정
                             }

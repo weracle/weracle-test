@@ -365,6 +365,23 @@
     }
 
     // Render Company Cards (100% object-contain으로 단 1픽셀도 잘리지 않음)
+    // 생보1 / 생보2 / 손보 깃허브 업로드 경로 자동 스마트 매핑
+    const saengbo1Companies = ['ABL생명', 'DB생명', 'KB라이프', 'KDB생명', '교보생명', '농협생명', '동양생명', '라이나생명'];
+
+    function getNewsImagePath(category, companyName, pagePadded) {
+      if (category === '손보') {
+        return `news/손보/${companyName}/${pagePadded}.png`;
+      }
+      if (category === '생보') {
+        if (saengbo1Companies.includes(companyName)) {
+          return `생보1/${companyName}/${pagePadded}.png`;
+        } else {
+          return `생보2/${companyName}/${pagePadded}.png`;
+        }
+      }
+      return `news/${category}/${companyName}/${pagePadded}.png`;
+    }
+
     function renderCards() {
       const grid = document.getElementById('weracleGrid');
       grid.innerHTML = '';
@@ -389,8 +406,8 @@
         card.className = "weracle-card rounded-2xl overflow-hidden cursor-pointer flex flex-col group p-2.5 bg-white";
         card.onclick = () => openSliderModal(comp);
 
-        // 깃허브 실물 이미지 경로
-        const imagePath = `news/${currentCategory}/${comp.name}/01.png`;
+        // 깃허브 업로드 구조에 맞춘 실물 이미지 경로 (손보 / 생보1 / 생보2 자동 인식)
+        const imagePath = getNewsImagePath(currentCategory, comp.name, '01');
 
         card.innerHTML = `
           <!-- 100% PURE CLEAN COVER IMAGE (object-contain으로 완벽하게 온전한 표지 노출) -->
@@ -399,7 +416,7 @@
             <img src="${imagePath}" 
                  alt="${comp.name} 1P 표지" 
                  class="w-full h-full object-contain transition-transform duration-200 group-hover:scale-102"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                 onerror="if (!this.dataset.fallback) { this.dataset.fallback='1'; this.src='news/${currentCategory}/${comp.name}/01.png'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }">
             
             <!-- Fallback Artwork -->
             <div class="w-full h-full p-5 flex-col justify-center items-center text-center text-white/95 select-none pointer-events-none hidden bg-gradient-to-br ${comp.accentBg} rounded-lg">
@@ -502,8 +519,8 @@
 
       document.getElementById('mPageCountBadge').innerText = `${paddedNum} / ${String(total).padStart(2, '0')} PAGE`;
 
-      // Current Image Path
-      const imagePath = `news/${currentCategory}/${activeCompany.name}/${paddedNum}.png`;
+      // Current Image Path (손보 / 생보1 / 생보2 자동 인식)
+      const imagePath = getNewsImagePath(currentCategory, activeCompany.name, paddedNum);
 
       // Update Center Canvas Box (클릭 시 확대 토글)
       const canvas = document.getElementById('mCanvasBox');
@@ -516,7 +533,7 @@
              class="${imgClass}"
              onclick="toggleZoomMode()"
              title="클릭하여 확대/축소"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+             onerror="if (!this.dataset.fallback) { this.dataset.fallback='1'; this.src='news/${currentCategory}/${activeCompany.name}/${paddedNum}.png'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }">
         
         <!-- Fallback when image file is missing -->
         <div class="w-full h-full flex flex-col justify-center items-center text-center text-white/95 p-6 bg-gradient-to-br ${activeCompany.accentBg} hidden rounded-xl">
@@ -542,7 +559,7 @@
         for (let i = 0; i < total; i++) {
           const isActive = (i === currentSlide);
           const pNum = String(i + 1).padStart(2, '0');
-          const thumbPath = `news/${currentCategory}/${activeCompany.name}/${pNum}.png`;
+          const thumbPath = getNewsImagePath(currentCategory, activeCompany.name, pNum);
 
           const pageTitle = (i === 0 ? '표지 (핵심 개정)' : (i === 1 ? '주요 담보 개정' : (i === 2 ? '상품 경쟁력 비교' : (i === 3 ? '인수 기준 완화' : (i === 4 ? '추천 맞춤 플랜' : '영업 시책 및 프로모션')))));
 
@@ -578,7 +595,7 @@
 
     function downloadImage() {
       const paddedNum = String(currentSlide + 1).padStart(2, '0');
-      const imagePath = `news/${currentCategory}/${activeCompany.name}/${paddedNum}.png`;
+      const imagePath = getNewsImagePath(currentCategory, activeCompany.name, paddedNum);
       const a = document.createElement('a');
       a.href = imagePath;
       a.download = `${activeCompany.name}_202611_${paddedNum}.png`;

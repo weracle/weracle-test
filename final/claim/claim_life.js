@@ -1082,9 +1082,28 @@
             const ctx = canvas.getContext('2d');
             
                         const rawFormUrl = String(row[formUrlKey]).trim();
-            // ImgBB 원본은 간헐적 TLS 행/CORS 차단 문제가 있으므로 고속 CDN 프록시를 1차로 로드
-            const cdnProxyUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent(rawFormUrl);
-            
+            const isHttp = rawFormUrl.startsWith('http://') || rawFormUrl.startsWith('https://');
+
+            // 1순위: 사용자가 서버에 직접 업로드한 로컬 양식 파일 최우선 로드
+            const compName = payload.company;
+            const categoryFolder = '3_생명보험';
+            const localCandidateUrls = [
+                `${categoryFolder}/${compName}_P${i}.jpg`,
+                `${categoryFolder}/${compName}_P${i}.png`,
+                `${categoryFolder}/${compName}_P${i}.jpeg`,
+                `./${categoryFolder}/${compName}_P${i}.jpg`,
+                `forms/${categoryFolder}/${compName}_P${i}.jpg`,
+                `/claim/${categoryFolder}/${compName}_P${i}.jpg`,
+                `../claim/${categoryFolder}/${compName}_P${i}.jpg`
+            ];
+
+            if (!isHttp && rawFormUrl) {
+                const cleanPath = rawFormUrl.replace(/^(\.\/|\/)/, '');
+                localCandidateUrls.unshift(rawFormUrl, cleanPath);
+            }
+
+            const uniqueCandidates = [...new Set(localCandidateUrls)];
+
             const img = await new Promise((resolve, reject) => {
                 let resolved = false;
                 const tryResolve = (targetImg, srcLabel) => {
@@ -1095,34 +1114,60 @@
                     }
                 };
 
-                // 1차: Cloudflare 기반 고속 CDN 프록시 로드 (확실한 CORS 헤더 및 캐시)
-                const proxyImg = new Image();
-                proxyImg.crossOrigin = 'Anonymous';
-                proxyImg.onload = () => tryResolve(proxyImg, 'CDN 프록시');
-                proxyImg.onerror = () => loadDirect();
-
-                // 2차: 프록시 실패 시 원본 직접 로드
-                const loadDirect = () => {
+                // 로컬 업로드 파일 먼저 시도
+                let attemptIdx = 0;
+                const tryNextLocal = () => {
                     if (resolved) return;
-                    console.warn('[CDN 프록시 실패, 원본 재시도]', rawFormUrl);
-                    const directImg = new Image();
-                    directImg.crossOrigin = 'Anonymous';
-                    directImg.onload = () => tryResolve(directImg, '원본 서버');
-                    directImg.onerror = () => {
-                        if (!resolved) {
+                    if (attemptIdx >= uniqueCandidates.length) {
+                        // 로컬 파일이 없으면 외부 URL 시도 (있을 경우)
+                        if (isHttp && rawFormUrl) {
+                            tryHttpFallback();
+                        } else {
                             resolved = true;
-                            reject(new Error('양식 이미지를 불러오는데 실패했습니다: ' + rawFormUrl));
+                            reject(new Error('양식 이미지를 찾을 수 없습니다: ' + (compName ? `${compName}_P${i}.jpg` : rawFormUrl)));
                         }
+                        return;
+                    }
+                    const curUrl = uniqueCandidates[attemptIdx++];
+                    const localImg = new Image();
+                    localImg.onload = () => tryResolve(localImg, '로컬 파일: ' + curUrl);
+                    localImg.onerror = () => {
+                        tryNextLocal();
                     };
-                    directImg.src = rawFormUrl;
+                    localImg.src = curUrl;
                 };
 
-                // CDN 프록시가 4초 내 응답 없을 때 원본 병렬 시도
-                setTimeout(() => {
-                    if (!resolved) loadDirect();
-                }, 4000);
+                const tryHttpFallback = () => {
+                    if (resolved) return;
+                    const cdnProxyUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent(rawFormUrl);
+                    const proxyImg = new Image();
+                    proxyImg.crossOrigin = 'Anonymous';
+                    proxyImg.onload = () => tryResolve(proxyImg, 'CDN 프록시');
+                    proxyImg.onerror = () => loadDirect();
 
-                proxyImg.src = cdnProxyUrl;
+                    const loadDirect = () => {
+                        if (resolved) return;
+                        console.warn('[CDN 프록시 실패, 원본 재시도]', rawFormUrl);
+                        const directImg = new Image();
+                        directImg.crossOrigin = 'Anonymous';
+                        directImg.onload = () => tryResolve(directImg, '원본 서버');
+                        directImg.onerror = () => {
+                            if (!resolved) {
+                                resolved = true;
+                                reject(new Error('양식 이미지를 불러오는데 실패했습니다: ' + rawFormUrl));
+                            }
+                        };
+                        directImg.src = rawFormUrl;
+                    };
+
+                    setTimeout(() => {
+                        if (!resolved) loadDirect();
+                    }, 4000);
+
+                    proxyImg.src = cdnProxyUrl;
+                };
+
+                tryNextLocal();
             });
             
             // 기존 좌표계가 800px 기준으로 세팅되었을 확률이 매우 높으므로 800으로 스케일링합니다.

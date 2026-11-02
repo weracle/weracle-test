@@ -1,195 +1,562 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>Weracle Insight - Compare</title>
-        <style>
-      @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
-      :root {
-        --primary: #0284c7;
-        --primary-light: #e0f2fe; /* 아주 옅은 배경용 */
-        --bg-color: #f4f5f8;
-        --border: #e2e8f0;
-      }
-      body { margin: 0; padding: 0; background-color: var(--bg-color); font-family: 'Pretendard', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-      
-      .top-nav-container {
-          background: #ffffff;
-          border-bottom: 1px solid var(--border);
-          padding: 24px 32px 16px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-          z-index: 10;
-      }
-      
-      /* [1단계] 대분류 메가 탭 (시그니처 컬러 밑줄) */
-      .mega-tabs {
-          display: flex;
-          gap: 32px;
-          border-bottom: 2px solid #f1f5f9;
-      }
-      .mega-tab {
-          font-size: 20px;
-          font-weight: 800;
-          color: #94a3b8;
-          padding-bottom: 12px;
-          cursor: pointer;
-          position: relative;
-          transition: color 0.2s;
-      }
-      .mega-tab:hover { color: #64748b; }
-      .mega-tab.active { color: var(--primary); }
-      .mega-tab.active::after {
-          content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
-          height: 3px; background: var(--primary); border-radius: 3px 3px 0 0;
-      }
-      
-      /* [2단계] 소분류 캡슐 버튼 (시그니처 컬러 배경) */
-      .sub-cats {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-      }
-      .sub-cat-btn {
-          padding: 8px 18px;
-          border-radius: 20px;
-          font-size: 15px;
-          font-weight: 700;
-          background: #f8fafc;
-          color: #64748b;
-          border: 1px solid var(--border);
-          cursor: pointer;
-          transition: all 0.2s;
-      }
-      .sub-cat-btn:hover { background: #f1f5f9; color: var(--primary); }
-      .sub-cat-btn.active {
-          background: var(--primary);
-          color: #ffffff;
-          border-color: var(--primary);
-          box-shadow: 0 4px 10px rgba(17, 63, 103, 0.2);
-      }
-      
-      /* [3단계] 최종 항목 사각 라운드 버튼 (시그니처 컬러 테두리 & 텍스트) */
-      .items-container {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          padding-top: 12px;
-          border-top: 1px dashed var(--border);
-      }
-      .item-link {
-          padding: 6px 14px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          background: #ffffff;
-          color: #64748b;
-          border: 1px solid var(--border);
-          cursor: pointer;
-          transition: all 0.2s;
-      }
-      .item-link:hover { background: #f8fafc; border-color: #94a3b8; }
-      .item-link.active {
-          background: var(--primary-light);
-          color: var(--primary);
-          border-color: var(--primary);
-          box-shadow: 0 0 0 1px var(--primary);
-      }
-      
-      .iframe-container { flex: 1; background: #fff; }
-      iframe { width: 100%; height: 100%; border: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>손·생보 한장 비교표 - Weracle Insight</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&display=swap">
+  <style>
+    :root {
+      --primary: #113f67;
+      --primary-hover: #0a253d;
+      --title-blue: #0284c7;
+      --accent-blue: #0284c7;
+      --accent-green: #059669;
+      --bg-body: #f5f5f7;
+      --border: rgba(0, 0, 0, 0.08);
+      --text-main: #1d1d1f;
+      --text-sub: #86868b;
+      --bg-main: radial-gradient(circle at 50% 30%, #f4f8fc 0%, #e2edf7 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      letter-spacing: -0.015em;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-main);
+      color: #1e293b;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .font-brand {
+      font-family: 'Outfit', 'Pretendard', sans-serif;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    /* Loader Pulse */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spin 1s linear infinite;
+    }
+  </style>
 </head>
-<body>
-    <div class="top-nav-container">
-        <div class="mega-tabs" id="megaTabs"></div>
-        <div class="sub-cats" id="subCats"></div>
-        <div class="items-container" id="itemsContainer"></div>
+<body class="p-3 sm:p-5 flex flex-col h-screen overflow-hidden">
+
+  <!-- Outer Dashboard Window Container (영업소식지 & 타겟관리 공식 벤토박스 디자인 연동) -->
+  <div class="rounded-3xl border border-slate-200/80 shadow-2xl overflow-hidden flex flex-col bg-white h-full w-full max-w-[1600px] mx-auto relative" id="mainContainer">
+    
+    <!-- ============================================================== -->
+    <!-- 1. 상단 헤더 & 카테고리 탭 (타겟관리 공식 컬러 시스템 연동) -->
+    <!-- ============================================================== -->
+    <header class="px-6 sm:px-8 py-3.5 border-b border-[#e2e8f0] flex flex-wrap items-center justify-between bg-white flex-shrink-0 relative z-30 gap-4" style="background: linear-gradient(180deg, #f0f8ff 0%, #ffffff 100%);">
+      
+      <!-- Left: Title & Brand Icon -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#113f67] to-[#0284c7] flex items-center justify-center text-white shadow-sm shadow-[#113f67]/15">
+          <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-black text-[#0284c7] tracking-tight">손·생보 한장 비교표</h1>
+        </div>
+      </div>
+
+      <!-- Center: 4대 카테고리 탭 (클릭 시 해당 카테고리 맞춤 맵만 펼쳐짐) -->
+      <div class="flex-1 flex justify-center min-w-[280px]">
+        <div class="flex items-center gap-1.5 bg-[#f5f5f7] p-1 rounded-2xl border border-[#e2e8f0] shadow-xs" id="headerTabsContainer">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Right: Active Sheet Badge, Search & Pop-out Action -->
+      <div class="flex items-center gap-2.5">
+        <!-- Current Sheet Badge -->
+        <div class="hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-[#e2e8f0] text-xs shadow-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-slate-400 font-medium">열람 중:</span>
+          <span id="activeBadgeName" class="text-[#113f67] font-bold"></span>
+        </div>
+
+        <!-- Quick Search Toggle / Input -->
+        <div class="relative">
+          <input type="text" id="quickSearchInput" oninput="onQuickSearch()" placeholder="담보 검색..." class="w-36 sm:w-44 text-xs bg-[#f5f5f7] border border-[#e2e8f0] rounded-xl px-3 py-1.5 pl-7 text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:border-[#113f67] focus:ring-2 focus:ring-[#113f67]/10 focus:bg-white transition-all">
+          <svg class="w-3.5 h-3.5 absolute left-2.5 top-2 text-[#86868b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+
+        <!-- New Window Action -->
+        <button onclick="openCurrentInNewTab()" title="새 창에서 크게보기" class="px-3.5 py-1.5 rounded-xl border border-[#e2e8f0] bg-white text-xs font-bold text-slate-600 hover:text-[#0284c7] hover:border-[#0284c7] shadow-xs cursor-pointer transition-all flex items-center gap-1.5">
+          <span class="hidden sm:inline">새창 열기</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ============================================================== -->
+    <!-- 2. 선택된 카테고리 전용 맞춤 맵 (카테고리 탭 클릭 시 부드럽게 펼쳐짐) -->
+    <!-- ============================================================== -->
+    <div id="categoryMegaOverlay" class="hidden absolute inset-x-6 top-16 bg-white/98 backdrop-blur-md border border-slate-300 rounded-3xl shadow-2xl z-40 p-6 flex-col gap-4 max-h-[82vh] overflow-y-auto">
+      
+      <!-- Popover Top Bar -->
+      <div class="flex flex-wrap items-center justify-between pb-3.5 border-b border-slate-200 gap-3">
+        <div class="flex items-center gap-2.5">
+          <span id="popoverGroupBadge" class="px-3 py-1 rounded-xl bg-[#0284c7] text-white text-xs font-extrabold shadow-sm">건강/질병</span>
+          <span id="popoverGroupTitle" class="text-sm font-extrabold text-[#113f67]">한장비교표 세부 맵</span>
+          <span class="text-xs text-slate-400 hidden sm:inline">원하시는 담보를 클릭하면 즉시 열람되고 맵이 닫힙니다.</span>
+        </div>
+
+        <!-- In-popover fast group switchers & close button -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs text-slate-400 font-medium mr-1 hidden sm:inline">다른 분류:</span>
+          <div class="flex items-center gap-1" id="popoverGroupSwitchers">
+            <!-- Rendered by JS -->
+          </div>
+          <button onclick="closeCategoryMap()" class="ml-2 w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs cursor-pointer transition-all">✕</button>
+        </div>
+      </div>
+
+      <!-- Bento Cards Grid (선택된 카테고리의 소분류들만 깔끔하게 노출) -->
+      <div id="popoverBentoGrid" class="grid gap-3.5">
+        <!-- Rendered by JS -->
+      </div>
     </div>
-    <div class="iframe-container"><iframe id="insightFrame"></iframe></div>
-    <script>
-const menuData = [
-  { category: '3대진단비', items: [{ name: '바로보장 암진단비(손보)', url: 'https://weraclelab.imweb.me/46?sheet=바로보장암진단비_손보' }, { name: '바로보장 2암 진단비(손보)', url: 'https://weraclelab.imweb.me/46?sheet=바로보장2암진단비_손보' }, { name: '나눠받는 암진단비(손보)', url: 'https://weraclelab.imweb.me/46?sheet=나눠받는암진단비_손보' }, { name: '심혈관진단비(건강/생보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비건강생보' }, { name: '심혈관진단비(간편/생보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비간편생보' }, { name: '심혈관진단비(건강/손보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비건강손보' }, { name: '심혈관진단비(간편/손보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비간편손보' }] },
-  { category: '3대 치료비/생활비', items: [{ name: '중입자치료비 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=중입자치료비_손보' }, { name: '암주요치료비 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=암주요치료비_손보' }, { name: '암주요치료비 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=암주요치료비_생보' }, { name: '암특급주요치료비 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=암특급주요치료비_손보' }, { name: '암특급주요치료비 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=암특급주요치료비_생보' }, { name: '주요치료 생활비', url: 'https://weraclelab.imweb.me/46?sheet=주요치료생활비' }, { name: '2대주요치료비[순환계포함] (손보)', url: 'https://weraclelab.imweb.me/46?sheet=2대주요치료비순환계포함_손보' }, { name: '2대주요치료비[순환계포함] (생보)', url: 'https://weraclelab.imweb.me/46?sheet=2대주요치료비순환계포함_생보' }] },
-  { category: '수술비', items: [{ name: '인공관절수술등담보 비교', url: 'https://weraclelab.imweb.me/46?sheet=인공관절수술등담보비교' }, { name: '생보/손보 수술비', url: 'https://weraclelab.imweb.me/46?sheet=생보손보수술비' }] },
-  { category: '치아', items: [{ name: '치아보험 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=치아보험_생보' }, { name: '치아보험 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=치아보험_손보' }] },
-  { category: '치매간병', items: [{ name: '장기요양보장 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=장기요양보장_생보' }, { name: '장기요양보장 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=장기요양보장_손보' }, { name: '표적치매약물치료비(레켐비)', url: 'https://weraclelab.imweb.me/46?sheet=표적치매약물치료비레켐비' }] },
-  { category: '종신', items: [{ name: '단기납종신보험 (5/7/10년납)', url: 'https://weraclelab.imweb.me/46?sheet=단기납종신보험5_7_10년납' }, { name: '단기납달러종신 (3년납)', url: 'https://weraclelab.imweb.me/46?sheet=단기납달러종신3년납' }, { name: '700류종신 (20년납)', url: 'https://weraclelab.imweb.me/46?sheet=700류종신20년납' }, { name: '사망보험금유동화제도', url: 'https://weraclelab.imweb.me/46?sheet=사망보험금유동화제도' }, { name: '공시이율상품 리스트', url: 'https://weraclelab.imweb.me/46?sheet=공시이율상품리스트' }] },
-  { category: '연금', items: [{ name: '연금', url: 'https://weraclelab.imweb.me/46?sheet=연금' }, { name: '변액연금', url: 'https://weraclelab.imweb.me/46?sheet=변액연금' }] },
-  { category: '운전자', items: [{ name: '영업용자부상비교', url: 'https://weraclelab.imweb.me/46?sheet=영업용자부상비교' }, { name: '3대(영업용개인/택시등)', url: 'https://weraclelab.imweb.me/46?sheet=영업용개인_택시등_3대' }, { name: '운전자자부상', url: 'https://weraclelab.imweb.me/46?sheet=운전자자부상' }, { name: '고연령70세이상 보장금액', url: 'https://weraclelab.imweb.me/46?sheet=고연령70세이상보장금액' }, { name: '3대이륜차운전자', url: 'https://weraclelab.imweb.me/46?sheet=이륜차운전자_3대' }] },
-  { category: '입원일당', items: [{ name: '첫날부터입원일당 5만원', url: 'https://weraclelab.imweb.me/46?sheet=첫날부터입원일당5만원' }] },
-  { category: '간병인', items: [{ name: '간병인건강체생보', url: 'https://weraclelab.imweb.me/46?sheet=간병인건강체생보' }, { name: '간병인유병자생보', url: 'https://weraclelab.imweb.me/46?sheet=간병인유병자생보' }, { name: '간병인건강체손보', url: 'https://weraclelab.imweb.me/46?sheet=간병인건강체손보' }, { name: '간병인유병자손보', url: 'https://weraclelab.imweb.me/46?sheet=간병인유병자손보' }, { name: '간병인8090', url: 'https://weraclelab.imweb.me/46?sheet=간병인8090' }, { name: '어린이간병인 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=어린이간병인_손보' }] },
-  { category: '단독실손', items: [{ name: '단독실손(손보)', url: 'https://weraclelab.imweb.me/46?sheet=단독실손_손보' }] },
-  { category: '종합질병&상해', items: [{ name: '종합상해 및 상해주요치료', url: 'https://weraclelab.imweb.me/46?sheet=종합상해및상해주요치료' }, { name: '질병종합치료비', url: 'https://weraclelab.imweb.me/46?sheet=질병종합치료비' }] },
-  { category: '기타 치료비', items: [{ name: '고고당암진단비치료비', url: 'https://weraclelab.imweb.me/46?sheet=고고당암진단비치료비' }] },
-  { category: '간편보험', items: [{ name: '고당지추가고지간편보험', url: 'https://weraclelab.imweb.me/46?sheet=고당지추가고지간편보험' }] },
-  { category: '태아플랜', items: [{ name: '태아보험비교', url: 'https://weraclelab.imweb.me/46?sheet=태아보험비교' }] },
-  { category: '주택화재', items: [{ name: '주택화재 (급배수누출누수)', url: 'https://weraclelab.imweb.me/46?sheet=주택화재_급배수누출누수' }] },
-  { category: '펫보험', items: [{ name: '펫보험', url: 'https://weraclelab.imweb.me/46?sheet=펫보험' }] },
-  { category: '골프보험', items: [{ name: '골프보험', url: 'https://weraclelab.imweb.me/46?sheet=골프보험' }] },
-  { category: '기타', items: [{ name: '치매진단비', url: 'https://weraclelab.imweb.me/46?sheet=치매진단비' }] }
-];
-        // Grouping logic
-        const groups = [
-            { name: "건강/질병", cats: ["3대진단비", "3대 치료비/생활비", "수술비", "치아", "종합질병&상해", "기타 치료비"] },
-            { name: "생애/간병", cats: ["치매간병", "간병인", "종신", "연금", "태아플랜"] },
-            { name: "실손/간편", cats: ["단독실손", "간편보험", "입원일당"] },
-            { name: "생활/레저", cats: ["운전자", "주택화재", "펫보험", "골프보험", "기타"] }
-        ];
 
-        let currentGroup = groups[0].name;
-        let currentCat = groups[0].cats[0];
-        let currentUrl = menuData.find(c => c.category === currentCat).items[0].url;
+    <!-- Quick Search Results Strip (검색어 입력 시 즉시 노출) -->
+    <div id="searchResultsOverlay" class="hidden px-6 py-2.5 bg-[#eff6ff] border-b border-[#bfdbfe] flex flex-wrap gap-2 items-center flex-shrink-0 z-30">
+      <span class="text-xs font-bold text-[#0284c7] flex items-center gap-1 mr-2">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        검색 결과 (<span id="searchResultCount">0</span>건):
+      </span>
+      <div id="searchResultsList" class="flex flex-wrap gap-1.5 flex-1"></div>
+      <button onclick="clearQuickSearch()" class="text-slate-400 hover:text-slate-700 text-xs font-bold px-2 py-0.5">✕</button>
+    </div>
 
-        function render() {
-            const tabs = document.getElementById('megaTabs');
-            tabs.innerHTML = '';
-            groups.forEach(g => {
-                const t = document.createElement('div');
-                t.className = "mega-tab " + (g.name === currentGroup ? "active" : "");
-                t.innerText = g.name;
-                t.onclick = () => { 
-                    currentGroup = g.name; 
-                    currentCat = g.cats[0]; 
-                    currentUrl = menuData.find(c => c.category === currentCat).items[0].url; 
-                    render(); 
-                };
-                tabs.appendChild(t);
-            });
+    <!-- ============================================================== -->
+    <!-- 3. 메인 Iframe 뷰어 영역 -->
+    <!-- ============================================================== -->
+    <main class="flex-1 w-full h-full relative bg-white flex flex-col overflow-hidden" onclick="closeCategoryMap()">
+      
+      <!-- Sub-status Bar -->
+      <div class="px-6 py-2 bg-slate-50/90 border-b border-slate-200/70 flex items-center justify-between text-xs flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-[#0284c7] animate-pulse"></span>
+          <span class="text-slate-500 font-medium">현재 경로:</span>
+          <span id="currentPathText" class="font-extrabold text-[#113f67]"></span>
+        </div>
+        <div class="flex items-center gap-3 text-slate-400">
+          <button onclick="reloadFrame()" class="hover:text-[#0284c7] flex items-center gap-1 font-medium transition-colors cursor-pointer" title="비교표 새로고침">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            새로고침
+          </button>
+        </div>
+      </div>
 
-            const subCats = document.getElementById('subCats');
-            subCats.innerHTML = '';
-            groups.find(g => g.name === currentGroup).cats.forEach(c => {
-                const btn = document.createElement('button');
-                btn.className = "sub-cat-btn " + (c === currentCat ? "active" : "");
-                btn.innerText = c;
-                btn.onclick = () => { 
-                    currentCat = c; 
-                    currentUrl = menuData.find(x => x.category === c).items[0].url; 
-                    render(); 
-                };
-                subCats.appendChild(btn);
-            });
+      <!-- Iframe Frame -->
+      <div class="flex-1 w-full h-full relative bg-white">
+        <div id="frameLoader" class="absolute inset-0 bg-white/70 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-10 transition-opacity duration-300">
+          <div class="w-8 h-8 border-3 border-[#0284c7]/20 border-t-[#0284c7] rounded-full animate-spin-slow"></div>
+          <span class="text-xs font-semibold text-slate-500">비교표를 불러오는 중입니다...</span>
+        </div>
+        <iframe id="insightFrame" class="w-full h-full border-none"></iframe>
+      </div>
+    </main>
 
-            const items = document.getElementById('itemsContainer');
-            items.innerHTML = '';
-            menuData.find(x => x.category === currentCat).items.forEach(item => {
-                const a = document.createElement('button');
-                a.className = "item-link " + (item.url === currentUrl ? "active" : "");
-                a.innerText = item.name;
-                a.onclick = () => { 
-                    currentUrl = item.url; 
-                    render(); 
-                };
-                items.appendChild(a);
-            });
+    <!-- ============================================================== -->
+    <!-- 4. 대시보드 하단 정보 바 -->
+    <!-- ============================================================== -->
+    <footer class="bg-white border-t border-slate-200/80 px-8 py-3 text-xs text-slate-500 flex flex-wrap justify-between items-center gap-3 flex-shrink-0">
+      <div class="flex items-center gap-3">
+        <span class="font-bold text-[#113f67] font-brand">WERACLE INSIGHT</span>
+        <span class="text-slate-300">|</span>
+        <span>손·생보 한장 비교표 데이터맵</span>
+      </div>
+      <div class="flex items-center gap-4 text-slate-400 text-xs">
+        <span>총 51개 핵심 담보 비교 데이터 구축 완료</span>
+      </div>
+    </footer>
 
-            const iframe = document.getElementById('insightFrame');
-            if(iframe.src !== currentUrl) iframe.src = currentUrl;
+  </div>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    // 51개 비교표 원본 데이터셋
+    const menuData = [
+      { category: '3대진단비', items: [
+        { name: '바로보장 암진단비(손보)', url: 'https://weraclelab.imweb.me/46?sheet=바로보장암진단비_손보' },
+        { name: '바로보장 2암 진단비(손보)', url: 'https://weraclelab.imweb.me/46?sheet=바로보장2암진단비_손보' },
+        { name: '나눠받는 암진단비(손보)', url: 'https://weraclelab.imweb.me/46?sheet=나눠받는암진단비_손보' },
+        { name: '심혈관진단비(건강/생보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비건강생보' },
+        { name: '심혈관진단비(간편/생보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비간편생보' },
+        { name: '심혈관진단비(건강/손보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비건강손보' },
+        { name: '심혈관진단비(간편/손보)', url: 'https://weraclelab.imweb.me/46?sheet=심혈관진단비간편손보' }
+      ]},
+      { category: '3대 치료비/생활비', items: [
+        { name: '중입자치료비 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=중입자치료비_손보' },
+        { name: '암주요치료비 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=암주요치료비_손보' },
+        { name: '암주요치료비 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=암주요치료비_생보' },
+        { name: '암특급주요치료비 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=암특급주요치료비_손보' },
+        { name: '암특급주요치료비 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=암특급주요치료비_생보' },
+        { name: '주요치료 생활비', url: 'https://weraclelab.imweb.me/46?sheet=주요치료생활비' },
+        { name: '2대주요치료비[순환계포함] (손보)', url: 'https://weraclelab.imweb.me/46?sheet=2대주요치료비순환계포함_손보' },
+        { name: '2대주요치료비[순환계포함] (생보)', url: 'https://weraclelab.imweb.me/46?sheet=2대주요치료비순환계포함_생보' }
+      ]},
+      { category: '수술비', items: [
+        { name: '인공관절수술등담보 비교', url: 'https://weraclelab.imweb.me/46?sheet=인공관절수술등담보비교' },
+        { name: '생보/손보 수술비', url: 'https://weraclelab.imweb.me/46?sheet=생보손보수술비' }
+      ]},
+      { category: '치아', items: [
+        { name: '치아보험 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=치아보험_생보' },
+        { name: '치아보험 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=치아보험_손보' }
+      ]},
+      { category: '치매간병', items: [
+        { name: '장기요양보장 (생보)', url: 'https://weraclelab.imweb.me/46?sheet=장기요양보장_생보' },
+        { name: '장기요양보장 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=장기요양보장_손보' },
+        { name: '표적치매약물치료비(레켐비)', url: 'https://weraclelab.imweb.me/46?sheet=표적치매약물치료비레켐비' }
+      ]},
+      { category: '종신', items: [
+        { name: '단기납종신보험 (5/7/10년납)', url: 'https://weraclelab.imweb.me/46?sheet=단기납종신보험5_7_10년납' },
+        { name: '단기납달러종신 (3년납)', url: 'https://weraclelab.imweb.me/46?sheet=단기납달러종신3년납' },
+        { name: '700류종신 (20년납)', url: 'https://weraclelab.imweb.me/46?sheet=700류종신20년납' },
+        { name: '사망보험금유동화제도', url: 'https://weraclelab.imweb.me/46?sheet=사망보험금유동화제도' },
+        { name: '공시이율상품 리스트', url: 'https://weraclelab.imweb.me/46?sheet=공시이율상품리스트' }
+      ]},
+      { category: '연금', items: [
+        { name: '연금', url: 'https://weraclelab.imweb.me/46?sheet=연금' },
+        { name: '변액연금', url: 'https://weraclelab.imweb.me/46?sheet=변액연금' }
+      ]},
+      { category: '운전자', items: [
+        { name: '영업용자부상비교', url: 'https://weraclelab.imweb.me/46?sheet=영업용자부상비교' },
+        { name: '3대(영업용개인/택시등)', url: 'https://weraclelab.imweb.me/46?sheet=영업용개인_택시등_3대' },
+        { name: '운전자자부상', url: 'https://weraclelab.imweb.me/46?sheet=운전자자부상' },
+        { name: '고연령70세이상 보장금액', url: 'https://weraclelab.imweb.me/46?sheet=고연령70세이상보장금액' },
+        { name: '3대이륜차운전자', url: 'https://weraclelab.imweb.me/46?sheet=이륜차운전자_3대' }
+      ]},
+      { category: '입원일당', items: [
+        { name: '첫날부터입원일당 5만원', url: 'https://weraclelab.imweb.me/46?sheet=첫날부터입원일당5만원' }
+      ]},
+      { category: '간병인', items: [
+        { name: '간병인건강체생보', url: 'https://weraclelab.imweb.me/46?sheet=간병인건강체생보' },
+        { name: '간병인유병자생보', url: 'https://weraclelab.imweb.me/46?sheet=간병인유병자생보' },
+        { name: '간병인건강체손보', url: 'https://weraclelab.imweb.me/46?sheet=간병인건강체손보' },
+        { name: '간병인유병자손보', url: 'https://weraclelab.imweb.me/46?sheet=간병인유병자손보' },
+        { name: '간병인8090', url: 'https://weraclelab.imweb.me/46?sheet=간병인8090' },
+        { name: '어린이간병인 (손보)', url: 'https://weraclelab.imweb.me/46?sheet=어린이간병인_손보' }
+      ]},
+      { category: '단독실손', items: [
+        { name: '단독실손(손보)', url: 'https://weraclelab.imweb.me/46?sheet=단독실손_손보' }
+      ]},
+      { category: '종합질병&상해', items: [
+        { name: '종합상해 및 상해주요치료', url: 'https://weraclelab.imweb.me/46?sheet=종합상해및상해주요치료' },
+        { name: '질병종합치료비', url: 'https://weraclelab.imweb.me/46?sheet=질병종합치료비' }
+      ]},
+      { category: '기타 치료비', items: [
+        { name: '고고당암진단비치료비', url: 'https://weraclelab.imweb.me/46?sheet=고고당암진단비치료비' }
+      ]},
+      { category: '간편보험', items: [
+        { name: '고당지추가고지간편보험', url: 'https://weraclelab.imweb.me/46?sheet=고당지추가고지간편보험' }
+      ]},
+      { category: '태아플랜', items: [
+        { name: '태아보험비교', url: 'https://weraclelab.imweb.me/46?sheet=태아보험비교' }
+      ]},
+      { category: '주택화재', items: [
+        { name: '주택화재 (급배수누출누수)', url: 'https://weraclelab.imweb.me/46?sheet=주택화재_급배수누출누수' }
+      ]},
+      { category: '펫보험', items: [
+        { name: '펫보험', url: 'https://weraclelab.imweb.me/46?sheet=펫보험' }
+      ]},
+      { category: '골프보험', items: [
+        { name: '골프보험', url: 'https://weraclelab.imweb.me/46?sheet=골프보험' }
+      ]},
+      { category: '기타', items: [
+        { name: '치매진단비', url: 'https://weraclelab.imweb.me/46?sheet=치매진단비' }
+      ]}
+    ];
+
+    const groups = [
+      { name: "건강/질병", cats: ["3대진단비", "3대 치료비/생활비", "수술비", "치아", "종합질병&상해", "기타 치료비"] },
+      { name: "생애/간병", cats: ["치매간병", "간병인", "종신", "연금", "태아플랜"] },
+      { name: "실손/간편", cats: ["단독실손", "간편보험", "입원일당"] },
+      { name: "생활/레저", cats: ["운전자", "주택화재", "펫보험", "골프보험", "기타"] }
+    ];
+
+    let currentGroup = groups[0].name;
+    let currentCat = groups[0].cats[0];
+    let currentUrl = menuData.find(c => c.category === currentCat).items[0].url;
+    let currentItemName = menuData.find(c => c.category === currentCat).items[0].name;
+    let isMapOpen = false;
+
+    function getGroupItemCount(groupName) {
+      const g = groups.find(x => x.name === groupName);
+      if (!g) return 0;
+      let count = 0;
+      g.cats.forEach(c => {
+        const catObj = menuData.find(m => m.category === c);
+        if (catObj && catObj.items) count += catObj.items.length;
+      });
+      return count;
+    }
+
+    // Toggle Category Map Popover
+    function toggleCategoryMap(groupName) {
+      if (currentGroup === groupName && isMapOpen) {
+        isMapOpen = false;
+      } else {
+        currentGroup = groupName;
+        isMapOpen = true;
+      }
+      renderUI();
+    }
+
+    function closeCategoryMap() {
+      if (isMapOpen) {
+        isMapOpen = false;
+        renderUI();
+      }
+    }
+
+    function selectSheetItem(cat, name, url) {
+      currentCat = cat;
+      const g = groups.find(x => x.cats.includes(cat));
+      if (g) currentGroup = g.name;
+      currentItemName = name;
+      currentUrl = url;
+      isMapOpen = false;
+      renderUI();
+    }
+
+    // Main Render Function
+    function renderUI() {
+      // 1. Render Header Category Tabs
+      const tabsContainer = document.getElementById('headerTabsContainer');
+      tabsContainer.innerHTML = '';
+      groups.forEach(g => {
+        const isSelected = (g.name === currentGroup);
+        const count = getGroupItemCount(g.name);
+
+        const tabBtn = document.createElement('button');
+        tabBtn.onclick = (e) => {
+          e.stopPropagation();
+          toggleCategoryMap(g.name);
+        };
+
+        if (isSelected) {
+          tabBtn.className = "px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 bg-[#0284c7] text-white shadow-sm ring-2 ring-[#0284c7]/20";
+          tabBtn.innerHTML = `
+            <span>${g.name}</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-white/25 text-white font-mono">${count}</span>
+            <span class="text-[10px] opacity-80">${isMapOpen ? '▲' : '▾'}</span>
+          `;
+        } else {
+          tabBtn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 text-slate-600 hover:text-slate-950 hover:bg-white";
+          tabBtn.innerHTML = `
+            <span>${g.name}</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200/80 text-slate-600 font-mono">${count}</span>
+            <span class="text-[10px] opacity-60">▾</span>
+          `;
         }
-        render();
-    </script>
+        tabsContainer.appendChild(tabBtn);
+      });
+
+      // 2. Update Header Badges and Text
+      document.getElementById('activeBadgeName').innerText = currentItemName;
+      document.getElementById('currentPathText').innerText = `${currentGroup} > ${currentCat} > ${currentItemName}`;
+
+      // 3. Render Mega Overlay (선택된 카테고리의 소분류들만 벤토 그리드로 정돈)
+      const overlay = document.getElementById('categoryMegaOverlay');
+      if (isMapOpen) {
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+
+        const activeGroupObj = groups.find(g => g.name === currentGroup);
+        const totalCount = getGroupItemCount(currentGroup);
+
+        document.getElementById('popoverGroupBadge').innerText = currentGroup;
+        document.getElementById('popoverGroupTitle').innerText = `한장비교표 세부 맵 (${totalCount}개 담보)`;
+
+        // In-popover fast group switchers
+        const switchers = document.getElementById('popoverGroupSwitchers');
+        switchers.innerHTML = '';
+        groups.forEach(g => {
+          const sBtn = document.createElement('button');
+          sBtn.onclick = (e) => {
+            e.stopPropagation();
+            currentGroup = g.name;
+            renderUI();
+          };
+          if (g.name === currentGroup) {
+            sBtn.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer bg-[#113f67] text-white shadow-xs";
+          } else {
+            sBtn.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600";
+          }
+          sBtn.innerText = g.name.split('/')[0];
+          switchers.appendChild(sBtn);
+        });
+
+        // Grid Columns based on count of subcategories
+        const grid = document.getElementById('popoverBentoGrid');
+        grid.innerHTML = '';
+        const colCount = activeGroupObj.cats.length <= 4 ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6';
+        grid.className = `grid ${colCount} gap-3.5`;
+
+        activeGroupObj.cats.forEach(c => {
+          const catObj = menuData.find(x => x.category === c);
+          const isSelectedCat = (c === currentCat);
+
+          const card = document.createElement('div');
+          card.className = `rounded-2xl border ${isSelectedCat ? 'border-[#bfdbfe] bg-[#eff6ff]/35 shadow-sm' : 'border-slate-200/90 bg-slate-50/70'} p-3.5 flex flex-col gap-2 transition-all`;
+
+          let itemsHtml = catObj.items.map(item => {
+            const isItemActive = (item.url === currentUrl);
+            return `
+              <button onclick="selectSheetItem('${c}', '${item.name}', '${item.url}')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs truncate cursor-pointer transition-all flex items-center justify-between ${isItemActive ? 'bg-[#0284c7] text-white font-extrabold shadow-xs' : 'text-slate-600 hover:bg-white hover:text-[#0284c7] hover:shadow-2xs'}">
+                <span class="truncate">${item.name}</span>
+                ${isItemActive ? '<span class="text-[9px] font-black">열람중</span>' : ''}
+              </button>
+            `;
+          }).join('');
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between pb-2 border-b ${isSelectedCat ? 'border-[#bfdbfe]' : 'border-slate-200'}">
+              <span class="font-black text-xs ${isSelectedCat ? 'text-[#0284c7]' : 'text-slate-800'}">${c}</span>
+              <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-full ${isSelectedCat ? 'bg-white text-[#0284c7] border border-[#bfdbfe]' : 'bg-slate-200 text-slate-600'} font-mono">${catObj.items.length}</span>
+            </div>
+            <div class="space-y-1">
+              ${itemsHtml}
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+      } else {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+      }
+
+      // 4. Update Iframe Source
+      const iframe = document.getElementById('insightFrame');
+      if (iframe.src !== currentUrl) {
+        showLoader();
+        iframe.src = currentUrl;
+      }
+    }
+
+    // Frame Helpers
+    function showLoader() {
+      const loader = document.getElementById('frameLoader');
+      if (loader) {
+        loader.classList.remove('hidden');
+        loader.style.opacity = '1';
+      }
+    }
+
+    function onFrameLoaded() {
+      const loader = document.getElementById('frameLoader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.classList.add('hidden'), 300);
+      }
+    }
+
+    function reloadFrame() {
+      const iframe = document.getElementById('insightFrame');
+      if (iframe) {
+        showLoader();
+        iframe.src = currentUrl;
+      }
+    }
+
+    function openCurrentInNewTab() {
+      if (currentUrl) {
+        window.open(currentUrl, '_blank');
+      }
+    }
+
+    // Quick Search Logic
+    function onQuickSearch() {
+      const input = document.getElementById('quickSearchInput');
+      const overlay = document.getElementById('searchResultsOverlay');
+      const listEl = document.getElementById('searchResultsList');
+      const countEl = document.getElementById('searchResultCount');
+
+      const query = (input.value || '').trim().toLowerCase();
+
+      if (!query) {
+        overlay.classList.add('hidden');
+        return;
+      }
+
+      const matches = [];
+      menuData.forEach(catObj => {
+        catObj.items.forEach(item => {
+          if (item.name.toLowerCase().includes(query) || catObj.category.toLowerCase().includes(query)) {
+            const grp = groups.find(g => g.cats.includes(catObj.category));
+            matches.push({
+              group: grp ? grp.name : '',
+              category: catObj.category,
+              name: item.name,
+              url: item.url
+            });
+          }
+        });
+      });
+
+      countEl.innerText = matches.length;
+      listEl.innerHTML = '';
+
+      if (matches.length === 0) {
+        listEl.innerHTML = `<span class="text-xs text-slate-400">일치하는 비교표가 없습니다.</span>`;
+      } else {
+        matches.forEach(m => {
+          const btn = document.createElement('button');
+          btn.className = "px-2.5 py-1 rounded-md bg-white border border-[#bfdbfe] text-xs font-semibold text-[#113f67] hover:bg-[#0284c7] hover:text-white transition-all cursor-pointer flex items-center gap-1 shadow-xs";
+          btn.innerHTML = `<span class="text-[10px] text-slate-400 font-normal">[${m.category}]</span> <span>${m.name}</span>`;
+          btn.onclick = () => {
+            selectSheetItem(m.category, m.name, m.url);
+            clearQuickSearch();
+          };
+          listEl.appendChild(btn);
+        });
+      }
+
+      overlay.classList.remove('hidden');
+    }
+
+    function clearQuickSearch() {
+      const input = document.getElementById('quickSearchInput');
+      const overlay = document.getElementById('searchResultsOverlay');
+      input.value = '';
+      overlay.classList.add('hidden');
+    }
+
+    // Event Listener for Frame Loading
+    const frameEl = document.getElementById('insightFrame');
+    if (frameEl) {
+      frameEl.addEventListener('load', onFrameLoaded);
+    }
+
+    // Initial render
+    renderUI();
+  </script>
 </body>
 </html>

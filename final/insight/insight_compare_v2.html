@@ -103,6 +103,12 @@
           </svg>
         </div>
 
+        <!-- Guide Button -->
+        <button onclick="openGuideModal()" title="한장비교표 기능 사용 가이드" class="px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-xs font-bold text-red-600 hover:text-red-700 shadow-xs cursor-pointer transition-all flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <span>사용 가이드</span>
+        </button>
+
         <!-- New Window Action -->
         <button onclick="openCurrentInNewTab()" title="새 창에서 크게보기" class="px-3.5 py-1.5 rounded-xl border border-[#e2e8f0] bg-white text-xs font-bold text-slate-600 hover:text-[#0284c7] hover:border-[#0284c7] shadow-xs cursor-pointer transition-all flex items-center gap-1.5">
           <span class="hidden sm:inline">새창 열기</span>
@@ -112,6 +118,15 @@
         </button>
       </div>
     </header>
+
+    <!-- ============================================================== -->
+    <!-- 2-1. 한장비교표 기능 사용 가이드 모달 오버레이 -->
+    <!-- ============================================================== -->
+    <div id="guideModalOverlay" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" onclick="if(event.target===this)closeGuideModal()">
+      <div class="bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-700 w-full max-w-[1340px] h-[90vh] overflow-hidden relative">
+        <iframe id="guideFrame" src="insight_compare_guide.html" class="w-full h-full border-none block"></iframe>
+      </div>
+    </div>
 
     <!-- ============================================================== -->
     <!-- 2. 선택된 카테고리 전용 맞춤 맵 (카테고리 탭 클릭 시 부드럽게 펼쳐짐) -->
@@ -554,6 +569,45 @@
     if (frameEl) {
       frameEl.addEventListener('load', onFrameLoaded);
     }
+
+    // Guide Modal Controls
+    function openGuideModal() {
+      const modal = document.getElementById('guideModalOverlay');
+      if (modal) {
+        modal.classList.remove('hidden');
+        const frame = document.getElementById('guideFrame');
+        if (frame && !frame.src.includes('insight_compare_guide.html')) {
+          frame.src = 'insight_compare_guide.html';
+        }
+      }
+    }
+
+    function closeGuideModal() {
+      const modal = document.getElementById('guideModalOverlay');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    // iframe 가이드 닫기 메시지 수신 (file:/// CORS 환경 완벽 대응)
+    window.addEventListener('message', (event) => {
+      try {
+        const data = event.data;
+        if (!data) return;
+        if (data === 'CLOSE_WERACLE_GUIDE' || data.action === 'CLOSE_WERACLE_GUIDE' || data.type === 'CLOSE_GUIDE_MODAL') {
+          closeGuideModal();
+        }
+      } catch (err) {}
+    });
+
+    function openGuideInNewTab() {
+      window.open('insight_compare_guide.html', '_blank');
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeGuideModal();
+        closeCategoryMap();
+      }
+    });
 
     // Initial render
     renderUI();

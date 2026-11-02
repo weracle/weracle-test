@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>한장비교표 핵심 기능 가이드 | Weracle Insight</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <style>
+    * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; letter-spacing: -0.015em; }
+    html, body {
+      margin: 0; padding: 0;
+      background: #0f172a;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    /* ========================================================
+       1. 상단 단일 가이드 컨트롤 바
+       ======================================================== */
+    .guide-header-bar {
+      background: #0b1120;
+      border-bottom: 1px solid #1e293b;
+      padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0; gap: 16px; flex-wrap: wrap;
+    }
+    .gh-left { display: flex; align-items: center; gap: 12px; }
+    .gh-beacon-dot {
+      width: 10px; height: 10px; background: #ef4444; border-radius: 50%;
+      box-shadow: 0 0 10px #ef4444; animation: blink 1.5s infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .gh-badge {
+      background: #ef4444; color: white; font-size: 11px; font-weight: 800;
+      padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px;
+    }
+    .gh-title { font-size: 15.5px; font-weight: 800; color: #f8fafc; }
+    .gh-subtitle { font-size: 12.5px; color: #94a3b8; font-weight: 500; }
+    .gh-subtitle b { color: #fca5a5; font-weight: 700; }
+
+    /* 4대 기능 상단 퀵 이동 칩 */
+    .gh-chips { display: flex; align-items: center; gap: 8px; }
+    .gh-chip-btn {
+      background: #1e293b; border: 1px solid #334155; color: #e2e8f0;
+      padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .gh-chip-btn:hover { background: #334155; color: white; border-color: #ef4444; }
+    .gh-chip-btn.active {
+      background: #ef4444; color: white; border-color: #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+    .gh-chip-btn .c-num {
+      width: 17px; height: 17px; background: rgba(255,255,255,0.25); color: white;
+      border-radius: 50%; font-size: 10.5px; display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    .gh-right { display: flex; align-items: center; gap: 8px; }
+    .btn-newtab {
+      background: #1e293b; border: 1px solid #334155; color: #cbd5e1;
+      padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 700;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+      transition: all 0.15s;
+    }
+    .btn-newtab:hover { background: #334155; color: white; border-color: #64748b; }
+    .btn-return-main {
+      background: #334155; color: white; border: none; padding: 7px 14px;
+      border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s;
+    }
+    .btn-return-main:hover { background: #ef4444; }
+
+    /* ========================================================
+       2. 중앙 컴팩트 가이드 스테이지
+       ======================================================== */
+    .guide-stage-wrapper {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 16px 20px; overflow: hidden; position: relative;
+    }
+
+    .guide-compact-card {
+      width: 100%; max-width: 1280px;
+      background: #ffffff; border-radius: 14px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.35);
+      border: 1px solid #cbd5e1;
+      padding: 16px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 플래시 효과 레이어 */
+    #camera-flash-overlay {
+      position: absolute; inset: 0; background: #ffffff;
+      opacity: 0; pointer-events: none; z-index: 400;
+      transition: opacity 0.12s ease-out;
+    }
+    #camera-flash-overlay.flashing {
+      opacity: 0.92; transition: opacity 0.04s ease-in;
+    }
+
+    /* 📸 캡처된 사진 미리보기 팝업 모달 (화면 중앙에 크게 떴다가 사라짐) */
+    #snapshot-modal-overlay {
+      position: absolute; inset: 0;
+      background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(5px);
+      z-index: 500;
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    #snapshot-modal-overlay.show {
+      display: flex;
+      animation: modal-pop-in 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    #snapshot-modal-overlay.hide-anim {
+      animation: modal-pop-out 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes modal-pop-in {
+      0% { opacity: 0; transform: scale(0.7); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes modal-pop-out {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.85) translateY(24px); }
+    }
+
+    .snapshot-photo-frame {
+      background: #ffffff; border-radius: 16px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 0 4px #0284c7;
+      width: 92%; max-width: 860px;
+      overflow: hidden; border: 1px solid #94a3b8;
+    }
+    .spf-header {
+      background: #0f2744; color: white; padding: 12px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .spf-header-left { display: flex; align-items: center; gap: 10px; }
+    .spf-icon-cam {
+      width: 28px; height: 28px; background: #0284c7; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 13px; color: white;
+    }
+    .spf-title { font-size: 14.5px; font-weight: 800; color: #ffffff; }
+    .spf-sub { font-size: 11px; color: #93c5fd; }
+    .spf-badge {
+      background: #10b981; color: white; font-size: 11px; font-weight: 800;
+      padding: 3px 9px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;
+    }
+
+    .spf-image-view {
+      padding: 16px; background: #f1f5f9; display: flex; justify-content: center;
+      align-items: center; overflow: hidden; max-height: 400px;
+    }
+    .spf-mock-table {
+      width: 100%; background: white; border-radius: 8px; border: 1px solid #cbd5e1;
+      padding: 12px 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+    .spf-footer {
+      background: #ffffff; border-top: 1px solid #e2e8f0; padding: 10px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11.5px; color: #475569; font-weight: 700;
+    }
+
+    /* 시연 상태 토스트 배지 */
+    .demo-status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800;
+      background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;
+      transition: all 0.25s ease;
+    }
+    .demo-status-pill.active {
+      background: #eff6ff; color: #0284c7; border-color: #93c5fd;
+      animation: pulse-border 1.5s infinite;
+    }
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.4); }
+      50% { box-shadow: 0 0 0 5px rgba(2, 132, 199, 0); }
+    }
+
+    /* 컴팩트 상단 헤더 */
+    .mini-top-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1.5px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 10px;
+    }
+    .mini-title-wrap { display: flex; align-items: center; gap: 10px; }
+    .mini-badge {
+      font-size: 10.5px; font-weight: 800; color: #0284c7; background: #e0f2fe;
+      padding: 2.5px 8px; border-radius: 6px;
+    }
+    .mini-title { font-size: 18px; font-weight: 900; color: #0f172a; margin: 0; }
+    .mini-meta { display: flex; align-items: center; gap: 8px; }
+    .mini-meta-item {
+      font-size: 11px; font-weight: 700; color: #475569; background: #f8fafc;
+      border: 1px solid #e2e8f0; padding: 2.5px 7px; border-radius: 6px;
+    }
+
+    /* 툴바 */
+    .compact-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
+    }
+    .btn-group-toggle {
+      display: inline-flex; background: #f1f5f9; border-radius: 8px; padding: 3px; gap: 3px;
+    }
+    .btn-tool-tab {
+      display: inline-flex; align-items: center; gap: 6px; border: none;
+      background: transparent; padding: 6px 13px; font-size: 12px;
+      font-weight: 700; color: #475569; border-radius: 6px; cursor: pointer;
+    }
+    .btn-tool-tab.active { background: #0f172a; color: white; }
+    .btn-tool-tab .tab-cnt {
+      font-size: 10px; background: rgba(0,0,0,0.15); padding: 1px 5px; border-radius: 10px;
+    }
+    .btn-tool-tab.active .tab-cnt { background: rgba(255,255,255,0.25); color: white; }
+
+    .btn-download {
+      background: #0284c7; color: white; border: none; padding: 7px 15px;
+      border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+
+    /* 테이블 스타일 */
+    .table-wrapper {
+      border: 1px solid #cbd5e1; border-radius: 10px; overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .w-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .w-table thead tr { background: #0f2744; }
+    .w-table th {
+      padding: 8px 6px; text-align: center; color: white;
+      border-right: 1px solid #1e3a5f; vertical-align: middle;
+      position: relative !important;
+      transition: all 0.3s ease;
+    }
+    .twotier-head-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .twotier-title { font-size: 12.5px; font-weight: 800; color: #ffffff; }
+    .twotier-sub {
+      display: inline-block; font-size: 9.5px; font-weight: 600; color: #93c5fd;
+      background: rgba(255, 255, 255, 0.08); padding: 1.5px 6px; border-radius: 8px; margin-top: 2px;
+    }
+
+    /* ✨ 컬럼 숨김 버튼: 모든 컬럼에서 100% 동일한 우측 상단 고정 위치 */
+    .twotier-hide-btn {
+      position: absolute !important;
+      top: 5px !important;
+      right: 5px !important;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #cbd5e1;
+      width: 18px; height: 18px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 9.5px;
+      z-index: 10;
+    }
+    .twotier-hide-btn:hover { background: #ef4444; color: white; border-color: #ef4444; }
+
+    /* 테이블 본문 */
+    .w-table tbody tr {
+      border-bottom: 1px solid #e2e8f0;
+      transition: all 0.3s ease;
+    }
+    .w-table tbody tr:hover { background: #f8fafc; }
+    .w-table td {
+      padding: 7px 8px; border-right: 1px solid #e2e8f0;
+      font-size: 11.5px; color: #1e293b; vertical-align: middle;
+      transition: all 0.3s ease;
+    }
+    .col-company-cell {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    }
+    .company-left { display: flex; align-items: center; gap: 6px; }
+    .comp-avatar {
+      width: 20px; height: 20px; border-radius: 4px; color: white;
+      font-size: 10.5px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+    }
+    .comp-name { font-size: 12px; font-weight: 800; color: #0f172a; }
+    .btn-row-hide {
+      background: #f1f5f9; border: 1px solid #cbd5e1; color: #64748b;
+      padding: 2px 5px; border-radius: 4px; font-size: 9.5px; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-row-hide:hover { background: #fee2e2; color: #dc2626; }
+
+    .sb-row { display: flex; align-items: center; gap: 5px; margin: 2.5px 0; }
+    .sb-badge {
+      font-size: 9.5px; font-weight: 700; color: #475569; background: #f1f5f9;
+      border: 1px solid #e2e8f0; border-radius: 3px; padding: 1px 4px; text-align: center;
+    }
+    .sb-badge.short { min-width: 28px; }
+    .sb-badge.wide { min-width: 40px; }
+    .sb-val { font-size: 11px; font-weight: 600; color: #1e293b; }
+    .hl-num { color: #0284c7; font-weight: 800; }
+    .chip-check {
+      font-size: 10px; font-weight: 700; color: #047857; background: #ecfdf5;
+      padding: 1px 5px; border-radius: 3px;
+    }
+    .chip-cross {
+      font-size: 10px; font-weight: 700; color: #94a3b8; background: #f1f5f9;
+      padding: 1px 5px; border-radius: 3px;
+    }
+
+    /* ========================================================
+       ✨ 반짝임 펄스 & 빨간 가이드 박스 & 1문장 카드
+       ======================================================== */
+    .spot-active {
+      cursor: pointer !important;
+      animation: red-pulse-glow 1.8s infinite ease-in-out !important;
+    }
+    @keyframes red-pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 2px #ef4444, 0 0 8px rgba(239, 68, 68, 0.45); }
+      50% { box-shadow: 0 0 0 4.5px #ef4444, 0 0 16px rgba(239, 68, 68, 0.85); }
+    }
+
+    #guide-focus-box {
+      position: absolute; z-index: 100; pointer-events: none;
+      border: 3.5px solid #ef4444; border-radius: 8px;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25), 0 8px 24px rgba(239, 68, 68, 0.35);
+      transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+      display: none;
+    }
+
+    #simple-guide-card {
+      position: absolute; z-index: 150; width: 340px;
+      background: #ffffff; border: 2px solid #ef4444; border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.22), 0 0 0 3px rgba(239, 68, 68, 0.15);
+      padding: 13px 15px; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+      display: none;
+    }
+    .sg-top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .sg-tag {
+      font-size: 11px; font-weight: 800; color: #b91c1c; background: #fee2e2;
+      padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .sg-close-btn { background: none; border: none; font-size: 15px; color: #94a3b8; cursor: pointer; padding: 2px; }
+    .sg-close-btn:hover { color: #ef4444; }
+    .sg-title { font-size: 14.5px; font-weight: 900; color: #0f172a; margin: 0 0 6px 0; }
+    .sg-content-box {
+      background: #f8fafc; border-left: 3.5px solid #ef4444; border-radius: 0 6px 6px 0;
+      padding: 8px 11px; margin-bottom: 8px;
+    }
+    .sg-sentence { font-size: 12px; font-weight: 700; color: #1e293b; line-height: 1.5; margin: 0; }
+    
+    .sg-action-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px dashed #e2e8f0; padding-top: 7px; margin-top: 4px;
+    }
+    .sg-status-text { font-size: 11px; font-weight: 700; color: #0284c7; display: flex; align-items: center; gap: 4px; }
+    .btn-replay-demo {
+      background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569;
+      font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 4px; cursor: pointer;
+    }
+    .btn-replay-demo:hover { background: #e2e8f0; color: #0f172a; }
+  </style>
+</head>
+<body>
+
+  <!-- 상단 단일 가이드 컨트롤 바 -->
+  <div class="guide-header-bar">
+    <div class="gh-left">
+      <div class="gh-beacon-dot"></div>
+      <span class="gh-badge">기능 가이드</span>
+      <div>
+        <div class="gh-title">한장비교표 핵심 기능 사용법</div>
+        <div class="gh-subtitle">화면에서 빨간 테두리로 <b>반짝이는 4가지 기능</b>을 클릭해보세요!</div>
+      </div>
+    </div>
+
+    <!-- 실제 비교표로 복귀 버튼 -->
+    <div class="gh-right">
+      <button onclick="handleReturnOrClose()" class="btn-return-main">
+        <i class="fas fa-times"></i> 가이드 닫기
+      </button>
+    </div>
+  </div>
+
+  <!-- 중앙 컴팩트 가이드 스테이지 (스크롤 없이 한 화면에 다 보이도록 배치) -->
+  <div class="guide-stage-wrapper">
+    <div class="guide-compact-card" id="guideStage">
+      <!-- 카메라 플래시 효과 레이어 -->
+      <div id="camera-flash-overlay"></div>
+
+      <!-- 📸 캡처된 사진 미리보기 팝업 모달 -->
+      <div id="snapshot-modal-overlay">
+        <div class="snapshot-photo-frame">
+          <div class="spf-header">
+            <div class="spf-header-left">
+              <div class="spf-icon-cam"><i class="fas fa-camera"></i></div>
+              <div>
+                <div class="spf-title">맞춤 비교표 캡처 완료!</div>
+                <div class="spf-sub">주택화재_비교표_고해상도.png (2x 초고화질)</div>
+              </div>
+            </div>
+            <span class="spf-badge"><i class="fas fa-check-circle"></i> 이미지 저장됨</span>
+          </div>
+
+          <div class="spf-image-view">
+            <!-- 캡처 결과물 시뮬레이션 카드 -->
+            <div class="spf-mock-table">
+              <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1.5px solid #0284c7; padding-bottom:6px; margin-bottom:8px;">
+                <div style="font-size:14px; font-weight:900; color:#0f2744;">WERACLE INSIGHT | 주택화재 보험비교표</div>
+                <div style="font-size:10px; color:#64748b; font-weight:700;">기준일 2026.03.02</div>
+              </div>
+              <div style="background:#0f2744; color:white; font-size:10.5px; font-weight:800; padding:5px 8px; border-radius:4px; display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span>보험사 (선택 2개사 집중비교)</span>
+                <span>상품명 / 화재손해 / 급배수 누출손해</span>
+              </div>
+              <div style="font-size:11px; padding:6px 8px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; background:#f0f9ff;">
+                <span style="font-weight:800; color:#dc2626;">메리츠화재 (운전자상해종합)</span>
+                <span style="color:#0f172a; font-weight:600;">합산 최대 20억 | 면책 X / 자부담 無</span>
+              </div>
+              <div style="font-size:11px; padding:6px 8px; display:flex; justify-content:space-between; background:#fff7ed;">
+                <span style="font-weight:800; color:#f97316;">현대해상 (행복가득생활보장)</span>
+                <span style="color:#0f172a; font-weight:600;">합산 최대 15억 | 10년내 5백 / 20년내 2백</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="spf-footer">
+            <span><i class="fas fa-file-image" style="color:#0284c7;"></i> 내가 세팅한 화면 그대로 깨끗한 사진 파일로 저장되었습니다.</span>
+            <span style="color:#10b981; font-weight:800;">✓ 카톡 전송 및 인쇄 준비 완료</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 빨간 포커스 박스 -->
+      <div id="guide-focus-box"></div>
+
+      <!-- 1문장 팁 카드 -->
+      <div id="simple-guide-card">
+        <div class="sg-top-row">
+          <span class="sg-tag"><i class="fas fa-lightbulb"></i> 활용 팁</span>
+          <button class="sg-close-btn" onclick="closeSimpleGuide()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="sg-title" id="sg-title">선택한 보험사만 보기</div>
+        <div class="sg-content-box">
+          <p class="sg-sentence" id="sg-sentence">고객이 원하는 2~3개 보험사만 골라 1:1로 집중 비교할 때 활용해 보세요!</p>
+        </div>
+        <div class="sg-action-bar">
+          <span class="sg-status-text" id="sg-status-text">
+            <i class="fas fa-play-circle"></i> <span id="sg-status-msg">화면 동작 시연 중...</span>
+          </span>
+          <button class="btn-replay-demo" onclick="replayCurrentDemo()">
+            <i class="fas fa-rotate-right"></i> 다시 시연
+          </button>
+        </div>
+      </div>
+
+      <!-- 컴팩트 요약 헤더 -->
+      <div class="mini-top-header">
+        <div class="mini-title-wrap">
+          <span class="mini-badge">WERACLE INSIGHT</span>
+          <h2 class="mini-title">주택화재 보험비교표 (한눈에 보기)</h2>
+        </div>
+      </div>
+
+      <!-- 컴팩트 툴바 -->
+      <div class="compact-toolbar">
+        <div class="btn-group-toggle">
+          <button class="btn-tool-tab">
+            <i class="fas fa-layer-group"></i> 전체 보험사 <span class="tab-cnt">5</span>
+          </button>
+          <button class="btn-tool-tab active spot-active" id="spot-guide-filter" onclick="openSimpleGuide('filter-btn', this, event)">
+            <i class="fas fa-check-square"></i> 선택한 보험사만 보기
+          </button>
+        </div>
+        <div>
+          <button class="btn-download spot-active" id="spot-guide-download" onclick="openSimpleGuide('download-btn', this, event)">
+            <i class="fas fa-camera"></i> 맞춤 비교표 캡처 저장
+          </button>
+        </div>
+      </div>
+
+      <!-- 컴팩트 비교표 -->
+      <div class="table-wrapper">
+        <table class="w-table" id="guideTable">
+          <thead>
+            <tr>
+              <th style="width: 140px;"><div class="twotier-head-wrap"><span class="twotier-title">보험사</span></div></th>
+              <th style="width: 110px;"><button class="twotier-hide-btn"><i class="fas fa-eye-slash"></i></button><div class="twotier-head-wrap"><span class="twotier-title">상품명</span></div></th>
+              <th style="width: 155px;">
+                <button class="twotier-hide-btn spot-active" id="spot-guide-colhide" onclick="openSimpleGuide('col-hide-btn', this, event)">
+                  <i class="fas fa-eye-slash"></i>
+                </button>
+                <div class="twotier-head-wrap"><span class="twotier-title">화재배상</span><span class="twotier-sub">대인 / 대물</span></div>
+              </th>
+              <th style="width: 130px;"><button class="twotier-hide-btn"><i class="fas fa-eye-slash"></i></button><div class="twotier-head-wrap"><span class="twotier-title">화재손해</span><span class="twotier-sub">건물 / 가재도구</span></div></th>
+              <th style="width: 170px;"><button class="twotier-hide-btn"><i class="fas fa-eye-slash"></i></button><div class="twotier-head-wrap"><span class="twotier-title">급배수 누출손해</span><span class="twotier-sub">한도 / 면책 / 자부담</span></div></th>
+              <th style="width: 140px;"><button class="twotier-hide-btn"><i class="fas fa-eye-slash"></i></button><div class="twotier-head-wrap"><span class="twotier-title">급배수 가입대상</span><span class="twotier-sub">아파트 / 단독 / 다세대</span></div></th>
+              <th style="width: 140px;"><button class="twotier-hide-btn"><i class="fas fa-eye-slash"></i></button><div class="twotier-head-wrap"><span class="twotier-title">임시거주비</span><span class="twotier-sub">1일 / 보장사유</span></div></th>
+              <th style="width: 140px;"><button class="twotier-hide-btn"><i class="fas fa-eye-slash"></i></button><div class="twotier-head-wrap"><span class="twotier-title">가전제품 고장수리</span><span class="twotier-sub">지급 한도</span></div></th>
+            </tr>
+          </thead>
+          <tbody id="guideTableBody">
+            <!-- 자바스크립트로 렌더링 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const simpleGuides = {
+      'filter-btn': {
+        title: '선택한 보험사만 보기',
+        sentence: '고객이 원하는 2~3개 보험사만 골라 1:1로 집중 비교할 때 활용해 보세요!'
+      },
+      'col-hide-btn': {
+        title: '보장 항목(컬럼) 숨기기',
+        sentence: '관심 없는 보장 항목을 숨겨서 화면 가로폭을 시원하게 줄일 때 활용해 보세요!'
+      },
+      'row-hide-btn': {
+        title: '특정 회사(행) 숨기기',
+        sentence: '인수가 거절되었거나 상담에서 제외할 특정 회사를 뺄 때 활용해 보세요!'
+      },
+      'download-btn': {
+        title: '맞춤 비교표 캡처 저장',
+        sentence: '내가 맞춤으로 세팅한 화면 그대로 깨끗하게 캡처하여 고객에게 보낼 때 활용해 보세요!'
+      }
+    };
+
+    const companies = [
+      { id: "c1", name: "라이나손보", short: "라", color: "#0284c7", prod: "우리집무사고할인", p1: "대인: 20억<br>대물: 사망1억/부상2천만/후유장해1.5억", p2: "건물: 최대20억<br>가재: 최대2억", p3: "한도: 1천만(단독:20년내 2백, 30년내 1백)<br>면책: X<br>자부담: 無", p4: "아파트: 30년이내<br>단독: 30년이내<br>다세대: 30년이내<br>(30년초과 가능)", p5: "1일: 30만<br>그외 임시거주비: 붕괴/침강/사태", p6: "20대가전100만" },
+      { id: "c2", name: "메리츠화재", short: "메", color: "#dc2626", prod: "운전자상해종합", p1: "대인: 20억<br>대물: 사망1억/부상2천만/후유장해1억", p2: "합산 최대20억", p3: "한도: 아파트 1천, 연립 2백, 단독 1백<br>면책: X<br>자부담: 無", p4: "아파트/단독/다세대 가능<br>(30년초과 가능)", p5: "1일: 10만<br>그외 임시거주비: 화재", p6: "20대가전100만" },
+      { id: "c3", name: "한화손해", short: "한", color: "#ea580c", prod: "가정생활종합", p1: "대인: 20억<br>대물: 사망1.5억/부상3천만/후유장해1.5억", p2: "합산 최대20억", p3: "한도: 200~500만차등<br>면책: 90일<br>자부담: 10만원 초과 또는 10/30/50%택1", p4: "아파트: 30년이내<br>단독/다세대: 5년이내<br>(30년초과 불가)", p5: "1일: 10만<br>그외 임시거주비: 붕괴/침강/사태", p6: "22대가전100만" },
+      { id: "c4", name: "현대해상", short: "현", color: "#f97316", prod: "행복가득생활보장", p1: "대인: 20억<br>대물: 사망1.5억/부상3천만/후유장해1.5억", p2: "합산 최대15억", p3: "한도: 10년내 5백, 20년내 2백, 30년내 1백<br>면책: 90일<br>자부담: 10~30만차등", p4: "모두30년이내<br>(30년초과 불가)", p5: "1일: 25만<br>그외 임시거주비: 풍수재/지진/급배수", p6: "18대가전100만" },
+      { id: "c5", name: "삼성화재", short: "삼", color: "#0284c7", prod: "슬기로운가정생활", p1: "대인: 20억<br>대물: 사망1억/부상2천만/후유장해1억", p2: "건물: 최대5억<br>가재: 최대5억", p3: "한도: 50~1000만차등, 누수탐지 배상<br>면책: 90일<br>자부담: 10%", p4: "아파트/다세대: 30년이내<br>단독: 불가<br>(30년초과 불가)", p5: "1일: 10만<br>그외 임시거주비: 화재/붕괴/침강/사태", p6: "27대가전100만" }
+    ];
+
+    let currentGuideKey = 'filter-btn';
+    let demoTimer = null;
+    let snapshotTimer = null;
+
+    function formatCell(raw) {
+      if (!raw) return '-';
+      return raw.split('<br>').map(line => {
+        const tr = line.trim();
+        if (tr.includes(':')) {
+          const parts = tr.split(':');
+          const k = parts[0].trim();
+          let v = parts.slice(1).join(':').trim();
+          const kClass = k.length >= 4 ? 'wide' : 'short';
+          if (v.includes('가능')) v = `<span class="chip-check">✓ 가능</span>`;
+          else if (v.includes('불가')) v = `<span class="chip-cross">✕ 불가</span>`;
+          else v = v.replace(/([0-9]+(?:\.[0-9]+)?(?:억|천만|만|대|%|년))/g, '<span class="hl-num">$1</span>');
+          return `<div class="sb-row"><span class="sb-badge ${kClass}">${k}</span><span class="sb-val">${v}</span></div>`;
+        } else {
+          let text = tr;
+          if (text.includes('불가')) text = `<span class="chip-cross">${text}</span>`;
+          else if (text.includes('가능')) text = `<span class="chip-check">${text}</span>`;
+          else text = text.replace(/([0-9]+(?:\.[0-9]+)?(?:억|천만|만|대|%|년))/g, '<span class="hl-num">$1</span>');
+          return `<div class="sb-row"><span class="sb-val">${text}</span></div>`;
+        }
+      }).join('');
+    }
+
+    function renderTable() {
+      let html = '';
+      companies.forEach((comp, idx) => {
+        const isChecked = (idx === 1 || idx === 3) ? 'checked' : '';
+        const isFirst = (idx === 0);
+        const hideBtnAttr = isFirst 
+          ? `class="btn-row-hide spot-active" id="spot-guide-rowhide" onclick="openSimpleGuide('row-hide-btn', this, event)"`
+          : `class="btn-row-hide"`;
+
+        html += `
+          <tr data-row-id="${comp.id}" class="${isChecked ? 'is-selected-comp' : ''}">
+            <td class="col-company">
+              <div class="col-company-cell">
+                <div class="company-left">
+                  <input type="checkbox" class="row-checkbox" ${isChecked}>
+                  <div class="comp-avatar" style="background:${comp.color}">${comp.short}</div>
+                  <span class="comp-name">${comp.name}</span>
+                </div>
+                <button ${hideBtnAttr}><i class="fas fa-eye-slash"></i> 숨김</button>
+              </div>
+            </td>
+            <td><strong>${comp.prod}</strong></td>
+            <td>${formatCell(comp.p1)}</td>
+            <td>${formatCell(comp.p2)}</td>
+            <td>${formatCell(comp.p3)}</td>
+            <td>${formatCell(comp.p4)}</td>
+            <td>${formatCell(comp.p5)}</td>
+            <td>${formatCell(comp.p6)}</td>
+          </tr>
+        `;
+      });
+      document.getElementById('guideTableBody').innerHTML = html;
+    }
+
+    // ========================================================
+    // 🎬 실제 칸이 물리적으로 줄어들고 복구되는 시연 엔진
+    // ========================================================
+    function restoreAllTableStates() {
+      if (demoTimer) clearTimeout(demoTimer);
+      if (snapshotTimer) clearTimeout(snapshotTimer);
+
+      // 1. 모든 행 display 및 스타일 복구
+      document.querySelectorAll('#guideTable tbody tr').forEach(tr => {
+        tr.style.display = '';
+        tr.style.background = '';
+      });
+
+      // 2. 모든 열 display 복구
+      const table = document.getElementById('guideTable');
+      for (let r of table.rows) {
+        if (r.cells[2]) r.cells[2].style.display = '';
+      }
+
+      // 3. 플래시 & 스냅샷 모달 닫기
+      const flash = document.getElementById('camera-flash-overlay');
+      if (flash) flash.classList.remove('flashing');
+
+      const snapModal = document.getElementById('snapshot-modal-overlay');
+      if (snapModal) {
+        snapModal.classList.remove('show', 'hide-anim');
+      }
+    }
+
+    function runFeatureSimulation(guideKey) {
+      restoreAllTableStates();
+
+      const msgText = document.getElementById('sg-status-msg');
+
+      if (guideKey === 'filter-btn') {
+        // [1] 선택한 2개사(메리츠, 현대)만 남기고 나머지 행 실제 칸 삭제(display: none)
+        if (msgText) msgText.innerText = '체크 안 된 행이 실제로 사라져 2개사로 압축됩니다!';
+
+        document.querySelectorAll('#guideTable tbody tr').forEach(tr => {
+          if (tr.classList.contains('is-selected-comp')) {
+            tr.style.background = '#f0f9ff';
+            tr.style.display = '';
+          } else {
+            tr.style.display = 'none'; // 실제로 칸이 줄어듦!
+          }
+        });
+
+        demoTimer = setTimeout(() => {
+          restoreAllTableStates();
+          if (msgText) msgText.innerText = '전체 행이 원상태로 부드럽게 복구되었습니다.';
+        }, 2200);
+
+      } else if (guideKey === 'col-hide-btn') {
+        // [2] 화재배상 열 실제 칸 삭제(display: none) -> 가로폭이 실제로 줄어듦!
+        if (msgText) msgText.innerText = "'화재배상' 칸이 완전히 닫히며 가로폭이 줄어듭니다!";
+
+        const table = document.getElementById('guideTable');
+        for (let r of table.rows) {
+          if (r.cells[2]) r.cells[2].style.display = 'none'; // 실제로 열 칸이 사라짐!
+        }
+
+        // 포커스 박스는 열이 닫혀있는 동안 잠시 숨겼다가 복구 시 재표시
+        const focusBox = document.getElementById('guide-focus-box');
+        focusBox.style.display = 'none';
+
+        demoTimer = setTimeout(() => {
+          restoreAllTableStates();
+          const targetEl = document.getElementById('spot-guide-colhide');
+          if (targetEl) reHighlightSpot(targetEl);
+          if (msgText) msgText.innerText = '숨겼던 열 칸이 원상태로 복구되었습니다.';
+        }, 2200);
+
+      } else if (guideKey === 'row-hide-btn') {
+        // [3] 라이나손보 행 실제 칸 삭제(display: none) -> 아래 행들이 실제로 올라옴!
+        if (msgText) msgText.innerText = "'라이나손보' 행이 쏙 빠지고 아래 행들이 올라옵니다!";
+
+        const firstRow = document.querySelector('#guideTable tbody tr:first-child');
+        if (firstRow) firstRow.style.display = 'none'; // 실제로 행 칸이 사라짐!
+
+        const focusBox = document.getElementById('guide-focus-box');
+        focusBox.style.display = 'none';
+
+        demoTimer = setTimeout(() => {
+          restoreAllTableStates();
+          const targetEl = document.getElementById('spot-guide-rowhide');
+          if (targetEl) reHighlightSpot(targetEl);
+          if (msgText) msgText.innerText = '제외된 행 칸이 원상태로 복구되었습니다.';
+        }, 2200);
+
+      } else if (guideKey === 'download-btn') {
+        // [4] 📸 찰칵 사진 찍히고 그 사진이 화면에 크게 보였다가 사라지는 시연!
+        if (msgText) msgText.innerText = "찰칵! 캡처된 사진이 화면에 크게 뜹니다.";
+
+        // 1) 셔터 플래시 번쩍
+        const flash = document.getElementById('camera-flash-overlay');
+        if (flash) {
+          flash.classList.add('flashing');
+          setTimeout(() => flash.classList.remove('flashing'), 200);
+        }
+
+        // 2) 0.15초 뒤 사진 미리보기 모달이 화면 중앙에 크게 팝업!
+        setTimeout(() => {
+          const snapModal = document.getElementById('snapshot-modal-overlay');
+          if (snapModal) {
+            snapModal.classList.remove('hide-anim');
+            snapModal.classList.add('show');
+
+            // 1.8초 동안 크게 보인 후, 부드럽게 퇴장 애니메이션 실행
+            snapshotTimer = setTimeout(() => {
+              snapModal.classList.add('hide-anim');
+              setTimeout(() => {
+                snapModal.classList.remove('show', 'hide-anim');
+                restoreAllTableStates();
+                msgText.innerText = '캡처된 사진 저장이 완료되었습니다.';
+              }, 280);
+            }, 1800);
+          }
+        }, 150);
+      }
+    }
+
+    function reHighlightSpot(targetEl) {
+      const stage = document.getElementById('guideStage');
+      const stageRect = stage.getBoundingClientRect();
+      const rect = targetEl.getBoundingClientRect();
+      const focusBox = document.getElementById('guide-focus-box');
+      focusBox.style.display = 'block';
+      const pad = 3;
+      focusBox.style.top = `${rect.top - stageRect.top - pad}px`;
+      focusBox.style.left = `${rect.left - stageRect.left - pad}px`;
+      focusBox.style.width = `${rect.width + (pad * 2)}px`;
+      focusBox.style.height = `${rect.height + (pad * 2)}px`;
+    }
+
+    function replayCurrentDemo() {
+      if (currentGuideKey) {
+        runFeatureSimulation(currentGuideKey);
+      }
+    }
+
+    // ========================================================
+    // 포커스 박스 및 가이드 카드 제어
+    // ========================================================
+    function openSimpleGuide(guideKey, targetEl, event) {
+      if (event) event.stopPropagation();
+
+      currentGuideKey = guideKey;
+
+      const stage = document.getElementById('guideStage');
+      const stageRect = stage.getBoundingClientRect();
+      const rect = targetEl.getBoundingClientRect();
+
+      // 포커스 박스 (빨간 테두리)
+      const focusBox = document.getElementById('guide-focus-box');
+      focusBox.style.display = 'block';
+      const pad = 3;
+      focusBox.style.top = `${rect.top - stageRect.top - pad}px`;
+      focusBox.style.left = `${rect.left - stageRect.left - pad}px`;
+      focusBox.style.width = `${rect.width + (pad * 2)}px`;
+      focusBox.style.height = `${rect.height + (pad * 2)}px`;
+
+      // 가이드 텍스트 업데이트
+      const guide = simpleGuides[guideKey];
+      if (guide) {
+        document.getElementById('sg-title').innerText = guide.title;
+        document.getElementById('sg-sentence').innerText = guide.sentence;
+      }
+
+      // 카드 위치
+      const card = document.getElementById('simple-guide-card');
+      card.style.display = 'block';
+
+      let cardTop = rect.bottom - stageRect.top + 10;
+      let cardLeft = rect.left - stageRect.left;
+
+      if (guideKey === 'row-hide-btn') {
+        cardTop = rect.top - stageRect.top - 12;
+        cardLeft = rect.right - stageRect.left + 14;
+      } else if (guideKey === 'download-btn') {
+        cardTop = rect.bottom - stageRect.top + 10;
+        cardLeft = rect.right - stageRect.left - 340;
+      }
+
+      if (cardLeft + 340 > stage.clientWidth) cardLeft = stage.clientWidth - 350;
+      if (cardLeft < 10) cardLeft = 10;
+
+      card.style.top = `${cardTop}px`;
+      card.style.left = `${cardLeft}px`;
+
+      // 🎬 실제 칸 축소/확장 & 사진 팝업 시연 실행!
+      runFeatureSimulation(guideKey);
+    }
+
+    function closeSimpleGuide() {
+      document.getElementById('guide-focus-box').style.display = 'none';
+      document.getElementById('simple-guide-card').style.display = 'none';
+      restoreAllTableStates();
+    }
+
+    function triggerSpot(spotId, btnEl) {
+      document.querySelectorAll('.gh-chip-btn').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+
+      const el = document.getElementById(spotId);
+      if (!el) return;
+
+      let key = 'filter-btn';
+      if (spotId === 'spot-guide-colhide') key = 'col-hide-btn';
+      if (spotId === 'spot-guide-rowhide') key = 'row-hide-btn';
+      if (spotId === 'spot-guide-download') key = 'download-btn';
+
+      openSimpleGuide(key, el);
+    }
+
+    function handleReturnOrClose() {
+      // 1. postMessage를 통해 부모(및 최상위) 창에 닫기 신호 전송 (file:/// 프로토콜 CORS 제약 우회)
+      try {
+        if (window.parent) {
+          window.parent.postMessage({ action: 'CLOSE_WERACLE_GUIDE', type: 'CLOSE_GUIDE_MODAL' }, '*');
+          window.parent.postMessage('CLOSE_WERACLE_GUIDE', '*');
+        }
+      } catch (err) {}
+
+      try {
+        if (window.top && window.top !== window.parent) {
+          window.top.postMessage({ action: 'CLOSE_WERACLE_GUIDE', type: 'CLOSE_GUIDE_MODAL' }, '*');
+          window.top.postMessage('CLOSE_WERACLE_GUIDE', '*');
+        }
+      } catch (err) {}
+
+      // 2. 직접 함수 호출 시도
+      try {
+        if (window.parent && typeof window.parent.closeGuideModal === 'function') {
+          window.parent.closeGuideModal();
+          return;
+        }
+      } catch (err) {}
+
+      // 3. 단독 창이거나 새창으로 열렸을 때
+      try {
+        if (window.opener) {
+          window.close();
+        } else if (window === window.top) {
+          window.location.href = 'insight_compare_v2.html';
+        }
+      } catch (err) {}
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderTable();
+      // 자동 시연 제거: 사용자가 직접 반짝이는 버튼을 클릭했을 때만 시연 동작!
+    });
+  </script>
+</body>
+</html>

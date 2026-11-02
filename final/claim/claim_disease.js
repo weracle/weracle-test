@@ -259,7 +259,7 @@
       
       return inputHtml;
     } else if(def.type === 'textarea') {
-      return `<textarea id="${fieldId}" class="form-control" rows="5" placeholder="자세하게 적어주시면 빠른 처리에 도움이 됩니다."></textarea>`;
+      return `<textarea id="${fieldId}" class="form-control" rows="5" wrap="soft" placeholder="자세하게 적어주시면 빠른 처리에 도움이 됩니다."></textarea>`;
     } else if(def.type === 'checkbox_copy') {
       let yesText = fieldId === 'sameAsCont' ? "동일함 (자동복사)" : "동일함";
       let noText = fieldId === 'sameAsCont' ? "다름 (직접입력)" : "다름";

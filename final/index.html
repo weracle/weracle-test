@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta name="google-site-verification" content="0bZjxLunsbUx5111Vr0GBScEPK1IYKC-c7YWICpM180" />
@@ -3746,40 +3745,46 @@ trySwitch();
             }
         });
 
-        window.addEventListener('DOMContentLoaded', () => {
-  if(window.authEvents) {
-    window.authEvents.on('stateChange', async ({ event, session }) => {
-      if (event === 'SIGNED_IN') {
-        const currentMainFrame = document.getElementById('mainFrame');
-        if (currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html')) {
-          if (typeof showDashboardHome === 'function') {
-            showDashboardHome();
-          }
+        function setupAuthEventListener() {
+            if (window.authEvents) {
+                window.authEvents.on('stateChange', async ({ event, session }) => {
+                    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+                        if (session && session.user) {
+                            const currentMainFrame = document.getElementById('mainFrame');
+                            if (currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html')) {
+                                if (typeof showDashboardHome === 'function') {
+                                    showDashboardHome();
+                                }
+                            }
+                            if (typeof checkSession === 'function') checkSession();
+                        }
+                    }
+                    if (event === 'SIGNED_OUT') {
+                        if (typeof updateProfileUI === 'function') updateProfileUI(null, null);
+                    }
+                    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && session.provider_token) {
+                        try {
+                            if (window.sb) {
+                                await window.sb.from('profiles').update({ google_access_token: session.provider_token }).eq('id', session.user.id);
+                            }
+                            if (window.currentProfile) window.currentProfile.google_access_token = session.provider_token;
+                            localStorage.setItem('g_access_token', session.provider_token);
+                            localStorage.setItem('g_token_time', Date.now().toString());
+
+                            const iframe = document.getElementById('mainFrame');
+                            if (iframe && iframe.contentWindow) {
+                                iframe.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: session.provider_token }, '*');
+                                const wf1 = document.getElementById('workerFrame');
+                                if (wf1 && wf1.contentWindow) wf1.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: session.provider_token }, '*');
+                            }
+                        } catch(e) { console.error('Error saving provider_token:', e); }
+                    }
+                });
+            } else {
+                setTimeout(setupAuthEventListener, 50);
+            }
         }
-        if (typeof checkSession === 'function') checkSession();
-      }
-      if (event === 'SIGNED_OUT') {
-        if (typeof updateProfileUI === 'function') updateProfileUI(null, null);
-      }
-      if (event === 'SIGNED_IN' && session && session.provider_token) {
-        try {
-          if (window.sb) {
-            await window.sb.from('profiles').update({ google_access_token: session.provider_token }).eq('id', session.user.id);
-          }
-          if (window.currentProfile) window.currentProfile.google_access_token = session.provider_token;
-          localStorage.setItem('g_access_token', session.provider_token);
-          
-          const iframe = document.getElementById('mainFrame');
-          if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: session.provider_token }, '*');
-            const wf1 = document.getElementById('workerFrame'); 
-            if (wf1 && wf1.contentWindow) wf1.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: session.provider_token }, '*');
-          }
-        } catch(e) { console.error('Error saving provider_token:', e); }
-      }
-    });
-  }
-});
+        setupAuthEventListener();
 
 let authTab = "login"; // "login" | "signup"
 let wIsLoggedIn = false; // Track login status
@@ -4326,27 +4331,46 @@ async function checkSession() {
                 }
             } catch(e) {}
         }
-        const { data, error } = await window.sb.auth.getSession();
-        if (error) throw error;
-        
-        if (data && data.session) {
-            window.currentUser = data.session.user;
+        const hasAuthParam = window.location.search.includes('code=') ||
+                             window.location.hash.includes('access_token=') ||
+                             (window.top && window.top !== window && (
+                                 (window.top.location.search && window.top.location.search.includes('code=')) ||
+                                 (window.top.location.hash && window.top.location.hash.includes('access_token='))
+                             ));
+
+        let currentSession = null;
+        for (let retry = 0; retry < (hasAuthParam ? 15 : 1); retry++) {
+            const { data, error } = await window.sb.auth.getSession();
+            if (!error && data && data.session) {
+                currentSession = data.session;
+                break;
+            }
+            if (hasAuthParam) {
+                await new Promise(r => setTimeout(r, 200));
+            }
+        }
+
+        if (currentSession) {
+            window.currentUser = currentSession.user;
             wIsLoggedIn = true;
 
-            // OAuth 리다이렉트 후 브라우저 주소창의 긴 해시(#access_token=...) 깔끔하게 자동 정리
+            // OAuth 리다이렉트 후 브라우저 주소창의 파라미터(?code=... 또는 #access_token=...) 깔끔하게 자동 정리
             if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('provider_token'))) {
-                try {
-                    history.replaceState(null, '', window.location.pathname + window.location.search);
-                } catch(e) {}
+                try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch(e) {}
+            }
+            if (window.location.search && window.location.search.includes('code=')) {
+                try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
             }
             if (window.top && window.top !== window) {
                 try {
                     if (window.top.location.hash && (window.top.location.hash.includes('access_token') || window.top.location.hash.includes('provider_token'))) {
                         window.top.history.replaceState(null, '', window.top.location.pathname + window.top.location.search);
                     }
+                    if (window.top.location.search && window.top.location.search.includes('code=')) {
+                        window.top.history.replaceState(null, '', window.top.location.pathname);
+                    }
                 } catch(e) {}
             }
-
             const currentMainFrame = document.getElementById('mainFrame');
             if (currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html')) {
                 if (typeof showDashboardHome === 'function') {
@@ -4354,13 +4378,13 @@ async function checkSession() {
                 }
             }
             
-            if (data.session.provider_token) {
+            if (currentSession.provider_token) {
                 try {
                     const gisTime = parseInt(localStorage.getItem('g_token_time') || '0');
-                    const loginTime = new Date(data.session.user.last_sign_in_at).getTime();
+                    const loginTime = new Date(currentSession.user.last_sign_in_at).getTime();
                     if (loginTime > gisTime) {
-                        await window.sb.from('profiles').update({ google_access_token: data.session.provider_token }).eq('id', window.currentUser.id);
-                        localStorage.setItem('g_access_token', data.session.provider_token);
+                        await window.sb.from('profiles').update({ google_access_token: currentSession.provider_token }).eq('id', window.currentUser.id);
+                        localStorage.setItem('g_access_token', currentSession.provider_token);
                         localStorage.setItem('g_token_time', Date.now().toString()); 
                     }
                 } catch(e) {}
@@ -4568,7 +4592,7 @@ safeAlert("회원가입 실패: " + err.message);
 
 async function handleSocial(provider) {
 try {
-const redirectUrl = (window.top && window.top !== window) ? window.top.location.href.split('?')[0].split('#')[0] : window.location.href.split('?')[0].split('#')[0];
+const redirectUrl = (window.top && window.top !== window) ? window.top.location.origin : window.location.origin;
 const options = { 
   redirectTo: redirectUrl,
   skipBrowserRedirect: true

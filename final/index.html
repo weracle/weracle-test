@@ -2,6 +2,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+  <meta name="google-site-verification" content="0bZjxLunsbUx5111Vr0GBScEPK1IYKC-c7YWICpM180" />
+
 <script src="login/config.js?v=1.0.1"></script>
 <script src="login/auth.js?v=1.0.1"></script>
 <script src="security.js?v=1.0.0"></script>
@@ -4315,49 +4317,15 @@ async function checkSession() {
         return;
     }
     try {
-        // [OAuth 토큰 복원] iframe 내부/외부 주소창에서 access_token 또는 code 감지 시 세션 즉시 주입
-        try {
-            const fullHash = (window.location.hash && window.location.hash.includes('access_token'))
-                ? window.location.hash
-                : ((window.top && window.top !== window && window.top.location.hash && window.top.location.hash.includes('access_token'))
-                    ? window.top.location.hash
-                    : '');
-            if (fullHash) {
-                const hp = new URLSearchParams(fullHash.replace(/^#/, ''));
-                const at = hp.get('access_token');
-                const rt = hp.get('refresh_token') || at;
-                const pt = hp.get('provider_token');
-                if (at) {
-                    console.log('[Auth] Restoring session via setSession from OAuth hash...');
-                    const { data: sData, error: sErr } = await window.sb.auth.setSession({ access_token: at, refresh_token: rt });
-                    if (!sErr && pt) {
-                        localStorage.setItem('g_access_token', pt);
-                        localStorage.setItem('g_token_time', Date.now().toString());
+        if (window.top && window.top !== window) {
+            try {
+                if (window.top.location.hash && window.top.location.hash.includes('access_token')) {
+                    if (!window.location.hash || !window.location.hash.includes('access_token')) {
+                        window.location.hash = window.top.location.hash;
                     }
                 }
-            }
-
-            const fullSearch = (window.location.search && window.location.search.includes('code='))
-                ? window.location.search
-                : ((window.top && window.top !== window && window.top.location.search && window.top.location.search.includes('code='))
-                    ? window.top.location.search
-                    : '');
-            if (fullSearch) {
-                const sp = new URLSearchParams(fullSearch);
-                const code = sp.get('code');
-                if (code) {
-                    console.log('[Auth] Exchanging code for session via exchangeCodeForSession...');
-                    const { data: exData, error: exErr } = await window.sb.auth.exchangeCodeForSession(code);
-                    if (!exErr && exData && exData.session && exData.session.provider_token) {
-                        localStorage.setItem('g_access_token', exData.session.provider_token);
-                        localStorage.setItem('g_token_time', Date.now().toString());
-                    }
-                }
-            }
-        } catch(oauthRecoveryErr) {
-            console.warn('[Auth] OAuth token recovery error:', oauthRecoveryErr);
+            } catch(e) {}
         }
-
         const { data, error } = await window.sb.auth.getSession();
         if (error) throw error;
         

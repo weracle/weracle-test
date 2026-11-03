@@ -182,7 +182,27 @@
   </div>
 
   <script>
+    let isSocialLoggingIn = false;
     function triggerGoogleLogin() {
+      if (isSocialLoggingIn) return;
+      isSocialLoggingIn = true;
+      const btn = document.querySelector('.btn-google-login');
+      if (btn) {
+        btn.style.opacity = '0.7';
+        btn.style.pointerEvents = 'none';
+        const span = btn.querySelector('span');
+        if (span) span.innerText = 'Google 로그인 연결 중...';
+      }
+      setTimeout(() => {
+        isSocialLoggingIn = false;
+        if (btn) {
+          btn.style.opacity = '1';
+          btn.style.pointerEvents = 'auto';
+          const span = btn.querySelector('span');
+          if (span) span.innerText = 'Google 계정으로 로그인';
+        }
+      }, 6000);
+
       // 상위 부모 윈도우(index_hyphen.html)에 소셜 로그인 요청 전달
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({ type: 'AUTH_SOCIAL', provider: 'google' }, '*');

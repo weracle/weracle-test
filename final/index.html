@@ -4034,6 +4034,7 @@ setTimeout(initGoogleClient, 100);
 initGoogleClient();
 
 function triggerGoogleLogin(isSilent = false) {
+    try { sessionStorage.removeItem('last_google_auth_alert'); } catch(e) {}
 if (!googleTokenClient) {
 safeAlert("구글 연동 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
 return;
@@ -4140,6 +4141,7 @@ iframe.style.height = newHeight + 'px';
 // 자식 iframe(CRM)에서 세션 요청 신호가 왔을 때 즉시 전송
 else if (event.data && event.data.type === 'CRM_TOKEN_UPDATED') {
     console.log(" Received updated CRM tokens from iframe.");
+    try { sessionStorage.removeItem('last_google_auth_alert'); } catch(e) {}
     if (event.data.google_sheet_id) {
         localStorage.setItem('g_sheet_id', event.data.google_sheet_id);
         if (window.currentProfile) window.currentProfile.google_sheet_id = event.data.google_sheet_id;

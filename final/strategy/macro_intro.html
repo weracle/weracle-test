@@ -240,27 +240,64 @@
     </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+    <script>
+    function goToTargetPage(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        // 1. 부모 창(index.html)이 있는 경우 부모의 정규 라우팅 함수 호출
+        try {
+            if (window.parent && typeof window.parent.loadSubPage === 'function') {
+                window.parent.loadSubPage('영업전략', '타겟 관리', 'target/target.html');
+                return;
+            }
+        } catch(err) {
+            console.warn('Parent loadSubPage failed:', err);
+        }
+        // 2. 단독 실행이거나 iframe 직접 이동인 경우
+        window.location.href = '../target/target.html';
+    }
+
+    function goToStrategyPlanPage(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        try {
+            if (window.parent && typeof window.parent.loadSubPage === 'function') {
+                window.parent.loadSubPage('영업전략', '전략 플랜', 'strategy/strategy_plan.html');
+                return;
+            }
+        } catch(err) {
+            console.warn('Parent loadSubPage failed:', err);
+        }
+        window.location.href = 'strategy_plan.html';
+    }
+    </script>
+
 </head>
 <body>
     <!-- 1. 타겟 관리 (좌측) -->
-    <div class="split-pane left-pane" onclick="location.href='target_test.html'">
+    <div class="split-pane left-pane" onclick="goToTargetPage(event)">
         <i class="fa-solid fa-users-viewfinder bg-icon"></i>
         <div class="content">
             <div class="badge">STEP 1. TARGET</div>
             <h1 class="title">누구에게<br>보낼까요?</h1>
             <p class="desc">필터를 통해 가망 고객과 만기 고객을 정밀하게 추출하고 리스트업합니다.</p>
-            <a href="target_test.html" class="action-link">타겟 추출하기 <i class="fa-solid fa-arrow-right"></i></a>
+            <a href="../target/target.html" class="action-link" onclick="goToTargetPage(event)">타겟 추출하기 <i class="fa-solid fa-arrow-right"></i></a>
         </div>
     </div>
 
     <!-- 2. 영업 전략 (우측) -->
-    <div class="split-pane right-pane" onclick="location.href='strategy_plan.html'">
+    <div class="split-pane right-pane" onclick="goToStrategyPlanPage(event)">
         <i class="fa-solid fa-lightbulb bg-icon"></i>
         <div class="content">
             <div class="badge">STEP 2. STRATEGY</div>
             <h1 class="title">무엇을<br>보낼까요?</h1>
             <p class="desc">고객의 마음을 움직일 가장 강력한 무기(제안서, 템플릿)를 세팅합니다.</p>
-            <a href="strategy_plan.html" class="action-link"><i class="fa-solid fa-arrow-left"></i> 영업 무기 고르기</a>
+            <a href="strategy_plan.html" class="action-link" onclick="goToStrategyPlanPage(event)"><i class="fa-solid fa-arrow-left"></i> 영업 무기 고르기</a>
         </div>
     </div>
 

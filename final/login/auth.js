@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Imweb & Supabase Auth & Security Logic
  * 
  * 기능: 로그인, 로그아웃, 세션 감지, 권한 등급 검사, 구독 만료/D-Day 감지, 모바일 팩스 쿼터(월 30회) 제어
@@ -311,7 +311,7 @@ window.guardPageAccess = guardPageAccess;
 async function loginWithGoogle() {
     if(!window.sb) { alert("서버 연결 중입니다. 잠시 후 다시 시도해주세요."); return; }
     try {
-        const redirectUrl = (window.top && window.top !== window) ? window.top.location.origin : window.location.origin;
+        const redirectUrl = (window.top && window.top !== window) ? window.top.location.href.split("?")[0].split("#")[0] : window.location.href.split("?")[0].split("#")[0];
         const { data, error } = await window.sb.auth.signInWithOAuth({
             provider: 'google',
             options: {

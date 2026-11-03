@@ -2,6 +2,7 @@
 const GOOGLE_API_KEY = "AIzaSyD9XOJBgaaUh6XVAx_az6Ka0IlUUsc2pSw"; // Replace with real if needed
 const SPREADSHEET_ID = "15UcwX8QpXbA-aL1n2qJ9z5dO2y94hQo-7YJ7H1mYwDk"; 
 const isHeadless = new URLSearchParams(window.location.search).get('mode') === 'headless';
+window.isHeadless = isHeadless;
 
 (function() {
     const style = document.createElement("style");
@@ -825,7 +826,7 @@ console.error("GIS init error:", err);
 */
 // [중복 알림 방지] 구글 연동 안내를 1회만 표시하는 싱글톤 헬퍼 (5분 쿨다운)
 function notifyGoogleExpiredOnce(message) {
-    if (typeof window === "undefined" || window.isHeadless) return;
+    if (typeof window === "undefined" || isHeadless || window.isHeadless) return;
     const now = Date.now();
     let lastAlert = 0;
     try {
@@ -852,18 +853,13 @@ async function ensureValidToken() {
     const savedTime = parseInt(localStorage.getItem("g_token_time") || "0", 10);
     if (savedTime > 0 && Date.now() > savedTime + 3540000) { // 59 minutes just to be safe
         invalidateCurrentToken();
-        if (typeof window !== "undefined" && !window.isHeadless) {
+        if (!isHeadless && !window.isHeadless) {
             notifyGoogleExpiredOnce("구글 연동 시간이 만료되었습니다.<br>화면 우측 상단의 [1초 재연동] 버튼을 눌러 연동을 갱신해 주세요.");
         }
         return null;
     }
     if (!token) {
-        invalidateCurrentToken();
-        if (!isHeadless) {
-            notifyGoogleExpiredOnce("구글 계정 연동이 필요합니다.<br>화면 우측 상단의 [1초 재연동]을 통해 로그인해 주세요.");
-        } else if (window.parent) {
-            window.parent.postMessage({ type: 'workerAuthFailed' }, '*');
-        }
+        // 미연동 상태에서는 경고창이나 token 무효화를 부르지 않고 헤더/테이블 안내 카드 UI에만 표시
         return null;
     }
     if (typeof gapi !== 'undefined' && gapi.client) {

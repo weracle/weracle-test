@@ -4320,18 +4320,6 @@ let isSessionChecked = false;
 let isCheckingSession = false;
 
 async function checkSession() {
-        // [오류 파라미터 자동 정리]
-        if (window.location.search && window.location.search.includes('error=')) {
-            try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
-        }
-        if (window.top && window.top !== window) {
-            try {
-                if (window.top.location.search && window.top.location.search.includes('error=')) {
-                    window.top.history.replaceState(null, '', window.top.location.pathname);
-                }
-            } catch(e) {}
-        }
-
     if (!window.sb || !window.sb.auth) {
         console.log('Waiting for Supabase client...');
         setTimeout(checkSession, 300);
@@ -4344,13 +4332,20 @@ async function checkSession() {
     try {
         let currentSession = null;
 
-        // 1. URL 해시에서 provider_token (구글 연동 토큰) 먼저 안전하게 보존
+        // 1. URL 파라미터(hash 및 search) 추출 (현재 iframe과 상위 window.top 모두 검사)
         const fullHash = (window.location.hash && window.location.hash.includes('access_token'))
             ? window.location.hash
             : ((window.top && window.top !== window && window.top.location.hash && window.top.location.hash.includes('access_token'))
                 ? window.top.location.hash
                 : '');
 
+        const fullSearch = (window.location.search && (window.location.search.includes('code=') || window.location.search.includes('error=')))
+            ? window.location.search
+            : ((window.top && window.top !== window && window.top.location.search && (window.top.location.search.includes('code=') || window.top.location.search.includes('error=')))
+                ? window.top.location.search
+                : '');
+
+        // 2. 구글 provider_token 선행 보존
         if (fullHash && fullHash.includes('provider_token=')) {
             try {
                 const cleanHash = fullHash.substring(fullHash.indexOf('#') + 1);
@@ -4364,59 +4359,82 @@ async function checkSession() {
             } catch(e) {}
         }
 
-        // 2. Supabase SDK 세션 조회 (detectSessionInUrl 비동기 처리 대기 포함)
-        const hasAuthParam = window.location.search.includes('code=') ||
-                             window.location.hash.includes('access_token=') ||
-                             (window.top && window.top !== window && (
-                                 (window.top.location.search && window.top.location.search.includes('code=')) ||
-                                 (window.top.location.hash && window.top.location.hash.includes('access_token='))
-                             ));
-
-        for (let retry = 0; retry < (hasAuthParam ? 12 : 2); retry++) {
-            try {
-                const { data, error } = await window.sb.auth.getSession();
-                if (!error && data && data.session) {
-                    currentSession = data.session;
-                    console.log('[Auth] Supabase 세션 확인 완료:', currentSession.user?.email);
-                    break;
-                }
-            } catch(sessErr) {
-                console.warn('[Auth] getSession 오류:', sessErr);
+        // 3. 먼저 기존 저장된 세션 조회
+        try {
+            const { data: sData, error: sErr } = await window.sb.auth.getSession();
+            if (!sErr && sData && sData.session) {
+                currentSession = sData.session;
+                console.log('[Auth] 기존 세션 확인 성공:', currentSession.user?.email);
             }
-            if (hasAuthParam) {
-                await new Promise(r => setTimeout(r, 200));
-            }
+        } catch(sessErr) {
+            console.warn('[Auth] getSession 오류:', sessErr);
         }
 
-        // 3. 만약 SDK 자동 감지가 되지 않았고 URL에 code가 있는 경우 (PKCE fallback)
-        if (!currentSession) {
-            const fullSearch = (window.location.search && window.location.search.includes('code='))
-                ? window.location.search
-                : ((window.top && window.top !== window && window.top.location.search && window.top.location.search.includes('code='))
-                    ? window.top.location.search
-                    : '');
-            if (fullSearch && fullSearch.includes('code=')) {
-                try {
-                    const sp = new URLSearchParams(fullSearch.substring(fullSearch.indexOf('?') + 1));
-                    const code = sp.get('code');
-                    if (code) {
-                        console.log('[Auth] code exchange fallback 실행');
-                        const { data: exData, error: exErr } = await window.sb.auth.exchangeCodeForSession(code);
-                        if (!exErr && exData && exData.session) {
-                            currentSession = exData.session;
-                            if (exData.session.provider_token) {
-                                localStorage.setItem('g_access_token', exData.session.provider_token);
-                                localStorage.setItem('g_token_time', Date.now().toString());
-                            }
+        // 4. 세션이 없고 해시에 access_token이 있는 경우 직접 토큰 주입 복원
+        if (!currentSession && fullHash && fullHash.includes('access_token=')) {
+            try {
+                const cleanHash = fullHash.substring(fullHash.indexOf('#') + 1);
+                const hp = new URLSearchParams(cleanHash);
+                const at = hp.get('access_token');
+                const rt = hp.get('refresh_token');
+                const pt = hp.get('provider_token');
+
+                if (at) {
+                    console.log('[Auth] URL 해시에서 OAuth 토큰 감지 -> setSession/getUser 복원 시도');
+                    // 4-1. setSession 시도
+                    const { data: setRes, error: setErr } = await window.sb.auth.setSession({
+                        access_token: at,
+                        refresh_token: rt || at
+                    });
+                    if (!setErr && setRes && setRes.session) {
+                        currentSession = setRes.session;
+                        console.log('[Auth] setSession 성공');
+                    } else {
+                        // 4-2. setSession 실패 시 getUser 직접 검증 fallback
+                        const { data: uRes, error: uErr } = await window.sb.auth.getUser(at);
+                        if (!uErr && uRes && uRes.user) {
+                            currentSession = {
+                                access_token: at,
+                                refresh_token: rt || '',
+                                user: uRes.user,
+                                provider_token: pt
+                            };
+                            console.log('[Auth] getUser 검증 성공');
                         }
                     }
-                } catch(tokenExtractErr) {
-                    console.warn('[Auth] code exchange fallback 오류:', tokenExtractErr);
+                    if (pt) {
+                        localStorage.setItem('g_access_token', pt);
+                        localStorage.setItem('g_token_time', Date.now().toString());
+                    }
                 }
+            } catch(tokenErr) {
+                console.warn('[Auth] URL 해시 토큰 복원 실패:', tokenErr);
             }
         }
 
-        if (currentSession) {
+        // 5. 세션이 없고 쿼리에 code가 있는 경우 (PKCE code exchange fallback)
+        if (!currentSession && fullSearch && fullSearch.includes('code=')) {
+            try {
+                const sp = new URLSearchParams(fullSearch.substring(fullSearch.indexOf('?') + 1));
+                const code = sp.get('code');
+                if (code) {
+                    console.log('[Auth] code exchange 실행');
+                    const { data: exData, error: exErr } = await window.sb.auth.exchangeCodeForSession(code);
+                    if (!exErr && exData && exData.session) {
+                        currentSession = exData.session;
+                        if (exData.session.provider_token) {
+                            localStorage.setItem('g_access_token', exData.session.provider_token);
+                            localStorage.setItem('g_token_time', Date.now().toString());
+                        }
+                    }
+                }
+            } catch(codeErr) {
+                console.warn('[Auth] code exchange fallback 오류:', codeErr);
+            }
+        }
+
+        // 6. 세션 획득 성공 시 UI 업데이트 및 마이페이지 전환
+        if (currentSession && currentSession.user) {
             window.currentUser = currentSession.user;
             wIsLoggedIn = true;
 
@@ -4426,49 +4444,27 @@ async function checkSession() {
                 localStorage.setItem('g_token_time', Date.now().toString());
             }
 
-            // OAuth 리다이렉트 후 브라우저 주소창의 파라미터(?code=... 또는 #access_token=...) 깔끔하게 자동 정리
-            if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('provider_token'))) {
-                try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch(e) {}
-            }
-            if (window.location.search && window.location.search.includes('code=')) {
-                try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
-            }
-            if (window.top && window.top !== window) {
-                try {
+            // URL 파라미터 깔끔하게 정리 (토큰/코드/에러 노출 제거)
+            try {
+                if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('provider_token'))) {
+                    history.replaceState(null, '', window.location.pathname + window.location.search);
+                }
+                if (window.location.search && (window.location.search.includes('code=') || window.location.search.includes('error='))) {
+                    history.replaceState(null, '', window.location.pathname);
+                }
+                if (window.top && window.top !== window) {
                     if (window.top.location.hash && (window.top.location.hash.includes('access_token') || window.top.location.hash.includes('provider_token'))) {
                         window.top.history.replaceState(null, '', window.top.location.pathname + window.top.location.search);
                     }
-                    if (window.top.location.search && window.top.location.search.includes('code=')) {
+                    if (window.top.location.search && (window.top.location.search.includes('code=') || window.top.location.search.includes('error='))) {
                         window.top.history.replaceState(null, '', window.top.location.pathname);
                     }
-                } catch(e) {}
-            }
-
-            // [마이페이지 자동 전환] 로그인 직후 로그인 창(login/intro.html)이 열려있었다면 마이페이지로 이동!
-            const currentMainFrame = document.getElementById('mainFrame');
-            if (currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html')) {
-                if (typeof openMyPageFromSidebar === 'function') {
-                    openMyPageFromSidebar();
-                } else {
-                    currentMainFrame.src = 'login/mypage.html?v=' + Date.now();
                 }
-            }
-            
-            if (currentSession.provider_token) {
-                try {
-                    const gisTime = parseInt(localStorage.getItem('g_token_time') || '0');
-                    const loginTime = new Date(currentSession.user.last_sign_in_at).getTime();
-                    if (loginTime > gisTime) {
-                        await window.sb.from('profiles').update({ google_access_token: currentSession.provider_token }).eq('id', window.currentUser.id);
-                        localStorage.setItem('g_access_token', currentSession.provider_token);
-                        localStorage.setItem('g_token_time', Date.now().toString()); 
-                    }
-                } catch(e) {}
-            }
-            
+            } catch(e) {}
+
             let { data: profile } = await window.sb.from('profiles').select('*').eq('id', window.currentUser.id).maybeSingle();
             
-            // [구글 소셜 로그인 등 신규 회원 profiles 자동 생성]
+            // 신규 회원 profiles 자동 생성
             if (!profile && window.currentUser) {
                 const meta = window.currentUser.user_metadata || {};
                 const emailPrefix = window.currentUser.email ? window.currentUser.email.split('@')[0] : '위라클회원';
@@ -4485,12 +4481,10 @@ async function checkSession() {
                     const { data: createdProf, error: insErr } = await window.sb.from('profiles').upsert(newProfileData).select().maybeSingle();
                     if (!insErr && createdProf) {
                         profile = createdProf;
-                        console.log('✔ 신규 구글 회원 profiles 테이블 자동 등록 완료:', profile.email);
                     } else {
                         profile = newProfileData;
                     }
                 } catch(e) {
-                    console.warn('신규 구글 회원 profile 자동 생성 에러:', e);
                     profile = newProfileData;
                 }
             }
@@ -4503,17 +4497,12 @@ async function checkSession() {
                 profile.nickname = profile.nickname || meta.nickname || '';
             }
             window.currentProfile = profile;
-            
-            // 기기 등록 자동 동기화 (최대 3대)
+
+            // 기기 등록 동기화
             if (window.currentUser && typeof syncUserDeviceRegistration === 'function') {
                 syncUserDeviceRegistration(window.currentUser);
             }
-            
-            const isDone = (profile && profile.phone) || (meta && meta.phone) || (meta && meta.onboarding_done) || (window.currentUser && localStorage.getItem('onboarding_done_' + window.currentUser.id));
-            if(!isDone && profile && profile.user_grade !== 'manager' && profile.user_grade !== 'admin') {
-                document.getElementById('w-onboarding-modal').style.display = 'flex';
-            }
-            
+
             const latestGToken = localStorage.getItem('g_access_token') || (profile ? profile.google_access_token : null);
             if (latestGToken) {
                 try { localStorage.setItem('g_access_token', latestGToken); } catch(e){}
@@ -4526,57 +4515,38 @@ async function checkSession() {
                     wf.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: latestGToken }, '*');
                 }
             }
-            
+
+            // 상단 헤더 프로필 UI 업데이트 (로그인 버튼 -> 닉네임/아바타)
             updateProfileUI(window.currentUser, profile);
-            if (window.location.hash.includes("app_login")) {
-                setTimeout(() => { if (typeof window.loginToWeracleTalk === "function") window.loginToWeracleTalk(); }, 500);
+
+            // [마이페이지 자동 전환]
+            // 방금 OAuth 인증을 마쳤거나(fullHash/fullSearch 존재) 또는 mainFrame이 로그인창(intro.html)인 경우 마이페이지로 이동!
+            const isFreshOAuth = Boolean(fullHash || fullSearch);
+            const currentMainFrame = document.getElementById('mainFrame');
+            const isIntroFrame = currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html');
+            if (isFreshOAuth || isIntroFrame) {
+                console.log('[Auth] 로그인 완료 감지 -> 마이페이지로 전환');
+                if (typeof openMyPageFromSidebar === 'function') {
+                    openMyPageFromSidebar();
+                } else if (currentMainFrame) {
+                    currentMainFrame.src = 'login/mypage.html?v=' + Date.now();
+                }
             }
-            
+
             const sessionMsg = {
                 type: 'SB_SESSION_SYNC',
                 user: window.currentUser,
-                profile: profile || {
-                    nickname: window.currentUser.user_metadata?.nickname || window.currentUser.email.split('@')[0],
-                    user_grade: 'normal',
-                    avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + window.currentUser.id
-                }
+                profile: profile
             };
-            const mainFrame = document.getElementById('mainFrame');
-            if (mainFrame && mainFrame.contentWindow) mainFrame.contentWindow.postMessage(sessionMsg, '*');
+            if (currentMainFrame && currentMainFrame.contentWindow) currentMainFrame.contentWindow.postMessage(sessionMsg, '*');
             const workerFrame = document.getElementById('workerFrame');
             if (workerFrame && workerFrame.contentWindow) workerFrame.contentWindow.postMessage(sessionMsg, '*');
-            
-            const wAuth = document.getElementById('w-auth-workspace-container');
-            if (wAuth && wAuth.style.display !== 'none') {
-                wAuth.style.display = 'none';
-            }
-        } else {
-            // [개발 및 디자인 검토용] 로그인 상태 미리보기 모드 지원
-            const urlParams = new URLSearchParams(window.location.search);
-            const isPreviewLogin = urlParams.get('preview') === 'login' || localStorage.getItem('weracle_preview_login') === 'true';
-            if (isPreviewLogin) {
-                const mockUser = {
-                    id: 'preview-planner-01',
-                    email: 'planner@weracle.com',
-                    user_metadata: { full_name: '홍길동', nickname: '홍길동' },
-                    last_sign_in_at: new Date().toISOString()
-                };
-                const mockProfile = {
-                    id: 'preview-planner-01',
-                    full_name: '홍길동',
-                    nickname: '홍길동',
-                    user_grade: 'premium',
-                    phone: '010-1234-5678',
-                    avatar_url: ''
-                };
-                window.currentUser = mockUser;
-                window.currentProfile = mockProfile;
-                wIsLoggedIn = true;
-                updateProfileUI(mockUser, mockProfile);
-                console.log('로그인 상태 미리보기 활성화됨');
-                return;
-            }
 
+            const wAuth = document.getElementById('w-auth-workspace-container');
+            if (wAuth && wAuth.style.display !== 'none') wAuth.style.display = 'none';
+
+        } else {
+            // 세션 없음
             wIsLoggedIn = false;
             updateProfileUI(null, null);
             if (typeof showDashboardHome === 'function') showDashboardHome();

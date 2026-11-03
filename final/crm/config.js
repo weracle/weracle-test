@@ -53,7 +53,14 @@ async function initSupabaseConfigOnly() {
     const { url, anonKey } = window.SUPABASE_CONFIG;
     
     try {
-        window.sb = window.supabase.createClient(url, anonKey);
+        window.sb = window.supabase.createClient(url, anonKey, {
+        auth: {
+            flowType: 'implicit',
+            detectSessionInUrl: true,
+            persistSession: true,
+            autoRefreshToken: true
+        }
+    });
         console.log(" Supabase Client Initialized (Config Only)!");
     } catch (apiError) {
         console.error(" Supabase Initialization Failed:", apiError);

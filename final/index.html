@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta name="google-site-verification" content="0bZjxLunsbUx5111Vr0GBScEPK1IYKC-c7YWICpM180" />
@@ -4334,31 +4334,76 @@ async function checkSession() {
         return;
     }
     try {
-        if (window.top && window.top !== window) {
-            try {
-                if (window.top.location.hash && window.top.location.hash.includes('access_token')) {
-                    if (!window.location.hash || !window.location.hash.includes('access_token')) {
-                        window.location.hash = window.top.location.hash;
+        // [OAuth 토큰 복원] URL Hash (#access_token=) 또는 Search (?code=) 직접 추출 및 세션 주입
+        let currentSession = null;
+        try {
+            const fullHash = (window.location.hash && window.location.hash.includes('access_token'))
+                ? window.location.hash
+                : ((window.top && window.top !== window && window.top.location.hash && window.top.location.hash.includes('access_token'))
+                    ? window.top.location.hash
+                    : '');
+            
+            if (fullHash && fullHash.includes('access_token=')) {
+                const cleanHash = fullHash.substring(fullHash.indexOf('#') + 1);
+                const hp = new URLSearchParams(cleanHash);
+                const at = hp.get('access_token');
+                const rt = hp.get('refresh_token') || at;
+                const pt = hp.get('provider_token');
+
+                if (at) {
+                    console.log('[Auth] URL 해시에서 OAuth 토큰 감지 -> setSession 직접 주입');
+                    const { data: sData, error: sErr } = await window.sb.auth.setSession({ access_token: at, refresh_token: rt });
+                    if (!sErr && sData && sData.session) {
+                        currentSession = sData.session;
+                    }
+                    if (pt) {
+                        localStorage.setItem('g_access_token', pt);
+                        localStorage.setItem('g_token_time', Date.now().toString());
                     }
                 }
-            } catch(e) {}
-        }
-        const hasAuthParam = window.location.search.includes('code=') ||
-                             window.location.hash.includes('access_token=') ||
-                             (window.top && window.top !== window && (
-                                 (window.top.location.search && window.top.location.search.includes('code=')) ||
-                                 (window.top.location.hash && window.top.location.hash.includes('access_token='))
-                             ));
-
-        let currentSession = null;
-        for (let retry = 0; retry < (hasAuthParam ? 15 : 1); retry++) {
-            const { data, error } = await window.sb.auth.getSession();
-            if (!error && data && data.session) {
-                currentSession = data.session;
-                break;
             }
-            if (hasAuthParam) {
-                await new Promise(r => setTimeout(r, 200));
+
+            const fullSearch = (window.location.search && window.location.search.includes('code='))
+                ? window.location.search
+                : ((window.top && window.top !== window && window.top.location.search && window.top.location.search.includes('code='))
+                    ? window.top.location.search
+                    : '');
+            if (!currentSession && fullSearch && fullSearch.includes('code=')) {
+                const sp = new URLSearchParams(fullSearch.substring(fullSearch.indexOf('?') + 1));
+                const code = sp.get('code');
+                if (code) {
+                    console.log('[Auth] URL 쿼리에서 code 감지 -> exchangeCodeForSession 실행');
+                    const { data: exData, error: exErr } = await window.sb.auth.exchangeCodeForSession(code);
+                    if (!exErr && exData && exData.session) {
+                        currentSession = exData.session;
+                        if (exData.session.provider_token) {
+                            localStorage.setItem('g_access_token', exData.session.provider_token);
+                            localStorage.setItem('g_token_time', Date.now().toString());
+                        }
+                    }
+                }
+            }
+        } catch(tokenExtractErr) {
+            console.warn('[Auth] 토큰 수동 추출 중 오류:', tokenExtractErr);
+        }
+
+        if (!currentSession) {
+            const hasAuthParam = window.location.search.includes('code=') ||
+                                 window.location.hash.includes('access_token=') ||
+                                 (window.top && window.top !== window && (
+                                     (window.top.location.search && window.top.location.search.includes('code=')) ||
+                                     (window.top.location.hash && window.top.location.hash.includes('access_token='))
+                                 ));
+
+            for (let retry = 0; retry < (hasAuthParam ? 15 : 1); retry++) {
+                const { data, error } = await window.sb.auth.getSession();
+                if (!error && data && data.session) {
+                    currentSession = data.session;
+                    break;
+                }
+                if (hasAuthParam) {
+                    await new Promise(r => setTimeout(r, 200));
+                }
             }
         }
 

@@ -4316,6 +4316,18 @@ window.openMyPageFromSidebar = function() {
 // --- Recovered Auth Logic ---
 let isSessionChecked = false;
 async function checkSession() {
+        // [오류 파라미터 자동 정리]
+        if (window.location.search && window.location.search.includes('error=')) {
+            try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
+        }
+        if (window.top && window.top !== window) {
+            try {
+                if (window.top.location.search && window.top.location.search.includes('error=')) {
+                    window.top.history.replaceState(null, '', window.top.location.pathname);
+                }
+            } catch(e) {}
+        }
+
     if (!window.sb || !window.sb.auth) {
         console.log('Waiting for Supabase client...');
         setTimeout(checkSession, 500);
@@ -4402,7 +4414,7 @@ async function checkSession() {
                     nickname: meta.full_name || meta.name || meta.user_name || emailPrefix,
                     avatar_url: meta.avatar_url || meta.picture || ('https://api.dicebear.com/7.x/bottts/svg?seed=' + window.currentUser.id),
                     user_grade: 'basic',
-                    google_access_token: data.session.provider_token || localStorage.getItem('g_access_token') || '',
+                    google_access_token: (currentSession && currentSession.provider_token) || localStorage.getItem('g_access_token') || '',
                     created_at: new Date().toISOString()
                 };
                 try {

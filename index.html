@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta name="google-site-verification" content="0bZjxLunsbUx5111Vr0GBScEPK1IYKC-c7YWICpM180" />
   <meta charset="utf-8">
   <title>위라클</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,12 +11,13 @@
   </style>
 </head>
 <body>
-  <iframe id="appFrame" allow="clipboard-read; clipboard-write; camera; microphone"></iframe>
+  <iframe id="appFrame" src="/final/index.html" allow="clipboard-read; clipboard-write; camera; microphone"></iframe>
   <script>
-    // [OAuth 연동 보존] 구글 로그인 후 주소창으로 전달된 인증 토큰(hash/search)을 안쪽 final/index.html로 즉시 전달
-    const search = window.location.search || '';
-    const hash = window.location.hash || '';
-    document.getElementById('appFrame').src = '/final/index.html' + search + hash;
+    const hash = window.location.hash;
+    const search = window.location.search;
+    if (hash || search) {
+      document.getElementById('appFrame').src = '/final/index.html' + search + hash;
+    }
   </script>
 </body>
 </html>

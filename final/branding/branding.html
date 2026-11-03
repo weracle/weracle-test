@@ -3014,11 +3014,220 @@
     }
 
     </style>
+<style>
+
+    /* ==================================================
+       PERFECT NO-CROP BENTO GRID (글자/외곽 잘림 없는 콤팩트 그리드)
+       ================================================== */
+    .compact-bento-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        grid-auto-rows: 114px;
+        gap: 10px;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .bento-cell {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .bento-cell:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    }
+
+    /* 이미지 래퍼 및 contain (잘림 방지) */
+    .bento-img-wrap {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        overflow: hidden;
+    }
+
+    .bento-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        transition: transform 0.3s ease;
+    }
+
+    .bento-cell:hover .bento-img-wrap img {
+        transform: scale(1.03);
+    }
+
+    /* 각 이미지별 맞춤 비정형 그리드 배치 */
+    .c-goods { grid-column: 1 / span 2; grid-row: 1 / span 4; }
+    .c-proposal { grid-column: 3 / span 1; grid-row: 1 / span 2; }
+    .c-brochure { grid-column: 4 / span 1; grid-row: 1 / span 2; }
+    .c-character { grid-column: 5 / span 2; grid-row: 1 / span 1; }
+    .c-card { grid-column: 5 / span 2; grid-row: 2 / span 1; }
+
+    .c-logo { grid-column: 3 / span 1; grid-row: 3 / span 1; }
+    .c-news { grid-column: 4 / span 1; grid-row: 3 / span 1; }
+    .c-workstation { grid-column: 5 / span 2; grid-row: 3 / span 1; }
+
+    .c-meeting { grid-column: 3 / span 1; grid-row: 4 / span 1; }
+    .c-binder1 { grid-column: 4 / span 1; grid-row: 4 / span 1; }
+    .c-binder2 { grid-column: 5 / span 1; grid-row: 4 / span 1; }
+    .c-binder3 { grid-column: 6 / span 1; grid-row: 4 / span 1; }
+
+    /* 포인트 카드 (마우스 오버 시에만 돋보기 표시) */
+    .point-card {
+        cursor: zoom-in;
+    }
+
+    .point-card:hover {
+        border-color: #0284c7;
+        box-shadow: 0 8px 20px rgba(2, 132, 199, 0.16);
+    }
+
+    .zoom-indicator {
+        position: absolute;
+        bottom: 6px;
+        right: 6px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, 0.75);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        pointer-events: none;
+    }
+
+    .point-card:hover .zoom-indicator {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+
+    /* 라이트박스 모달 */
+    .lightbox-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: rgba(15, 23, 42, 0.82);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .lightbox-modal.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .lightbox-dialog {
+        position: relative;
+        max-width: 90vw;
+        max-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalPop {
+        from { transform: scale(0.94); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .lightbox-body {
+        max-width: 100%;
+        max-height: 86vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
+        background: #000000;
+    }
+
+    .lightbox-body img {
+        max-width: 90vw;
+        max-height: 86vh;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        display: block;
+    }
+
+    .btn-lightbox-close {
+        position: absolute;
+        top: -16px;
+        right: -16px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #0f172a;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        transition: transform 0.15s ease, background 0.15s ease;
+        z-index: 10;
+    }
+
+    .btn-lightbox-close:hover {
+        transform: scale(1.1);
+        background: #f1f5f9;
+    }
+
+    /* 반응형 */
+    @media (max-width: 1024px) {
+        .compact-bento-grid {
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: 120px;
+        }
+        .c-goods { grid-column: 1 / span 2; grid-row: 1 / span 3; }
+    }
+
+    @media (max-width: 640px) {
+        .compact-bento-grid {
+            grid-template-columns: repeat(2, 1fr);
+            grid-auto-rows: 120px;
+        }
+        .c-goods { grid-column: 1 / span 2; grid-row: 1 / span 2; }
+        .c-character, .c-card, .c-workstation { grid-column: 1 / span 2; }
+    }
+
+</style>
 </head>
 <body>
 
     
     <!-- [STAGE 1] 위라클 브랜딩 갤러리 커버 -->
+    
+    <!-- [STAGE 1] 전체 갤러리 메인 화면 (이미지 잘림 없는 무절단 비정형 그리드) -->
     <div id="view-gallery" class="view-stage active">
         <div class="gallery-wrap">
             <div class="gallery-compact-header">
@@ -3031,158 +3240,94 @@
                 </button>
             </div>
 
-            <div class="masonry-grid-dense">
+            <!-- 6열 x 4행 콤팩트 무절단 비정형 그리드 (글자/외곽 잘림 없이 100% 원본 노출) -->
+            <div class="compact-bento-grid">
 
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media tall">
-                        <img src="images/showcase_binder.jpg" alt="시그니처 증권 바인더">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">시그니처 증권 바인더</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 1. [포인트] 굿즈 풀세트 (대형 메인 2x4 Hero) -->
+                <div class="bento-cell c-goods point-card" onclick="openLightbox('images/브랜딩2.jpg')" title="클릭하여 확대보기">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩2.jpg" alt="굿즈 풀세트" loading="lazy">
+                        <div class="zoom-indicator"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
                     </div>
                 </div>
 
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media square">
-                        <img src="https://i.ibb.co/mVRTNSxM/image.png" alt="세실보험 시그니처">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">세실보험 시그니처</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 2. [포인트] 맞춤형 보장분석제안서 (세로 1x2) -->
+                <div class="bento-cell c-proposal point-card" onclick="openLightbox('images/브랜딩10.jpg')" title="클릭하여 확대보기">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩10.jpg" alt="보장분석제안서" loading="lazy">
+                        <div class="zoom-indicator"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
                     </div>
                 </div>
 
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media wide">
-                        <img src="images/showcase_goods.jpg" alt="시그니처 굿즈 패키지">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">시그니처 굿즈 패키지</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 3. 서브: 브로슈어 내지 인포그래픽 (세로 1x2) -->
+                <div class="bento-cell c-brochure">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩11.jpg" alt="인포그래픽 브로슈어" loading="lazy">
                     </div>
                 </div>
 
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media square">
-                        <img src="https://i.ibb.co/HLM3jx49/image.png" alt="이지인슈 시그니처">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">이지인슈 시그니처</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 4. 서브: 실제 설계사 캐릭터화 (가로 2x1 3:1비율) -->
+                <div class="bento-cell c-character">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩7.jpg" alt="캐릭터 브랜딩" loading="lazy">
                     </div>
                 </div>
 
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media square">
-                        <img src="https://i.ibb.co/SD5GNzy5/image.png" alt="온새미로 시그니처">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">온새미로 시그니처</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 5. 서브: 명함 & 스테이셔너리 (가로 2x1 3:1비율) -->
+                <div class="bento-cell c-card">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩4.jpg" alt="명함 스테이셔너리" loading="lazy">
                     </div>
                 </div>
 
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media tall">
-                        <img src="images/showcase_mobile.jpg" alt="모바일 디지털 명함 & SNS">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">모바일 디지털 명함 & SNS</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 6. [포인트] 로고 디자인 프로세스 (1x1) -->
+                <div class="bento-cell c-logo point-card" onclick="openLightbox('images/브랜딩9.jpg')" title="클릭하여 확대보기">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩9.jpg" alt="로고 디자인" loading="lazy">
+                        <div class="zoom-indicator"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
                     </div>
                 </div>
 
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media square">
-                        <img src="https://i.ibb.co/RpZJnfxq/image.png" alt="든든한 시그니처">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">든든한 시그니처</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 7. [포인트] SNS 마케팅 카드뉴스 (1x1 정방형) -->
+                <div class="bento-cell c-news point-card" onclick="openLightbox('images/브랜딩8.jpg')" title="클릭하여 확대보기">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩8.jpg" alt="마케팅 콘텐츠" loading="lazy">
+                        <div class="zoom-indicator"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
                     </div>
                 </div>
 
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media square">
-                        <img src="https://i.ibb.co/twHGXcYy/image.png" alt="바른설계 시그니처">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">바른설계 시그니처</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 8. 서브: 디자인 워크스테이션 (가로 2x1 3:1비율) -->
+                <div class="bento-cell c-workstation">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩3.jpg" alt="워크스테이션" loading="lazy">
                     </div>
                 </div>
 
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media square">
-                        <img src="https://i.ibb.co/Bp7NYYB/1.png" alt="이룸 시그니처">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">이룸 시그니처</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 9. 서브: 미팅룸 인테리어 현판 (1x1) -->
+                <div class="bento-cell c-meeting">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩5.png" alt="미팅룸" loading="lazy">
                     </div>
                 </div>
 
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media square">
-                        <img src="https://i.ibb.co/B5yK6DX4/image.png" alt="지킴이 시그니처">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">지킴이 시그니처</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 10. 서브: 바인더 레드 (1x1) -->
+                <div class="bento-cell c-binder1">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩1.jpg" alt="바인더 레드" loading="lazy">
                     </div>
                 </div>
 
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media square">
-                        <img src="https://i.ibb.co/KjDD4nR4/image.png" alt="참좋은 시그니처">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">참좋은 시그니처</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 11. 서브: 바인더 네이비 (1x1) -->
+                <div class="bento-cell c-binder2">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩6.jpg" alt="바인더 네이비" loading="lazy">
                     </div>
                 </div>
 
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media square">
-                        <img src="https://i.ibb.co/s9BcSQ72/image.png" alt="케어플러스 시그니처">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">케어플러스 시그니처</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media square">
-                        <img src="https://i.ibb.co/zWkLXgHv/image.png" alt="유케어 시그니처">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">유케어 시그니처</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="gallery-compact-card" onclick="showDetailView('pane-why')">
-                    <div class="card-media wide">
-                        <img src="https://cdn.imweb.me/upload/S202512085540897f6f690/db8bf19cce243.png" alt="기획 & 제작 프로세스">
-                        <div class="card-hover-mask">
-                            <span class="mask-title">기획 & 제작 프로세스</span>
-                            <span class="mask-cta">솔루션 보러가기 &rarr;</span>
-                        </div>
+                <!-- 12. 서브: 바인더 블랙&골드 (1x1) -->
+                <div class="bento-cell c-binder3">
+                    <div class="bento-img-wrap">
+                        <img src="images/브랜딩12.jpg" alt="바인더 블랙&골드" loading="lazy">
                     </div>
                 </div>
 
@@ -3190,8 +3335,18 @@
         </div>
     </div>
 
-    <!-- [STAGE 2] 4단계 상세 솔루션 워크스페이스 -->
-    <div id="view-details" class="view-stage">
+    <!-- 라이트박스 확대 모달 (심플 & 미니멀) -->
+    <div id="lightboxModal" class="lightbox-modal" onclick="closeLightbox(event)">
+        <div class="lightbox-dialog" onclick="event.stopPropagation()">
+            <button type="button" class="btn-lightbox-close" onclick="closeLightbox()" aria-label="닫기">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="lightbox-body">
+                <img id="lightboxImg" src="" alt="확대 이미지">
+            </div>
+        </div>
+    </div>
+<div id="view-details" class="view-stage">
 <div class="page-wrap">
 
         <!-- ==============================================
@@ -4170,6 +4325,34 @@
         }
     }
     </script>
+
+
+<script>
+function openLightbox(src) {
+    const modal = document.getElementById('lightboxModal');
+    const img = document.getElementById('lightboxImg');
+    if (modal && img) {
+        img.src = src;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeLightbox(e) {
+    if (e && e.target && e.target !== document.getElementById('lightboxModal') && !e.target.closest('.btn-lightbox-close')) {
+        return;
+    }
+    const modal = document.getElementById('lightboxModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+});
+</script>
 
 </body>
 </html>

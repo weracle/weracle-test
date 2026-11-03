@@ -2123,19 +2123,14 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                     mctx.fillRect(0, 0, mask.width, mask.height);
 
                     // 글자 및 원형 심볼 외곽선을 따라 얇은 테두리 라인 + 소프트 음영 렌더링
-                    octx.save();
-                    octx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-                    octx.shadowBlur = Math.max(4, strokeWidth * 2);
-                    octx.shadowOffsetY = Math.max(1, strokeWidth * 0.8);
-
-                    const points = 24;
-                    for (let r = 1; r <= strokeWidth; r += 0.8) {
+                    // 검정 테두리/그림자를 완전히 제거하고, 순수 화이트 외곽 라인만 깔끔하게 렌더링
+                    const points = 16;
+                    for (let r = 0.8; r <= strokeWidth; r += 0.6) {
                         for (let i = 0; i < points; i++) {
                             const angle = (i * 2 * Math.PI) / points;
                             octx.drawImage(mask, Math.cos(angle) * r, Math.sin(angle) * r);
                         }
                     }
-                    octx.restore();
 
                     // 중앙에 원본 로고 합성
                     octx.drawImage(customLogo, ox, oy, logoW, logoH);

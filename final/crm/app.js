@@ -823,30 +823,6 @@ console.error("GIS init error:", err);
 * 토큰이 없거나 만료된 경우 무효화하고 구글 로그인 창을 띄웁니다.
 * @returns {Promise<string|null>} 유효한 access_token 또는 null
 */
-// [중복 알림 방지] 구글 연동 만료 알림을 1회만 표시하는 싱글톤 헬퍼
-function notifyGoogleExpiredOnce(message) {
-    if (typeof window === "undefined" || window.isHeadless) return;
-    const now = Date.now();
-    let lastAlert = 0;
-    try {
-        lastAlert = parseInt(sessionStorage.getItem("last_google_auth_alert") || "0", 10);
-    } catch(e) {}
-    // 5분 쿨다운: 이미 알림이 떴다면 반복/중첩 팝업 완전 차단
-    if (now - lastAlert < 300000) {
-        console.log("[Google Auth] 중복 알림 차단됨 (5분 쿨다운 활성)");
-        return;
-    }
-    try {
-        sessionStorage.setItem("last_google_auth_alert", now.toString());
-    } catch(e) {}
-
-    if (typeof showCustomAlert === "function") {
-        showCustomAlert("구글 연동 안내", message.replace(/\n/g, "<br>"));
-    } else if (typeof alert === "function") {
-        alert(message);
-    }
-}
-
 async function ensureValidToken() {
     if (isDemoMode) return "demo_token";
     let token = memoryAccessToken || (function() { try { return localStorage.getItem("g_access_token"); } catch(e) { return null; } })();
@@ -855,14 +831,14 @@ async function ensureValidToken() {
     if (savedTime > 0 && Date.now() > savedTime + 3540000) { // 59 minutes just to be safe
         invalidateCurrentToken();
         if (typeof window !== "undefined" && !window.isHeadless) {
-            notifyGoogleExpiredOnce("구글 연동 시간이 만료되었습니다.\n화면 우측 상단의 [1초 재연동] 버튼을 눌러 연동을 갱신해 주세요.");
+            alert(" 구글 연동 시간이 만료되었습니다!\n\n창을 닫거나 새로고침하지 마시고, 화면 우측 상단의 [재연동] 버튼을 눌러 먼저 연동을 갱신해주세요.\n(입력하신 데이터는 날아가지 않습니다.)");
         }
         return null;
     }
     if (!token) {
         invalidateCurrentToken();
         if (!isHeadless) {
-            notifyGoogleExpiredOnce("구글 연동 권한이 없거나 만료되었습니다.\n화면 우측 상단의 [1초 재연동]을 통해 로그인해 주세요.");
+            alert("구글 연동 권한이 없거나 만료되었습니다. 안전한 저장을 위해 우측 상단 메뉴에서 로그아웃하신 후 다시 로그인해 주세요.");
         } else if (window.parent) {
             window.parent.postMessage({ type: 'workerAuthFailed' }, '*');
         }
@@ -957,7 +933,6 @@ showLoading(false);
 }
 
 async function handleTokenResponse(tokenResponse) {
-    try { sessionStorage.removeItem("last_google_auth_alert"); } catch(e) {}
 if (tokenResponse && tokenResponse.access_token) {
 isSilentAuthAttempted = false;
 console.log(' Token received. Scope:', tokenResponse.scope || 'N/A');
@@ -1009,10 +984,9 @@ function updateAgentHeaderUI(errorMessage = "") {
         bannerContainer = document.createElement("div");
         bannerContainer.id = "google-auth-banner-container";
         bannerContainer.style.position = "fixed";
-        bannerContainer.style.top = "14px";
+        bannerContainer.style.top = "16px";
         bannerContainer.style.right = "20px";
         bannerContainer.style.zIndex = "999999";
-        bannerContainer.style.transition = "all 0.3s ease";
         document.body.appendChild(bannerContainer);
     }
     
@@ -1021,22 +995,23 @@ function updateAgentHeaderUI(errorMessage = "") {
     
     if (hasGoogleAuth) {
         bannerContainer.innerHTML = `
-            <div style="display: inline-flex; align-items: center; gap: 8px; background: #ffffff; padding: 6px 14px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(15,23,42,0.06);">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="15" height="15">
-                    <span style="font-size: 12px; color: #059669; font-weight: 800;">연동 정상</span>
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; background: white; padding: 6px 14px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <div style="display: flex; align-items: center; gap: 6px; padding-right: 8px; border-right: 1px solid #e2e8f0;">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="14" height="14">
+                    <span style="font-size: 12.5px; color: #10b981; font-weight: 800;">연동됨</span>
                 </div>
+                
             </div>
         `;
     } else {
         bannerContainer.innerHTML = `
-            <div style="display: inline-flex; align-items: center; gap: 10px; background: #ffffff; padding: 6px 14px; border-radius: 20px; border: 1.5px solid #fed7aa; box-shadow: 0 4px 14px rgba(249,115,22,0.12);">
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; background: #fff1f2; padding: 6px 14px; border-radius: 12px; border: 1px solid #fecdd3; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                 <div style="display: flex; align-items: center; gap: 6px;">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="15" height="15">
-                    <span style="font-size: 12px; color: #ea580c; font-weight: 800;">구글 연동 필요</span>
+                    <span style="font-size: 13.5px; margin-bottom: 2px;"></span>
+                    <span style="font-size: 12.5px; color: #e11d48; font-weight: 800;">연동 안됨</span>
                 </div>
-                <button type="button" onclick="triggerParentLogin()" style="background: #1e5c94; border: none; font-size: 11.5px; color: #ffffff; cursor: pointer; padding: 4px 10px; border-radius: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(30,92,148,0.25); transition: 0.2s;">
-                    1초 재연동
+                <button onclick="triggerParentLogin()" style="background: #e11d48; border: none; font-size: 11.5px; color: white; cursor: pointer; padding: 4px 10px; border-radius: 6px; font-weight: 600; margin-left: 4px;">
+                    연동하기
                 </button>
             </div>
         `;
@@ -7476,31 +7451,6 @@ window.renderTable = function(data = globalCustomerData) {
     else if (filterState === "birth") { filtered = data.filter(c => { const b = String(c["생일"] || ""); return b.includes(currentMonthStr) || b.includes(nextMonthStr); }); }
     else if (filterState === "sangryung") { filtered = data.filter(c => { const s = String(c["상령일"] || ""); return s.includes(currentMonthStr) || s.includes(nextMonthStr); }); }
     
-    // [공통 디자인] 구글 연동 미연동 시 안내 카드 렌더링
-    if (!filtered || filtered.length === 0) {
-        const _t = (typeof memoryAccessToken !== "undefined" && memoryAccessToken) ? memoryAccessToken : (function(){ try { return localStorage.getItem("g_access_token"); } catch(e){ return null; } })();
-        if (!_t) {
-            listArea.innerHTML = `
-                <div style="padding: 36px 16px; text-align: center; background: #ffffff; border: 1.5px dashed #cbd5e1; border-radius: 16px; margin: 12px 0;">
-                    <div style="width: 48px; height: 48px; background: #f8fafc; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; margin-bottom: 12px;">
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="24" height="24">
-                    </div>
-                    <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Google 계정 연동 필요</div>
-                    <p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0 0 14px;">
-                        고객 DB를 안전하게 불러오려면<br>Google 계정을 연동해 주세요.
-                    </p>
-                    <button type="button" onclick="triggerParentLogin()" style="display: inline-flex; align-items: center; gap: 6px; background: #1e5c94; color: #ffffff; border: none; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(30,92,148,0.25);">
-                        1초 만에 구글 연동하기
-                    </button>
-                </div>
-            `;
-            return;
-        } else {
-            listArea.innerHTML = `<div style="padding: 30px; text-align: center; color: #94a3b8; font-size: 13px;">등록된 고객 정보가 없습니다.</div>`;
-            return;
-        }
-    }
-    
     let html = "";
     filtered.forEach(client => {
         const idStr = String(client["고객번호"] || client["ID"] || "");
@@ -10551,7 +10501,3 @@ document.addEventListener('click', function(e) {
         e.stopImmediatePropagation();
     }
 }, true);
-
-
-
-

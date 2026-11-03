@@ -1,4 +1,4 @@
-const GOOGLE_CLIENT_ID = "281609603311-j6ie378elv518odovep2rjemeaffb40b.apps.googleusercontent.com"; 
+﻿const GOOGLE_CLIENT_ID = "281609603311-j6ie378elv518odovep2rjemeaffb40b.apps.googleusercontent.com"; 
 const GOOGLE_API_KEY = "AIzaSyD9XOJBgaaUh6XVAx_az6Ka0IlUUsc2pSw"; // Replace with real if needed
 const SPREADSHEET_ID = "15UcwX8QpXbA-aL1n2qJ9z5dO2y94hQo-7YJ7H1mYwDk"; 
 const isHeadless = new URLSearchParams(window.location.search).get('mode') === 'headless';
@@ -823,6 +823,28 @@ console.error("GIS init error:", err);
 * 토큰이 없거나 만료된 경우 무효화하고 구글 로그인 창을 띄웁니다.
 * @returns {Promise<string|null>} 유효한 access_token 또는 null
 */
+// [중복 알림 방지] 구글 연동 안내를 1회만 표시하는 싱글톤 헬퍼 (5분 쿨다운)
+function notifyGoogleExpiredOnce(message) {
+    if (typeof window === "undefined" || window.isHeadless) return;
+    const now = Date.now();
+    let lastAlert = 0;
+    try {
+        lastAlert = parseInt(sessionStorage.getItem("last_google_auth_alert") || "0", 10);
+    } catch(e) {}
+    if (now - lastAlert < 300000) {
+        return;
+    }
+    try {
+        sessionStorage.setItem("last_google_auth_alert", now.toString());
+    } catch(e) {}
+
+    if (typeof showCustomAlert === "function") {
+        showCustomAlert("구글 연동 안내", message);
+    } else if (typeof alert === "function") {
+        alert(message.replace(/<br>/g, "\n"));
+    }
+}
+
 async function ensureValidToken() {
     if (isDemoMode) return "demo_token";
     let token = memoryAccessToken || (function() { try { return localStorage.getItem("g_access_token"); } catch(e) { return null; } })();
@@ -831,14 +853,14 @@ async function ensureValidToken() {
     if (savedTime > 0 && Date.now() > savedTime + 3540000) { // 59 minutes just to be safe
         invalidateCurrentToken();
         if (typeof window !== "undefined" && !window.isHeadless) {
-            alert(" 구글 연동 시간이 만료되었습니다!\n\n창을 닫거나 새로고침하지 마시고, 화면 우측 상단의 [재연동] 버튼을 눌러 먼저 연동을 갱신해주세요.\n(입력하신 데이터는 날아가지 않습니다.)");
+            notifyGoogleExpiredOnce("구글 연동 시간이 만료되었습니다.<br>화면 우측 상단의 [1초 재연동] 버튼을 눌러 연동을 갱신해 주세요.");
         }
         return null;
     }
     if (!token) {
         invalidateCurrentToken();
         if (!isHeadless) {
-            alert("구글 연동 권한이 없거나 만료되었습니다. 안전한 저장을 위해 우측 상단 메뉴에서 로그아웃하신 후 다시 로그인해 주세요.");
+            notifyGoogleExpiredOnce("구글 계정 연동이 필요합니다.<br>화면 우측 상단의 [1초 재연동]을 통해 로그인해 주세요.");
         } else if (window.parent) {
             window.parent.postMessage({ type: 'workerAuthFailed' }, '*');
         }

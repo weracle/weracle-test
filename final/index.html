@@ -3752,7 +3752,9 @@ trySwitch();
                         if (session && session.user) {
                             const currentMainFrame = document.getElementById('mainFrame');
                             if (currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html')) {
-                                if (typeof showDashboardHome === 'function') {
+                                if (typeof openMyPageFromSidebar === 'function') {
+                                    openMyPageFromSidebar();
+                                } else if (typeof showDashboardHome === 'function') {
                                     showDashboardHome();
                                 }
                             }
@@ -4315,6 +4317,8 @@ window.openMyPageFromSidebar = function() {
 };
 // --- Recovered Auth Logic ---
 let isSessionChecked = false;
+let isCheckingSession = false;
+
 async function checkSession() {
         // [오류 파라미터 자동 정리]
         if (window.location.search && window.location.search.includes('error=')) {
@@ -4330,79 +4334,84 @@ async function checkSession() {
 
     if (!window.sb || !window.sb.auth) {
         console.log('Waiting for Supabase client...');
-        setTimeout(checkSession, 500);
+        setTimeout(checkSession, 300);
         return;
     }
+
+    if (isCheckingSession) return;
+    isCheckingSession = true;
+
     try {
-        // [OAuth 토큰 복원] URL Hash (#access_token=) 또는 Search (?code=) 직접 추출 및 세션 주입
         let currentSession = null;
-        try {
-            const fullHash = (window.location.hash && window.location.hash.includes('access_token'))
-                ? window.location.hash
-                : ((window.top && window.top !== window && window.top.location.hash && window.top.location.hash.includes('access_token'))
-                    ? window.top.location.hash
-                    : '');
-            
-            if (fullHash && fullHash.includes('access_token=')) {
+
+        // 1. URL 해시에서 provider_token (구글 연동 토큰) 먼저 안전하게 보존
+        const fullHash = (window.location.hash && window.location.hash.includes('access_token'))
+            ? window.location.hash
+            : ((window.top && window.top !== window && window.top.location.hash && window.top.location.hash.includes('access_token'))
+                ? window.top.location.hash
+                : '');
+
+        if (fullHash && fullHash.includes('provider_token=')) {
+            try {
                 const cleanHash = fullHash.substring(fullHash.indexOf('#') + 1);
                 const hp = new URLSearchParams(cleanHash);
-                const at = hp.get('access_token');
-                const rt = hp.get('refresh_token') || at;
                 const pt = hp.get('provider_token');
-
-                if (at) {
-                    console.log('[Auth] URL 해시에서 OAuth 토큰 감지 -> setSession 직접 주입');
-                    const { data: sData, error: sErr } = await window.sb.auth.setSession({ access_token: at, refresh_token: rt });
-                    if (!sErr && sData && sData.session) {
-                        currentSession = sData.session;
-                    }
-                    if (pt) {
-                        localStorage.setItem('g_access_token', pt);
-                        localStorage.setItem('g_token_time', Date.now().toString());
-                    }
+                if (pt) {
+                    localStorage.setItem('g_access_token', pt);
+                    localStorage.setItem('g_token_time', Date.now().toString());
+                    console.log('[Auth] 구글 provider_token 선행 보존 완료');
                 }
-            }
+            } catch(e) {}
+        }
 
+        // 2. Supabase SDK 세션 조회 (detectSessionInUrl 비동기 처리 대기 포함)
+        const hasAuthParam = window.location.search.includes('code=') ||
+                             window.location.hash.includes('access_token=') ||
+                             (window.top && window.top !== window && (
+                                 (window.top.location.search && window.top.location.search.includes('code=')) ||
+                                 (window.top.location.hash && window.top.location.hash.includes('access_token='))
+                             ));
+
+        for (let retry = 0; retry < (hasAuthParam ? 12 : 2); retry++) {
+            try {
+                const { data, error } = await window.sb.auth.getSession();
+                if (!error && data && data.session) {
+                    currentSession = data.session;
+                    console.log('[Auth] Supabase 세션 확인 완료:', currentSession.user?.email);
+                    break;
+                }
+            } catch(sessErr) {
+                console.warn('[Auth] getSession 오류:', sessErr);
+            }
+            if (hasAuthParam) {
+                await new Promise(r => setTimeout(r, 200));
+            }
+        }
+
+        // 3. 만약 SDK 자동 감지가 되지 않았고 URL에 code가 있는 경우 (PKCE fallback)
+        if (!currentSession) {
             const fullSearch = (window.location.search && window.location.search.includes('code='))
                 ? window.location.search
                 : ((window.top && window.top !== window && window.top.location.search && window.top.location.search.includes('code='))
                     ? window.top.location.search
                     : '');
-            if (!currentSession && fullSearch && fullSearch.includes('code=')) {
-                const sp = new URLSearchParams(fullSearch.substring(fullSearch.indexOf('?') + 1));
-                const code = sp.get('code');
-                if (code) {
-                    console.log('[Auth] URL 쿼리에서 code 감지 -> exchangeCodeForSession 실행');
-                    const { data: exData, error: exErr } = await window.sb.auth.exchangeCodeForSession(code);
-                    if (!exErr && exData && exData.session) {
-                        currentSession = exData.session;
-                        if (exData.session.provider_token) {
-                            localStorage.setItem('g_access_token', exData.session.provider_token);
-                            localStorage.setItem('g_token_time', Date.now().toString());
+            if (fullSearch && fullSearch.includes('code=')) {
+                try {
+                    const sp = new URLSearchParams(fullSearch.substring(fullSearch.indexOf('?') + 1));
+                    const code = sp.get('code');
+                    if (code) {
+                        console.log('[Auth] code exchange fallback 실행');
+                        const { data: exData, error: exErr } = await window.sb.auth.exchangeCodeForSession(code);
+                        if (!exErr && exData && exData.session) {
+                            currentSession = exData.session;
+                            if (exData.session.provider_token) {
+                                localStorage.setItem('g_access_token', exData.session.provider_token);
+                                localStorage.setItem('g_token_time', Date.now().toString());
+                            }
                         }
                     }
-                }
-            }
-        } catch(tokenExtractErr) {
-            console.warn('[Auth] 토큰 수동 추출 중 오류:', tokenExtractErr);
-        }
-
-        if (!currentSession) {
-            const hasAuthParam = window.location.search.includes('code=') ||
-                                 window.location.hash.includes('access_token=') ||
-                                 (window.top && window.top !== window && (
-                                     (window.top.location.search && window.top.location.search.includes('code=')) ||
-                                     (window.top.location.hash && window.top.location.hash.includes('access_token='))
-                                 ));
-
-            for (let retry = 0; retry < (hasAuthParam ? 15 : 1); retry++) {
-                const { data, error } = await window.sb.auth.getSession();
-                if (!error && data && data.session) {
-                    currentSession = data.session;
-                    break;
-                }
-                if (hasAuthParam) {
-                    await new Promise(r => setTimeout(r, 200));
+                } catch(tokenExtractErr) {
+                    console.warn('[Auth] code exchange fallback 오류:', tokenExtractErr);
                 }
             }
         }
@@ -4410,6 +4419,12 @@ async function checkSession() {
         if (currentSession) {
             window.currentUser = currentSession.user;
             wIsLoggedIn = true;
+
+            // provider_token 저장 (세션 객체에 포함된 경우)
+            if (currentSession.provider_token) {
+                localStorage.setItem('g_access_token', currentSession.provider_token);
+                localStorage.setItem('g_token_time', Date.now().toString());
+            }
 
             // OAuth 리다이렉트 후 브라우저 주소창의 파라미터(?code=... 또는 #access_token=...) 깔끔하게 자동 정리
             if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('provider_token'))) {
@@ -4428,10 +4443,14 @@ async function checkSession() {
                     }
                 } catch(e) {}
             }
+
+            // [마이페이지 자동 전환] 로그인 직후 로그인 창(login/intro.html)이 열려있었다면 마이페이지로 이동!
             const currentMainFrame = document.getElementById('mainFrame');
             if (currentMainFrame && currentMainFrame.src && currentMainFrame.src.includes('login/intro.html')) {
-                if (typeof showDashboardHome === 'function') {
-                    showDashboardHome();
+                if (typeof openMyPageFromSidebar === 'function') {
+                    openMyPageFromSidebar();
+                } else {
+                    currentMainFrame.src = 'login/mypage.html?v=' + Date.now();
                 }
             }
             
@@ -4569,6 +4588,7 @@ async function checkSession() {
         if (typeof showDashboardHome === 'function') showDashboardHome();
     } finally {
         isSessionChecked = true;
+        isCheckingSession = false;
     }
 }
 

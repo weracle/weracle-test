@@ -1328,12 +1328,15 @@
                     } catch (errDb) {
                         console.warn("Supabase update error:", errDb);
                     }
-                    try {
-                        const metaObj = {};
-                        metaObj[field] = value;
-                        await sb.auth.updateUser({ data: metaObj });
-                    } catch (errMeta) {
-                        console.warn("Supabase meta update:", errMeta);
+                    // 로고나 고용량 이미지는 auth 메타데이터(토큰)에 넣지 않고 DB profiles 테이블에만 안전하게 저장
+                    if (field !== 'logo_url' && !String(value).startsWith('data:image')) {
+                        try {
+                            const metaObj = {};
+                            metaObj[field] = value;
+                            await sb.auth.updateUser({ data: metaObj });
+                        } catch (errMeta) {
+                            console.warn("Supabase meta update:", errMeta);
+                        }
                     }
                 }
                 

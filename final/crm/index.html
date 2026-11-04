@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -91,25 +91,31 @@ window.addEventListener('error', function(e) {
           </button>
       </div>
     <!-- Today's Actions Box -->
-    <div style="flex:1.2; display:flex; flex-direction:column;">
+    <div style="flex:1.4; display:flex; flex-direction:column;">
         <span style="font-size:13px; font-weight:800; color:#64748b; margin-bottom:8px;">오늘 챙겨야 할 고객</span>
-        <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:12px 16px; display:flex; gap:16px; align-items:center; height:60px; box-sizing:border-box; box-shadow:0 4px 6px -1px rgba(0,0,0,0.03);">
-            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'birth', value:'today'}, '*')" style="flex:1; margin:0; padding:8px; border:none; box-shadow:none; background:#fffbeb; height:100%;">
-                <span class="badge" id="mini-badge-birth">3명</span>
+        <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:12px 14px; display:flex; gap:12px; align-items:center; height:60px; box-sizing:border-box; box-shadow:0 4px 6px -1px rgba(0,0,0,0.03);">
+            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'birth', value:'today'}, '*')" style="flex:1; margin:0; padding:6px; border:none; box-shadow:none; background:#fffbeb; height:100%; cursor:pointer;">
+                <span class="badge" id="mini-badge-birth">0명</span>
                 <i class="fa-solid fa-cake-candles mini-icon" style="color: #f59e0b;"></i>
-                <span class="mini-text" style="font-size:13px;">오늘 생일</span>
+                <span class="mini-text" style="font-size:12.5px;">오늘 생일</span>
             </div>
             <div style="width:1px; height:30px; background:#e2e8f0;"></div>
-            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'sang', value:'today'}, '*')" style="flex:1; margin:0; padding:8px; border:none; box-shadow:none; background:#ecfdf5; height:100%;">
-                <span class="badge" id="mini-badge-sangryung">5명</span>
+            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'sang', value:'today'}, '*')" style="flex:1; margin:0; padding:6px; border:none; box-shadow:none; background:#ecfdf5; height:100%; cursor:pointer;">
+                <span class="badge" id="mini-badge-sangryung">0명</span>
                 <i class="fa-solid fa-shield-heart mini-icon" style="color: #10b981;"></i>
-                <span class="mini-text" style="font-size:13px;">상령일 도래</span>
+                <span class="mini-text" style="font-size:12.5px;">상령일 도래</span>
             </div>
             <div style="width:1px; height:30px; background:#e2e8f0;"></div>
-            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'expiry', value: '만기'}, '*')" style="flex:1; margin:0; padding:8px; border:none; box-shadow:none; background:#eef2ff; height:100%;">
-                <span class="badge blue" id="mini-badge-expiry">2명</span>
+            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'expiry', value: '만기'}, '*')" style="flex:1; margin:0; padding:6px; border:none; box-shadow:none; background:#eef2ff; height:100%; cursor:pointer;">
+                <span class="badge blue" id="mini-badge-expiry">0명</span>
                 <i class="fa-solid fa-file-contract mini-icon" style="color: #6366f1;"></i>
-                <span class="mini-text" style="font-size:13px;">보험 만기</span>
+                <span class="mini-text" style="font-size:12.5px;">만기 도래</span>
+            </div>
+            <div style="width:1px; height:30px; background:#e2e8f0;"></div>
+            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'claim', value: 'month'}, '*')" style="flex:1; margin:0; padding:6px; border:none; box-shadow:none; background:#fdf2f8; height:100%; cursor:pointer;">
+                <span class="badge" style="background:#f43f5e; color:white;" id="mini-badge-claim">0명</span>
+                <i class="fa-solid fa-receipt mini-icon" style="color: #f43f5e;"></i>
+                <span class="mini-text" style="font-size:12.5px;">이달의 청구</span>
             </div>
         </div>
     </div>
@@ -770,6 +776,9 @@ window.addEventListener('error', function(e) {
 
 <script src="app.js?v=V20261006"></script>
   <script src="familyTabsLogic.js?v=20261004213200"></script>
+  <script src="crm_speed_center.js?v=20261104"></script>
+  <script src="crm_smart_reg.js?v=20261104"></script>
+  <script src="crm_enhancements.js?v=20261104"></script>
   
   
 
@@ -1364,7 +1373,9 @@ function execDaumPostcode(targetId) {
   <!-- Quick Edit Modal (Speed Workspace) -->
   <div class="modal-overlay" id="quickEditModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.7); z-index:99999; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; backdrop-filter:blur(4px);">
       <div class="modal-content" style="background:#f8fafc; width:100%; max-width:1600px; border-radius:24px; padding:32px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); position:relative; max-height:95vh; display:flex; flex-direction:column;">
-          <button onclick="document.getElementById('quickEditModal').style.display='none'" style="position:absolute; top:24px; right:24px; background:none; border:none; font-size:24px; color:#94a3b8; cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'"></button>
+          <button onclick="if(typeof window.closeQuickEditModal==='function') window.closeQuickEditModal(); else document.getElementById('quickEditModal').style.display='none';" style="position:absolute; top:24px; right:24px; background:#f1f5f9; border:1px solid #cbd5e1; width:38px; height:38px; border-radius:50%; font-size:20px; color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;" onmouseover="this.style.background='#fee2e2'; this.style.color='#ef4444'; this.style.borderColor='#fca5a5';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#64748b'; this.style.borderColor='#cbd5e1';" title="닫기">
+              <i class="fa-solid fa-xmark"></i>
+          </button>
           
           <h2 style="font-size:24px; font-weight:800; color:#0f172a; margin:0 0 24px 0; display:flex; align-items:center; gap:8px;">
               <i class="fa-solid fa-bolt" style="color:#3b82f6;"></i> 스피드 작업 센터
@@ -1377,6 +1388,66 @@ function execDaumPostcode(targetId) {
                   <div style="position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:14px; color:#64748b; font-weight:600;">
                       검색 결과: <span id="quickEditCount" style="color:#3b82f6; font-size:16px; font-weight:800;">0</span>건
                   </div>
+              </div>
+
+              <!-- 5대 다이렉트 필터 (운전, 연령, 반려동물, 사업자, 결제) -->
+              <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:14px; padding-top:14px; border-top:1px dashed #cbd5e1;">
+                  <!-- 운전여부 -->
+                  <div style="display:flex; align-items:center; gap:6px;">
+                      <span style="font-size:12.5px; font-weight:800; color:#475569;"><i class="fa-solid fa-car" style="color:#3b82f6;"></i> 운전:</span>
+                      <select id="sc-select-driver" onchange="window.setSpeedFilter('driver', this.value)" style="padding:6px 12px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:13px; font-weight:700; outline:none; background:white; color:#334155; cursor:pointer;">
+                          <option value="">전체 (운전)</option>
+                          <option value="이륜차">이륜차</option>
+                          <option value="영업용">영업용</option>
+                          <option value="업무용">업무용</option>
+                          <option value="자가용">자가용</option>
+                      </select>
+                  </div>
+                  
+                  <!-- 연령대 -->
+                  <div style="display:flex; align-items:center; gap:6px;">
+                      <span style="font-size:12.5px; font-weight:800; color:#475569;"><i class="fa-solid fa-user-group" style="color:#6366f1;"></i> 연령:</span>
+                      <select id="sc-select-age" onchange="window.setSpeedFilter('ageGroup', this.value)" style="padding:6px 12px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:13px; font-weight:700; outline:none; background:white; color:#334155; cursor:pointer;">
+                          <option value="">전체 (연령)</option>
+                          <option value="10">10대 이하</option>
+                          <option value="20">20대</option>
+                          <option value="30">30대</option>
+                          <option value="40">40대</option>
+                          <option value="50">50대</option>
+                          <option value="60">60대 이상</option>
+                      </select>
+                  </div>
+
+                  <!-- 반려동물 토글 -->
+                  <button type="button" id="sc-btn-pet" onclick="window.setSpeedFilter('hasPet')" style="display:flex; align-items:center; gap:5px; padding:6px 12px; border-radius:8px; border:1.5px solid #cbd5e1; background:white; font-size:13px; font-weight:800; color:#475569; cursor:pointer; transition:0.2s;" onmouseover="if(this.style.background!=='rgb(254, 243, 199)') this.style.borderColor='#f59e0b'" onmouseout="if(this.style.background!=='rgb(254, 243, 199)') this.style.borderColor='#cbd5e1'">
+                      🐾 반려동물
+                  </button>
+
+                  <!-- 사업자 구분 -->
+                  <div style="display:flex; align-items:center; gap:6px;">
+                      <span style="font-size:12.5px; font-weight:800; color:#475569;"><i class="fa-solid fa-briefcase" style="color:#059669;"></i> 사업자:</span>
+                      <select id="sc-select-biz" onchange="window.setSpeedFilter('bizType', this.value)" style="padding:6px 12px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:13px; font-weight:700; outline:none; background:white; color:#334155; cursor:pointer;">
+                          <option value="">전체 (사업자)</option>
+                          <option value="개인사업자">개인사업자</option>
+                          <option value="법인사업자">법인사업자</option>
+                          <option value="일반고객">일반고객</option>
+                      </select>
+                  </div>
+
+                  <!-- 결제방식 -->
+                  <div style="display:flex; align-items:center; gap:6px;">
+                      <span style="font-size:12.5px; font-weight:800; color:#475569;"><i class="fa-regular fa-credit-card" style="color:#d97706;"></i> 결제:</span>
+                      <select id="sc-select-pay" onchange="window.setSpeedFilter('payMethod', this.value)" style="padding:6px 12px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:13px; font-weight:700; outline:none; background:white; color:#334155; cursor:pointer;">
+                          <option value="">전체 (결제)</option>
+                          <option value="카드">신용카드</option>
+                          <option value="자동이체">자동이체</option>
+                      </select>
+                  </div>
+
+                  <!-- 필터 초기화 -->
+                  <button type="button" onclick="window.resetSpeedCenterFilters(true)" style="margin-left:auto; display:flex; align-items:center; gap:5px; padding:6px 14px; border-radius:8px; border:1px solid #e2e8f0; background:#f1f5f9; font-size:12.5px; font-weight:800; color:#64748b; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#0f172a';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#64748b';">
+                      <i class="fa-solid fa-rotate-right"></i> 필터 초기화
+                  </button>
               </div>
           </div>
           

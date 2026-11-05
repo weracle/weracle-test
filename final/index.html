@@ -1584,6 +1584,20 @@ color: #065f46;
     background: #b91c1c;
 }
 
+
+@media (max-width: 768px) {
+    .pb-content-area.iframe-active, .main-workspace.iframe-active {
+        height: calc(100vh - 74px) !important;
+        height: calc(100dvh - 74px) !important;
+        max-height: calc(100dvh - 74px) !important;
+        overflow: hidden !important;
+    }
+    .iframe-active #mainFrame {
+        height: 100% !important;
+        min-height: 100% !important;
+    }
+}
+
 </style>
 <style id="navy-toss-theme">
 /* =========================================
@@ -2800,6 +2814,30 @@ transform: translateY(-2px);
     transform: translateX(2px);
 }
 
+
+@media (max-width: 900px) {
+    /* 모바일 메인에서는 iframe-active가 붙어있어도 스케줄러 허브를 보여줌 */
+    .main-workspace.iframe-active #mobileWorkHub {
+        display: block !important;
+    }
+    /* 단, 서브페이지(mainFrame)가 실제로 로드되어 표시 중일 때는 숨김 */
+    .main-workspace.subpage-viewing #mobileWorkHub {
+        display: none !important;
+    }
+}
+
+
+    /* 대표님 요청: 모바일 우측 상단 플로팅 '전체메뉴' 파란 버튼 제거 */
+    #mobileFloatingHamburger {
+        display: none !important;
+    }
+
+
+    /* 대표님 요청: 모바일 상단 헤더 우측 '전체메뉴' 파란 버튼 영구 제거 */
+    .mobile-all-menu-btn {
+        display: none !important;
+    }
+
 /* ======================================================== */
 /* 색상 톤: 아이콘 칩과 태그에만 섬세하게 적용 (과도한 테두리 일체 없음) */
 /* ======================================================== */
@@ -3105,11 +3143,309 @@ transform: translateY(-2px);
 }
 
 @media (max-width: 900px) {
-    .mobile-all-menu-btn { display: flex !important; }
+    .mobile-all-menu-btn { display: none !important; }
 }
 
 </style>
 
+<style>
+/* ========================================================
+   [모바일 전용] 대시보드 스케줄러 & 3x3 슬라이딩 서랍 메뉴 CSS
+   (PC 화면 > 900px 에는 0.001%도 침투하지 않도록 철저 격리)
+   ======================================================== */
+@media (max-width: 900px) {
+    #mobileWorkHub {
+        display: block !important;
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 16px 14px 80px 14px;
+        position: relative;
+    }
+
+    /* 캘린더 헤더 박스 */
+    .cal-header-box {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 13px 15px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
+    }
+    .cal-header-row1 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 11px;
+    }
+    .cal-date-label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        white-space: nowrap;
+    }
+    .cal-date-title {
+        font-size: 15.5px;
+        font-weight: 850;
+        color: #0f172a;
+        white-space: nowrap;
+    }
+    .cal-today-tag {
+        font-size: 11px;
+        font-weight: 800;
+        color: #0284c7;
+        background: #e0f2fe;
+        padding: 2px 7px;
+        border-radius: 5px;
+        white-space: nowrap;
+    }
+    .cal-nav-btns {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .cal-nav-btn {
+        width: 27px;
+        height: 27px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        border-radius: 7px;
+        font-size: 11px;
+        color: #64748b;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+    }
+    .cal-nav-btn:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    /* 필터 칩 바 (가로 스크롤 가능, 줄바꿈 완전 차단) */
+    .cal-filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+    }
+    .cal-filter-bar::-webkit-scrollbar { display: none; }
+    
+    .cal-filter-chip {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11.5px;
+        font-weight: 750;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: all 0.15s ease;
+        border: 1px solid transparent;
+    }
+    .cal-filter-chip.active {
+        background: #0284c7;
+        color: #ffffff;
+        border-color: #0284c7;
+    }
+    .cal-filter-chip.chip-normal {
+        background: #f1f5f9;
+        color: #475569;
+        border-color: #e2e8f0;
+    }
+    .cal-filter-chip.chip-normal:hover {
+        background: #e2e8f0;
+    }
+    .chip-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+
+    /* 스케줄 카드 리스트 */
+    .cal-event-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .cal-event-card {
+        display: flex;
+        flex-direction: column;
+        padding: 13px 15px;
+        border-radius: 15px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        gap: 5px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        transition: all 0.15s ease;
+    }
+    .cal-event-card:hover {
+        border-color: #cbd5e1;
+        background: #fcfdfe;
+    }
+    .cal-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2px;
+    }
+    .cal-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2.5px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 800;
+    }
+    .cal-badge.google { background: #dcfce7; color: #15803d; }
+    .cal-badge.bday { background: #ffe4e6; color: #be123c; }
+    .cal-badge.expiry { background: #fef3c7; color: #b45309; }
+    
+    .cal-card-action-btn {
+        padding: 4px 10px;
+        border-radius: 7px;
+        font-size: 11px;
+        font-weight: 750;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #334155;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+        transition: all 0.15s ease;
+    }
+    .cal-card-action-btn:hover {
+        background: #0284c7;
+        color: #ffffff;
+        border-color: #0284c7;
+    }
+
+    .cal-event-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.4;
+        word-break: keep-all;
+    }
+    .cal-event-sub {
+        font-size: 11.5px;
+        color: #64748b;
+        line-height: 1.4;
+        word-break: keep-all;
+    }
+
+    /* 하단 슬라이딩 바텀 시트 (토스/당근 스타일) */
+    .mobile-bottom-sheet-wrap {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
+        box-shadow: 0 -8px 25px rgba(15, 23, 42, 0.14);
+        border-top: 1px solid #e2e8f0;
+        z-index: 9999;
+        transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+        transform: translateY(0);
+        max-width: 520px;
+        margin: 0 auto;
+    }
+    .mobile-bottom-sheet-wrap.collapsed {
+        transform: translateY(calc(100% - 46px));
+    }
+    .sheet-drag-handle-bar {
+        padding: 8px 16px 10px 16px;
+        cursor: pointer;
+        text-align: center;
+        background: #ffffff;
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
+        user-select: none;
+        transition: background 0.15s;
+    }
+    .sheet-drag-handle-bar:hover {
+        background: #f8fafc;
+    }
+    .sheet-pill-bar {
+        width: 42px;
+        height: 4.5px;
+        background: #cbd5e1;
+        border-radius: 9999px;
+        margin: 0 auto 6px auto;
+    }
+    .sheet-handle-text {
+        font-size: 11px;
+        font-weight: 800;
+        color: #0284c7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    /* 3x3 그리드 메뉴 */
+    .sheet-menu-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 6px 14px 20px 14px;
+        background: #ffffff;
+    }
+    .sheet-menu-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 6px;
+        border-radius: 14px;
+        background: #f8fafc;
+        border: 1px solid #f1f5f9;
+        cursor: pointer;
+        transition: all 0.16s ease;
+        gap: 6px;
+    }
+    .sheet-menu-tile:hover {
+        background: #f1f5f9;
+        transform: translateY(-2px);
+        border-color: #cbd5e1;
+    }
+    .sheet-menu-tile:active {
+        transform: scale(0.97);
+    }
+    .sheet-tile-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        transition: all 0.15s;
+    }
+    .sheet-tile-label {
+        font-size: 11.5px;
+        font-weight: 750;
+        color: #334155;
+        text-align: center;
+        letter-spacing: -0.3px;
+    }
+}
+@media (min-width: 901px) {
+    .mobile-bottom-sheet-wrap {
+        display: none !important;
+    }
+}
+</style>
 </head>
 <body><script></script>
 <!-- PWA Mobile Install Overlay Removed -->
@@ -3294,186 +3630,137 @@ transform: translateY(-2px);
 
 
 <!-- 모바일 전용 업무 바로가기 허브 (모바일에서는 대시보드 대신 업무 바로가기 제공) -->
+
+<!-- 모바일 전용 대시보드 허브: 통합 스마트 스케줄러 & 3x3 서랍 메뉴 -->
 <div class="mobile-work-hub" id="mobileWorkHub">
-    <!-- 모바일 타이틀 & 날짜 -->
-    <div class="m-hub-header">
-        <div class="m-hub-badge">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <span>2026. 08. 08 (토)</span>
+    <!-- 헤더 박스: 날짜 + 필터 칩 -->
+    <div class="cal-header-box">
+        <div class="cal-header-row1">
+            <div class="cal-date-label">
+                <i class="fa-regular fa-calendar-days" style="color: #0284c7; font-size: 15px;"></i>
+                <span class="cal-date-title" id="mDashDateDisplay">2026. 11. 05 (목)</span>
+                <span class="cal-today-tag">오늘</span>
+            </div>
+            <div class="cal-nav-btns">
+                <button type="button" class="cal-nav-btn" onclick="alert('이전 날짜로 이동')"><i class="fa-solid fa-chevron-left"></i></button>
+                <button type="button" class="cal-nav-btn" onclick="alert('다음 날짜로 이동')"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
         </div>
-        <h2 class="m-hub-title">영업 및 고객 업무 포털</h2>
-        <p class="m-hub-desc">필요한 업무를 터치하여 바로 시작하세요.</p>
+
+        <div class="cal-filter-bar">
+            <span class="cal-filter-chip active" onclick="filterMDashEvents('all', this)">전체 4</span>
+            <span class="cal-filter-chip chip-normal" onclick="filterMDashEvents('schedule', this)">
+                <span class="chip-dot" style="background: #22c55e;"></span>내 일정 2
+            </span>
+            <span class="cal-filter-chip chip-normal" onclick="filterMDashEvents('bday', this)">
+                <span class="chip-dot" style="background: #f43f5e;"></span>생일 1
+            </span>
+            <span class="cal-filter-chip chip-normal" onclick="filterMDashEvents('expiry', this)">
+                <span class="chip-dot" style="background: #eab308;"></span>만기 1
+            </span>
+        </div>
     </div>
 
-    <!-- 전체 업무 카테고리 -->
-    <div class="m-categories-section">
-        <!-- 1. 고객관리 -->
-        <div class="m-cat-card theme-blue">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </div>
-                    <span class="m-cat-title">고객관리</span>
-                </div>
-                <span class="m-tag">고객 / 청구</span>
+    <!-- 일정 카드 목록 (4종 디테일) -->
+    <div class="cal-event-list">
+        <div class="cal-event-card m-event-item m-event-schedule">
+            <div class="cal-card-top">
+                <span class="cal-badge google"><i class="fa-regular fa-clock"></i> 10:30 ~ 11:30</span>
+                <button type="button" class="cal-card-action-btn" onclick="alert('홍길동 고객(010-1234-5678)에게 전화를 연결합니다.')">
+                    <i class="fa-solid fa-phone"></i> 연결
+                </button>
             </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('고객관리', '고객관리', 'crm/crm_test.html')">
-                    <span>고객관리 (CRM)</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('고객관리', '보험금 청구', 'claim/claim.html')">
-                    <span>보험금 청구</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
+            <div class="cal-event-title">홍길동 고객 보장 리모델링 상담</div>
+            <div class="cal-event-sub">
+                <i class="fa-solid fa-location-dot" style="color: #94a3b8; margin-right: 3px;"></i>스타벅스 강남점 (2층) · 신규 보장 분석자료 전달
             </div>
         </div>
 
-        <!-- 2. 보험인사이트 -->
-        <div class="m-cat-card theme-green">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.5 8.5L13.5 13.5L9.5 9.5L5.5 13.5"/></svg>
-                    </div>
-                    <span class="m-cat-title">보험인사이트</span>
-                </div>
-                <span class="m-tag">시장 / 분석</span>
+        <div class="cal-event-card m-event-item m-event-schedule">
+            <div class="cal-card-top">
+                <span class="cal-badge google"><i class="fa-regular fa-clock"></i> 14:00 ~ 15:00</span>
+                <button type="button" class="cal-card-action-btn" onclick="alert('김영희 고객(010-9876-5432)에게 전화를 연결합니다.')">
+                    <i class="fa-solid fa-phone"></i> 연결
+                </button>
             </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('보험인사이트', '영업 소식지', 'insight/insight_news_v4.html?v=V20261103_3')">
-                    <span>영업 소식지</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('보험인사이트', '한장 비교표', 'insight/insight_compare_v2.html?v=V20261102_2')">
-                    <span>한장 비교표</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('보험인사이트', '보험 영상', 'insight/video.html')" style="grid-column: span 2;">
-                    <span>보험 영상</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
+            <div class="cal-event-title">김영희 고객 가입 증권 서류 전달</div>
+            <div class="cal-event-sub">
+                <i class="fa-solid fa-location-dot" style="color: #94a3b8; margin-right: 3px;"></i>성남시 분당구 고객 자택 방문 · 증권 바인더 전달
             </div>
         </div>
 
-        <!-- 3. 영업전략 -->
-        <div class="m-cat-card theme-amber">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
-                    </div>
-                    <span class="m-cat-title">영업전략</span>
-                </div>
-                <span class="m-tag">타겟 / 플랜</span>
+        <div class="cal-event-card m-event-item m-event-bday">
+            <div class="cal-card-top">
+                <span class="cal-badge bday"><i class="fa-solid fa-cake-candles"></i> 오늘 생일</span>
+                <button type="button" class="cal-card-action-btn" onclick="alert('김철수 고객님께 생일 축하 카톡 메시지를 전송합니다.')">
+                    <i class="fa-solid fa-comment"></i> 축하톡
+                </button>
             </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('영업전략', '타겟 관리', 'target/target.html')">
-                    <span>타겟 관리</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('영업전략', '전략 플랜', 'strategy/strategy_plan.html')">
-                    <span>전략 플랜</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('영업전략', '보장 분석', 'branding/pdf_p.html')">
-                    <span>보장 분석</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('영업전략', '데일리 뉴스', 'branding/dailynews.html')">
-                    <span>데일리 뉴스</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-            </div>
+            <div class="cal-event-title">김철수 고객님 생일 축하</div>
+            <div class="cal-event-sub">010-5555-1234 · 모바일 커피 쿠폰 및 축하 안부톡 발송 대상</div>
         </div>
 
-        <!-- 4. 브랜딩 -->
-        <div class="m-cat-card theme-purple">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="10" y1="3" x2="6" y2="9"/><line x1="14" y1="3" x2="18" y2="9"/><line x1="12" y1="21" x2="9" y2="9"/><line x1="12" y1="21" x2="15" y2="9"/></svg>
-                    </div>
-                    <span class="m-cat-title">브랜딩</span>
-                </div>
-                <span class="m-tag">마켓 / 브랜드</span>
+        <div class="cal-event-card m-event-item m-event-expiry">
+            <div class="cal-card-top">
+                <span class="cal-badge expiry"><i class="fa-solid fa-car"></i> 만기 도래</span>
+                <button type="button" class="cal-card-action-btn" onclick="loadSubPage('고객관리', '고객관리', 'crm/crm_test.html')">
+                    <i class="fa-solid fa-arrow-right"></i> 확인
+                </button>
             </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('브랜딩', '위라클 브랜딩', 'branding/branding.html')">
-                    <span>위라클 브랜딩</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('브랜딩', '디지털 명함', 'card/card_edit.html')">
-                    <span>디지털 명함</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('브랜딩', '브랜딩 마켓', 'branding/market.html')">
-                    <span>브랜딩 마켓</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-            </div>
+            <div class="cal-event-title">박철수 고객 운전자보험 갱신 안내</div>
+            <div class="cal-event-sub">DB손해보험 운전자보험 만기 D-30일 도래 건 (갱신 안내 통화)</div>
+        </div>
+    </div>
+</div>
+
+<!-- 모바일 전용 3x3 슬라이딩 바텀 시트 (토스/당근 스타일) -->
+<div class="mobile-bottom-sheet-wrap" id="mobileBottomSheetWrap">
+    <div class="sheet-drag-handle-bar" onclick="toggleMDashSheet()">
+        <div class="sheet-pill-bar"></div>
+        <div class="sheet-handle-text" id="mSheetHandleText">
+            <i class="fa-solid fa-chevron-down"></i>
+            <span>원하는 기능을 탭하세요 (탭 시 자동 숨김)</span>
+        </div>
+    </div>
+
+    <div class="sheet-menu-grid">
+        <div class="sheet-menu-tile" onclick="navigateMobileTile('브랜딩', '디지털 명함', 'card/card_edit.html')">
+            <span class="sheet-tile-icon" style="background: #e0f2fe; color: #0284c7;"><i class="fa-regular fa-id-badge"></i></span>
+            <span class="sheet-tile-label">디지털 명함</span>
+        </div>
+        <div class="sheet-menu-tile" onclick="navigateMobileTile('고객관리', '고객관리', 'crm/crm_test.html')">
+            <span class="sheet-tile-icon" style="background: #ecfdf5; color: #059669;"><i class="fa-solid fa-users"></i></span>
+            <span class="sheet-tile-label">고객관리</span>
+        </div>
+        <div class="sheet-menu-tile" onclick="navigateMobileTile('고객관리', '보험금 청구', 'claim/claim.html')">
+            <span class="sheet-tile-icon" style="background: #eff6ff; color: #3b82f6;"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+            <span class="sheet-tile-label">보험금 청구</span>
         </div>
 
-<!-- 5. 광고관리 -->
-        <div class="m-cat-card theme-amber">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-                    </div>
-                    <span class="m-cat-title">광고관리</span>
-                </div>
-                <span class="m-tag">마케팅</span>
-            </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('광고관리', '광고관리', 'ad/ad.html')">
-                    <span>광고관리</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-            </div>
+        <div class="sheet-menu-tile" onclick="navigateMobileTile('영업전략', '데일리 뉴스', 'branding/dailynews.html')">
+            <span class="sheet-tile-icon" style="background: #fefce8; color: #ca8a04;"><i class="fa-regular fa-newspaper"></i></span>
+            <span class="sheet-tile-label">데일리 뉴스</span>
+        </div>
+        <div class="sheet-menu-tile" onclick="navigateMobileTile('보험인사이트', '보험 영상', 'insight/video.html')">
+            <span class="sheet-tile-icon" style="background: #fef2f2; color: #dc2626;"><i class="fa-regular fa-circle-play"></i></span>
+            <span class="sheet-tile-label">보험 영상</span>
+        </div>
+        <div class="sheet-menu-tile" onclick="navigateMobileTile('브랜딩', '브랜딩 마켓', 'branding/market.html')">
+            <span class="sheet-tile-icon" style="background: #fff7ed; color: #ea580c;"><i class="fa-solid fa-store"></i></span>
+            <span class="sheet-tile-label">브랜딩 마켓</span>
         </div>
 
-        <!-- 6. 위라클 -->
-        <div class="m-cat-card theme-indigo">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><path d="M2 19h20v2H2z"/><path d="M2 5l4 9 6-6 6 6 4-9v12H2z"/></svg>
-                    </div>
-                    <span class="m-cat-title">위라클</span>
-                </div>
-                <span class="m-tag">파트너</span>
-            </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('위라클', '파트너스', 'management/management.html')">
-                    <span>파트너스</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-            </div>
+        <div class="sheet-menu-tile" onclick="alert('구글 스프레드시트와 실시간 연동 정상 유지 중입니다.')">
+            <span class="sheet-tile-icon" style="background: #e6f4ea; color: #16a34a;"><i class="fa-solid fa-table"></i></span>
+            <span class="sheet-tile-label">구글시트 연동</span>
         </div>
-
-        <!-- 6. 구독서비스 (신규 독립 허브 카드 + 둥근 라운드형 아이콘) -->
-        <div class="m-cat-card theme-rose">
-            <div class="m-cat-head">
-                <div class="m-head-left">
-                    <div class="m-cat-pill">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 10a4 4 0 0 1 6.8-1.5L17 10"/><polyline points="17 6.5 17 10 13.5 10"/><path d="M15.5 14a4 4 0 0 1-6.8 1.5L7 14"/><polyline points="7 17.5 7 14 10.5 14"/></svg>
-                    </div>
-                    <span class="m-cat-title">구독서비스</span>
-                </div>
-                <span class="m-tag">멤버십</span>
-            </div>
-            <div class="m-cat-links">
-                <a onclick="loadSubPage('구독서비스', '구독 플랜', 'subscription/subscription.html')">
-                    <span>구독 플랜</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a onclick="loadSubPage('구독서비스', '결제/구독 관리', 'subscription/subscription.html')">
-                    <span>결제/구독 관리</span>
-                    <svg class="m-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-            </div>
+        <div class="sheet-menu-tile" onclick="navigateMobileTile('구독서비스', '구독 플랜', 'subscription/subscription.html')">
+            <span class="sheet-tile-icon" style="background: #f8fafc; color: #334155;"><i class="fa-solid fa-credit-card"></i></span>
+            <span class="sheet-tile-label">구독서비스</span>
+        </div>
+        <div class="sheet-menu-tile" onclick="navigateMobileTile('위라클', '파트너스', 'management/management.html')">
+            <span class="sheet-tile-icon" style="background: #f0fdfa; color: #0d9488;"><i class="fa-solid fa-crown"></i></span>
+            <span class="sheet-tile-label">파트너스</span>
         </div>
     </div>
 </div>
@@ -5780,6 +6067,66 @@ function toggleMobileFullMenu(show) {
     }
 }
 window.toggleMobileFullMenu = toggleMobileFullMenu;
+</script>
+
+
+<script>
+    let isMDashSheetCollapsed = false;
+
+    function toggleMDashSheet() {
+        isMDashSheetCollapsed = !isMDashSheetCollapsed;
+        updateMDashSheetUI();
+    }
+
+    function updateMDashSheetUI() {
+        const sheet = document.getElementById('mobileBottomSheetWrap');
+        const text = document.getElementById('mSheetHandleText');
+        if (!sheet || !text) return;
+
+        if (isMDashSheetCollapsed) {
+            sheet.classList.add('collapsed');
+            text.innerHTML = '<i class="fa-solid fa-chevron-up"></i> <span>⬆️ 메뉴 선택하기 (탭하여 서랍 열기)</span>';
+        } else {
+            sheet.classList.remove('collapsed');
+            text.innerHTML = '<i class="fa-solid fa-chevron-down"></i> <span>원하는 기능을 탭하세요 (탭 시 자동 숨김)</span>';
+        }
+    }
+
+    
+    function navigateMobileTile(menuName, subName, url) {
+        isMDashSheetCollapsed = true;
+        updateMDashSheetUI();
+
+        const ws = document.querySelector('.main-workspace');
+        if (ws) ws.classList.add('subpage-viewing');
+
+        if (typeof loadSubPage === 'function') {
+            loadSubPage(menuName, subName, url);
+        } else {
+            window.location.href = url;
+        }
+    }
+
+    const origShowHome = window.showDashboardHome;
+    window.showDashboardHome = function() {
+        const ws = document.querySelector('.main-workspace');
+        if (ws) ws.classList.remove('subpage-viewing');
+
+        if (typeof origShowHome === 'function') {
+            origShowHome();
+        }
+        const mHub = document.getElementById('mobileWorkHub');
+        if (mHub && window.innerWidth <= 900) {
+            mHub.style.display = 'block';
+        }
+        const sheet = document.getElementById('mobileBottomSheetWrap');
+        if (sheet && window.innerWidth <= 900) {
+            sheet.style.display = 'block';
+            isMDashSheetCollapsed = false;
+            updateMDashSheetUI();
+        }
+    };
+
 </script>
 
 </body>

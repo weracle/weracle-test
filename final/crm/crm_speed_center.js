@@ -321,8 +321,8 @@ window.handleQuickEditSearch = function() {
             tbHtml = '<tr><td colspan="15" style="text-align:center; padding:60px 20px; color:#94a3b8; font-weight:600;"><i class="fa-solid fa-magnifying-glass" style="font-size:24px; margin-bottom:8px; display:block;"></i>일치하는 고객이 없습니다.</td></tr>';
         } else {
             matches.forEach(c => {
-                const id = c['고객ID'] || c['고객고유번호'] || c['id'] || '';
-                const name = c['성함'] || c['대표자명'] || '-';
+                const id = c['고객번호'] || c['사업자번호'] || c['ID'] || c['id'] || c['rowNumber'] || c['고객명'] || '';
+                const name = c['고객명'] || c['이름'] || c['성함'] || c['대표자명'] || '-';
                 const status = c['상태'] || c['진행상태'] || '신규';
                 const phone = c['연락처'] || c['전화번호'] || '-';
                 const ageGender = (c['나이'] ? c['나이'] + '세' : '-') + ' / ' + (c['성별'] || '-');
@@ -346,7 +346,7 @@ window.handleQuickEditSearch = function() {
                 
                 if (tab === '1차') {
                     tbHtml += `
-                        <td style="padding:12px 14px; font-weight:800; color:#1e293b;" onclick="showMasterDetail('${id}')">${name}</td>
+                        <td style="padding:12px 14px; font-weight:800; color:#1e293b;" onclick="if(typeof openProfile==='function'){openProfile('${id}');}else if(typeof showMasterDetail==='function'){showMasterDetail('${id}');}">${name}</td>
                         <td style="padding:12px 14px;"><span style="display:inline-block; padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:700; background:${statusBg}; color:${statusColor};">${status}</span></td>
                         <td style="padding:12px 14px; color:#475569; font-size:13px;">${ageGender}</td>
                         <td style="padding:12px 14px; color:#475569; font-size:13px;">${birth}</td>
@@ -360,7 +360,7 @@ window.handleQuickEditSearch = function() {
                     `;
                 } else if (tab === '터치') {
                     tbHtml += `
-                        <td style="padding:12px 14px; font-weight:800; color:#1e293b;" onclick="showMasterDetail('${id}')">${name}</td>
+                        <td style="padding:12px 14px; font-weight:800; color:#1e293b;" onclick="if(typeof openProfile==='function'){openProfile('${id}');}else if(typeof showMasterDetail==='function'){showMasterDetail('${id}');}">${name}</td>
                         <td style="padding:12px 14px;"><span style="display:inline-block; padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:700; background:${statusBg}; color:${statusColor};">${status}</span></td>
                         <td style="padding:12px 14px; color:#4338ca; font-weight:600; font-size:13px;">${touch}</td>
                         <td style="padding:12px 14px; color:#64748b; font-size:13px;">${memo}</td>
@@ -380,7 +380,7 @@ window.handleQuickEditSearch = function() {
                     } catch(e) {}
 
                     tbHtml += `
-                        <td style="padding:12px 14px; font-weight:800; color:#1e293b;" onclick="showMasterDetail('${id}')">${name}</td>
+                        <td style="padding:12px 14px; font-weight:800; color:#1e293b;" onclick="if(typeof openProfile==='function'){openProfile('${id}');}else if(typeof showMasterDetail==='function'){showMasterDetail('${id}');}">${name}</td>
                         <td style="padding:12px 14px;"><span style="display:inline-block; padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:700; background:${statusBg}; color:${statusColor};">${status}</span></td>
                         <td style="padding:12px 14px; color:#334155;">${insSummary}</td>
                     `;

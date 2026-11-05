@@ -7474,21 +7474,29 @@ window.getCrmHeaders = function(sheetType) {
 };
 function getCrmHeaders(sheetType) { return window.getCrmHeaders(sheetType); }
 
-window.renderTable = function(data = globalCustomerData) {
-    window.globalCustomerData = globalCustomerData;
+window.renderTable = function(data) {
+    const activeData = (data && Array.isArray(data) && data.length > 0) 
+        ? data 
+        : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData);
+    globalCustomerData = activeData;
+    window.globalCustomerData = activeData;
+    
     const listArea = document.getElementById("masterListArea");
     if (!listArea) return;
     listArea.innerHTML = "";
     
-    let filtered = data;
+    let filtered = activeData;
     const filterState = window.currentQuickFilter || "all";
     const today = new Date();
     const currentMonthStr = String(today.getMonth() + 1).padStart(2, "0");
     const nextMonthStr = String((today.getMonth() + 1) % 12 + 1).padStart(2, "0");
-    if (filterState === "interest") { filtered = data.filter(c => c["상태"] === "가망" || c["상태"] === "관심"); }
-    else if (filterState === "contract") { filtered = data.filter(c => c["상태"] === "체결" || c["상태"] === "계약"); }
-    else if (filterState === "birth") { filtered = data.filter(c => { const b = String(c["생일"] || ""); return b.includes(currentMonthStr) || b.includes(nextMonthStr); }); }
-    else if (filterState === "sangryung") { filtered = data.filter(c => { const s = String(c["상령일"] || ""); return s.includes(currentMonthStr) || s.includes(nextMonthStr); }); }
+    if (filterState === "interest") { filtered = activeData.filter(c => c["상태"] === "가망" || c["상태"] === "관심" || (c["상태"] && c["상태"].includes("관심"))); }
+    else if (filterState === "contract") { filtered = activeData.filter(c => c["상태"] === "체결" || c["상태"] === "계약" || (c["상태"] && c["상태"].includes("체결"))); }
+    else if (filterState === "birth") { filtered = activeData.filter(c => { const b = String(c["생일"] || ""); return b.includes(currentMonthStr) || b.includes(nextMonthStr); }); }
+    else if (filterState === "sangryung") { filtered = activeData.filter(c => { const s = String(c["상령일"] || ""); return s.includes(currentMonthStr) || s.includes(nextMonthStr); }); }
+    
+    const mc = document.getElementById("memberCount");
+    if (mc) mc.innerText = filtered.length;
     
     let html = "";
     filtered.forEach(client => {
@@ -8706,7 +8714,7 @@ document.body.addEventListener('input', function(e) {
 });
 
 window.openTotalCustomers = function() {
-    window.targetSheetName = "weraclecrm" || 'weraclecrm'; //  전체보기 시 일반고객 모드로 초기화
+    window.targetSheetName = "weraclecrm";
     window.currentQuickFilter = '';
     const searchInput = document.getElementById('masterSearch');
     if (searchInput) searchInput.value = '';
@@ -8714,25 +8722,31 @@ window.openTotalCustomers = function() {
     const activeFilters = document.querySelectorAll('.filter-btn, .status-filter-btn, .db-pipeline-btn');
     activeFilters.forEach(b => b.classList.remove('active'));
     
+    const activeData = (window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData;
     if (typeof window.renderTable === 'function') {
-        window.renderTable(globalCustomerData);
+        window.renderTable(activeData);
     }
     
-    if (typeof openMasterModal === 'function') {
-        openMasterModal();
-    } else {
-        const masterModal = document.getElementById('masterModal');
-          if (masterModal) {
-              masterModal.style.display = 'flex';
-              setTimeout(() => masterModal.classList.add('active'), 10);
-          }
+    const masterModal = document.getElementById('masterModal');
+    if (masterModal) {
+        masterModal.style.display = 'flex';
+        setTimeout(() => masterModal.classList.add('active'), 10);
     }
     
     const mTitle = document.querySelector('#masterModal .modal-title');
     if (mTitle) {
-        const memCountEl = document.getElementById('memberCount');
-        const count = memCountEl ? memCountEl.innerText : globalCustomerData.length;
-        mTitle.innerHTML = '<i class="fa-solid fa-users" style="color:var(--primary);"></i> 전체 고객 마스터 리스트 <span id="memberCount" style="font-size:16px; margin-left:10px; color:#64748b;">' + count + '</span>';
+        mTitle.innerHTML = '<i class="fa-solid fa-users" style="color:var(--primary);"></i> 전체 고객 마스터 리스트 <span id="memberCount" style="font-size:16px; margin-left:10px; color:#64748b;">' + activeData.length + '</span>';
+    }
+
+    if (activeData && activeData.length > 0) {
+        const firstClient = activeData[0];
+        const firstId = firstClient["고객번호"] || firstClient["ID"];
+        setTimeout(() => {
+            const firstCard = document.querySelector('.master-list-card');
+            if (typeof window.showMasterDetail === 'function' && firstId) {
+                window.showMasterDetail(firstId, firstCard);
+            }
+        }, 80);
     }
 };
 window.copyMaskedCustomerInfo = function(btn, name, jumin, phone, address, job, mask = false) {

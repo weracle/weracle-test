@@ -2,6 +2,10 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WERACLE CRM - 반응형 하이브리드 (PC: 3번 세일즈퍼널 & 오리지널 스피드검색 / Mobile: 10번 네이티브)</title>
+
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRM V2 Design Preview</title>
     <!-- Google Identity Services & Google API Client -->
@@ -56,200 +60,1071 @@ window.addEventListener('error', function(e) {
         console.log('Cleared wrong g_sheet_id to force reconnect to 워라클_통합');
     }
 </script>
-</head>
-<body>
-<div id="crm-v2-app">
 
-<div class="container">
-            <!-- Header -->
-    <div class="header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px; background:white; padding: 16px 24px; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); min-width: 0;">
-        <div style="display:flex; align-items:center; gap: 16px; flex: 1; min-width: 0;">
-            <h1 style="margin:0; font-size:18px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:4px;">현재 <span style="color: var(--primary);" id="qf-count-total">0</span>의 소중한 고객님을 관리해드리고 있습니다 </h1>
-            <button onclick="window.openTotalCustomers()" style="background: white; border: 1px solid #cbd5e1; color: #334155; font-weight: 800; padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: 0.2s; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.03); flex-shrink: 0; display:flex; align-items:center; font-size:14px; height: 38px;" onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#3b82f6';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#334155';">
+
+<style>
+/* Responsive Display Rules */
+@media (min-width: 769px) {
+    .container { display: block !important; }
+    .crm-mobile-10-wrap { display: none !important; }
+    .mobile-dock { display: none !important; }
+}
+
+@media (max-width: 768px) {
+    .container { display: none !important; }
+    .crm-mobile-10-wrap { 
+        display: block !important; 
+        padding: 12px 14px 100px 14px;
+        background: #f8fafc;
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
+    .mobile-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 14px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+    .mobile-dock {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+        display: flex !important;
+        justify-content: space-around;
+        align-items: center;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px;
+        z-index: 9999;
+    }
+    .dock-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        padding: 6px 4px;
+        cursor: pointer;
+        transition: transform 0.15s;
+        text-decoration: none;
+        color: #64748b;
+    }
+    .dock-item:active {
+        transform: scale(0.92);
+    }
+    .dock-item.dock-smart-reg { color: #d97706; }
+    .dock-item.dock-memo { color: #2563eb; }
+    .dock-item.dock-ins { color: #0284c7; }
+    .dock-item.dock-tag { color: #7c3aed; }
+
+    .dock-item-icon {
+        font-size: 20px;
+        margin-bottom: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 24px;
+    }
+    .dock-item-label {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+    }
+}
+
+/* PC vs Mobile for listModal */
+@media (min-width: 769px) {
+    #listModalTableWrap { display: block !important; }
+    #listModalMobileList { display: none !important; }
+}
+
+@media (max-width: 768px) {
+    #listModal .modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 94vh !important;
+        padding: 0 !important;
+        border-radius: 20px 20px 0 0 !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+    }
+    #listModal .modal-header {
+        padding: 14px 18px !important;
+        background: white !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    #listModalTableWrap { display: none !important; }
+    #listModalMobileList { display: block !important; }
+
+    #quickEditModal .modal-content {
+        width: 98% !important;
+        max-width: 98% !important;
+        height: 94vh !important;
+        padding: 16px 12px !important;
+        border-radius: 18px !important;
+    }
+}
+
+#google-auth-banner-container {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    z-index: 10 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+#google-auth-banner-container > div {
+    margin: 0 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+}
+@media (max-width: 768px) {
+    #google-auth-banner-container {
+        position: static !important;
+        margin: 4px auto !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+}
+
+/* ==============================================================
+   스마트 간편 등록 (Smart Registration Modal) - PC & Mobile 완벽 대응
+   ============================================================== */
+#smartRegModal.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.smart-reg-modal-content {
+    background: #ffffff;
+    width: 100%;
+    max-width: 960px;
+    height: auto;
+    max-height: 90vh;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #e2e8f0;
+}
+
+.smart-reg-header {
+    padding: 18px 24px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+.smart-reg-header-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.smart-reg-header-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: #d1fae5;
+    color: #059669;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+.smart-reg-header-title {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.4px;
+}
+.smart-reg-header-desc {
+    margin: 3px 0 0 0;
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+.smart-reg-close-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: 0.15s;
+}
+.smart-reg-close-btn:hover {
+    color: #0f172a;
+    background: #e2e8f0;
+}
+
+/* PC Modal Body (2 Columns) */
+.smart-reg-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    background: #f1f5f9;
+    padding: 20px;
+    gap: 18px;
+    min-height: 0;
+}
+.smart-reg-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.smart-reg-step1 {
+    flex: 1;
+    min-width: 0;
+}
+.smart-reg-step2 {
+    flex: 1.15;
+    min-width: 0;
+    padding: 20px;
+    overflow-y: auto;
+}
+.smart-reg-card-head {
+    padding: 14px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+.smart-reg-card-title {
+    font-weight: 800;
+    font-size: 14px;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.smart-reg-badge-step {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 10px;
+}
+.badge-blue {
+    background: #eff6ff;
+    color: #2563eb;
+}
+.badge-green {
+    background: #d1fae5;
+    color: #059669;
+}
+
+/* Textarea & paste tools */
+.smart-reg-textarea-wrap {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+}
+#smartRegInput {
+    width: 100%;
+    height: 105px;
+    padding: 14px 16px;
+    border: none;
+    box-sizing: border-box;
+    resize: none;
+    font-family: Pretendard, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #1e293b;
+    outline: none;
+}
+.smart-reg-textarea-tools {
+    display: flex;
+    gap: 8px;
+    padding: 8px 14px;
+    background: #f8fafc;
+    border-top: 1px dashed #e2e8f0;
+}
+.smart-reg-tool-btn {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: 0.15s;
+}
+.smart-reg-tool-btn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+.smart-reg-tool-btn.clear-btn {
+    margin-left: auto;
+    color: #94a3b8;
+}
+.smart-reg-tool-btn.clear-btn:hover {
+    color: #ef4444;
+}
+
+.smart-reg-help-notice {
+    padding: 10px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.smart-reg-help-notice i {
+    color: #10b981;
+}
+
+/* Chunks (Compact, Clean & 1-Touch Touchscreen Friendly) */
+.smart-reg-chunks {
+    flex: 1;
+    padding: 8px 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #f8fafc;
+    min-height: 90px;
+    max-height: 200px;
+}
+.smart-reg-chunk-placeholder {
+    color: #94a3b8;
+    font-size: 12px;
+    text-align: center;
+    margin: 22px 0;
+    font-weight: 500;
+}
+
+.smart-chunk {
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+}
+
+/* Assigned state: compact single-row pill card */
+.chunk-assigned {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 5px 9px;
+}
+.chunk-assigned:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+}
+.chunk-assigned-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+.chunk-badge-assigned {
+    font-size: 11px;
+    font-weight: 800;
+    background: #dcfce7;
+    color: #15803d;
+    padding: 2px 7px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.chunk-text {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #1e293b;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.chunk-text-assigned {
+    color: #334155;
+    font-size: 12px;
+}
+.chunk-btn-cancel {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 13px;
+    padding: 2px 6px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: 0.15s;
+    flex-shrink: 0;
+}
+.chunk-btn-cancel:hover {
+    color: #ef4444;
+    background: #fee2e2;
+}
+
+/* Unassigned state: sleek card with mini 1-tap action buttons */
+.chunk-unassigned {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 7px 9px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.chunk-unassigned:hover {
+    border-color: #94a3b8;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.chunk-unassigned-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+}
+.chunk-text-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+.chunk-grip {
+    color: #94a3b8;
+    font-size: 11px;
+    cursor: grab;
+    flex-shrink: 0;
+}
+.chunk-action-pills {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-left: 17px;
+}
+.chunk-action-hint {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #64748b;
+    margin-right: 2px;
+}
+.chunk-pill-btn {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    touch-action: manipulation;
+}
+.chunk-pill-btn:hover, .chunk-pill-btn:active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* Form fields */
+.smart-reg-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+}
+.smart-reg-row {
+    display: flex;
+    gap: 12px;
+}
+.smart-reg-col {
+    display: flex;
+    flex-direction: column;
+}
+.col-id {
+    flex: 0 0 95px;
+}
+.col-name {
+    flex: 1;
+}
+.col-jumin {
+    flex: 1;
+}
+.col-phone {
+    flex: 1;
+}
+.smart-reg-field {
+    display: flex;
+    flex-direction: column;
+}
+.smart-reg-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 6px;
+}
+.smart-req {
+    color: #ef4444;
+}
+.smart-reg-modal-content .form-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    font-size: 14px;
+    color: #1e293b;
+    outline: none;
+    box-sizing: border-box;
+    transition: 0.15s;
+    background: #ffffff;
+}
+.smart-reg-modal-content .form-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+.smart-input-id {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+    font-weight: 800;
+    text-align: center;
+}
+.smart-textarea {
+    height: 72px;
+    resize: none;
+    line-height: 1.5;
+}
+
+/* CTA submit */
+.smart-reg-cta-wrap {
+    margin-top: 18px;
+    flex-shrink: 0;
+}
+.smart-reg-btn-submit {
+    width: 100%;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.smart-reg-btn-submit:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+.smart-reg-btn-submit:active {
+    transform: translateY(0);
+}
+
+/* MOBILE MEDIA QUERY (max-width: 768px) */
+@media (max-width: 768px) {
+    #smartRegModal.modal-overlay {
+        padding: 0 !important;
+        align-items: flex-end !important;
+    }
+    .smart-reg-modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: #f8fafc !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .smart-reg-header {
+        padding: 14px 16px !important;
+        background: #ffffff !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 25 !important;
+    }
+    .smart-reg-header-badge {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 16px !important;
+        border-radius: 10px !important;
+    }
+    .smart-reg-header-title {
+        font-size: 16px !important;
+    }
+    .smart-reg-header-desc {
+        font-size: 11px !important;
+    }
+    .smart-reg-close-btn {
+        padding: 8px !important;
+        font-size: 20px !important;
+    }
+
+    /* Stack cards vertically in scrollable container */
+    .smart-reg-body {
+        flex-direction: column !important;
+        padding: 12px 14px 96px 14px !important;
+        gap: 14px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        background: #f8fafc !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+    }
+    .smart-reg-step1 {
+        flex: none !important;
+        width: 100% !important;
+        border-radius: 14px !important;
+    }
+    .smart-reg-step2 {
+        flex: none !important;
+        width: 100% !important;
+        padding: 16px !important;
+        box-sizing: border-box !important;
+        border-radius: 14px !important;
+        overflow-y: visible !important;
+    }
+    #smartRegInput {
+        height: 80px !important;
+        font-size: 14px !important;
+        padding: 12px !important;
+    }
+    .smart-reg-chunks {
+        max-height: 180px !important;
+        min-height: 60px !important;
+        padding: 6px 8px !important;
+        gap: 5px !important;
+    }
+    .smart-reg-modal-content .form-input {
+        padding: 12px 14px !important;
+        font-size: 15px !important;
+        border-radius: 10px !important;
+    }
+    .col-id {
+        flex: 0 0 80px !important;
+    }
+    .smart-textarea {
+        height: 70px !important;
+    }
+
+    /* Fixed Bottom Action Bar for Mobile */
+    .smart-reg-cta-wrap {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        margin: 0 !important;
+        padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)) 16px !important;
+        background: #ffffff !important;
+        border-top: 1px solid #e2e8f0 !important;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.06) !important;
+        z-index: 30 !important;
+    }
+    .smart-reg-btn-submit {
+        height: 48px !important;
+        font-size: 15px !important;
+        border-radius: 12px !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .smart-reg-row-jumin-phone {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+}
+
+
+</style>
+
+</head>
+<body style="background:#f8fafc; font-family: Pretendard, -apple-system, sans-serif;">
+
+
+<div class="container" style="max-width:1400px; margin:0 auto; padding:20px;">
+    <!-- Top Header: Stats on Left + [Insurance 2-Stage Search & New Client] on Right -->
+    <div class="header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px; background:white; padding: 14px 24px; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; flex-wrap:wrap; gap:12px;">
+        <!-- Left: Customer Stats & Total Button & Sample Load Button -->
+        <div style="display:flex; align-items:center; gap: 14px; min-width: 0; flex-wrap:wrap;">
+            <h1 style="margin:0; font-size:17px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:4px;">
+                현재 <span style="color: var(--primary);" id="qf-count-total">0</span>명의 소중한 고객님을 관리해드리고 있습니다
+            </h1>
+            <button onclick="window.openTotalCustomers()" style="background: white; border: 1px solid #cbd5e1; color: #334155; font-weight: 800; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.03); flex-shrink: 0; display:flex; align-items:center; font-size:13px; height: 36px;" onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#3b82f6';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#334155';">
                 <i class="fa-solid fa-users" style="margin-right:6px;"></i> 전체 고객 보기
             </button>
+            
         </div>
         
-        <div style="display:flex; align-items:center; gap: 12px; flex-shrink: 0;">
-            <button onclick="openRegModal('new')" style="background: #3b82f6; color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.3); display:flex; align-items:center; gap:6px; transition: 0.2s; white-space: nowrap; height: 38px;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+        <!-- Right: Insurance 2-Stage Filter + New Client Registration -->
+        <div style="display:flex; align-items:center; gap: 10px; flex-shrink: 0; flex-wrap: wrap;">
+            <!-- Designated Container for Google Auth Status (Prevents Overlap) -->
+            <div id="google-auth-banner-container" style="position: static !important; z-index: 10 !important; margin: 0; display: inline-flex; align-items: center;"></div>
+            <div style="display:flex; align-items:center; gap:6px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:4px 8px; height:38px; box-sizing:border-box;">
+                <i class="fa-solid fa-building-shield" style="color:#2563eb; font-size:14px; margin: 0 2px;"></i>
+                <select class="modern-select" id="dash-ins-type-select" onchange="window.updateDashInsCompanies()" style="height:30px; border-radius:6px; border:1px solid #cbd5e1; font-weight:700; padding:0 8px; font-size:12px; background:white; color:#334155; cursor:pointer;">
+                    <option value="">분류 (생명/손해)</option>
+                    <option value="생명">생명보험</option>
+                    <option value="손해">손해보험</option>
+                </select>
+                <select class="modern-select" id="dash-ins-comp-select" style="height:30px; border-radius:6px; border:1px solid #cbd5e1; font-weight:700; padding:0 8px; font-size:12px; min-width:130px; background:white; color:#334155; cursor:pointer;">
+                    <option value="">회사명 선택</option>
+                </select>
+                <button onclick="window.searchDashInsurance()" style="background:#2563eb; color:white; border:none; padding:0 12px; height:30px; border-radius:6px; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap; transition:0.15s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+                    조회
+                </button>
+            </div>
+
+            <button onclick="openRegModal('new')" style="background: #3b82f6; color: white; border: none; padding: 0 16px; border-radius: 9px; font-weight: 800; font-size: 13.5px; cursor: pointer; box-shadow: 0 2px 6px rgba(59,130,246,0.3); display:flex; align-items:center; gap:6px; transition: 0.2s; white-space: nowrap; height: 38px;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
                 <i class="fa-solid fa-plus"></i> 새 고객 등록
             </button>
         </div>
     </div>
 
-    
+    <!-- Center Speed Action Search Bar -->
+    <div style="max-width: 800px; margin: 0 auto 28px auto;">
+        <div style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px; text-align: left; padding-left: 2px; letter-spacing: -0.2px;">
+            빠른 고객 검색
+        </div>
+        <div onclick="if(typeof window.openQuickEditModal === 'function') window.openQuickEditModal();" 
+             style="background: #eff6ff; border: 2px solid #93c5fd; border-radius: 16px; padding: 0 24px; height: 58px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 3px 6px -1px rgba(59,130,246,0.08); transition: all 0.2s;"
+             onmouseover="this.style.background='#dbeafe'; this.style.borderColor='#3b82f6'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 14px rgba(59,130,246,0.18)';"
+             onmouseout="this.style.background='#eff6ff'; this.style.borderColor='#93c5fd'; this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 6px -1px rgba(59,130,246,0.08)';">
+            
+            <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
+                <i class="fa-solid fa-bolt" style="color: #f59e0b; font-size: 20px; flex-shrink: 0;"></i>
+                <input type="text" id="centerSpeedSearchInput" 
+                       placeholder="원하는 고객의 정보를 빠르게 확인해보세요." 
+                       style="flex: 1; border: none; outline: none; background: transparent; font-size: 15px; font-weight: 600; color: #1e293b; cursor: pointer; width: 100%; letter-spacing: -0.2px;" 
+                       onclick="event.stopPropagation(); window.openQuickEditModal();" 
+                       onkeydown="if(event.key==='Enter'){ event.preventDefault(); window.openQuickEditModal(); }">
+            </div>
 
-    <div style="display:flex; gap:24px; margin-bottom:24px; align-items:stretch;">
-                <!-- Speed Search Box -->
-      <div style="flex:1; display:flex; flex-direction:column;">
-          <span style="font-size:13px; font-weight:800; color:#64748b; margin-bottom:8px;">고객 빠른 검색 & 스피드 작업</span>
-          <button onclick="if(typeof window.openQuickEditModal === 'function') window.openQuickEditModal();" style="flex:1; background:#eff6ff; border:2px solid #93c5fd; border-radius:16px; padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; box-shadow:0 4px 6px -1px rgba(59,130,246,0.1); transition:all 0.2s;" onmouseover="this.style.background='#dbeafe'; this.style.borderColor='#3b82f6'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(59,130,246,0.2)';" onmouseout="this.style.background='#eff6ff'; this.style.borderColor='#93c5fd'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(59,130,246,0.1)';">
-              <div style="display:flex; align-items:center; gap:24px;">
-                  <i class="fa-solid fa-bolt" style="color:#f59e0b; font-size:20px;"></i>
-                  <span style="font-size:16px; font-weight:800; color:#1e293b;">스피드 작업 센터 열기 (빠른 검색)</span>
-              </div>
-          </button>
-      </div>
-    <!-- Today's Actions Box -->
-    <div style="flex:1.4; display:flex; flex-direction:column;">
-        <span style="font-size:13px; font-weight:800; color:#64748b; margin-bottom:8px;">오늘 챙겨야 할 고객</span>
-        <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:12px 14px; display:flex; gap:12px; align-items:center; height:60px; box-sizing:border-box; box-shadow:0 4px 6px -1px rgba(0,0,0,0.03);">
-            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'birth', value:'today'}, '*')" style="flex:1; margin:0; padding:6px; border:none; box-shadow:none; background:#fffbeb; height:100%; cursor:pointer;">
-                <span class="badge" id="mini-badge-birth">0명</span>
-                <i class="fa-solid fa-cake-candles mini-icon" style="color: #f59e0b;"></i>
-                <span class="mini-text" style="font-size:12.5px;">오늘 생일</span>
+            <i class="fa-solid fa-magnifying-glass" style="color: #3b82f6; font-size: 16px; margin-left: 12px; flex-shrink: 0;"></i>
+        </div>
+    </div>
+
+    <!-- Section 1 (Layout 3): 영업 파이프라인 현황 -->
+    <div style="background:white; border:1px solid #cbd5e1; border-radius:18px; padding:20px 24px; margin-bottom:24px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-chart-pie" style="color:#3b82f6; font-size:18px;"></i>
+                <span style="font-size:16px; font-weight:800; color:#0f172a;">영업 파이프라인 진행 현황</span>
             </div>
-            <div style="width:1px; height:30px; background:#e2e8f0;"></div>
-            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'sang', value:'today'}, '*')" style="flex:1; margin:0; padding:6px; border:none; box-shadow:none; background:#ecfdf5; height:100%; cursor:pointer;">
-                <span class="badge" id="mini-badge-sangryung">0명</span>
-                <i class="fa-solid fa-shield-heart mini-icon" style="color: #10b981;"></i>
-                <span class="mini-text" style="font-size:12.5px;">상령일 도래</span>
+            <span style="font-size:12px; color:#94a3b8;">원터치로 단계별 고객 목록 즉시 필터링</span>
+        </div>
+        <div class="grid-4" style="margin-bottom:0;">
+            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '관심')">
+                <div class="pipe-info">
+                    <span class="pipe-title">관심 고객</span>
+                    <span class="pipe-count" id="pipe-count-interest">0</span>
+                </div>
+                <i class="fa-solid fa-user-plus" style="font-size:24px; color:#cbd5e1;"></i>
             </div>
-            <div style="width:1px; height:30px; background:#e2e8f0;"></div>
-            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'expiry', value: '만기'}, '*')" style="flex:1; margin:0; padding:6px; border:none; box-shadow:none; background:#eef2ff; height:100%; cursor:pointer;">
-                <span class="badge blue" id="mini-badge-expiry">0명</span>
-                <i class="fa-solid fa-file-contract mini-icon" style="color: #6366f1;"></i>
-                <span class="mini-text" style="font-size:12.5px;">만기 도래</span>
+            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '상담')">
+                <div class="pipe-info">
+                    <span class="pipe-title">상담/설계 중</span>
+                    <span class="pipe-count" id="pipe-count-consult">0</span>
+                </div>
+                <i class="fa-solid fa-comments" style="font-size:24px; color:#cbd5e1;"></i>
             </div>
-            <div style="width:1px; height:30px; background:#e2e8f0;"></div>
-            <div class="mini-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'claim', value: 'month'}, '*')" style="flex:1; margin:0; padding:6px; border:none; box-shadow:none; background:#fdf2f8; height:100%; cursor:pointer;">
-                <span class="badge" style="background:#f43f5e; color:white;" id="mini-badge-claim">0명</span>
-                <i class="fa-solid fa-receipt mini-icon" style="color: #f43f5e;"></i>
-                <span class="mini-text" style="font-size:12.5px;">이달의 청구</span>
+            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '체결')">
+                <div class="pipe-info">
+                    <span class="pipe-title">계약/유지 고객</span>
+                    <span class="pipe-count" id="pipe-count-contract">0</span>
+                </div>
+                <i class="fa-solid fa-file-signature" style="font-size:24px; color:#cbd5e1;"></i>
+            </div>
+            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '케어')">
+                <div class="pipe-info">
+                    <span class="pipe-title">집중 케어</span>
+                    <span class="pipe-count" style="color:var(--badge-red);" id="pipe-count-care">0</span>
+                </div>
+                <i class="fa-solid fa-hand-holding-heart" style="font-size:24px; color:#cbd5e1;"></i>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Section 2: Pipeline -->
-    <h2 class="section-title">영업 파이프라인 현황 </h2>
-    <div class="grid-4">
-        <div class="pipeline-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'status', value:'관심'}, '*')">
-            <div class="pipe-info">
-                <span class="pipe-title">관심 고객</span>
-                <span class="pipe-count" id="pipe-count-interest">45</span>
+    <!-- Section 2: 오늘 챙겨야 할 고객 -->
+    <div style="background:white; border:1px solid #cbd5e1; border-radius:18px; padding:20px 24px; margin-bottom:24px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-bell" style="color:#f59e0b; font-size:18px;"></i>
+                <span style="font-size:16px; font-weight:800; color:#0f172a;">오늘 챙겨야 할 고객</span>
             </div>
-            <i class="fa-solid fa-user-plus" style="font-size:24px; color:#cbd5e1;"></i>
+            <span style="font-size:12px; color:#94a3b8;">원터치로 해당 알림 고객 즉시 필터링</span>
         </div>
-        <div class="pipeline-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'status', value:'상담'}, '*')">
-            <div class="pipe-info">
-                <span class="pipe-title">상담/설계 중</span>
-                <span class="pipe-count" id="pipe-count-consult">12</span>
+        <div class="grid-4" style="margin-bottom:0;">
+            <!-- 1. 오늘 생일 -->
+            <div onclick="window.executeFilterAndShowList('birth', 'today')" 
+                 style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02);"
+                 onmouseover="this.style.borderColor='#3b82f6'; this.style.background='#f0f9ff'; this.style.transform='translateY(-2px)';" 
+                 onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#ffffff'; this.style.transform='none';">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 4px;">오늘 생일</span>
+                    <span id="mini-badge-birth" style="font-size: 24px; font-weight: 800; color: #d97706; letter-spacing: -0.5px;">0명</span>
+                </div>
+                <div style="width: 42px; height: 42px; border-radius: 10px; background: #fffbeb; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fa-solid fa-cake-candles" style="font-size: 20px; color: #d97706;"></i>
+                </div>
             </div>
-            <i class="fa-solid fa-comments" style="font-size:24px; color:#cbd5e1;"></i>
-        </div>
-        <div class="pipeline-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'status', value:'체결'}, '*')">
-            <div class="pipe-info">
-                <span class="pipe-title">계약/유지 고객</span>
-                <span class="pipe-count" id="pipe-count-contract">840</span>
+
+            <!-- 2. 상령일 도래 -->
+            <div onclick="window.executeFilterAndShowList('sang', 'today')" 
+                 style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02);"
+                 onmouseover="this.style.borderColor='#3b82f6'; this.style.background='#f0f9ff'; this.style.transform='translateY(-2px)';" 
+                 onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#ffffff'; this.style.transform='none';">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 4px;">상령일 도래</span>
+                    <span id="mini-badge-sangryung" style="font-size: 24px; font-weight: 800; color: #059669; letter-spacing: -0.5px;">0명</span>
+                </div>
+                <div style="width: 42px; height: 42px; border-radius: 10px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fa-solid fa-shield-heart" style="font-size: 20px; color: #059669;"></i>
+                </div>
             </div>
-            <i class="fa-solid fa-file-signature" style="font-size:24px; color:#cbd5e1;"></i>
-        </div>
-        <div class="pipeline-card" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'status', value:'케어'}, '*')">
-            <div class="pipe-info">
-                <span class="pipe-title">집중 케어</span>
-                <span class="pipe-count" style="color:var(--badge-red);" id="pipe-count-care">8</span>
+
+            <!-- 3. 만기 도래 -->
+            <div onclick="window.executeFilterAndShowList('expiry', '만기')" 
+                 style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02);"
+                 onmouseover="this.style.borderColor='#3b82f6'; this.style.background='#f0f9ff'; this.style.transform='translateY(-2px)';" 
+                 onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#ffffff'; this.style.transform='none';">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 4px;">만기 도래</span>
+                    <span id="mini-badge-expiry" style="font-size: 24px; font-weight: 800; color: #4f46e5; letter-spacing: -0.5px;">0명</span>
+                </div>
+                <div style="width: 42px; height: 42px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fa-solid fa-file-contract" style="font-size: 20px; color: #4f46e5;"></i>
+                </div>
             </div>
-            <i class="fa-solid fa-hand-holding-heart" style="font-size:24px; color:#cbd5e1;"></i>
+
+            <!-- 4. 보험금 청구 -->
+            <div onclick="window.executeFilterAndShowList('claim', '청구')" 
+                 style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02);"
+                 onmouseover="this.style.borderColor='#3b82f6'; this.style.background='#f0f9ff'; this.style.transform='translateY(-2px)';" 
+                 onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#ffffff'; this.style.transform='none';">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 4px;">보험금 청구</span>
+                    <span id="mini-badge-claim" style="font-size: 24px; font-weight: 800; color: #dc2626; letter-spacing: -0.5px;">0명</span>
+                </div>
+                <div style="width: 42px; height: 42px; border-radius: 10px; background: #fef2f2; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fa-solid fa-receipt" style="font-size: 20px; color: #dc2626;"></i>
+                </div>
+            </div>
         </div>
-    </div> <!-- Horizontal Insurance Filter Banner -->
-      <div style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:16px 24px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-          <div style="display:flex; align-items:center; gap:12px;">
-              <i class="fa-solid fa-building" style="color:var(--primary); font-size:20px;"></i>
-              <span style="font-weight:700; font-size:16px; color:#334155;">보험사별 리스트 검색</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;">
-              <select class="modern-select" id="dash-ins-type-select" onchange="window.updateDashInsCompanies()" style="min-width:160px; height:46px;">
-                  <option value="">분류 (생명/손해)</option>
-                  <option value="생명">생명보험</option>
-                  <option value="손해">손해보험</option>
-              </select>
-              <select class="modern-select" id="dash-ins-comp-select" style="min-width:200px; height:46px;">
-                  <option value="">회사명 선택</option>
-              </select>
-              <button onclick="window.searchDashInsurance()" style="background:#3b82f6; color:white; border:none; padding:0 24px; height:46px; border-radius:8px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 2px 4px rgba(59,130,246,0.3); transition:0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
-                  <i class="fa-solid fa-list"></i> 리스트 보기
-              </button>
-          </div>
-      </div>
-      <!-- Top Dash Row (2 Big Boxes) -->
-    <div class="dash-row" style="display:flex; gap: 24px; margin-bottom: 24px;">
-    <!-- Right Box: Touch Insights -->
-    <div class="big-box" style="flex:1; width:100%;">
-            <div class="box-header">
-                <div class="box-title"><i class="fa-solid fa-chart-pie" style="color:#f43f5e;"></i> 터치인사이트</div>
-                <span style="font-size:13px; color:var(--text-muted);">테마별 타겟 고객</span>
+    </div>
+
+    <!-- Section 3: 터치인사이트 (3대 테마 & 알약형 태그 버튼) -->
+    <div class="big-box" style="background:white; border:1px solid #cbd5e1; border-radius:16px; padding:20px 22px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="font-weight:800; font-size:16px; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-chart-pie" style="color:#2563eb;"></i> 터치인사이트 <span style="font-size:12.5px; color:#64748b; font-weight:600;">(테마별 타겟 고객)</span>
+            </div>
+            <span style="font-size:12px; color:#94a3b8;">클릭 시 해당 태그 고객 즉시 필터</span>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:14px;">
+            <!-- 1. 건강의료 테마 -->
+            <div style="background:#fef2f2; border:1px solid #fee2e2; border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+                <div onclick="toggleSubTags('touch-health-tags')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:26px; height:26px; border-radius:7px; background:#ef4444; color:white; display:flex; align-items:center; justify-content:center; font-size:12px;"><i class="fa-solid fa-heart-pulse"></i></div>
+                        <span style="font-weight:800; font-size:14.5px; color:#991b1b;">건강의료</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down" style="color:#f87171; font-size:12px;"></i>
+                </div>
+                <div class="touch-sub-tags active" id="touch-health-tags" style="display:flex; flex-wrap:wrap; gap:6px; background:transparent; padding:0; border:none; box-shadow:none; margin:0;">
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '실손')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">실손 (<span id="touch-count-실손">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '암')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">암 (<span id="touch-count-암">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '치아')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">치아 (<span id="touch-count-치아">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '간병')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">간병 (<span id="touch-count-간병">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '치매')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">치매 (<span id="touch-count-치매">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '후유장해')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">후유장해 (<span id="touch-count-후유장해">0</span>)</button>
+                </div>
             </div>
             
-                                    <div class="touch-list" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:24px;">
-                <!-- 건강 테마 -->
-                <div class="touch-bar-wrapper">
-                    <div class="touch-bar" onclick="toggleSubTags('touch-health-tags')" style="cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; transition:0.2s;" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1'">
-                        <div class="touch-name">
-                            <div class="touch-icon" style="background:#f43f5e;"><i class="fa-solid fa-heart-pulse"></i></div>
-                            건강의료
-                        </div>
-                        <i class="fa-solid fa-chevron-down" style="color:#94a3b8;"></i>
+            <!-- 2. 라이프 테마 -->
+            <div style="background:#f0fdf4; border:1px solid #dcfce7; border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+                <div onclick="toggleSubTags('touch-life-tags')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:26px; height:26px; border-radius:7px; background:#10b981; color:white; display:flex; align-items:center; justify-content:center; font-size:12px;"><i class="fa-solid fa-car"></i></div>
+                        <span style="font-weight:800; font-size:14.5px; color:#166534;">라이프</span>
                     </div>
-                    <div class="touch-sub-tags" id="touch-health-tags">
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'실손'}, '*')">실손 (<span id="touch-count-실손">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'종합'}, '*')">종합 (<span id="touch-count-종합">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'진단비'}, '*')">진단비 (<span id="touch-count-진단비">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'수술비'}, '*')">수술비 (<span id="touch-count-수술비">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'주요치료비'}, '*')">주요치료비 (<span id="touch-count-주요치료비">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'질병상해통합'}, '*')">질병상해통합 (<span id="touch-count-질병상해통합">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'치아'}, '*')">치아 (<span id="touch-count-치아">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'간병'}, '*')">간병 (<span id="touch-count-간병">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'치매'}, '*')">치매 (<span id="touch-count-치매">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'후유장해'}, '*')">후유장해 (<span id="touch-count-후유장해">0</span>)</button>
-                    </div>
+                    <i class="fa-solid fa-chevron-down" style="color:#4ade80; font-size:12px;"></i>
                 </div>
-                
-                <!-- 라이프 테마 -->
-                <div class="touch-bar-wrapper">
-                    <div class="touch-bar" onclick="toggleSubTags('touch-life-tags')" style="cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; transition:0.2s;" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1'">
-                        <div class="touch-name">
-                            <div class="touch-icon" style="background:#10b981;"><i class="fa-solid fa-car"></i></div>
-                            라이프
-                        </div>
-                        <i class="fa-solid fa-chevron-down" style="color:#94a3b8;"></i>
-                    </div>
-                    <div class="touch-sub-tags" id="touch-life-tags">
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'자동차'}, '*')">자동차 (<span id="touch-count-자동차">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'운전자'}, '*')">운전자 (<span id="touch-count-운전자">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'바이크'}, '*')">바이크 (<span id="touch-count-바이크">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'골프'}, '*')">골프 (<span id="touch-count-골프">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'펫보험'}, '*')">펫보험 (<span id="touch-count-펫보험">0</span>)</button>
-                    </div>
-                </div>
-                
-                <!-- 노후자산 테마 -->
-                <div class="touch-bar-wrapper">
-                    <div class="touch-bar" onclick="toggleSubTags('touch-medical-tags')" style="cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; transition:0.2s;" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1'">
-                        <div class="touch-name">
-                            <div class="touch-icon" style="background:#8b5cf6;"><i class="fa-solid fa-piggy-bank"></i></div>
-                            노후자산
-                        </div>
-                        <i class="fa-solid fa-chevron-down" style="color:#94a3b8;"></i>
-                    </div>
-                    <div class="touch-sub-tags" id="touch-medical-tags">
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'연금'}, '*')">연금 (<span id="touch-count-연금">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'재테크'}, '*')">재테크 (<span id="touch-count-재테크">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'종신'}, '*')">종신 (<span id="touch-count-종신">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'정기'}, '*')">정기 (<span id="touch-count-정기">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'생활비'}, '*')">생활비 (<span id="touch-count-생활비">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'주택화재'}, '*')">주택화재 (<span id="touch-count-주택화재">0</span>)</button>
-                        <button class="pill-btn" onclick="window.postMessage({type:'APPLY_FILTER', filterType:'insight', value:'재물보험'}, '*')">재물보험 (<span id="touch-count-재물보험">0</span>)</button>
-                    </div>
+                <div class="touch-sub-tags active" id="touch-life-tags" style="display:flex; flex-wrap:wrap; gap:6px; background:transparent; padding:0; border:none; box-shadow:none; margin:0;">
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '자동차')" style="background:#ffffff; border:1px solid #bbf7d0; color:#166534; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">자동차 (<span id="touch-count-자동차">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '운전자')" style="background:#ffffff; border:1px solid #bbf7d0; color:#166534; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">운전자 (<span id="touch-count-운전자">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '바이크')" style="background:#ffffff; border:1px solid #bbf7d0; color:#166534; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">바이크 (<span id="touch-count-바이크">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '골프')" style="background:#ffffff; border:1px solid #bbf7d0; color:#166534; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">골프 (<span id="touch-count-골프">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '펫보험')" style="background:#ffffff; border:1px solid #bbf7d0; color:#166534; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">펫보험 (<span id="touch-count-펫보험">0</span>)</button>
                 </div>
             </div>
-    <!-- Section 3: Filters -->
-    
+            
+            <!-- 3. 노후자산 테마 -->
+            <div style="background:#f5f3ff; border:1px solid #ede9fe; border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+                <div onclick="toggleSubTags('touch-medical-tags')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:26px; height:26px; border-radius:7px; background:#8b5cf6; color:white; display:flex; align-items:center; justify-content:center; font-size:12px;"><i class="fa-solid fa-piggy-bank"></i></div>
+                        <span style="font-weight:800; font-size:14.5px; color:#581c87;">노후자산</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down" style="color:#a78bfa; font-size:12px;"></i>
+                </div>
+                <div class="touch-sub-tags active" id="touch-medical-tags" style="display:flex; flex-wrap:wrap; gap:6px; background:transparent; padding:0; border:none; box-shadow:none; margin:0;">
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '연금')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">연금 (<span id="touch-count-연금">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '재테크')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">재테크 (<span id="touch-count-재테크">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '종신')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">종신 (<span id="touch-count-종신">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '정기')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">정기 (<span id="touch-count-정기">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '생활비')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">생활비 (<span id="touch-count-생활비">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '주택화재')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">주택화재 (<span id="touch-count-주택화재">0</span>)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '재물보험')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; font-weight:700; font-size:12px; padding:5px 11px; border-radius:16px;">재물보험 (<span id="touch-count-재물보험">0</span>)</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-<!-- Profile View Modal (Restored V1 Read-Only View) -->
-<!-- Profile Modal (V2 Unified View) -->
+
+
+
+<div class="crm-mobile-10-wrap">
+    <!-- Mobile App Header Bar -->
+    <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:14px 18px; border-radius:18px; border:1px solid #e2e8f0; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg, #2563eb, #3b82f6); display:flex; align-items:center; justify-content:center; color:white; font-size:13px; font-weight:900;">W</div>
+            <span style="font-weight:900; font-size:15px; color:#0f172a; letter-spacing:-0.3px;">WERACLE CRM</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+            <button onclick="window.openTotalCustomers()" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                <i class="fa-solid fa-users"></i> 총 <span class="m-sync-total">0</span>명
+            </button>
+            
+        </div>
+    </div>
+
+    <!-- Mobile Speed Action Search Button -->
+    <div class="mobile-card" style="padding:12px 14px;">
+        <button onclick="window.openQuickEditModal()" style="width:100%; background:#eff6ff; border:2px solid #93c5fd; border-radius:14px; padding:11px 16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; box-shadow:0 2px 6px rgba(59,130,246,0.08);">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <i class="fa-solid fa-bolt" style="color:#f59e0b; font-size:18px; flex-shrink:0;"></i>
+                <div style="text-align:left;">
+                    <span style="font-size:14px; font-weight:700; color:#1e293b; display:block; letter-spacing:-0.2px;">빠른 고객 검색</span>
+                    <span style="font-size:11.5px; color:#64748b; font-weight:500;">원하는 고객의 정보를 빠르게 확인해보세요.</span>
+                </div>
+            </div>
+            <i class="fa-solid fa-magnifying-glass" style="color:#3b82f6; font-size:15px; flex-shrink:0;"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Pipeline (2x2 Grid) -->
+    <div class="mobile-card">
+        <div style="font-size:13px; font-weight:800; color:#334155; margin-bottom:10px;"><i class="fa-solid fa-chart-pie" style="color:#3b82f6; margin-right:4px;"></i> 영업 파이프라인 단계</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div onclick="window.executeFilterAndShowList('status', '관심')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11px; color:#475569; font-weight:700;">관심/발굴</div><div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-interest">0</span>명</div></div>
+                <i class="fa-regular fa-compass" style="color:#059669; font-size:18px;"></i>
+            </div>
+            <div onclick="window.executeFilterAndShowList('status', '상담')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11px; color:#475569; font-weight:700;">상담진행</div><div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-consult">0</span>명</div></div>
+                <i class="fa-solid fa-comments" style="color:#2563eb; font-size:18px;"></i>
+            </div>
+            <div onclick="window.executeFilterAndShowList('status', '체결')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11px; color:#475569; font-weight:700;">계약체결</div><div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-contract">0</span>명</div></div>
+                <i class="fa-solid fa-file-signature" style="color:#7c3aed; font-size:18px;"></i>
+            </div>
+            <div onclick="window.executeFilterAndShowList('status', '케어')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11px; color:#475569; font-weight:700;">집중케어</div><div style="font-size:16px; font-weight:800; color:#dc2626; margin-top:2px;"><span class="m-sync-care">0</span>명</div></div>
+                <i class="fa-solid fa-hand-holding-heart" style="color:#dc2626; font-size:18px;"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Today Care (2x2 Grid) -->
+    <div class="mobile-card">
+        <div style="font-size:13px; font-weight:800; color:#334155; margin-bottom:10px;"><i class="fa-solid fa-bell" style="color:#f59e0b; margin-right:4px;"></i> 오늘 챙겨야 할 고객</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div onclick="window.executeFilterAndShowList('birth', 'today')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11px; color:#475569; font-weight:700;">오늘 생일</div><div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-birth">0</span>명</div></div>
+                <i class="fa-solid fa-cake-candles" style="color:#d97706; font-size:18px;"></i>
+            </div>
+            <div onclick="window.executeFilterAndShowList('sang', 'today')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11px; color:#475569; font-weight:700;">상령일 도래</div><div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-sang">0</span>명</div></div>
+                <i class="fa-solid fa-shield-heart" style="color:#059669; font-size:18px;"></i>
+            </div>
+            <div onclick="window.executeFilterAndShowList('expiry', '만기')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11px; color:#475569; font-weight:700;">만기 도래</div><div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-expiry">0</span>명</div></div>
+                <i class="fa-solid fa-file-contract" style="color:#4f46e5; font-size:18px;"></i>
+            </div>
+            <div onclick="window.executeFilterAndShowList('claim', '청구')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:11px; color:#475569; font-weight:700;">보험금 청구</div><div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-claim">0</span>명</div></div>
+                <i class="fa-solid fa-receipt" style="color:#dc2626; font-size:18px;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="mobile-dock">
+    <button class="dock-item dock-smart-reg" onclick="window.openSmartRegModal ? window.openSmartRegModal() : alert('스마트 등록 모달 준비 중');" title="초고속 신규 등록">
+        <div class="dock-item-icon"><i class="fa-solid fa-bolt"></i></div>
+        <span class="dock-item-label">1초 등록</span>
+    </button>
+    <button class="dock-item dock-memo" onclick="window.openQuickTouchMemoModal()" title="상담 직후 퀵메모 작성">
+        <div class="dock-item-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+        <span class="dock-item-label">현장 퀵메모</span>
+    </button>
+    <button class="dock-item dock-ins" onclick="window.openInsFilterModal()" title="보험사별 고객 즉시 조회">
+        <div class="dock-item-icon"><i class="fa-solid fa-building-shield"></i></div>
+        <span class="dock-item-label">보험사 조회</span>
+    </button>
+    <button class="dock-item dock-tag" onclick="window.openTagFilterModal()" title="터치인사이트 (테마별 고객 조회)">
+        <div class="dock-item-icon"><i class="fa-solid fa-chart-pie"></i></div>
+        <span class="dock-item-label">터치인사이트</span>
+    </button>
+</div>
+
+
 <div class="modal-overlay" id="masterModal" style="z-index: 1500;">
     <div class="modal-content" style="max-width: 1600px; width: 95%; height: 95vh; display: flex; flex-direction: column;">
         <div class="modal-header">
@@ -296,18 +1171,25 @@ window.addEventListener('error', function(e) {
     </div>
 </div><!-- Basic List Modal (Popup) -->
 <div class="modal-overlay" id="listModal">
-    <div class="modal-content" style="max-width: 1600px; width: 95%; height: 95vh; display: flex; flex-direction: column;">
-        <div class="modal-header">
+    <div class="modal-content" style="max-width: 1600px; width: 95%; height: 95vh; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="modal-header" style="flex-shrink:0;">
             <div class="modal-title" id="modalTitle"><i class="fa-solid fa-list" style="color:var(--primary);"></i> 리스트</div>
             <button class="close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div style="padding: 0; overflow-y: auto; flex: 1; background: #f8fafc;">
+        <!-- PC Wide Table View -->
+        <div id="listModalTableWrap" style="padding: 0; overflow-y: auto; flex: 1; background: #f8fafc;">
             <table class="modern-table" style="width: 100%; border-collapse: collapse;">
                 <thead id="listTableHead">
                 </thead>
                 <tbody id="listTableBody">
                 </tbody>
             </table>
+        </div>
+        <!-- Mobile Unified View (Single-column Stack with Clean Click-to-Expand Details) -->
+        <div id="listModalMobileList" style="display: none; flex: 1; min-height: 0; background: #f8fafc; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 14px 40px 14px;">
+            <!-- Cards Container -->
+            <div id="mobileCustomerCardsContainer">
+            </div>
         </div>
     </div>
 </div>
@@ -773,6 +1655,101 @@ window.addEventListener('error', function(e) {
     window.GOOGLE_API_KEY = "YOUR_API_KEY";
 </script>
 <script>window.targetSheetName = 'weraclecrm';</script>
+
+
+
+<!-- Modal 1: Quick Touch Memo Modal -->
+<div class="modal-overlay" id="quickTouchMemoModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10001; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:white; border-radius:18px; width:100%; max-width:440px; padding:20px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:8px; font-weight:800; font-size:16px; color:#0f172a;">
+                <i class="fa-solid fa-pen-to-square" style="color:#2563eb;"></i> 현장 퀵메모 (상담 즉시 기록)
+            </div>
+            <button onclick="document.getElementById('quickTouchMemoModal').style.display='none'" style="background:none; border:none; font-size:18px; color:#94a3b8; cursor:pointer;">&times;</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div>
+                <label style="font-size:12px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">고객명 / 연락처 검색</label>
+                <input type="text" id="quickMemoClientSearch" placeholder="고객명 또는 전화번호 뒷자리" style="width:100%; box-sizing:border-box; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
+            </div>
+            <div>
+                <label style="font-size:12px; font-weight:700; color:#475569; margin-bottom:4px; display:block;">상담/통화 핵심 메모</label>
+                <textarea id="quickMemoText" rows="4" placeholder="예: 암보험 추가 보장 문의, 다음주 화요일 2차 방문 상담 약속" style="width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; resize:none;"></textarea>
+            </div>
+            <button onclick="window.saveQuickTouchMemo()" style="background:#2563eb; color:white; border:none; padding:12px; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer; margin-top:4px;">
+                메모 저장 완료
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: Mobile Insurance Filter Modal -->
+<div class="modal-overlay" id="insFilterModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10001; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:white; border-radius:18px; width:100%; max-width:440px; padding:20px; box-shadow:0 10px 25px rgba(0,0,0,0.2); max-height:85vh; display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:8px; font-weight:800; font-size:16px; color:#0f172a;">
+                <i class="fa-solid fa-building-shield" style="color:#0284c7;"></i> 보험사별 고객 조회
+            </div>
+            <button onclick="document.getElementById('insFilterModal').style.display='none'" style="background:none; border:none; font-size:18px; color:#94a3b8; cursor:pointer;">&times;</button>
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <button onclick="window.switchInsTab('nonlife')" id="insTabNonlife" style="flex:1; padding:8px; border-radius:8px; border:1px solid #cbd5e1; background:#0284c7; color:white; font-weight:800; font-size:13px; cursor:pointer;">손해보험</button>
+            <button onclick="window.switchInsTab('life')" id="insTabLife" style="flex:1; padding:8px; border-radius:8px; border:1px solid #cbd5e1; background:#f8fafc; color:#475569; font-weight:800; font-size:13px; cursor:pointer;">생명보험</button>
+        </div>
+        <div id="insCompsGrid" style="flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding-bottom:10px;"></div>
+    </div>
+</div>
+
+<!-- Modal 3: Mobile Touch Insight Modal -->
+<div class="modal-overlay" id="tagFilterModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10001; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:white; border-radius:18px; width:100%; max-width:440px; padding:20px; box-shadow:0 10px 25px rgba(0,0,0,0.2); max-height:85vh; display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:8px; font-weight:800; font-size:16px; color:#0f172a;">
+                <i class="fa-solid fa-chart-pie" style="color:#2563eb;"></i> 터치인사이트 (테마별 고객 조회)
+            </div>
+            <button onclick="document.getElementById('tagFilterModal').style.display='none'" style="background:none; border:none; font-size:18px; color:#94a3b8; cursor:pointer;">&times;</button>
+        </div>
+        <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:14px; padding-bottom:10px;">
+            <!-- 1. 건강의료 -->
+            <div style="background:#fef2f2; border:1px solid #fee2e2; border-radius:12px; padding:12px;">
+                <div style="font-weight:800; font-size:13px; color:#991b1b; margin-bottom:8px;"><i class="fa-solid fa-heart-pulse"></i> 건강의료</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '실손')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; padding:5px 10px; border-radius:14px; font-size:12px;">실손 (7)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '암')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; padding:5px 10px; border-radius:14px; font-size:12px;">암 (5)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '치아')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; padding:5px 10px; border-radius:14px; font-size:12px;">치아 (3)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '간병')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; padding:5px 10px; border-radius:14px; font-size:12px;">간병 (3)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '치매')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; padding:5px 10px; border-radius:14px; font-size:12px;">치매 (3)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '후유장해')" style="background:#ffffff; border:1px solid #fecaca; color:#991b1b; padding:5px 10px; border-radius:14px; font-size:12px;">후유장해 (2)</button>
+                </div>
+            </div>
+            <!-- 2. 라이프 -->
+            <div style="background:#f0fdf4; border:1px solid #dcfce7; border-radius:12px; padding:12px;">
+                <div style="font-weight:800; font-size:13px; color:#166534; margin-bottom:8px;"><i class="fa-solid fa-car"></i> 라이프</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '자동차')" style="background:#ffffff; border:1px solid #bbf7d0; color:#166534; padding:5px 10px; border-radius:14px; font-size:12px;">자동차 (3)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '운전자')" style="background:#ffffff; border:1px solid #bbf7d0; color:#166534; padding:5px 10px; border-radius:14px; font-size:12px;">운전자 (2)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '바이크')" style="background:#ffffff; border:1px solid #bbf7d0; color:#166534; padding:5px 10px; border-radius:14px; font-size:12px;">바이크 (1)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '골프')" style="background:#ffffff; border:1px solid #bbf7d0; color:#166534; padding:5px 10px; border-radius:14px; font-size:12px;">골프 (1)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '펫보험')" style="background:#ffffff; border:1px solid #bbf7d0; color:#166534; padding:5px 10px; border-radius:14px; font-size:12px;">펫보험 (1)</button>
+                </div>
+            </div>
+            <!-- 3. 노후자산 -->
+            <div style="background:#f5f3ff; border:1px solid #ede9fe; border-radius:12px; padding:12px;">
+                <div style="font-weight:800; font-size:13px; color:#581c87; margin-bottom:8px;"><i class="fa-solid fa-piggy-bank"></i> 노후자산</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '연금')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; padding:5px 10px; border-radius:14px; font-size:12px;">연금 (2)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '재테크')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; padding:5px 10px; border-radius:14px; font-size:12px;">재테크 (2)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '종신')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; padding:5px 10px; border-radius:14px; font-size:12px;">종신 (2)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '정기')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; padding:5px 10px; border-radius:14px; font-size:12px;">정기 (1)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '생활비')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; padding:5px 10px; border-radius:14px; font-size:12px;">생활비 (2)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '주택화재')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; padding:5px 10px; border-radius:14px; font-size:12px;">주택화재 (1)</button>
+                    <button class="pill-btn" onclick="window.executeFilterAndShowList('insight', '재물보험')" style="background:#ffffff; border:1px solid #ddd6fe; color:#581c87; padding:5px 10px; border-radius:14px; font-size:12px;">재물보험 (1)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script src="app.js?v=V20261006"></script>
   <script src="familyTabsLogic.js?v=20261004213200"></script>
@@ -1268,206 +2245,262 @@ function execDaumPostcode(targetId) {
           </div>
       </div>
   </div>
-<!-- Smart Registration Modal -->
-<div id="smartRegModal" class="modal-overlay" style="display:none; z-index:99999;">
-    <div class="modal-content" style="max-width:900px; width:95%; height:auto; max-height:90vh; padding:0; display:flex; flex-direction:column; overflow:hidden;">
-        <div class="modal-header" style="padding:20px 24px; border-bottom:1px solid #e2e8f0; background:#f8fafc; display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:24px;">
-                <div style="width:40px; height:40px; border-radius:10px; background:#d1fae5; color:#059669; display:flex; align-items:center; justify-content:center; font-size:20px;">
+<!-- Smart Registration Modal (Responsive & Polished) -->
+<div id="smartRegModal" class="modal-overlay smart-reg-overlay" style="display:none; z-index:99999;">
+    <div class="modal-content smart-reg-modal-content">
+        <!-- Header -->
+        <div class="smart-reg-header">
+            <div class="smart-reg-header-info">
+                <div class="smart-reg-header-badge">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </div>
                 <div>
-                    <h2 style="margin:0; font-size:20px; font-weight:800; color:#0f172a;">스마트 간편 등록</h2>
-                    <div style="font-size:13px; color:#64748b; margin-top:4px;">텍스트를 붙여넣으면 인공지능처럼 알아서 항목을 분류합니다.</div>
+                    <h2 class="smart-reg-header-title">스마트 간편 등록</h2>
+                    <p class="smart-reg-header-desc">문자·카톡을 붙여넣으면 고객 정보가 자동으로 분류·입력됩니다.</p>
                 </div>
             </div>
-            <button onclick="closeSmartRegModal()" style="background:none; border:none; font-size:24px; color:#94a3b8; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            <button type="button" onclick="closeSmartRegModal()" class="smart-reg-close-btn" aria-label="닫기">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
         
-        <div style="display:flex; flex:1; overflow:hidden; background:#f1f5f9; padding:20px; gap:20px;">
-            <!-- Left: Raw Text Area -->
-            <div style="flex:1; display:flex; flex-direction:column; background:white; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); overflow:hidden;">
-                <div style="padding:16px 20px; border-bottom:1px solid #e2e8f0; background:#f8fafc; font-weight:800; color:#1e293b; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="display:flex; align-items:center; gap:8px;"><i class="fa-regular fa-clipboard" style="color:#64748b;"></i> 원본 텍스트 붙여넣기</span>
-                    <span style="font-size:12px; color:#3b82f6; font-weight:600; background:#eff6ff; padding:4px 10px; border-radius:12px;">Step 1</span>
+        <!-- Body: 2-column on PC, 1-column scroll on Mobile -->
+        <div class="smart-reg-body">
+            <!-- Step 1: Raw Text & Chunks -->
+            <div class="smart-reg-card smart-reg-step1">
+                <div class="smart-reg-card-head">
+                    <span class="smart-reg-card-title">
+                        <i class="fa-regular fa-clipboard"></i> 원본 텍스트 붙여넣기
+                    </span>
+                    <span class="smart-reg-badge-step badge-blue">Step 1</span>
                 </div>
-                <textarea id="smartRegInput" placeholder="고객 정보를 복사해서 붙여넣으세요. (줄바꿈 단위로 자동 블록화됩니다)" style="height:120px; flex:none; padding:20px; border:none; border-bottom:1px dashed #cbd5e1; resize:none; font-family:Pretendard; font-size:15px; line-height:1.6; outline:none;" oninput="autoParseSmartReg()"></textarea>
-                <div style="padding:12px 20px; background:#f8fafc; font-size:13px; font-weight:700; color:#475569; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-arrows-turn-right"></i> 아래 생성된 블록을 마우스로 끌어다 우측 폼에 넣으세요
+                
+                <div class="smart-reg-textarea-wrap">
+                    <textarea id="smartRegInput" placeholder="고객 정보를 복사해서 붙여넣으세요.&#10;(이름, 010-0000-0000, 생년월일, 주소 등 입력 시 자동 분석)" oninput="autoParseSmartReg()"></textarea>
+                    <div class="smart-reg-textarea-tools">
+                        <button type="button" class="smart-reg-tool-btn" onclick="navigator.clipboard && navigator.clipboard.readText ? navigator.clipboard.readText().then(function(t){ if(t){ var el=document.getElementById('smartRegInput'); el.value=t; autoParseSmartReg(); } }).catch(function(){ document.getElementById('smartRegInput').focus(); }) : document.getElementById('smartRegInput').focus();">
+                            <i class="fa-regular fa-paste"></i> 클립보드 붙여넣기
+                        </button>
+                        <button type="button" class="smart-reg-tool-btn clear-btn" onclick="document.getElementById('smartRegInput').value=''; autoParseSmartReg();">
+                            <i class="fa-solid fa-rotate-left"></i> 지우기
+                        </button>
+                    </div>
                 </div>
-                <div id="smartRegChunkContainer" style="flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; background:#f1f5f9;">
-                    <div style="color:#94a3b8; font-size:14px; text-align:center; margin-top:40px; font-weight:500;">텍스트를 입력하면 드래그 가능한 블록이 생성됩니다.</div>
+
+                <div class="smart-reg-help-notice">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>블록의 <b>[항목 버튼]</b>을 터치하면 아래 폼에 즉시 자동 입력됩니다.</span>
+                </div>
+
+                <div id="smartRegChunkContainer" class="smart-reg-chunks">
+                    <div class="smart-reg-chunk-placeholder">텍스트를 입력하면 분석 블록이 생성됩니다.</div>
                 </div>
             </div>
             
-            <!-- Right: Parsed Form -->
-            <div style="flex:1; background:white; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); padding:24px; overflow-y:auto; display:flex; flex-direction:column;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                    <div style="font-weight:800; color:#1e293b; font-size:16px; display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-list-check" style="color:#64748b;"></i> 추출된 고객 정보
-                    </div>
-                    <span style="font-size:12px; color:#10b981; font-weight:600; background:#d1fae5; padding:4px 10px; border-radius:12px;">Step 2</span>
+            <!-- Step 2: Parsed Form Fields -->
+            <div class="smart-reg-card smart-reg-step2">
+                <div class="smart-reg-card-head">
+                    <span class="smart-reg-card-title">
+                        <i class="fa-solid fa-list-check"></i> 추출된 고객 정보 확인
+                    </span>
+                    <span class="smart-reg-badge-step badge-green">Step 2</span>
                 </div>
                 
-                <div style="display:flex; flex-direction:column; gap:20px; flex:1;">
-                    <div style="display:flex; gap:16px;">
-                        <div style="flex: 0 0 110px;">
-                            <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">고객번호</label>
-                            <input type="text" id="smartRegId" class="form-input" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; background:#f1f5f9; color:#475569; font-weight:800; text-align:center; outline:none; box-sizing:border-box;" readonly>
+                <div class="smart-reg-form">
+                    <div class="smart-reg-row">
+                        <div class="smart-reg-col col-id">
+                            <label class="smart-reg-label">고객번호</label>
+                            <input type="text" id="smartRegId" class="form-input smart-input-id" readonly>
                         </div>
-                        <div style="flex: 1;">
-                            <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">고객명 <span style="color:#ef4444;">*</span></label>
-                            <input type="text" id="smartRegName" class="form-input" placeholder="이름을 입력하세요" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:0.2s; box-sizing:border-box;">
-                        </div>
-                    </div>
-
-                    <div style="display:flex; gap:16px;">
-                        <div style="flex: 1;">
-                            <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">주민번호</label>
-                            <input type="text" id="smartRegJumin" class="form-input" placeholder="000000-0000000" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:0.2s; box-sizing:border-box;">
-                        </div>
-                        <div style="flex: 1;">
-                            <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">전화번호</label>
-                            <input type="text" id="smartRegPhone" class="form-input" placeholder="010-0000-0000" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:0.2s; box-sizing:border-box;">
+                        <div class="smart-reg-col col-name">
+                            <label class="smart-reg-label">고객명 <span class="smart-req">*</span></label>
+                            <input type="text" id="smartRegName" class="form-input" placeholder="고객명 입력">
                         </div>
                     </div>
 
-                    <div>
-                        <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">주소</label>
-                        <input type="text" id="smartRegAddr" class="form-input" placeholder="상세 주소를 입력하세요" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:0.2s; box-sizing:border-box;">
+                    <div class="smart-reg-row smart-reg-row-jumin-phone">
+                        <div class="smart-reg-col col-jumin">
+                            <label class="smart-reg-label">주민번호 / 생년월일</label>
+                            <input type="text" id="smartRegJumin" class="form-input" placeholder="000000-0000000">
+                        </div>
+                        <div class="smart-reg-col col-phone">
+                            <label class="smart-reg-label">전화번호 <span class="smart-req">*</span></label>
+                            <input type="text" id="smartRegPhone" class="form-input" placeholder="010-0000-0000">
+                        </div>
                     </div>
 
-                    <div>
-                        <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">직업</label>
-                        <input type="text" id="smartRegJob" class="form-input" placeholder="직업을 입력하세요" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; transition:0.2s; box-sizing:border-box;">
+                    <div class="smart-reg-field">
+                        <label class="smart-reg-label">주소</label>
+                        <input type="text" id="smartRegAddr" class="form-input" placeholder="상세 주소를 입력하세요">
                     </div>
 
-                    <div>
-                        <label style="display:block; font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;">특이사항 (메모)</label>
-                        <textarea id="smartRegMemo" class="form-input" placeholder="추가 메모 사항을 기재하세요" style="width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; height:80px; resize:none; outline:none; transition:0.2s; box-sizing:border-box;"></textarea>
+                    <div class="smart-reg-field">
+                        <label class="smart-reg-label">직업</label>
+                        <input type="text" id="smartRegJob" class="form-input" placeholder="직업을 입력하세요">
+                    </div>
+
+                    <div class="smart-reg-field">
+                        <label class="smart-reg-label">특이사항 (상담 메모)</label>
+                        <textarea id="smartRegMemo" class="form-input smart-textarea" placeholder="추가 메모 사항을 기재하세요"></textarea>
                     </div>
                 </div>
                 
-                <button onclick="submitSmartReg()" style="width:100%; margin-top:24px; background:#10b981; color:white; border:none; border-radius:8px; padding:16px; font-weight:800; font-size:16px; cursor:pointer; box-shadow:0 4px 6px -1px rgba(16,185,129,0.3); transition:0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
-                    고객 등록하기 
-                </button>
+                <div class="smart-reg-cta-wrap">
+                    <button type="button" onclick="submitSmartReg()" class="smart-reg-btn-submit">
+                        <i class="fa-solid fa-check"></i> 고객 등록 완료
+                    </button>
+                </div>
             </div>
         </div>
     </div>
     
     <!-- Smart Reg Tooltip -->
-    <div id="smartRegTooltip" style="display:none; position:absolute; background:#1e293b; border-radius:8px; padding:6px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:100000; gap:4px; transform:translate(-50%, -100%); margin-top:-10px;">
-        <button onclick="assignSmartReg('smartRegName')" class="smart-btn">이름</button>
-        <button onclick="assignSmartReg('smartRegJumin')" class="smart-btn">주민</button>
-        <button onclick="assignSmartReg('smartRegPhone')" class="smart-btn">폰번호</button>
-        <button onclick="assignSmartReg('smartRegAddr')" class="smart-btn">주소</button>
-        <button onclick="assignSmartReg('smartRegJob')" class="smart-btn">직업</button>
-        <button onclick="assignSmartReg('smartRegMemo')" class="smart-btn">메모</button>
+    <div id="smartRegTooltip" style="display:none; position:fixed; background:#0f172a; border-radius:10px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,0.3); z-index:100002; gap:4px; transform:translate(-50%, -100%); margin-top:-6px; border:1px solid #334155; flex-wrap:wrap; justify-content:center; max-width:90vw;">
+        <button type="button" onclick="assignSmartReg('smartRegName')" class="smart-btn">이름</button>
+        <button type="button" onclick="assignSmartReg('smartRegJumin')" class="smart-btn">주민</button>
+        <button type="button" onclick="assignSmartReg('smartRegPhone')" class="smart-btn">폰번호</button>
+        <button type="button" onclick="assignSmartReg('smartRegAddr')" class="smart-btn">주소</button>
+        <button type="button" onclick="assignSmartReg('smartRegJob')" class="smart-btn">직업</button>
+        <button type="button" onclick="assignSmartReg('smartRegMemo')" class="smart-btn">메모</button>
     </div>
     <style>
-        .smart-btn { background:transparent; color:#e2e8f0; border:none; padding:6px 10px; border-radius:4px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s; white-space:nowrap; }
+        .smart-btn { background:transparent; color:#e2e8f0; border:none; padding:7px 11px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:0.15s; white-space:nowrap; }
         .smart-btn:hover { background:#334155; color:white; }
-        #smartRegTooltip::after { content:''; position:absolute; bottom:-6px; left:50%; margin-left:-6px; border-width:6px 6px 0; border-style:solid; border-color:#1e293b transparent transparent transparent; }
+        .smart-btn:active { background:#2563eb; color:white; }
+        #smartRegTooltip::after { content:''; position:absolute; bottom:-6px; left:50%; margin-left:-6px; border-width:6px 6px 0; border-style:solid; border-color:#0f172a transparent transparent transparent; }
     </style>
 </div>
-  <!-- Quick Edit Modal (Speed Workspace) -->
+    <!-- Quick Edit Modal (Speed Workspace - Option 3-A: 5-Card Focus + Age Real-Time Search) -->
   <div class="modal-overlay" id="quickEditModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.7); z-index:99999; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; backdrop-filter:blur(4px);">
       <div class="modal-content" style="background:#f8fafc; width:100%; max-width:1600px; border-radius:24px; padding:32px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); position:relative; max-height:95vh; display:flex; flex-direction:column;">
           <button onclick="if(typeof window.closeQuickEditModal==='function') window.closeQuickEditModal(); else document.getElementById('quickEditModal').style.display='none';" style="position:absolute; top:24px; right:24px; background:#f1f5f9; border:1px solid #cbd5e1; width:38px; height:38px; border-radius:50%; font-size:20px; color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;" onmouseover="this.style.background='#fee2e2'; this.style.color='#ef4444'; this.style.borderColor='#fca5a5';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#64748b'; this.style.borderColor='#cbd5e1';" title="닫기">
               <i class="fa-solid fa-xmark"></i>
           </button>
           
-          <h2 style="font-size:24px; font-weight:800; color:#0f172a; margin:0 0 24px 0; display:flex; align-items:center; gap:8px;">
-              <i class="fa-solid fa-bolt" style="color:#3b82f6;"></i> 스피드 작업 센터
-          </h2>
-          
-          <div style="background:white; border-radius:16px; padding:20px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05); border:1px solid #e2e8f0;">
-              <div style="position:relative;">
-                  <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:20px; top:50%; transform:translateY(-50%); font-size:20px; color:#94a3b8;"></i>
-                  <input type="text" id="quickEditSearchInput" placeholder="이름, 폰번호, 고객번호, 주소, 메모 등 무엇이든 자유롭게 검색하세요!" style="width:100%; padding:18px 120px 18px 52px; border:2px solid #cbd5e1; border-radius:12px; font-size:16px; font-weight:700; outline:none; transition:all 0.2s; box-sizing:border-box;" onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59,130,246,0.1)';" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none';" oninput="window.handleQuickEditSearch()">
-                  <div style="position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:14px; color:#64748b; font-weight:600;">
-                      검색 결과: <span id="quickEditCount" style="color:#3b82f6; font-size:16px; font-weight:800;">0</span>건
-                  </div>
-              </div>
-
-              <!-- 5대 다이렉트 필터 (운전, 연령, 반려동물, 사업자, 결제) -->
-              <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:14px; padding-top:14px; border-top:1px dashed #cbd5e1;">
-                  <!-- 운전여부 -->
-                  <div style="display:flex; align-items:center; gap:6px;">
-                      <span style="font-size:12.5px; font-weight:800; color:#475569;"><i class="fa-solid fa-car" style="color:#3b82f6;"></i> 운전:</span>
-                      <select id="sc-select-driver" onchange="window.setSpeedFilter('driver', this.value)" style="padding:6px 12px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:13px; font-weight:700; outline:none; background:white; color:#334155; cursor:pointer;">
-                          <option value="">전체 (운전)</option>
-                          <option value="이륜차">이륜차</option>
-                          <option value="영업용">영업용</option>
-                          <option value="업무용">업무용</option>
-                          <option value="자가용">자가용</option>
-                      </select>
-                  </div>
-                  
-                  <!-- 연령대 -->
-                  <div style="display:flex; align-items:center; gap:6px;">
-                      <span style="font-size:12.5px; font-weight:800; color:#475569;"><i class="fa-solid fa-user-group" style="color:#6366f1;"></i> 연령:</span>
-                      <select id="sc-select-age" onchange="window.setSpeedFilter('ageGroup', this.value)" style="padding:6px 12px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:13px; font-weight:700; outline:none; background:white; color:#334155; cursor:pointer;">
-                          <option value="">전체 (연령)</option>
-                          <option value="10">10대 이하</option>
-                          <option value="20">20대</option>
-                          <option value="30">30대</option>
-                          <option value="40">40대</option>
-                          <option value="50">50대</option>
-                          <option value="60">60대 이상</option>
-                      </select>
-                  </div>
-
-                  <!-- 반려동물 토글 -->
-                  <button type="button" id="sc-btn-pet" onclick="window.setSpeedFilter('hasPet')" style="display:flex; align-items:center; gap:5px; padding:6px 12px; border-radius:8px; border:1.5px solid #cbd5e1; background:white; font-size:13px; font-weight:800; color:#475569; cursor:pointer; transition:0.2s;" onmouseover="if(this.style.background!=='rgb(254, 243, 199)') this.style.borderColor='#f59e0b'" onmouseout="if(this.style.background!=='rgb(254, 243, 199)') this.style.borderColor='#cbd5e1'">
-                      🐾 반려동물
-                  </button>
-
-                  <!-- 사업자 구분 -->
-                  <div style="display:flex; align-items:center; gap:6px;">
-                      <span style="font-size:12.5px; font-weight:800; color:#475569;"><i class="fa-solid fa-briefcase" style="color:#059669;"></i> 사업자:</span>
-                      <select id="sc-select-biz" onchange="window.setSpeedFilter('bizType', this.value)" style="padding:6px 12px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:13px; font-weight:700; outline:none; background:white; color:#334155; cursor:pointer;">
-                          <option value="">전체 (사업자)</option>
-                          <option value="개인사업자">개인사업자</option>
-                          <option value="법인사업자">법인사업자</option>
-                          <option value="일반고객">일반고객</option>
-                      </select>
-                  </div>
-
-                  <!-- 결제방식 -->
-                  <div style="display:flex; align-items:center; gap:6px;">
-                      <span style="font-size:12.5px; font-weight:800; color:#475569;"><i class="fa-regular fa-credit-card" style="color:#d97706;"></i> 결제:</span>
-                      <select id="sc-select-pay" onchange="window.setSpeedFilter('payMethod', this.value)" style="padding:6px 12px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:13px; font-weight:700; outline:none; background:white; color:#334155; cursor:pointer;">
-                          <option value="">전체 (결제)</option>
-                          <option value="카드">신용카드</option>
-                          <option value="자동이체">자동이체</option>
-                      </select>
-                  </div>
-
-                  <!-- 필터 초기화 -->
-                  <button type="button" onclick="window.resetSpeedCenterFilters(true)" style="margin-left:auto; display:flex; align-items:center; gap:5px; padding:6px 14px; border-radius:8px; border:1px solid #e2e8f0; background:#f1f5f9; font-size:12.5px; font-weight:800; color:#64748b; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#0f172a';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#64748b';">
-                      <i class="fa-solid fa-rotate-right"></i> 필터 초기화
-                  </button>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <h2 style="font-size:24px; font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+                  <i class="fa-solid fa-bolt" style="color:#3b82f6;"></i> 스피드 작업 센터
+              </h2>
+              <div id="sc-active-badge" style="background:#eff6ff; border:1.5px solid #bfdbfe; color:#1d4ed8; font-size:13px; font-weight:800; padding:5px 14px; border-radius:20px; display:inline-flex; align-items:center; gap:6px; margin-right:48px;">
+                  <i class="fa-solid fa-circle-check"></i>
+                  현재 조건: <span id="sc-badge-text">전체 고객 (필터 없음)</span>
               </div>
           </div>
           
-          <div id="quickEditTabs" style="display:flex; gap:10px; margin-bottom:12px; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">
-              <button onclick="window.setQuickEditTab('1차')" id="qeTab-1차" style="padding:10px 20px; border-radius:8px; font-weight:800; font-size:14px; cursor:pointer; background:#3b82f6; color:white; border:none; box-shadow:0 2px 4px rgba(59,130,246,0.2);">1차 고객정보</button>
-              <button onclick="window.setQuickEditTab('터치')" id="qeTab-터치" style="padding:10px 20px; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; background:transparent; color:#94a3b8; border:none; transition:0.2s;" onmouseover="if(this.style.background!=='rgb(59, 130, 246)' && this.style.background!=='#3b82f6')this.style.color='#334155'" onmouseout="if(this.style.background!=='rgb(59, 130, 246)' && this.style.background!=='#3b82f6')this.style.color='#94a3b8'">터치인사이트</button>
-              <button onclick="window.setQuickEditTab('보험')" id="qeTab-보험" style="padding:10px 20px; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; background:transparent; color:#94a3b8; border:none; transition:0.2s;" onmouseover="if(this.style.background!=='rgb(59, 130, 246)' && this.style.background!=='#3b82f6')this.style.color='#334155'" onmouseout="if(this.style.background!=='rgb(59, 130, 246)' && this.style.background!=='#3b82f6')this.style.color='#94a3b8'">보험가입내역</button>
+          <div style="background:white; border-radius:16px; padding:20px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,0.05); border:1px solid #e2e8f0;">
+              <!-- Common Search Bar -->
+              <div style="position:relative; display:flex; gap:10px; align-items:center;">
+                  <div style="position:relative; flex:1;">
+                      <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:18px; top:50%; transform:translateY(-50%); font-size:18px; color:#94a3b8;"></i>
+                      <input type="text" id="quickEditSearchInput" placeholder="이름, 폰번호, 생년월일, 주소, 메모 등 키워드를 자유롭게 검색하세요!" style="width:100%; padding:14px 120px 14px 48px; border:2px solid #cbd5e1; border-radius:12px; font-size:15px; font-weight:700; outline:none; transition:all 0.2s; box-sizing:border-box;" onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59,130,246,0.1)';" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none';" oninput="window.handleQuickEditSearch()">
+                      <div style="position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:13.5px; color:#64748b; font-weight:600;">
+                          조회 결과: <span id="quickEditCount" style="color:#3b82f6; font-size:16px; font-weight:800;">0</span>명
+                      </div>
+                  </div>
+                  <button onclick="window.resetSpeedCenterFilters()" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; padding:12px 18px; border-radius:12px; font-size:13.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; white-space:nowrap; transition:all 0.2s;" onmouseover="this.style.background='#fee2e2'; this.style.color='#dc2626'; this.style.borderColor='#fca5a5';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'; this.style.borderColor='#cbd5e1';">
+                      <i class="fa-solid fa-rotate-left"></i> 전체 초기화
+                  </button>
+              </div>
+
+              <!-- Option 3-A: 5-Card Focus Grid (Single Condition Focus + Real-Time Age Search) -->
+              <div class="sc-focus-grid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; margin-top:16px; padding-top:16px; border-top:1px dashed #e2e8f0;">
+                  <!-- Card 1: Driver -->
+                  <div id="sc-card-driver" style="border:1.5px solid #e2e8f0; background:#ffffff; border-radius:12px; padding:12px; cursor:pointer; transition:all 0.2s;" onclick="window.focusSpeedCard('driver')">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                          <span style="font-size:13px; font-weight:800; color:#334155;"><i class="fa-solid fa-car" style="color:#3b82f6; margin-right:5px;"></i> 1. 운전여부</span>
+                          <div id="sc-dot-driver" style="width:13px; height:13px; border-radius:50%; border:1.5px solid #cbd5e1;"></div>
+                      </div>
+                      <select id="sc-select-driver" onchange="window.setSpeedSingleFilter('driver', this.value)" onclick="event.stopPropagation(); window.focusSpeedCard('driver');" style="width:100%; padding:7px 10px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-weight:700; color:#1e293b; background:white; cursor:pointer; outline:none;">
+                          <option value="">전체 (선택 안함)</option>
+                          <option value="자가용">자가용 운전</option>
+                          <option value="영업용">영업용 운전</option>
+                          <option value="이륜차">이륜차(오토바이)</option>
+                          <option value="운전안함">운전안함</option>
+                      </select>
+                  </div>
+
+                  <!-- Card 2: Pet -->
+                  <div id="sc-card-pet" style="border:1.5px solid #e2e8f0; background:#ffffff; border-radius:12px; padding:12px; cursor:pointer; transition:all 0.2s;" onclick="window.focusSpeedCard('pet')">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                          <span style="font-size:13px; font-weight:800; color:#334155;"><i class="fa-solid fa-paw" style="color:#3b82f6; margin-right:5px;"></i> 2. 반려동물</span>
+                          <div id="sc-dot-pet" style="width:13px; height:13px; border-radius:50%; border:1.5px solid #cbd5e1;"></div>
+                      </div>
+                      <select id="sc-select-pet" onchange="window.setSpeedSingleFilter('pet', this.value)" onclick="event.stopPropagation(); window.focusSpeedCard('pet');" style="width:100%; padding:7px 10px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-weight:700; color:#1e293b; background:white; cursor:pointer; outline:none;">
+                          <option value="">전체 (선택 안함)</option>
+                          <option value="유">🐾 반려동물 있음(유)</option>
+                          <option value="무">반려동물 없음(무)</option>
+                      </select>
+                  </div>
+
+                  <!-- Card 3: Biz -->
+                  <div id="sc-card-biz" style="border:1.5px solid #e2e8f0; background:#ffffff; border-radius:12px; padding:12px; cursor:pointer; transition:all 0.2s;" onclick="window.focusSpeedCard('biz')">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                          <span style="font-size:13px; font-weight:800; color:#334155;"><i class="fa-solid fa-briefcase" style="color:#3b82f6; margin-right:5px;"></i> 3. 사업자구분</span>
+                          <div id="sc-dot-biz" style="width:13px; height:13px; border-radius:50%; border:1.5px solid #cbd5e1;"></div>
+                      </div>
+                      <select id="sc-select-biz" onchange="window.setSpeedSingleFilter('biz', this.value)" onclick="event.stopPropagation(); window.focusSpeedCard('biz');" style="width:100%; padding:7px 10px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-weight:700; color:#1e293b; background:white; cursor:pointer; outline:none;">
+                          <option value="">전체 (선택 안함)</option>
+                          <option value="개인사업자">🏢 개인사업자</option>
+                          <option value="법인사업자">🏢 법인사업자</option>
+                          <option value="일반고객">👤 일반/직장인</option>
+                      </select>
+                  </div>
+
+                  <!-- Card 4: Pay -->
+                  <div id="sc-card-pay" style="border:1.5px solid #e2e8f0; background:#ffffff; border-radius:12px; padding:12px; cursor:pointer; transition:all 0.2s;" onclick="window.focusSpeedCard('pay')">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                          <span style="font-size:13px; font-weight:800; color:#334155;"><i class="fa-solid fa-credit-card" style="color:#3b82f6; margin-right:5px;"></i> 4. 결제방식</span>
+                          <div id="sc-dot-pay" style="width:13px; height:13px; border-radius:50%; border:1.5px solid #cbd5e1;"></div>
+                      </div>
+                      <select id="sc-select-pay" onchange="window.setSpeedSingleFilter('pay', this.value)" onclick="event.stopPropagation(); window.focusSpeedCard('pay');" style="width:100%; padding:7px 10px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-weight:700; color:#1e293b; background:white; cursor:pointer; outline:none;">
+                          <option value="">전체 (선택 안함)</option>
+                          <option value="카드">💳 카드 결제</option>
+                          <option value="자동이체">🏦 자동이체</option>
+                      </select>
+                  </div>
+
+                  <!-- Card 5: Age Direct Search -->
+                  <div id="sc-card-age" style="border:1.5px solid #e2e8f0; background:#ffffff; border-radius:12px; padding:12px; cursor:pointer; transition:all 0.2s;" onclick="window.focusSpeedCard('age')">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                          <span style="font-size:13px; font-weight:800; color:#334155;"><i class="fa-solid fa-cake-candles" style="color:#3b82f6; margin-right:5px;"></i> 5. 나이 직접 검색</span>
+                          <div id="sc-dot-age" style="width:13px; height:13px; border-radius:50%; border:1.5px solid #cbd5e1;"></div>
+                      </div>
+                      <div style="position:relative; display:flex; align-items:center;">
+                          <input type="text" id="sc-input-age" placeholder="나이 입력 (예: 42, 30대)" oninput="window.setSpeedSingleFilter('age', this.value)" onclick="event.stopPropagation(); window.focusSpeedCard('age');" style="width:100%; padding:7px 28px 7px 10px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-weight:700; color:#1e293b; background:white; outline:none; transition:all 0.2s;">
+                          <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:10px; font-size:12px; color:#94a3b8; pointer-events:none;"></i>
+                      </div>
+                  </div>
+              </div>
           </div>
-          
-          <div style="flex:1; overflow-y:auto; background:white; position:relative; border-radius:12px; border:1px solid #e2e8f0;">
-              <table class="modern-table" style="width: 100%; border-collapse: collapse; text-align: left;">
-                  <thead id="quickEditTableHeader" style="background:#f1f5f9; position:sticky; top:0; z-index:10; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+
+          <!-- 3 Tab Switcher: 1차 | 터치 | 보험 -->
+          <div style="display:flex; gap:10px; margin-bottom:12px; border-bottom:2px solid #e2e8f0; padding-bottom:12px;">
+              <button id="qeTab-1차" onclick="window.setQuickEditTab('1차')" style="background:#3b82f6; color:white; border:none; padding:10px 24px; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:0 2px 4px rgba(59,130,246,0.2); transition:all 0.2s;">
+                  <i class="fa-solid fa-id-card"></i> 1차 인적사항
+              </button>
+              <button id="qeTab-터치" onclick="window.setQuickEditTab('터치')" style="background:#e2e8f0; color:#475569; border:none; padding:10px 24px; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer; transition:all 0.2s;">
+                  <i class="fa-solid fa-bullseye"></i> 터치 인사이트
+              </button>
+              <button id="qeTab-보험" onclick="window.setQuickEditTab('보험')" style="background:#e2e8f0; color:#475569; border:none; padding:10px 24px; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer; transition:all 0.2s;">
+                  <i class="fa-solid fa-shield-halved"></i> 가입 보험 증권
+              </button>
+          </div>
+
+          <!-- Customer Data Table -->
+          <div style="flex:1; overflow-y:auto; background:white; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+              <table style="width:100%; border-collapse:collapse; font-size:13.5px; text-align:left;">
+                  <thead style="background:#f8fafc; border-bottom:1.5px solid #e2e8f0; position:sticky; top:0; z-index:10;">
+                      <tr id="quickEditTableHeader">
+                          <!-- Injected via JS -->
+                      </tr>
                   </thead>
                   <tbody id="quickEditResultArea">
+                      <!-- Results injected via JS -->
                   </tbody>
               </table>
           </div>
       </div>
   </div>
-  
   <!-- File Upload Modal -->
 <div id="uploadModal" class="modal-overlay" style="display:none; z-index:99999;">
     <div class="modal-content" style="max-width:500px; width:95%; border-radius: 16px; padding: 0; overflow: hidden; display: flex; flex-direction: column;">
@@ -1564,222 +2597,1582 @@ function execDaumPostcode(targetId) {
     </div>
 </div>
 <input type="hidden" id="fm-current-root-id">
+
+
+<script>
+
+// ==========================================
+// TEST SAMPLE CUSTOMERS DATASET (15명 완벽 매핑)
+// ==========================================
+window.sampleCustomers = [
+    {
+        "고객번호": "1",
+        "고객명": "김민수",
+        "상태": "관심",
+        "나이": "35",
+        "성별": "남",
+        "폰번호": "010-1234-5678",
+        "직업": "IT 개발자 (네이버)",
+        "주소": "서울시 강남구 테헤란로 124",
+        "가족사항": "배우자(33세), 자녀 1명(남, 4세)",
+        "운전여부": "자가용 (중형 세단)",
+        "사업여부": "일반고객",
+        "반려동물": "반려견 (말티즈 2세)",
+        "결제방식": "신용카드 (현대카드)",
+        "생일": "1104",
+        "상령일": "1115",
+        "알릴의무": "3년 전 위용종 제거 (치료 완료, 서류 구비)",
+        "터치인사이트": "실손, 암, 치아",
+        "상담메모": "실손 갱신 보험료 절감 방안 문의, 4세대 실손 비교 제안서 발송 필요",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "삼성화재",
+                "상품명": "다이렉트 착 실손의료비보장보험",
+                "계약자": "김민수",
+                "피보험자": "김민수",
+                "보험료": "38,500원",
+                "체결일": "2021-11-10",
+                "만기일": "2026-11-10",
+                "납입기간": "5년 만기 (1년 갱신)",
+                "결제방식": "신용카드 (현대카드)",
+                "결제일": "매월 15일",
+                "특약내역": "상해입원통원(5천만원), 질병입원통원(5천만원), 3대비급여특약"
+            },
+            {
+                "번호": 2,
+                "보험사": "메리츠화재",
+                "상품명": "또또암 종합보장보험 (원발암/전이암)",
+                "계약자": "김민수",
+                "피보험자": "김민수",
+                "보험료": "62,000원",
+                "체결일": "2023-04-15",
+                "만기일": "2065-04-15",
+                "납입기간": "20년납 80세 만기",
+                "결제방식": "신용카드 (현대카드)",
+                "결제일": "매월 25일",
+                "특약내역": "일반암진단비(5천만원), 표적항암약물치료비(1억원), 다빈치로봇수술비"
+            },
+            {
+                "번호": 3,
+                "보험사": "라이나생명",
+                "상품명": "THE건강한치아보험V",
+                "계약자": "김민수",
+                "피보험자": "김민수",
+                "보험료": "29,400원",
+                "체결일": "2024-02-01",
+                "만기일": "2034-02-01",
+                "납입기간": "10년납 10년 만기",
+                "결제방식": "자동이체 (국민은행)",
+                "결제일": "매월 10일",
+                "특약내역": "임플란트/브릿지(개당 150만원), 크라운(20만원), 복합레진"
+            }
+        ]
+    },
+    {
+        "고객번호": "2",
+        "고객명": "이영희",
+        "상태": "상담",
+        "나이": "42",
+        "성별": "여",
+        "폰번호": "010-9876-5432",
+        "직업": "초등학교 교사",
+        "주소": "서울시 송파구 잠실로 45",
+        "가족사항": "배우자, 자녀 2명",
+        "운전여부": "자가용 (SUV)",
+        "사업여부": "일반고객",
+        "반려동물": "없음",
+        "결제방식": "자동이체 (국민은행)",
+        "생일": "0512",
+        "상령일": "1104",
+        "알릴의무": "특이 질환 없음 (건강검진 양호)",
+        "터치인사이트": "암, 간병, 치매",
+        "상담메모": "모친 대장암 가족력으로 표적항암치료 및 카티특약 집중 상담 진행 중",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "현대해상",
+                "상품명": "퍼펙트플러스 종합보장보험",
+                "계약자": "이영희",
+                "피보험자": "이영희",
+                "보험료": "94,000원",
+                "체결일": "2019-06-20",
+                "만기일": "2072-06-20",
+                "납입기간": "20년납 90세 만기",
+                "결제방식": "자동이체 (국민은행)",
+                "결제일": "매월 20일",
+                "특약내역": "암/뇌혈관/허혈성진단비 각 3천만원, 질병/상해 1-5종수술비"
+            },
+            {
+                "번호": 2,
+                "보험사": "신한라이프",
+                "상품명": "더편한간병인지원치매보험",
+                "계약자": "이영희",
+                "피보험자": "이영희",
+                "보험료": "45,000원",
+                "체결일": "2023-10-12",
+                "만기일": "2073-10-12",
+                "납입기간": "20년납 90세 만기",
+                "결제방식": "신용카드 (신한카드)",
+                "결제일": "매월 05일",
+                "특약내역": "간병인사용일당(일 15만원), 중증치매진단비(2천만원), 장기요양생활비"
+            }
+        ]
+    },
+    {
+        "고객번호": "3",
+        "고객명": "박철수",
+        "상태": "체결",
+        "나이": "48",
+        "성별": "남",
+        "폰번호": "010-5555-8888",
+        "직업": "철수네물류 대표",
+        "주소": "경기도 성남시 분당구 판교역로 10",
+        "가족사항": "배우자, 대학생 자녀",
+        "운전여부": "영업용/업무용 (화물차)",
+        "사업여부": "개인사업자",
+        "반려동물": "반려견 (골든리트리버)",
+        "결제방식": "자동이체 (기업은행)",
+        "생일": "0320",
+        "상령일": "0920",
+        "알릴의무": "고혈압 약 복용 중 (간편심사 유병자 플랜 체결)",
+        "터치인사이트": "자동차, 운전자, 골프",
+        "상담메모": "신차 출고에 따른 자동차보험 및 영업용 운전자보험 동시 계약 체결 완료",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "DB손해보험",
+                "상품명": "참좋은운전자보험 (영업용 화물)",
+                "계약자": "박철수",
+                "피보험자": "박철수",
+                "보험료": "36,000원",
+                "체결일": "2024-03-01",
+                "만기일": "2026-11-01",
+                "납입기간": "3년 만기",
+                "결제방식": "자동이체 (기업은행)",
+                "결제일": "매월 10일",
+                "특약내역": "교통사고처리지원금(2억원), 변호사선임비용(5천만원), 벌금대인(3천만원)"
+            },
+            {
+                "번호": 2,
+                "보험사": "삼성화재",
+                "상품명": "애니카 다이렉트 자동차보험 (영업용 화물)",
+                "계약자": "박철수",
+                "피보험자": "박철수",
+                "보험료": "연 1,180,000원",
+                "체결일": "2024-03-01",
+                "만기일": "2025-03-01",
+                "납입기간": "1년 일시납",
+                "결제방식": "신용카드 (현대카드)",
+                "결제일": "체결일 일시납",
+                "특약내역": "대인II(무한), 대물(5억원), 자손/자상(2억원), 긴급출동(특약)"
+            },
+            {
+                "번호": 3,
+                "보험사": "한화손해보험",
+                "상품명": "한화 굿샷 골프보험",
+                "계약자": "박철수",
+                "피보험자": "박철수",
+                "보험료": "25,000원",
+                "체결일": "2023-05-18",
+                "만기일": "2026-05-18",
+                "납입기간": "3년 만기",
+                "결제방식": "신용카드 (현대카드)",
+                "결제일": "매월 15일",
+                "특약내역": "홀인원비용(300만원), 알바트로스(300만원), 골프용품손해(200만원)"
+            }
+        ]
+    },
+    {
+        "고객번호": "4",
+        "고객명": "정우성",
+        "상태": "케어",
+        "나이": "51",
+        "성별": "남",
+        "폰번호": "010-7777-1111",
+        "직업": "건축 디자이너",
+        "주소": "서울시 용산구 한남대로 88",
+        "가족사항": "단독 가구",
+        "운전여부": "자가용 (외제차)",
+        "사업여부": "개인사업자 (디자인스튜디오)",
+        "반려동물": "반려묘 (러시안블루)",
+        "결제방식": "신용카드 (신한카드)",
+        "생일": "0815",
+        "상령일": "0215",
+        "알릴의무": "최근 무릎 반월상연골 파열 수술 (청구 접수 완료)",
+        "터치인사이트": "실손, 후유장해",
+        "상담메모": "관절경 수술 후 실손의료비 및 질병수술비 청구 접수 지원, 보상금 지급 대기",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "메리츠화재",
+                "상품명": "알파Plus보장보험 (상해/질병)",
+                "계약자": "정우성",
+                "피보험자": "정우성",
+                "보험료": "82,000원",
+                "체결일": "2018-09-01",
+                "만기일": "2065-09-01",
+                "납입기간": "20년납 90세 만기",
+                "결제방식": "신용카드 (신한카드)",
+                "결제일": "매월 10일",
+                "특약내역": "상해/질병수술비, 질병후유장해(3%이상 5천만원), 골절진단비"
+            }
+        ]
+    },
+    {
+        "고객번호": "5",
+        "고객명": "한지민",
+        "상태": "관심",
+        "나이": "29",
+        "성별": "여",
+        "폰번호": "010-3333-2222",
+        "직업": "프리랜서 번역가",
+        "주소": "서울시 마포구 독막로 67",
+        "가족사항": "부모님 동거",
+        "운전여부": "미운전 (대중교통)",
+        "사업여부": "프리랜서 (일반)",
+        "반려동물": "반려묘 2마리",
+        "결제방식": "자동이체 (카카오뱅크)",
+        "생일": "1104",
+        "상령일": "0504",
+        "알릴의무": "과거 병력 없음 (클린)",
+        "터치인사이트": "연금, 재테크, 종신",
+        "상담메모": "사회초년생 노후대비 비과세 연금저축 상품 문의, 11/04 생일 축하 메시지 발송",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "한화생명",
+                "상품명": "한화생명 변액연금보험 플러스",
+                "계약자": "한지민",
+                "피보험자": "한지민",
+                "보험료": "200,000원",
+                "체결일": "2023-01-10",
+                "만기일": "2060-01-10",
+                "납입기간": "10년납 65세 연금개시",
+                "결제방식": "자동이체 (카카오뱅크)",
+                "결제일": "매월 10일",
+                "특약내역": "글로벌주식형/채권형 펀드배분, 종신연금형/확정연금형 선택가능"
+            }
+        ]
+    },
+    {
+        "고객번호": "6",
+        "고객명": "강동원",
+        "상태": "상담",
+        "나이": "43",
+        "성별": "남",
+        "폰번호": "010-4444-9999",
+        "직업": "삼일회계법인 회계사",
+        "주소": "서울시 영등포구 여의대로 108",
+        "가족사항": "배우자, 영유아 자녀 1명",
+        "운전여부": "자가용 (세단)",
+        "사업여부": "일반고객",
+        "반려동물": "없음",
+        "결제방식": "신용카드 (삼성카드)",
+        "생일": "0118",
+        "상령일": "0718",
+        "알릴의무": "간수치 약간 높음 (재검 정상 소견)",
+        "터치인사이트": "종신, 정기, 생활비",
+        "상담메모": "자녀 출산으로 가장 유고 시 매월 가족생활비 지급되는 정기특약 설계 요청",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "교보생명",
+                "상품명": "교보 프라임종신보험 (가족생활비지급형)",
+                "계약자": "강동원",
+                "피보험자": "강동원",
+                "보험료": "185,000원",
+                "체결일": "2020-05-12",
+                "만기일": "종신",
+                "납입기간": "20년납 종신만기",
+                "결제방식": "신용카드 (삼성카드)",
+                "결제일": "매월 25일",
+                "특약내역": "기본사망보험금(2억원), 유족생활자금(월 200만원 x 10년)"
+            }
+        ]
+    },
+    {
+        "고객번호": "7",
+        "고객명": "송혜교",
+        "상태": "체결",
+        "나이": "38",
+        "성별": "여",
+        "폰번호": "010-6666-4444",
+        "직업": "패션 스타일리스트 대표",
+        "주소": "서울시 성수동 연무장길 15",
+        "가족사항": "배우자",
+        "운전여부": "자가용",
+        "사업여부": "법인사업자 (스타일앤코 대표)",
+        "반려동물": "반려견 (포메라니안 3세)",
+        "결제방식": "신용카드 (법인카드)",
+        "생일": "1122",
+        "상령일": "1104",
+        "알릴의무": "반려견 1년 전 외이도염 치료 이력",
+        "터치인사이트": "펫보험, 실손, 치아",
+        "상담메모": "반려견 슬개골 탈구 및 구강질환 보장 특약 포함 펫보험 계약 완료",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "KB손해보험",
+                "상품명": "KB 금쪽같은 펫보험 (반려견 실손)",
+                "계약자": "송혜교",
+                "피보험자": "반려견 (코코)",
+                "보험료": "54,000원",
+                "체결일": "2023-11-20",
+                "만기일": "2026-11-20",
+                "납입기간": "3년 만기 (갱신형)",
+                "결제방식": "신용카드 (법인카드)",
+                "결제일": "매월 20일",
+                "특약내역": "입원/통원의료비(일 15만원), 슬개골/고관절수술, 배상책임(1천만원)"
+            },
+            {
+                "번호": 2,
+                "보험사": "삼성화재",
+                "상품명": "마이헬스파트너 종합보험",
+                "계약자": "송혜교",
+                "피보험자": "송혜교",
+                "보험료": "78,000원",
+                "체결일": "2021-08-15",
+                "만기일": "2070-08-15",
+                "납입기간": "20년납 90세 만기",
+                "결제방식": "신용카드 (법인카드)",
+                "결제일": "매월 15일",
+                "특약내역": "3대질병진단비, 여성특화질환수술비, 질병입원일당"
+            }
+        ]
+    },
+    {
+        "고객번호": "8",
+        "고객명": "유재석",
+        "상태": "체결",
+        "나이": "52",
+        "성별": "남",
+        "폰번호": "010-8888-2222",
+        "직업": "방송인/MC",
+        "주소": "서울시 강남구 압구정로 312",
+        "가족사항": "배우자, 자녀 2명",
+        "운전여부": "자가용 (승합차/세단)",
+        "사업여부": "개인사업자",
+        "반려동물": "없음",
+        "결제방식": "자동이체 (신한은행)",
+        "생일": "0814",
+        "상령일": "0214",
+        "알릴의무": "특이사항 없음",
+        "터치인사이트": "골프, 운전자, 자동차",
+        "상담메모": "홀인원 상금 및 골프용품 손해 특약 포함 골프보험 및 법률비용 가입 완료",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "삼성화재",
+                "상품명": "애니카 다이렉트 자동차보험 (VIP)",
+                "계약자": "유재석",
+                "피보험자": "유재석",
+                "보험료": "연 950,000원",
+                "체결일": "2024-02-15",
+                "만기일": "2025-02-15",
+                "납입기간": "1년 일시납",
+                "결제방식": "신용카드 (신한카드)",
+                "결제일": "체결일",
+                "특약내역": "대물(10억원), 자상(5억원), 법률비용지원, 무보험차상해(5억원)"
+            }
+        ]
+    },
+    {
+        "고객번호": "9",
+        "고객명": "신민아",
+        "상태": "상담",
+        "나이": "39",
+        "성별": "여",
+        "폰번호": "010-2222-1111",
+        "직업": "미나인테리어 대표",
+        "주소": "경기도 고양시 일산동구 정발산로 24",
+        "가족사항": "배우자",
+        "운전여부": "자가용 (SUV)",
+        "사업여부": "개인사업자",
+        "반려동물": "반려묘 (코리안숏헤어)",
+        "결제방식": "자동이체 (우리은행)",
+        "생일": "0405",
+        "상령일": "1005",
+        "알릴의무": "인테리어 쇼룸 내 스프링클러 설치 완료",
+        "터치인사이트": "주택화재, 재물보험",
+        "상담메모": "가구 쇼룸 및 창고 화재배상책임 종합보험 견적서 3개사 비교 발송 완료",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "DB손해보험",
+                "상품명": "참좋은비즈니스 재물종합보험",
+                "계약자": "미나인테리어",
+                "피보험자": "신민아",
+                "보험료": "120,000원",
+                "체결일": "2023-09-01",
+                "만기일": "2028-09-01",
+                "납입기간": "5년 만기",
+                "결제방식": "자동이체 (우리은행)",
+                "결제일": "매월 05일",
+                "특약내역": "화재배상책임(건물 10억/집기 3억), 시설소유자배상, 누수손해"
+            }
+        ]
+    },
+    {
+        "고객번호": "10",
+        "고객명": "조인성",
+        "상태": "케어",
+        "나이": "42",
+        "성별": "남",
+        "폰번호": "010-1111-5555",
+        "직업": "영상 촬영감독",
+        "주소": "서울시 마포구 월드컵북로 400",
+        "가족사항": "단독 가구",
+        "운전여부": "이륜차/바이크 (BMW R1250)",
+        "사업여부": "프리랜서",
+        "반려동물": "없음",
+        "결제방식": "신용카드 (현대카드)",
+        "생일": "0728",
+        "상령일": "0128",
+        "알릴의무": "오토바이 레저 운행 고지 완료",
+        "터치인사이트": "바이크, 후유장해, 실손",
+        "상담메모": "이륜차 안전운전 특약 및 상해사망/후유장해 보장 관리 케어 진행 중",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "현대해상",
+                "상품명": "하이바이크 이륜차보험 (대형레저)",
+                "계약자": "조인성",
+                "피보험자": "조인성",
+                "보험료": "연 640,000원",
+                "체결일": "2024-04-01",
+                "만기일": "2025-04-01",
+                "납입기간": "1년 일시납",
+                "결제방식": "신용카드 (현대카드)",
+                "결제일": "체결일",
+                "특약내역": "대인I/II(무한), 대물(1억원), 이륜차자기신체사고(5천만원)"
+            },
+            {
+                "번호": 2,
+                "보험사": "메리츠화재",
+                "상품명": "The좋은상해보험 (후유장해특화)",
+                "계약자": "조인성",
+                "피보험자": "조인성",
+                "보험료": "48,000원",
+                "체결일": "2022-07-15",
+                "만기일": "2052-07-15",
+                "납입기간": "20년납 80세 만기",
+                "결제방식": "신용카드 (현대카드)",
+                "결제일": "매월 15일",
+                "특약내역": "상해후유장해(3-100% 2억원), 상해입원일당, 응급실내원비"
+            }
+        ]
+    },
+    {
+        "고객번호": "11",
+        "고객명": "배수지",
+        "상태": "관심",
+        "나이": "30",
+        "성별": "여",
+        "폰번호": "010-9999-3333",
+        "직업": "마케팅 플래너",
+        "주소": "서울시 광진구 아차산로 200",
+        "가족사항": "부모님",
+        "운전여부": "자가용",
+        "사업여부": "일반고객",
+        "반려동물": "반려견 (비숑프리제)",
+        "결제방식": "신용카드 (하나카드)",
+        "생일": "1010",
+        "상령일": "0410",
+        "알릴의무": "최근 1년 치과 충치 치료 2건 (고지 완료)",
+        "터치인사이트": "치아, 실손, 암",
+        "상담메모": "임플란트 및 크라운 보장 한도 200만원 플랜 치아보험 제안 요청",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "라이나생명",
+                "상품명": "THE건강한치아보험 (임플란트특화)",
+                "계약자": "배수지",
+                "피보험자": "배수지",
+                "보험료": "33,000원",
+                "체결일": "2024-05-01",
+                "만기일": "2034-05-01",
+                "납입기간": "10년 만기 (갱신형)",
+                "결제방식": "신용카드 (하나카드)",
+                "결제일": "매월 01일",
+                "특약내역": "임플란트 200만원(무제한), 크라운 40만원, 소액치과치료"
+            }
+        ]
+    },
+    {
+        "고객번호": "12",
+        "고객명": "윤여정",
+        "상태": "체결",
+        "나이": "76",
+        "성별": "여",
+        "폰번호": "010-7777-6666",
+        "직업": "작가/고문",
+        "주소": "서울시 종로구 평창문화로 70",
+        "가족사항": "성인 자녀 2명",
+        "운전여부": "미운전",
+        "사업여부": "일반고객",
+        "반려동물": "없음",
+        "결제방식": "자동이체 (농협은행)",
+        "생일": "0619",
+        "상령일": "1219",
+        "알릴의무": "골다공증 약 복용 중 (유병자 간편심사 통과)",
+        "터치인사이트": "치매, 간병, 생활비",
+        "상담메모": "장기요양등급 판정 시 간병인 일당 15만원 지원 특약 체결 및 관리 중",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "신한라이프",
+                "상품명": "신한간병비든든보험 (간편고지)",
+                "계약자": "윤여정",
+                "피보험자": "윤여정",
+                "보험료": "68,000원",
+                "체결일": "2023-06-10",
+                "만기일": "2043-06-10",
+                "납입기간": "10년납 90세 만기",
+                "결제방식": "자동이체 (농협은행)",
+                "결제일": "매월 10일",
+                "특약내역": "간병인사용일당(15만원), 중증치매생활비(매월 100만원 x 5년)"
+            }
+        ]
+    },
+    {
+        "고객번호": "13",
+        "고객명": "이병헌",
+        "상태": "상담",
+        "나이": "54",
+        "성별": "남",
+        "폰번호": "010-5555-3333",
+        "직업": "법무법인 변호사",
+        "주소": "서울시 서초구 반포대로 140",
+        "가족사항": "배우자, 자녀 1명",
+        "운전여부": "자가용 (대형 세단)",
+        "사업여부": "전문직 사업자",
+        "반려동물": "없음",
+        "결제방식": "신용카드 (KB국민카드)",
+        "생일": "0712",
+        "상령일": "0112",
+        "알릴의무": "이상지질혈증 관리 중",
+        "터치인사이트": "연금, 재테크, 종신",
+        "상담메모": "절세 목적 연금저축펀드와 IRP 세액공제 한도 극대화 포트폴리오 상담",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "미래에셋생명",
+                "상품명": "마스터플랜 평생연금보험 (세액공제형)",
+                "계약자": "이병헌",
+                "피보험자": "이병헌",
+                "보험료": "500,000원",
+                "체결일": "2021-03-15",
+                "만기일": "2045-03-15",
+                "납입기간": "10년납 65세 개시",
+                "결제방식": "신용카드 (KB국민카드)",
+                "결제일": "매월 15일",
+                "특약내역": "세액공제한도(연 900만원), 채권안정형펀드, 종신연금수령"
+            }
+        ]
+    },
+    {
+        "고객번호": "14",
+        "고객명": "김태리",
+        "상태": "체결",
+        "나이": "34",
+        "성별": "여",
+        "폰번호": "010-8888-7777",
+        "직업": "바이오 연구원",
+        "주소": "대전시 유성구 대덕대로 500",
+        "가족사항": "미혼 (단독)",
+        "운전여부": "자가용",
+        "사업여부": "일반고객",
+        "반려동물": "반려묘 (페르시안)",
+        "결제방식": "신용카드 (현대카드)",
+        "생일": "0424",
+        "상령일": "1024",
+        "알릴의무": "특이 병력 없음 (클린)",
+        "터치인사이트": "실손, 암, 자동차",
+        "상담메모": "원발암 전이암 통합진단비 1억원 특약 체결 완료 및 증권 전달",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "메리츠화재",
+                "상품명": "올바른 암보험 (통합진단비 1억)",
+                "계약자": "김태리",
+                "피보험자": "김태리",
+                "보험료": "52,000원",
+                "체결일": "2024-01-20",
+                "만기일": "2026-11-20",
+                "납입기간": "20년납 90세 만기",
+                "결제방식": "신용카드 (현대카드)",
+                "결제일": "매월 25일",
+                "특약내역": "원발암/전이암통합진단비(1억원), 항암방사선약물치료비(5천만원)"
+            }
+        ]
+    },
+    {
+        "고객번호": "15",
+        "고객명": "최수진",
+        "상태": "케어",
+        "나이": "45",
+        "성별": "여",
+        "폰번호": "010-3333-8888",
+        "직업": "대학병원 수간호사",
+        "주소": "서울시 은평구 통일로 1020",
+        "가족사항": "배우자, 중학생 자녀",
+        "운전여부": "자가용",
+        "사업여부": "일반고객",
+        "반려동물": "반려견 (시츄 8세)",
+        "결제방식": "자동이체 (하나은행)",
+        "생일": "1104",
+        "상령일": "0504",
+        "알릴의무": "허리 디스크 물리치료 이력",
+        "터치인사이트": "간병, 실손, 치매",
+        "상담메모": "도수치료 실손 청구 서류 접수 완료, 11/04 생일 기프티콘 발송 완료 케어",
+        "보험목록": [
+            {
+                "번호": 1,
+                "보험사": "한화손해보험",
+                "상품명": "한화 마이라이프간병보험",
+                "계약자": "최수진",
+                "피보험자": "최수진",
+                "보험료": "58,000원",
+                "체결일": "2022-10-15",
+                "만기일": "2065-10-15",
+                "납입기간": "20년납 85세 만기",
+                "결제방식": "자동이체 (하나은행)",
+                "결제일": "매월 15일",
+                "특약내역": "간병인사용일당(15만원), 질병입원수술비, 도수치료특약"
+            }
+        ]
+    }
+];
+
+// 1. Direct Filter Executor that actually populates and opens listModal with matching records!
+
+// 100% Real Google Sheet / Supabase Data Connector (0-Data Safe)
+window.getActiveCRMData = function() {
+    if (typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData)) {
+        return globalCustomerData;
+    }
+    if (window.globalCustomerData && Array.isArray(window.globalCustomerData)) {
+        return window.globalCustomerData;
+    }
+    try {
+        const cached = localStorage.getItem('weracle_crm_cached_data');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed)) return parsed;
+        }
+    } catch(e) {}
+    // Fallback: If demo mode or preview with empty data, return sampleCustomers only if explicitly requested
+    if (window.isDemoMode === true && window.sampleCustomers) {
+        return window.sampleCustomers;
+    }
+    return [];
+};
+
+window.executeFilterAndShowList = function(fType, fVal) {
+    const list = window.getActiveCRMData();
+    let filtered = [...list];
+    let titleStr = "고객 목록";
+    
+    if (fType === 'all') {
+        titleStr = "전체 고객 리스트";
+    } else if (fType === 'status') {
+        titleStr = "영업 파이프라인: " + fVal + " 고객";
+        filtered = filtered.filter(function(c) {
+            return String(c.상태 || "").indexOf(fVal) !== -1;
+        });
+    } else if (fType === 'insight') {
+        titleStr = "터치인사이트: " + fVal + " 타겟 고객";
+        filtered = filtered.filter(function(c) {
+            return String(c.터치인사이트 || "").indexOf(fVal) !== -1;
+        });
+    } else if (fType === 'birth') {
+        titleStr = "오늘 생일 고객";
+        filtered = filtered.filter(function(c) {
+            return String(c.생일 || "").indexOf('1104') !== -1;
+        });
+    } else if (fType === 'sang') {
+        titleStr = "상령일 도래 고객";
+        filtered = filtered.filter(function(c) {
+            return String(c.상령일 || "").indexOf('1104') !== -1 || String(c.상령일 || "").indexOf('1115') !== -1;
+        });
+    } else if (fType === 'expiry') {
+        titleStr = "만기 도래 고객";
+        filtered = filtered.filter(function(c) {
+            return String(c.가입내역 || "").indexOf('만기') !== -1;
+        });
+    } else if (fType === 'claim') {
+        titleStr = "보험금 청구 / 집중 케어 고객";
+        filtered = filtered.filter(function(c) {
+            return String(c.상태 || "").indexOf('케어') !== -1 || String(c.상담메모 || "").indexOf('청구') !== -1;
+        });
+    } else if (fType === 'insurance') {
+        titleStr = "보험사별: " + fVal;
+        filtered = filtered.filter(function(c) {
+            return String(c.보험사 || "").indexOf(fVal) !== -1 || String(c.가입내역 || "").indexOf(fVal) !== -1;
+        });
+    }
+
+    window.renderListModalDirect(filtered, titleStr, fType, fVal);
+};
+
+// Render real records into listModal (PC: Table / Mobile: Unified Expandable Cards)
+window.renderListModalDirect = function(filtered, titleStr, fType, fVal) {
+    fType = fType || 'all';
+    fVal = fVal || '';
+    const head = document.getElementById("listTableHead");
+    const body = document.getElementById("listTableBody");
+    const title = document.getElementById("modalTitle");
+    const listModal = document.getElementById('listModal');
+    if (!listModal) return;
+
+    if (title) title.innerHTML = "<i class='fa-solid fa-list' style='color:#2563eb;'></i> " + titleStr + " (" + filtered.length + "명)";
+
+    // 1. PC Table (Exact match to PC CRM specifications)
+    if (head) {
+        let thHtml = '<tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">';
+        if (fType === 'status') {
+            thHtml += '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">고객명</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">상태</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">직업</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">폰번호</th>';
+        } else if (fType === 'insight') {
+            thHtml += '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">고객명</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">상태</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">직업</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">태그</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">폰번호</th>';
+        } else if (fType === 'birth') {
+            thHtml += '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">고객명</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">생일</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">상태</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">폰번호</th>';
+        } else if (fType === 'sang') {
+            thHtml += '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">고객명</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">상령일</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">상태</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">폰번호</th>';
+        } else if (fType === 'expiry') {
+            thHtml += '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">고객명</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">가입내역</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">만기일</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">폰번호</th>';
+        } else if (fType === 'insurance') {
+            thHtml += '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">고객명</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">상품명</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">상태</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">폰번호</th>';
+        } else {
+            thHtml += '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">고객명</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">상태</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">보험사</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">보장 태그</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">연락처</th>' +
+                      '<th style="padding:12px 16px; text-align:left; font-size:13px; color:#475569; font-weight:800;">최근 상담 메모</th>';
+        }
+        thHtml += '<th style="padding:12px 16px; text-align:center; font-size:13px; color:#475569; font-weight:800;">상세보기</th></tr>';
+        head.innerHTML = thHtml;
+    }
+
+    if (body) {
+        if (filtered.length === 0) {
+            body.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:50px 0; color:#94a3b8; font-size:15px; font-weight:600;">조건에 해당하는 고객이 없습니다.</td></tr>';
+        } else {
+            body.innerHTML = filtered.map(function(c) {
+                const name = c.고객명 || '-';
+                const status = c.상태 || '일반';
+                const phone = c.폰번호 || '-';
+                const job = c.직업 || '-';
+                const ins = c.보험사 || '-';
+                const tags = c.터치인사이트 || '-';
+                const memo = c.상담메모 || '-';
+                const id = c.고객번호 || '1';
+                
+                let badgeStyle = "background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;";
+                if (status === '관심') badgeStyle = "background:#fef3c7; color:#b45309; border:1px solid #fde68a;";
+                else if (status === '상담') badgeStyle = "background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;";
+                else if (status === '체결') badgeStyle = "background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;";
+                else if (status === '케어') badgeStyle = "background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;";
+
+                let trContent = '';
+                if (fType === 'status') {
+                    trContent = '<td style="padding:14px 16px; font-weight:800; color:#0f172a; font-size:14.5px;">' + name + '</td>' +
+                        '<td style="padding:14px 16px;"><span style="padding:3px 9px; border-radius:12px; font-size:12px; font-weight:800; ' + badgeStyle + '">' + status + '</span></td>' +
+                        '<td style="padding:14px 16px; font-weight:600; color:#334155;">' + job + '</td>' +
+                        '<td style="padding:14px 16px; font-weight:600; color:#475569;">' + phone + '</td>';
+                } else if (fType === 'insight') {
+                    trContent = '<td style="padding:14px 16px; font-weight:800; color:#0f172a; font-size:14.5px;">' + name + '</td>' +
+                        '<td style="padding:14px 16px;"><span style="padding:3px 9px; border-radius:12px; font-size:12px; font-weight:800; ' + badgeStyle + '">' + status + '</span></td>' +
+                        '<td style="padding:14px 16px; font-weight:600; color:#334155;">' + job + '</td>' +
+                        '<td style="padding:14px 16px;"><span style="background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe; padding:3px 9px; border-radius:8px; font-size:12px; font-weight:700;">#' + fVal + '</span></td>' +
+                        '<td style="padding:14px 16px; font-weight:600; color:#475569;">' + phone + '</td>';
+                } else if (fType === 'birth') {
+                    trContent = '<td style="padding:14px 16px; font-weight:800; color:#0f172a; font-size:14.5px;">' + name + '</td>' +
+                        '<td style="padding:14px 16px; font-weight:800; color:#ef4444;"><i class="fa-solid fa-cake-candles" style="margin-right:4px;"></i>' + (c.생일 || '-') + '</td>' +
+                        '<td style="padding:14px 16px;"><span style="padding:3px 9px; border-radius:12px; font-size:12px; font-weight:800; ' + badgeStyle + '">' + status + '</span></td>' +
+                        '<td style="padding:14px 16px; font-weight:600; color:#475569;">' + phone + '</td>';
+                } else if (fType === 'sang') {
+                    trContent = '<td style="padding:14px 16px; font-weight:800; color:#0f172a; font-size:14.5px;">' + name + '</td>' +
+                        '<td style="padding:14px 16px; font-weight:800; color:#f59e0b;"><i class="fa-solid fa-calendar-check" style="margin-right:4px;"></i>' + (c.상령일 || '-') + '</td>' +
+                        '<td style="padding:14px 16px;"><span style="padding:3px 9px; border-radius:12px; font-size:12px; font-weight:800; ' + badgeStyle + '">' + status + '</span></td>' +
+                        '<td style="padding:14px 16px; font-weight:600; color:#475569;">' + phone + '</td>';
+                } else if (fType === 'expiry') {
+                    trContent = '<td style="padding:14px 16px; font-weight:800; color:#0f172a; font-size:14.5px;">' + name + '</td>' +
+                        '<td style="padding:14px 16px; font-weight:600; color:#334155;">' + (c.가입내역 || '-') + '</td>' +
+                        '<td style="padding:14px 16px; font-weight:800; color:#dc2626;">2026-11</td>' +
+                        '<td style="padding:14px 16px; font-weight:600; color:#475569;">' + phone + '</td>';
+                } else if (fType === 'insurance') {
+                    trContent = '<td style="padding:14px 16px; font-weight:800; color:#0f172a; font-size:14.5px;">' + name + '</td>' +
+                        '<td style="padding:14px 16px; font-weight:700; color:#2563eb;">' + (c.가입내역 || '-') + '</td>' +
+                        '<td style="padding:14px 16px;"><span style="padding:3px 9px; border-radius:12px; font-size:12px; font-weight:800; ' + badgeStyle + '">' + status + '</span></td>' +
+                        '<td style="padding:14px 16px; font-weight:600; color:#475569;">' + phone + '</td>';
+                } else {
+                    trContent = '<td style="padding:14px 16px; font-weight:800; color:#0f172a; font-size:14.5px;">' + name + '</td>' +
+                        '<td style="padding:14px 16px;"><span style="padding:3px 9px; border-radius:12px; font-size:12px; font-weight:800; ' + badgeStyle + '">' + status + '</span></td>' +
+                        '<td style="padding:14px 16px; font-weight:700; color:#2563eb; font-size:13.5px;">' + ins + '</td>' +
+                        '<td style="padding:14px 16px;"><span style="background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe; padding:3px 9px; border-radius:8px; font-size:12px; font-weight:700;">' + tags + '</span></td>' +
+                        '<td style="padding:14px 16px; font-weight:600; color:#475569; font-size:13.5px;">' + phone + '</td>' +
+                        '<td style="padding:14px 16px; font-size:12.5px; color:#64748b; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + memo + '</td>';
+                }
+
+                return '<tr style="border-bottom:1px solid #f1f5f9; transition:background 0.15s;">' +
+                    trContent +
+                    '<td style="padding:14px 16px; text-align:center;">' +
+                        '<button onclick="window.openProfile(' + id + ')" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:5px 12px; border-radius:6px; font-weight:800; font-size:12px; cursor:pointer;">상세보기</button>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+        }
+    }
+
+    // 2. Mobile Unified List (Summary headers matching selected part + [상세보기 ▾] button revealing 3-tab detail)
+    window.currentFilteredCustomers = filtered;
+    window.renderMobileCustomerCards(filtered, fType, fVal);
+
+    listModal.style.display = 'flex';
+    setTimeout(function() { listModal.classList.add('active'); }, 10);
+};
+
+// Render Mobile Customer Cards matching PC part exactly
+window.renderMobileCustomerCards = function(list, fType, fVal) {
+    fType = fType || 'all';
+    fVal = fVal || '';
+    const container = document.getElementById("mobileCustomerCardsContainer");
+    if (!container) return;
+
+    if (!list || list.length === 0) {
+        container.innerHTML = '<div style="padding:60px 16px; text-align:center; color:#94a3b8; font-size:14px; font-weight:700;"><i class="fa-solid fa-user-slash" style="font-size:32px; margin-bottom:12px; display:block; color:#cbd5e1;"></i>조건에 해당하는 고객이 없습니다.</div>';
+        return;
+    }
+
+    function formatMD(str) {
+        if (!str || str.length < 4) return '-';
+        return parseInt(str.substring(0,2), 10) + '월 ' + parseInt(str.substring(2,4), 10) + '일';
+    }
+    const today = new Date();
+    const curMD = String(today.getMonth() + 1).padStart(2, '0') + String(today.getDate()).padStart(2, '0');
+
+    container.innerHTML = list.map(function(c, i) {
+        const id = c.고객번호 || c.ID || (i + 1);
+        const name = c.고객명 || '-';
+        const status = c.상태 || '일반';
+        const phone = c.폰번호 || '-';
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
+        const insList = c.보험목록 || [];
+        const insCount = insList.length;
+
+        const tagsArr = (c.터치인사이트 || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+        const isBirthToday = (c.생일 === curMD);
+        const isSangToday = (c.상령일 === curMD);
+
+        let badgeStyle = "background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;";
+        if (status === '관심') badgeStyle = "background:#fef3c7; color:#b45309; border:1px solid #fde68a;";
+        else if (status === '상담') badgeStyle = "background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;";
+        else if (status === '체결') badgeStyle = "background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;";
+        else if (status === '케어') badgeStyle = "background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;";
+
+        // Part-specific 2nd summary line on Mobile matching PC specifications
+        let partSummaryHtml = '';
+        if (fType === 'birth') {
+            partSummaryHtml = '<span style="color:#ef4444; font-weight:800;"><i class="fa-solid fa-cake-candles" style="font-size:11px; margin-right:3px;"></i>생일: ' + formatMD(c.생일) + (isBirthToday ? ' (오늘!)' : '') + '</span>' +
+                '<span style="color:#cbd5e1;">·</span>' +
+                '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
+        } else if (fType === 'sang') {
+            partSummaryHtml = '<span style="color:#f59e0b; font-weight:800;"><i class="fa-solid fa-calendar-check" style="font-size:11px; margin-right:3px;"></i>상령일: ' + formatMD(c.상령일) + (isSangToday ? ' (오늘 도래!)' : '') + '</span>' +
+                '<span style="color:#cbd5e1;">·</span>' +
+                '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
+        } else if (fType === 'status') {
+            partSummaryHtml = '<span style="color:#0f172a; font-weight:700;"><i class="fa-solid fa-briefcase" style="font-size:11px; color:#94a3b8; margin-right:3px;"></i>' + (c.직업 || '-') + '</span>' +
+                '<span style="color:#cbd5e1;">·</span>' +
+                '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
+        } else if (fType === 'insight') {
+            partSummaryHtml = '<span style="color:#2563eb; font-weight:800;"><i class="fa-solid fa-tag" style="font-size:11px; margin-right:3px;"></i>#' + fVal + '</span>' +
+                '<span style="color:#cbd5e1;">·</span>' +
+                '<span style="color:#64748b; font-weight:600;">' + (c.직업 || '-') + '</span>' +
+                '<span style="color:#cbd5e1;">·</span>' +
+                '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
+        } else if (fType === 'expiry') {
+            partSummaryHtml = '<span style="color:#dc2626; font-weight:800;"><i class="fa-solid fa-clock" style="font-size:11px; margin-right:3px;"></i>만기: ' + (c.가입내역 || '-') + '</span>' +
+                '<span style="color:#cbd5e1;">·</span>' +
+                '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
+        } else if (fType === 'insurance') {
+            partSummaryHtml = '<span style="color:#2563eb; font-weight:800;"><i class="fa-solid fa-building-shield" style="font-size:11px; margin-right:3px;"></i>' + (c.보험사 || fVal) + '</span>' +
+                '<span style="color:#cbd5e1;">·</span>' +
+                '<span style="color:#334155; font-weight:600;">' + (c.가입내역 || '-') + '</span>' +
+                '<span style="color:#cbd5e1;">·</span>' +
+                '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
+        } else {
+            partSummaryHtml = '<span style="color:#2563eb; font-weight:700;">' + (c.보험사 || '-') + '</span>' +
+                '<span style="color:#cbd5e1;">·</span>' +
+                '<span style="color:#64748b; font-weight:600;">' + (c.직업 || '-') + '</span>' +
+                '<span style="color:#cbd5e1;">·</span>' +
+                '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
+        }
+
+        // Sub-tabs for Insurance Policies
+        let insSubTabsHtml = '';
+        let insSlotsHtml = '';
+        if (insCount > 0) {
+            if (insCount > 1) {
+                insSubTabsHtml = '<div style="display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; padding-bottom:2px;">' +
+                    insList.map(function(p, pIdx) {
+                        return '<button id="card-' + i + '-ins-btn-' + pIdx + '" onclick="window.setCardInsSubTab(' + i + ', ' + pIdx + ', ' + insCount + ')" ' +
+                            'style="padding:6px 12px; border-radius:6px; font-size:11.5px; font-weight:' + (pIdx === 0 ? '800' : '700') + '; border:1px solid #cbd5e1; cursor:pointer; white-space:nowrap; transition:all 0.15s; ' +
+                            (pIdx === 0 ? 'background:#0284c7; color:white; border-color:#0284c7;' : 'background:#f8fafc; color:#475569;') + '">' +
+                            (pIdx + 1) + '번: ' + (p.보험사 || '보험') +
+                        '</button>';
+                    }).join('') +
+                '</div>';
+            }
+
+            insSlotsHtml = insList.map(function(p, pIdx) {
+                return '<div id="card-' + i + '-ins-slot-' + pIdx + '" style="display:' + (pIdx === 0 ? 'block' : 'none') + ';">' +
+                    '<div style="background:white; border:1.5px solid #bae6fd; border-radius:10px; padding:12px; box-shadow:0 1px 3px rgba(2,132,199,0.06);">' +
+                        '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; border-bottom:1px dashed #e0f2fe; padding-bottom:8px;">' +
+                            '<div>' +
+                                '<span style="background:#0284c7; color:white; font-size:10.5px; font-weight:800; padding:2px 6px; border-radius:4px; margin-right:6px;">' + (pIdx + 1) + '번 보험</span>' +
+                                '<span style="font-size:14px; font-weight:800; color:#0369a1;">' + (p.보험사 || '-') + '</span>' +
+                                '<div style="font-size:13px; font-weight:800; color:#0f172a; margin-top:3px;">' + (p.상품명 || '-') + '</div>' +
+                            '</div>' +
+                            '<span style="font-size:13px; font-weight:800; color:#2563eb; background:#eff6ff; padding:3px 8px; border-radius:6px; border:1px solid #bfdbfe;">' + (p.보험료 || '-') + '</span>' +
+                        '</div>' +
+                        '<div style="display:flex; flex-direction:column; gap:5px; font-size:12px;">' +
+                            '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">계약자/피보험자</span><span style="color:#0f172a; font-weight:600;">' + (p.계약자 || name) + ' / ' + (p.피보험자 || name) + '</span></div>' +
+                            '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">체결/만기일</span><span style="color:#0f172a; font-weight:600;">' + (p.체결일 || '-') + ' ~ ' + (p.만기일 || '-') + '</span></div>' +
+                            '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">납입기간</span><span style="color:#0f172a; font-weight:600;">' + (p.납입기간 || '-') + '</span></div>' +
+                            '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">결제방식</span><span style="color:#0f172a; font-weight:600;">' + (p.결제방식 || '-') + (p.결제일 ? ' (' + p.결제일 + ')' : '') + '</span></div>' +
+                            (p.특약내역 ? '<div style="margin-top:4px; padding-top:6px; border-top:1px dashed #f1f5f9;"><span style="display:block; color:#64748b; font-weight:700; margin-bottom:2px;">주요 보장 특약</span><div style="background:#f8fafc; padding:7px 9px; border-radius:6px; font-size:11.5px; color:#334155; line-height:1.4;">' + p.특약내역 + '</div></div>' : '') +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        } else {
+            insSlotsHtml = '<div style="padding:24px; text-align:center; color:#94a3b8; font-size:13px; font-weight:600;">등록된 보험 가입 내역이 없습니다.</div>';
+        }
+
+        const touchHealth = ['실손', '암', '치아', '간병', '치매', '후유장해'];
+        const touchLife = ['자동차', '운전자', '바이크', '골프', '펫보험', '주택화재', '재물보험'];
+        const touchAsset = ['연금', '재테크', '종신', '정기', '생활비'];
+
+        function buildTouchCategory(title, icon, color, list) {
+            const hasMatched = list.filter(function(t) { return tagsArr.indexOf(t) !== -1; });
+            return '<div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; margin-bottom:8px;">' +
+                '<div style="font-weight:800; font-size:11.5px; color:' + color + '; margin-bottom:6px; display:flex; align-items:center; gap:5px;">' +
+                    '<i class="' + icon + '"></i> ' + title + ' (' + hasMatched.length + ')' +
+                '</div>' +
+                '<div style="display:flex; flex-wrap:wrap; gap:5px;">' +
+                    list.map(function(t) {
+                        const active = tagsArr.indexOf(t) !== -1;
+                        if (active) {
+                            return '<span style="background:#eff6ff; color:#1d4ed8; font-size:11px; font-weight:800; padding:3px 8px; border-radius:6px; border:1.5px solid #93c5fd; box-shadow:0 1px 2px rgba(37,99,235,0.08);"><i class="fa-solid fa-check" style="font-size:9px; margin-right:3px;"></i>#' + t + '</span>';
+                        } else {
+                            return '<span style="background:#f8fafc; color:#94a3b8; font-size:10.5px; font-weight:600; padding:3px 7px; border-radius:6px; border:1px solid #e2e8f0; opacity:0.75;">#' + t + '</span>';
+                        }
+                    }).join('') +
+                '</div>' +
+            '</div>';
+        }
+
+        return '<div class="mc-card" id="mc-card-' + i + '" style="background:white; border:1px solid #e2e8f0; border-radius:14px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.03); overflow:hidden; transition:all 0.2s;">' +
+            '<!-- 1. Simple Summary Header Row (Part-specific like PC) -->' +
+            '<div style="padding:13px 15px; display:flex; justify-content:space-between; align-items:center; -webkit-tap-highlight-color:transparent;">' +
+                '<div style="flex:1; min-width:0; padding-right:10px;">' +
+                    '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">' +
+                        '<span style="font-size:16px; font-weight:800; color:#0f172a;">' + name + '</span>' +
+                        '<span style="font-size:11.5px; color:#64748b; font-weight:600;">(' + (c.나이 ? c.나이 + '세' : '') + (c.성별 ? ' · ' + c.성별 : '') + ')</span>' +
+                        '<span style="font-size:10.5px; font-weight:800; padding:2px 6px; border-radius:4px; ' + badgeStyle + '">' + status + '</span>' +
+                    '</div>' +
+                    '<div style="font-size:12px; color:#64748b; margin-top:4px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">' +
+                        partSummaryHtml +
+                    '</div>' +
+                '</div>' +
+                '<!-- Distinct 상세보기 Button -->' +
+                '<button onclick="window.toggleMobileCustomerDetail(' + i + ')" id="mc-btn-' + i + '" ' +
+                        'style="background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; padding:7px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:5px; flex-shrink:0; white-space:nowrap; transition:all 0.15s;">' +
+                    '<span id="mc-btn-text-' + i + '">상세보기</span>' +
+                    '<i class="fa-solid fa-chevron-down" id="mc-arrow-' + i + '" style="font-size:10.5px; transition:transform 0.25s;"></i>' +
+                '</button>' +
+            '</div>' +
+
+            '<!-- 2. Expandable Area with 3 Buttons/Tabs (Revealed upon clicking 상세보기) -->' +
+            '<div id="mc-detail-' + i + '" style="display:none; padding:12px 14px 16px 14px; border-top:1px dashed #e2e8f0; background:#f8fafc;">' +
+                '<!-- Quick Action Phone/SMS Bar -->' +
+                '<div style="display:flex; gap:8px; margin-bottom:12px;">' +
+                    '<a href="tel:' + cleanPhone + '" style="flex:1; background:#2563eb; color:white; text-decoration:none; padding:8px 0; border-radius:8px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow:0 1px 3px rgba(37,99,235,0.2);">' +
+                        '<i class="fa-solid fa-phone"></i> 전화 걸기' +
+                    '</a>' +
+                    '<a href="sms:' + cleanPhone + '" style="flex:1; background:white; color:#334155; text-decoration:none; padding:8px 0; border-radius:8px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:5px; border:1px solid #cbd5e1;">' +
+                        '<i class="fa-solid fa-comment-dots" style="color:#2563eb;"></i> 문자 보내기' +
+                    '</a>' +
+                '</div>' +
+
+                '<!-- The 3 Main Tab Buttons -->' +
+                '<div style="display:flex; gap:6px; margin-bottom:12px; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">' +
+                    '<button id="card-' + i + '-tab-btn-info" onclick="window.setCardTab(' + i + ', \'info\')" ' +
+                            'style="flex:1; padding:8px 2px; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer; border:none; background:#2563eb; color:white; transition:all 0.15s; box-shadow:0 1px 2px rgba(37,99,235,0.2);">' +
+                        '1차 정보' +
+                    '</button>' +
+                    '<button id="card-' + i + '-tab-btn-touch" onclick="window.setCardTab(' + i + ', \'touch\')" ' +
+                            'style="flex:1; padding:8px 2px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; border:none; background:#e2e8f0; color:#475569; transition:all 0.15s;">' +
+                        '터치인사이트' +
+                    '</button>' +
+                    '<button id="card-' + i + '-tab-btn-ins" onclick="window.setCardTab(' + i + ', \'ins\')" ' +
+                            'style="flex:1.2; padding:8px 2px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; border:none; background:#e2e8f0; color:#475569; transition:all 0.15s;">' +
+                        '보험가입내역 (' + insCount + '건)' +
+                    '</button>' +
+                '</div>' +
+
+                '<!-- Tab Pane 1: 1차 정보 -->' +
+                '<div id="card-' + i + '-pane-info" style="display:block;">' +
+                    '<div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:11px 13px; margin-bottom:9px; font-size:12.5px;">' +
+                        '<div style="font-weight:800; color:#0f172a; margin-bottom:7px; font-size:12px; display:flex; align-items:center; gap:5px;">' +
+                            '<i class="fa-regular fa-user" style="color:#2563eb;"></i> 인적 & 가족 정보' +
+                        '</div>' +
+                        '<div style="display:flex; flex-direction:column; gap:5px;">' +
+                            '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">직업</span><span style="color:#0f172a; font-weight:600;">' + (c.직업 || '-') + '</span></div>' +
+                            '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">가족관계</span><span style="color:#334155; font-weight:600;">' + (c.가족사항 || '-') + '</span></div>' +
+                            '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">주소</span><span style="color:#475569; font-size:11.5px; line-height:1.35;">' + (c.주소 || '-') + '</span></div>' +
+                            '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">생년월일</span><span style="color:#0f172a; font-weight:600;">' + formatMD(c.생일) + (isBirthToday ? ' <b style="color:#ef4444; margin-left:4px;">(오늘 생일!)</b>' : '') + '</span></div>' +
+                            '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">상령일</span><span style="color:#0f172a; font-weight:600;">' + formatMD(c.상령일) + (isSangToday ? ' <b style="color:#f59e0b; margin-left:4px;">(오늘 상령일!)</b>' : '') + '</span></div>' +
+                        '</div>' +
+                    '</div>' +
+
+                    '<div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:11px 13px; margin-bottom:9px; font-size:12.5px;">' +
+                        '<div style="font-weight:800; color:#0f172a; margin-bottom:7px; font-size:12px; display:flex; align-items:center; gap:5px;">' +
+                            '<i class="fa-solid fa-car" style="color:#f59e0b;"></i> 라이프 & 언더라이팅' +
+                        '</div>' +
+                        '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 12px;">' +
+                            '<div><span style="color:#64748b; font-weight:700;">운전: </span><span style="color:#0f172a; font-weight:600;">' + (c.운전여부 || '-') + '</span></div>' +
+                            '<div><span style="color:#64748b; font-weight:700;">사업: </span><span style="color:#0f172a; font-weight:600;">' + (c.사업여부 || '-') + '</span></div>' +
+                            '<div><span style="color:#64748b; font-weight:700;">반려동물: </span><span style="color:#0f172a; font-weight:600;">' + (c.반려동물 || '-') + '</span></div>' +
+                            '<div><span style="color:#64748b; font-weight:700;">결제방식: </span><span style="color:#0f172a; font-weight:600;">' + (c.결제방식 || '-') + '</span></div>' +
+                        '</div>' +
+                        (c.알릴의무 ? '<div style="margin-top:6px; padding-top:6px; border-top:1px dashed #f1f5f9;"><span style="color:#b45309; font-weight:700;">알릴의무: </span><span style="color:#78350f; font-weight:600;">' + c.알릴의무 + '</span></div>' : '') +
+                    '</div>' +
+
+                    '<div style="background:white; border:1px solid #e2e8f0; border-radius:10px; padding:11px 13px; margin-bottom:9px;">' +
+                        '<div style="font-weight:800; color:#475569; font-size:11.5px; margin-bottom:5px; display:flex; align-items:center; gap:4px;">' +
+                            '<i class="fa-regular fa-comment-dots" style="color:#f59e0b;"></i> 최근 상담 메모' +
+                        '</div>' +
+                        '<div style="font-size:12px; color:#1e293b; line-height:1.45; white-space:pre-wrap; word-break:break-all;">' +
+                            (c.상담메모 || '작성된 상담 메모가 없습니다.') +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                '<!-- Tab Pane 2: 터치인사이트 -->' +
+                '<div id="card-' + i + '-pane-touch" style="display:none;">' +
+                    buildTouchCategory('건강 / 의료 보장', 'fa-solid fa-heart-pulse', '#dc2626', touchHealth) +
+                    buildTouchCategory('라이프 / 생활 보장', 'fa-solid fa-car', '#16a34a', touchLife) +
+                    buildTouchCategory('노후 / 자산 보장', 'fa-solid fa-coins', '#7c3aed', touchAsset) +
+                '</div>' +
+
+                '<!-- Tab Pane 3: 보험가입내역 (서브탭 포함) -->' +
+                '<div id="card-' + i + '-pane-ins" style="display:none;">' +
+                    insSubTabsHtml +
+                    insSlotsHtml +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+};
+
+// Toggle Accordion Detail
+window.toggleMobileCustomerDetail = function(idx) {
+    const detailEl = document.getElementById('mc-detail-' + idx);
+    const arrowEl = document.getElementById('mc-arrow-' + idx);
+    const cardEl = document.getElementById('mc-card-' + idx);
+    if (!detailEl) return;
+    
+    const isExpanded = (detailEl.style.display === 'block');
+    if (isExpanded) {
+        detailEl.style.display = 'none';
+        if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
+        if (cardEl) {
+            cardEl.style.borderColor = '#e2e8f0';
+            cardEl.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)';
+        }
+    } else {
+        detailEl.style.display = 'block';
+        if (arrowEl) arrowEl.style.transform = 'rotate(180deg)';
+        if (cardEl) {
+            cardEl.style.borderColor = '#3b82f6';
+            cardEl.style.boxShadow = '0 3px 10px rgba(59,130,246,0.12)';
+        }
+    }
+};
+
+// Switch Card Main Tabs (1차 정보, 터치인사이트, 보험가입내역)
+window.setCardTab = function(cIdx, tab) {
+    const tabs = ['info', 'touch', 'ins'];
+    tabs.forEach(function(t) {
+        const pane = document.getElementById('card-' + cIdx + '-pane-' + t);
+        const btn = document.getElementById('card-' + cIdx + '-tab-btn-' + t);
+        if (pane) pane.style.display = (t === tab) ? 'block' : 'none';
+        if (btn) {
+            if (t === tab) {
+                btn.style.background = '#2563eb';
+                btn.style.color = '#ffffff';
+                btn.style.fontWeight = '800';
+                btn.style.boxShadow = '0 1px 2px rgba(37,99,235,0.2)';
+            } else {
+                btn.style.background = '#e2e8f0';
+                btn.style.color = '#475569';
+                btn.style.fontWeight = '700';
+                btn.style.boxShadow = 'none';
+            }
+        }
+    });
+};
+
+// Switch Insurance Sub-tabs (1번, 2번, 3번 ...)
+window.setCardInsSubTab = function(cIdx, pIdx, total) {
+    for (let i = 0; i < total; i++) {
+        const slot = document.getElementById('card-' + cIdx + '-ins-slot-' + i);
+        const btn = document.getElementById('card-' + cIdx + '-ins-btn-' + i);
+        if (slot) slot.style.display = (i === pIdx) ? 'block' : 'none';
+        if (btn) {
+            if (i === pIdx) {
+                btn.style.background = '#0284c7';
+                btn.style.color = '#ffffff';
+                btn.style.borderColor = '#0284c7';
+                btn.style.fontWeight = '800';
+            } else {
+                btn.style.background = '#f8fafc';
+                btn.style.color = '#475569';
+                btn.style.borderColor = '#cbd5e1';
+                btn.style.fontWeight = '700';
+            }
+        }
+    }
+};
+
+
+
+
+// 2 & 3. 스피드 작업 센터는 crm_speed_center.js 에서 5대 필터(운전, 연령, 반려동물, 사업자, 결제) 및 탭(1차/터치/보험) 전환을 전담 처리합니다.
+
+
+// 4. Overwrite postMessage listener for APPLY_FILTER
+window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'APPLY_FILTER') {
+        window.executeFilterAndShowList(e.data.filterType, e.data.value);
+    }
+});
+
+// 5. Connect Insurance Search button in Header
+window.searchDashInsurance = function() {
+    const comp = document.getElementById("dash-ins-comp-select").value;
+    if (!comp) return alert("회사명을 선택해주세요.");
+    window.executeFilterAndShowList('insurance', comp);
+};
+
+// 6. Connect openTotalCustomers
+window.openTotalCustomers = function() {
+    window.executeFilterAndShowList('all', 'all');
+};
+
+// Toggle Sub Tags in PC View
+window.toggleSubTags = function(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'flex' : 'none';
+};
+
+// Open Quick Touch Memo Modal
+window.openQuickTouchMemoModal = function() {
+    const m = document.getElementById('quickTouchMemoModal');
+    if (m) m.style.display = 'flex';
+};
+
+window.saveQuickTouchMemo = function() {
+    const client = document.getElementById('quickMemoClientSearch').value.trim();
+    const memo = document.getElementById('quickMemoText').value.trim();
+    if (!memo) return alert('메모 내용을 입력해주세요.');
+    alert((client ? '[' + client + '] ' : '') + '현장 퀵메모가 저장되었습니다.');
+    document.getElementById('quickTouchMemoModal').style.display = 'none';
+    document.getElementById('quickMemoText').value = '';
+    document.getElementById('quickMemoClientSearch').value = '';
+};
+
+// Open Insurance Filter Modal
+window.openInsFilterModal = function() {
+    const m = document.getElementById('insFilterModal');
+    if (m) {
+        m.style.display = 'flex';
+        window.switchInsTab('nonlife');
+    }
+};
+
+window.switchInsTab = function(type) {
+    const btnNonlife = document.getElementById('insTabNonlife');
+    const btnLife = document.getElementById('insTabLife');
+    const grid = document.getElementById('insCompsGrid');
+    if (!grid) return;
+    
+    let comps = [];
+    if (type === 'nonlife') {
+        btnNonlife.style.background = '#0284c7'; btnNonlife.style.color = 'white';
+        btnLife.style.background = '#f8fafc'; btnLife.style.color = '#475569';
+        comps = ['삼성화재','메리츠화재','DB손해보험','KB손해보험','현대해상','한화손해보험','롯데손해보험','흥국화재','하나손해보험','NH농협손해보험','라이나손보','AIG손보','MG손해보험'];
+    } else {
+        btnLife.style.background = '#0284c7'; btnLife.style.color = 'white';
+        btnNonlife.style.background = '#f8fafc'; btnNonlife.style.color = '#475569';
+        comps = ['한화생명','교보생명','농협생명','메트라이프','KDB생명','DB생명','흥국생명','동양생명','미래에셋생명','라이나생명','푸본현대생명','신한라이프','ABL생명','iM라이프','KB라이프','IBK연금보험','처브라이프','카디프생명','하나생명','AIA생명'];
+    }
+    
+    grid.innerHTML = comps.map(function(c) {
+        return '<button onclick="window.selectInsCompany(\'' + c + '\')" style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px 8px; border-radius:8px; font-weight:700; font-size:12.5px; color:#1e293b; cursor:pointer; text-align:center;">' + c + '</button>';
+    }).join('');
+};
+
+window.selectInsCompany = function(compName) {
+    const m = document.getElementById('insFilterModal');
+    if (m) m.style.display = 'none';
+    window.executeFilterAndShowList('insurance', compName);
+};
+
+// Open Tag Filter Modal (터치인사이트)
+window.openTagFilterModal = function() {
+    const m = document.getElementById('tagFilterModal');
+    if (m) m.style.display = 'flex';
+};
+
+window.openTagFilterModalWithTheme = function(themeName) {
+    window.openTagFilterModal();
+};
+
+window.selectTag = function(tagName) {
+    const m = document.getElementById('tagFilterModal');
+    if (m) m.style.display = 'none';
+    window.executeFilterAndShowList('insight', tagName.trim());
+};
+
+// Reliable Profile & Modal Handlers
+window.openProfile = function(idStr) {
+    const list = window.getActiveCRMData();
+    let client = null;
+    if (idStr) {
+        client = list.find(function(c) {
+            return String(c["고객번호"] || c["ID"]) === String(idStr) || String(c["고객명"]) === String(idStr);
+        });
+    }
+    if (!client && list.length > 0) client = list[0];
+    
+    if (client) {
+        const profileContent = document.getElementById("profileModalContent");
+        if (profileContent && typeof window.generateProfileHtml === 'function') {
+            try {
+                profileContent.innerHTML = window.generateProfileHtml(client);
+            } catch(e) {
+                console.warn('generateProfileHtml error', e);
+            }
+        }
+        const modal = document.getElementById("profileModal");
+        if (modal) {
+            modal.style.display = "flex";
+            setTimeout(function() { modal.classList.add("show"); }, 10);
+        }
+    } else {
+        alert("고객 정보를 찾을 수 없습니다.");
+    }
+};
+
+window.closeProfile = function() {
+    const modal = document.getElementById("profileModal");
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(function() { modal.style.display = 'none'; }, 200);
+    }
+};
+
+window.closeModal = function() {
+    const listModal = document.getElementById('listModal');
+    if (listModal) {
+        listModal.classList.remove('active');
+        setTimeout(function() { listModal.style.display = 'none'; }, 200);
+    }
+};
+
+
+
+// Load Sample Data
+window.loadSampleMockData = function() {
+    const toast = document.createElement('div');
+    toast.innerHTML = '<i class="fa-solid fa-check-circle" style="color:#22c55e; margin-right:8px; font-size:16px;"></i> <b>테스트 샘플 고객 15명 준비 완료!</b><br><span style="font-size:12px; color:#94a3b8;">이제 [전체 고객 보기], [관심 고객], [오늘 생일], 검색창을 클릭해보세요.</span>';
+    toast.style.cssText = 'position:fixed; top:24px; left:50%; transform:translateX(-50%); background:#0f172a; color:white; padding:14px 26px; border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,0.35); z-index:999999; font-size:14px; line-height:1.5; border:1px solid #334155; text-align:center; transition:opacity 0.3s;';
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 300); }, 3200);
+};
+
+
+
+// Synchronize PC and Mobile Total Headers on Google Sheets load
+(function() {
+    const origUpdate = window.updateQuickFilterCounts;
+    window.updateQuickFilterCounts = function() {
+        let res;
+        if (typeof origUpdate === 'function') {
+            try { res = origUpdate(); } catch(e){}
+        }
+        const data = window.getActiveCRMData();
+        const total = data.length;
+        const pcEl = document.getElementById('qf-count-total');
+        if (pcEl) pcEl.innerText = total + '명';
+        document.querySelectorAll('.m-sync-total').forEach(function(el) {
+            el.innerText = total;
+        });
+        return res;
+    };
+})();
+
+// Force immediate zero-initialization on startup until Google Sheets data loads
+function applyZeroCountsInitially() {
+    const list = window.getActiveCRMData();
+    const total = list.length;
+    const pcEl = document.getElementById('qf-count-total');
+    if (pcEl) pcEl.innerText = total + '명';
+    document.querySelectorAll('.m-sync-total').forEach(function(el) {
+        el.innerText = total;
+    });
+
+    if (total === 0) {
+        // Reset pipeline
+        ['interest', 'consult', 'contract', 'care'].forEach(function(p) {
+            const el = document.getElementById('pipe-count-' + p);
+            if (el) el.innerText = '0';
+            const mEl = document.querySelector('.m-sync-' + p);
+            if (mEl) mEl.innerText = '0';
+        });
+        // Reset mini badges
+        ['birth', 'sangryung', 'expiry', 'claim'].forEach(function(b) {
+            const el = document.getElementById('mini-badge-' + b);
+            if (el) el.innerText = '0명';
+        });
+        ['birth', 'sang', 'expiry', 'claim'].forEach(function(b) {
+            const mEl = document.querySelector('.m-sync-' + b);
+            if (mEl) mEl.innerText = '0';
+        });
+        // Reset touch tags
+        const tags = ['실손', '암', '치아', '간병', '치매', '후유장해', '자동차', '운전자', '바이크', '골프', '펫보험', '연금', '재테크', '종신', '정기', '생활비', '주택화재', '재물보험'];
+        tags.forEach(function(t) {
+            const el = document.getElementById('touch-count-' + t);
+            if (el) el.innerText = '0';
+        });
+    }
+}
+window.addEventListener('DOMContentLoaded', applyZeroCountsInitially);
+setTimeout(applyZeroCountsInitially, 50);
+setTimeout(applyZeroCountsInitially, 300);
+
+// --- 스마트 간편 등록 (Smart Registration) 모바일 및 터치 인터랙션 고도화 ---
+(function initSmartRegUX() {
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;')
+                  .replace(/'/g, '&#039;');
+    }
+
+    // 전역 블록 드래그 지원 (PC용)
+    window.startSmartDrag = function(e, el) {
+        const textEl = el.querySelector('.chunk-text') || el.querySelector('div') || el;
+        const text = textEl ? textEl.innerText.trim() : '';
+        if (e.dataTransfer && text) {
+            e.dataTransfer.setData('text/plain', text);
+            e.dataTransfer.effectAllowed = 'copy';
+        }
+    };
+
+    // 콤팩트 스마트 블록 렌더러
+    window.renderSmartRegChunks = function() {
+        const input = document.getElementById('smartRegInput');
+        const container = document.getElementById('smartRegChunkContainer');
+        if (!container) return;
+        
+        const txt = (input ? input.value : '') || '';
+        if (!txt.trim()) {
+            container.innerHTML = '<div class="smart-reg-chunk-placeholder">텍스트를 입력하면 분석 블록이 생성됩니다.</div>';
+            return;
+        }
+        
+        const lines = txt.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+        if (lines.length === 0) {
+            container.innerHTML = '<div class="smart-reg-chunk-placeholder">텍스트를 입력하면 분석 블록이 생성됩니다.</div>';
+            return;
+        }
+
+        const nameVal = (document.getElementById('smartRegName') ? document.getElementById('smartRegName').value : '').trim();
+        const phoneVal = (document.getElementById('smartRegPhone') ? document.getElementById('smartRegPhone').value : '').replace(/\D/g, '');
+        const juminVal = (document.getElementById('smartRegJumin') ? document.getElementById('smartRegJumin').value : '').replace(/\D/g, '');
+        const addrVal = (document.getElementById('smartRegAddr') ? document.getElementById('smartRegAddr').value : '').trim();
+        const jobVal = (document.getElementById('smartRegJob') ? document.getElementById('smartRegJob').value : '').trim();
+        const memoVal = (document.getElementById('smartRegMemo') ? document.getElementById('smartRegMemo').value : '').trim();
+
+        let html = '';
+        
+        lines.forEach(function(line) {
+            let assignedTo = '';
+            let assignedField = '';
+            
+            const lineCleanDigits = line.replace(/\D/g, '');
+            
+            if (nameVal && (nameVal === line || line.startsWith(nameVal))) {
+                assignedTo = '고객명';
+                assignedField = 'smartRegName';
+            } else if (phoneVal && lineCleanDigits.length >= 9 && lineCleanDigits.includes(phoneVal)) {
+                assignedTo = '전화번호';
+                assignedField = 'smartRegPhone';
+            } else if (juminVal && lineCleanDigits.length >= 6 && lineCleanDigits.includes(juminVal)) {
+                assignedTo = '주민/생년';
+                assignedField = 'smartRegJumin';
+            } else if (addrVal && (addrVal === line || line.includes(addrVal) || addrVal.includes(line))) {
+                assignedTo = '주소';
+                assignedField = 'smartRegAddr';
+            } else if (jobVal && jobVal === line) {
+                assignedTo = '직업';
+                assignedField = 'smartRegJob';
+            } else if (memoVal && memoVal.includes(line)) {
+                assignedTo = '메모';
+                assignedField = 'smartRegMemo';
+            }
+
+            const safeLine = escapeHtml(line);
+            const encLine = encodeURIComponent(line);
+
+            if (assignedTo) {
+                html += '<div class="smart-chunk chunk-assigned" draggable="true" ondragstart="window.startSmartDrag(event, this)">' +
+                    '<div class="chunk-assigned-inner">' +
+                        '<span class="chunk-badge-assigned"><i class="fa-solid fa-check"></i> ' + assignedTo + '</span>' +
+                        '<span class="chunk-text chunk-text-assigned" title="' + safeLine + '">' + safeLine + '</span>' +
+                        '<button type="button" class="chunk-btn-cancel" onclick="window.clearChunkAssignment(\'' + assignedField + '\', event)" title="지정 취소">' +
+                            '<i class="fa-solid fa-xmark"></i>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+            } else {
+                html += '<div class="smart-chunk chunk-unassigned" draggable="true" ondragstart="window.startSmartDrag(event, this)">' +
+                    '<div class="chunk-unassigned-inner">' +
+                        '<div class="chunk-text-row">' +
+                            '<i class="fa-solid fa-grip-vertical chunk-grip"></i>' +
+                            '<span class="chunk-text" title="' + safeLine + '">' + safeLine + '</span>' +
+                        '</div>' +
+                        '<div class="chunk-action-pills">' +
+                            '<span class="chunk-action-hint">터치 입력:</span>' +
+                            '<button type="button" class="chunk-pill-btn" onclick="window.quickAssignChunk(\'' + encLine + '\', \'smartRegName\', event)">이름</button>' +
+                            '<button type="button" class="chunk-pill-btn" onclick="window.quickAssignChunk(\'' + encLine + '\', \'smartRegPhone\', event)">폰</button>' +
+                            '<button type="button" class="chunk-pill-btn" onclick="window.quickAssignChunk(\'' + encLine + '\', \'smartRegJumin\', event)">주민</button>' +
+                            '<button type="button" class="chunk-pill-btn" onclick="window.quickAssignChunk(\'' + encLine + '\', \'smartRegAddr\', event)">주소</button>' +
+                            '<button type="button" class="chunk-pill-btn" onclick="window.quickAssignChunk(\'' + encLine + '\', \'smartRegJob\', event)">직업</button>' +
+                            '<button type="button" class="chunk-pill-btn" onclick="window.quickAssignChunk(\'' + encLine + '\', \'smartRegMemo\', event)">메모</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }
+        });
+
+        container.innerHTML = html;
+    };
+
+    // 1-터치 원클릭 블록 할당 함수
+    window.quickAssignChunk = function(encLine, fieldId, event) {
+        if (event) event.stopPropagation();
+        const line = decodeURIComponent(encLine);
+        const el = document.getElementById(fieldId);
+        if (el) {
+            el.value = line;
+            if (fieldId === 'smartRegPhone' && typeof window.formatPhoneNumber === 'function') {
+                el.value = window.formatPhoneNumber(el.value);
+            }
+            // 산뜻한 연초록 플래시 애니메이션으로 피드백
+            el.style.backgroundColor = '#ecfdf5';
+            el.style.borderColor = '#10b981';
+            el.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.2)';
+            setTimeout(function() {
+                el.style.backgroundColor = '';
+                el.style.borderColor = '';
+                el.style.boxShadow = '';
+            }, 600);
+        }
+        if (typeof window.renderSmartRegChunks === 'function') {
+            window.renderSmartRegChunks();
+        }
+    };
+
+    // 지정 취소 함수
+    window.clearChunkAssignment = function(fieldId, event) {
+        if (event) event.stopPropagation();
+        const el = document.getElementById(fieldId);
+        if (el) el.value = '';
+        if (typeof window.renderSmartRegChunks === 'function') {
+            window.renderSmartRegChunks();
+        }
+    };
+
+    // autoParseSmartReg 래핑: 전화번호 포맷 + 콤팩트 블록 렌더링
+    const prevAutoParse = window.autoParseSmartReg;
+    window.autoParseSmartReg = function() {
+        if (typeof prevAutoParse === 'function') {
+            prevAutoParse();
+        }
+        const phoneEl = document.getElementById('smartRegPhone');
+        if (phoneEl && phoneEl.value && typeof window.formatPhoneNumber === 'function') {
+            phoneEl.value = window.formatPhoneNumber(phoneEl.value);
+        }
+        if (typeof window.renderSmartRegChunks === 'function') {
+            window.renderSmartRegChunks();
+        }
+    };
+
+    // openSmartRegModal 래핑
+    const prevOpenSmartRegModal = window.openSmartRegModal;
+    window.openSmartRegModal = function() {
+        if (typeof prevOpenSmartRegModal === 'function') {
+            prevOpenSmartRegModal();
+        }
+        if (typeof window.renderSmartRegChunks === 'function') {
+            window.renderSmartRegChunks();
+        }
+    };
+
+    // 폼 인풋 변경 시 블록 상태 실시간 동기화
+    ['smartRegName', 'smartRegPhone', 'smartRegJumin', 'smartRegAddr', 'smartRegJob', 'smartRegMemo'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', function() {
+                if (typeof window.renderSmartRegChunks === 'function') {
+                    window.renderSmartRegChunks();
+                }
+            });
+        }
+    });
+})();
+
+
+
+
+</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

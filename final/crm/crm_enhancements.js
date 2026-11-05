@@ -683,11 +683,13 @@ console.log("[CRM Modular] crm_enhancements.js 로드 완료 (구글알림정리
             if (batchBtn) batchBtn.style.display = 'inline-flex';
             
             let html = `
-                <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:14px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px;">
-                    <i class="fa-solid fa-triangle-exclamation" style="color:#d97706; font-size:20px; flex-shrink:0;"></i>
-                    <div style="font-size:13px; color:#92400e; line-height:1.5;">
+                <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:14px 16px; margin-bottom:16px; display:flex; align-items:flex-start; gap:12px;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#d97706; font-size:20px; flex-shrink:0; margin-top:2px;"></i>
+                    <div style="font-size:13px; color:#92400e; line-height:1.5; flex:1;">
                         전체 <strong>${window.globalCustomerData.length}명</strong> 중 <strong>${dirtyList.length}건</strong>의 비표준 데이터(앞 0 누락, 하이픈 미입력 등)가 발견되었습니다.<br>
-                        아래 미리보기를 확인하시고 하단 버튼을 클릭하시면 구글 시트에 즉시 덮어쓰기 업데이트됩니다.
+                        <div style="margin-top:6px; display:inline-flex; align-items:center; gap:6px; background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:700; border:1px solid #fcd34d;">
+                            <i class="fa-solid fa-pen-to-square"></i> [정제 후] 초록색/파란색 번호 칸을 클릭하여 원하는 번호로 직접 자유롭게 수정하실 수 있습니다!
+                        </div>
                     </div>
                 </div>
 
@@ -698,30 +700,74 @@ console.log("[CRM Modular] crm_enhancements.js 로드 완료 (구글알림정리
                                 <th style="padding:10px 12px; width:34px; text-align:center;">
                                     <input type="checkbox" id="cleanerMasterCheck" checked onchange="window.toggleAllCleanerChecks(this.checked)" style="width:15px; height:15px; cursor:pointer;">
                                 </th>
-                                <th style="padding:10px 12px; font-weight:700; color:#475569;">고객명 (번호)</th>
-                                <th style="padding:10px 12px; font-weight:700; color:#475569;">전화번호 정제 전 ➔ 정제 후</th>
-                                <th style="padding:10px 12px; font-weight:700; color:#475569;">주민번호 정제 전 ➔ 정제 후</th>
+                                <th style="padding:10px 12px; font-weight:700; color:#475569; width:130px;">고객명 (번호)</th>
+                                <th style="padding:10px 12px; font-weight:700; color:#475569;">전화번호 (정제 전 ➔ 정제 후 / 클릭하여 수정)</th>
+                                <th style="padding:10px 12px; font-weight:700; color:#475569;">주민번호 (정제 전 ➔ 정제 후 / 클릭하여 수정)</th>
                             </tr>
                         </thead>
                         <tbody>
             `;
 
             dirtyList.forEach((item, idx) => {
-                let phoneDiffHtml = '<span style="color:#94a3b8;">- (정상)</span>';
+                let phoneDiffHtml = '';
                 if (item.phoneNeedsFix) {
                     phoneDiffHtml = `
-                        <span style="color:#ef4444; text-decoration:line-through; font-family:monospace;">${item.origPhone || '(빈값)'}</span>
-                        <span style="margin:0 4px; color:#64748b;">➔</span>
-                        <span style="color:#10b981; font-weight:800; font-family:monospace;">${item.fixedPhone}</span>
+                        <div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <span style="color:#ef4444; text-decoration:line-through; font-family:monospace; font-size:11.5px;">${item.origPhone || '(빈값)'}</span>
+                            <span style="color:#64748b; font-size:11px;">➔</span>
+                            <div style="position:relative; display:inline-flex; align-items:center;">
+                                <input type="text" class="cleaner-input-phone" data-idx="${idx}" value="${item.fixedPhone}"
+                                       oninput="window.handleCleanerInputChange(this, '${idx}', 'phone')"
+                                       style="padding:4px 8px 4px 22px; border:1.5px solid #10b981; border-radius:6px; font-weight:800; font-family:monospace; color:#065f46; background:#ecfdf5; font-size:12.5px; width:130px; outline:none; transition:0.15s;"
+                                       onfocus="this.style.borderColor='#059669'; this.style.background='#ffffff'; this.style.boxShadow='0 0 0 2px rgba(16,185,129,0.2)';"
+                                       onblur="this.style.borderColor='#10b981'; this.style.background='#ecfdf5'; this.style.boxShadow='none';"
+                                       title="클릭하여 번호를 직접 수정할 수 있습니다" />
+                                <i class="fa-solid fa-pen" style="position:absolute; left:7px; font-size:9.5px; color:#10b981; pointer-events:none;"></i>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    phoneDiffHtml = `
+                        <div style="position:relative; display:inline-flex; align-items:center;">
+                            <input type="text" class="cleaner-input-phone" data-idx="${idx}" value="${item.origPhone || ''}"
+                                   oninput="window.handleCleanerInputChange(this, '${idx}', 'phone')"
+                                   style="padding:4px 8px 4px 22px; border:1px solid #cbd5e1; border-radius:6px; font-weight:600; font-family:monospace; color:#475569; background:#f8fafc; font-size:12px; width:130px; outline:none; transition:0.15s;"
+                                   onfocus="this.style.borderColor='#3b82f6'; this.style.background='#ffffff';"
+                                   onblur="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';"
+                                   title="클릭하여 번호를 직접 수정할 수 있습니다" />
+                            <i class="fa-solid fa-pen" style="position:absolute; left:7px; font-size:9.5px; color:#94a3b8; pointer-events:none;"></i>
+                        </div>
                     `;
                 }
 
-                let juminDiffHtml = '<span style="color:#94a3b8;">- (정상)</span>';
+                let juminDiffHtml = '';
                 if (item.juminNeedsFix) {
                     juminDiffHtml = `
-                        <span style="color:#ef4444; text-decoration:line-through; font-family:monospace;">${item.origJumin || '(빈값)'}</span>
-                        <span style="margin:0 4px; color:#64748b;">➔</span>
-                        <span style="color:#2563eb; font-weight:800; font-family:monospace;">${item.fixedJumin}</span>
+                        <div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <span style="color:#ef4444; text-decoration:line-through; font-family:monospace; font-size:11.5px;">${item.origJumin || '(빈값)'}</span>
+                            <span style="color:#64748b; font-size:11px;">➔</span>
+                            <div style="position:relative; display:inline-flex; align-items:center;">
+                                <input type="text" class="cleaner-input-jumin" data-idx="${idx}" value="${item.fixedJumin}"
+                                       oninput="window.handleCleanerInputChange(this, '${idx}', 'jumin')"
+                                       style="padding:4px 8px 4px 22px; border:1.5px solid #3b82f6; border-radius:6px; font-weight:800; font-family:monospace; color:#1d4ed8; background:#eff6ff; font-size:12.5px; width:140px; outline:none; transition:0.15s;"
+                                       onfocus="this.style.borderColor='#2563eb'; this.style.background='#ffffff'; this.style.boxShadow='0 0 0 2px rgba(59,130,246,0.2)';"
+                                       onblur="this.style.borderColor='#3b82f6'; this.style.background='#eff6ff'; this.style.boxShadow='none';"
+                                       title="클릭하여 주민번호를 직접 수정할 수 있습니다" />
+                                <i class="fa-solid fa-pen" style="position:absolute; left:7px; font-size:9.5px; color:#3b82f6; pointer-events:none;"></i>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    juminDiffHtml = `
+                        <div style="position:relative; display:inline-flex; align-items:center;">
+                            <input type="text" class="cleaner-input-jumin" data-idx="${idx}" value="${item.origJumin || ''}"
+                                   oninput="window.handleCleanerInputChange(this, '${idx}', 'jumin')"
+                                   style="padding:4px 8px 4px 22px; border:1px solid #cbd5e1; border-radius:6px; font-weight:600; font-family:monospace; color:#475569; background:#f8fafc; font-size:12px; width:140px; outline:none; transition:0.15s;"
+                                   onfocus="this.style.borderColor='#3b82f6'; this.style.background='#ffffff';"
+                                   onblur="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';"
+                                   title="클릭하여 주민번호를 직접 수정할 수 있습니다" />
+                            <i class="fa-solid fa-pen" style="position:absolute; left:7px; font-size:9.5px; color:#94a3b8; pointer-events:none;"></i>
+                        </div>
                     `;
                 }
 
@@ -789,7 +835,23 @@ console.log("[CRM Modular] crm_enhancements.js 로드 완료 (구글알림정리
 
         const selectedItems = checkedBoxes.map(cb => {
             const idx = parseInt(cb.getAttribute('data-idx'), 10);
-            return _currentDirtyList[idx];
+            const item = _currentDirtyList[idx];
+            if (!item) return null;
+
+            const pInput = document.querySelector(`.cleaner-input-phone[data-idx="${idx}"]`);
+            const jInput = document.querySelector(`.cleaner-input-jumin[data-idx="${idx}"]`);
+
+            if (pInput) {
+                const userPhone = pInput.value.trim();
+                item.fixedPhone = userPhone;
+                if (userPhone !== item.origPhone) item.phoneNeedsFix = true;
+            }
+            if (jInput) {
+                const userJumin = jInput.value.trim();
+                item.fixedJumin = userJumin;
+                if (userJumin !== item.origJumin) item.juminNeedsFix = true;
+            }
+            return item;
         }).filter(Boolean);
 
         const ok = confirm(`선택하신 ${selectedItems.length}명의 번호를 구글 시트에 표준 규격으로 일괄 업데이트하시겠습니까?\n\n• 전화번호: 010-XXXX-XXXX 형식 통일\n• 주민번호: XXXXXX-XXXXXXX 형식 통일`);

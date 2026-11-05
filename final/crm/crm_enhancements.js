@@ -276,10 +276,16 @@ window.showToastNotice = function(text) {
 // 10 & 11. renderListModal 및 updateQuickFilterCounts 고도화
 // ==============================================================
 (function() {
-    // 1. 대시보드 카운트 함수 고도화 (만기 지난 계약 제외 + 이달의 청구 뱃지 연동)
+    // 1. 대시보드 카운트 함수 고도화 (PC & 모바일 완벽 동기화 + 만기 당일 계산 + 이달의 청구 뱃지 연동)
     const origUpdateCounts = window.updateQuickFilterCounts;
     window.updateQuickFilterCounts = function() {
-        if (!window.globalCustomerData) return;
+        const rawData = (window.globalCustomerData && Array.isArray(window.globalCustomerData) && window.globalCustomerData.length > 0) 
+            ? window.globalCustomerData 
+            : ((typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData) && globalCustomerData.length > 0) 
+                ? globalCustomerData 
+                : (typeof window.getActiveCRMData === 'function' ? window.getActiveCRMData() : []));
+
+        if (!rawData || !Array.isArray(rawData)) return;
 
         let interest = 0;
         let consult = 0;
@@ -295,7 +301,7 @@ window.showToastNotice = function(text) {
         const currentDayStr = String(today.getDate()).padStart(2, '0');
         const currentMD = currentMonthStr + currentDayStr;
 
-        window.globalCustomerData.forEach(c => {
+        rawData.forEach(c => {
             let s = String(c['상태'] || c['고객상태'] || '');
             if (s.includes('관심') || s.includes('가망')) interest++;
             else if (s.includes('상담') || s.includes('설계')) consult++;
@@ -343,29 +349,72 @@ window.showToastNotice = function(text) {
                 if (diffDays >= 0 && diffDays <= 30) sangryung++;
             }
 
-            // 만기 도래 (Item 9: 지난 날짜 제외한 정확한 계산)
+            // 만기 도래 (Item 9: 당일 매칭)
             if (window.isExpiringCustomer(c)) expiry++;
 
             // 이달의 보험금 청구 (Item 11)
             if (window.isClaimCustomer(c)) claim++;
         });
 
-        // UI 엘리먼트 갱신
-        const setElText = (id, txt) => {
-            const el = document.getElementById(id);
-            if (el) el.innerText = txt;
+        // UI 엘리먼트 갱신 (PC 및 모바일 완벽 100% 동기화)
+        const total = rawData.length;
+
+        const setTxt = (sel, val) => {
+            document.querySelectorAll(sel).forEach(el => el.innerText = val);
         };
 
-        setElText('pipe-count-interest', interest);
-        setElText('pipe-count-consult', consult);
-        setElText('pipe-count-contract', contract);
-        setElText('pipe-count-care', care);
+        // 1. 전체 고객 수 (PC & Mobile)
+        setTxt('#qf-count-total, #qf-count-all', total + "명");
+        setTxt('.m-sync-total', total);
 
-        setElText('mini-badge-birth', birth + "명");
-        setElText('mini-badge-sangryung', sangryung + "명");
-        setElText('mini-badge-expiry', expiry + "명");
-        setElText('mini-badge-claim', claim + "명");
+        // 2. 파이프라인 (PC & Mobile)
+        setTxt('#pipe-count-interest, #qf-count-interest, #qf-interest', interest);
+        setTxt('#pipe-count-consult, #qf-count-consult', consult);
+        setTxt('#pipe-count-contract, #qf-count-contract, #qf-contract', contract);
+        setTxt('#pipe-count-care, #qf-count-care', care);
+
+        setTxt('.m-sync-interest', interest);
+        setTxt('.m-sync-consult', consult);
+        setTxt('.m-sync-contract', contract);
+        setTxt('.m-sync-care', care);
+
+        // 3. 오늘 케어 카드 (PC)
+        setTxt('#mini-badge-birth', birth + "명");
+        setTxt('#mini-badge-sangryung', sangryung + "명");
+        setTxt('#mini-badge-expiry', expiry + "명");
+        setTxt('#mini-badge-claim', claim + "명");
+
+        // 4. 오늘 케어 카드 (Mobile)
+        setTxt('.m-sync-birth', birth);
+        setTxt('.m-sync-sang', sangryung);
+        setTxt('.m-sync-expiry', expiry);
+        setTxt('.m-sync-claim', claim);
+
+        // 5. 터치인사이트 태그 카운트 (PC)
+        const insightCounts = {};
+        rawData.forEach(c => {
+            let tags = String(c['터치인사이트'] || '').split(',').map(t => t.trim()).filter(t => t);
+            tags.forEach(t => { 
+                insightCounts[t] = (insightCounts[t] || 0) + 1; 
+            });
+        });
+        const allTags = ['실손', '암', '치아', '간병', '치매', '후유장해', '자동차', '운전자', '바이크', '골프', '펫보험', '연금', '재테크', '종신', '정기', '생활비', '주택화재', '재물보험'];
+        allTags.forEach(tag => {
+            const el = document.getElementById('touch-count-' + tag);
+            if (el) el.innerText = insightCounts[tag] || 0;
+        });
+        Object.entries(insightCounts).forEach(([tag, count]) => {
+            const el = document.getElementById('touch-count-' + tag);
+            if (el) el.innerText = count;
+        });
     };
+
+    // 리사이즈 시에도 즉시 모바일/PC 카운트 재동기화
+    window.addEventListener('resize', function() {
+        if (typeof window.updateQuickFilterCounts === 'function') {
+            window.updateQuickFilterCounts();
+        }
+    });
 
     // 2. 모달 렌더링 함수 오버라이드
     window.renderListModal = function(filtered, fType, fVal) {

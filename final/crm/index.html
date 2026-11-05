@@ -4497,6 +4497,13 @@ function applyZeroCountsInitially() {
         el.innerText = total;
     });
 
+    if (total > 0) {
+        if (typeof window.updateQuickFilterCounts === 'function') {
+            window.updateQuickFilterCounts();
+        }
+        return;
+    }
+
     if (total === 0) {
         // Reset pipeline
         ['interest', 'consult', 'contract', 'care'].forEach(function(p) {
@@ -4525,6 +4532,9 @@ function applyZeroCountsInitially() {
 window.addEventListener('DOMContentLoaded', applyZeroCountsInitially);
 setTimeout(applyZeroCountsInitially, 50);
 setTimeout(applyZeroCountsInitially, 300);
+window.addEventListener('resize', function() {
+    if (typeof window.updateQuickFilterCounts === 'function') window.updateQuickFilterCounts();
+});
 
 // --- 스마트 간편 등록 (Smart Registration) 모바일 및 터치 인터랙션 고도화 ---
 (function initSmartRegUX() {

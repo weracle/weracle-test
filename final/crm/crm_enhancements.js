@@ -320,8 +320,10 @@ window.showToastNotice = function(text) {
                 let sm = parseInt(sMD.substring(0,2), 10) - 1;
                 let sd = parseInt(sMD.substring(2,4), 10);
                 let sDate = new Date(sy, sm, sd);
-                if (sDate < today) sDate.setFullYear(sy + 1);
-                let diffDays = Math.floor((sDate - today) / (1000 * 60 * 60 * 24));
+                const cleanToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                sDate.setHours(0,0,0,0);
+                if (sDate < cleanToday) sDate.setFullYear(sy + 1);
+                let diffDays = Math.round((sDate - cleanToday) / (1000 * 60 * 60 * 24));
                 if (diffDays >= 0 && diffDays <= 30) sangryung++;
             }
 
@@ -826,6 +828,20 @@ console.log("[CRM Modular] crm_enhancements.js 로드 완료 (구글알림정리
     };
 
     // 일괄 업데이트 실행
+    window.handleCleanerInputChange = function(inputEl, idx, type) {
+        const val = inputEl.value.trim();
+        const numIdx = parseInt(idx, 10);
+        if (!_currentDirtyList || !_currentDirtyList[numIdx]) return;
+        const item = _currentDirtyList[numIdx];
+        if (type === 'phone') {
+            item.fixedPhone = val;
+            item.phoneNeedsFix = (val !== item.origPhone);
+        } else if (type === 'jumin') {
+            item.fixedJumin = val;
+            item.juminNeedsFix = (val !== item.origJumin);
+        }
+    };
+
     window.executeDataCleaning = async function() {
         const checkedBoxes = Array.from(document.querySelectorAll('.cleaner-row-check:checked'));
         if (checkedBoxes.length === 0) {

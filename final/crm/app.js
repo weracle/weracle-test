@@ -3789,25 +3789,27 @@ function loadCustomerForFamily(task) {
     }
 }function openEditMode(custId, initialMode = 'edit') {
     window.disableInitFamilyTabs = false;
-const client = globalCustomerData.find(c => String(c["고객번호"] || c["사업자번호"]) === String(custId));
+    const activeData = (window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData;
+    const client = activeData.find(c => String(c["고객번호"] || c["사업자번호"]) === String(custId));
     if (!client) {
-        showCustomAlert(" 오류", "고객 정보를 찾을 수 없습니다.");
+        showCustomAlert("오류", "고객 정보를 찾을 수 없습니다.");
         return;
     }
-    isEditMode = true; window.isEditMode = true;
+    isEditMode = true; 
+    window.isEditMode = true;
     setTimeout(() => {
         const familyBtn = document.getElementById("familyToggleBtn");
         if(familyBtn) { 
             familyBtn.style.display = "inline-block"; 
             const curId = document.getElementById("base-cust-id").value;
-            if(curId.includes("-")) familyBtn.innerText = "가족에서 분리(독립) ";
-            else familyBtn.innerText = "가족으로 묶기 ";
+            if(curId.includes("-")) familyBtn.innerText = "가족에서 분리(독립)";
+            else familyBtn.innerText = "가족으로 묶기";
         }
         const delBtn = document.getElementById("deleteCrmBtn");
         if(delBtn) delBtn.style.display = "inline-block";
     }, 100);
-      if (typeof injectDynamicSaveButtons === 'function') injectDynamicSaveButtons();
-      document.body.classList.remove('mode-new');
+    if (typeof injectDynamicSaveButtons === 'function') injectDynamicSaveButtons();
+    document.body.classList.remove('mode-new');
     editTargetId = String(custId);
     if (typeof initFamilyTabs === 'function') initFamilyTabs(custId, client["고객명"] || "본인");
     const modal = document.getElementById("regModal");
@@ -3815,7 +3817,13 @@ const client = globalCustomerData.find(c => String(c["고객번호"] || c["사�
     const wiz = document.getElementById("regSetupWizard"); if(wiz) wiz.style.display = "none";
     if(form) form.style.display = "flex";
     const mw = document.querySelector(".sian-main-wrapper"); if(mw) mw.style.display = "flex";
-    form.reset(); const noPhoneCb = document.getElementById("no-phone-cb"); if (noPhoneCb) { noPhoneCb.checked = false; const bp = document.getElementById("base-phone"); if (bp) { bp.disabled = false; bp.required = true; } }
+    form.reset(); 
+    const noPhoneCb = document.getElementById("no-phone-cb"); 
+    if (noPhoneCb) { 
+        noPhoneCb.checked = false; 
+        const bp = document.getElementById("base-phone"); 
+        if (bp) { bp.disabled = false; bp.required = true; } 
+    }
     const insArea = document.getElementById("insurance-area");
     if (insArea) insArea.innerHTML = "";
     insCount = 0;
@@ -3835,10 +3843,20 @@ const client = globalCustomerData.find(c => String(c["고객번호"] || c["사�
         baseCustIdEl.title = "가족으로 편입하려면 기준 고객의 번호 뒤에 '-번호'를 붙여주세요. (예: 1-1)";
     }
 
-    // 일반 고객 매핑
+    // 1. 기본 고객 정보 매핑
     setFormVal("고객명", client["고객명"] || client["대표자명"] || "");
-      
-      setFormVal("상태", client["상태"] || "체결");
+    
+    // 상태 매핑 (select 옵션과 완벽 호환)
+    const statusSel = form.querySelector('[name="상태"]');
+    if (statusSel) {
+        const rawSt = String(client["상태"] || "").trim();
+        if (rawSt.includes("관심") || rawSt.includes("가망")) statusSel.value = "관심";
+        else if (rawSt.includes("상담") || rawSt.includes("설계")) statusSel.value = "상담";
+        else if (rawSt.includes("계약") || rawSt.includes("체결") || rawSt.includes("유지")) statusSel.value = "계약";
+        else if (rawSt.includes("케어") || rawSt.includes("집중") || rawSt.includes("VIP")) statusSel.value = "집중케어(VIP)";
+        else statusSel.value = rawSt || "계약";
+    }
+
     setFormVal("주민번호", formatJumin(client["주민번호"] || ""));
     setFormVal("나이", client["나이"] || "");
     setFormVal("성별", client["성별"] || "");
@@ -3847,105 +3865,107 @@ const client = globalCustomerData.find(c => String(c["고객번호"] || c["사�
     setFormVal("폰번호", formatPhone(client["폰번호"] || ""));
     setFormVal("생일", client["생일"] || "");
     setFormVal("상령일", client["상령일"] || client["상령월"] || "");
-      setFormVal("주소", client["주소"] || "");
-      if (document.getElementById("base-address")) document.getElementById("base-address").value = client["주소"] || client["대표주소"] || "";
-      if (document.getElementById("detail-address")) document.getElementById("detail-address").value = "";
-    setFormVal(client[""] || "");
+    setFormVal("주소", client["주소"] || "");
+    if (document.getElementById("base-address")) document.getElementById("base-address").value = client["주소"] || client["대표주소"] || "";
+    if (document.getElementById("detail-address")) document.getElementById("detail-address").value = "";
+    
     setFormVal("특이사항", client["특이사항"] || client["상담메모"] || "");
     setFormVal("가족사항", client["가족사항"] || "");
     setFormVal("반려동물", client["반려동물"] || "");
     setFormVal("동물이름", client["동물이름"] || "");
     setFormVal("코드", client["코드"] || "");
-    setFormVal("사업여부", client["사업여부"] || "");
-    setFormVal("운전여부", client["운전여부"] || "아니오");
+    setFormVal("사업여부", client["사업여부"] || "N");
 
-    // 자동차 체크박스 복원
+    // 2. 운전여부 및 차량용도 체크박스 완벽 복원
+    const isDriving = (client["운전여부"] === "예" || client["운전여부"] === "운전" || client["운전여부"] === "유");
+    const driveCb = document.getElementById("is-driving-cb");
+    if (driveCb) {
+        driveCb.checked = isDriving;
+        const driveFields = document.getElementById("driving-fields");
+        if (driveFields) {
+            driveFields.style.display = isDriving ? "flex" : "none";
+            driveFields.style.opacity = isDriving ? "1" : "0";
+        }
+    }
+    const rawCar = String(client["차량용도"] || client["차종류"] || "");
+    const cbPersonal = form.querySelector('[name="차량용도_개인용"]');
+    const cbBusiness = form.querySelector('[name="차량용도_업무용"]');
+    const cbCommercial = form.querySelector('[name="차량용도_영업용"]');
+    const cbBike = form.querySelector('[name="차량용도_바이크"]');
+    if (cbPersonal) cbPersonal.checked = (rawCar.includes("개인") || rawCar.includes("출퇴근"));
+    if (cbBusiness) cbBusiness.checked = rawCar.includes("업무");
+    if (cbCommercial) cbCommercial.checked = rawCar.includes("영업");
+    if (cbBike) cbBike.checked = rawCar.includes("바이크");
 
-    // 다중 보험 내역 복원 로직
-let list = getGlobalInsuranceList(client, false);
-// Parse legacy alril if first item doesn't have it
-let legacyAlril = null;
-if (client["알릴의무사항"]) {
-try {
-legacyAlril = typeof client["알릴의무사항"] === 'string' ? JSON.parse(client["알릴의무사항"]) : client["알릴의무사항"];
-} catch (e) {}
-}
-if (legacyAlril && list.length > 0 && (!list[0].알릴의무사항 || list[0].알릴의무사항.length === 0)) {
-const converted = [];
-if (legacyAlril.m3 === "예" || legacyAlril.m3_detail) {
-converted.push({ "병명": legacyAlril.m3_detail || "3개월 알릴의무", "시작일": "", "종료일": "", "병원": "", "치료": true, "재발": "X", "완치": "O" });
-}
-if (legacyAlril.y1 === "예" || legacyAlril.y1_detail) {
-converted.push({ "병명": legacyAlril.y1_detail || "1년 알릴의무", "시작일": "", "종료일": "", "병원": "", "치료": true, "재발": "X", "완치": "O" });
-}
-if (legacyAlril.y5 === "예" || legacyAlril.y5_detail) {
-converted.push({ "병명": legacyAlril.y5_detail || "5년 알릴의무", "시작일": "", "종료일": "", "병원": "", "치료": true, "재발": "X", "완치": "O" });
-}
-if (legacyAlril.disease === "예" || legacyAlril.disease_detail) {
-converted.push({ "병명": legacyAlril.disease_detail || "5대질병 알릴의무", "시작일": "", "종료일": "", "병원": "", "치료": true, "재발": "X", "완치": "O" });
-}
-if (converted.length > 0) {
-list[0].알릴의무사항 = converted;
-}
-}
+    // 반려동물 체크박스 및 필드 복원
+    const petCb = document.getElementById("has-pet-cb");
+    if (petCb) {
+        petCb.checked = !!(client["반려동물"] || client["동물이름"] || (client["반려동물"] === "유"));
+        const petFields = document.getElementById("pet-fields");
+        if (petFields) petFields.style.display = petCb.checked ? "flex" : "none";
+    }
 
-// 동적으로 보험 입력 카드 생성
-list.forEach(item => {
-addInsuranceFields(item);
-});
-
-setFormVal("가족사항", client["가족사항"]);
-      const petCb = document.getElementById("has-pet-cb");
-      if (petCb) {
-          petCb.checked = !!(client["반려동물"] || client["동물이름"] || client["코드"]);
-          const petFields = document.getElementById("pet-fields");
-          if (petFields) petFields.style.display = petCb.checked ? "flex" : "none";
-      }
-
-      const driveCb = document.getElementById("is-driving-cb");
-      if (driveCb) {
-          driveCb.checked = (client["운전여부"] === "예");
-          const driveFields = document.getElementById("driving-fields");
-          if (driveFields) driveFields.style.display = driveCb.checked ? "block" : "none";
-      }
-
-      setFormVal("반려동물", client["반려동물"]);
-      setFormVal("동물이름", client["동물이름"]);
-      setFormVal("코드", client["코드"]);
-      setFormVal("사업여부", client["사업여부"]);
-      setFormVal("운전여부", client["운전여부"] || "아니오");
-
-const carTypes = (client["차량용도"] || client["차종류"] || "").split(",").map(s => s.trim()).filter(Boolean);
-    const mappedCarTypes = carTypes.map(c => c === '개인' ? '개인용' : (c === '업무' ? '업무용' : c));
-    form.querySelectorAll("input[type='checkbox'][name^='차량용도_']").forEach(chk => {
-        chk.checked = mappedCarTypes.includes(chk.value);
+    // 3. 터치인사이트 다중 태그 체크박스 완벽 복원 (배열, 쉼표, 슬래시, JSON 모두 지원)
+    let rawInsight = client["터치인사이트"];
+    let insights = [];
+    if (Array.isArray(rawInsight)) {
+        insights = rawInsight.map(s => String(s).trim());
+    } else if (rawInsight) {
+        let clean = String(rawInsight).replace(/[\[\]"']/g, '');
+        insights = clean.split(/[,/]/).map(s => s.trim()).filter(Boolean);
+    }
+    document.querySelectorAll('.insight-pill input[type="checkbox"]').forEach(cb => {
+        cb.checked = insights.some(item => item === cb.value || item.includes(cb.value) || cb.value.includes(item));
     });
-setFormVal(client[""]);
-setFormVal("특이사항", client["특이사항"]);
+    const hiddenInsight = document.getElementById("form-insight-data");
+    if (hiddenInsight) {
+        const checkedPills = Array.from(document.querySelectorAll('.insight-pill input[type="checkbox"]:checked')).map(el => el.value);
+        hiddenInsight.value = checkedPills.join(", ");
+    }
 
-          const insightData = client["터치인사이트"];
-      let insights = [];
-      if (Array.isArray(insightData)) {
-          insights = insightData;
-      } else if (typeof insightData === "string") {
-          insights = insightData.split(",").map(s => s.trim()).filter(Boolean);
-      }
-      document.querySelectorAll('.insight-pill input[type="checkbox"]').forEach(cb => {
-          cb.checked = insights.includes(cb.value);
-      });
-      if (typeof window.syncInsights === 'function') {
-          window.syncInsights();
-      } else {
-          const hiddenInsight = document.getElementById("form-insight-data");
-          if(hiddenInsight) hiddenInsight.value = insights.join(", ");
-      }
-      currentStep = 1;
-showStep(1);
-window.currentFormMode = initialMode;
-if(typeof toggleReadonlyState === 'function') toggleReadonlyState();
+    // 4. 가입내역 텍스트에리어 복원
+    const gainVal = typeof client["가입내역"] === "string" ? client["가입내역"] : (Array.isArray(client["가입내역"]) ? JSON.stringify(client["가입내역"]) : "");
+    setFormVal("가입내역", gainVal);
 
-      modal.style.display = "flex"; setTimeout(() => modal.classList.add("active"), 10);
+    // 5. 다중 보험 내역 카드 복원 로직
+    let list = getGlobalInsuranceList(client, false);
+    let legacyAlril = null;
+    if (client["알릴의무사항"]) {
+        try {
+            legacyAlril = typeof client["알릴의무사항"] === 'string' ? JSON.parse(client["알릴의무사항"]) : client["알릴의무사항"];
+        } catch (e) {}
+    }
+    if (legacyAlril && list.length > 0 && (!list[0].알릴의무사항 || list[0].알릴의무사항.length === 0)) {
+        const converted = [];
+        if (legacyAlril.m3 === "예" || legacyAlril.m3_detail) {
+            converted.push({ "병명": legacyAlril.m3_detail || "3개월 알릴의무", "시작일": "", "종료일": "", "병원": "", "치료": true, "재발": "X", "완치": "O" });
+        }
+        if (legacyAlril.y1 === "예" || legacyAlril.y1_detail) {
+            converted.push({ "병명": legacyAlril.y1_detail || "1년 알릴의무", "시작일": "", "종료일": "", "병원": "", "치료": true, "재발": "X", "완치": "O" });
+        }
+        if (legacyAlril.y5 === "예" || legacyAlril.y5_detail) {
+            converted.push({ "병명": legacyAlril.y5_detail || "5년 알릴의무", "시작일": "", "종료일": "", "병원": "", "치료": true, "재발": "X", "완치": "O" });
+        }
+        if (legacyAlril.disease === "예" || legacyAlril.disease_detail) {
+            converted.push({ "병명": legacyAlril.disease_detail || "5대질병 알릴의무", "시작일": "", "종료일": "", "병원": "", "치료": true, "재발": "X", "완치": "O" });
+        }
+        if (converted.length > 0) {
+            list[0].알릴의무사항 = converted;
+        }
+    }
 
+    // 동적으로 보험 입력 카드 생성
+    list.forEach(item => {
+        addInsuranceFields(item);
+    });
+
+    currentStep = 1;
+    showStep(1);
+    window.currentFormMode = initialMode;
+    if(typeof toggleReadonlyState === 'function') toggleReadonlyState();
+
+    modal.style.display = "flex"; 
+    setTimeout(() => modal.classList.add("active"), 10);
 }
 function closeRegModal() { const m = document.getElementById("regModal"); if(m) m.classList.remove("active"); setTimeout(() => { if(m) m.style.display = "none"; }, 300); }
 function showStep(step) {
@@ -4302,137 +4322,70 @@ const baseAddr = formData.get("기본주소") || "";
 const detailAddr = formData.get("상세주소입력") || "";
 const fullAddress = baseAddr ? (baseAddr + (detailAddr ? " " + detailAddr : "")) : (formData.get("주소") || "");
 
+const isDriveChecked = (form.querySelector('#is-driving-cb') && form.querySelector('#is-driving-cb').checked);
+const carTypesSelected = [];
+if (form.querySelector('[name="차량용도_개인용"]')?.checked) carTypesSelected.push("개인용");
+if (form.querySelector('[name="차량용도_업무용"]')?.checked) carTypesSelected.push("업무용");
+if (form.querySelector('[name="차량용도_영업용"]')?.checked) carTypesSelected.push("영업용");
+if (form.querySelector('[name="차량용도_바이크"]')?.checked) carTypesSelected.push("바이크");
+
+const checkedPillVals = Array.from(document.querySelectorAll('.insight-pill input[type="checkbox"]:checked')).map(el => el.value);
+const touchInsightVal = (checkedPillVals.length > 0)
+    ? checkedPillVals.join(", ")
+    : (formData.get("터치인사이트") || (existingClient ? (existingClient["터치인사이트"] || "") : ""));
+
+let normalizedStatus = formData.get("상태") || (existingClient ? existingClient["상태"] : "상담고객");
+if (normalizedStatus === "관심") normalizedStatus = "관심고객";
+else if (normalizedStatus === "상담") normalizedStatus = "상담고객";
+else if (normalizedStatus === "계약") normalizedStatus = "체결고객";
+else if (normalizedStatus.includes("케어") || normalizedStatus.includes("집중")) normalizedStatus = "케어고객";
+
+let finalGainHistory = "";
+if (insList && insList.length > 0 && (insList[0].보험사명 || insList[0].차_보험사명 || insList[0].상품명 || insList.length > 1)) {
+    finalGainHistory = JSON.stringify(insList);
+} else {
+    finalGainHistory = formData.get("가입내역") || (existingClient ? (existingClient["가입내역"] || "") : "");
+}
+
 const clientObj = {
     "고객번호": document.getElementById("base-cust-id").value,
-    "등록일": existingClient ? (existingClient["등록일"] || new Date().toISOString().substring(0, 10)) : new Date().toISOString().substring(0, 10),
-    "UID": existingClient && existingClient["UID"] ? existingClient["UID"] : "UID_" + new Date().getTime() + "_" + Math.floor(Math.random()*1000),
-    "사업여부": formData.get("사업여부") || "",
-    "고객명": formData.get("고객명") || "무명고객",
-    "상태": formData.get("상태"),
-    "주민번호": formatJumin(formData.get("주민번호") || ""),
-    "나이": formData.get("나이"),
-    "성별": formData.get("성별"),
-    "직업": formData.get("직업"),
-    "폰번호": formatPhone(formData.get("폰번호") || ""),
+    "고객명": formData.get("고객명") || (existingClient ? existingClient["고객명"] : "무명고객"),
+    "상태": normalizedStatus,
+    "주민번호": formatJumin(formData.get("주민번호") || (existingClient ? existingClient["주민번호"] : "")),
+    "나이": formData.get("나이") || (existingClient ? existingClient["나이"] : ""),
+    "성별": formData.get("성별") || (existingClient ? existingClient["성별"] : ""),
+    "생일": formData.get("생일") || (existingClient ? existingClient["생일"] : ""),
+    "상령일": formData.get("상령일") || (existingClient ? existingClient["상령일"] : ""),
+    "폰번호": formatPhone(formData.get("폰번호") || (existingClient ? existingClient["폰번호"] : "")),
+    "직업": formData.get("직업") || (existingClient ? existingClient["직업"] : ""),
+    "상세업무": formData.get("상세업무") || (existingClient ? existingClient["상세업무"] : ""),
+    "주소": fullAddress || (existingClient ? existingClient["주소"] : ""),
+    "운전여부": isDriveChecked ? "운전" : "비운전",
+    "차량용도": carTypesSelected.length > 0 ? carTypesSelected.join(", ") : (isDriveChecked && existingClient ? (existingClient["차량용도"] || "-") : "-"),
+    "반려동물": formData.get("반려동물") || (existingClient ? existingClient["반려동물"] : ""),
+    "동물이름": formData.get("동물이름") || (existingClient ? existingClient["동물이름"] : ""),
+    "가족사항": formData.get("가족사항") || (existingClient ? existingClient["가족사항"] : ""),
+    "코드": formData.get("코드") || (existingClient ? existingClient["코드"] : ""),
+    "터치인사이트": touchInsightVal,
+    "특이사항": formData.get("특이사항") || (existingClient ? existingClient["특이사항"] : ""),
+    "가입내역": finalGainHistory,
+    "등록일": (existingClient && existingClient["등록일"]) ? existingClient["등록일"] : new Date().toISOString().substring(0, 10),
+    "사업여부": formData.get("사업여부") || (existingClient ? existingClient["사업여부"] : "N"),
+    "UID": (existingClient && existingClient["UID"]) ? existingClient["UID"] : "UID_" + new Date().getTime() + "_" + Math.floor(Math.random()*1000),
 
-    "생일": formData.get("생일"),
-    "상령일": formData.get("상령일"),
-    "주소": fullAddress,
-
-// 대표 보험 정보 컬럼 세팅 (가독성 보장)
-  "피보험자": firstIns.피보험자 || firstIns.차_피보험자 || (existingClient ? existingClient["피보험자"] : ""),
-  "계약자": firstIns.계약자 || firstIns.차_계약자 || (existingClient ? existingClient["계약자"] : ""),
-  "보험사명": firstIns.보험사명 || firstIns.차_보험사명 || firstIns.company || "",
-  "상품명": (firstIns.보험종류 === "자동차보험" ? (firstIns.차종 || firstIns.차량번호 || "자동차보험") : (firstIns.상품명 || firstIns.product || "")),
-  "가입내역": (insList.length > 0 && (insList[0].보험사명 || insList[0].차_보험사명 || insList[0].상품명 || insList[0].차종 || (insList[0].알릴의무사항 && insList[0].알릴의무사항.length > 0) || insList.length > 1)) ? JSON.stringify(insList) : (formData.get("가입내역") || ""), 
-  "체결일": firstIns.체결일 || firstIns.책임개시일 || firstIns.갱신일자 || firstIns.date || "",
-  "보험료": firstIns.보험료 || firstIns.차_보험료 || firstIns.premium || "",
-  "결제일": firstIns.결제일 || firstIns.payDate || (existingClient ? existingClient["결제일"] : ""),
-  "납입기간": firstIns.납입기간 || firstIns.payPeriod || (existingClient ? existingClient["납입기간"] : ""),
-  "갱신일": firstIns.갱신일 || firstIns.갱신일자 || firstIns.expireDate || (existingClient ? existingClient["갱신일"] : ""),
-  "결제방식": firstIns.결제방식 || firstIns.차_결제방식 || (firstIns.payment === "카드" || firstIns.payment === "신용카드" ? "카드" : "자동이체"),
-  "결제정보": firstIns.결제정보 || firstIns.차_결제정보 || (existingClient ? existingClient["결제정보"] : ""),
-  "보험1_종류": insList[0] ? (insList[0].보험분류 || insList[0].type || insList[0].보험종류 || "") : "",
-  "보험1_사명": insList[0] ? (insList[0].보험사명 || insList[0].차_보험사명 || insList[0].company || "") : "",
-  "보험1_상품명": insList[0] ? (insList[0].보험종류 === "자동차보험" ? (insList[0].차종 || insList[0].차량번호 || "자동차보험") : (insList[0].상품명 || insList[0].product || "")) : "",
-"보험1_가입내역": insList[0] ? JSON.stringify(insList[0].가입내역 || insList[0].details || "") : "",
-"보험1_체결일": insList[0] ? (insList[0].체결일 || insList[0].책임개시일 || insList[0].date || "") : "",
-"보험1_만기일": insList[0] ? (insList[0].만기일 || "") : "",
-"보험1_보험료": insList[0] ? (insList[0].보험료 || insList[0].차_보험료 || insList[0].premium || "") : "",
-"보험1_결제일": insList[0] ? (insList[0].결제일 || insList[0].payDate || "") : "",
-"보험1_납입기간": insList[0] ? (insList[0].납입기간 || insList[0].payPeriod || "") : "",
-"보험1_갱신일": insList[0] ? (insList[0].갱신일 || insList[0].expireDate || "") : "",
-"보험1_결제방식": insList[0] ? (insList[0].결제방식 || (insList[0].payment === "카드" || insList[0].payment === "신용카드" ? "카드" : "자동이체")) : "",
-"보험1_결제정보": insList[0] ? (insList[0].결제정보 || "") : "",
-"보험1_차종": insList[0] ? (insList[0].차종 || "") : "",
-"보험1_차량번호": insList[0] ? (insList[0].차량번호 || "") : "",
-"보험1_차량용도": insList[0] ? (insList[0].차량용도 || "") : "",
-"보험1_운전자특약": insList[0] ? (insList[0].운전자특약 || "") : "",
-"보험1_연령특약": insList[0] ? (insList[0].연령특약 || "") : "",
-"보험1_다이렉트여부": insList[0] ? (insList[0].다이렉트여부 || "") : "",
-"보험2_종류": insList[1] ? (insList[1].보험분류 || insList[1].type || insList[1].보험종류 || "") : "",
-"보험2_사명": insList[1] ? (insList[1].보험사명 || insList[1].차_보험사명 || insList[1].company || "") : "",
-"보험2_상품명": insList[1] ? (insList[1].상품명 || insList[1].product || "") : "",
-"보험2_가입내역": insList[1] ? JSON.stringify(insList[1].가입내역 || insList[1].details || "") : "",
-"보험2_체결일": insList[1] ? (insList[1].체결일 || insList[1].책임개시일 || insList[1].date || "") : "",
-"보험2_만기일": insList[1] ? (insList[1].만기일 || "") : "",
-"보험2_보험료": insList[1] ? (insList[1].보험료 || insList[1].차_보험료 || insList[1].premium || "") : "",
-"보험2_결제일": insList[1] ? (insList[1].결제일 || insList[1].payDate || "") : "",
-"보험2_납입기간": insList[1] ? (insList[1].납입기간 || insList[1].payPeriod || "") : "",
-"보험2_갱신일": insList[1] ? (insList[1].갱신일 || insList[1].expireDate || "") : "",
-"보험2_결제방식": insList[1] ? (insList[1].결제방식 || (insList[1].payment === "카드" || insList[1].payment === "신용카드" ? "카드" : "자동이체")) : "",
-"보험2_결제정보": insList[1] ? (insList[1].결제정보 || "") : "",
-"보험2_차종": insList[1] ? (insList[1].차종 || "") : "",
-"보험2_차량번호": insList[1] ? (insList[1].차량번호 || "") : "",
-"보험2_차량용도": insList[1] ? (insList[1].차량용도 || "") : "",
-"보험2_운전자특약": insList[1] ? (insList[1].운전자특약 || "") : "",
-"보험2_연령특약": insList[1] ? (insList[1].연령특약 || "") : "",
-"보험2_다이렉트여부": insList[1] ? (insList[1].다이렉트여부 || "") : "",
-"보험3_종류": insList[2] ? (insList[2].보험분류 || insList[2].type || insList[2].보험종류 || "") : "",
-"보험3_사명": insList[2] ? (insList[2].보험사명 || insList[2].차_보험사명 || insList[2].company || "") : "",
-"보험3_상품명": insList[2] ? (insList[2].상품명 || insList[2].product || "") : "",
-"보험3_가입내역": insList[2] ? JSON.stringify(insList[2].가입내역 || insList[2].details || "") : "",
-"보험3_체결일": insList[2] ? (insList[2].체결일 || insList[2].책임개시일 || insList[2].date || "") : "",
-"보험3_만기일": insList[2] ? (insList[2].만기일 || "") : "",
-"보험3_보험료": insList[2] ? (insList[2].보험료 || insList[2].차_보험료 || insList[2].premium || "") : "",
-"보험3_결제일": insList[2] ? (insList[2].결제일 || insList[2].payDate || "") : "",
-"보험3_납입기간": insList[2] ? (insList[2].납입기간 || insList[2].payPeriod || "") : "",
-"보험3_갱신일": insList[2] ? (insList[2].갱신일 || insList[2].expireDate || "") : "",
-"보험3_결제방식": insList[2] ? (insList[2].결제방식 || (insList[2].payment === "카드" || insList[2].payment === "신용카드" ? "카드" : "자동이체")) : "",
-"보험3_결제정보": insList[2] ? (insList[2].결제정보 || "") : "",
-"보험3_차종": insList[2] ? (insList[2].차종 || "") : "",
-"보험3_차량번호": insList[2] ? (insList[2].차량번호 || "") : "",
-"보험3_차량용도": insList[2] ? (insList[2].차량용도 || "") : "",
-"보험3_운전자특약": insList[2] ? (insList[2].운전자특약 || "") : "",
-"보험3_연령특약": insList[2] ? (insList[2].연령특약 || "") : "",
-"보험3_다이렉트여부": insList[2] ? (insList[2].다이렉트여부 || "") : "",
-"보험4_종류": insList[3] ? (insList[3].보험분류 || insList[3].type || insList[3].보험종류 || "") : "",
-"보험4_사명": insList[3] ? (insList[3].보험사명 || insList[3].차_보험사명 || insList[3].company || "") : "",
-"보험4_상품명": insList[3] ? (insList[3].상품명 || insList[3].product || "") : "",
-"보험4_가입내역": insList[3] ? JSON.stringify(insList[3].가입내역 || insList[3].details || "") : "",
-"보험4_체결일": insList[3] ? (insList[3].체결일 || insList[3].책임개시일 || insList[3].date || "") : "",
-"보험4_만기일": insList[3] ? (insList[3].만기일 || "") : "",
-"보험4_보험료": insList[3] ? (insList[3].보험료 || insList[3].차_보험료 || insList[3].premium || "") : "",
-"보험4_결제일": insList[3] ? (insList[3].결제일 || insList[3].payDate || "") : "",
-"보험4_납입기간": insList[3] ? (insList[3].납입기간 || insList[3].payPeriod || "") : "",
-"보험4_갱신일": insList[3] ? (insList[3].갱신일 || insList[3].expireDate || "") : "",
-"보험4_결제방식": insList[3] ? (insList[3].결제방식 || (insList[3].payment === "카드" || insList[3].payment === "신용카드" ? "카드" : "자동이체")) : "",
-"보험4_결제정보": insList[3] ? (insList[3].결제정보 || "") : "",
-"보험4_차종": insList[3] ? (insList[3].차종 || "") : "",
-"보험4_차량번호": insList[3] ? (insList[3].차량번호 || "") : "",
-"보험4_차량용도": insList[3] ? (insList[3].차량용도 || "") : "",
-"보험4_운전자특약": insList[3] ? (insList[3].운전자특약 || "") : "",
-"보험4_연령특약": insList[3] ? (insList[3].연령특약 || "") : "",
-"보험4_다이렉트여부": insList[3] ? (insList[3].다이렉트여부 || "") : "",
-"보험5_종류": insList[4] ? (insList[4].보험분류 || insList[4].type || insList[4].보험종류 || "") : "",
-"보험5_사명": insList[4] ? (insList[4].보험사명 || insList[4].차_보험사명 || insList[4].company || "") : "",
-"보험5_상품명": insList[4] ? (insList[4].상품명 || insList[4].product || "") : "",
-"보험5_가입내역": insList[4] ? JSON.stringify(insList[4].가입내역 || insList[4].details || "") : "",
-"보험5_체결일": insList[4] ? (insList[4].체결일 || insList[4].책임개시일 || insList[4].date || "") : "",
-"보험5_만기일": insList[4] ? (insList[4].만기일 || "") : "",
-"보험5_보험료": insList[4] ? (insList[4].보험료 || insList[4].차_보험료 || insList[4].premium || "") : "",
-"보험5_결제일": insList[4] ? (insList[4].결제일 || insList[4].payDate || "") : "",
-"보험5_납입기간": insList[4] ? (insList[4].납입기간 || insList[4].payPeriod || "") : "",
-"보험5_갱신일": insList[4] ? (insList[4].갱신일 || insList[4].expireDate || "") : "",
-"보험5_결제방식": insList[4] ? (insList[4].결제방식 || (insList[4].payment === "카드" || insList[4].payment === "신용카드" ? "카드" : "자동이체")) : "",
-"보험5_결제정보": insList[4] ? (insList[4].결제정보 || "") : "",
-
-"알릴의무사항": firstInsAlrilText,
-"가족사항": formData.get("가족사항"),
-"반려동물": formData.get("반려동물"),
-"동물이름": formData.get("동물이름"),
-"알릴의무사항": firstInsAlrilText,
-"가족사항": formData.get("가족사항"),
-"반려동물": formData.get("반려동물"),
-"동물이름": formData.get("동물이름"),
-"코드": formData.get("코드"),
-"운전여부": formData.get("운전여부"),
-"차량용도": carTypes.join(","),
-"": formData.get(""),
-"상세업무": formData.get("상세업무") || "",
-"특이사항": formData.get("특이사항") || " ",
-
-"터치인사이트": formData.get("터치인사이트") || ""
+    // 대표 보험 정보 컬럼 호환
+    "피보험자": firstIns.피보험자 || firstIns.차_피보험자 || (existingClient ? existingClient["피보험자"] : ""),
+    "계약자": firstIns.계약자 || firstIns.차_계약자 || (existingClient ? existingClient["계약자"] : ""),
+    "보험사명": firstIns.보험사명 || firstIns.차_보험사명 || firstIns.company || "",
+    "상품명": (firstIns.보험종류 === "자동차보험" ? (firstIns.차종 || firstIns.차량번호 || "자동차보험") : (firstIns.상품명 || firstIns.product || "")),
+    "체결일": firstIns.체결일 || firstIns.책임개시일 || firstIns.갱신일자 || firstIns.date || "",
+    "보험료": firstIns.보험료 || firstIns.차_보험료 || firstIns.premium || "",
+    "결제일": firstIns.결제일 || firstIns.payDate || (existingClient ? existingClient["결제일"] : ""),
+    "납입기간": firstIns.납입기간 || firstIns.payPeriod || (existingClient ? existingClient["납입기간"] : ""),
+    "갱신일": firstIns.갱신일 || firstIns.갱신일자 || firstIns.expireDate || (existingClient ? existingClient["갱신일"] : ""),
+    "결제방식": firstIns.결제방식 || firstIns.차_결제방식 || (firstIns.payment === "카드" || firstIns.payment === "신용카드" ? "카드" : "자동이체"),
+    "결제정보": firstIns.결제정보 || firstIns.차_결제정보 || (existingClient ? existingClient["결제정보"] : ""),
+    "알릴의무사항": firstInsAlrilText
 };
 return await saveClientToServer(clientObj, typeof insList !== 'undefined' ? insList : []);
 }
@@ -7176,7 +7129,7 @@ window.updateDashboardStats = function() {
         if (cStatus.includes('\uAD00\uC2EC')) cntGwan++;
         else if (cStatus.includes('\uC0C1\uB2F4')) cntSang++;
         else if (cStatus.includes('\uACC4\uC57D') || cStatus.includes('\uCCB4\uACB0') || cStatus.includes('\uC720\uC9C0')) cntChe++;
-        else if (cStatus.includes('\uC9D1\uC911')) cntJip++;
+        else if (cStatus.includes('\uC9D1\uC911') || cStatus.includes('케어')) cntJip++;
         
         const birth = String(client['\uC0DD\uC77C'] || '');
         if (birth.includes('-' + currentMonth + '-') || birth.substring(2,4) === currentMonth || birth.substring(4,6) === currentMonth || birth.startsWith(currentMonth)) cntBirth++;
@@ -7440,7 +7393,8 @@ window.searchInsurance = function() {
     const comp = document.getElementById('ins-comp-select').value;
     if(!comp) return;
     
-    let filtered = [...globalCustomerData];
+    const activeData = (window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData;
+        let filtered = [...activeData];
     filtered = filtered.filter(c => {
         try {
             if (Array.isArray(c['가입내역'])) {
@@ -8054,8 +8008,10 @@ window.updateQuickFilterCounts = function() {
             let sm = parseInt(sMD.substring(0,2)) - 1;
             let sd = parseInt(sMD.substring(2,4));
             let sDate = new Date(sy, sm, sd);
-            if (sDate < today) sDate.setFullYear(sy + 1);
-            let diffDays = Math.floor((sDate - today) / (1000 * 60 * 60 * 24));
+            const cleanToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            sDate.setHours(0,0,0,0);
+            if (sDate < cleanToday) sDate.setFullYear(sy + 1);
+            let diffDays = Math.round((sDate - cleanToday) / (1000 * 60 * 60 * 24));
             if (diffDays >= 0 && diffDays <= 30) sangryung++;
         }
         
@@ -8122,7 +8078,8 @@ window.addEventListener('message', function(e) {
         activeFilters.forEach(b => b.classList.remove('active'));
         window.currentQuickFilter = '';
         
-        let filtered = [...globalCustomerData];
+        const activeData = (window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData;
+        let filtered = [...activeData];
         
                 if (fType === 'status') {
             filtered = filtered.filter(c => {
@@ -8420,6 +8377,10 @@ window.renderListModal = function(filtered, fType, fVal) {
     body.innerHTML = tbHtml;
     if (title) title.innerHTML = "<i class='fa-solid fa-list' style='color:var(--primary);'></i> " + titleStr;
     
+    // Also render mobile cards if function exists
+    if (typeof window.renderMobileCustomerCards === 'function') {
+        try { window.renderMobileCustomerCards(filtered, fType, fVal); } catch(e){}
+    }
     const listModal = document.getElementById('listModal');
     if (listModal) {
         listModal.style.display = 'flex';

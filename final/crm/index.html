@@ -3672,8 +3672,9 @@ window.isSangryungCustomer = function(c) {
         let sm = parseInt(sMD.substring(0,2), 10) - 1;
         let sd = parseInt(sMD.substring(2,4), 10);
         let sDate = new Date(sy, sm, sd);
+        sDate.setHours(0,0,0,0);
         if (sDate < today) sDate.setFullYear(sy + 1);
-        let diffDays = Math.floor((sDate - today) / (1000 * 60 * 60 * 24));
+        let diffDays = Math.round((sDate - today) / (1000 * 60 * 60 * 24));
         return (diffDays >= 0 && diffDays <= 30);
     }
     return false;

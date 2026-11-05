@@ -523,3 +523,349 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log("[CRM Modular] crm_enhancements.js 로드 완료 (구글알림정리, 만기계산보정, 파이프라인원클릭, 청구리스트)");
+
+
+
+// ==============================================================
+// 5. [신규] 고객 데이터 표준화 & 1-클릭 정제 도구 (Item 13 & User Request)
+// ==============================================================
+(function initDataCleaner() {
+    function colIndexToLetter(colIdx) {
+        let letter = '';
+        while (colIdx >= 0) {
+            let temp = colIdx % 26;
+            letter = String.fromCharCode(temp + 65) + letter;
+            colIdx = Math.floor(colIdx / 26) - 1;
+        }
+        return letter;
+    }
+
+    // 비표준 번호 검출 스캐너
+    window.scanNonStandardCustomerData = function() {
+        const list = window.globalCustomerData || [];
+        const dirtyList = [];
+        
+        list.forEach((c, index) => {
+            const origPhone = String(c['폰번호'] || c['연락처'] || c['전화번호'] || '').trim();
+            const origJumin = String(c['주민번호'] || c['대표자주민번호'] || '').trim();
+            
+            let fixedPhone = origPhone;
+            let phoneNeedsFix = false;
+            if (origPhone && origPhone !== '폰없음') {
+                fixedPhone = window.formatPhone ? window.formatPhone(origPhone) : origPhone;
+                if (fixedPhone !== origPhone) {
+                    phoneNeedsFix = true;
+                }
+            }
+            
+            let fixedJumin = origJumin;
+            let juminNeedsFix = false;
+            if (origJumin) {
+                fixedJumin = window.formatJumin ? window.formatJumin(origJumin) : origJumin;
+                if (fixedJumin !== origJumin) {
+                    juminNeedsFix = true;
+                }
+            }
+            
+            if (phoneNeedsFix || juminNeedsFix) {
+                dirtyList.push({
+                    index,
+                    rowNumber: c.rowNumber,
+                    sheetName: c.sheetName || window.targetSheetName || 'weraclecrm',
+                    id: c['고객번호'] || c['사업자번호'] || c['ID'] || (index + 1),
+                    name: c['고객명'] || c['대표자명'] || '고객',
+                    status: c['상태'] || c['진행상태'] || '고객',
+                    origPhone,
+                    fixedPhone,
+                    phoneNeedsFix,
+                    origJumin,
+                    fixedJumin,
+                    juminNeedsFix
+                });
+            }
+        });
+        return dirtyList;
+    };
+
+    // 모달 DOM 동적 생성
+    function ensureCleanerModalDom() {
+        let modal = document.getElementById('dataCleanerModal');
+        if (modal) return modal;
+
+        modal = document.createElement('div');
+        modal.id = 'dataCleanerModal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); z-index:999999; display:none; justify-content:center; align-items:center; padding:16px; box-sizing:border-box; backdrop-filter:blur(4px);';
+        
+        modal.innerHTML = `
+            <div style="background:#ffffff; border-radius:18px; width:100%; max-width:780px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); overflow:hidden; border:1px solid #e2e8f0; animation: cleanerFadeIn 0.2s ease;">
+                <!-- Header -->
+                <div style="padding:20px 24px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; background:#ffffff;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:36px; height:36px; border-radius:10px; background:#eff6ff; color:#3b82f6; display:flex; align-items:center; justify-content:center; font-size:18px;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin:0; font-size:17px; font-weight:800; color:#0f172a;">고객 번호(전화·주민) 표준화 정제 센터</h3>
+                            <p style="margin:2px 0 0 0; font-size:12px; color:#64748b;">구글 시트에 등록된 데이터의 하이픈 누락 및 0 빠짐 번호를 자동 보정합니다.</p>
+                        </div>
+                    </div>
+                    <button onclick="window.closeDataCleanerModal()" style="background:#f1f5f9; border:none; width:32px; height:32px; border-radius:8px; cursor:pointer; color:#64748b; font-size:15px; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Body (Scrollable) -->
+                <div id="cleanerModalBody" style="padding:20px 24px; overflow-y:auto; flex:1; background:#f8fafc;">
+                    <!-- Injected dynamically -->
+                </div>
+
+                <!-- Footer -->
+                <div id="cleanerModalFooter" style="padding:16px 24px; border-top:1px solid #e2e8f0; background:#ffffff; display:flex; justify-content:space-between; align-items:center;">
+                    <div id="cleanerSelectCountText" style="font-size:13px; font-weight:700; color:#475569;">선택 0건</div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="window.closeDataCleanerModal()" style="padding:10px 18px; border-radius:10px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:700; font-size:13px; cursor:pointer;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">닫기</button>
+                        <button id="cleanerBatchBtn" onclick="window.executeDataCleaning()" style="padding:10px 22px; border-radius:10px; background:#3b82f6; color:#ffffff; border:none; font-weight:800; font-size:13.5px; cursor:pointer; box-shadow:0 2px 6px rgba(59,130,246,0.3); display:flex; align-items:center; gap:8px;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                            <i class="fa-solid fa-bolt"></i> 구글 시트 일괄 자동 수정
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // CSS animation
+        if (!document.getElementById('cleanerModalStyle')) {
+            const st = document.createElement('style');
+            st.id = 'cleanerModalStyle';
+            st.innerHTML = `
+                @keyframes cleanerFadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+                .cleaner-check:checked { accent-color: #3b82f6; }
+            `;
+            document.head.appendChild(st);
+        }
+
+        document.body.appendChild(modal);
+        return modal;
+    }
+
+    let _currentDirtyList = [];
+
+    // 모달 열기
+    window.openDataCleanerModal = function() {
+        if (!window.globalCustomerData || window.globalCustomerData.length === 0) {
+            alert("불러온 고객 데이터가 없습니다.\n먼저 화면 우측 상단의 [연동하기] 버튼으로 구글 시트를 연동해 주세요.");
+            return;
+        }
+
+        const modal = ensureCleanerModalDom();
+        const dirtyList = window.scanNonStandardCustomerData();
+        _currentDirtyList = dirtyList;
+
+        const bodyArea = document.getElementById('cleanerModalBody');
+        const footerArea = document.getElementById('cleanerModalFooter');
+        const batchBtn = document.getElementById('cleanerBatchBtn');
+
+        if (dirtyList.length === 0) {
+            bodyArea.innerHTML = `
+                <div style="text-align:center; padding:50px 20px;">
+                    <div style="width:68px; height:68px; border-radius:50%; background:#ecfdf5; color:#10b981; font-size:32px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:16px;">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h3 style="margin:0 0 8px 0; font-size:19px; font-weight:800; color:#0f172a;">모든 번호가 완벽하게 표준화되어 있습니다!</h3>
+                    <p style="margin:0; font-size:14px; color:#64748b; line-height:1.5;">
+                        등록된 전체 고객 (${window.globalCustomerData.length}명)의 전화번호(010-XXXX-XXXX) 및<br>
+                        주민번호(XXXXXX-XXXXXXX)가 모두 표준 규격에 맞게 저장되어 있습니다.
+                    </p>
+                </div>
+            `;
+            if (batchBtn) batchBtn.style.display = 'none';
+            document.getElementById('cleanerSelectCountText').innerText = "이상 데이터 없음";
+        } else {
+            if (batchBtn) batchBtn.style.display = 'inline-flex';
+            
+            let html = `
+                <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:14px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#d97706; font-size:20px; flex-shrink:0;"></i>
+                    <div style="font-size:13px; color:#92400e; line-height:1.5;">
+                        전체 <strong>${window.globalCustomerData.length}명</strong> 중 <strong>${dirtyList.length}건</strong>의 비표준 데이터(앞 0 누락, 하이픈 미입력 등)가 발견되었습니다.<br>
+                        아래 미리보기를 확인하시고 하단 버튼을 클릭하시면 구글 시트에 즉시 덮어쓰기 업데이트됩니다.
+                    </div>
+                </div>
+
+                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
+                    <table style="width:100%; border-collapse:collapse; font-size:12.5px; text-align:left;">
+                        <thead>
+                            <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                                <th style="padding:10px 12px; width:34px; text-align:center;">
+                                    <input type="checkbox" id="cleanerMasterCheck" checked onchange="window.toggleAllCleanerChecks(this.checked)" style="width:15px; height:15px; cursor:pointer;">
+                                </th>
+                                <th style="padding:10px 12px; font-weight:700; color:#475569;">고객명 (번호)</th>
+                                <th style="padding:10px 12px; font-weight:700; color:#475569;">전화번호 정제 전 ➔ 정제 후</th>
+                                <th style="padding:10px 12px; font-weight:700; color:#475569;">주민번호 정제 전 ➔ 정제 후</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            dirtyList.forEach((item, idx) => {
+                let phoneDiffHtml = '<span style="color:#94a3b8;">- (정상)</span>';
+                if (item.phoneNeedsFix) {
+                    phoneDiffHtml = `
+                        <span style="color:#ef4444; text-decoration:line-through; font-family:monospace;">${item.origPhone || '(빈값)'}</span>
+                        <span style="margin:0 4px; color:#64748b;">➔</span>
+                        <span style="color:#10b981; font-weight:800; font-family:monospace;">${item.fixedPhone}</span>
+                    `;
+                }
+
+                let juminDiffHtml = '<span style="color:#94a3b8;">- (정상)</span>';
+                if (item.juminNeedsFix) {
+                    juminDiffHtml = `
+                        <span style="color:#ef4444; text-decoration:line-through; font-family:monospace;">${item.origJumin || '(빈값)'}</span>
+                        <span style="margin:0 4px; color:#64748b;">➔</span>
+                        <span style="color:#2563eb; font-weight:800; font-family:monospace;">${item.fixedJumin}</span>
+                    `;
+                }
+
+                html += `
+                    <tr style="border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">
+                        <td style="padding:10px 12px; text-align:center;">
+                            <input type="checkbox" class="cleaner-row-check" data-idx="${idx}" checked onchange="window.updateCleanerSelectCount()" style="width:15px; height:15px; cursor:pointer;">
+                        </td>
+                        <td style="padding:10px 12px; font-weight:800; color:#1e293b;">
+                            ${item.name} <span style="font-weight:500; font-size:11.5px; color:#64748b;">(No.${item.id})</span>
+                        </td>
+                        <td style="padding:10px 12px;">${phoneDiffHtml}</td>
+                        <td style="padding:10px 12px;">${juminDiffHtml}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            bodyArea.innerHTML = html;
+            window.updateCleanerSelectCount();
+        }
+
+        modal.style.display = 'flex';
+    };
+
+    window.closeDataCleanerModal = function() {
+        const modal = document.getElementById('dataCleanerModal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.toggleAllCleanerChecks = function(checked) {
+        document.querySelectorAll('.cleaner-row-check').forEach(cb => {
+            cb.checked = checked;
+        });
+        window.updateCleanerSelectCount();
+    };
+
+    window.updateCleanerSelectCount = function() {
+        const checks = document.querySelectorAll('.cleaner-row-check:checked');
+        const count = checks.length;
+        const total = _currentDirtyList.length;
+        
+        const textEl = document.getElementById('cleanerSelectCountText');
+        if (textEl) textEl.innerText = `선택됨: ${count} / ${total}건`;
+
+        const batchBtn = document.getElementById('cleanerBatchBtn');
+        if (batchBtn) {
+            batchBtn.disabled = (count === 0);
+            batchBtn.style.opacity = (count === 0) ? '0.5' : '1';
+            batchBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> 선택한 ${count}건 구글 시트 일괄 반영`;
+        }
+    };
+
+    // 일괄 업데이트 실행
+    window.executeDataCleaning = async function() {
+        const checkedBoxes = Array.from(document.querySelectorAll('.cleaner-row-check:checked'));
+        if (checkedBoxes.length === 0) {
+            alert("선택된 고객 데이터가 없습니다.");
+            return;
+        }
+
+        const selectedItems = checkedBoxes.map(cb => {
+            const idx = parseInt(cb.getAttribute('data-idx'), 10);
+            return _currentDirtyList[idx];
+        }).filter(Boolean);
+
+        const ok = confirm(`선택하신 ${selectedItems.length}명의 번호를 구글 시트에 표준 규격으로 일괄 업데이트하시겠습니까?\n\n• 전화번호: 010-XXXX-XXXX 형식 통일\n• 주민번호: XXXXXX-XXXXXXX 형식 통일`);
+        if (!ok) return;
+
+        if (typeof showLoading === 'function') showLoading(true);
+
+        try {
+            if (typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets && window.spreadsheetId) {
+                const batchData = [];
+
+                selectedItems.forEach(item => {
+                    const sheet = item.sheetName || 'weraclecrm';
+                    const headers = (typeof getCrmHeaders === 'function') ? getCrmHeaders(sheet) : [];
+                    
+                    const juminIdx = headers.indexOf('주민번호');
+                    const phoneIdx = headers.indexOf('폰번호');
+
+                    if (item.phoneNeedsFix && phoneIdx !== -1 && item.rowNumber) {
+                        const colLetter = colIndexToLetter(phoneIdx);
+                        batchData.push({
+                            range: `${sheet}!${colLetter}${item.rowNumber}`,
+                            values: [[item.fixedPhone]]
+                        });
+                    }
+
+                    if (item.juminNeedsFix && juminIdx !== -1 && item.rowNumber) {
+                        const colLetter = colIndexToLetter(juminIdx);
+                        batchData.push({
+                            range: `${sheet}!${colLetter}${item.rowNumber}`,
+                            values: [[item.fixedJumin]]
+                        });
+                    }
+                });
+
+                if (batchData.length > 0) {
+                    await gapi.client.sheets.spreadsheets.values.batchUpdate({
+                        spreadsheetId: window.spreadsheetId,
+                        resource: {
+                            valueInputOption: "USER_ENTERED",
+                            data: batchData
+                        }
+                    });
+                    console.log(`[Cleaner] Google Sheets ${batchData.length} cells updated via batchUpdate!`);
+                }
+            } else {
+                console.warn("[Cleaner] Google Sheets API not available, applying in-memory only.");
+            }
+
+            // In-Memory globalCustomerData 동기화
+            selectedItems.forEach(item => {
+                if (window.globalCustomerData && window.globalCustomerData[item.index]) {
+                    const cust = window.globalCustomerData[item.index];
+                    if (item.phoneNeedsFix) {
+                        cust['폰번호'] = item.fixedPhone;
+                        if (cust['연락처']) cust['연락처'] = item.fixedPhone;
+                        if (cust['전화번호']) cust['전화번호'] = item.fixedPhone;
+                    }
+                    if (item.juminNeedsFix) {
+                        cust['주민번호'] = item.fixedJumin;
+                    }
+                }
+            });
+
+            // 화면 리렌더링
+            if (typeof renderTable === 'function') renderTable();
+            if (typeof updateQuickFilterCounts === 'function') updateQuickFilterCounts();
+
+            if (typeof showLoading === 'function') showLoading(false);
+            window.closeDataCleanerModal();
+
+            alert(`🎉 성공적으로 정제 완료되었습니다!\n\n총 ${selectedItems.length}명의 고객 정보가 표준 규격(010-XXXX-XXXX / XXXXXX-XXXXXXX)으로 구글 시트에 업데이트되었습니다.`);
+        } catch (err) {
+            console.error("Data cleaner error:", err);
+            if (typeof showLoading === 'function') showLoading(false);
+            alert("정제 중 오류가 발생했습니다: " + (err.message || err));
+        }
+    };
+})();

@@ -7,10 +7,18 @@
  * 3. 스마트 간편 등록 처리 (submitSmartReg 오버라이드)
  */
 
-// 전화번호 포맷팅 함수 (어떤 방식으로 입력하든 010-0000-0000 규격으로 통일)
-window.formatPhoneNumber = function(input) {
+// 전화번호 포맷팅 함수 (어떤 방식으로 입력하든 010-0000-0000 규격으로 통일, 0 누락 10XXXXXXXX 및 8자리 자동 보정)
+window.formatPhone = function(input) {
     if (!input) return "";
+    if (input === '폰없음') return '폰없음';
     let clean = String(input).replace(/\D/g, "");
+    
+    // 엑셀/구글시트에서 앞자리 0이 누락되어 10으로 시작하는 10자리인 경우 010으로 복원
+    if (clean.length === 10 && clean.startsWith('10')) {
+        clean = '0' + clean;
+    } else if (clean.length === 8) {
+        clean = '010' + clean;
+    }
     
     if (clean.length === 11) {
         return clean.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
@@ -27,7 +35,22 @@ window.formatPhoneNumber = function(input) {
         clean = clean.substring(0, 11);
         return clean.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
     }
-    return input.trim();
+    return String(input).trim();
+};
+window.formatPhoneNumber = window.formatPhone;
+
+// 주민번호 포맷팅 함수 (XXXXXX-XXXXXXX 규격 통일)
+window.formatJumin = function(input, mask = false) {
+    if (!input) return "";
+    let clean = String(input).replace(/\D/g, "");
+    if (clean.length === 13) {
+        if (mask) return clean.replace(/(\d{6})(\d{1})(\d{6})/, '$1-$2******');
+        return clean.replace(/(\d{6})(\d{7})/, '$1-$2');
+    }
+    if (clean.length === 7) {
+        return clean.substring(0, 6) + '-' + clean.substring(6, 7);
+    }
+    return String(input).trim();
 };
 
 // 중복 고객 감지 함수 (주민번호 또는 전화번호)
@@ -102,17 +125,18 @@ window.submitSmartReg = async function() {
     const job = document.getElementById('smartRegJob') ? document.getElementById('smartRegJob').value.trim() : '';
     const memo = document.getElementById('smartRegMemo') ? document.getElementById('smartRegMemo').value.trim() : '';
     
-    // 전화번호 010-XXXX-XXXX 통일 포맷 적용 (Item 13)
-    const phone = window.formatPhoneNumber(phoneRaw);
+    // 전화번호 010-XXXX-XXXX 통일 포맷 적용 (0 누락 10XXXXXXXX 및 8자리 자동 보정)
+    const phone = window.formatPhone(phoneRaw);
     if (document.getElementById('smartRegPhone')) {
         document.getElementById('smartRegPhone').value = phone;
     }
     
-    // 주민번호 하이픈 정규화
-    const cleanJumin = jumin.replace(/\D/g, "");
-    if (cleanJumin.length === 13) {
-        jumin = cleanJumin.substring(0, 6) + "-" + cleanJumin.substring(6, 13);
+    // 주민번호 하이픈 정규화 (XXXXXX-XXXXXXX)
+    jumin = window.formatJumin(jumin);
+    if (document.getElementById('smartRegJumin')) {
+        document.getElementById('smartRegJumin').value = jumin;
     }
+    const cleanJumin = jumin.replace(/\D/g, "");
     
     // 중복 고객 감지 검사 (Item 12)
     const duplicate = window.findDuplicateCustomer(phone, cleanJumin);

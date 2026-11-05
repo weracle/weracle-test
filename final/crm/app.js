@@ -823,6 +823,32 @@ console.error("GIS init error:", err);
 * 토큰이 없거나 만료된 경우 무효화하고 구글 로그인 창을 띄웁니다.
 * @returns {Promise<string|null>} 유효한 access_token 또는 null
 */
+// [중복 알림 방지 & 문구 통일] 구글 연동 만료 알림 1회 노출 싱글톤 가드
+function notifyGoogleExpiredOnce(customMsg) {
+    if (typeof window === "undefined" || window.isHeadless) return;
+    const now = Date.now();
+    let lastAlert = 0;
+    try {
+        lastAlert = parseInt(sessionStorage.getItem("last_google_auth_alert") || "0", 10);
+    } catch(e) {}
+    // 5분 쿨다운: 비동기 함수 동시 감지 시 중복 팝업 100% 차단
+    if (now - lastAlert < 300000) {
+        console.log("[Google Auth] 중복 연동 알림 차단됨 (5분 쿨다운 활성)");
+        return;
+    }
+    try {
+        sessionStorage.setItem("last_google_auth_alert", now.toString());
+    } catch(e) {}
+
+    const unifiedMsg = customMsg || "구글 계정 연동 세션이 만료되었습니다.\n안전한 데이터 저장을 위해 화면 우측 상단의 [연동하기] 버튼을 눌러 다시 연동해 주세요.";
+    if (typeof showCustomAlert === "function") {
+        showCustomAlert("구글 연동 안내", unifiedMsg.replace(/\n/g, "<br>"));
+    } else if (typeof alert === "function") {
+        alert(unifiedMsg);
+    }
+}
+window.notifyGoogleExpiredOnce = notifyGoogleExpiredOnce;
+
 async function ensureValidToken() {
     if (isDemoMode) return "demo_token";
     let token = memoryAccessToken || (function() { try { return localStorage.getItem("g_access_token"); } catch(e) { return null; } })();
@@ -831,14 +857,14 @@ async function ensureValidToken() {
     if (savedTime > 0 && Date.now() > savedTime + 3540000) { // 59 minutes just to be safe
         invalidateCurrentToken();
         if (typeof window !== "undefined" && !window.isHeadless) {
-            alert(" 구글 연동 시간이 만료되었습니다!\n\n창을 닫거나 새로고침하지 마시고, 화면 우측 상단의 [재연동] 버튼을 눌러 먼저 연동을 갱신해주세요.\n(입력하신 데이터는 날아가지 않습니다.)");
+            notifyGoogleExpiredOnce();
         }
         return null;
     }
     if (!token) {
         invalidateCurrentToken();
         if (!isHeadless) {
-            alert("구글 연동 권한이 없거나 만료되었습니다. 안전한 저장을 위해 우측 상단 메뉴에서 로그아웃하신 후 다시 로그인해 주세요.");
+            notifyGoogleExpiredOnce();
         } else if (window.parent) {
             window.parent.postMessage({ type: 'workerAuthFailed' }, '*');
         }
@@ -934,6 +960,7 @@ showLoading(false);
 
 async function handleTokenResponse(tokenResponse) {
 if (tokenResponse && tokenResponse.access_token) {
+    try { sessionStorage.removeItem("last_google_auth_alert"); } catch(e) {}
 isSilentAuthAttempted = false;
 console.log(' Token received. Scope:', tokenResponse.scope || 'N/A');
 
@@ -2187,7 +2214,7 @@ async function saveClientToServer(clientObj, insRows) {
         console.error("Save Client Error:", err);
         let msg = err.message || err.result?.error?.message || "";
         if (msg === "Failed to fetch" || msg.includes("A network error occurred")) {
-            showCustomAlert("구글 로그인 만료", "구글 로그인 세션(1시간)이 만료되어 연결이 끊겼습니다.<br><br>우측 상단의 <b>[연동 해제]</b> 버튼을 누른 후, 다시 Google 로그인을 진행해 주시면 즉시 정상 저장됩니다.");
+            notifyGoogleExpiredOnce("구글 계정 연동 세션이 만료되었습니다.\n안전한 데이터 저장을 위해 화면 우측 상단의 [연동하기] 버튼을 눌러 다시 연동해 주세요.");
         } else {
             showCustomAlert("저장 실패", "오류: " + msg);
         }
@@ -4449,10 +4476,20 @@ function formatPhone(val) {
     if(val.length === 10 && val.startsWith('10')) val = '0' + val;
     if(val.length === 8) val = '010' + val;
     if(val.length === 11) return val.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
-    if(val.length === 10) return val.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+    if(val.length === 10) {
+        if(val.startsWith('02')) return val.replace(/(\d{2})(\d{4})(\d{4})/, '$1-$2-$3');
+        return val.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+    }
     if(val.length === 9 && val.startsWith('02')) return val.replace(/(\d{2})(\d{3})(\d{4})/, '$1-$2-$3');
+    if(val.length > 11) {
+        val = val.substring(0, 11);
+        return val.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+    }
     return val;
 }
+window.formatPhone = formatPhone;
+window.formatPhoneNumber = formatPhone;
+
 function formatJumin(val, mask = false) {
     if(!val) return "";
     val = val.toString().replace(/[^0-9]/g, '');
@@ -4460,8 +4497,10 @@ function formatJumin(val, mask = false) {
         if(mask) return val.replace(/(\d{6})(\d{1})(\d{6})/, '$1-$2******');
         return val.replace(/(\d{6})(\d{7})/, '$1-$2');
     }
+    if(val.length === 7) return val.substring(0, 6) + '-' + val.substring(6, 7);
     return val;
 }
+window.formatJumin = formatJumin;
 window.copyJumin = function(val, mask = false) {
     if(!val) return;
     let text = formatJumin(val, mask) || val;
@@ -7456,7 +7495,8 @@ window.renderTable = function(data = globalCustomerData) {
         const idStr = String(client["고객번호"] || client["ID"] || "");
         const status = client["상태"] || "-";
         const name = client["고객명"] || client["대표자명"] || "-";
-        const phone = client["폰번호"] || client["연락처"] || "-";
+        const rawPhone = client["폰번호"] || client["연락처"] || "";
+        const phone = formatPhone(rawPhone) || "-";
         
         let badgeBg = "#f1f5f9";
         let badgeColor = "#64748b";
@@ -7776,7 +7816,7 @@ window.generateProfileHtml = function(client) {
                       </div>
                       <div style="display: flex; gap: 24px; color: #64748b; font-size: 16px; font-weight: 600;">
                         <span><i class="fa-solid fa-cake-candles" style="margin-right:6px; color:#f59e0b;"></i> ` + (client["생일"] || "-") + ` (` + (client["나이"] || "-") + `세)</span>
-                        <span><i class="fa-solid fa-phone" style="margin-right:6px; color:#10b981;"></i> ` + (client["폰번호"] || "-") + `</span>
+                        <span><i class="fa-solid fa-phone" style="margin-right:6px; color:#10b981;"></i> ` + (formatPhone(client["폰번호"] || client["대표자폰번호"]) || "-") + `</span>
                     </div>
                 </div>
             </div>
@@ -9242,7 +9282,7 @@ window.submitSmartReg = async function() {
         let msg = e.message; if(!msg && e.result && e.result.error) msg = e.result.error.message; 
         
         if (msg === "Failed to fetch" || msg.includes("A network error occurred")) {
-            alert("구글 로그인 세션(1시간)이 만료되어 연결이 끊겼습니다.\n\n우측 상단의 [연동 해제] 버튼을 누른 후, 다시 Google 로그인을 진행해 주시면 즉시 해결됩니다.");
+            notifyGoogleExpiredOnce("구글 계정 연동 세션이 만료되었습니다.\n안전한 데이터 저장을 위해 화면 우측 상단의 [연동하기] 버튼을 눌러 다시 연동해 주세요.");
         } else {
             alert("등록 중 오류가 발생했습니다: " + msg);
         }

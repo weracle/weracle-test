@@ -13,11 +13,51 @@ window.speedCenterFilters = {
     ageSearch: ''
 };
 
+window.syncSpeedCenterMobileUI = function() {
+    const isMobile = window.innerWidth <= 768;
+    const focusGrid = document.querySelector('#quickEditModal .sc-focus-grid') || document.getElementById('sc-focus-grid-container');
+    const activeBadge = document.getElementById('sc-active-badge');
+    const tableWrap = document.getElementById('quickEditTableWrap');
+    const mobileList = document.getElementById('quickEditMobileList');
+    
+    if (focusGrid) {
+        if (isMobile) {
+            focusGrid.style.setProperty('display', 'none', 'important');
+        } else {
+            focusGrid.style.setProperty('display', 'flex', 'important');
+        }
+    }
+    if (activeBadge) {
+        if (isMobile) {
+            activeBadge.style.setProperty('display', 'none', 'important');
+        } else {
+            activeBadge.style.removeProperty('display');
+        }
+    }
+    if (tableWrap && mobileList) {
+        if (isMobile) {
+            tableWrap.style.setProperty('display', 'none', 'important');
+            mobileList.style.setProperty('display', 'flex', 'important');
+        } else {
+            tableWrap.style.setProperty('display', 'block', 'important');
+            mobileList.style.setProperty('display', 'none', 'important');
+        }
+    }
+};
+
+window.addEventListener('resize', () => {
+    if (typeof window.syncSpeedCenterMobileUI === 'function') {
+        window.syncSpeedCenterMobileUI();
+    }
+});
+
 window.openQuickEditModal = function() {
     const modal = document.getElementById('quickEditModal');
     if (!modal) return;
 
     modal.style.display = 'flex';
+    window.syncSpeedCenterMobileUI();
+
     const searchInput = document.getElementById('quickEditSearchInput');
     const centerInput = document.getElementById('centerSpeedSearchInput');
     if (searchInput) {
@@ -317,8 +357,11 @@ window.handleQuickEditSearch = function() {
 
         // Render Rows
         let tbHtml = '';
+        let mobileCardHtml = '';
+
         if (matches.length === 0) {
             tbHtml = '<tr><td colspan="15" style="text-align:center; padding:60px 20px; color:#94a3b8; font-weight:600;"><i class="fa-solid fa-magnifying-glass" style="font-size:24px; margin-bottom:8px; display:block;"></i>일치하는 고객이 없습니다.</td></tr>';
+            mobileCardHtml = '<div style="text-align:center; padding:50px 14px; color:#94a3b8; font-weight:600;"><i class="fa-solid fa-magnifying-glass" style="font-size:24px; margin-bottom:8px; display:block;"></i>일치하는 고객이 없습니다.</div>';
         } else {
             matches.forEach(c => {
                 const id = c['고객번호'] || c['사업자번호'] || c['ID'] || c['id'] || c['rowNumber'] || c['고객명'] || '';
@@ -329,7 +372,8 @@ window.handleQuickEditSearch = function() {
                 const ageGender = (c['나이'] ? c['나이'] + '세' : '-') + ' / ' + (c['성별'] || '-');
                 const birth = c['생년월일'] || c['생일'] || '-';
                 const driver = (c['운전'] || '-') + (c['차량용도'] ? ' (' + c['차량용도'] + ')' : '');
-                const pet = (c['반려동물'] && c['반려동물'] !== '무' && c['반려동물'] !== '없음') 
+                const hasPet = (c['반려동물'] && c['반려동물'] !== '무' && c['반려동물'] !== '없음');
+                const pet = hasPet 
                             ? `<span style="color:#d97706; font-weight:700;">🐾 ${c['반려동물']}</span>` 
                             : '<span style="color:#94a3b8;">-</span>';
                 const job = (c['직업'] || '-') + (c['상세직무'] ? ` (${c['상세직무']})` : '');
@@ -338,11 +382,13 @@ window.handleQuickEditSearch = function() {
                 const family = c['가족사항'] || '-';
                 const touch = c['터치인사이트'] || '-';
 
-                let statusBg = '#eff6ff'; let statusColor = '#2563eb';
-                if (status.includes('상담')) { statusBg = '#fefce8'; statusColor = '#ca8a04'; }
-                else if (status.includes('체결') || status.includes('계약')) { statusBg = '#ecfdf5'; statusColor = '#059669'; }
-                else if (status.includes('케어')) { statusBg = '#fee2e2'; statusColor = '#dc2626'; }
+                let statusBg = '#eff6ff'; let statusColor = '#2563eb'; let statusBorder = '#bfdbfe';
+                if (status.includes('상담')) { statusBg = '#fefce8'; statusColor = '#ca8a04'; statusBorder = '#fef08a'; }
+                else if (status.includes('체결') || status.includes('계약')) { statusBg = '#faf5ff'; statusColor = '#7e22ce'; statusBorder = '#e9d5ff'; }
+                else if (status.includes('케어')) { statusBg = '#fee2e2'; statusColor = '#dc2626'; statusBorder = '#fecaca'; }
+                else if (status.includes('관심')) { statusBg = '#f0fdf4'; statusColor = '#15803d'; statusBorder = '#bbf7d0'; }
 
+                // 1. PC Table Row
                 tbHtml += `<tr style="border-bottom:1px solid #f1f5f9; cursor:pointer;" onmouseover="this.style.background='#f8fafc';" onmouseout="this.style.background='#ffffff';">`;
                 
                 if (tab === '1차') {
@@ -387,9 +433,67 @@ window.handleQuickEditSearch = function() {
                     `;
                 }
                 tbHtml += '</tr>';
+
+                // 2. Mobile Version A (Info Card)
+                mobileCardHtml += `<div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px; box-shadow:0 1px 3px rgba(0,0,0,0.03); cursor:pointer; transition:all 0.15s;" onclick="if(typeof openProfile==='function'){openProfile('${id}');}else if(typeof showMasterDetail==='function'){showMasterDetail('${id}');}">`;
+                mobileCardHtml += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:7px;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="display:inline-block; padding:2px 7px; border-radius:5px; font-size:11px; font-weight:800; background:${statusBg}; color:${statusColor}; border:1px solid ${statusBorder};">${status}</span>
+                            <span style="font-size:14.5px; font-weight:800; color:#0f172a;">${name}</span>
+                            <span style="font-size:12px; color:#64748b; font-weight:600;">(${ageGender})</span>
+                        </div>
+                        ${rawPhone ? `<a href="tel:${rawPhone}" onclick="event.stopPropagation();" style="font-size:11.5px; font-weight:700; color:#0284c7; text-decoration:none; display:flex; align-items:center; gap:4px; background:#f0f9ff; border:1px solid #bae6fd; padding:3px 7px; border-radius:6px;"><i class="fa-solid fa-phone"></i> ${phone}</a>` : ''}
+                    </div>
+                `;
+
+                if (tab === '1차') {
+                    let tagItems = '';
+                    if (job && job !== '-') tagItems += `<span style="background:#eff6ff; color:#1e40af; border:1px solid #dbeafe; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-briefcase"></i> ${job}</span>`;
+                    if (c['운전'] && c['운전'] !== '무' && c['운전'] !== '없음') tagItems += `<span style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-car"></i> ${driver}</span>`;
+                    if (hasPet) tagItems += `<span style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;">🐾 ${c['반려동물']}</span>`;
+
+                    mobileCardHtml += `
+                        ${tagItems ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:7px;">${tagItems}</div>` : ''}
+                        ${addr !== '-' ? `<div style="font-size:11.5px; color:#64748b; line-height:1.35; display:flex; align-items:flex-start; gap:5px; margin-top:3px;"><i class="fa-solid fa-location-dot" style="margin-top:2px; font-size:11px; color:#94a3b8;"></i> <span>${addr}</span></div>` : ''}
+                        ${memo !== '-' ? `<div style="font-size:11.5px; color:#334155; font-weight:600; line-height:1.35; display:flex; align-items:flex-start; gap:5px; margin-top:3px;"><i class="fa-solid fa-note-sticky" style="margin-top:2px; font-size:11px; color:#94a3b8;"></i> <span>${memo}</span></div>` : ''}
+                    `;
+                } else if (tab === '터치') {
+                    mobileCardHtml += `
+                        <div style="background:#eff6ff; border-radius:8px; padding:7px 10px; margin-bottom:5px; font-size:12px; color:#1d4ed8; font-weight:700;">
+                            <i class="fa-solid fa-sparkles"></i> ${touch}
+                        </div>
+                        ${memo !== '-' ? `<div style="font-size:11.5px; color:#64748b; line-height:1.35; display:flex; align-items:flex-start; gap:5px;"><i class="fa-solid fa-comment-dots" style="margin-top:2px; font-size:11px; color:#94a3b8;"></i> <span>상담메모: ${memo}</span></div>` : ''}
+                    `;
+                } else if (tab === '보험') {
+                    let insSummary = '-';
+                    try {
+                        let insList = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
+                        if (insList.length > 0) {
+                            insSummary = insList.map(i => {
+                                const comp = i['회사명'] || i['보험사'] || '';
+                                const prod = i['상품명'] || '';
+                                const pay = i['납입방법'] || i['결제방법'] || '';
+                                return `<span style="display:inline-block; background:#f1f5f9; border:1px solid #e2e8f0; padding:2px 7px; border-radius:4px; margin-right:4px; margin-bottom:4px; font-size:11.5px;"><b>${comp}</b> ${prod} ${pay ? `(${pay})` : ''}</span>`;
+                            }).join('');
+                        }
+                    } catch(e) {}
+
+                    mobileCardHtml += `
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; font-size:11.5px; color:#334155; line-height:1.4;">
+                            <div style="font-weight:700; color:#0f172a; margin-bottom:3px;"><i class="fa-solid fa-file-shield" style="color:#2563eb;"></i> 가입 상품:</div>
+                            ${insSummary}
+                        </div>
+                    `;
+                }
+
+                mobileCardHtml += `</div>`;
             });
         }
-        resultArea.innerHTML = tbHtml;
+        if (resultArea) resultArea.innerHTML = tbHtml;
+        const mobileListArea = document.getElementById('quickEditMobileList');
+        if (mobileListArea) mobileListArea.innerHTML = mobileCardHtml;
+        if (typeof window.syncSpeedCenterMobileUI === 'function') window.syncSpeedCenterMobileUI();
     } catch(err) {
         console.error("Speed Center Search Error:", err);
     }

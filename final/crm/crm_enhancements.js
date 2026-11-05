@@ -544,9 +544,17 @@ window.showToastNotice = function(text) {
                     let matchedProd = "-";
                     try {
                         let gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(r, true) : [];
+                        const lifeComps = ["한화생명","교보생명","농협생명","메트라이프","KDB생명","DB생명","흥국생명","동양생명","미래에셋생명","라이나생명","푸본현대생명","신한라이프","ABL생명","iM라이프","KB라이프","IBK연금보험","처브라이프","카디프생명","하나생명","AIA생명"];
+                        const nonlifeComps = ["삼성화재","메리츠화재","DB손해보험","KB손해보험","현대해상","한화손해보험","롯데손해보험","흥국화재","하나손해보험","NH농협손해보험","라이나손보","AIG손보","MG손해보험"];
                         let expItem = gArr.find(i => {
                             let comp = String(i['보험사명'] || i['차_보험사명'] || i['차_보험사'] || i['company'] || '').trim();
                             let prod = String(i['상품명'] || i['차_상품명'] || i['product'] || '').trim();
+                            let kind = String(i['보험분류'] || '').trim();
+                            if (fVal === '생보 전체보기' || fVal === '생명보험') {
+                                return kind.includes('생명') || lifeComps.some(lc => comp.includes(lc) || lc.includes(comp));
+                            } else if (fVal === '손보 전체보기' || fVal === '손해보험') {
+                                return kind.includes('손해') || kind.includes('화재') || nonlifeComps.some(nc => comp.includes(nc) || nc.includes(comp));
+                            }
                             return comp === fVal || comp.includes(fVal) || prod.includes(fVal);
                         });
                         if (expItem) {

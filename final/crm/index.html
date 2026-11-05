@@ -3470,22 +3470,24 @@ window.sampleCustomers = [
 
 // 100% Real Google Sheet / Supabase Data Connector (0-Data Safe)
 window.getActiveCRMData = function() {
-    if (typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData)) {
-        return globalCustomerData;
-    }
-    if (window.globalCustomerData && Array.isArray(window.globalCustomerData)) {
+    if (window.globalCustomerData && Array.isArray(window.globalCustomerData) && window.globalCustomerData.length > 0) {
         return window.globalCustomerData;
+    }
+    if (typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData) && globalCustomerData.length > 0) {
+        return globalCustomerData;
     }
     try {
         const cached = localStorage.getItem('weracle_crm_cached_data');
         if (cached) {
             const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed)) return parsed;
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
         }
     } catch(e) {}
-    // Fallback: If demo mode or preview with empty data, return sampleCustomers only if explicitly requested
-    if (window.isDemoMode === true && window.sampleCustomers) {
-        return window.sampleCustomers;
+    if (typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData)) {
+        return globalCustomerData;
+    }
+    if (window.globalCustomerData && Array.isArray(window.globalCustomerData)) {
+        return window.globalCustomerData;
     }
     return [];
 };
@@ -3738,12 +3740,12 @@ window.executeFilterAndShowList = function(fType, fVal) {
             return window.isSangryungCustomer(c);
         });
     } else if (fType === 'expiry') {
-        titleStr = "만기 도래 고객";
+        titleStr = "오늘 만기 도래 고객";
         filtered = filtered.filter(function(c) {
             if (typeof window.isExpiringCustomer === 'function') {
                 return window.isExpiringCustomer(c);
             }
-            return String(c.가입내역 || "").indexOf('만기') !== -1;
+            return false;
         });
     } else if (fType === 'claim') {
         titleStr = "보험금 청구 / 집중 케어 고객";
@@ -3872,9 +3874,41 @@ window.renderListModalDirect = function(filtered, titleStr, fType, fVal) {
                         '<td style="padding:14px 16px;"><span style="padding:3px 9px; border-radius:12px; font-size:12px; font-weight:800; ' + badgeStyle + '">' + status + '</span></td>' +
                         '<td style="padding:14px 16px; font-weight:600; color:#475569;">' + phone + '</td>';
                 } else if (fType === 'expiry') {
+                    let insDesc = c.가입내역 || '';
+                    let expDateStr = c.만기일 || c.갱신일 || '';
+                    try {
+                        const gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
+                        const today = new Date();
+                        const curYear = today.getFullYear(), curMonth = today.getMonth(), curDate = today.getDate();
+                        const expItem = gArr.find(i => {
+                            let ed = i['갱신일자'] || i['만기일자'] || i['갱신일'] || i['만기일'] || i['expireDate'] || i['renewalDate'] || '';
+                            if (!ed) return false;
+                            let parts = String(ed).trim().split(/[-./\s]+/);
+                            if (parts.length >= 3) {
+                                let py = parseInt(parts[0], 10), pm = parseInt(parts[1], 10) - 1, pd = parseInt(parts[2], 10);
+                                if (py < 100) py += 2000;
+                                return (py === curYear && pm === curMonth && pd === curDate);
+                            }
+                            let digits = String(ed).replace(/\D/g, '');
+                            if (digits.length >= 8) {
+                                let py = parseInt(digits.substring(0, 4), 10), pm = parseInt(digits.substring(4, 6), 10) - 1, pd = parseInt(digits.substring(6, 8), 10);
+                                return (py === curYear && pm === curMonth && pd === curDate);
+                            }
+                            return false;
+                        });
+                        if (expItem) {
+                            let comp = expItem['보험사명'] || expItem['차_보험사명'] || expItem['company'] || '';
+                            let prod = expItem['상품명'] || expItem['차_상품명'] || expItem['product'] || '';
+                            insDesc = (comp ? comp + ' ' : '') + prod;
+                            expDateStr = expItem['갱신일자'] || expItem['만기일자'] || expItem['갱신일'] || expItem['만기일'] || expItem['expireDate'] || expItem['renewalDate'] || expDateStr;
+                        }
+                    } catch(e) {}
+                    if (!insDesc) insDesc = '-';
+                    if (!expDateStr) expDateStr = '오늘 만기';
+
                     trContent = '<td style="padding:14px 16px; font-weight:800; color:#0f172a; font-size:14.5px;">' + name + '</td>' +
-                        '<td style="padding:14px 16px; font-weight:600; color:#334155;">' + (c.가입내역 || '-') + '</td>' +
-                        '<td style="padding:14px 16px; font-weight:800; color:#dc2626;">2026-11</td>' +
+                        '<td style="padding:14px 16px; font-weight:600; color:#334155;">' + insDesc + '</td>' +
+                        '<td style="padding:14px 16px; font-weight:800; color:#dc2626;">' + expDateStr + '</td>' +
                         '<td style="padding:14px 16px; font-weight:600; color:#475569;">' + phone + '</td>';
                 } else if (fType === 'insurance') {
                     trContent = '<td style="padding:14px 16px; font-weight:800; color:#0f172a; font-size:14.5px;">' + name + '</td>' +
@@ -3967,7 +4001,36 @@ window.renderMobileCustomerCards = function(list, fType, fVal) {
                 '<span style="color:#cbd5e1;">·</span>' +
                 '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
         } else if (fType === 'expiry') {
-            partSummaryHtml = '<span style="color:#dc2626; font-weight:800;"><i class="fa-solid fa-clock" style="font-size:11px; margin-right:3px;"></i>만기: ' + (c.가입내역 || '-') + '</span>' +
+            let insDesc = c.가입내역 || '';
+            try {
+                const gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
+                const today = new Date();
+                const curYear = today.getFullYear(), curMonth = today.getMonth(), curDate = today.getDate();
+                const expItem = gArr.find(i => {
+                    let ed = i['갱신일자'] || i['만기일자'] || i['갱신일'] || i['만기일'] || i['expireDate'] || i['renewalDate'] || '';
+                    if (!ed) return false;
+                    let parts = String(ed).trim().split(/[-./\s]+/);
+                    if (parts.length >= 3) {
+                        let py = parseInt(parts[0], 10), pm = parseInt(parts[1], 10) - 1, pd = parseInt(parts[2], 10);
+                        if (py < 100) py += 2000;
+                        return (py === curYear && pm === curMonth && pd === curDate);
+                    }
+                    let digits = String(ed).replace(/\D/g, '');
+                    if (digits.length >= 8) {
+                        let py = parseInt(digits.substring(0, 4), 10), pm = parseInt(digits.substring(4, 6), 10) - 1, pd = parseInt(digits.substring(6, 8), 10);
+                        return (py === curYear && pm === curMonth && pd === curDate);
+                    }
+                    return false;
+                });
+                if (expItem) {
+                    let comp = expItem['보험사명'] || expItem['차_보험사명'] || expItem['company'] || '';
+                    let prod = expItem['상품명'] || expItem['차_상품명'] || expItem['product'] || '';
+                    insDesc = (comp ? comp + ' ' : '') + prod;
+                }
+            } catch(e) {}
+            if (!insDesc) insDesc = '-';
+
+            partSummaryHtml = '<span style="color:#dc2626; font-weight:800;"><i class="fa-solid fa-clock" style="font-size:11px; margin-right:3px;"></i>오늘 만기: ' + insDesc + '</span>' +
                 '<span style="color:#cbd5e1;">·</span>' +
                 '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
         } else if (fType === 'insurance') {

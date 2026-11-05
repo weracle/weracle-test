@@ -8166,28 +8166,33 @@ window.addEventListener('message', function(e) {
             }
         }
         else if (fType === 'expiry') {
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            filtered = filtered.filter(c => {
-                let hasExp = false;
-                try {
-                    let gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
-                    gArr.forEach(i => {
-                        let ed = i['갱신일자'] || i['만기일자'] || i['갱신일'] || i['만기일'] || '';
-                        if(ed) {
-                            let dStr = String(ed).replace(/\D/g, '');
-                            if (dStr.length >= 6) {
-                                let y = parseInt(dStr.substring(0,4));
-                                let m = dStr.substring(4,6);
-                                let cy = new Date().getFullYear();
-                                const currentMonthStr = String(new Date().getMonth() + 1).padStart(2, '0');
-                                if (y === cy && m === currentMonthStr) hasExp = true;
+            if (typeof window.isExpiringCustomer === 'function') {
+                filtered = filtered.filter(window.isExpiringCustomer);
+            } else {
+                const today = new Date();
+                const curYear = today.getFullYear();
+                const curMonth = today.getMonth();
+                const curDate = today.getDate();
+                filtered = filtered.filter(c => {
+                    let hasExp = false;
+                    try {
+                        let gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
+                        gArr.forEach(i => {
+                            let ed = i['갱신일자'] || i['만기일자'] || i['갱신일'] || i['만기일'] || '';
+                            if (ed) {
+                                let dStr = String(ed).replace(/\D/g, '');
+                                if (dStr.length >= 8) {
+                                    let y = parseInt(dStr.substring(0,4), 10);
+                                    let m = parseInt(dStr.substring(4,6), 10) - 1;
+                                    let d = parseInt(dStr.substring(6,8), 10);
+                                    if (y === curYear && m === curMonth && d === curDate) hasExp = true;
+                                }
                             }
-                        }
-                    });
-                } catch(e){}
-                return hasExp;
-            });
+                        });
+                    } catch(e){}
+                    return hasExp;
+                });
+            }
         } else if (fType === 'insurance') {
             const lifeComps = ["한화생명","교보생명","농협생명","메트라이프","KDB생명","DB생명","흥국생명","동양생명","미래에셋생명","라이나생명","푸본현대생명","신한라이프","ABL생명","iM라이프","KB라이프","IBK연금보험","처브라이프","카디프생명","하나생명","AIA생명"];
             const nonlifeComps = ["삼성화재","메리츠화재","DB손해보험","KB손해보험","현대해상","한화손해보험","롯데손해보험","흥국화재","하나손해보험","NH농협손해보험","라이나손보","AIG손보","MG손해보험"];

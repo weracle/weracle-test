@@ -959,9 +959,9 @@
 
       .crm-success-toast {
         position: fixed;
-        bottom: 80px;
+        top: 24px;
         left: 50%;
-        transform: translateX(-50%) translateY(20px);
+        transform: translateX(-50%) translateY(-20px);
         background: rgba(15, 23, 42, 0.92);
         color: #ffffff;
         padding: 12px 24px;

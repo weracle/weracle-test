@@ -13,7 +13,7 @@
  * 3. 5대 청구 파트 (질병상해, 펫보험, 생명보험, 배상책임, 재물보험) 공통 연동
  *    - 손해보험 'cont*(계약자)' 및 생명보험 'bene*(수익자)' 스마트 분기 매핑
  *    - 보상안내(guide*) 및 수령계좌(bank*)는 실제 돈 받는 주체에게 자동 지정
- * 4. 4단계 코비 수평 스텝퍼 바(updateStepperBar) 100% 보존
+ * 4. 4단계 코비 수평 스텝퍼 바(updateStepperBar) 100% 무한루프 방지 및 안전 작동
  * ==============================================================================
  */
 
@@ -369,7 +369,6 @@
     if (role === 'insured') {
       window.crmPickerState.insuredCustomer = client;
       window.crmPickerState.insuredData = sanitized;
-      // 만약 아직 contractor가 없고 동일함 모드면 동일 상태 유지
     } else if (role === 'contractor') {
       window.crmPickerState.contractorCustomer = client;
       window.crmPickerState.contractorData = sanitized;
@@ -396,11 +395,6 @@
   // 피보험자 = 계약자 동일 여부 토글
   window.toggleSamePerson = function (isSame) {
     window.crmPickerState.isDifferent = !isSame;
-    if (isSame) {
-      // 동일 모드로 전환 시 contractor 데이터는 보관하되 비활성화
-    } else {
-      // 다름 모드인데 아직 contractor가 없으면 검색창 유도 플래그
-    }
     renderPreviewView();
   };
 
@@ -976,27 +970,28 @@
     setTimeout(() => toast.classList.remove('show'), 3500);
   }
 
-  // 8. Step 1 슬라이드 헤더 우측에 메인 버튼 부착
+  // 8. Step 1 슬라이드 헤더 우측에 메인 버튼 부착 (루프 방지 완벽 가드)
+  let isAttaching = false;
   function attachButtonsToForm() {
-    document.querySelectorAll('.btn-picker-trigger').forEach(el => el.remove());
+    if (isAttaching) return;
+    isAttaching = true;
 
-    const slide0 = document.getElementById('slide_0');
-    if (slide0) {
-      const titleEl = slide0.querySelector('.slide-title');
-      if (titleEl) {
-        titleEl.style.display = 'flex';
-        titleEl.style.alignItems = 'center';
-        titleEl.style.justifyContent = 'space-between';
-        titleEl.style.flexWrap = 'wrap';
-        titleEl.style.gap = '10px';
+    try {
+      const slide0 = document.getElementById('slide_0');
+      if (slide0) {
+        const titleEl = slide0.querySelector('.slide-title');
+        if (titleEl && !titleEl.querySelector('#btnCrmPickerMain')) {
+          titleEl.style.display = 'flex';
+          titleEl.style.justifyContent = 'space-between';
+          titleEl.style.alignItems = 'center';
+          titleEl.style.flexWrap = 'wrap';
+          titleEl.style.gap = '8px';
 
-        let mainBtn = document.getElementById('btnCrmPickerMain');
-        if (!mainBtn) {
-          mainBtn = document.createElement('button');
+          const mainBtn = document.createElement('button');
           mainBtn.type = 'button';
           mainBtn.id = 'btnCrmPickerMain';
-          mainBtn.className = 'btn-picker-trigger';
-          mainBtn.innerHTML = '<span>✨ CRM 고객 불러오기</span>';
+          mainBtn.className = 'btn-picker-main';
+          mainBtn.innerHTML = '✨ CRM 고객 불러오기';
           mainBtn.onclick = function (e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1005,97 +1000,83 @@
           titleEl.appendChild(mainBtn);
         }
       }
+    } finally {
+      setTimeout(() => { isAttaching = false; }, 60);
     }
-
-    // Step 2 (보험사 선택) 화면의 다음 버튼 감시
-    const nextBtn = document.getElementById('nextBtn');
-    if (nextBtn && !nextBtn._pickerHooked) {
-      nextBtn._pickerHooked = true;
-      const origNext = nextBtn.onclick;
-      nextBtn.addEventListener('click', function () {
-        setTimeout(attachButtonsToForm, 80);
-      });
-    }
-
-    // 이전 버튼 감시
-    const prevBtn = document.getElementById('prevBtn');
-    if (prevBtn && !prevBtn._pickerHooked) {
-      prevBtn._pickerHooked = true;
-      prevBtn.addEventListener('click', function () {
-        setTimeout(attachButtonsToForm, 80);
-      });
-    }
-
-    updateStepperBar();
   }
 
   // 9. 코비 스타일 수평 스텝퍼 바 (1단계~4단계) 100% 보존
   function updateStepperBar() {
     try {
-      const dynStep = document.getElementById('step_dyn_flow');
-      if (!dynStep || !dynStep.classList.contains('active')) return;
+      const dynFlow = document.getElementById('step_dyn_flow');
+      if (!dynFlow) return;
 
-      const slides = Array.from(document.querySelectorAll('#slides-container .app-slide'));
-      if (slides.length === 0) return;
-
-      let currentIndex = slides.findIndex(s => s.classList.contains('active'));
-      if (currentIndex === -1) currentIndex = 0;
-
-      const standardSteps = [
-        { label: '인적사항' },
-        { label: '사고정보' },
-        { label: '지급계좌 · 서명' },
-        { label: '서류첨부' }
-      ];
-
-      let stepper = document.getElementById('covyStepperBar');
-      if (!stepper) {
-        stepper = document.createElement('div');
-        stepper.id = 'covyStepperBar';
-        stepper.className = 'covy-style-stepper';
-        const contentArea = document.querySelector('.content-area');
-        if (contentArea) {
-          contentArea.insertBefore(stepper, contentArea.firstChild);
-        }
+      let stepperWrap = document.getElementById('covyStepperBar');
+      if (!stepperWrap) {
+        stepperWrap = document.createElement('div');
+        stepperWrap.id = 'covyStepperBar';
+        stepperWrap.className = 'covy-style-stepper';
+        dynFlow.parentNode.insertBefore(stepperWrap, dynFlow);
       }
 
-      stepper.innerHTML = '';
-      slides.forEach((slide, idx) => {
-        const tab = document.createElement('div');
-        tab.className = 'stepper-tab-c' + (idx === currentIndex ? ' active' : '');
+      if (!dynFlow.classList.contains('active')) {
+        stepperWrap.style.display = 'none';
+        return;
+      }
 
-        let titleText = '';
-        const titleEl = slide.querySelector('.slide-title');
+      const slides = document.querySelectorAll('#slides-container .app-slide');
+      if (!slides || slides.length === 0) {
+        stepperWrap.style.display = 'none';
+        return;
+      }
+
+      let activeIdx = -1;
+      slides.forEach((s, idx) => {
+        if (s.classList.contains('active')) {
+          activeIdx = idx;
+        }
+      });
+
+      if (activeIdx === -1) {
+        stepperWrap.style.display = 'none';
+        return;
+      }
+      stepperWrap.style.display = '';
+
+      const titles = [];
+      slides.forEach((s, i) => {
+        const titleEl = s.querySelector('.slide-title');
+        let text = '';
         if (titleEl) {
           const clone = titleEl.cloneNode(true);
           const btnInTitle = clone.querySelector('#btnCrmPickerMain');
           if (btnInTitle) btnInTitle.remove();
-          titleText = clone.textContent.replace(/^[0-9]+.s*/, '').trim();
+          text = clone.innerText.replace(/^[0-9.]+s*/, '').trim();
+        } else {
+          text = '단계 ' + (i + 1);
         }
-        if (!titleText && standardSteps[idx]) {
-          titleText = standardSteps[idx].label;
-        }
 
-        tab.innerHTML = `
-          <div class="stepper-tab-content">
-            <span class="stepper-mini-badge">${idx + 1}</span>
-            <span class="stepper-tab-label">${titleText}</span>
-          </div>
-          <div class="stepper-tab-line"></div>
-        `;
-
-        tab.onclick = function () {
-          if (typeof window.goToSlide === 'function') {
-            window.goToSlide(idx);
-          } else {
-            slides.forEach(s => s.classList.remove('active'));
-            slides[idx].classList.add('active');
-            updateStepperBar();
-          }
-        };
-
-        stepper.appendChild(tab);
+        if (text.includes('피보험자') || text.includes('인적사항')) text = '인적사항';
+        else if (text.includes('사고')) text = '사고정보';
+        else if (text.includes('계좌') || text.includes('서명')) text = '지급계좌·서명';
+        else if (text.includes('서류')) text = '서류첨부';
+        titles.push(text);
       });
+
+      let html = '';
+      titles.forEach((t, i) => {
+        let stateClass = (i === activeIdx) ? 'active' : '';
+
+        html += '<div class="stepper-tab-c ' + stateClass + '" onclick="if(typeof showSlide===\'function\') showSlide(' + i + ')">'
+              + '  <div class="stepper-tab-content">'
+              + '    <span class="stepper-mini-badge">' + (i + 1) + '</span>'
+              + '    <span class="stepper-tab-label">' + t + '</span>'
+              + '  </div>'
+              + '  <div class="stepper-tab-line"></div>'
+              + '</div>';
+      });
+
+      stepperWrap.innerHTML = html;
     } catch (e) {
       console.warn('[Covy Stepper] 업데이트 중 경고:', e);
     }
@@ -1103,32 +1084,30 @@
 
   // 10. 전용 스타일 주입
   function injectCustomStyles() {
-    if (document.getElementById('crmCustomerPickerStyles')) return;
+    if (document.getElementById('crmPickerCustomStyles')) return;
 
     const style = document.createElement('style');
-    style.id = 'crmCustomerPickerStyles';
+    style.id = 'crmPickerCustomStyles';
     style.innerHTML = `
-      .btn-picker-trigger {
-        font-size: 13px;
-        font-weight: 700;
-        color: #0284c7;
-        background-color: #f0f9ff;
-        border: 1.5px solid #bae6fd;
-        border-radius: 20px;
-        padding: 6px 14px;
+      .btn-picker-main {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        padding: 8px 16px;
+        font-size: 13.5px;
+        font-weight: 750;
         cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.08);
-      }
-      .btn-picker-trigger:hover {
-        background-color: #0284c7;
-        color: #ffffff;
-        border-color: #0284c7;
-        transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .btn-picker-main:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+        filter: brightness(1.05);
       }
 
       /* 2인 제어 콘솔 박스 */
@@ -1651,28 +1630,47 @@
     }
   }
 
-  // 12. 돔 변경 감시 및 초기화
+  // 12. 돔 변경 감시 및 초기화 (무한 루프 방지 철통 가드)
+  let isObserverUpdating = false;
   function initObserver() {
-    attachButtonsToForm();
-    initDataSync();
-
-    const slidesContainer = document.getElementById('slides-container');
-    if (slidesContainer) {
-      const observer = new MutationObserver(function () {
-        attachButtonsToForm();
-      });
-      observer.observe(slidesContainer, { childList: true, subtree: true });
+    const targetNode = document.getElementById('slides-container');
+    if (!targetNode) {
+      setTimeout(initObserver, 200);
+      return;
     }
+
+    const observer = new MutationObserver(function () {
+      if (isObserverUpdating) return;
+      isObserverUpdating = true;
+      try {
+        attachButtonsToForm();
+        updateStepperBar();
+        if (!hasAutoFilledUrlParams) {
+          autoFillFromUrlParams();
+        }
+      } finally {
+        setTimeout(() => { isObserverUpdating = false; }, 80);
+      }
+    });
+
+    observer.observe(targetNode, { childList: true, subtree: true });
+    attachButtonsToForm();
+    updateStepperBar();
+    autoFillFromUrlParams();
 
     const contentArea = document.querySelector('.content-area');
     if (contentArea) {
       const stepObserver = new MutationObserver(function () {
-        updateStepperBar();
+        if (isObserverUpdating) return;
+        isObserverUpdating = true;
+        try {
+          updateStepperBar();
+        } finally {
+          setTimeout(() => { isObserverUpdating = false; }, 80);
+        }
       });
-      stepObserver.observe(contentArea, { childList: true, subtree: false });
+      stepObserver.observe(contentArea, { attributes: true, subtree: true, attributeFilter: ['class'] });
     }
-
-    autoFillFromUrlParams();
   }
 
   if (document.readyState === 'loading') {

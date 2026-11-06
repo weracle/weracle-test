@@ -10,6 +10,7 @@
  *    - 펫보험 반려동물 정보 (petName, petBreed) 및 다견/다묘 선택 UI
  * 3. 2단계 프리뷰 화면에서 채워질 항목 리스트를 깔끔한 카드로 시각화
  * 4. [폼에 즉시 반영하기] 클릭 시 입력폼에 데이터 일괄 주입 후 청구 입력폼 화면으로 복귀
+ * 5. 코비 스타일 1단계~4단계 수평 스텝퍼 바 (인적사항 / 사고정보 / 지급계좌·서명 / 서류첨부) 100% 정상 복원
  */
 
 (function () {
@@ -18,12 +19,12 @@
   // 전역 상태 관리
   window.crmPickerState = {
     customers: [],
-    targetType: 'main', // 'main' (통합 고객 불러오기)
+    targetType: 'main',
     selectedCustomer: null,
     previewData: null,
     searchKeyword: '',
     selectedPetIndex: 0,
-    receiptType: 'auto' // 'auto' (자동이체 수령) 또는 'bank' (계좌 직접입력)
+    receiptType: 'auto'
   };
 
   // 1. 데이터 수신 및 로컬 캐시 동기화
@@ -164,9 +165,7 @@
 
           <!-- 단계 2: 선택된 고객 데이터 미리보기 및 검증 뷰 -->
           <div id="crmPickerStep2" class="crm-modal-step">
-            <div class="crm-preview-scroll" id="crmPreviewScroll">
-              <!-- 동적으로 렌더링되는 채워질 항목 리스트 -->
-            </div>
+            <div class="crm-preview-scroll" id="crmPreviewScroll"></div>
             
             <div class="crm-preview-footer">
               <button type="button" class="crm-btn-back" onclick="backToCustomerList()">← 다른 고객 선택</button>
@@ -180,19 +179,15 @@
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-    // 모달 배경 클릭 시 닫기
     const backdrop = document.getElementById('crmPickerModal');
-    backdrop.addEventListener('click', function (e) {
-      if (e.target === backdrop) {
-        closeCustomerPicker();
-      }
-    });
+    if (backdrop) {
+      backdrop.addEventListener('click', function (e) {
+        if (e.target === backdrop) closeCustomerPicker();
+      });
+    }
 
-    // ESC 키로 닫기
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && isModalOpen()) {
-        closeCustomerPicker();
-      }
+      if (e.key === 'Escape' && isModalOpen()) closeCustomerPicker();
     });
 
     injectCustomStyles();
@@ -223,22 +218,11 @@
     }
 
     renderCustomerList();
-
-    try {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'requestSyncData' }, '*');
-      }
-      if (window.opener && !window.opener.closed) {
-        window.opener.postMessage({ type: 'requestSyncData' }, '*');
-      }
-    } catch (e) {}
   };
 
   window.closeCustomerPicker = function () {
     const modal = document.getElementById('crmPickerModal');
-    if (modal) {
-      modal.classList.remove('show');
-    }
+    if (modal) modal.classList.remove('show');
   };
 
   function isModalOpen() {
@@ -354,14 +338,12 @@
     window.crmPickerState.previewData = sanitized;
     window.crmPickerState.selectedPetIndex = 0;
 
-    // 현재 폼(보험사)에 실제로 존재하는 필드들 실시간 감지
     const hasGuide = !!document.getElementById('guideName') || !!document.getElementById('guidePhone');
     const hasAutoTransfer = !!document.getElementById('autoTransfer');
     const hasBank = !!document.getElementById('bankName') || !!document.getElementById('bankAccount');
     const hasBankOwnerRrn = !!document.getElementById('bankOwnerRrn');
     const hasPet = !!document.getElementById('petName') || !!document.getElementById('petBreed');
 
-    // 자동이체 기본값 설정
     window.crmPickerState.receiptType = hasAutoTransfer ? 'auto' : 'bank';
 
     renderPreviewListHtml(sanitized, {
@@ -415,7 +397,7 @@
       </div>
     `;
 
-    // 2. 보상안내받으실 분 섹션 (해당 입력폼이 있는 회사인 경우)
+    // 2. 보상안내받으실 분 섹션
     if (formCaps.hasGuide) {
       html += `
         <div class="crm-fill-section-card">
@@ -452,7 +434,6 @@
           </div>
       `;
 
-      // 자동이체 수령 체크박스가 있는 회사인 경우 라디오 옵션 제공
       if (formCaps.hasAutoTransfer) {
         html += `
           <div class="crm-radio-choice-group">
@@ -468,7 +449,6 @@
         `;
       }
 
-      // 계좌 입력 영역
       const bankDisplay = formCaps.hasAutoTransfer ? 'none' : 'block';
       html += `
         <div id="crmBankDetailsWrap" style="display:${bankDisplay}; margin-top:12px;">
@@ -487,7 +467,6 @@
             </div>
       `;
 
-      // 예금주 주민번호 요구 회사인 경우 추가 필드 노출
       if (formCaps.hasBankOwnerRrn) {
         html += `
             <div class="crm-fill-item">
@@ -508,7 +487,7 @@
       `;
     }
 
-    // 4. 반려동물 정보 섹션 (펫보험 탭인 경우)
+    // 4. 반려동물 정보 섹션
     if (formCaps.hasPet) {
       const petSecNum = (formCaps.hasGuide ? 1 : 0) + (formCaps.hasAutoTransfer || formCaps.hasBank ? 1 : 0) + 2;
       html += `
@@ -568,16 +547,12 @@
     scrollEl.innerHTML = html;
   }
 
-  // 수령 방식 토글 (자동이체 vs 계좌입력)
   window.toggleReceiptType = function (type) {
     window.crmPickerState.receiptType = type;
     const wrap = document.getElementById('crmBankDetailsWrap');
-    if (wrap) {
-      wrap.style.display = type === 'bank' ? 'block' : 'none';
-    }
+    if (wrap) wrap.style.display = type === 'bank' ? 'block' : 'none';
   };
 
-  // 반려동물 선택 변경
   window.onSelectPetChoice = function (pIdx) {
     window.crmPickerState.selectedPetIndex = pIdx;
   };
@@ -599,7 +574,6 @@
       if (!proceed) return;
     }
 
-    // 값 주입 헬퍼 함수
     function setFieldValue(fieldId, value) {
       const el = document.getElementById(fieldId);
       if (el && value !== undefined && value !== null) {
@@ -609,13 +583,11 @@
       }
     }
 
-    // 1. 피보험자 정보 주입
     setFieldValue('insName', finalName);
     setFieldValue('insRrn', finalRrn);
     setFieldValue('insPhone', finalPhone);
     setFieldValue('insAddress', finalAddress);
 
-    // 2. 보상안내받으실 분 주입
     const guideName = document.getElementById('prev_guideName')?.value.trim() || finalName;
     const guidePhone = document.getElementById('prev_guidePhone')?.value.trim() || finalPhone;
     const guideRelation = document.getElementById('prev_guideRelation')?.value.trim() || '본인';
@@ -623,7 +595,6 @@
     setFieldValue('guidePhone', guidePhone);
     setFieldValue('guideRelation', guideRelation);
 
-    // 3. 보험금 수령 / 자동이체 처리
     const receiptType = window.crmPickerState.receiptType;
     const autoTransferEl = document.getElementById('autoTransfer');
 
@@ -643,7 +614,6 @@
       }
     }
 
-    // 계좌 입력 방식이거나 autoTransfer가 없는 보험사인 경우 계좌정보 주입
     if (receiptType === 'bank' || !autoTransferEl) {
       const bName = document.getElementById('prev_bankName')?.value.trim() || '';
       const bOwner = document.getElementById('prev_bankOwner')?.value.trim() || finalName;
@@ -652,14 +622,12 @@
       if (bOwner) setFieldValue('bankOwner', bOwner);
       if (bAcc) setFieldValue('bankAccount', bAcc);
 
-      // 예금주 주민번호 & 관계
       const bRrn = document.getElementById('prev_bankOwnerRrn')?.value.replace(/[^0-9]/g, '').trim() || finalRrn;
       const bRel = document.getElementById('prev_bankOwnerRel')?.value.trim() || '본인';
       if (document.getElementById('bankOwnerRrn')) setFieldValue('bankOwnerRrn', bRrn);
       if (document.getElementById('bankOwnerRel')) setFieldValue('bankOwnerRel', bRel);
     }
 
-    // 4. 반려동물 정보 주입 (다견/다묘 선택 반영)
     const previewData = window.crmPickerState.previewData;
     if (previewData && previewData.pets && previewData.pets.length > 0) {
       const pIdx = window.crmPickerState.selectedPetIndex || 0;
@@ -673,14 +641,10 @@
       if (customPetBreed) setFieldValue('petBreed', customPetBreed);
     }
 
-    // 모달 닫기
     closeCustomerPicker();
-
-    // 완료 알림 토스트
     showSuccessToast(`✅ CRM 고객(${finalName}) 정보가 폼에 성공적으로 반영되었습니다.`);
   };
 
-  // 성공 토스트 UI
   function showSuccessToast(msg) {
     let toast = document.getElementById('crmSuccessToast');
     if (!toast) {
@@ -691,17 +655,13 @@
     }
     toast.innerText = msg;
     toast.classList.add('show');
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 3200);
+    setTimeout(() => toast.classList.remove('show'), 3200);
   }
 
   // 8. Step 1 슬라이드 헤더 우측에 단일 메인 버튼 부착
   function attachButtonsToForm() {
-    // 기존 입력칸 옆 조그만 개별 버튼 제거
     document.querySelectorAll('.btn-picker-trigger').forEach(el => el.remove());
 
-    // Step 1 슬라이드 헤더 탐색
     const slide0 = document.getElementById('slide_0');
     if (slide0) {
       const titleEl = slide0.querySelector('.slide-title');
@@ -726,7 +686,6 @@
       }
     }
 
-    // 하단 고정 바에 [이전] 버튼 부착
     const bottomNav = document.getElementById('bottomNav');
     if (bottomNav && !document.getElementById('prevBtn')) {
       const prevBtn = document.createElement('button');
@@ -747,7 +706,81 @@
     }
   }
 
-  // 9. 전용 스타일 주입
+  // 9. 코비 스타일 수평 스텝퍼 바 (1단계~4단계: 인적사항 / 사고정보 / 지급계좌·서명 / 서류첨부) 100% 정상 작동 복원
+  function updateStepperBar() {
+    const dynFlow = document.getElementById('step_dyn_flow');
+    if (!dynFlow) return;
+
+    let stepperWrap = document.getElementById('covyStepperBar');
+    if (!stepperWrap) {
+      stepperWrap = document.createElement('div');
+      stepperWrap.id = 'covyStepperBar';
+      stepperWrap.className = 'covy-style-stepper';
+      dynFlow.parentNode.insertBefore(stepperWrap, dynFlow);
+    }
+
+    if (!dynFlow.classList.contains('active')) {
+      stepperWrap.style.display = 'none';
+      return;
+    }
+
+    const slides = document.querySelectorAll('.app-slide');
+    if (!slides || slides.length === 0) {
+      stepperWrap.style.display = 'none';
+      return;
+    }
+
+    let activeIdx = -1;
+    slides.forEach((s, idx) => {
+      if (s.classList.contains('active')) {
+        activeIdx = idx;
+      }
+    });
+
+    if (activeIdx === -1) {
+      stepperWrap.style.display = 'none';
+      return;
+    }
+    stepperWrap.style.display = '';
+
+    const titles = [];
+    slides.forEach((s, i) => {
+      const titleEl = s.querySelector('.slide-title');
+      let text = '';
+      if (titleEl) {
+        // 복제 노드에서 버튼 텍스트 제외하고 순수 제목 텍스트만 추출
+        const clone = titleEl.cloneNode(true);
+        const btnInTitle = clone.querySelector('#btnCrmPickerMain');
+        if (btnInTitle) btnInTitle.remove();
+        text = clone.innerText.replace(/^[0-9.]+\s*/, '').trim();
+      } else {
+        text = '단계 ' + (i + 1);
+      }
+
+      if (text.includes('피보험자') || text.includes('인적사항')) text = '인적사항';
+      else if (text.includes('사고')) text = '사고정보';
+      else if (text.includes('계좌') || text.includes('서명')) text = '지급계좌·서명';
+      else if (text.includes('서류')) text = '서류첨부';
+      titles.push(text);
+    });
+
+    let html = '';
+    titles.forEach((t, i) => {
+      let stateClass = (i === activeIdx) ? 'active' : '';
+
+      html += '<div class="stepper-tab-c ' + stateClass + '" onclick="if(typeof showSlide===\'function\') showSlide(' + i + ')">'
+            + '  <div class="stepper-tab-content">'
+            + '    <span class="stepper-mini-badge">' + (i + 1) + '</span>'
+            + '    <span class="stepper-tab-label">' + t + '</span>'
+            + '  </div>'
+            + '  <div class="stepper-tab-line"></div>'
+            + '</div>';
+    });
+
+    stepperWrap.innerHTML = html;
+  }
+
+  // 10. 전용 스타일 주입
   function injectCustomStyles() {
     if (document.getElementById('crmPickerCustomStyles')) return;
     const style = document.createElement('style');
@@ -949,7 +982,8 @@
     document.head.appendChild(style);
   }
 
-  // 10. URL 파라미터 자동 입력 연동 유지
+  // 11. URL 파라미터 자동 입력 연동
+  let hasAutoFilledUrlParams = false;
   function autoFillFromUrlParams() {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -988,35 +1022,54 @@
       setVal('insName', name);
       setVal('insPhone', phone);
       setVal('insRrn', jumin.replace(/[^0-9]/g, ''));
+      hasAutoFilledUrlParams = true;
     } catch (e) {
       console.warn('[CustomerPicker] autoFillFromUrlParams 에러:', e);
     }
   }
 
-  // 11. 돔 변경 감시 및 초기화
+  // 12. 돔 변경 감시 및 초기화 (slides-container 및 content-area 감시)
   function initObserver() {
+    const targetNode = document.getElementById('slides-container');
+    if (!targetNode) {
+      setTimeout(initObserver, 200);
+      return;
+    }
+
     const observer = new MutationObserver(function () {
-      const slide0 = document.getElementById('slide_0');
-      if (slide0) {
-        const titleEl = slide0.querySelector('.slide-title');
-        if (titleEl && !titleEl.querySelector('#btnCrmPickerMain')) {
-          attachButtonsToForm();
-        }
+      attachButtonsToForm();
+      updateStepperBar();
+      if (!hasAutoFilledUrlParams) {
+        autoFillFromUrlParams();
       }
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(targetNode, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    attachButtonsToForm();
+    updateStepperBar();
+    autoFillFromUrlParams();
+
+    const contentArea = document.querySelector('.content-area');
+    if (contentArea) {
+      const stepObserver = new MutationObserver(function () {
+        updateStepperBar();
+        if (!hasAutoFilledUrlParams) {
+          autoFillFromUrlParams();
+        }
+      });
+      stepObserver.observe(contentArea, { attributes: true, subtree: true, attributeFilter: ['class'] });
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function () {
     initDataSync();
-    attachButtonsToForm();
     initObserver();
-    autoFillFromUrlParams();
+    setTimeout(autoFillFromUrlParams, 300);
   });
 
-  // 전역 함수 노출
+  // 전역 노출
   window.attachCustomerPickerButtons = attachButtonsToForm;
+  window.updateStepperBar = updateStepperBar;
   window.autoFillFromUrlParams = autoFillFromUrlParams;
 
 })();

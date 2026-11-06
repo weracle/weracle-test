@@ -1,7 +1,15 @@
 /**
- * customer_picker.js - CRM 고객 정보 불러오기 및 청구서 폼 연동 모듈
- * 대상: 피보험자 / 계약자 인적사항 안전 매핑 및 데이터 정제기
- * 무결성 보장: 61개 보험사 PDF 좌표 매핑과 독립적으로 작동
+ * customer_picker.js - CRM 고객 정보 불러오기 및 청구서 폼 연동 모듈 (고도화 버전)
+ * 
+ * [주요 기능]
+ * 1. Step 1 슬라이드 헤더("1. 피보험자/수익자 정보") 우측에 대표 메인 버튼 배치
+ * 2. 현재 선택된 보험사 입력폼 필드 실시간 감지:
+ *    - 보상/안내받으실 분 (guideName, guidePhone, guideRelation)
+ *    - 자동이체 수령 체크 (autoTransfer) vs 계좌 직접 입력 (bankName, bankAccount, bankOwner)
+ *    - 예금주 주민번호 (bankOwnerRrn) 및 관계 (bankOwnerRel)
+ *    - 펫보험 반려동물 정보 (petName, petBreed) 및 다견/다묘 선택 UI
+ * 3. 2단계 프리뷰 화면에서 채워질 항목 리스트를 깔끔한 카드로 시각화
+ * 4. [폼에 즉시 반영하기] 클릭 시 입력폼에 데이터 일괄 주입 후 청구 입력폼 화면으로 복귀
  */
 
 (function () {
@@ -10,15 +18,16 @@
   // 전역 상태 관리
   window.crmPickerState = {
     customers: [],
-    targetType: 'ins', // 'ins' (피보험자) 또는 'cont' (계약자)
+    targetType: 'main', // 'main' (통합 고객 불러오기)
     selectedCustomer: null,
     previewData: null,
-    searchKeyword: ''
+    searchKeyword: '',
+    selectedPetIndex: 0,
+    receiptType: 'auto' // 'auto' (자동이체 수령) 또는 'bank' (계좌 직접입력)
   };
 
   // 1. 데이터 수신 및 로컬 캐시 동기화
   function initDataSync() {
-    // 로컬 스토리지 캐시 로드
     try {
       const cached = localStorage.getItem('weracle_crm_customers_cache');
       if (cached) {
@@ -34,7 +43,6 @@
       console.warn('[CustomerPicker] 로컬 캐시 로드 실패:', e);
     }
 
-    // 부모 창 및 오프너 창에 데이터 동기화 요청
     try {
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({ type: 'requestSyncData' }, '*');
@@ -44,7 +52,6 @@
       }
     } catch (e) {}
 
-    // postMessage 수신 리스너
     window.addEventListener('message', function (event) {
       if (event.data && event.data.type === 'syncData') {
         const data = event.data.data || [];
@@ -62,18 +69,15 @@
     });
   }
 
-  // 2. 데이터 정제기 (Data Sanitizer)
+  // 2. 고객 데이터 정제기 (다견/다묘, 계좌, 안내인 등 포함)
   function sanitizeCustomer(client) {
     if (!client) return null;
 
-    // 이름 추출
     const name = String(client['고객명'] || client['대표자명'] || client['이름'] || '').trim();
 
-    // 주민등록번호 추출 및 숫자 13자리 정제
     let rawJumin = String(client['주민번호'] || client['주민등록번호'] || '').trim();
     let cleanJumin = rawJumin.replace(/[^0-9]/g, '');
 
-    // 연락처 추출 및 숫자 정제
     let rawPhone = String(client['폰번호'] || client['연락처'] || client['휴대전화'] || '').trim();
     let cleanPhone = rawPhone.replace(/[^0-9]/g, '');
     if (cleanPhone.length === 11) {
@@ -82,15 +86,12 @@
       cleanPhone = cleanPhone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
     }
 
-    // 주소 추출
     const address = String(client['주소'] || client['자택주소'] || '').trim();
-
-    // 직업/상세업무
     const job = String(client['직업'] || client['상세업무'] || '').trim();
 
-    // 보험관리 가입내역에서 계좌 정보 탐색
-    let bankName = '';
-    let bankAccount = '';
+    // 계좌 정보 탐색
+    let bankName = String(client['은행명'] || client['차_은행명'] || '').trim();
+    let bankAccount = String(client['계좌번호'] || client['차_계좌번호'] || '').trim();
     let bankOwner = name;
 
     const insList = client['보험가입리스트'] || client['가입내역'] || [];
@@ -98,33 +99,47 @@
       for (let i = 0; i < insList.length; i++) {
         const item = insList[i];
         if (item && (item['은행명'] || item['계좌번호'])) {
-          bankName = String(item['은행명'] || '').trim();
-          bankAccount = String(item['계좌번호'] || '').trim().replace(/[^0-9-]/g, '');
-          if (item['예금주']) bankOwner = String(item['예금주']).trim();
-          break;
+          if (!bankName && item['은행명']) bankName = String(item['은행명']).trim();
+          if (!bankAccount && item['계좌번호']) bankAccount = String(item['계좌번호']).trim();
         }
       }
     }
 
-    if (!bankName && client['은행명']) bankName = String(client['은행명']).trim();
-    if (!bankAccount && client['계좌번호']) bankAccount = String(client['계좌번호']).trim().replace(/[^0-9-]/g, '');
+    // 반려동물 목록 탐색 및 다견/다묘 분리 파싱
+    const pets = [];
+    const petBreedRaw = String(client['반려동물'] || '').trim();
+    const petNameRaw = String(client['동물이름'] || '').trim();
+    const petCodeRaw = String(client['코드'] || '').trim();
+
+    if (petNameRaw || (petBreedRaw && petBreedRaw !== '해당없음' && petBreedRaw !== '-')) {
+      const names = petNameRaw.split(/[,/&+\n]+/).map(s => s.trim()).filter(Boolean);
+      const breeds = petBreedRaw.split(/[,/&+\n]+/).map(s => s.trim()).filter(s => s && s !== '해당없음' && s !== '-');
+      const codes = petCodeRaw.split(/[,/&+\n]+/).map(s => s.trim()).filter(Boolean);
+
+      const maxLen = Math.max(names.length, breeds.length, 1);
+      for (let i = 0; i < maxLen; i++) {
+        const pName = names[i] || names[0] || '반려동물';
+        const pBreed = breeds[i] || breeds[0] || '품종미상';
+        const pCode = codes[i] || codes[0] || '';
+        pets.push({ name: pName, breed: pBreed, code: pCode });
+      }
+    }
 
     return {
-      id: client['고객번호'] || client['ID'] || client['UID'] || '',
-      name: name,
+      name,
       rrn: cleanJumin,
-      rawRrn: rawJumin,
       phone: cleanPhone,
-      address: address,
-      job: job,
-      bankName: bankName,
-      bankAccount: bankAccount,
-      bankOwner: bankOwner,
-      raw: client
+      address,
+      job,
+      bankName,
+      bankAccount,
+      bankOwner,
+      bankOwnerRrn: cleanJumin,
+      pets
     };
   }
 
-  // 3. 모달 DOM 생성 및 주입
+  // 3. 모달 DOM 생성
   function ensureModalDom() {
     if (document.getElementById('crmPickerModal')) return;
 
@@ -134,7 +149,7 @@
           <div class="crm-modal-header">
             <div>
               <h3 class="crm-modal-title" id="crmModalTitle">CRM 고객 정보 불러오기</h3>
-              <p class="crm-modal-sub" id="crmModalSub">고객을 선택하면 폼에 들어갈 데이터가 미리보기로 표시됩니다.</p>
+              <p class="crm-modal-sub" id="crmModalSub">고객을 선택하면 청구서 폼에 채워질 데이터 목록이 표시됩니다.</p>
             </div>
             <button type="button" class="crm-modal-close" onclick="closeCustomerPicker()">&times;</button>
           </div>
@@ -149,57 +164,13 @@
 
           <!-- 단계 2: 선택된 고객 데이터 미리보기 및 검증 뷰 -->
           <div id="crmPickerStep2" class="crm-modal-step">
-            <div class="crm-preview-scroll">
-              <div class="crm-preview-banner" id="crmPreviewBanner">
-                선택한 고객의 정보가 입력 폼에 채워집니다.
-              </div>
-              <div class="crm-preview-group">
-                <label class="crm-preview-label">성명</label>
-                <input type="text" id="prev_name" class="crm-preview-input">
-              </div>
-              <div class="crm-preview-group">
-                <label class="crm-preview-label">주민등록번호 (13자리 숫자)</label>
-                <input type="text" id="prev_rrn" class="crm-preview-input" maxlength="13">
-              </div>
-              <div class="crm-preview-group">
-                <label class="crm-preview-label">휴대전화번호</label>
-                <input type="text" id="prev_phone" class="crm-preview-input">
-              </div>
-              <div class="crm-preview-group">
-                <label class="crm-preview-label">거주지 주소</label>
-                <input type="text" id="prev_address" class="crm-preview-input">
-              </div>
-              <div class="crm-preview-group">
-                <label class="crm-preview-label">직업 / 상세업무</label>
-                <input type="text" id="prev_job" class="crm-preview-input">
-              </div>
-
-              <!-- 계좌 정보 섹션 -->
-              <div class="crm-preview-account-box" id="crmPreviewAccountBox">
-                <label class="crm-account-check-label">
-                  <input type="checkbox" id="prev_fillAccount" checked>
-                  <span>보험금 수령 계좌 정보도 함께 채우기</span>
-                </label>
-                <div class="crm-preview-row-grid">
-                  <div class="crm-preview-group" style="margin-bottom:0;">
-                    <label class="crm-preview-label">은행명</label>
-                    <input type="text" id="prev_bankName" class="crm-preview-input">
-                  </div>
-                  <div class="crm-preview-group" style="margin-bottom:0;">
-                    <label class="crm-preview-label">예금주</label>
-                    <input type="text" id="prev_bankOwner" class="crm-preview-input">
-                  </div>
-                </div>
-                <div class="crm-preview-group" style="margin-top:8px; margin-bottom:0;">
-                  <label class="crm-preview-label">계좌번호</label>
-                  <input type="text" id="prev_bankAccount" class="crm-preview-input">
-                </div>
-              </div>
+            <div class="crm-preview-scroll" id="crmPreviewScroll">
+              <!-- 동적으로 렌더링되는 채워질 항목 리스트 -->
             </div>
             
             <div class="crm-preview-footer">
-              <button type="button" class="crm-btn-back" onclick="backToCustomerList()">이전으로</button>
-              <button type="button" class="crm-btn-apply" onclick="confirmAndApplyCustomerData()">확인 완료 - 폼에 입력</button>
+              <button type="button" class="crm-btn-back" onclick="backToCustomerList()">← 다른 고객 선택</button>
+              <button type="button" class="crm-btn-apply" onclick="confirmAndApplyCustomerData()">✨ 폼에 즉시 반영하기</button>
             </div>
           </div>
 
@@ -208,31 +179,41 @@
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // 모달 배경 클릭 시 닫기
+    const backdrop = document.getElementById('crmPickerModal');
+    backdrop.addEventListener('click', function (e) {
+      if (e.target === backdrop) {
+        closeCustomerPicker();
+      }
+    });
+
+    // ESC 키로 닫기
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && isModalOpen()) {
+        closeCustomerPicker();
+      }
+    });
+
+    injectCustomStyles();
   }
 
-  // 4. 모달 열기 및 닫기
+  // 4. 모달 열기/닫기 및 스텝 전환
   window.openCustomerPicker = function (targetType) {
     ensureModalDom();
-    window.crmPickerState.targetType = targetType || 'ins';
+    if (!window.crmPickerState.customers || window.crmPickerState.customers.length === 0) {
+      initDataSync();
+    }
+    window.crmPickerState.targetType = targetType || 'main';
     window.crmPickerState.selectedCustomer = null;
     window.crmPickerState.previewData = null;
     window.crmPickerState.searchKeyword = '';
-
-    const titleEl = document.getElementById('crmModalTitle');
-    const subEl = document.getElementById('crmModalSub');
-    if (targetType === 'cont') {
-      if (titleEl) titleEl.innerText = '계약자 정보 불러오기';
-      if (subEl) subEl.innerText = '계약자(보험료 납입자)로 지정할 고객을 선택해 주세요.';
-    } else {
-      if (titleEl) titleEl.innerText = '피보험자 정보 불러오기';
-      if (subEl) subEl.innerText = '치료받으신 분(피보험자)으로 지정할 고객을 선택해 주세요.';
-    }
+    window.crmPickerState.selectedPetIndex = 0;
 
     const modal = document.getElementById('crmPickerModal');
-    if (modal) {
-      modal.classList.add('show');
-    }
+    if (!modal) return;
 
+    modal.classList.add('show');
     switchStep(1);
 
     const searchInput = document.getElementById('crmSearchInput');
@@ -242,6 +223,15 @@
     }
 
     renderCustomerList();
+
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'requestSyncData' }, '*');
+      }
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'requestSyncData' }, '*');
+      }
+    } catch (e) {}
   };
 
   window.closeCustomerPicker = function () {
@@ -259,13 +249,16 @@
   function switchStep(stepNum) {
     const s1 = document.getElementById('crmPickerStep1');
     const s2 = document.getElementById('crmPickerStep2');
-    if (!s1 || !s2) return;
     if (stepNum === 1) {
-      s1.classList.add('active');
-      s2.classList.remove('active');
+      if (s1) s1.classList.add('active');
+      if (s2) s2.classList.remove('active');
+      document.getElementById('crmModalTitle').innerText = 'CRM 고객 정보 불러오기';
+      document.getElementById('crmModalSub').innerText = '고객을 선택하면 청구서 폼에 채워질 데이터 목록이 표시됩니다.';
     } else {
-      s1.classList.remove('active');
-      s2.classList.add('active');
+      if (s1) s1.classList.remove('active');
+      if (s2) s2.classList.add('active');
+      document.getElementById('crmModalTitle').innerText = '청구서 반영 데이터 확인';
+      document.getElementById('crmModalSub').innerText = '아래 리스트의 정보가 현재 보험사 입력폼에 자동으로 채워집니다.';
     }
   }
 
@@ -273,23 +266,24 @@
     switchStep(1);
   };
 
-  // 5. 고객 검색 및 렌더링
   window.onCustomerSearchInput = function (val) {
     window.crmPickerState.searchKeyword = (val || '').trim().toLowerCase();
     renderCustomerList();
   };
 
+  // 5. 고객 목록 렌더링
   function renderCustomerList() {
-    const listArea = document.getElementById('crmCustomerList');
-    if (!listArea) return;
+    const listEl = document.getElementById('crmCustomerList');
+    if (!listEl) return;
 
     let customers = window.crmPickerState.customers || window.claimCustomerData || [];
     const keyword = window.crmPickerState.searchKeyword;
 
     if (!Array.isArray(customers) || customers.length === 0) {
-      listArea.innerHTML = `
+      listEl.innerHTML = `
         <div class="crm-empty-state">
-          <p class="crm-empty-title">불러올 수 있는 고객 데이터가 없습니다.</p>
+          <div class="crm-empty-icon">📂</div>
+          <p class="crm-empty-title">불러올 수 있는 CRM 고객 데이터가 없습니다.</p>
           <p class="crm-empty-desc">CRM 메인 화면에서 로그인 후 고객 데이터를 로드한 뒤 다시 시도해 주세요.</p>
         </div>
       `;
@@ -300,54 +294,56 @@
     if (keyword) {
       filtered = customers.filter(c => {
         const name = String(c['고객명'] || c['대표자명'] || c['이름'] || '').toLowerCase();
-        const phone = String(c['폰번호'] || c['연락처'] || '').replace(/[^0-9]/g, '');
+        const phone = String(c['폰번호'] || c['연락처'] || c['휴대전화'] || '').replace(/[^0-9]/g, '');
         const jumin = String(c['주민번호'] || c['주민등록번호'] || '').replace(/[^0-9]/g, '');
-        return name.includes(keyword) || phone.includes(keyword) || jumin.includes(keyword);
+        const cleanKw = keyword.replace(/[^0-9a-zA-Z가-힣]/g, '');
+        return name.includes(keyword) || phone.includes(cleanKw) || jumin.includes(cleanKw);
       });
     }
 
     if (filtered.length === 0) {
-      listArea.innerHTML = `
+      listEl.innerHTML = `
         <div class="crm-empty-state">
-          <p class="crm-empty-title">검색 결과가 없습니다.</p>
-          <p class="crm-empty-desc">고객명이나 휴대폰 번호를 다시 확인해 주세요.</p>
+          <div class="crm-empty-icon">🔍</div>
+          <p class="crm-empty-title">'${keyword}' 검색 결과가 없습니다.</p>
+          <p class="crm-empty-desc">다른 이름이나 전화번호로 다시 검색해 보세요.</p>
         </div>
       `;
       return;
     }
 
+    window._filteredCustomerPool = filtered;
+
     let html = '';
-    filtered.slice(0, 50).forEach((client, idx) => {
+    filtered.forEach((client, idx) => {
       const sanitized = sanitizeCustomer(client);
-      let maskedJumin = sanitized.rrn;
-      if (maskedJumin && maskedJumin.length >= 7) {
-        maskedJumin = maskedJumin.substring(0, 6) + '-' + maskedJumin.substring(6, 7) + '******';
-      } else if (!maskedJumin) {
-        maskedJumin = '주민번호 미등록';
-      }
+      const juminMasked = sanitized.rrn.length >= 7
+        ? sanitized.rrn.slice(0, 6) + '-' + sanitized.rrn.slice(6, 7) + '******'
+        : sanitized.rrn || '-';
+      const phoneDisplay = sanitized.phone || '-';
+      const petSummary = sanitized.pets.length > 0
+        ? `🐾 반려동물 ${sanitized.pets.length}마리 (${sanitized.pets.map(p => p.name).join(', ')})`
+        : '';
 
       html += `
         <div class="crm-customer-card" onclick="selectCustomerForPreview(${idx})">
           <div class="crm-card-header">
-            <span class="crm-card-name">${sanitized.name || '성명 미상'}</span>
-            <span class="crm-card-badge">${sanitized.job || '고객'}</span>
+            <span class="crm-card-name">${sanitized.name || '(이름없음)'}</span>
+            <span class="crm-card-jumin">${juminMasked}</span>
           </div>
-          <div class="crm-card-info-row">
-            <span class="crm-info-item">전화: ${sanitized.phone || '미등록'}</span>
-            <span class="crm-info-item">주민번호: ${maskedJumin}</span>
+          <div class="crm-card-details">
+            <div class="crm-card-line">📞 ${phoneDisplay}</div>
+            ${sanitized.address ? `<div class="crm-card-line">📍 ${sanitized.address}</div>` : ''}
+            ${petSummary ? `<div class="crm-card-line" style="color:#0284c7; font-weight:600;">${petSummary}</div>` : ''}
           </div>
-          <div class="crm-card-address">${sanitized.address || '주소 정보 없음'}</div>
         </div>
       `;
     });
 
-    listArea.innerHTML = html;
-
-    // 현재 필터된 배열을 전역에 임시 보관
-    window._filteredCustomerPool = filtered;
+    listEl.innerHTML = html;
   }
 
-  // 6. 고객 선택 및 미리보기 화면 전환
+  // 6. 고객 선택 및 "채워지는 부분 리스트" 미리보기 화면 렌더링
   window.selectCustomerForPreview = function (filteredIndex) {
     const list = window._filteredCustomerPool || window.crmPickerState.customers || [];
     const client = list[filteredIndex];
@@ -356,51 +352,242 @@
     const sanitized = sanitizeCustomer(client);
     window.crmPickerState.selectedCustomer = client;
     window.crmPickerState.previewData = sanitized;
+    window.crmPickerState.selectedPetIndex = 0;
 
-    const banner = document.getElementById('crmPreviewBanner');
-    if (banner) {
-      const t = window.crmPickerState.targetType;
-      banner.innerText = t === 'cont'
-        ? '[계약자(보험료 납입자)] 정보로 적용 예정입니다.'
-        : '[피보험자(치료받으신 분)] 정보로 적용 예정입니다.';
-    }
+    // 현재 폼(보험사)에 실제로 존재하는 필드들 실시간 감지
+    const hasGuide = !!document.getElementById('guideName') || !!document.getElementById('guidePhone');
+    const hasAutoTransfer = !!document.getElementById('autoTransfer');
+    const hasBank = !!document.getElementById('bankName') || !!document.getElementById('bankAccount');
+    const hasBankOwnerRrn = !!document.getElementById('bankOwnerRrn');
+    const hasPet = !!document.getElementById('petName') || !!document.getElementById('petBreed');
 
-    document.getElementById('prev_name').value = sanitized.name || '';
-    document.getElementById('prev_rrn').value = sanitized.rrn || '';
-    document.getElementById('prev_phone').value = sanitized.phone || '';
-    document.getElementById('prev_address').value = sanitized.address || '';
-    document.getElementById('prev_job').value = sanitized.job || '';
+    // 자동이체 기본값 설정
+    window.crmPickerState.receiptType = hasAutoTransfer ? 'auto' : 'bank';
 
-    // 계좌 정보
-    const accBox = document.getElementById('crmPreviewAccountBox');
-    const bankNameInput = document.getElementById('prev_bankName');
-    const bankOwnerInput = document.getElementById('prev_bankOwner');
-    const bankAccountInput = document.getElementById('prev_bankAccount');
-
-    if (sanitized.bankName || sanitized.bankAccount) {
-      if (accBox) accBox.style.display = 'block';
-      if (bankNameInput) bankNameInput.value = sanitized.bankName || '';
-      if (bankOwnerInput) bankOwnerInput.value = sanitized.bankOwner || sanitized.name || '';
-      if (bankAccountInput) bankAccountInput.value = sanitized.bankAccount || '';
-    } else {
-      if (accBox) accBox.style.display = 'block';
-      if (bankNameInput) bankNameInput.value = '';
-      if (bankOwnerInput) bankOwnerInput.value = sanitized.name || '';
-      if (bankAccountInput) bankAccountInput.value = '';
-    }
+    renderPreviewListHtml(sanitized, {
+      hasGuide,
+      hasAutoTransfer,
+      hasBank,
+      hasBankOwnerRrn,
+      hasPet
+    });
 
     switchStep(2);
   };
 
-  // 7. 데이터 최종 승인 및 폼 주입
-  window.confirmAndApplyCustomerData = function () {
-    const target = window.crmPickerState.targetType || 'ins';
+  function renderPreviewListHtml(data, formCaps) {
+    const scrollEl = document.getElementById('crmPreviewScroll');
+    if (!scrollEl) return;
 
-    const finalName = document.getElementById('prev_name').value.trim();
-    let finalRrn = document.getElementById('prev_rrn').value.replace(/[^0-9]/g, '').trim();
-    const finalPhone = document.getElementById('prev_phone').value.trim();
-    const finalAddress = document.getElementById('prev_address').value.trim();
-    const finalJob = document.getElementById('prev_job').value.trim();
+    let html = `
+      <div class="crm-summary-header-box">
+        <div class="crm-summary-badge">선택된 고객</div>
+        <div class="crm-summary-client-name">${data.name} <span>(${data.phone || '연락처 없음'})</span></div>
+        <div class="crm-summary-desc">현재 선택하신 보험사 양식에 맞추어 아래 항목들이 자동으로 채워집니다.</div>
+      </div>
+    `;
+
+    // 1. 피보험자 인적사항 섹션
+    html += `
+      <div class="crm-fill-section-card">
+        <div class="crm-section-title">
+          <span class="crm-section-num">1</span>
+          <span>피보험자(치료받으신 분) 인적사항</span>
+        </div>
+        <div class="crm-fill-grid">
+          <div class="crm-fill-item">
+            <span class="crm-fill-label">성명</span>
+            <input type="text" id="prev_name" class="crm-inline-input" value="${data.name}">
+          </div>
+          <div class="crm-fill-item">
+            <span class="crm-fill-label">주민등록번호 (13자리)</span>
+            <input type="text" id="prev_rrn" class="crm-inline-input" value="${data.rrn}" maxlength="13">
+          </div>
+          <div class="crm-fill-item">
+            <span class="crm-fill-label">휴대전화번호</span>
+            <input type="text" id="prev_phone" class="crm-inline-input" value="${data.phone}">
+          </div>
+          <div class="crm-fill-item">
+            <span class="crm-fill-label">자택 주소</span>
+            <input type="text" id="prev_address" class="crm-inline-input" value="${data.address}">
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 2. 보상안내받으실 분 섹션 (해당 입력폼이 있는 회사인 경우)
+    if (formCaps.hasGuide) {
+      html += `
+        <div class="crm-fill-section-card">
+          <div class="crm-section-title">
+            <span class="crm-section-num">2</span>
+            <span>보상 안내받으실 분 정보</span>
+            <span class="crm-section-badge">해당 보험사 필수 항목</span>
+          </div>
+          <div class="crm-fill-grid">
+            <div class="crm-fill-item">
+              <span class="crm-fill-label">안내받으실 분 성명</span>
+              <input type="text" id="prev_guideName" class="crm-inline-input" value="${data.name}">
+            </div>
+            <div class="crm-fill-item">
+              <span class="crm-fill-label">안내 연락처</span>
+              <input type="text" id="prev_guidePhone" class="crm-inline-input" value="${data.phone}">
+            </div>
+            <div class="crm-fill-item">
+              <span class="crm-fill-label">피보험자와의 관계</span>
+              <input type="text" id="prev_guideRelation" class="crm-inline-input" value="본인">
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // 3. 보험금 수령 / 자동이체 설정 섹션
+    if (formCaps.hasAutoTransfer || formCaps.hasBank) {
+      html += `
+        <div class="crm-fill-section-card">
+          <div class="crm-section-title">
+            <span class="crm-section-num">${formCaps.hasGuide ? '3' : '2'}</span>
+            <span>보험금 수령 방법 및 계좌 정보</span>
+          </div>
+      `;
+
+      // 자동이체 수령 체크박스가 있는 회사인 경우 라디오 옵션 제공
+      if (formCaps.hasAutoTransfer) {
+        html += `
+          <div class="crm-radio-choice-group">
+            <label class="crm-radio-label">
+              <input type="radio" name="crmReceiptType" value="auto" checked onchange="toggleReceiptType('auto')">
+              <span><strong>기존 보험료 납입 자동이체 계좌로 수령</strong> (서식에 '예'로 자동 체크, 계좌입력 생략)</span>
+            </label>
+            <label class="crm-radio-label">
+              <input type="radio" name="crmReceiptType" value="bank" onchange="toggleReceiptType('bank')">
+              <span><strong>다른 계좌로 직접 수령</strong> (은행/계좌번호 직접 입력)</span>
+            </label>
+          </div>
+        `;
+      }
+
+      // 계좌 입력 영역
+      const bankDisplay = formCaps.hasAutoTransfer ? 'none' : 'block';
+      html += `
+        <div id="crmBankDetailsWrap" style="display:${bankDisplay}; margin-top:12px;">
+          <div class="crm-fill-grid">
+            <div class="crm-fill-item">
+              <span class="crm-fill-label">은행명</span>
+              <input type="text" id="prev_bankName" class="crm-inline-input" value="${data.bankName}" placeholder="예: 신한은행">
+            </div>
+            <div class="crm-fill-item">
+              <span class="crm-fill-label">예금주</span>
+              <input type="text" id="prev_bankOwner" class="crm-inline-input" value="${data.bankOwner || data.name}">
+            </div>
+            <div class="crm-fill-item" style="grid-column: 1 / -1;">
+              <span class="crm-fill-label">계좌번호</span>
+              <input type="text" id="prev_bankAccount" class="crm-inline-input" value="${data.bankAccount}" placeholder="숫자만 입력">
+            </div>
+      `;
+
+      // 예금주 주민번호 요구 회사인 경우 추가 필드 노출
+      if (formCaps.hasBankOwnerRrn) {
+        html += `
+            <div class="crm-fill-item">
+              <span class="crm-fill-label">예금주 주민등록번호 (13자리)</span>
+              <input type="text" id="prev_bankOwnerRrn" class="crm-inline-input" value="${data.bankOwnerRrn}" maxlength="13">
+            </div>
+            <div class="crm-fill-item">
+              <span class="crm-fill-label">예금주와 피보험자 관계</span>
+              <input type="text" id="prev_bankOwnerRel" class="crm-inline-input" value="본인">
+            </div>
+        `;
+      }
+
+      html += `
+          </div>
+        </div>
+      </div>
+      `;
+    }
+
+    // 4. 반려동물 정보 섹션 (펫보험 탭인 경우)
+    if (formCaps.hasPet) {
+      const petSecNum = (formCaps.hasGuide ? 1 : 0) + (formCaps.hasAutoTransfer || formCaps.hasBank ? 1 : 0) + 2;
+      html += `
+        <div class="crm-fill-section-card">
+          <div class="crm-section-title">
+            <span class="crm-section-num">${petSecNum}</span>
+            <span>🐾 반려동물 정보 (청구 대상)</span>
+            <span class="crm-section-badge">펫보험</span>
+          </div>
+      `;
+
+      if (data.pets.length > 1) {
+        html += `<p style="font-size:13px; color:#475569; margin: 0 0 10px 0; font-weight:600;">등록된 반려동물이 여러 마리입니다. 청구할 반려동물을 선택해주세요:</p>`;
+        data.pets.forEach((pet, pIdx) => {
+          html += `
+            <label class="crm-pet-select-item">
+              <input type="radio" name="crmSelectedPet" value="${pIdx}" ${pIdx === 0 ? 'checked' : ''} onchange="onSelectPetChoice(${pIdx})">
+              <div class="crm-pet-info-box">
+                <span class="crm-pet-name">${pet.name}</span>
+                <span class="crm-pet-sub">${pet.breed} ${pet.code ? ' / 등록코드: ' + pet.code : ''}</span>
+              </div>
+            </label>
+          `;
+        });
+      } else if (data.pets.length === 1) {
+        const pet = data.pets[0];
+        html += `
+          <div class="crm-fill-grid">
+            <div class="crm-fill-item">
+              <span class="crm-fill-label">반려동물 이름</span>
+              <input type="text" id="prev_petName" class="crm-inline-input" value="${pet.name}">
+            </div>
+            <div class="crm-fill-item">
+              <span class="crm-fill-label">품종</span>
+              <input type="text" id="prev_petBreed" class="crm-inline-input" value="${pet.breed}">
+            </div>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="crm-fill-grid">
+            <div class="crm-fill-item">
+              <span class="crm-fill-label">반려동물 이름</span>
+              <input type="text" id="prev_petName" class="crm-inline-input" placeholder="이름 직접 입력">
+            </div>
+            <div class="crm-fill-item">
+              <span class="crm-fill-label">품종</span>
+              <input type="text" id="prev_petBreed" class="crm-inline-input" placeholder="품종 직접 입력">
+            </div>
+          </div>
+        `;
+      }
+
+      html += `</div>`;
+    }
+
+    scrollEl.innerHTML = html;
+  }
+
+  // 수령 방식 토글 (자동이체 vs 계좌입력)
+  window.toggleReceiptType = function (type) {
+    window.crmPickerState.receiptType = type;
+    const wrap = document.getElementById('crmBankDetailsWrap');
+    if (wrap) {
+      wrap.style.display = type === 'bank' ? 'block' : 'none';
+    }
+  };
+
+  // 반려동물 선택 변경
+  window.onSelectPetChoice = function (pIdx) {
+    window.crmPickerState.selectedPetIndex = pIdx;
+  };
+
+  // 7. 데이터 최종 승인 및 폼 주입 ("폼에 반영하기" 버튼 클릭 시)
+  window.confirmAndApplyCustomerData = function () {
+    const finalName = document.getElementById('prev_name')?.value.trim() || '';
+    let finalRrn = document.getElementById('prev_rrn')?.value.replace(/[^0-9]/g, '').trim() || '';
+    const finalPhone = document.getElementById('prev_phone')?.value.trim() || '';
+    const finalAddress = document.getElementById('prev_address')?.value.trim() || '';
 
     if (!finalName) {
       alert('성명을 입력해 주세요.');
@@ -412,84 +599,130 @@
       if (!proceed) return;
     }
 
-    // 값 주입 및 change 이벤트 트리거 헬퍼
+    // 값 주입 헬퍼 함수
     function setFieldValue(fieldId, value) {
       const el = document.getElementById(fieldId);
-      if (el) {
+      if (el && value !== undefined && value !== null) {
         el.value = value;
         el.dispatchEvent(new Event('input', { bubbles: true }));
         el.dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
 
-    if (target === 'ins') {
-      setFieldValue('insName', finalName);
-      setFieldValue('insRrn', finalRrn);
-      setFieldValue('insPhone', finalPhone);
-      setFieldValue('insAddress', finalAddress);
-      setFieldValue('insJob', finalJob);
-    } else if (target === 'cont') {
-      setFieldValue('contName', finalName);
-      setFieldValue('contRrn', finalRrn);
-      setFieldValue('contPhone', finalPhone);
-      setFieldValue('contAddress', finalAddress);
-      setFieldValue('contRelation', '본인');
-    }
+    // 1. 피보험자 정보 주입
+    setFieldValue('insName', finalName);
+    setFieldValue('insRrn', finalRrn);
+    setFieldValue('insPhone', finalPhone);
+    setFieldValue('insAddress', finalAddress);
 
-    // 계좌 정보 주입 (선택된 경우)
-    const fillAccount = document.getElementById('prev_fillAccount')?.checked;
-    if (fillAccount) {
-      const bName = document.getElementById('prev_bankName').value.trim();
-      const bOwner = document.getElementById('prev_bankOwner').value.trim();
-      const bAcc = document.getElementById('prev_bankAccount').value.trim();
+    // 2. 보상안내받으실 분 주입
+    const guideName = document.getElementById('prev_guideName')?.value.trim() || finalName;
+    const guidePhone = document.getElementById('prev_guidePhone')?.value.trim() || finalPhone;
+    const guideRelation = document.getElementById('prev_guideRelation')?.value.trim() || '본인';
+    setFieldValue('guideName', guideName);
+    setFieldValue('guidePhone', guidePhone);
+    setFieldValue('guideRelation', guideRelation);
 
-      if (bName) setFieldValue('bankName', bName);
-      if (bOwner) setFieldValue('bankOwner', bOwner);
-      if (bAcc) setFieldValue('bankAccount', bAcc);
-    }
+    // 3. 보험금 수령 / 자동이체 처리
+    const receiptType = window.crmPickerState.receiptType;
+    const autoTransferEl = document.getElementById('autoTransfer');
 
-    closeCustomerPicker();
-  };
-
-  // 8. 폼 라벨 옆에 불러오기 버튼 자동 부착
-  function attachButtonsToForm() {
-    // 피보험자 버튼
-    const insWrap = document.getElementById('wrapper_insName');
-    if (insWrap && !insWrap.querySelector('.btn-picker-trigger')) {
-      const label = insWrap.querySelector('.main-label');
-      if (label) {
-        label.style.display = 'flex';
-        label.style.justifyContent = 'space-between';
-        label.style.alignItems = 'center';
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn-picker-trigger';
-        btn.innerText = 'CRM 고객 불러오기';
-        btn.onclick = function (e) {
-          e.preventDefault();
-          window.openCustomerPicker('ins');
-        };
-        label.appendChild(btn);
+    if (autoTransferEl) {
+      if (receiptType === 'auto') {
+        autoTransferEl.checked = true;
+        autoTransferEl.dispatchEvent(new Event('change', { bubbles: true }));
+        if (typeof window.toggleBankFields === 'function') {
+          window.toggleBankFields(true);
+        }
+      } else {
+        autoTransferEl.checked = false;
+        autoTransferEl.dispatchEvent(new Event('change', { bubbles: true }));
+        if (typeof window.toggleBankFields === 'function') {
+          window.toggleBankFields(false);
+        }
       }
     }
 
-    // 계약자 버튼
-    const contWrap = document.getElementById('wrapper_contName');
-    if (contWrap && !contWrap.querySelector('.btn-picker-trigger')) {
-      const label = contWrap.querySelector('.main-label');
-      if (label) {
-        label.style.display = 'flex';
-        label.style.justifyContent = 'space-between';
-        label.style.alignItems = 'center';
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn-picker-trigger';
-        btn.innerText = 'CRM 고객 불러오기';
-        btn.onclick = function (e) {
+    // 계좌 입력 방식이거나 autoTransfer가 없는 보험사인 경우 계좌정보 주입
+    if (receiptType === 'bank' || !autoTransferEl) {
+      const bName = document.getElementById('prev_bankName')?.value.trim() || '';
+      const bOwner = document.getElementById('prev_bankOwner')?.value.trim() || finalName;
+      const bAcc = document.getElementById('prev_bankAccount')?.value.trim() || '';
+      if (bName) setFieldValue('bankName', bName);
+      if (bOwner) setFieldValue('bankOwner', bOwner);
+      if (bAcc) setFieldValue('bankAccount', bAcc);
+
+      // 예금주 주민번호 & 관계
+      const bRrn = document.getElementById('prev_bankOwnerRrn')?.value.replace(/[^0-9]/g, '').trim() || finalRrn;
+      const bRel = document.getElementById('prev_bankOwnerRel')?.value.trim() || '본인';
+      if (document.getElementById('bankOwnerRrn')) setFieldValue('bankOwnerRrn', bRrn);
+      if (document.getElementById('bankOwnerRel')) setFieldValue('bankOwnerRel', bRel);
+    }
+
+    // 4. 반려동물 정보 주입 (다견/다묘 선택 반영)
+    const previewData = window.crmPickerState.previewData;
+    if (previewData && previewData.pets && previewData.pets.length > 0) {
+      const pIdx = window.crmPickerState.selectedPetIndex || 0;
+      const chosenPet = previewData.pets[pIdx] || previewData.pets[0];
+      setFieldValue('petName', chosenPet.name);
+      setFieldValue('petBreed', chosenPet.breed);
+    } else {
+      const customPetName = document.getElementById('prev_petName')?.value.trim();
+      const customPetBreed = document.getElementById('prev_petBreed')?.value.trim();
+      if (customPetName) setFieldValue('petName', customPetName);
+      if (customPetBreed) setFieldValue('petBreed', customPetBreed);
+    }
+
+    // 모달 닫기
+    closeCustomerPicker();
+
+    // 완료 알림 토스트
+    showSuccessToast(`✅ CRM 고객(${finalName}) 정보가 폼에 성공적으로 반영되었습니다.`);
+  };
+
+  // 성공 토스트 UI
+  function showSuccessToast(msg) {
+    let toast = document.getElementById('crmSuccessToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'crmSuccessToast';
+      toast.className = 'crm-success-toast';
+      document.body.appendChild(toast);
+    }
+    toast.innerText = msg;
+    toast.classList.add('show');
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 3200);
+  }
+
+  // 8. Step 1 슬라이드 헤더 우측에 단일 메인 버튼 부착
+  function attachButtonsToForm() {
+    // 기존 입력칸 옆 조그만 개별 버튼 제거
+    document.querySelectorAll('.btn-picker-trigger').forEach(el => el.remove());
+
+    // Step 1 슬라이드 헤더 탐색
+    const slide0 = document.getElementById('slide_0');
+    if (slide0) {
+      const titleEl = slide0.querySelector('.slide-title');
+      if (titleEl && !titleEl.querySelector('#btnCrmPickerMain')) {
+        titleEl.style.display = 'flex';
+        titleEl.style.justifyContent = 'space-between';
+        titleEl.style.alignItems = 'center';
+        titleEl.style.flexWrap = 'wrap';
+        titleEl.style.gap = '8px';
+
+        const mainBtn = document.createElement('button');
+        mainBtn.type = 'button';
+        mainBtn.id = 'btnCrmPickerMain';
+        mainBtn.className = 'btn-picker-main';
+        mainBtn.innerHTML = `👤 CRM 고객정보 불러오기`;
+        mainBtn.onclick = function (e) {
           e.preventDefault();
-          window.openCustomerPicker('cont');
+          window.openCustomerPicker('main');
         };
-        label.appendChild(btn);
+
+        titleEl.appendChild(mainBtn);
       }
     }
 
@@ -514,72 +747,209 @@
     }
   }
 
-  // 9. 코비 스타일 수평 스텝퍼 바 (순수 시각용 UI 표시 도우미 - 100% 기존 데이터 연동)
-  function updateStepperBar() {
-    const dynFlow = document.getElementById('step_dyn_flow');
-    if (!dynFlow) return;
-
-    let stepperWrap = document.getElementById('covyStepperBar');
-    if (!stepperWrap) {
-      stepperWrap = document.createElement('div');
-      stepperWrap.id = 'covyStepperBar';
-      stepperWrap.className = 'covy-style-stepper';
-      dynFlow.parentNode.insertBefore(stepperWrap, dynFlow);
-    }
-
-    if (!dynFlow.classList.contains('active')) {
-      stepperWrap.style.display = 'none';
-      return;
-    }
-
-    const slides = document.querySelectorAll('.app-slide');
-    if (!slides || slides.length === 0) {
-      stepperWrap.style.display = 'none';
-      return;
-    }
-
-    let activeIdx = -1;
-    slides.forEach((s, idx) => {
-      if (s.classList.contains('active')) {
-        activeIdx = idx;
+  // 9. 전용 스타일 주입
+  function injectCustomStyles() {
+    if (document.getElementById('crmPickerCustomStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'crmPickerCustomStyles';
+    style.innerHTML = `
+      .btn-picker-main {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        color: #ffffff;
+        font-size: 13.5px;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+        transition: all 0.2s ease;
       }
-    });
+      .btn-picker-main:hover {
+        background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+      }
 
-    if (activeIdx === -1) {
-      stepperWrap.style.display = 'none';
-      return;
-    }
-    stepperWrap.style.display = '';
+      .crm-summary-header-box {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .crm-summary-badge {
+        font-size: 11px;
+        font-weight: 800;
+        color: #0284c7;
+        background: #e0f2fe;
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-bottom: 6px;
+      }
+      .crm-summary-client-name {
+        font-size: 18px;
+        font-weight: 800;
+        color: #0c4a6e;
+      }
+      .crm-summary-client-name span {
+        font-size: 14px;
+        font-weight: 500;
+        color: #64748b;
+        margin-left: 6px;
+      }
+      .crm-summary-desc {
+        font-size: 12.5px;
+        color: #475569;
+        margin-top: 6px;
+      }
 
-    const titles = [];
-    slides.forEach((s, i) => {
-      const titleEl = s.querySelector('.slide-title');
-      let text = titleEl ? titleEl.innerText.replace(/^[0-9.]+\s*/, '') : ('단계 ' + (i + 1));
-      if (text.includes('피보험자') || text.includes('인적사항')) text = '인적사항';
-      else if (text.includes('사고')) text = '사고정보';
-      else if (text.includes('계좌') || text.includes('서명')) text = '지급계좌·서명';
-      else if (text.includes('서류')) text = '서류첨부';
-      titles.push(text);
-    });
+      .crm-fill-section-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      }
+      .crm-section-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .crm-section-num {
+        width: 20px;
+        height: 20px;
+        background: #0284c7;
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+      }
+      .crm-section-badge {
+        font-size: 11px;
+        color: #0284c7;
+        background: #e0f2fe;
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-left: auto;
+      }
 
-    let html = '';
-    titles.forEach((t, i) => {
-      let stateClass = (i === activeIdx) ? 'active' : '';
+      .crm-fill-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .crm-fill-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .crm-fill-label {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #64748b;
+      }
+      .crm-inline-input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 13.5px;
+        color: #1e293b;
+        background: #f8fafc;
+        box-sizing: border-box;
+      }
+      .crm-inline-input:focus {
+        background: #ffffff;
+        border-color: #0284c7;
+        outline: none;
+      }
 
-      html += '<div class="stepper-tab-c ' + stateClass + '" onclick="if(typeof showSlide===\'function\') showSlide(' + i + ')">'
-            + '  <div class="stepper-tab-content">'
-            + '    <span class="stepper-mini-badge">' + (i + 1) + '</span>'
-            + '    <span class="stepper-tab-label">' + t + '</span>'
-            + '  </div>'
-            + '  <div class="stepper-tab-line"></div>'
-            + '</div>';
-    });
+      .crm-radio-choice-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        background: #f8fafc;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+      }
+      .crm-radio-label {
+        font-size: 13px;
+        color: #334155;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
 
-    stepperWrap.innerHTML = html;
+      .crm-pet-select-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .crm-pet-select-item:hover {
+        background: #f0f9ff;
+        border-color: #bae6fd;
+      }
+      .crm-pet-info-box {
+        display: flex;
+        flex-direction: column;
+      }
+      .crm-pet-name {
+        font-size: 14px;
+        font-weight: 800;
+        color: #0f172a;
+      }
+      .crm-pet-sub {
+        font-size: 12px;
+        color: #64748b;
+      }
+
+      .crm-success-toast {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: rgba(15, 23, 42, 0.92);
+        color: #ffffff;
+        padding: 12px 24px;
+        border-radius: 30px;
+        font-size: 14px;
+        font-weight: 700;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 10001;
+      }
+      .crm-success-toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    `;
+    document.head.appendChild(style);
   }
 
-  // 9. URL 파라미터(CRM 고객 클릭 등) 자동 입력 연동
-  let hasAutoFilledUrlParams = false;
+  // 10. URL 파라미터 자동 입력 연동 유지
   function autoFillFromUrlParams() {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -590,7 +960,6 @@
 
       if (!name && !phone && !jumin && !comp) return;
 
-      // 보험사 자동 선택 (Step 2 화면)
       if (comp) {
         const compSelect = document.getElementById('companySelect');
         if (compSelect && compSelect.options.length > 0) {
@@ -607,7 +976,6 @@
         }
       }
 
-      // 동적 폼 필드 입력 (Step 3 화면 생성 시)
       function setVal(id, v) {
         const el = document.getElementById(id);
         if (el && v && (!el.value || el.value.trim() === '')) {
@@ -617,72 +985,38 @@
         }
       }
 
-      const insNameEl = document.getElementById('insName');
-      if (insNameEl) {
-        const cleanRrn = jumin.replace(/[^0-9]/g, '');
-        const cleanPhone = phone.replace(/[^0-9-]/g, '');
-
-        if (name) setVal('insName', name);
-        if (cleanRrn) setVal('insRrn', cleanRrn);
-        if (cleanPhone) setVal('insPhone', cleanPhone);
-
-        if (name && !document.getElementById('contName')?.value) {
-          setVal('contName', name);
-          if (cleanRrn) setVal('contRrn', cleanRrn);
-          if (cleanPhone) setVal('contPhone', cleanPhone);
-          setVal('contRelation', '본인');
-        }
-        hasAutoFilledUrlParams = true;
-      }
-    } catch (err) {
-      console.warn('[CustomerPicker] autoFillFromUrlParams error:', err);
+      setVal('insName', name);
+      setVal('insPhone', phone);
+      setVal('insRrn', jumin.replace(/[^0-9]/g, ''));
+    } catch (e) {
+      console.warn('[CustomerPicker] autoFillFromUrlParams 에러:', e);
     }
   }
 
-  // slides-container 감시자 등록 (동적 슬라이드 렌더링 시 자동 부착)
+  // 11. 돔 변경 감시 및 초기화
   function initObserver() {
-    const targetNode = document.getElementById('slides-container');
-    if (!targetNode) {
-      setTimeout(initObserver, 300);
-      return;
-    }
-
     const observer = new MutationObserver(function () {
-      attachButtonsToForm();
-      updateStepperBar();
-      if (!hasAutoFilledUrlParams) {
-        autoFillFromUrlParams();
+      const slide0 = document.getElementById('slide_0');
+      if (slide0) {
+        const titleEl = slide0.querySelector('.slide-title');
+        if (titleEl && !titleEl.querySelector('#btnCrmPickerMain')) {
+          attachButtonsToForm();
+        }
       }
     });
 
-    observer.observe(targetNode, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
-    attachButtonsToForm();
-    updateStepperBar();
-    autoFillFromUrlParams();
-
-    // claim-step 전환 감시 (step2 -> step_dyn_flow 진입 시)
-    const contentArea = document.querySelector('.content-area');
-    if (contentArea) {
-      const stepObserver = new MutationObserver(function () {
-        updateStepperBar();
-        if (!hasAutoFilledUrlParams) {
-          autoFillFromUrlParams();
-        }
-      });
-      stepObserver.observe(contentArea, { attributes: true, subtree: true, attributeFilter: ['class'] });
-    }
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  // 초기화 실행
   document.addEventListener('DOMContentLoaded', function () {
     initDataSync();
+    attachButtonsToForm();
     initObserver();
-    setTimeout(autoFillFromUrlParams, 300);
+    autoFillFromUrlParams();
   });
 
+  // 전역 함수 노출
   window.attachCustomerPickerButtons = attachButtonsToForm;
-  window.updateStepperBar = updateStepperBar;
   window.autoFillFromUrlParams = autoFillFromUrlParams;
 
 })();
-

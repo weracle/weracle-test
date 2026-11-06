@@ -149,8 +149,8 @@
         .c-tab:hover { color: var(--text-main); border-color: #d2d2d7; }
         .c-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 4px 14px rgba(17,63,103,0.25); }
 
-        .carousel-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
-        .carousel-container { width: 100%;  height: auto; min-height: 100%;  position: relative; perspective: 1000px; display: flex; align-items: center; justify-content: center; padding: 0 32px; }
+        .carousel-wrapper { flex: 1; display: flex; align-items: flex-start; justify-content: center; position: relative; }
+        .carousel-container { width: 100%;  height: auto; min-height: 100%;  position: relative; perspective: 1000px; display: flex; align-items: flex-start; justify-content: center; padding: 0 32px; }
         
         .nav-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
@@ -715,7 +715,7 @@
     <div class="filter-list"></div>
 
         </div>
-        <div class="content-panel" style="flex: 1; min-height: 0; background: #fff; border-radius: 20px; padding: 16px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center; overflow: visible;">
+        <div class="content-panel" style="flex: 1; min-height: 0; background: #fff; border-radius: 20px; padding: 16px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: flex-start; overflow: visible;">
             <div class="main-tabs" style="display: none;">
                 <div class="c-tab active" id="tab-target">오늘의 추천 타겟</div>
                 <div class="c-tab" id="tab-product">이달의 추천 상품</div>
@@ -1365,9 +1365,11 @@ function attachFilterEvents() {
 
 const menuTitle = this.querySelector(".filter-title").innerText.trim();
                         currentLeftMenuTitle = menuTitle;
-                        const cp = document.querySelector('.content-panel');
-                        if (cp && typeof cp.scrollIntoView === 'function') {
-                            cp.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        if (window.innerWidth <= 768) {
+                            const cp = document.querySelector('.content-panel');
+                            if (cp && typeof cp.scrollIntoView === 'function') {
+                                cp.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }
                         }
 
                         //  우측 탭을 항상 노출하여 'CRM 고객(타겟)'과 '전체 고객'을 자유롭게 오갈 수 있도록 보장!

@@ -12,7 +12,7 @@
  *    - 폼 내부에서 데이터가 임시로 채워졌다 덮어써지며 생기는 데이터 찌꺼기/겹침 오류 100% 원천 차단
  *    - '다릅니다' 선택 시 손보 'diffInsuredCont' 자동 활성화 및 폼 펼침, 생보 'sameAsBene' 자동 해제
  * 3. 5대 청구 파트 (질병상해, 펫보험, 생명보험, 배상책임, 재물보험) 공통 호환
- * 4. 4단계 코비 수평 스텝퍼 바(updateStepperBar) 무한루프 방지 완벽 가드
+ * 4. 4단계 코비 수평 스텝퍼 바(updateStepperBar) 무한루프 방지 및 가로 그리드 정렬 100% 보존
  * ==============================================================================
  */
 
@@ -36,8 +36,6 @@
     // Q2: Person B - 계약자 / 수익자 (보험금 수령자 - isDifferent가 true일 때)
     contractorCustomer: null,
     contractorData: null,
-    relation: '모', // '모', '부', '배우자', '자녀', '형제/자매', '기타'
-    customRelation: '',
 
     receiptType: 'auto', // 'auto' or 'bank'
     selectedPetIndex: 0
@@ -328,7 +326,6 @@
     const isDiff = window.crmPickerState.isDifferent;
     const insured = window.crmPickerState.insuredData;
     const contractor = window.crmPickerState.contractorData;
-    const relation = window.crmPickerState.relation || '모';
 
     // 현재 선택된 보험사 명칭 확인
     const select = document.getElementById('companySelect');
@@ -480,21 +477,6 @@
         `;
       }
 
-      // 피보험자와의 관계 선택
-      const relChips = ['모', '부', '배우자', '자녀', '형제/자매', '기타'];
-      html += `
-        <div class="crm-relation-select-box">
-          <label class="crm-rel-label">피보험자(환자)와의 관계:</label>
-          <div class="crm-rel-chips">
-            ${relChips.map(r => `
-              <button type="button" class="crm-rel-chip ${relation === r ? 'active' : ''}" onclick="setRelation('${r}')">
-                ${r}
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `;
-
       html += `</div>`; // End Person B
     }
 
@@ -506,12 +488,6 @@
   // Q1 모드 변경 (동일 vs 다름)
   window.setDiffMode = function (isDiff) {
     window.crmPickerState.isDifferent = isDiff;
-    renderSetupView();
-  };
-
-  // 관계 설정
-  window.setRelation = function (rel) {
-    window.crmPickerState.relation = rel;
     renderSetupView();
   };
 
@@ -642,7 +618,6 @@
     const isDiff = window.crmPickerState.isDifferent;
     const insured = window.crmPickerState.insuredData;
     const contractor = window.crmPickerState.contractorData;
-    const relation = window.crmPickerState.relation || '모';
 
     // 1. 손해보험 'diffInsuredCont' 체크박스 상태 제어
     const diffInsContEl = document.getElementById('diffInsuredCont');
@@ -696,7 +671,6 @@
       setFieldValue('contRrn_back', contractor.rrnBack);
       setFieldValue('contPhone', contractor.phone);
       setFieldValue('contAddress', contractor.address);
-      setFieldValue('contRelation', relation);
 
       // 생명보험 bene* 필드 주입
       setFieldValue('beneName', contractor.name);
@@ -705,12 +679,10 @@
       setFieldValue('beneRrn_back', contractor.rrnBack);
       setFieldValue('benePhone', contractor.phone);
       setFieldValue('beneAddress', contractor.address);
-      setFieldValue('beneRelation', relation);
 
       // 보상안내(guide*) 주입
       setFieldValue('guideName', contractor.name);
       setFieldValue('guidePhone', contractor.phone);
-      setFieldValue('guideRelation', relation);
 
       // 계좌정보 주입 (계약자 우선, 없으면 피보험자)
       const moneyTarget = contractor.bankAccount ? contractor : (insured || contractor);
@@ -751,7 +723,7 @@
     setFieldValue('bankAccount', target.bankAccount);
     setFieldValue('bankOwner', target.bankOwner || target.name);
     setFieldValue('bankOwnerRrn', target.rrn);
-    setFieldValue('bankOwnerRel', target === window.crmPickerState.insuredData ? '본인' : (window.crmPickerState.relation || '본인'));
+    setFieldValue('bankOwnerRel', target === window.crmPickerState.insuredData ? '본인' : '계약자');
   }
 
   // 필드 값 안전 주입
@@ -839,7 +811,7 @@
   }
 
   // ========================================================
-  // [코비 스타일 수평 스텝퍼 바 (1단계~4단계) 100% 안전 보존]
+  // [코비 스타일 수평 스텝퍼 바 (1단계~4단계) 100% 가로 그리드 보존]
   // ========================================================
   function updateStepperBar() {
     try {
@@ -859,8 +831,10 @@
       if (!stepperWrap) {
         stepperWrap = document.createElement('div');
         stepperWrap.id = 'covyStepperBar';
-        stepperWrap.className = 'covy-stepper-container';
+        stepperWrap.className = 'covy-style-stepper';
         dynFlow.parentNode.insertBefore(stepperWrap, dynFlow);
+      } else {
+        stepperWrap.className = 'covy-style-stepper';
       }
 
       let titles = [];
@@ -902,6 +876,19 @@
     const style = document.createElement('style');
     style.id = 'crmPickerCustomStyles';
     style.innerHTML = `
+      /* 코비 스타일 수평 스텝퍼 바 가로 그리드 절대 보장 */
+      #covyStepperBar, .covy-style-stepper {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        background: #ffffff !important;
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 18px !important;
+        padding: 16px 20px 14px !important;
+        margin-bottom: 26px !important;
+        box-shadow: 0 4px 16px rgba(17, 63, 103, 0.04) !important;
+      }
+
       .btn-picker-main {
         background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
         color: #ffffff;
@@ -1312,46 +1299,6 @@
         font-size: 12px;
         font-weight: 700;
         cursor: pointer;
-      }
-
-      /* 관계 선택 칩 */
-      .crm-relation-select-box {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding-top: 6px;
-        border-top: 1px dashed #f1f5f9;
-        flex-wrap: wrap;
-      }
-      .crm-rel-label {
-        font-size: 12.5px;
-        font-weight: 700;
-        color: #334155;
-      }
-      .crm-rel-chips {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-      }
-      .crm-rel-chip {
-        background: #ffffff;
-        border: 1.5px solid #cbd5e1;
-        color: #475569;
-        border-radius: 8px;
-        padding: 4px 10px;
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.15s ease;
-      }
-      .crm-rel-chip:hover {
-        border-color: #db2777;
-        color: #db2777;
-      }
-      .crm-rel-chip.active {
-        background: #db2777;
-        border-color: #db2777;
-        color: #ffffff;
       }
 
       /* 모달 푸터 버튼 */

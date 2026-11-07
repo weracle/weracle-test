@@ -8825,10 +8825,6 @@ window.previewBulkData = function() { try {
     });
 
     bulkParsedData = [];
-    let html = '';
-    let currentId = maxId + 1;
-    let hasError = false;
-    let dupCount = 0;
 
     for (let i = 0; i < rowCount; i++) {
         const name = names[i] || '';
@@ -8838,13 +8834,65 @@ window.previewBulkData = function() { try {
         const job = jobs[i] || '';
         const memo = memos[i] || '';
 
-        const isNameMissing = !name;
+        bulkParsedData.push({
+            고객번호: '',
+            고객명: name,
+            주민번호: jumin,
+            폰번호: phone,
+            주소: addr,
+            직업: job,
+            특이사항: memo,
+            checked: true
+        });
+    }
+
+    document.getElementById('bulkPreviewArea').style.display = 'block';
+    document.getElementById('bulkDataInputWrapper').style.display = 'none';
+
+    window.renderBulkPreviewTable();
+
+    const dupCount = bulkParsedData.filter(d => d.isDuplicate).length;
+    const hasError = bulkParsedData.some(d => !d.고객명);
+
+    if (hasError) {
+        alert("이름이 누락된 행이 있습니다. 붉은색으로 표시된 행의 [✕] 삭제 버튼을 누르시거나 다시 붙여넣어 주세요.");
+    }
+    if (dupCount > 0) {
+        alert(`⚠️ 기존 고객 또는 목록 내 중복되는 고객 ${dupCount}건이 감지되었습니다.\n각 행 우측의 [✕] 버튼을 눌러 중복 고객을 삭제하시거나, 상단의 [중복 일괄 삭제] 버튼으로 제거 후 등록하실 수 있습니다.`);
+    }
+
+    document.getElementById('bulkSubmitBtn').style.display = 'block';
+    document.getElementById('bulkPreviewBtn').style.display = 'none';
+} catch(e) { alert("Preview Error: " + e.message + "\n" + e.stack); } };
+
+window.renderBulkPreviewTable = function() {
+    let maxId = 0;
+    (window.globalCustomerData || []).forEach(c => {
+        let idVal = c["고객번호"] || c["사업자번호"] || c["ID"];
+        if(idVal) {
+            let numStr = String(idVal).split('-')[0].replace(/\D/g, '');
+            if(numStr) {
+                let n = parseInt(numStr, 10);
+                if(!isNaN(n) && n > maxId) maxId = n;
+            }
+        }
+    });
+
+    let currentId = maxId + 1;
+    let dupCount = 0;
+    let hasError = false;
+
+    // 목록 내 중복 및 기존 고객 중복 재계산
+    bulkParsedData.forEach((item, i) => {
+        item.고객번호 = currentId.toString();
+        currentId++;
+
+        const isNameMissing = !item.고객명;
         if (isNameMissing) hasError = true;
 
-        const cleanP = phone ? phone.replace(/\D/g, '') : '';
-        const cleanJ = jumin ? jumin.replace(/\D/g, '') : '';
+        const cleanP = item.폰번호 ? item.폰번호.replace(/\D/g, '') : '';
+        const cleanJ = item.주민번호 ? item.주민번호.replace(/\D/g, '') : '';
 
-        // 중복 검사: 1) 기존 CRM 고객 데이터와 비교
         let dupInfo = null;
         if (typeof window.findDuplicateCustomer === 'function') {
             const dup = window.findDuplicateCustomer(cleanP, cleanJ);
@@ -8868,9 +8916,8 @@ window.previewBulkData = function() { try {
             }
         }
 
-        // 2) 붙여넣은 목록 내 이전 행들과 비교 (자체 중복)
         if (!dupInfo && i > 0) {
-            for (let prevIdx = 0; prevIdx < bulkParsedData.length; prevIdx++) {
+            for (let prevIdx = 0; prevIdx < i; prevIdx++) {
                 const prev = bulkParsedData[prevIdx];
                 const prevP = prev.폰번호 ? prev.폰번호.replace(/\D/g, '') : '';
                 const prevJ = prev.주민번호 ? prev.주민번호.replace(/\D/g, '') : '';
@@ -8881,86 +8928,113 @@ window.previewBulkData = function() { try {
             }
         }
 
-        const isDuplicate = !!dupInfo;
-        if (isDuplicate) dupCount++;
-
-        bulkParsedData.push({
-            고객번호: currentId.toString(),
-            고객명: name,
-            주민번호: jumin,
-            폰번호: phone,
-            주소: addr,
-            직업: job,
-            특이사항: memo,
-            isDuplicate: isDuplicate,
-            dupInfo: dupInfo || ''
-        });
-
-        let trStyle = 'background:white;';
-        if (isNameMissing) trStyle = 'background:#fee2e2;';
-        else if (isDuplicate) trStyle = 'background:#fffbeb;';
-
-        const nameStyle = isNameMissing ? 'color:#ef4444; font-weight:800;' : 'font-weight:700; color:#1e293b;';
-
-        let dupBadge = '';
-        if (isDuplicate) {
-            dupBadge = `<span style="display:inline-block; font-size:11px; font-weight:700; color:#b45309; background:#fef3c7; border:1px solid #fde68a; padding:1px 6px; border-radius:4px; margin-left:6px;" title="${dupInfo}">⚠️ ${dupInfo}</span>`;
+        item.isDuplicate = !!dupInfo;
+        item.dupInfo = dupInfo || '';
+        if (item.isDuplicate) {
+            dupCount++;
+            // 중복이면 기본 체크 해제 (아직 사용자가 명시적으로 체크하지 않았다면)
+            if (item.userChecked === undefined) item.checked = false;
+        } else {
+            if (item.userChecked === undefined) item.checked = !isNameMissing;
         }
+    });
 
-        // 중복인 행은 기본 체크 해제, 정상 행은 체크
-        const isChecked = (!isNameMissing && !isDuplicate) ? 'checked' : '';
-        const isDisabled = isNameMissing ? 'disabled' : '';
+    let html = '';
+    if (bulkParsedData.length === 0) {
+        html = `<tr><td colspan="9" style="text-align:center; padding:32px; color:#94a3b8; font-weight:700;">등록할 고객이 모두 삭제되었습니다. [다시 붙여넣기]를 눌러 새로 입력하세요.</td></tr>`;
+    } else {
+        bulkParsedData.forEach((data, i) => {
+            const isNameMissing = !data.고객명;
+            let trStyle = 'background:white;';
+            if (isNameMissing) trStyle = 'background:#fee2e2;';
+            else if (data.isDuplicate) trStyle = 'background:#fffbeb;';
 
-        html += `<tr style="${trStyle}">
-            <td style="padding:10px; border-bottom:1px solid #e2e8f0; text-align:center;">
-                <input type="checkbox" class="bulk-row-check" data-idx="${i}" ${isChecked} ${isDisabled} onchange="window.updateBulkSubmitCount()" style="width:15px; height:15px; cursor:pointer;">
-            </td>
-            <td style="padding:10px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#3b82f6;">${currentId}</td>
-            <td style="padding:10px; border-bottom:1px solid #e2e8f0; ${nameStyle}">${name || '이름 누락(등록불가)'} ${dupBadge}</td>
-            <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${jumin}</td>
-            <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${phone}</td>
-            <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${addr}</td>
-            <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${job}</td>
-            <td style="padding:10px; border-bottom:1px solid #e2e8f0; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${memo}</td>
-        </tr>`;
+            const nameStyle = isNameMissing ? 'color:#ef4444; font-weight:800;' : 'font-weight:700; color:#1e293b;';
 
-        currentId++;
+            let dupBadge = '';
+            if (data.isDuplicate) {
+                dupBadge = `<span style="display:inline-block; font-size:11px; font-weight:700; color:#b45309; background:#fef3c7; border:1px solid #fde68a; padding:1px 6px; border-radius:4px; margin-left:6px;" title="${data.dupInfo}">⚠️ ${data.dupInfo}</span>`;
+            }
+
+            const isChecked = data.checked ? 'checked' : '';
+            const isDisabled = isNameMissing ? 'disabled' : '';
+
+            html += `<tr style="${trStyle}">
+                <td style="padding:10px; border-bottom:1px solid #e2e8f0; text-align:center;">
+                    <input type="checkbox" class="bulk-row-check" data-idx="${i}" ${isChecked} ${isDisabled} onchange="window.handleBulkRowCheckChange(${i}, this.checked)" style="width:15px; height:15px; cursor:pointer;">
+                </td>
+                <td style="padding:10px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#3b82f6;">${data.고객번호}</td>
+                <td style="padding:10px; border-bottom:1px solid #e2e8f0; ${nameStyle}">${data.고객명 || '이름 누락(등록불가)'} ${dupBadge}</td>
+                <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${data.주민번호}</td>
+                <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${data.폰번호}</td>
+                <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${data.주소}</td>
+                <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${data.직업}</td>
+                <td style="padding:10px; border-bottom:1px solid #e2e8f0; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${data.특이사항}</td>
+                <td style="padding:10px; border-bottom:1px solid #e2e8f0; text-align:center;">
+                    <button type="button" onclick="window.deleteBulkRow(${i})" style="background:#fee2e2; border:1.5px solid #fca5a5; color:#dc2626; border-radius:6px; width:26px; height:26px; font-weight:900; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:0.15s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" title="이 고객 삭제">✕</button>
+                </td>
+            </tr>`;
+        });
     }
 
-    document.getElementById('bulkCount').innerText = bulkParsedData.length;
-    document.getElementById('bulkPreviewTableBody').innerHTML = html;
-    document.getElementById('bulkPreviewArea').style.display = 'block';
-    document.getElementById('bulkDataInputWrapper').style.display = 'none';
+    const countEl = document.getElementById('bulkCount');
+    if (countEl) countEl.innerText = bulkParsedData.length;
 
-    // 중복 배지 및 제외 버튼 제어
+    const tbody = document.getElementById('bulkPreviewTableBody');
+    if (tbody) tbody.innerHTML = html;
+
+    // 배지 및 중복삭제 버튼 제어
     const dupBadgeEl = document.getElementById('bulkDupBadge');
+    const deleteDupBtn = document.getElementById('bulkDeleteDupBtn');
     const excludeBtn = document.getElementById('bulkExcludeDupBtn');
     if (dupBadgeEl) {
         if (dupCount > 0) {
-            dupBadgeEl.innerText = `중복 ${dupCount}건 감지 (체크해제됨)`;
+            dupBadgeEl.innerText = `중복 ${dupCount}건 감지`;
             dupBadgeEl.style.display = 'inline-block';
         } else {
             dupBadgeEl.style.display = 'none';
         }
     }
+    if (deleteDupBtn) {
+        deleteDupBtn.style.display = (dupCount > 0) ? 'inline-flex' : 'none';
+        deleteDupBtn.innerHTML = `<i class="fa-solid fa-trash-can" style="margin-right:4px;"></i>중복 ${dupCount}건 일괄 삭제`;
+    }
     if (excludeBtn) {
         excludeBtn.style.display = (dupCount > 0) ? 'inline-block' : 'none';
     }
 
-    if (typeof window.updateBulkSubmitCount === 'function') {
-        window.updateBulkSubmitCount();
-    }
+    window.updateBulkSubmitCount();
+};
 
-    if (hasError) {
-        alert("이름이 누락된 행이 있습니다. 붉은색으로 표시된 행은 등록에서 제외됩니다.");
+window.handleBulkRowCheckChange = function(idx, checked) {
+    if (bulkParsedData[idx]) {
+        bulkParsedData[idx].checked = checked;
+        bulkParsedData[idx].userChecked = true;
     }
-    if (dupCount > 0) {
-        alert(`⚠️ 기존 고객 또는 목록 내 중복되는 고객 ${dupCount}건이 감지되었습니다.\n중복 건은 안전을 위해 자동 체크 해제되었으며, 등록할 항목만 선택 후 등록하실 수 있습니다.`);
-    }
+    window.updateBulkSubmitCount();
+};
 
-    document.getElementById('bulkSubmitBtn').style.display = 'block';
-    document.getElementById('bulkPreviewBtn').style.display = 'none';
-} catch(e) { alert("Preview Error: " + e.message + "\n" + e.stack); } };
+window.deleteBulkRow = function(idx) {
+    if (idx < 0 || idx >= bulkParsedData.length) return;
+    bulkParsedData.splice(idx, 1);
+    window.renderBulkPreviewTable();
+};
+
+window.deleteBulkDuplicates = function() {
+    const dupCount = bulkParsedData.filter(d => d.isDuplicate).length;
+    if (dupCount === 0) {
+        alert("목록에 중복된 고객이 없습니다.");
+        return;
+    }
+    if (!confirm(`중복으로 감지된 ${dupCount}명의 고객을 목록에서 모두 삭제하시겠습니까?\n삭제 후 나머지 고객만 남게 됩니다.`)) return;
+    bulkParsedData = bulkParsedData.filter(d => !d.isDuplicate);
+    // 남은 정상 고객들은 모두 체크 상태로
+    bulkParsedData.forEach(d => {
+        d.checked = !(!d.고객명);
+        d.userChecked = true;
+    });
+    window.renderBulkPreviewTable();
+};
 
 window.submitBulkData = async function() {
     const checkedBoxes = Array.from(document.querySelectorAll('.bulk-row-check:checked'));
@@ -9092,6 +9166,12 @@ window.submitBulkData = async function() {
 };
 
 window.toggleBulkSelectAll = function(checked) {
+    bulkParsedData.forEach(d => {
+        if (d.고객명) {
+            d.checked = checked;
+            d.userChecked = true;
+        }
+    });
     document.querySelectorAll('.bulk-row-check:not(:disabled)').forEach(cb => {
         cb.checked = checked;
     });
@@ -9099,6 +9179,14 @@ window.toggleBulkSelectAll = function(checked) {
 };
 
 window.bulkFilterExcludeDuplicates = function() {
+    bulkParsedData.forEach(d => {
+        if (d.isDuplicate) {
+            d.checked = false;
+        } else if (d.고객명) {
+            d.checked = true;
+        }
+        d.userChecked = true;
+    });
     document.querySelectorAll('.bulk-row-check:not(:disabled)').forEach(cb => {
         const idx = parseInt(cb.getAttribute('data-idx'), 10);
         const item = bulkParsedData[idx];
@@ -9128,6 +9216,7 @@ window.updateBulkSubmitCount = function() {
         allBox.checked = enabledBoxes.length > 0 && checked === enabledBoxes.length;
     }
 };
+
 window.closeMasterModal = function() {
     const m = document.getElementById('masterModal');
     if (m) {

@@ -8289,7 +8289,8 @@ window.renderListModal = function(filtered, fType, fVal) {
 
     let tbHtml = "";
     if (filtered.length === 0) {
-        tbHtml = "<tr><td colspan='6' style='text-align:center; padding: 40px; color:#94a3b8;'>해당하는 고객이 없습니다.</td></tr>";
+        const colCount = head ? (head.querySelectorAll('th').length || 5) : 5;
+        tbHtml = "<tr><td colspan='" + colCount + "' style='text-align:center; padding: 40px; color:#94a3b8;'>해당하는 고객이 없습니다.</td></tr>";
     } else {
         filtered.forEach(r => {
             const name = r["고객명"] || r["대표자명"] || "-";
@@ -8768,7 +8769,15 @@ window.openBulkRegModal = function() {
     document.getElementById('bulkPreviewBtn').style.display = 'block';
     document.getElementById('bulkSubmitBtn').style.display = 'none';
     document.getElementById('bulkPreviewTableBody').innerHTML = '';
-    document.getElementById('bulkRegModal').style.display = 'flex';
+    const bModal = document.getElementById('bulkRegModal');
+    if (bModal) {
+        bModal.style.display = 'flex';
+        bModal.style.alignItems = 'flex-start';
+        bModal.style.justifyContent = 'center';
+        bModal.style.padding = '32px 16px 60px';
+        bModal.style.overflowY = 'auto';
+        bModal.scrollTop = 0;
+    }
 };
 
 let bulkParsedData = [];
@@ -8960,17 +8969,17 @@ window.renderBulkPreviewTable = function() {
             const isDisabled = isNameMissing ? 'disabled' : '';
 
             html += `<tr style="${trStyle}">
-                <td style="padding:10px; border-bottom:1px solid #e2e8f0; text-align:center;">
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; text-align:center;">
                     <input type="checkbox" class="bulk-row-check" data-idx="${i}" ${isChecked} ${isDisabled} onchange="window.handleBulkRowCheckChange(${i}, this.checked)" style="width:15px; height:15px; cursor:pointer;">
                 </td>
-                <td style="padding:10px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#3b82f6;">${data.고객번호}</td>
-                <td style="padding:10px; border-bottom:1px solid #e2e8f0; ${nameStyle}">${data.고객명 || '이름 누락(등록불가)'} ${dupBadge}</td>
-                <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${data.주민번호}</td>
-                <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${data.폰번호}</td>
-                <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${data.주소}</td>
-                <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${data.직업}</td>
-                <td style="padding:10px; border-bottom:1px solid #e2e8f0; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${data.특이사항}</td>
-                <td style="padding:10px; border-bottom:1px solid #e2e8f0; text-align:center;">
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#3b82f6; text-align:center;">${data.고객번호}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; ${nameStyle}">${data.고객명 || '이름 누락(등록불가)'} ${dupBadge}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px;">${data.주민번호}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; font-weight:600; color:#0284c7;">${data.폰번호}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${data.주소}">${data.주소}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px;">${data.직업}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${data.특이사항}">${data.특이사항}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; text-align:center; width:52px;">
                     <button type="button" onclick="window.deleteBulkRow(${i})" style="background:#fee2e2; border:1.5px solid #fca5a5; color:#dc2626; border-radius:6px; width:26px; height:26px; font-weight:900; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:0.15s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" title="이 고객 삭제">✕</button>
                 </td>
             </tr>`;

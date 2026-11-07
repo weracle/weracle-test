@@ -459,7 +459,8 @@ window.showToastNotice = function(text) {
 
         let tbHtml = "";
         if (filtered.length === 0) {
-            tbHtml = "<tr><td colspan='6' style='text-align:center; padding: 40px; color:#94a3b8; font-size:14px; font-weight:600;'>해당하는 고객이 없습니다.</td></tr>";
+            const colCount = head ? (head.querySelectorAll('th').length || 5) : 5;
+            tbHtml = "<tr><td colspan='" + colCount + "' style='text-align:center; padding: 40px; color:#94a3b8; font-size:14px; font-weight:600;'>해당하는 고객이 없습니다.</td></tr>";
         } else {
             filtered.forEach(r => {
                 const name = r["고객명"] || r["대표자명"] || "-";

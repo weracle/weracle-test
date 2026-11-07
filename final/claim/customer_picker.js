@@ -13,6 +13,7 @@
  *    - '다릅니다' 선택 시 손보 'diffInsuredCont' 자동 활성화 및 폼 펼침, 생보 'sameAsBene' 자동 해제
  * 3. 5대 청구 파트 (질병상해, 펫보험, 생명보험, 배상책임, 재물보험) 공통 호환
  * 4. 4단계 코비 수평 스텝퍼 바(updateStepperBar) 무한루프 방지 및 가로 그리드 정렬 100% 보존
+ *    - step_dyn_flow 활성화 시에만 표시 (회사 선택 step2 등에서는 100% 숨김)
  * ==============================================================================
  */
 
@@ -815,27 +816,44 @@
   // ========================================================
   function updateStepperBar() {
     try {
-      const dynStep = document.getElementById('step_dyn_flow');
-      if (!dynStep || !dynStep.classList.contains('active')) return;
-
-      const slides = Array.from(document.querySelectorAll('#slides-container .app-slide'));
-      if (slides.length === 0) return;
-
-      let activeIdx = slides.findIndex(s => s.classList.contains('active'));
-      if (activeIdx < 0) activeIdx = 0;
-
-      let dynFlow = document.getElementById('step_dyn_flow');
-      if (!dynFlow) return;
-
+      const dynFlow = document.getElementById('step_dyn_flow');
       let stepperWrap = document.getElementById('covyStepperBar');
+
+      // 1. dynFlow가 없거나 active가 아니면(예: 회사 선택 step2 화면 등) 무조건 숨김!
+      if (!dynFlow || !dynFlow.classList.contains('active')) {
+        if (stepperWrap) {
+          stepperWrap.style.display = 'none';
+        }
+        window._crmPickerOpenedOnce = false; // 회사 선택 화면으로 돌아왔으므로 다음 진입 시 재실행 허용
+        return;
+      }
+
+      // 2. dynFlow 안에 슬라이드가 없으면 숨김
+      const slides = Array.from(document.querySelectorAll('#slides-container .app-slide'));
+      if (slides.length === 0) {
+        if (stepperWrap) {
+          stepperWrap.style.display = 'none';
+        }
+        return;
+      }
+
+      // 3. 스텝퍼 바 생성 및 위치 지정 (dynFlow 내부의 첫 번째 자식으로 삽입하여 step2 누출 100% 원천 차단)
       if (!stepperWrap) {
         stepperWrap = document.createElement('div');
         stepperWrap.id = 'covyStepperBar';
         stepperWrap.className = 'covy-style-stepper';
-        dynFlow.parentNode.insertBefore(stepperWrap, dynFlow);
+        dynFlow.insertBefore(stepperWrap, dynFlow.firstChild);
       } else {
         stepperWrap.className = 'covy-style-stepper';
+        if (stepperWrap.parentNode !== dynFlow) {
+          dynFlow.insertBefore(stepperWrap, dynFlow.firstChild);
+        }
       }
+
+      stepperWrap.style.display = '';
+
+      let activeIdx = slides.findIndex(s => s.classList.contains('active'));
+      if (activeIdx < 0) activeIdx = 0;
 
       let titles = [];
       slides.forEach((slide) => {

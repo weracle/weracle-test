@@ -9283,9 +9283,11 @@ window.openSmartRegModal = function() {
     if (w) { w.classList.remove('active'); w.style.display = 'none'; }
     
     // 스마트 모달 초기화
-    document.getElementById('smartRegInput').value = '';
+    const sInput = document.getElementById('smartRegInput');
+    if (sInput) sInput.value = '';
     ['smartRegName', 'smartRegJumin', 'smartRegPhone', 'smartRegAddr', 'smartRegJob', 'smartRegMemo'].forEach(id => {
-        document.getElementById(id).value = '';
+        const el = document.getElementById(id);
+        if (el) el.value = '';
     });
     
     let maxId = 0;
@@ -9299,13 +9301,44 @@ window.openSmartRegModal = function() {
     if(document.getElementById('smartRegId')) document.getElementById('smartRegId').value = newId;
     
     if(document.getElementById('smartRegChunkContainer')) document.getElementById('smartRegChunkContainer').innerHTML = '<div style="color:#94a3b8; font-size:13px; text-align:center; margin-top:20px;">텍스트를 입력하면 여기에 드래그 가능한 블록이 생성됩니다.</div>';
-    document.getElementById('smartRegTooltip').style.display = 'none';
+    if(document.getElementById('smartRegTooltip')) document.getElementById('smartRegTooltip').style.display = 'none';
     
-    document.getElementById('smartRegModal').style.display = 'flex';
+    const modal = document.getElementById('smartRegModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+        modal.style.alignItems = 'flex-start';
+        modal.style.justifyContent = 'center';
+        modal.style.padding = '32px 16px 60px';
+        modal.style.overflowY = 'auto';
+        modal.scrollTop = 0;
+
+        const content = modal.querySelector('.modal-content') || modal.querySelector('.smart-reg-modal-content');
+        if (content) {
+            content.style.margin = '0 auto';
+            content.style.transform = 'none';
+            content.style.top = '0';
+        }
+
+        setTimeout(() => {
+            if (sInput) {
+                try {
+                    sInput.focus({ preventScroll: true });
+                } catch(e) {
+                    sInput.focus();
+                }
+            }
+            if (modal) modal.scrollTop = 0;
+        }, 100);
+    }
 };
 
 window.closeSmartRegModal = function() {
-    document.getElementById('smartRegModal').style.display = 'none';
+    const modal = document.getElementById('smartRegModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+    }
 };
 
 window.autoParseSmartReg = function() {

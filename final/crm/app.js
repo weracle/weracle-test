@@ -2650,18 +2650,21 @@ return dayA - dayB;
 } else {
 filtered.sort((a, b) => {
 const parseIdParts = (idStr) => {
-if (!idStr) return [999999, 0];
-const parts = String(idStr).split('-');
-const p1 = parseInt(parts[0], 10);
-const p2 = parts[1] ? parseInt(parts[1], 10) : 0;
-return [isNaN(p1) ? 999999 : p1, isNaN(p2) ? 0 : p2];
+    if (!idStr) return [999999];
+    return String(idStr).split('-').map(p => {
+        const n = parseInt(p, 10);
+        return isNaN(n) ? 0 : n;
+    });
 };
-const [a1, a2] = parseIdParts(a["고객번호"]);
-const [b1, b2] = parseIdParts(b["고객번호"]);
-if (a1 !== b1) {
-return a1 - b1;
+const aParts = parseIdParts(a["고객번호"] || a["ID"]);
+const bParts = parseIdParts(b["고객번호"] || b["ID"]);
+const maxLen = Math.max(aParts.length, bParts.length);
+for (let i = 0; i < maxLen; i++) {
+    const valA = aParts[i] !== undefined ? aParts[i] : -1;
+    const valB = bParts[i] !== undefined ? bParts[i] : -1;
+    if (valA !== valB) return valA - valB;
 }
-return a2 - b2;
+return 0;
 });
 }
 
@@ -8806,17 +8809,61 @@ window.previewBulkData = function() { try {
     let html = '';
     let currentId = maxId + 1;
     let hasError = false;
+    let dupCount = 0;
 
     for (let i = 0; i < rowCount; i++) {
         const name = names[i] || '';
         const jumin = jumins[i] || '';
-        const phone = formatPhone(phones[i] || '');
+        const phone = (typeof formatPhone === 'function') ? formatPhone(phones[i] || '') : (phones[i] || '');
         const addr = addrs[i] || '';
         const job = jobs[i] || '';
         const memo = memos[i] || '';
 
         const isNameMissing = !name;
         if (isNameMissing) hasError = true;
+
+        const cleanP = phone ? phone.replace(/\D/g, '') : '';
+        const cleanJ = jumin ? jumin.replace(/\D/g, '') : '';
+
+        // 중복 검사: 1) 기존 CRM 고객 데이터와 비교
+        let dupInfo = null;
+        if (typeof window.findDuplicateCustomer === 'function') {
+            const dup = window.findDuplicateCustomer(cleanP, cleanJ);
+            if (dup) {
+                const exName = dup['고객명'] || dup['대표자명'] || '기존고객';
+                const exId = dup['고객번호'] || dup['ID'] || '';
+                dupInfo = `기존고객 [${exName}(No.${exId})]과 중복`;
+            }
+        } else if (window.globalCustomerData && Array.isArray(window.globalCustomerData)) {
+            const hasP = cleanP.length >= 9;
+            const hasJ = cleanJ.length >= 13;
+            const dup = window.globalCustomerData.find(c => {
+                const cp = String(c['폰번호'] || c['연락처'] || c['대표자폰번호'] || '').replace(/\D/g, '');
+                const cj = String(c['주민번호'] || c['사업자번호'] || '').replace(/\D/g, '');
+                return (hasP && cp === cleanP) || (hasJ && cj === cleanJ);
+            });
+            if (dup) {
+                const exName = dup['고객명'] || dup['대표자명'] || '기존고객';
+                const exId = dup['고객번호'] || dup['ID'] || '';
+                dupInfo = `기존고객 [${exName}(No.${exId})]과 중복`;
+            }
+        }
+
+        // 2) 붙여넣은 목록 내 이전 행들과 비교 (자체 중복)
+        if (!dupInfo && i > 0) {
+            for (let prevIdx = 0; prevIdx < bulkParsedData.length; prevIdx++) {
+                const prev = bulkParsedData[prevIdx];
+                const prevP = prev.폰번호 ? prev.폰번호.replace(/\D/g, '') : '';
+                const prevJ = prev.주민번호 ? prev.주민번호.replace(/\D/g, '') : '';
+                if ((cleanP && cleanP.length >= 9 && cleanP === prevP) || (cleanJ && cleanJ.length >= 13 && cleanJ === prevJ)) {
+                    dupInfo = `목록 내 ${prevIdx + 1}행과 중복`;
+                    break;
+                }
+            }
+        }
+
+        const isDuplicate = !!dupInfo;
+        if (isDuplicate) dupCount++;
 
         bulkParsedData.push({
             고객번호: currentId.toString(),
@@ -8825,15 +8872,32 @@ window.previewBulkData = function() { try {
             폰번호: phone,
             주소: addr,
             직업: job,
-            특이사항: memo
+            특이사항: memo,
+            isDuplicate: isDuplicate,
+            dupInfo: dupInfo || ''
         });
 
-        const trStyle = isNameMissing ? 'background:#fee2e2;' : 'background:white;';
-        const nameStyle = isNameMissing ? 'color:#ef4444; font-weight:800;' : '';
+        let trStyle = 'background:white;';
+        if (isNameMissing) trStyle = 'background:#fee2e2;';
+        else if (isDuplicate) trStyle = 'background:#fffbeb;';
+
+        const nameStyle = isNameMissing ? 'color:#ef4444; font-weight:800;' : 'font-weight:700; color:#1e293b;';
+
+        let dupBadge = '';
+        if (isDuplicate) {
+            dupBadge = `<span style="display:inline-block; font-size:11px; font-weight:700; color:#b45309; background:#fef3c7; border:1px solid #fde68a; padding:1px 6px; border-radius:4px; margin-left:6px;" title="${dupInfo}">⚠️ ${dupInfo}</span>`;
+        }
+
+        // 중복인 행은 기본 체크 해제, 정상 행은 체크
+        const isChecked = (!isNameMissing && !isDuplicate) ? 'checked' : '';
+        const isDisabled = isNameMissing ? 'disabled' : '';
 
         html += `<tr style="${trStyle}">
+            <td style="padding:10px; border-bottom:1px solid #e2e8f0; text-align:center;">
+                <input type="checkbox" class="bulk-row-check" data-idx="${i}" ${isChecked} ${isDisabled} onchange="window.updateBulkSubmitCount()" style="width:15px; height:15px; cursor:pointer;">
+            </td>
             <td style="padding:10px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#3b82f6;">${currentId}</td>
-            <td style="padding:10px; border-bottom:1px solid #e2e8f0; ${nameStyle}">${name || '이름 누락(필수)'}</td>
+            <td style="padding:10px; border-bottom:1px solid #e2e8f0; ${nameStyle}">${name || '이름 누락(등록불가)'} ${dupBadge}</td>
             <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${jumin}</td>
             <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${phone}</td>
             <td style="padding:10px; border-bottom:1px solid #e2e8f0;">${addr}</td>
@@ -8849,15 +8913,50 @@ window.previewBulkData = function() { try {
     document.getElementById('bulkPreviewArea').style.display = 'block';
     document.getElementById('bulkDataInputWrapper').style.display = 'none';
 
+    // 중복 배지 및 제외 버튼 제어
+    const dupBadgeEl = document.getElementById('bulkDupBadge');
+    const excludeBtn = document.getElementById('bulkExcludeDupBtn');
+    if (dupBadgeEl) {
+        if (dupCount > 0) {
+            dupBadgeEl.innerText = `중복 ${dupCount}건 감지 (체크해제됨)`;
+            dupBadgeEl.style.display = 'inline-block';
+        } else {
+            dupBadgeEl.style.display = 'none';
+        }
+    }
+    if (excludeBtn) {
+        excludeBtn.style.display = (dupCount > 0) ? 'inline-block' : 'none';
+    }
+
+    if (typeof window.updateBulkSubmitCount === 'function') {
+        window.updateBulkSubmitCount();
+    }
+
     if (hasError) {
-        alert("이름이 누락된 행이 있습니다. 붉은색으로 표시된 행을 확인 후 다시 붙여넣어 주세요.");
-        document.getElementById('bulkSubmitBtn').style.display = 'none';
-    } else if (bulkParsedData.length > 0) {
-        document.getElementById('bulkSubmitBtn').style.display = 'block'; document.getElementById('bulkPreviewBtn').style.display = 'none'; } } catch(e) { alert("Preview Error: " + e.message + "\n" + e.stack); } };
+        alert("이름이 누락된 행이 있습니다. 붉은색으로 표시된 행은 등록에서 제외됩니다.");
+    }
+    if (dupCount > 0) {
+        alert(`⚠️ 기존 고객 또는 목록 내 중복되는 고객 ${dupCount}건이 감지되었습니다.\n중복 건은 안전을 위해 자동 체크 해제되었으며, 등록할 항목만 선택 후 등록하실 수 있습니다.`);
+    }
+
+    document.getElementById('bulkSubmitBtn').style.display = 'block';
+    document.getElementById('bulkPreviewBtn').style.display = 'none';
+} catch(e) { alert("Preview Error: " + e.message + "\n" + e.stack); } };
 
 window.submitBulkData = async function() {
-    if (bulkParsedData.length === 0) return;
-    if (!confirm(`총 ${bulkParsedData.length}명의 고객을 등록하시겠습니까?`)) return;
+    const checkedBoxes = Array.from(document.querySelectorAll('.bulk-row-check:checked'));
+    if (checkedBoxes.length === 0) {
+        alert("등록할 대상 고객이 선택되지 않았습니다. 등록할 고객의 체크박스를 확인해 주세요.");
+        return;
+    }
+
+    const selectedData = checkedBoxes.map(cb => {
+        const idx = parseInt(cb.getAttribute('data-idx'), 10);
+        return bulkParsedData[idx];
+    }).filter(Boolean);
+
+    if (selectedData.length === 0) return;
+    if (!confirm(`선택하신 총 ${selectedData.length}명의 고객을 등록하시겠습니까?`)) return;
     
     document.getElementById('bulkSubmitBtn').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...';
     document.getElementById('bulkSubmitBtn').disabled = true;
@@ -8869,8 +8968,26 @@ window.submitBulkData = async function() {
         const sName = window.targetSheetName || (window.targetSheetName || "weraclecrm");
         const headers = getCrmHeaders(sName); // 전체 컬럼 헤더 배열
 
-        // bulkParsedData를 2차원 배열(values)로 변환
-        const valuesToAppend = bulkParsedData.map(data => {
+        // 최신 고객번호 순번 재계산 (선택된 데이터 순차 부여)
+        let maxId = 0;
+        (window.globalCustomerData || []).forEach(c => {
+            let idVal = c["고객번호"] || c["사업자번호"] || c["ID"];
+            if(idVal) {
+                let numStr = String(idVal).split('-')[0].replace(/\D/g, '');
+                if(numStr) {
+                    let n = parseInt(numStr, 10);
+                    if(!isNaN(n) && n > maxId) maxId = n;
+                }
+            }
+        });
+
+        let nextNum = maxId + 1;
+        selectedData.forEach(d => {
+            d.고객번호 = String(nextNum++);
+        });
+
+        // selectedData를 2차원 배열(values)로 변환
+        const valuesToAppend = selectedData.map(data => {
             const rowArr = new Array(headers.length).fill(""); // 기본적으로 모두 빈 문자열로 초기화
             
             // 등록일자는 오늘 날짜로 세팅
@@ -8926,7 +9043,8 @@ window.submitBulkData = async function() {
             resource: { values: valuesToAppend }
         });
 
-        alert(`성공적으로 ${bulkParsedData.length}명의 고객이 등록되었습니다!`);
+        const skippedCount = bulkParsedData.length - selectedData.length;
+        alert(`성공적으로 ${selectedData.length}명의 고객이 등록되었습니다!` + (skippedCount > 0 ? `\n(제외/중복 건수: ${skippedCount}건)` : ''));
         document.getElementById('bulkRegModal').style.display = 'none';
         
         // 데이터 리로드
@@ -8947,8 +9065,48 @@ window.submitBulkData = async function() {
         alert("일괄 등록 중 오류가 발생했습니다:\n" + errMsg);
     } finally {
         const btn = document.getElementById('bulkSubmitBtn');
-        btn.innerHTML = '등록 ';
-        btn.disabled = false;
+        if (btn) {
+            btn.innerHTML = '등록 ';
+            btn.disabled = false;
+        }
+    }
+};
+
+window.toggleBulkSelectAll = function(checked) {
+    document.querySelectorAll('.bulk-row-check:not(:disabled)').forEach(cb => {
+        cb.checked = checked;
+    });
+    window.updateBulkSubmitCount();
+};
+
+window.bulkFilterExcludeDuplicates = function() {
+    document.querySelectorAll('.bulk-row-check:not(:disabled)').forEach(cb => {
+        const idx = parseInt(cb.getAttribute('data-idx'), 10);
+        const item = bulkParsedData[idx];
+        if (item && item.isDuplicate) {
+            cb.checked = false;
+        } else {
+            cb.checked = true;
+        }
+    });
+    window.updateBulkSubmitCount();
+};
+
+window.updateBulkSubmitCount = function() {
+    const checkedBoxes = document.querySelectorAll('.bulk-row-check:checked');
+    const checked = checkedBoxes.length;
+    const el = document.getElementById('bulkSelectedCount');
+    if (el) el.innerText = checked;
+    const btn = document.getElementById('bulkSubmitBtn');
+    if (btn) {
+        btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> 선택한 ${checked}명 등록`;
+        btn.disabled = (checked === 0);
+        btn.style.opacity = (checked === 0) ? '0.5' : '1';
+    }
+    const allBox = document.getElementById('bulkSelectAll');
+    if (allBox) {
+        const enabledBoxes = document.querySelectorAll('.bulk-row-check:not(:disabled)');
+        allBox.checked = enabledBoxes.length > 0 && checked === enabledBoxes.length;
     }
 };
 window.closeMasterModal = function() {
@@ -10136,7 +10294,7 @@ window.toggleFamilyStatus = function() {
             globalCustomerData.forEach(c => {
                 let idVal = String(c["고객번호"] || c["사업자번호"]);
                 if(idVal.startsWith(rootBase + "-")) {
-                    let sub = parseInt(idVal.split('-')[1], 10);
+                    let sub = parseInt(idVal.substring(rootBase.length + 1).split('-')[0], 10);
                     if(sub > maxSub) maxSub = sub;
                 }
             });
@@ -10316,7 +10474,7 @@ window.linkCustomerToFamily = async function(targetCustId, targetName) {
     globalCustomerData.forEach(c => {
         let idVal = String(c["고객번호"] || c["사업자번호"]);
         if(idVal.startsWith(rootId + "-")) {
-            let sub = parseInt(idVal.split('-')[1], 10);
+            let sub = parseInt(idVal.substring(rootId.length + 1).split('-')[0], 10);
             if(sub > maxSub) maxSub = sub;
         }
     });

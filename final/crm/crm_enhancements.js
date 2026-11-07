@@ -965,46 +965,58 @@ console.log("[CRM Modular] crm_enhancements.js 로드 완료 (구글알림정리
         if (typeof showLoading === 'function') showLoading(true);
 
         try {
-            if (typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets && window.spreadsheetId) {
-                const batchData = [];
-
-                selectedItems.forEach(item => {
-                    const sheet = item.sheetName || 'weraclecrm';
-                    const headers = (typeof getCrmHeaders === 'function') ? getCrmHeaders(sheet) : [];
-                    
-                    const juminIdx = headers.indexOf('주민번호');
-                    const phoneIdx = headers.indexOf('폰번호');
-
-                    if (item.phoneNeedsFix && phoneIdx !== -1 && item.rowNumber) {
-                        const colLetter = colIndexToLetter(phoneIdx);
-                        batchData.push({
-                            range: `${sheet}!${colLetter}${item.rowNumber}`,
-                            values: [[item.fixedPhone]]
-                        });
-                    }
-
-                    if (item.juminNeedsFix && juminIdx !== -1 && item.rowNumber) {
-                        const colLetter = colIndexToLetter(juminIdx);
-                        batchData.push({
-                            range: `${sheet}!${colLetter}${item.rowNumber}`,
-                            values: [[item.fixedJumin]]
-                        });
-                    }
-                });
-
-                if (batchData.length > 0) {
-                    await gapi.client.sheets.spreadsheets.values.batchUpdate({
-                        spreadsheetId: window.spreadsheetId,
-                        resource: {
-                            valueInputOption: "USER_ENTERED",
-                            data: batchData
-                        }
-                    });
-                    console.log(`[Cleaner] Google Sheets ${batchData.length} cells updated via batchUpdate!`);
-                }
-            } else {
-                console.warn("[Cleaner] Google Sheets API not available, applying in-memory only.");
+            const spreadsheetId = (window.spreadsheetId || localStorage.getItem("g_sheet_id"));
+            if (typeof gapi === 'undefined' || !gapi.client || !gapi.client.sheets) {
+                throw new Error("구글 시트 연동 라이브러리(GAPI)가 로드되지 않았습니다. 인터넷 상태 및 로그인을 확인해주세요.");
             }
+            if (!spreadsheetId) {
+                throw new Error("연결된 구글 시트 ID를 찾을 수 없습니다. 우측 상단의 [연동하기] 버튼으로 구글 시트를 먼저 연동해 주세요.");
+            }
+
+            const batchData = [];
+
+            selectedItems.forEach(item => {
+                const sheet = item.sheetName || window.targetSheetName || 'weraclecrm';
+                const headers = (typeof getCrmHeaders === 'function') ? getCrmHeaders(sheet) : [];
+                
+                let juminIdx = headers.indexOf('주민번호');
+                if (juminIdx === -1) juminIdx = headers.indexOf('사업자번호');
+                if (juminIdx === -1) juminIdx = headers.indexOf('주민등록번호');
+
+                let phoneIdx = headers.indexOf('폰번호');
+                if (phoneIdx === -1) phoneIdx = headers.indexOf('연락처');
+                if (phoneIdx === -1) phoneIdx = headers.indexOf('전화번호');
+                if (phoneIdx === -1) phoneIdx = headers.indexOf('대표자폰번호');
+
+                if (item.phoneNeedsFix && phoneIdx !== -1 && item.rowNumber) {
+                    const colLetter = colIndexToLetter(phoneIdx);
+                    batchData.push({
+                        range: `${sheet}!${colLetter}${item.rowNumber}`,
+                        values: [[item.fixedPhone]]
+                    });
+                }
+
+                if (item.juminNeedsFix && juminIdx !== -1 && item.rowNumber) {
+                    const colLetter = colIndexToLetter(juminIdx);
+                    batchData.push({
+                        range: `${sheet}!${colLetter}${item.rowNumber}`,
+                        values: [[item.fixedJumin]]
+                    });
+                }
+            });
+
+            if (batchData.length === 0) {
+                throw new Error("수정 대상 셀의 열 위치나 행 번호를 찾지 못했습니다. 시트 헤더 설정을 확인해 주세요.");
+            }
+
+            await gapi.client.sheets.spreadsheets.values.batchUpdate({
+                spreadsheetId: spreadsheetId,
+                resource: {
+                    valueInputOption: "USER_ENTERED",
+                    data: batchData
+                }
+            });
+            console.log(`[Cleaner] Google Sheets ${batchData.length} cells successfully updated via batchUpdate!`);
 
             // In-Memory globalCustomerData 동기화
             selectedItems.forEach(item => {

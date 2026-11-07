@@ -280,17 +280,31 @@ window.handleQuickEditSearch = function() {
                     return biz.includes(f.bizType.toLowerCase());
                 });
             } else if (f.activeType === 'pay' && f.payMethod) {
+                const targetMethod = f.payMethod.trim().toLowerCase();
+                const isCardSearch = targetMethod.includes('카드');
+                const isTransferSearch = targetMethod.includes('이체') || targetMethod.includes('계좌');
+
                 matches = matches.filter(c => {
-                    let payStr = String(c['결제방법'] || c['수납방법'] || c['납부방법'] || '').toLowerCase();
+                    let payStr = String(c['결제방식'] || c['결제방법'] || c['차_결제방식'] || c['수납방법'] || c['납부방법'] || c['결제정보'] || '').toLowerCase();
+                    for (let k = 1; k <= 10; k++) {
+                        if (c['보험' + k + '_결제방식']) payStr += ' ' + String(c['보험' + k + '_결제방식']).toLowerCase();
+                        if (c['보험' + k + '_결제정보']) payStr += ' ' + String(c['보험' + k + '_결제정보']).toLowerCase();
+                    }
                     try {
                         let insList = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
-                        if (insList.length > 0) {
+                        if (insList && insList.length > 0) {
                             insList.forEach(i => {
-                                payStr += " " + String(i['납입방법'] || i['결제방법'] || '').toLowerCase();
+                                payStr += ' ' + String(i['결제방식'] || i['차_결제방식'] || i['납입방법'] || i['결제방법'] || i['결제정보'] || i['payMethod'] || '').toLowerCase();
                             });
                         }
                     } catch(e) {}
-                    return payStr.includes(f.payMethod.toLowerCase());
+
+                    if (isCardSearch) {
+                        return payStr.includes('카드') || payStr.includes('신용') || payStr.includes('체크');
+                    } else if (isTransferSearch) {
+                        return payStr.includes('이체') || payStr.includes('자동이체') || payStr.includes('계좌') || payStr.includes('통장') || payStr.includes('은행');
+                    }
+                    return payStr.includes(targetMethod);
                 });
             } else if (f.activeType === 'age' && f.ageSearch) {
                 matches = matches.filter(c => {

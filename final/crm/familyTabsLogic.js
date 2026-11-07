@@ -23,9 +23,15 @@ function initFamilyTabs(baseId, baseLabel) {
             const bId = String(b["고객번호"] || "").trim();
             if (aId === rootIdStr) return -1;
             if (bId === rootIdStr) return 1;
-            const aNum = parseInt(aId.split('-')[1] || 0);
-            const bNum = parseInt(bId.split('-')[1] || 0);
-            return aNum - bNum;
+            const aParts = aId.split('-').map(p => parseInt(p, 10) || 0);
+            const bParts = bId.split('-').map(p => parseInt(p, 10) || 0);
+            const maxLen = Math.max(aParts.length, bParts.length);
+            for (let i = 0; i < maxLen; i++) {
+                const valA = aParts[i] !== undefined ? aParts[i] : -1;
+                const valB = bParts[i] !== undefined ? bParts[i] : -1;
+                if (valA !== valB) return valA - valB;
+            }
+            return 0;
         });
     }
 

@@ -9600,22 +9600,52 @@ window.openQuickEditModal = function() {
     const modal = document.getElementById('quickEditModal');
     if(modal) {
         modal.style.display = 'flex';
-        document.getElementById('quickEditSearchInput').value = '';
-        document.getElementById('quickEditResultArea').innerHTML = '<tr><td colspan="10" style="text-align:center; color:#94a3b8; font-size:15px; font-weight:600; padding:80px 0;">검색어를 입력하시면 고객 리스트가 나타납니다.</td></tr>';
-        document.getElementById('quickEditTableHeader').innerHTML = '';
-        document.getElementById('quickEditCount').innerText = "0";
+        modal.classList.add('active');
+        modal.style.alignItems = 'flex-start';
+        modal.style.justifyContent = 'center';
+        modal.style.padding = '32px 16px 60px';
+        modal.style.overflowY = 'auto';
+        modal.scrollTop = 0;
+
+        const content = modal.querySelector('.modal-content');
+        if (content) {
+            content.style.margin = '0 auto';
+            content.style.transform = 'none';
+            content.style.top = '0';
+        }
+
+        const sInput = document.getElementById('quickEditSearchInput');
+        if (sInput) sInput.value = '';
+        const rArea = document.getElementById('quickEditResultArea');
+        if (rArea) rArea.innerHTML = '<tr><td colspan="10" style="text-align:center; color:#94a3b8; font-size:15px; font-weight:600; padding:80px 0;">검색어를 입력하시면 고객 리스트가 나타납니다.</td></tr>';
+        const tHeader = document.getElementById('quickEditTableHeader');
+        if (tHeader) tHeader.innerHTML = '';
+        const qCount = document.getElementById('quickEditCount');
+        if (qCount) qCount.innerText = "0";
         
         if (typeof window.populateQuickEditDropdowns === 'function') {
             window.populateQuickEditDropdowns();
         }
         
-        setTimeout(() => document.getElementById('quickEditSearchInput').focus(), 100);
+        setTimeout(() => {
+            if (sInput) {
+                try {
+                    sInput.focus({ preventScroll: true });
+                } catch(e) {
+                    sInput.focus();
+                }
+            }
+            if (modal) modal.scrollTop = 0;
+        }, 100);
     }
 };
 
 window.closeQuickEditModal = function() {
     const modal = document.getElementById('quickEditModal');
-    if(modal) modal.style.display = 'none';
+    if(modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+    }
 };
 
 window.currentQuickEditTab = 'basic';

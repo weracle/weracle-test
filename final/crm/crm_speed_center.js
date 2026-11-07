@@ -56,6 +56,20 @@ window.openQuickEditModal = function() {
     if (!modal) return;
 
     modal.style.display = 'flex';
+    modal.classList.add('active');
+    modal.style.alignItems = 'flex-start';
+    modal.style.justifyContent = 'center';
+    modal.style.padding = '32px 16px 60px';
+    modal.style.overflowY = 'auto';
+    modal.scrollTop = 0;
+
+    const content = modal.querySelector('.modal-content');
+    if (content) {
+        content.style.margin = '0 auto';
+        content.style.transform = 'none';
+        content.style.top = '0';
+    }
+
     window.syncSpeedCenterMobileUI();
 
     const searchInput = document.getElementById('quickEditSearchInput');
@@ -73,13 +87,23 @@ window.openQuickEditModal = function() {
     window.handleQuickEditSearch();
 
     setTimeout(() => {
-        if (searchInput) searchInput.focus();
+        if (searchInput) {
+            try {
+                searchInput.focus({ preventScroll: true });
+            } catch(e) {
+                searchInput.focus();
+            }
+        }
+        if (modal) modal.scrollTop = 0;
     }, 150);
 };
 
 window.closeQuickEditModal = function() {
     const modal = document.getElementById('quickEditModal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+    }
 };
 
 // Focus Card (Single-Condition Focus)

@@ -14,10 +14,14 @@ function initFamilyTabs(baseId, baseLabel) {
     
     let familyMembers = [];
     if (typeof window.isEditMode !== 'undefined' && window.isEditMode && typeof globalCustomerData !== 'undefined') {
-        const rootIdStr = initialId.split('-')[0];
+        const isFamilySub = /-\d+(?:-\d+)*$/.test(initialId);
+        const rootIdStr = isFamilySub ? initialId.replace(/(-\d+)+$/, '') : initialId;
+        const escRoot = rootIdStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
+
         familyMembers = globalCustomerData.filter(c => {
             const cId = String(c["고객번호"] || c["사업자번호"] || "").trim();
-            return cId === rootIdStr || cId.startsWith(rootIdStr + "-");
+            return cId === rootIdStr || famSubRegex.test(cId);
         }).sort((a, b) => {
             const aId = String(a["고객번호"] || "").trim();
             const bId = String(b["고객번호"] || "").trim();

@@ -3136,7 +3136,8 @@ const displayedRoots = new Set();
 filtered.forEach((filteredClient, index) => {
     const idStr = String(filteredClient["고객번호"] || filteredClient["사업자번호"] || "").trim();
     if (!idStr) return;
-    const rootId = idStr.split('-')[0];
+    const isFamilySub = /-\d+(?:-\d+)*$/.test(idStr);
+    const rootId = isFamilySub ? idStr.replace(/(-\d+)+$/, '') : idStr;
     if (displayedRoots.has(rootId)) return;
         displayedRoots.add(rootId);
     
@@ -3144,9 +3145,11 @@ filtered.forEach((filteredClient, index) => {
     const familyBarColor = familyBarColors[(displayedRoots.size - 1) % familyBarColors.length];
     const familyBgColor = "#fff"; // Revert background to white
     
+    const escRoot = rootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
     const household = globalCustomerData.filter(c => {
         const cid = String(c["고객번호"] || c["사업자번호"] || "").trim();
-        return cid === rootId || cid.startsWith(rootId + '-');
+        return cid === rootId || famSubRegex.test(cid);
     });
     
     household.sort((a,b) => {
@@ -7190,10 +7193,13 @@ window.renderProfileModal = function(mId) {
     if (!client) return;
 
     const idStr = String(mId);
-    const rootId = idStr.split('-')[0];
+    const isFamilySub = /-\d+(?:-\d+)*$/.test(idStr);
+    const rootId = isFamilySub ? idStr.replace(/(-\d+)+$/, '') : idStr;
+    const escRoot = rootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
     const household = window.globalCustomerData.filter(c => {
         const cid = String(c['\uACE0\uAC1D\uBC88\uD638'] || c['\uC0AC\uC5C5\uC790\uBC88\uD638'] || '').trim();
-        return cid === rootId || cid.startsWith(rootId + '-');
+        return cid === rootId || famSubRegex.test(cid);
     }).sort((a,b) => {
         const aId = String(a['\uACE0\uAC1D\uBC88\uD638']||a['\uC0AC\uC5C5\uC790\uBC88\uD638']||'').trim();
         const bId = String(b['\uACE0\uAC1D\uBC88\uD638']||b['\uC0AC\uC5C5\uC790\uBC88\uD638']||'').trim();
@@ -7204,28 +7210,34 @@ window.renderProfileModal = function(mId) {
 
     const navEl = document.getElementById('pfFamilyNav');
     if (navEl) {
-        let navHtml = '<div style="color: #64748b; font-size: 13px; font-weight: 800; margin-right: 12px;"><i class="fa-solid fa-people-roof" style="margin-right:6px;"></i>\uAC00\uC871 \uD504\uB85C\uD544</div>';
-        household.forEach((fam) => {
-            const famId = String(fam['\uACE0\uAC1D\uBC88\uD638'] || fam['\uC0AC\uC5C5\uC790\uBC88\uD638']);
-            const famName = fam['\uACE0\uAC1D\uBA85'] || fam['\uB300\uD45C\uC790\uBA85'] || '\uC774\uB984\uC5C6\uC74C';
-            const isRoot = (famId === rootId);
-            const relation = isRoot ? '\uBCF8\uC778' : (fam['\uAC00\uC871\uAD00\uACC4'] || '\uAC00\uC871');
-            const label = isRoot ? '\uBCF8\uC778 (' + famName + ')' : relation + ' (' + famName + ')';
-            
-            const isActive = (famId === idStr);
-            if (isActive) {
-                navHtml += '<button class="family-tab active" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:default; font-size: 14px; box-shadow: 0 2px 4px rgba(59,130,246,0.2);">' +
-                    (isRoot ? '<i class="fa-solid fa-star" style="color:#fcd34d; margin-right:6px;"></i> ' : '') + label +
-                '</button>';
-            } else {
-                navHtml += '<button class="family-tab" style="background:white; color:#475569; border:1px solid #cbd5e1; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer; font-size: 14px; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02);" ' +
-                    'onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'white\'" ' +
-                    'onclick="renderProfileModal(\'' + famId + '\')">' +
-                    (isRoot ? '<i class="fa-solid fa-star" style="color:#fcd34d; margin-right:6px;"></i> ' : '') + label +
-                '</button>';
-            }
-        });
-        navEl.innerHTML = navHtml;
+        if (household.length <= 1) {
+            navEl.style.display = 'none';
+            navEl.innerHTML = '';
+        } else {
+            navEl.style.display = 'flex';
+            let navHtml = '<div style="color: #64748b; font-size: 13px; font-weight: 800; margin-right: 12px;"><i class="fa-solid fa-people-roof" style="margin-right:6px;"></i>\uAC00\uC871 \uD504\uB85C\uD544</div>';
+            household.forEach((fam) => {
+                const famId = String(fam['\uACE0\uAC1D\uBC88\uD638'] || fam['\uC0AC\uC5C5\uC790\uBC88\uD638']);
+                const famName = fam['\uACE0\uAC1D\uBA85'] || fam['\uB300\uD45C\uC790\uBA85'] || '\uC774\uB984\uC5C6\uC74C';
+                const isRoot = (famId === rootId);
+                const relation = isRoot ? '\uBCF8\uC778' : (fam['\uAC00\uC871\uAD00\uACC4'] || '\uAC00\uC871');
+                const label = isRoot ? '\uBCF8\uC778 (' + famName + ')' : relation + ' (' + famName + ')';
+                
+                const isActive = (famId === idStr);
+                if (isActive) {
+                    navHtml += '<button class="family-tab active" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:default; font-size: 14px; box-shadow: 0 2px 4px rgba(59,130,246,0.2);">' +
+                        (isRoot ? '<i class="fa-solid fa-star" style="color:#fcd34d; margin-right:6px;"></i> ' : '') + label +
+                    '</button>';
+                } else {
+                    navHtml += '<button class="family-tab" style="background:white; color:#475569; border:1px solid #cbd5e1; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer; font-size: 14px; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02);" ' +
+                        'onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'white\'" ' +
+                        'onclick="renderProfileModal(\'' + famId + '\')">' +
+                        (isRoot ? '<i class="fa-solid fa-star" style="color:#fcd34d; margin-right:6px;"></i> ' : '') + label +
+                    '</button>';
+                }
+            });
+            navEl.innerHTML = navHtml;
+        }
     }
 
     const name = client['\uACE0\uAC1D\uBA85'] || client['\uB300\uD45C\uC790\uBA85'] || '\uC774\uB984\uC5C6\uC74C';
@@ -7721,21 +7733,28 @@ window.generateInsListHtml = function(client) {
 
 window.generateProfileHtml = function(client) {
     let familyPillsHtml = "";
-    const rootId = String(client["고객번호"] || client["ID"] || "").split("-")[0];
+    const myId = String(client["고객번호"] || client["ID"] || "").trim();
+    const isFamilySub = /-\d+(?:-\d+)*$/.test(myId);
+    const rootId = isFamilySub ? myId.replace(/(-\d+)+$/, '') : myId;
+    
     if (rootId && typeof globalCustomerData !== "undefined") {
+        const escRoot = rootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
+        
         const familyMembers = globalCustomerData.filter(c => {
-            const cId = String(c["고객번호"] || c["ID"] || "");
-            return cId === rootId || cId.startsWith(rootId + "-");
+            const cId = String(c["고객번호"] || c["ID"] || "").trim();
+            return cId === rootId || famSubRegex.test(cId);
         });
         
-        if (familyMembers.length > 0) {
+        // 가족 구성원이 2명 이상인 경우에만 연동된 가족 목록으로 표시
+        if (familyMembers.length > 1) {
             familyPillsHtml = "<div style=\"display:flex; flex-wrap:wrap; gap:8px;\">";
             familyMembers.forEach(fm => {
-                const fmId = String(fm["고객번호"] || fm["ID"] || "");
-                const isCurrent = (fmId === String(client["고객번호"] || client["ID"] || ""));
+                const fmId = String(fm["고객번호"] || fm["ID"] || "").trim();
+                const isCurrent = (fmId === myId);
                 const fmName = fm["고객명"] || "이름없음";
                 let fmRel = fm["가족사항"] || fm["가족_관계"] || "가족";
-                if (fmId === rootId) fmRel = "계약자";
+                if (fmId === rootId) fmRel = "계약자(본인)";
                 else if (fmRel.includes("(")) fmRel = fmRel.split("(")[0];
                 
                 if (isCurrent) {
@@ -7746,10 +7765,10 @@ window.generateProfileHtml = function(client) {
             });
             familyPillsHtml += "</div>";
         } else {
-            familyPillsHtml = `<div style="color: #475569; font-size: 15px; font-weight:600;">등록된 가족이 없습니다.</div>`;
+            familyPillsHtml = `<div style="color: #94a3b8; font-size: 14px; font-weight:600;">연동된 가족이 없습니다. (단독 고객)</div>`;
         }
     } else {
-        familyPillsHtml = `<div style="color: #475569; font-size: 15px; font-weight:600;">` + (client["가족사항"] || "-") + `</div>`;
+        familyPillsHtml = `<div style="color: #94a3b8; font-size: 14px; font-weight:600;">연동된 가족이 없습니다. (단독 고객)</div>`;
     }
 
     let insHtml = (typeof window.generateInsListHtml === 'function') ? window.generateInsListHtml(client) : '-';
@@ -10541,148 +10560,249 @@ window.deleteCustomerData = async function() {
 // 15. Profile Family Management (Modal)
 // ==========================================
 window.openFamilyManageModal = function(rootId, rootName) {
+    const escRoot = String(rootId).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
+    
     document.getElementById('fm-modal-title').innerText = `[${rootName}] 가족 관리`;
-    document.getElementById('fm-current-root-id').value = rootId;
+    document.getElementById('fm-current-root-id').value = String(rootId).trim();
     document.getElementById('fm-search-input').value = "";
     document.getElementById('fm-search-results').innerHTML = "";
     
-    // Load current members
-    const familyMembers = globalCustomerData.filter(c => {
-        const cId = String(c["고객번호"] || c["ID"] || "");
-        return cId === rootId || cId.startsWith(rootId + "-");
+    // Load current members: root + sub-members
+    const familyMembers = (window.globalCustomerData || []).filter(c => {
+        const cId = String(c["고객번호"] || c["ID"] || "").trim();
+        return cId === String(rootId).trim() || famSubRegex.test(cId);
     });
     
     let html = "";
-    familyMembers.forEach(fm => {
-        const fmId = String(fm["고객번호"] || fm["ID"] || "");
-        const fmName = fm["고객명"] || "이름없음";
-        let fmRel = fm["가족사항"] || fm["가족_관계"] || "가족";
-        if (fmId === rootId) fmRel = "계약자(본인)";
-        else if (fmRel.includes("(")) fmRel = fmRel.split("(")[0];
-        
-        let btnHtml = "";
-        if (fmId !== rootId) {
-            btnHtml = `<button onclick="window.unlinkFamilyMember('${fmId}', '${fmName}')" style="background:#fef2f2; color:#ef4444; border:1px solid #fca5a5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">분리(독립)</button>`;
-        } else {
-            btnHtml = `<span style="font-size:12px; color:#94a3b8; font-weight:600; padding:6px 0;">가족 대표 (분리 불가)</span>`;
-        }
-
-        html += `<div style="display:flex; justify-content:space-between; align-items:center; background:white; border:1px solid #e2e8f0; padding:12px 16px; border-radius:8px;">
-            <div>
-                <div style="font-weight:700; color:#0f172a; font-size:14px;">${fmName} <span style="font-size:12px; color:#64748b; font-weight:500; margin-left:6px;">(${fmRel})</span></div>
-                <div style="font-size:12px; color:#94a3b8; margin-top:2px;">고객번호: ${fmId}</div>
-            </div>
-            ${btnHtml}
+    if (familyMembers.length <= 1) {
+        html = `<div style="color:#64748b; font-size:13.5px; padding:20px; background:#f8fafc; border-radius:10px; border:1.5px dashed #cbd5e1; text-align:center; line-height:1.6;">
+            현재 연동된 다른 가족 구성원이 없습니다.<br>
+            <span style="font-size:12px; color:#94a3b8; font-weight:500;">아래 [다른 고객 검색하여 가족으로 묶기]에서 가족 구성원을 검색하여 편입할 수 있습니다.</span>
         </div>`;
-    });
+    } else {
+        familyMembers.forEach(fm => {
+            const fmId = String(fm["고객번호"] || fm["ID"] || "").trim();
+            const fmName = fm["고객명"] || "이름없음";
+            let fmRel = fm["가족사항"] || fm["가족_관계"] || "가족";
+            if (fmId === String(rootId).trim()) fmRel = "계약자(본인)";
+            else if (fmRel.includes("(")) fmRel = fmRel.split("(")[0];
+            
+            let btnHtml = "";
+            if (fmId !== String(rootId).trim()) {
+                btnHtml = `<button type="button" onclick="window.unlinkFamilyMember('${fmId}', '${fmName.replace(/'/g, "\\'")}')" style="background:#fef2f2; color:#ef4444; border:1px solid #fca5a5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">분리(독립)</button>`;
+            } else {
+                btnHtml = `<span style="font-size:12px; color:#3b82f6; background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; font-weight:700; padding:4px 8px;">가족 대표 (본인)</span>`;
+            }
+
+            html += `<div style="display:flex; justify-content:space-between; align-items:center; background:white; border:1px solid #e2e8f0; padding:12px 16px; border-radius:8px;">
+                <div>
+                    <div style="font-weight:700; color:#0f172a; font-size:14px;">${fmName} <span style="font-size:12px; color:#64748b; font-weight:500; margin-left:6px;">(${fmRel})</span></div>
+                    <div style="font-size:12px; color:#94a3b8; margin-top:2px;">고객번호: <strong>${fmId}</strong></div>
+                </div>
+                ${btnHtml}
+            </div>`;
+        });
+    }
     document.getElementById('fm-current-members').innerHTML = html;
     
-    document.getElementById('family-manage-modal').style.display = 'flex';
+    const modal = document.getElementById('family-manage-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+        modal.scrollTop = 0;
+    }
 };
 
 window.searchCustomerForFamily = function() {
     const keyword = document.getElementById('fm-search-input').value.trim();
     const resultDiv = document.getElementById('fm-search-results');
-    const rootId = document.getElementById('fm-current-root-id').value;
+    const rootId = document.getElementById('fm-current-root-id').value.trim();
     
     if (keyword.length < 1) {
         resultDiv.innerHTML = '<div style="color:#ef4444; font-size:13px; font-weight:600;">검색어를 입력해주세요.</div>';
         return;
     }
     
-    const results = globalCustomerData.filter(c => {
-        const cId = String(c["고객번호"] || c["ID"] || "");
-        const name = c["고객명"] || c["이름"] || c["대표자명"] || "";
-        const phone = c["폰번호"] || c["대표자폰번호"] || "";
+    const escRoot = rootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
+    const cleanKeyword = keyword.replace(/\D/g, '');
+    
+    const results = (window.globalCustomerData || []).filter(c => {
+        const cId = String(c["고객번호"] || c["ID"] || "").trim();
+        const name = String(c["고객명"] || c["이름"] || c["대표자명"] || "").trim();
+        const phone = String(c["폰번호"] || c["대표자폰번호"] || "").trim();
+        const cleanPhone = phone.replace(/\D/g, '');
+
         // Exclude current family members
-        if (cId === rootId || cId.startsWith(rootId + "-")) return false;
-        return name.includes(keyword) || phone.includes(keyword);
+        if (cId === rootId || famSubRegex.test(cId)) return false;
+        return name.includes(keyword) || (cleanKeyword.length >= 2 && cleanPhone.includes(cleanKeyword));
     });
     
     if (results.length === 0) {
-        resultDiv.innerHTML = '<div style="color:#64748b; font-size:13px;">검색 결과가 없습니다.</div>';
+        resultDiv.innerHTML = '<div style="color:#64748b; font-size:13px; padding:12px; text-align:center;">검색 결과가 없습니다.</div>';
         return;
     }
     
     let html = "";
     results.forEach(c => {
-        const cId = String(c["고객번호"] || c["ID"] || "");
-        const name = c["고객명"] || c["이름"] || c["대표자명"] || "";
+        const cId = String(c["고객번호"] || c["ID"] || "").trim();
+        const name = c["고객명"] || c["이름"] || c["대표자명"] || "고객";
+        const phone = c["폰번호"] || c["대표자폰번호"] || "-";
         html += `<div style="display:flex; justify-content:space-between; align-items:center; background:white; border:1px solid #e2e8f0; padding:10px 14px; border-radius:8px;">
             <div>
-                <div style="font-weight:700; color:#0f172a; font-size:13px;">${name}</div>
-                <div style="font-size:11px; color:#94a3b8; margin-top:2px;">고객번호: ${cId}</div>
+                <div style="font-weight:700; color:#0f172a; font-size:13px;">${name} <span style="font-size:12px; color:#64748b; font-weight:500;">(${phone})</span></div>
+                <div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">현재 고객번호: <strong>${cId}</strong></div>
             </div>
-            <button onclick="window.linkCustomerToFamily('${cId}', '${name}')" style="background:#e0e7ff; color:#4f46e5; border:1px solid #c7d2fe; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#c7d2fe'" onmouseout="this.style.background='#e0e7ff'">이 가족으로 묶기</button>
+            <button type="button" onclick="window.linkCustomerToFamily('${cId}', '${name.replace(/'/g, "\\'")}')" style="background:#e0e7ff; color:#4f46e5; border:1px solid #c7d2fe; padding:6px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#c7d2fe'" onmouseout="this.style.background='#e0e7ff'"><i class="fa-solid fa-link"></i> 이 가족으로 묶기</button>
         </div>`;
     });
     resultDiv.innerHTML = html;
 };
 
 window.linkCustomerToFamily = async function(targetCustId, targetName) {
-    const rootId = document.getElementById('fm-current-root-id').value;
-    if(!confirm(`[${targetName}] 고객을 이 가족 그룹으로 편입하시겠습니까?`)) return;
+    const rootId = document.getElementById('fm-current-root-id').value.trim();
+    if (!rootId) {
+        alert("가족 대표 고객번호를 찾을 수 없습니다.");
+        return;
+    }
+    
+    const relation = prompt(`[${targetName}] 고객의 가족 관계를 입력해주세요 (예: 배우자, 자녀, 부모 등):`, "배우자");
+    if (relation === null) return;
+    const chosenRel = relation.trim() || "가족";
+    
+    if(!confirm(`[${targetName}] 고객을 [${rootId}] 대표 가족의 구성원(${chosenRel})으로 편입하시겠습니까?\n고객번호가 '${rootId}-번호' 형태로 변경됩니다.`)) return;
     
     let maxSub = 0;
-    globalCustomerData.forEach(c => {
-        let idVal = String(c["고객번호"] || c["사업자번호"]);
-        if(idVal.startsWith(rootId + "-")) {
-            let sub = parseInt(idVal.substring(rootId.length + 1).split('-')[0], 10);
-            if(sub > maxSub) maxSub = sub;
+    const escRoot = rootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp('^' + escRoot + '-(\\d+)');
+    
+    (window.globalCustomerData || []).forEach(c => {
+        let idVal = String(c["고객번호"] || c["사업자번호"] || c["ID"] || "").trim();
+        const m = idVal.match(regex);
+        if (m) {
+            let sub = parseInt(m[1], 10);
+            if (!isNaN(sub) && sub > maxSub) maxSub = sub;
         }
     });
-    const newId = rootId + "-" + (maxSub + 1);
+    const newId = `${rootId}-${maxSub + 1}`;
     
-    await updateCustomerIdInSheet(targetCustId, newId, ` [${targetName}] 가족 편입 완료`);
+    await updateCustomerIdInSheet(targetCustId, newId, `[${targetName}] 가족 편입 완료`, chosenRel);
 };
 
 window.unlinkFamilyMember = async function(targetCustId, targetName) {
-    if(!confirm(`[${targetName}] 고객을 이 가족에서 분리하여 독립시키겠습니까?\n새로운 독립 고객번호가 부여됩니다.`)) return;
+    if(!confirm(`[${targetName}] (고객번호: ${targetCustId}) 고객을 이 가족에서 분리하여 독립시키겠습니까?\n새로운 독립 고객번호가 순차 부여됩니다.`)) return;
     
     let maxId = 0;
-    globalCustomerData.forEach(c => {
-        let idVal = c["고객번호"] || c["사업자번호"];
+    (window.globalCustomerData || []).forEach(c => {
+        let idVal = c["고객번호"] || c["사업자번호"] || c["ID"];
         if(idVal) {
             let numStr = String(idVal).split('-')[0].replace(/\D/g, '');
             if(numStr) {
                 let n = parseInt(numStr, 10);
-                if(n > maxId) maxId = n;
+                if(!isNaN(n) && n > maxId) maxId = n;
             }
         }
     });
     const newId = String(maxId + 1);
     
-    await updateCustomerIdInSheet(targetCustId, newId, ` [${targetName}] 가족 독립 완료`);
+    await updateCustomerIdInSheet(targetCustId, newId, `[${targetName}] 가족 분리 완료 (독립 번호: ${newId})`, "본인");
 };
 
-async function updateCustomerIdInSheet(oldId, newId, successMsg) {
+async function updateCustomerIdInSheet(oldId, newId, successMsg, newRelation = "") {
     showLoading(true);
     try {
-        const targetIdx = globalCustomerData.findIndex(c => String(c["고객번호"] || c["사업자번호"]) === oldId);
-        if(targetIdx === -1) throw new Error("데이터를 찾을 수 없습니다.");
+        const cleanOldId = String(oldId).trim();
+        const targetIdx = (window.globalCustomerData || []).findIndex(c => String(c["고객번호"] || c["사업자번호"] || c["ID"]).trim() === cleanOldId);
+        if (targetIdx === -1) throw new Error(`고객번호 [${oldId}] 데이터를 찾을 수 없습니다.`);
         
-        const rNum = globalCustomerData[targetIdx].rowNumber;
-        const sName = globalCustomerData[targetIdx].sheetName || "weraclecrm";
+        const targetClient = window.globalCustomerData[targetIdx];
+        const rNum = targetClient.rowNumber;
+        const sName = targetClient.sheetName || "weraclecrm";
         const spreadsheetId = (window.spreadsheetId || localStorage.getItem("g_sheet_id"));
+
+        let token = null;
+        if (!isDemoMode && typeof ensureValidToken === 'function') {
+            try {
+                token = await ensureValidToken();
+            } catch(e) {
+                console.warn("Token check warning:", e);
+            }
+        }
+
+        // 1. 구글 시트 반영 (연동되어 있고 행 번호가 유효한 경우)
+        if (!isDemoMode && token && spreadsheetId && rNum && typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets) {
+            try {
+                // A열(고객번호) 업데이트
+                await gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId,
+                    range: `${sName}!A${rNum}`,
+                    valueInputOption: "USER_ENTERED",
+                    resource: { values: [[newId]] }
+                });
+
+                // 가족관계 업데이트
+                if (newRelation) {
+                    const headers = getCrmHeaders(sName);
+                    const famColIdx = headers.indexOf("가족사항");
+                    if (famColIdx !== -1) {
+                        const colLetter = String.fromCharCode(65 + famColIdx);
+                        await gapi.client.sheets.spreadsheets.values.update({
+                            spreadsheetId,
+                            range: `${sName}!${colLetter}${rNum}`,
+                            valueInputOption: "USER_ENTERED",
+                            resource: { values: [[newRelation]] }
+                        });
+                    }
+                }
+            } catch (sheetErr) {
+                console.warn("Google Sheet direct update notice (fallback to local state):", sheetErr);
+            }
+        }
         
-        // Update column A (고객번호)
-        await gapi.client.sheets.spreadsheets.values.update({
-            spreadsheetId,
-            range: sName + "!A" + rNum,
-            valueInputOption: "USER_ENTERED",
-            resource: { values: [[newId]] }
-        });
+        // 2. 메모리 및 로컬 스토리지 즉시 동기화
+        targetClient["고객번호"] = newId;
+        if (targetClient["ID"]) targetClient["ID"] = newId;
+        if (newRelation) targetClient["가족사항"] = newRelation;
+
+        // 보험 가입내역에 고객번호가 있으면 함께 동기화
+        if (Array.isArray(targetClient["보험가입리스트"])) {
+            targetClient["보험가입리스트"].forEach(ins => {
+                ins["고객번호"] = newId;
+            });
+        }
+
+        try {
+            localStorage.setItem("demo_crm_data", JSON.stringify(window.globalCustomerData));
+        } catch(e) {}
+
+        // 3. 보험 시트 백업 동기화가 활성화된 경우 실행
+        if (typeof window.forceSyncInsuranceSheet === 'function') {
+            try {
+                await window.forceSyncInsuranceSheet();
+            } catch(e) {}
+        }
         
-        showCustomAlert("업데이트 완료", successMsg + `<br>새 고객번호: ${newId}`);
-        document.getElementById('family-manage-modal').style.display = 'none';
+        showCustomAlert("업데이트 완료", `${successMsg}<br>새 고객번호: <strong>${newId}</strong>`);
+        
+        const fmModal = document.getElementById('family-manage-modal');
+        if (fmModal) fmModal.style.display = 'none';
         
         const p2 = document.getElementById('profileModal');
-        if (p2) { p2.classList.remove('show'); p2.classList.remove('active'); p2.style.display = 'none'; }
-        if (typeof loadCRMData === 'function') await loadCRMData();
-        
+        if (p2) { 
+            p2.classList.remove('show'); 
+            p2.classList.remove('active'); 
+            p2.style.display = 'none'; 
+        }
+
+        // 전체 화면 뷰 즉시 갱신
+        if (typeof renderTable === 'function') renderTable();
+        if (typeof updateQuickFilterCounts === 'function') updateQuickFilterCounts();
+        if (typeof updateAgentHeaderUI === 'function') updateAgentHeaderUI();
+
     } catch(err) {
         console.error("ID Update Error", err);
-        alert("오류 발생: " + err.message);
+        alert("가족 정보 저장 중 오류 발생: " + err.message);
     } finally {
         showLoading(false);
     }

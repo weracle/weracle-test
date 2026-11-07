@@ -4988,23 +4988,76 @@ fallbackCopyTextToClipboard(t);
 // ==========================================
 // 11. 모달 팝업 및 알림 헬퍼 구현
 // ==========================================
-function showLoading(visible) {
-let loader = document.getElementById("crm-loader");
-if (!loader && visible) {
-loader = document.createElement("div");
-loader.id = "crm-loader";
-loader.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); display:flex; justify-content:center; align-items:center; z-index:11000; font-size:18px; font-weight:800; color:var(--primary);";
-loader.innerHTML = `<div><span style="display:inline-block; animation:spin 1s linear infinite; margin-right:10px;">?</span> 동기화 중...</div>`;
-loader.innerHTML = `<div><span style="display:inline-block; width: 24px; text-align: center; margin-right:10px;"><span style="display:inline-block; animation:spin 1s linear infinite;"></span></span> 동기화 중...</div>`;
-document.body.appendChild(loader);
-const style = document.createElement("style");
-style.innerHTML = "@keyframes spin { 100% { transform:rotate(360deg); } }";
-document.head.appendChild(style);
+function showLoading(visible, title, desc) {
+    let loader = document.getElementById("crm-loader");
+    if (!loader) {
+        loader = document.createElement("div");
+        loader.id = "crm-loader";
+        loader.style.cssText = "display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.4); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999999; justify-content:center; align-items:flex-start; padding:32px 16px 0; box-sizing:border-box; pointer-events:auto;";
+        loader.innerHTML = `
+            <div class="crm-sync-banner">
+                <div class="crm-sync-icon-box">
+                    <div class="crm-sync-orbital-ring"></div>
+                    <div class="crm-sync-inner-badge">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction:column; text-align:left;">
+                    <div class="crm-sync-title">
+                        <span id="crm-sync-title-text">데이터 동기화 진행 중</span>
+                        <span style="display:inline-flex; gap:3px; align-items:center;">
+                            <span class="crm-sync-dot" style="animation:crmSyncDot 1.4s infinite ease-in-out both;"></span>
+                            <span class="crm-sync-dot" style="animation:crmSyncDot 1.4s infinite ease-in-out both 0.2s;"></span>
+                            <span class="crm-sync-dot" style="animation:crmSyncDot 1.4s infinite ease-in-out both 0.4s;"></span>
+                        </span>
+                    </div>
+                    <div class="crm-sync-desc" id="crm-sync-desc-text">
+                        클라우드 구글 시트와 실시간 연동하고 있습니다.
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(loader);
+
+        if (!document.getElementById("crm-sync-style")) {
+            const style = document.createElement("style");
+            style.id = "crm-sync-style";
+            style.innerHTML = `
+                @keyframes crmSyncSlideDown {
+                    0% { opacity:0; transform:translateY(-24px) scale(0.96); }
+                    100% { opacity:1; transform:translateY(0) scale(1); }
+                }
+                @keyframes crmSyncRotate {
+                    0% { transform:rotate(0deg); }
+                    100% { transform:rotate(360deg); }
+                }
+                @keyframes crmSyncDot {
+                    0%, 80%, 100% { transform:scale(0.6); opacity:0.3; }
+                    40% { transform:scale(1.2); opacity:1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+
+    if (visible) {
+        const titleEl = document.getElementById("crm-sync-title-text");
+        if (titleEl) titleEl.innerText = title || "데이터 동기화 진행 중";
+        const descEl = document.getElementById("crm-sync-desc-text");
+        if (descEl) descEl.innerText = desc || "클라우드 구글 시트와 실시간 연동하고 있습니다.";
+
+        loader.style.display = "flex";
+        const banner = loader.querySelector(".crm-sync-banner");
+        if (banner) {
+            banner.style.animation = "none";
+            banner.offsetHeight; // trigger reflow
+            banner.style.animation = "crmSyncSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards";
+        }
+    } else {
+        if (loader) loader.style.display = "none";
+    }
 }
-if (loader) {
-loader.style.display = visible ? "flex" : "none";
-}
-}
+window.showLoading = showLoading;
 function openCustomPrompt(mode, title, desc) {
 const modal = document.getElementById("customPromptModal");
 modal.setAttribute("data-mode", mode);
@@ -10743,7 +10796,7 @@ window.unlinkFamilyMember = async function(targetCustId, targetName) {
 };
 
 async function updateCustomerIdInSheet(oldId, newId, successMsg, newRelation = "") {
-    showLoading(true);
+    showLoading(true, "가족 정보 동기화 중...", "구글 시트에 가족 관계를 실시간 반영하고 있습니다.");
     try {
         const cleanOldId = String(oldId).trim();
         const targetIdx = (window.globalCustomerData || []).findIndex(c => String(c["고객번호"] || c["사업자번호"] || c["ID"]).trim() === cleanOldId);

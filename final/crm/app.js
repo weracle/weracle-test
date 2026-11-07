@@ -3665,7 +3665,16 @@ function openRegModal(mode, specificId) {
         }
         
         if (mode === 'new' && wizard && form) {
-            wizard.style.display = 'flex'; wizard.style.justifyContent = 'center'; wizard.style.minHeight = '500px';
+            const modalContent = document.querySelector("#regModal .modal-content");
+            if (modalContent) {
+                modalContent.style.height = "auto";
+                modalContent.style.maxHeight = "95vh";
+                modalContent.style.margin = "0 auto";
+            }
+            wizard.style.display = 'flex';
+            wizard.style.justifyContent = 'flex-start';
+            wizard.style.paddingTop = '10px';
+            wizard.style.minHeight = 'auto';
             form.style.display = 'none';
             const mw = document.querySelector('.sian-main-wrapper'); if(mw) mw.style.display = 'none';
             if (typeof window.setWizardMode === 'function') {
@@ -3694,6 +3703,11 @@ function openRegModal(mode, specificId) {
                 window.wizardRowCount = 1;
             }
         } else if (wizard && form) {
+            const modalContent = document.querySelector("#regModal .modal-content");
+            if (modalContent) {
+                modalContent.style.height = "96vh";
+                modalContent.style.margin = "0 auto";
+            }
             wizard.style.display = 'none';
             form.style.display = 'flex';
         }
@@ -8530,6 +8544,11 @@ window.executeWizardStart = function() {
     window.disableInitFamilyTabs = false;
     document.getElementById("regSetupWizard").style.display = "none";
     document.getElementById("crmRegForm").style.display = "flex";
+    const modalContent = document.querySelector("#regModal .modal-content");
+    if (modalContent) {
+        modalContent.style.height = "96vh";
+        modalContent.style.margin = "0 auto";
+    }
     
     const rootId = document.getElementById("base-cust-id").value;
     const mainName = document.getElementById("wizard-main-name").value.trim() || '무명고객';

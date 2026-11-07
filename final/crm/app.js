@@ -8968,18 +8968,24 @@ window.renderBulkPreviewTable = function() {
             const isChecked = data.checked ? 'checked' : '';
             const isDisabled = isNameMissing ? 'disabled' : '';
 
+            const memoDisplay = (data.특이사항 && data.특이사항.trim()) ? data.특이사항 : '<span style="color:#cbd5e1;">-</span>';
+            const jobDisplay = (data.직업 && data.직업.trim()) ? data.직업 : '<span style="color:#cbd5e1;">-</span>';
+            const addrDisplay = (data.주소 && data.주소.trim()) ? data.주소 : '<span style="color:#cbd5e1;">-</span>';
+            const juminDisplay = (data.주민번호 && data.주민번호.trim()) ? data.주민번호 : '<span style="color:#cbd5e1;">-</span>';
+            const phoneDisplay = (data.폰번호 && data.폰번호.trim()) ? data.폰번호 : '<span style="color:#cbd5e1;">-</span>';
+
             html += `<tr style="${trStyle}">
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; text-align:center;">
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; text-align:center; width:36px; min-width:36px;">
                     <input type="checkbox" class="bulk-row-check" data-idx="${i}" ${isChecked} ${isDisabled} onchange="window.handleBulkRowCheckChange(${i}, this.checked)" style="width:15px; height:15px; cursor:pointer;">
                 </td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#3b82f6; text-align:center;">${data.고객번호}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; ${nameStyle}">${data.고객명 || '이름 누락(등록불가)'} ${dupBadge}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px;">${data.주민번호}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; font-weight:600; color:#0284c7;">${data.폰번호}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${data.주소}">${data.주소}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px;">${data.직업}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${data.특이사항}">${data.특이사항}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; text-align:center; width:52px;">
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#3b82f6; text-align:center; width:70px; min-width:70px;">${data.고객번호}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; ${nameStyle} min-width:90px;">${data.고객명 || '이름 누락(등록불가)'} ${dupBadge}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; width:125px; min-width:125px;">${juminDisplay}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; font-weight:600; color:#0284c7; width:115px; min-width:115px;">${phoneDisplay}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; min-width:160px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${data.주소 || ''}">${addrDisplay}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; min-width:85px;">${jobDisplay}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; min-width:140px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${data.특이사항 || ''}">${memoDisplay}</td>
+                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; text-align:center; width:60px; min-width:60px;">
                     <button type="button" onclick="window.deleteBulkRow(${i})" style="background:#fee2e2; border:1.5px solid #fca5a5; color:#dc2626; border-radius:6px; width:26px; height:26px; font-weight:900; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:0.15s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" title="이 고객 삭제">✕</button>
                 </td>
             </tr>`;

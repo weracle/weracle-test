@@ -685,7 +685,7 @@ console.log("[CRM Modular] crm_enhancements.js 로드 완료 (구글알림정리
 
         modal = document.createElement('div');
         modal.id = 'dataCleanerModal';
-        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); z-index:999999; display:none; justify-content:center; align-items:center; padding:16px; box-sizing:border-box; backdrop-filter:blur(4px);';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); z-index:999999; display:none; justify-content:center; align-items:flex-start; padding:32px 16px 60px; box-sizing:border-box; backdrop-filter:blur(4px); overflow-y:auto;';
         
         modal.innerHTML = `
             <div style="background:#ffffff; border-radius:18px; width:100%; max-width:780px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); overflow:hidden; border:1px solid #e2e8f0; animation: cleanerFadeIn 0.2s ease;">

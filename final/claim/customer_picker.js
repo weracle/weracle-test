@@ -938,10 +938,10 @@
         background: rgba(15, 23, 42, 0.72);
         backdrop-filter: blur(8px);
         display: none;
-        align-items: flex-start;
+        align-items: flex-start !important;
         justify-content: center;
         z-index: 99999;
-        padding: 40px 16px;
+        padding: 30px 16px 60px !important;
         overflow-y: auto;
       }
       .crm-modal-backdrop.active {
@@ -962,7 +962,7 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        margin: auto 0;
+        margin: 0 auto !important;
         animation: crmSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
       @keyframes crmSlideUp {
@@ -974,7 +974,7 @@
       .crm-modal-header {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: flex-start !important;
         padding: 22px 24px 18px;
         border-bottom: 1px solid #f1f5f9;
         background: #ffffff;
@@ -1059,7 +1059,7 @@
       }
       .crm-wizard-card-header {
         display: flex;
-        align-items: flex-start;
+        align-items: flex-start !important;
         gap: 12px;
       }
       .crm-q-badge {
@@ -1563,7 +1563,7 @@
         }
         .crm-empty-slot-card {
           flex-direction: column;
-          align-items: flex-start;
+          align-items: flex-start !important;
         }
         .btn-slot-search {
           width: 100%;

@@ -1482,10 +1482,11 @@ async function confirmAndSendFax() {
         console.warn('[Claim Google Sheet Append Error]', logErr);
       }
 
-      alert('팩스 전송 및 알림톡 접수 안내가 정상 처리되었습니다!\n(접수번호: ' + result.receiptNum + ')\n\n통신사 전송 완료 시 카카오톡 알림톡으로 최종 결과가 안내됩니다.\n확인용 PDF 파일도 기기에 저장합니다.');
-      downloadCurrentPdf();
-      closePdfPreviewModal();
-      location.reload();
+      alert('팩스 전송 및 알림톡 접수 안내가 정상 처리되었습니다!\n(접수번호: ' + result.receiptNum + ')\n\n통신사 전송 완료 시 카카오톡 알림톡으로 최종 결과가 안내됩니다.\n확인용 PDF 파일도 기기에 저장합니다.', function() {
+        downloadCurrentPdf();
+        closePdfPreviewModal();
+        location.reload();
+      });
     } else {
       alert('팩스 전송에 실패했습니다: ' + (result.message || '알 수 없는 오류') + '\n\nPDF 파일은 기기에 안전하게 저장됩니다.');
       downloadCurrentPdf();

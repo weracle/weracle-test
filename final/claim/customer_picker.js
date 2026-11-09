@@ -55,6 +55,15 @@
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
           window.crmPickerState.customers = parsed;
+        try {
+          const insCached = localStorage.getItem('weracle_crm_insurance_cache');
+          if (insCached) {
+            const parsedIns = JSON.parse(insCached);
+            if (Array.isArray(parsedIns) && parsedIns.length > 0) {
+              window.crmPickerState.insuranceRows = parsedIns;
+            }
+          }
+        } catch(e) {}
           if (!window.claimCustomerData || window.claimCustomerData.length === 0) {
             window.claimCustomerData = parsed;
           }
@@ -410,6 +419,28 @@
     ];
 
     let allContracts = [];
+    const _cid = String(client['고객번호'] || '').trim();
+    const _cname = String(rawName || client['고객명'] || client['이름'] || '').trim();
+    const _crrn = String(rawRrn || client['주민번호'] || '').replace(/[^0-9]/g, '');
+
+    const insCache = (window.crmPickerState && window.crmPickerState.insuranceRows && window.crmPickerState.insuranceRows.length > 0) ? window.crmPickerState.insuranceRows : (function() { try { return JSON.parse(localStorage.getItem('weracle_crm_insurance_cache') || '[]'); } catch(e) { return []; } })();
+    if (insCache.length > 0) {
+      for (const item of insCache) {
+        if (!item || typeof item !== 'object') continue;
+        const iCid = String(item['고객번호'] || '').trim();
+        const iName = String(item['고객명'] || item['피보험자'] || item['계약자'] || '').trim();
+        const iRrn = String(item['주민번호'] || '').replace(/[^0-9]/g, '');
+
+        let isMatch = false;
+        if (_cid && iCid && _cid === iCid) isMatch = true;
+        else if (_crrn.length >= 6 && iRrn.length >= 6 && _crrn === iRrn) isMatch = true;
+        else if (_cname && iName && _cname === iName) isMatch = true;
+
+        if (isMatch) {
+          allContracts.push(item);
+        }
+      }
+    }
     for (const cand of contractListCandidates) {
       if (Array.isArray(cand) && cand.length > 0) {
         allContracts.push(...cand);

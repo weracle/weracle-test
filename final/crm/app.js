@@ -1380,13 +1380,38 @@ const general = await fetchClientsFromSheet("weraclecrm");
 const corp = await fetchClientsFromSheet("corporatecrm");
 try {
     const insRows = await fetchClientsFromSheet("보험관리");
-    const insMap = {};
+    try {
+        localStorage.setItem("weracle_crm_insurance_cache", JSON.stringify(insRows));
+    } catch(e) {}
+
+    const insMapByCid = {}, insMapByName = {}, insMapByRrn = {};
     insRows.forEach(r => {
-        const cid = r["고객번호"];
-        if(cid) { if(!insMap[cid]) insMap[cid] = []; insMap[cid].push(r); }
+        const cid = String(r["고객번호"] || "").trim();
+        const name = String(r["고객명"] || r["피보험자"] || r["계약자"] || "").trim();
+        const rrn = String(r["주민번호"] || "").replace(/[^0-9]/g, "");
+        if (cid) { (insMapByCid[cid] = insMapByCid[cid] || []).push(r); }
+        if (name) { (insMapByName[name] = insMapByName[name] || []).push(r); }
+        if (rrn && rrn.length >= 6) { (insMapByRrn[rrn] = insMapByRrn[rrn] || []).push(r); }
     });
-    general.forEach(c => c["보험가입리스트"] = insMap[c["고객번호"]] || []);
-    corp.forEach(c => c["보험가입리스트"] = insMap[c["고객번호"]] || []);
+
+    const attachIns = (c) => {
+        const cid = String(c["고객번호"] || "").trim();
+        const name = String(c["고객명"] || c["이름"] || c["대표자명"] || "").trim();
+        const rrn = String(c["주민번호"] || "").replace(/[^0-9]/g, "");
+        let list = (cid && insMapByCid[cid]) || [];
+        if (list.length === 0 && rrn && insMapByRrn[rrn]) list = insMapByRrn[rrn];
+        if (list.length === 0 && name && insMapByName[name]) list = insMapByName[name];
+        c["보험가입리스트"] = list;
+        for (const ins of list) {
+            const b = ins["은행명"] || ins["차_은행명"] || "";
+            const a = ins["계좌번호"] || ins["차_계좌번호"] || "";
+            if (b && !c["은행명"]) c["은행명"] = b;
+            if (a && !c["계좌번호"]) c["계좌번호"] = a;
+            if (c["은행명"] && c["계좌번호"]) break;
+        }
+    };
+    general.forEach(attachIns);
+    corp.forEach(attachIns);
 } catch(e) { console.warn("보험관리 패치 실패", e); }
 allClients = [...general, ...corp];
 globalCustomerData = allClients;
@@ -1555,13 +1580,38 @@ const general = await fetchClientsFromSheet("weraclecrm");
 const corp = await fetchClientsFromSheet("corporatecrm");
 try {
     const insRows = await fetchClientsFromSheet("보험관리");
-    const insMap = {};
+    try {
+        localStorage.setItem("weracle_crm_insurance_cache", JSON.stringify(insRows));
+    } catch(e) {}
+
+    const insMapByCid = {}, insMapByName = {}, insMapByRrn = {};
     insRows.forEach(r => {
-        const cid = r["고객번호"];
-        if(cid) { if(!insMap[cid]) insMap[cid] = []; insMap[cid].push(r); }
+        const cid = String(r["고객번호"] || "").trim();
+        const name = String(r["고객명"] || r["피보험자"] || r["계약자"] || "").trim();
+        const rrn = String(r["주민번호"] || "").replace(/[^0-9]/g, "");
+        if (cid) { (insMapByCid[cid] = insMapByCid[cid] || []).push(r); }
+        if (name) { (insMapByName[name] = insMapByName[name] || []).push(r); }
+        if (rrn && rrn.length >= 6) { (insMapByRrn[rrn] = insMapByRrn[rrn] || []).push(r); }
     });
-    general.forEach(c => c["보험가입리스트"] = insMap[c["고객번호"]] || []);
-    corp.forEach(c => c["보험가입리스트"] = insMap[c["고객번호"]] || []);
+
+    const attachIns = (c) => {
+        const cid = String(c["고객번호"] || "").trim();
+        const name = String(c["고객명"] || c["이름"] || c["대표자명"] || "").trim();
+        const rrn = String(c["주민번호"] || "").replace(/[^0-9]/g, "");
+        let list = (cid && insMapByCid[cid]) || [];
+        if (list.length === 0 && rrn && insMapByRrn[rrn]) list = insMapByRrn[rrn];
+        if (list.length === 0 && name && insMapByName[name]) list = insMapByName[name];
+        c["보험가입리스트"] = list;
+        for (const ins of list) {
+            const b = ins["은행명"] || ins["차_은행명"] || "";
+            const a = ins["계좌번호"] || ins["차_계좌번호"] || "";
+            if (b && !c["은행명"]) c["은행명"] = b;
+            if (a && !c["계좌번호"]) c["계좌번호"] = a;
+            if (c["은행명"] && c["계좌번호"]) break;
+        }
+    };
+    general.forEach(attachIns);
+    corp.forEach(attachIns);
 } catch(e) { console.warn("보험관리 패치 실패", e); }
 allClients = [...general, ...corp];
 globalCustomerData = allClients;
@@ -1682,6 +1732,9 @@ function getInsuranceHeaders() {
 }
 
 function getCrmHeaders(sheetType) {
+    if (sheetType === "보험관리") {
+        return getInsuranceHeaders();
+    }
     if (sheetType === "corporatecrm" || sheetType === "사업자고객") {
         return [
             "고객번호", "상호명", "사업자번호", "업종코드", "상태", "대표자명", "주민번호", "나이", "성별", "생일", "상령일", 
@@ -1697,8 +1750,9 @@ function getCrmHeaders(sheetType) {
 }
 
 function getCrmEndCol(sheetType) {
-    if (sheetType === "corporatecrm" || sheetType === "사업자고객") return "Z";
-    return "X"; // 24 columns total
+    if (sheetType === "보험관리") return "AZ";
+    if (sheetType === "corporatecrm" || sheetType === "사업자고객") return "AZ";
+    return "AZ"; // Expand to AZ so all columns (including 은행명, 계좌번호) are fetched
 }
 
 // 구글 드라이브 내 전용 시트 검색 및 생성
@@ -2115,7 +2169,7 @@ async function saveClientToServer(clientObj, insRows) {
             if (window.isFamilySubmitInProgress && window.familyInsRowsCache) {
                 allInsRows = window.familyInsRowsCache;
             } else {
-                const insResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: insSheetName + "!A2:Z" });
+                const insResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: insSheetName + "!A2:AZ" });
                 allInsRows = insResp.result.values || [];
             }
             allInsRows = allInsRows.filter(row => {
@@ -2176,7 +2230,7 @@ async function saveClientToServer(clientObj, insRows) {
                 }
             }
             if (window.isFamilySubmitInProgress) { window.familyInsRowsCache = allInsRows; }
-            await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: insSheetName + "!A2:Z" });
+            await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: insSheetName + "!A2:AZ" });
             if (allInsRows.length > 0) {
                 await gapi.client.sheets.spreadsheets.values.update({
                     spreadsheetId,
@@ -11008,7 +11062,7 @@ window.forceSyncInsuranceSheet = async function() {
         }
     });
     
-    await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: insSheetName + "!A2:Z" });
+    await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: insSheetName + "!A2:AZ" });
     if (allInsRows.length > 0) {
         await gapi.client.sheets.spreadsheets.values.update({
             spreadsheetId,

@@ -3960,11 +3960,11 @@ function loadCustomerForFamily(task) {
     const statusSel = form.querySelector('[name="상태"]');
     if (statusSel) {
         const rawSt = String(client["상태"] || "").trim();
-        if (rawSt.includes("관심") || rawSt.includes("가망")) statusSel.value = "관심";
-        else if (rawSt.includes("상담") || rawSt.includes("설계")) statusSel.value = "상담";
-        else if (rawSt.includes("계약") || rawSt.includes("체결") || rawSt.includes("유지")) statusSel.value = "계약";
-        else if (rawSt.includes("케어") || rawSt.includes("집중") || rawSt.includes("VIP")) statusSel.value = "집중케어(VIP)";
-        else statusSel.value = rawSt || "계약";
+        if (rawSt.includes("관심") || rawSt.includes("가망")) statusSel.value = "관심고객";
+        else if (rawSt.includes("상담") || rawSt.includes("설계")) statusSel.value = "상담설계중";
+        else if (rawSt.includes("계약") || rawSt.includes("체결") || rawSt.includes("유지")) statusSel.value = "계약유지고객";
+        else if (rawSt.includes("케어") || rawSt.includes("집중") || rawSt.includes("VIP")) statusSel.value = "집중케어";
+        else statusSel.value = "관심고객";
     }
 
     setFormVal("주민번호", formatJumin(client["주민번호"] || ""));
@@ -4444,11 +4444,12 @@ const touchInsightVal = (checkedPillVals.length > 0)
     ? checkedPillVals.join(", ")
     : (formData.get("터치인사이트") || (existingClient ? (existingClient["터치인사이트"] || "") : ""));
 
-let normalizedStatus = formData.get("상태") || (existingClient ? existingClient["상태"] : "상담고객");
-if (normalizedStatus === "관심") normalizedStatus = "관심고객";
-else if (normalizedStatus === "상담") normalizedStatus = "상담고객";
-else if (normalizedStatus === "계약") normalizedStatus = "체결고객";
-else if (normalizedStatus.includes("케어") || normalizedStatus.includes("집중")) normalizedStatus = "케어고객";
+let normalizedStatus = formData.get("상태") || (existingClient ? existingClient["상태"] : "관심고객");
+if (normalizedStatus.includes("관심") || normalizedStatus.includes("가망")) normalizedStatus = "관심고객";
+else if (normalizedStatus.includes("상담") || normalizedStatus.includes("설계")) normalizedStatus = "상담설계중";
+else if (normalizedStatus.includes("계약") || normalizedStatus.includes("체결") || normalizedStatus.includes("유지")) normalizedStatus = "계약유지고객";
+else if (normalizedStatus.includes("케어") || normalizedStatus.includes("집중") || normalizedStatus.includes("VIP")) normalizedStatus = "집중케어";
+else normalizedStatus = "관심고객";
 
 let finalGainHistory = "";
 if (insList && insList.length > 0 && (insList[0].보험사명 || insList[0].차_보험사명 || insList[0].상품명 || insList.length > 1)) {
@@ -8317,8 +8318,10 @@ window.addEventListener('message', function(e) {
                 if (fType === 'status') {
             filtered = filtered.filter(c => {
                 const s = String(c['상태'] || c['고객상태'] || "");
-                if (fVal === '관심') return s.includes('관심') || s.includes('가망');
-                if (fVal === '체결') return s.includes('체결') || s.includes('계약');
+                if (fVal.includes('관심')) return s.includes('관심') || s.includes('가망');
+                if (fVal.includes('상담') || fVal.includes('설계')) return s.includes('상담') || s.includes('설계');
+                if (fVal.includes('계약') || fVal.includes('체결') || fVal.includes('유지')) return s.includes('계약') || s.includes('체결') || s.includes('유지');
+                if (fVal.includes('케어') || fVal.includes('집중')) return s.includes('케어') || s.includes('집중') || s.includes('VIP');
                 return s.includes(fVal);
             });
         } 

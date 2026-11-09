@@ -478,14 +478,14 @@ window.showToastNotice = function(text) {
                     else if (status.includes('체결') || status.includes('계약')) { sBg = '#ecfdf5'; sColor = '#059669'; sBorder = '#86efac'; }
                     else if (status.includes('케어') || status.includes('집중')) { sBg = '#fee2e2'; sColor = '#dc2626'; sBorder = '#fca5a5'; }
 
-                    const statusOptions = ['관심고객', '상담/설계', '계약체결', '집중케어'];
+                    const statusOptions = ['관심고객', '상담설계중', '계약유지고객', '집중케어'];
                     let selectHtml = `<select onchange="window.quickChangeCustomerStatus('${id}', this.value, this)" style="padding:4px 10px; border-radius:8px; font-weight:700; font-size:12.5px; border:1.5px solid ${sBorder}; background:${sBg}; color:${sColor}; outline:none; cursor:pointer;">`;
                     
                     statusOptions.forEach(opt => {
                         const isSel = (status === opt) || 
                                       (opt === '관심고객' && (status.includes('관심') || status.includes('가망'))) ||
-                                      (opt === '상담/설계' && (status.includes('상담') || status.includes('설계'))) ||
-                                      (opt === '계약체결' && (status.includes('체결') || status.includes('계약'))) ||
+                                      (opt === '상담설계중' && (status.includes('상담') || status.includes('설계'))) ||
+                                      (opt === '계약유지고객' && (status.includes('체결') || status.includes('계약') || status.includes('유지'))) ||
                                       (opt === '집중케어' && (status.includes('케어') || status.includes('집중')));
                         selectHtml += `<option value="${opt}" ${isSel ? 'selected' : ''}>${opt}</option>`;
                     });

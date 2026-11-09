@@ -233,11 +233,13 @@
   function isValidOwnerName(name) {
     if (!name || typeof name !== 'string') return false;
     const s = name.trim();
-    if (!s || s.length < 2 || s.length > 20) return false;
-    // 보험 상품명 및 관련 키워드가 포함되어 있으면 절대 예금주가 아님!
-    if (/보험|보장|플러스|특약|다이렉트|화재|생명|해상|손해|케어|안심|종합|실손|암보험|운전자|상해|치매|간병|어린이|치아|저축|연금|치료비|진단비|수술비|일당|배상/.test(s)) return false;
-    // 은행, 카드사 등 금융기관 키워드 제외
-    if (/은행|카드|뱅크|증권|금고|신협|새마을|캐피탈|페이|pay|bank|계좌|자동이체/i.test(s)) return false;
+    if (!s || s.length < 2 || s.length > 25) return false;
+    // 명백한 보험 상품명 패턴 배제 (예: "퍼펙트플러스 종합보장보험", "무배당 OO실손보험")
+    if (s.endsWith('보험') || /종합보험|보장보험|실손보험|암보험|운전자보험|치아보험|화재보험|해상보험|생명보험/.test(s)) return false;
+    if (/플러스|다이렉트|무배당|유배당|세이프|마이라이프|굿앤굿/.test(s)) return false;
+    if (s.length > 4 && /보험|보장|특약|배상|치료비|진단비/.test(s)) return false;
+    // 금융기관명 배제
+    if (/은행|카드|뱅크|증권|금고|신협|새마을|캐피탈|페이|계좌|자동이체/i.test(s)) return false;
     return true;
   }
 
@@ -629,7 +631,7 @@
     if (!isValidOwnerName(bankOwner)) {
       bankOwner = '';
     }
-    bankOwner = bankOwner || (isValidOwnerName(rawName) ? rawName : '');
+    bankOwner = bankOwner || rawName || '';
 
     // H. 은행명 정규화
     if (bankName) {
@@ -1246,8 +1248,7 @@
       // 계좌 및 예금주: 계약자 계좌 우선, 없으면 계약에 등록된 은행/계좌 활용
       const finalBank = (contractor && contractor.bankName) || (insured && insured.bankName) || '';
       const finalAccount = (contractor && contractor.bankAccount) || (insured && insured.bankAccount) || '';
-      const finalOwner = (contractor && isValidOwnerName(contractor.name) ? contractor.name : '')
-                      || (isValidOwnerName(contName) ? contName : '');
+      const finalOwner = (contractor && contractor.name) ? contractor.name : (contName || '');
 
       setFieldValue('bankName', finalBank);
       setFieldValue('bankAccount', finalAccount);
@@ -1263,8 +1264,7 @@
 
       const finalBank = insured.bankName || '';
       const finalAccount = insured.bankAccount || '';
-      const finalOwner = (isValidOwnerName(insured.bankOwner) ? insured.bankOwner : '')
-                      || (isValidOwnerName(insured.name) ? insured.name : '');
+      const finalOwner = insured.name || insured.bankOwner || '';
 
       setFieldValue('bankName', finalBank);
       setFieldValue('bankAccount', finalAccount);
@@ -1307,8 +1307,7 @@
     const finalBank = target.bankName || '';
     const finalAccount = target.bankAccount || '';
     // 예금주: target.bankOwner가 유효하면 사용, 그렇지 않으면 target.name 사용 (상품명 완전 배제)
-    const finalOwner = (isValidOwnerName(target.bankOwner) ? target.bankOwner : '') 
-                    || (isValidOwnerName(target.name) ? target.name : '');
+    const finalOwner = target.name || target.bankOwner || '';
 
     setFieldValue('bankName', finalBank);
     setFieldValue('bankAccount', finalAccount);

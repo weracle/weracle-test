@@ -150,12 +150,11 @@ window.submitSmartReg = async function() {
             `• 기존 고객명: ${exName}\n` +
             `• 기존 연락처: ${exPhone}\n` +
             `• 고객 상태: ${exStatus} (고객번호: ${exId}번)\n\n` +
-            `정말로 중복으로 추가 등록하시겠습니까?`;
+            `중복 등록을 방지하기 위해 등록이 차단되었습니다.`;
             
-        if (!confirm(confirmMsg)) {
-            console.log("[스마트 간편 등록] 중복 감출로 등록 취소됨");
+        alert(confirmMsg);
+        console.log("[스마트 간편 등록] 중복 감지로 등록 차단됨");
             return;
-        }
     }
     
     // 신규 고객 ID 배정

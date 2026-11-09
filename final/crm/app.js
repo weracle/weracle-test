@@ -10921,12 +10921,57 @@ window.linkCustomerToFamily = async function(targetCustId, targetName) {
         return;
     }
     
+    // 0. 새 가족 대표 고객 정보 조회
+    const rootClient = (window.globalCustomerData || []).find(c => String(c["고객번호"] || c["ID"] || "").trim() === rootId);
+    const rootName = rootClient ? (rootClient["고객명"] || rootClient["이름"] || rootClient["대표자명"] || rootId) : rootId;
+    
+    const cleanTargetId = String(targetCustId).trim();
+    const isSubMember = cleanTargetId.includes('-'); // 예: 10-1
+    
+    // 1. 대상 고객 밑에 딸린 하위 가족 구성원이 있는지 확인 (예: 10번 고객인데 10-1, 10-2가 있는 경우)
+    const escTarget = cleanTargetId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const subRegex = new RegExp('^' + escTarget + '-\\d+(?:-\\d+)*$');
+    const attachedMembers = (window.globalCustomerData || []).filter(c => {
+        const cid = String(c["고객번호"] || c["ID"] || "").trim();
+        return subRegex.test(cid);
+    });
+    
+    let bringAllTogether = false;
+    
+    // Case A: 딸린 가족 구성원이 있는 대표 고객인 경우 -> 일괄 편입 안내
+    if (attachedMembers.length > 0) {
+        const memberNames = attachedMembers.map(m => (m["고객명"] || m["이름"] || m["대표자명"] || "가족") + "(" + (m["고객번호"] || "") + ")").join(', ');
+        const confirmMsg = `⚠️ [${targetName}] 고객에게 딸린 가족 ${attachedMembers.length}명이 있습니다.\n` +
+            `• 기존 구성원: ${memberNames}\n\n` +
+            `가족 구성원들도 함께 [${rootName}(${rootId}번)] 가족으로 다 같이 데려올까요?\n\n` +
+            `[확인] : ${targetName} 및 가족 ${attachedMembers.length}명 전체 일괄 편입\n` +
+            `[취소] : 작업 중단 (기존 가족 안전 유지)`;
+            
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        bringAllTogether = true;
+    } 
+    // Case B: 이미 다른 가족의 서브 구성원(-1 등)인 경우 -> 기존 연동 해제 후 편입 안내
+    else if (isSubMember) {
+        const oldRootId = cleanTargetId.split('-')[0];
+        const oldRootClient = (window.globalCustomerData || []).find(c => String(c["고객번호"] || c["ID"] || "").trim() === oldRootId);
+        const oldRootName = oldRootClient ? (oldRootClient["고객명"] || oldRootClient["이름"] || oldRootClient["대표자명"] || oldRootId) : oldRootId;
+        
+        const confirmMsg = `⚠️ [${targetName}] 고객은 이미 [${oldRootName}(${oldRootId}번)] 가족의 구성원으로 등록되어 있습니다.\n\n` +
+            `기존 가족과의 연동을 풀고, [${rootName}(${rootId}번)] 가족으로 새롭게 맺을까요?`;
+            
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+    }
+    
+    // 2. 가족 관계 입력
     const relation = prompt(`[${targetName}] 고객의 가족 관계를 입력해주세요 (예: 배우자, 자녀, 부모 등):`, "배우자");
     if (relation === null) return;
     const chosenRel = relation.trim() || "가족";
     
-    if(!confirm(`[${targetName}] 고객을 [${rootId}] 대표 가족의 구성원(${chosenRel})으로 편입하시겠습니까?\n고객번호가 '${rootId}-번호' 형태로 변경됩니다.`)) return;
-    
+    // 3. 새 가족(rootId)의 최대 서브 번호 계산 (없으면 0 -> 1부터 순차 채번)
     let maxSub = 0;
     const escRoot = rootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp('^' + escRoot + '-(\\d+)');
@@ -10939,9 +10984,37 @@ window.linkCustomerToFamily = async function(targetCustId, targetName) {
             if (!isNaN(sub) && sub > maxSub) maxSub = sub;
         }
     });
-    const newId = `${rootId}-${maxSub + 1}`;
     
-    await updateCustomerIdInSheet(targetCustId, newId, `[${targetName}] 가족 편입 완료`, chosenRel);
+    const updates = [];
+    maxSub += 1;
+    const newTargetId = `${rootId}-${maxSub}`;
+    updates.push({
+        oldId: cleanTargetId,
+        newId: newTargetId,
+        newRelation: chosenRel
+    });
+    
+    // 딸린 가족도 함께 데려오는 경우 순차적으로 번호 부여 (예: 5-2, 5-3...)
+    if (bringAllTogether && attachedMembers.length > 0) {
+        attachedMembers.forEach(mem => {
+            maxSub += 1;
+            const memOldId = String(mem["고객번호"] || mem["ID"] || "").trim();
+            const memNewId = `${rootId}-${maxSub}`;
+            const memRel = mem["가족사항"] || "가족";
+            updates.push({
+                oldId: memOldId,
+                newId: memNewId,
+                newRelation: memRel
+            });
+        });
+    }
+    
+    let summaryMsg = `[${targetName}] 가족 편입 완료`;
+    if (updates.length > 1) {
+        summaryMsg = `[${targetName}] 외 가족 ${updates.length - 1}명 일괄 편입 완료`;
+    }
+    
+    await updateMultipleCustomerIdsInSheet(updates, summaryMsg);
 };
 
 window.unlinkFamilyMember = async function(targetCustId, targetName) {
@@ -10963,18 +11036,11 @@ window.unlinkFamilyMember = async function(targetCustId, targetName) {
     await updateCustomerIdInSheet(targetCustId, newId, `[${targetName}] 가족 분리 완료 (독립 번호: ${newId})`, "본인");
 };
 
-async function updateCustomerIdInSheet(oldId, newId, successMsg, newRelation = "") {
+async function updateMultipleCustomerIdsInSheet(updates, successMsg) {
+    if (!updates || updates.length === 0) return;
     showLoading(true, "가족 정보 동기화 중...", "구글 시트에 가족 관계를 실시간 반영하고 있습니다.");
     try {
-        const cleanOldId = String(oldId).trim();
-        const targetIdx = (window.globalCustomerData || []).findIndex(c => String(c["고객번호"] || c["사업자번호"] || c["ID"]).trim() === cleanOldId);
-        if (targetIdx === -1) throw new Error(`고객번호 [${oldId}] 데이터를 찾을 수 없습니다.`);
-        
-        const targetClient = window.globalCustomerData[targetIdx];
-        const rNum = targetClient.rowNumber;
-        const sName = targetClient.sheetName || "weraclecrm";
         const spreadsheetId = (window.spreadsheetId || localStorage.getItem("g_sheet_id"));
-
         let token = null;
         if (!isDemoMode && typeof ensureValidToken === 'function') {
             try {
@@ -10984,48 +11050,66 @@ async function updateCustomerIdInSheet(oldId, newId, successMsg, newRelation = "
             }
         }
 
-        // 1. 구글 시트 반영 (연동되어 있고 행 번호가 유효한 경우)
-        if (!isDemoMode && token && spreadsheetId && rNum && typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets) {
-            try {
-                // A열(고객번호) 업데이트
-                await gapi.client.sheets.spreadsheets.values.update({
-                    spreadsheetId,
-                    range: `${sName}!A${rNum}`,
-                    valueInputOption: "USER_ENTERED",
-                    resource: { values: [[newId]] }
-                });
+        const canUpdateSheets = !isDemoMode && token && spreadsheetId && typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets;
+        const resultIds = [];
 
-                // 가족관계 업데이트
-                if (newRelation) {
-                    const headers = getCrmHeaders(sName);
-                    const famColIdx = headers.indexOf("가족사항");
-                    if (famColIdx !== -1) {
-                        const colLetter = String.fromCharCode(65 + famColIdx);
-                        await gapi.client.sheets.spreadsheets.values.update({
-                            spreadsheetId,
-                            range: `${sName}!${colLetter}${rNum}`,
-                            valueInputOption: "USER_ENTERED",
-                            resource: { values: [[newRelation]] }
-                        });
-                    }
-                }
-            } catch (sheetErr) {
-                console.warn("Google Sheet direct update notice (fallback to local state):", sheetErr);
+        for (const item of updates) {
+            const cleanOldId = String(item.oldId).trim();
+            const targetIdx = (window.globalCustomerData || []).findIndex(c => String(c["고객번호"] || c["사업자번호"] || c["ID"]).trim() === cleanOldId);
+            if (targetIdx === -1) {
+                console.warn(`고객번호 [${item.oldId}] 데이터를 찾을 수 없어 건너뜁니다.`);
+                continue;
             }
-        }
-        
-        // 2. 메모리 및 로컬 스토리지 즉시 동기화
-        targetClient["고객번호"] = newId;
-        if (targetClient["ID"]) targetClient["ID"] = newId;
-        if (newRelation) targetClient["가족사항"] = newRelation;
+            
+            const targetClient = window.globalCustomerData[targetIdx];
+            const rNum = targetClient.rowNumber;
+            const sName = targetClient.sheetName || "weraclecrm";
 
-        // 보험 가입내역에 고객번호가 있으면 함께 동기화
-        if (Array.isArray(targetClient["보험가입리스트"])) {
-            targetClient["보험가입리스트"].forEach(ins => {
-                ins["고객번호"] = newId;
-            });
+            // 1. 구글 시트 반영
+            if (canUpdateSheets && rNum) {
+                try {
+                    // A열(고객번호) 업데이트
+                    await gapi.client.sheets.spreadsheets.values.update({
+                        spreadsheetId,
+                        range: `${sName}!A${rNum}`,
+                        valueInputOption: "USER_ENTERED",
+                        resource: { values: [[item.newId]] }
+                    });
+
+                    // 가족관계 업데이트
+                    if (item.newRelation) {
+                        const headers = getCrmHeaders(sName);
+                        const famColIdx = headers.indexOf("가족사항");
+                        if (famColIdx !== -1) {
+                            const colLetter = String.fromCharCode(65 + famColIdx);
+                            await gapi.client.sheets.spreadsheets.values.update({
+                                spreadsheetId,
+                                range: `${sName}!${colLetter}${rNum}`,
+                                valueInputOption: "USER_ENTERED",
+                                resource: { values: [[item.newRelation]] }
+                            });
+                        }
+                    }
+                } catch (sheetErr) {
+                    console.warn(`Google Sheet direct update notice for [${item.oldId} -> ${item.newId}]:`, sheetErr);
+                }
+            }
+
+            // 2. 메모리 즉시 동기화
+            targetClient["고객번호"] = item.newId;
+            if (targetClient["ID"]) targetClient["ID"] = item.newId;
+            if (item.newRelation) targetClient["가족사항"] = item.newRelation;
+
+            if (Array.isArray(targetClient["보험가입리스트"])) {
+                targetClient["보험가입리스트"].forEach(ins => {
+                    ins["고객번호"] = item.newId;
+                });
+            }
+
+            resultIds.push(`${targetClient["고객명"] || item.oldId} ➔ ${item.newId}`);
         }
 
+        // 로컬스토리지 저장
         try {
             localStorage.setItem("demo_crm_data", JSON.stringify(window.globalCustomerData));
         } catch(e) {}
@@ -11037,7 +11121,7 @@ async function updateCustomerIdInSheet(oldId, newId, successMsg, newRelation = "
             } catch(e) {}
         }
         
-        showCustomAlert("업데이트 완료", `${successMsg}<br>새 고객번호: <strong>${newId}</strong>`);
+        showCustomAlert("업데이트 완료", `${successMsg}<br><span style="font-size:12px; color:#475569; display:inline-block; margin-top:6px;">${resultIds.join('<br>')}</span>`);
         
         const fmModal = document.getElementById('family-manage-modal');
         if (fmModal) fmModal.style.display = 'none';
@@ -11061,6 +11145,11 @@ async function updateCustomerIdInSheet(oldId, newId, successMsg, newRelation = "
         showLoading(false);
     }
 }
+
+async function updateCustomerIdInSheet(oldId, newId, successMsg, newRelation = "") {
+    return await updateMultipleCustomerIdsInSheet([{ oldId, newId, newRelation }], successMsg);
+}
+
 
 
 window.deleteCustomerFromProfile = async function(custId, custName) {

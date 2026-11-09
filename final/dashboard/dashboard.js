@@ -238,11 +238,7 @@ function openAnalysisPage() {
 }
 
 function openInsurerContacts() {
-  if (window.parent && typeof window.parent.loadSubPage === 'function') {
-    window.parent.loadSubPage('고객관리', '보험금 청구', 'claim/claim.html#contacts');
-  } else {
-    window.location.href = '../claim/claim.html#contacts';
-  }
+  openInsurerContactsModal();
 }
 
 // -------------------------------------------------------------
@@ -1601,3 +1597,203 @@ if (window.innerWidth <= 900) {
   setInterval(sendResize, 600);
   setTimeout(sendResize, 150);
 }
+
+
+
+// ==========================================
+// 10. 34개 보험사 고객센터 연락처 모달 기능
+// ==========================================
+const INSURER_CONTACTS_DATA = [
+  // --- 손해보험 (13개) ---
+  { name: '삼성화재', type: 'nonlife', phone: '1588-5114', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/6a348da19e407.png' },
+  { name: '메리츠화재', type: 'nonlife', phone: '1566-7711', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/c2cae692660c8.png' },
+  { name: 'DB손해보험', type: 'nonlife', phone: '1588-0100', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/381ad4a684500.png' },
+  { name: 'KB손해보험', type: 'nonlife', phone: '1544-0114', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/c065f97b24fc5.png' },
+  { name: '현대해상', type: 'nonlife', phone: '1588-5656', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/87357d8f3595e.png' },
+  { name: '한화손해보험', type: 'nonlife', phone: '1566-8000', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/81c5fd45e30c1.png' },
+  { name: '롯데손해보험', type: 'nonlife', phone: '1588-3344', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/7d53063ddc47a.png' },
+  { name: '흥국화재', type: 'nonlife', phone: '1688-1688', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/79e0f248909c3.png' },
+  { name: '하나손해보험', type: 'nonlife', phone: '1566-3000', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/3f61372180e41.png' },
+  { name: 'NH농협손해보험', type: 'nonlife', phone: '1644-9000', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/bf3ad594b4f21.png' },
+  { name: '라이나원(손보)', type: 'nonlife', phone: '1566-5800', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/935984f4aab4b.png' },
+  { name: 'AIG손해보험', type: 'nonlife', phone: '1544-2792', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/da3bebc9fe3e5.png' },
+  { name: 'MG손해보험', type: 'nonlife', phone: '1588-5959', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/499a6f93744ae.png' },
+
+  // --- 생명보험 (21개) ---
+  { name: '한화생명', type: 'life', phone: '1588-6363', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/841d2709f8a0f.png' },
+  { name: '동양생명', type: 'life', phone: '1577-1004', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/8a0361a32f8a5.png' },
+  { name: '교보생명', type: 'life', phone: '1588-1001', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/26afb87929732.png' },
+  { name: '삼성생명', type: 'life', phone: '1588-3114', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/15a9434e85abb.png' },
+  { name: '라이나생명', type: 'life', phone: '1588-0058', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/9c5fe27cead16.png' },
+  { name: 'KDB생명', type: 'life', phone: '1588-4040', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/f7dd46a0d892d.png' },
+  { name: 'iM라이프', type: 'life', phone: '1588-4770', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/96ba1710e5a9d.png' },
+  { name: '미래에셋생명', type: 'life', phone: '1588-0220', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/cec788ecfe510.png' },
+  { name: '신한라이프', type: 'life', phone: '1588-5580', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/fb6eb26475156.png' },
+  { name: 'KB라이프', type: 'life', phone: '1588-3374', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/2835121bf7f26.png' },
+  { name: 'DB생명', type: 'life', phone: '1588-3131', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/6bbd0d0979a39.png' },
+  { name: '하나생명', type: 'life', phone: '1577-1112', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/c436fbe95f91c.png' },
+  { name: '흥국생명', type: 'life', phone: '1588-2288', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/8f2f2216a57b9.png' },
+  { name: 'ABL생명', type: 'life', phone: '1588-6500', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/95e75b52beee4.png' },
+  { name: 'IBK연금보험', type: 'life', phone: '1577-4117', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/4bd70e80179db.png' },
+  { name: 'NH농협생명', type: 'life', phone: '1544-4000', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/9ea0d2dbfc153.png' },
+  { name: 'MetLife', type: 'life', phone: '1588-9600', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/c3d2965579a2c.png' },
+  { name: '처브라이프', type: 'life', phone: '1599-4600', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/64f2c0716807d.png' },
+  { name: '푸본현대생명', type: 'life', phone: '1577-3311', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/03d4e5f7b698e.png' },
+  { name: 'BNP파리바카디프', type: 'life', phone: '1688-1118', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/e8e7681abe44c.png' },
+  { name: 'AIA생명', type: 'life', phone: '1588-9898', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/fba6e742bc731.png' }
+];
+
+let currentContactTab = 'all';
+
+function openInsurerContactsModal() {
+  const modal = document.getElementById('insurerContactsModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    const input = document.getElementById('contactSearchInput');
+    if (input) {
+      input.value = '';
+    }
+    currentContactTab = 'all';
+    document.querySelectorAll('.contact-tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === 'all');
+    });
+    filterContacts();
+    setTimeout(() => {
+      if (input) input.focus();
+    }, 150);
+  }
+}
+
+function closeInsurerContactsModal() {
+  const modal = document.getElementById('insurerContactsModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function setContactTab(tab) {
+  currentContactTab = tab;
+  document.querySelectorAll('.contact-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+  });
+  filterContacts();
+}
+
+function filterContacts() {
+  const input = document.getElementById('contactSearchInput');
+  const query = (input ? input.value : '').trim().toLowerCase();
+  const container = document.getElementById('insurerContactsList');
+  const badge = document.getElementById('contactCountBadge');
+  if (!container) return;
+
+  const filtered = INSURER_CONTACTS_DATA.filter(item => {
+    const matchTab = (currentContactTab === 'all') || (item.type === currentContactTab);
+    if (!matchTab) return false;
+    if (!query) return true;
+    const cleanPhone = item.phone.replace(/[^0-9]/g, '');
+    const cleanQuery = query.replace(/[^0-9]/g, '');
+    const matchName = item.name.toLowerCase().includes(query);
+    const matchPhone = item.phone.includes(query) || (cleanQuery && cleanPhone.includes(cleanQuery));
+    return matchName || matchPhone;
+  });
+
+  if (badge) {
+    badge.innerHTML = query || currentContactTab !== 'all'
+      ? '조회 결과 <strong style="color:#0284c7;">' + filtered.length + '</strong> / 34개사'
+      : '총 <strong style="color:#0284c7;">34</strong>개 보험사';
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 45px 15px; color: #94a3b8;"><i class="fa-solid fa-magnifying-glass" style="font-size: 26px; margin-bottom: 8px; opacity: 0.5;"></i><p style="margin: 0; font-size: 13.5px; font-weight: 600;">일치하는 보험사 또는 전화번호가 없습니다.</p></div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(item => {
+    const badgeClass = item.type === 'nonlife' ? 'contact-badge-nonlife' : 'contact-badge-life';
+    const typeLabel = item.type === 'nonlife' ? '손해보험' : '생명보험';
+    return '<div class="contact-card-item">' +
+      '<div class="contact-card-top">' +
+        '<div class="contact-card-info">' +
+          '<img class="contact-card-logo" src="' + item.logoUrl + '" alt="' + item.name + '" onerror="this.onerror=null; this.style.display=\'none\';">' +
+          '<span class="contact-card-name">' + item.name + '</span>' +
+        '</div>' +
+        '<span class="' + badgeClass + '">' + typeLabel + '</span>' +
+      '</div>' +
+      '<div class="contact-card-bottom">' +
+        '<div class="contact-phone-num">' + item.phone + '</div>' +
+        '<div class="contact-actions">' +
+          '<a href="tel:' + item.phone + '" class="btn-contact-action btn-contact-call" title="전화 걸기">' +
+            '<i class="fa-solid fa-phone"></i> 통화' +
+          '</a>' +
+          '<button type="button" class="btn-contact-action btn-contact-copy" onclick="copyContactNumber(\'' + item.phone + '\', this)" title="번호 복사">' +
+            '<i class="fa-regular fa-copy"></i> 복사' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function copyContactNumber(num, btn) {
+  if (!num) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(num).then(() => {
+      showCopyFeedback(btn);
+    }).catch(() => {
+      fallbackCopy(num, btn);
+    });
+  } else {
+    fallbackCopy(num, btn);
+  }
+}
+
+function fallbackCopy(num, btn) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = num;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showCopyFeedback(btn);
+  } catch (e) {
+    alert('전화번호: ' + num);
+  }
+}
+
+function showCopyFeedback(btn) {
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-check" style="color:#059669;"></i> 복사됨!';
+  btn.style.borderColor = '#10b981';
+  btn.style.background = '#ecfdf5';
+  btn.style.color = '#047857';
+  setTimeout(() => {
+    btn.innerHTML = origHtml;
+    btn.style.borderColor = '';
+    btn.style.background = '';
+    btn.style.color = '';
+  }, 1200);
+}
+
+// 모달 외부 클릭 & ESC 키 닫기 이벤트 등록
+window.addEventListener('click', (e) => {
+  const modal = document.getElementById('insurerContactsModal');
+  if (e.target === modal) {
+    closeInsurerContactsModal();
+  }
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeInsurerContactsModal();
+  }
+});
+
+// 전역 바인딩
+window.openInsurerContactsModal = openInsurerContactsModal;
+window.closeInsurerContactsModal = closeInsurerContactsModal;
+window.setContactTab = setContactTab;
+window.filterContacts = filterContacts;
+window.copyContactNumber = copyContactNumber;

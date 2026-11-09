@@ -1,4 +1,4 @@
-﻿// familyTabsLogic.js
+// familyTabsLogic.js
 // Handles the 2-Tier Tab UI and state swapping for Family Household CRM Input
 
 window.familyState = [];
@@ -108,7 +108,7 @@ function initFamilyTabs(baseId, baseLabel) {
         const famSidebar = document.createElement('div');
         famSidebar.id = 'tier-1-tabs';
         famSidebar.className = 'family-sidebar-wizard';
-        famSidebar.style.width = '240px'; famSidebar.style.minWidth = '240px'; famSidebar.style.background = '#ffffff'; famSidebar.style.borderRight = '1px solid #e2e8f0'; famSidebar.style.padding = '20px 10px'; famSidebar.style.display = 'flex'; famSidebar.style.flexDirection = 'column'; famSidebar.style.gap = '8px'; famSidebar.style.position = 'relative';
+        famSidebar.style.width = '240px'; famSidebar.style.minWidth = '240px'; famSidebar.style.background = '#ffffff'; famSidebar.style.borderRight = '1px solid #e2e8f0'; famSidebar.style.padding = '20px 10px'; famSidebar.style.display = 'flex'; famSidebar.style.flexDirection = 'column'; famSidebar.style.gap = '8px'; famSidebar.style.position = 'relative'; famSidebar.style.overflowY = 'auto';
 
         const rightArea = document.createElement('div');
         rightArea.style.flex = '1'; rightArea.style.display = 'flex'; rightArea.style.flexDirection = 'column'; rightArea.style.overflow = 'hidden';
@@ -139,7 +139,7 @@ function initFamilyTabs(baseId, baseLabel) {
         
         const bottomNav = document.createElement('div');
         bottomNav.id = 'wizard-bottom-nav';
-        bottomNav.style.padding = '12px 24px'; bottomNav.style.background = '#ffffff'; bottomNav.style.borderTop = '1px solid #e2e8f0'; bottomNav.style.display = 'flex'; bottomNav.style.justifyContent = 'space-between'; bottomNav.style.alignItems = 'center';
+        bottomNav.style.padding = '12px 24px'; bottomNav.style.background = '#ffffff'; bottomNav.style.borderTop = '1px solid #e2e8f0'; bottomNav.style.display = 'flex'; bottomNav.style.justifyContent = 'space-between'; bottomNav.style.alignItems = 'center'; bottomNav.style.flexShrink = '0'; bottomNav.style.position = 'sticky'; bottomNav.style.bottom = '0'; bottomNav.style.zIndex = '20'; bottomNav.style.borderRadius = '0 0 20px 0';
 
         form.parentNode.insertBefore(mainWrapper, form);
         mainWrapper.appendChild(famSidebar);

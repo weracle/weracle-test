@@ -3742,7 +3742,7 @@ function openRegModal(mode, specificId) {
             const modalContent = document.querySelector("#regModal .modal-content");
             if (modalContent) {
                 modalContent.style.height = "auto";
-                modalContent.style.maxHeight = "95vh";
+                modalContent.style.maxHeight = "94vh";
                 modalContent.style.margin = "0 auto";
             }
             wizard.style.display = 'flex';
@@ -3779,7 +3779,7 @@ function openRegModal(mode, specificId) {
         } else if (wizard && form) {
             const modalContent = document.querySelector("#regModal .modal-content");
             if (modalContent) {
-                modalContent.style.height = "96vh";
+                modalContent.style.height = "94vh";
                 modalContent.style.margin = "0 auto";
             }
             wizard.style.display = 'none';
@@ -8690,7 +8690,7 @@ window.executeWizardStart = function() {
     document.getElementById("crmRegForm").style.display = "flex";
     const modalContent = document.querySelector("#regModal .modal-content");
     if (modalContent) {
-        modalContent.style.height = "96vh";
+        modalContent.style.height = "94vh";
         modalContent.style.margin = "0 auto";
     }
     

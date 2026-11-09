@@ -308,6 +308,43 @@ window.addEventListener('error', function(e) {
 }
 
 /* ==============================================================
+   고객 등록 및 가족 등록 모달 (#regModal) - PC & 노트북 완벽 대응 (하단 잘림 방지)
+   ============================================================== */
+#regModal.modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.5) !important;
+    backdrop-filter: blur(4px) !important;
+    z-index: 2000 !important;
+    display: none;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 12px 16px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+#regModal.modal-overlay.active {
+    display: flex !important;
+}
+#regModal .modal-content {
+    background: #ffffff !important;
+    width: 98% !important;
+    max-width: 1600px !important;
+    height: 94vh !important;
+    max-height: calc(100vh - 24px) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* ==============================================================
    스마트 간편 등록 (Smart Registration Modal) - PC & Mobile 완벽 대응
    ============================================================== */
 #smartRegModal.modal-overlay {
@@ -1313,7 +1350,7 @@ window.addEventListener('error', function(e) {
 </div>
 <!-- Edit Modal (V2 Design with Perfect V1 Structure) -->
 <div class="modal-overlay" id="regModal" style="z-index: 2000;">
-    <div class="modal-content" style="max-width: 1600px; width: 98%; height: 98vh; display: flex; flex-direction: column; margin: auto; box-sizing: border-box;">
+    <div class="modal-content" style="max-width: 1600px; width: 98%; height: 94vh; max-height: calc(100vh - 24px); display: flex; flex-direction: column; margin: auto; box-sizing: border-box;">
         
         <!--  통합된 시안 8-5 상단 가족 탭 영역 (V1과 완벽 호환) -->
         
@@ -1718,14 +1755,13 @@ window.addEventListener('error', function(e) {
 
 </div>
 
-                <!-- 탭 공통 하단 저장/취소 버튼 -->
-                <div style="display:flex; justify-content:center; gap:12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                    <button type="button" onclick="if(typeof closeRegModal === 'function') closeRegModal()" style="padding:10px 24px; font-size:14px; font-weight:700; color:#475569; background:#f1f5f9; border:none; border-radius:6px; cursor:pointer;">취소</button>
-                    <button type="submit" style="padding:10px 40px; font-size:14px; font-weight:700; color:white; background:#10b981; border:none; border-radius:6px; cursor:pointer; box-shadow:0 4px 6px -1px rgba(16,185,129,0.3);">현재 탭 저장</button>
-                </div>
-                <!-- 하단 스크롤 확보용 여백 공간 -->
-                <div style="height: 60px; width: 100%;"></div>
             </div> <!-- End of modal-body -->
+            
+            <!-- 탭 공통 하단 저장/취소 고정 바 (단독 모드 및 수정 시 상시 노출) -->
+            <div id="crmRegBottomBar" style="padding: 12px 24px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px; align-items: center; flex-shrink: 0; z-index: 10; border-radius: 0 0 20px 20px;">
+                <button type="button" onclick="if(typeof closeRegModal === 'function') closeRegModal()" style="padding: 10px 24px; font-size: 14px; font-weight: 700; color: #475569; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">취소</button>
+                <button type="submit" style="padding: 10px 36px; font-size: 14px; font-weight: 800; color: white; background: #10b981; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(16,185,129,0.3); transition: 0.2s; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'"><i class="fa-solid fa-check"></i> 현재 탭 저장</button>
+            </div>
         </form>
     </div>
 </div>

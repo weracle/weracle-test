@@ -151,7 +151,21 @@
     return true;
   }
 
-  // 텍스트 내에서 계좌번호 패턴 정밀 추출 (주민번호, 전화번호, 연도 배제)
+  // 날짜 형식 여부 정밀 판정기 (계좌번호 오인식 방지)
+  function isDateString(str) {
+    if (!str) return false;
+    const s = String(str).trim();
+    // YYYY-MM-DD, YYYY.MM.DD, YYYY/MM/DD
+    if (/^(?:19|20)\d{2}[-./](?:0?[1-9]|1[0-2])[-./](?:0?[1-9]|[12]\d|3[01])$/.test(s)) return true;
+    // YY-MM-DD
+    if (/^\d{2}[-./](?:0?[1-9]|1[0-2])[-./](?:0?[1-9]|[12]\d|3[01])$/.test(s)) return true;
+    // YYYYMMDD
+    const digits = s.replace(/[^0-9]/g, '');
+    if (digits.length === 8 && /^(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])$/.test(digits)) return true;
+    return false;
+  }
+
+  // 텍스트 내에서 계좌번호 패턴 정밀 추출 (주민번호, 전화번호, 연도/날짜 배제)
   function extractAccountNumber(text, excludeRrn, excludePhone) {
     if (!text || typeof text !== 'string') return '';
     const cleanExcludeRrn = (excludeRrn || '').replace(/[^0-9]/g, '');
@@ -161,6 +175,7 @@
     const hyphenMatches = text.match(/\b\d{2,6}-\d{2,6}-\d{2,8}(?:-\d{1,5})?\b/g);
     if (hyphenMatches) {
       for (const m of hyphenMatches) {
+        if (isDateString(m)) continue; // 날짜(YYYY-MM-DD) 절대 제외!
         const digits = m.replace(/[^0-9]/g, '');
         if (digits.length >= 8 && digits.length <= 16) {
           if (cleanExcludePhone && digits === cleanExcludePhone) continue;
@@ -175,10 +190,10 @@
     const digitMatches = text.match(/\b\d{8,16}\b/g);
     if (digitMatches) {
       for (const d of digitMatches) {
+        if (isDateString(d)) continue; // 날짜(YYYYMMDD) 절대 제외!
         if (cleanExcludePhone && d === cleanExcludePhone) continue;
         if (cleanExcludeRrn && d === cleanExcludeRrn) continue;
         if (d.startsWith('010') || d.startsWith('011')) continue;
-        if (d.length === 8 && (d.startsWith('19') || d.startsWith('20'))) continue;
         return d.trim();
       }
     }
@@ -233,17 +248,17 @@
           const foundBank = resolveBankName(s);
           if (foundBank) arrBankName = foundBank;
         }
-        if (!arrAccount) {
+        if (!arrAccount && !isDateString(s)) {
           if (s.includes('/')) {
             const parts = s.split('/');
-            if (parts[1]) {
+            if (parts[1] && !isDateString(parts[1])) {
               const acc = parts[1].replace(/[^0-9-]/g, '').trim();
-              if (acc.replace(/[^0-9]/g, '').length >= 8) arrAccount = acc;
+              if (acc.replace(/[^0-9]/g, '').length >= 8 && !isDateString(acc)) arrAccount = acc;
             }
           }
           if (!arrAccount) {
             const acc = extractAccountNumber(s, cleanRrn, cleanPhone);
-            if (acc) arrAccount = acc;
+            if (acc && !isDateString(acc)) arrAccount = acc;
           }
         }
       }
@@ -371,14 +386,14 @@
       if (!rawAccount) {
         if (v.includes('/')) {
           const parts = v.split('/');
-          if (parts[1]) {
+          if (parts[1] && !isDateString(parts[1])) {
             const accCand = parts[1].replace(/[^0-9-]/g, '').trim();
-            if (accCand.replace(/[^0-9]/g, '').length >= 8) rawAccount = accCand;
+            if (accCand.replace(/[^0-9]/g, '').length >= 8 && !isDateString(accCand)) rawAccount = accCand;
           }
         }
-        if (!rawAccount) {
+        if (!rawAccount && !isDateString(v)) {
           const accFound = extractAccountNumber(v, rawRrn, rawPhone);
-          if (accFound) rawAccount = accFound;
+          if (accFound && !isDateString(accFound)) rawAccount = accFound;
         }
       }
 
@@ -507,8 +522,14 @@
       bankName = resolveBankName(bankName) || bankName;
     }
 
-    // I. 계좌번호 정리 (하이픈 유지)
+    // I. 계좌번호 정리 및 날짜 오인식 원천 차단
+    if (isDateString(rawAccount)) {
+      rawAccount = '';
+    }
     let cleanAccount = String(rawAccount || '').replace(/[^0-9-]/g, '').trim();
+    if (isDateString(cleanAccount)) {
+      cleanAccount = '';
+    }
 
     // J. 데모/샘플 데이터 폴백
     if ((!bankName || !cleanAccount) && DEMO_SAMPLE_ACCOUNTS[rawName]) {

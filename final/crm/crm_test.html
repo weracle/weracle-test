@@ -1905,11 +1905,11 @@ window.addEventListener('error', function(e) {
 </div>
 
 
-<script src="app.js?v=20261109_1915"></script>
+<script src="app.js?v=20261109_1920"></script>
   <script src="familyTabsLogic.js?v=20261004213200"></script>
   <script src="crm_speed_center.js?v=20261104"></script>
   <script src="crm_smart_reg.js?v=20261104"></script>
-  <script src="crm_enhancements.js?v=20261109_1915"></script>
+  <script src="crm_enhancements.js?v=20261109_1920"></script>
   
   
 
@@ -2853,6 +2853,12 @@ window.getActiveCRMData = function() {
 window.quickChangeCustomerStatus = async function(id, newStatus, selectEl) {
     if (!id || !newStatus) return;
 
+    if (newStatus.includes('관심') || newStatus.includes('가망')) newStatus = '관심고객';
+    else if (newStatus.includes('상담') || newStatus.includes('설계')) newStatus = '상담고객';
+    else if (newStatus.includes('계약') || newStatus.includes('체결') || newStatus.includes('유지')) newStatus = '계약고객';
+    else if (newStatus.includes('케어') || newStatus.includes('집중') || newStatus.includes('VIP')) newStatus = '케어고객';
+    else newStatus = '관심고객';
+
     let list = (window.globalCustomerData && Array.isArray(window.globalCustomerData) && window.globalCustomerData.length > 0)
         ? window.globalCustomerData
         : (window.sampleCustomers || []);
@@ -2955,18 +2961,23 @@ window.quickChangeCustomerStatus = async function(id, newStatus, selectEl) {
 };
 
 window.buildStatusSelectHtml = function(status, id) {
-    status = status || '관심';
-    const statusOptions = ['관심', '상담', '체결', '케어'];
+    status = status || '관심고객';
+    const statusOptions = ['관심고객', '상담고객', '계약고객', '케어고객'];
     let sBg = '#eff6ff', sColor = '#2563eb', sBorder = '#93c5fd';
     if (status.includes('관심')) { sBg = '#fef3c7'; sColor = '#b45309'; sBorder = '#fde68a'; }
     else if (status.includes('상담') || status.includes('설계')) { sBg = '#eff6ff'; sColor = '#1d4ed8'; sBorder = '#bfdbfe'; }
-    else if (status.includes('체결') || status.includes('계약')) { sBg = '#f0fdf4'; sColor = '#15803d'; sBorder = '#bbf7d0'; }
-    else if (status.includes('케어') || status.includes('집중')) { sBg = '#fef2f2'; sColor = '#b91c1c'; sBorder = '#fecaca'; }
+    else if (status.includes('체결') || status.includes('계약') || status.includes('유지')) { sBg = '#f0fdf4'; sColor = '#15803d'; sBorder = '#bbf7d0'; }
+    else if (status.includes('케어') || status.includes('집중') || status.includes('VIP')) { sBg = '#fef2f2'; sColor = '#b91c1c'; sBorder = '#fecaca'; }
 
     let selectHtml = '<select onchange="window.quickChangeCustomerStatus(\'' + id + '\', this.value, this)" onclick="event.stopPropagation();" ' +
         'style="padding:3px 8px; border-radius:8px; font-weight:800; font-size:12px; border:1.5px solid ' + sBorder + '; background:' + sBg + '; color:' + sColor + '; outline:none; cursor:pointer;">';
     statusOptions.forEach(function(opt) {
-        selectHtml += '<option value="' + opt + '" ' + (status.includes(opt) ? 'selected' : '') + '>' + opt + '</option>';
+        let isSel = (status === opt) ||
+                    (opt === '관심고객' && (status.includes('관심') || status.includes('가망'))) ||
+                    (opt === '상담고객' && (status.includes('상담') || status.includes('설계'))) ||
+                    (opt === '계약고객' && (status.includes('계약') || status.includes('체결') || status.includes('유지'))) ||
+                    (opt === '케어고객' && (status.includes('케어') || status.includes('집중') || status.includes('VIP')));
+        selectHtml += '<option value="' + opt + '" ' + (isSel ? 'selected' : '') + '>' + opt + '</option>';
     });
     selectHtml += '</select>';
     return selectHtml;

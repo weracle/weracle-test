@@ -153,6 +153,11 @@ window.isClaimCustomer = function(c) {
 // ==============================================================
 window.quickChangeCustomerStatus = async function(id, newStatus, selectEl) {
     if (!id || !newStatus) return;
+    if (newStatus.includes('관심') || newStatus.includes('가망')) newStatus = '관심고객';
+    else if (newStatus.includes('상담') || newStatus.includes('설계')) newStatus = '상담고객';
+    else if (newStatus.includes('계약') || newStatus.includes('체결') || newStatus.includes('유지')) newStatus = '계약고객';
+    else if (newStatus.includes('케어') || newStatus.includes('집중') || newStatus.includes('VIP')) newStatus = '케어고객';
+    else newStatus = '관심고객';
     
     if (!window.globalCustomerData) {
         alert("고객 데이터를 찾을 수 없습니다.");

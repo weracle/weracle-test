@@ -9179,28 +9179,29 @@ window.renderBulkPreviewTable = function() {
         item.dupInfo = dupInfo || '';
         if (item.isDuplicate) {
             dupCount++;
-            // 중복이면 기본 체크 해제 (아직 사용자가 명시적으로 체크하지 않았다면)
             if (item.userChecked === undefined) item.checked = false;
         } else {
             if (item.userChecked === undefined) item.checked = !isNameMissing;
         }
     });
 
+    const okCount = bulkParsedData.filter(d => !d.isDuplicate && d.고객명).length;
+
     let html = '';
     if (bulkParsedData.length === 0) {
-        html = `<tr><td colspan="9" style="text-align:center; padding:32px; color:#94a3b8; font-weight:700;">등록할 고객이 모두 삭제되었습니다. [다시 붙여넣기]를 눌러 새로 입력하세요.</td></tr>`;
+        html = `<tr><td colspan="9" style="text-align:center; padding:36px; color:#94a3b8; font-weight:700;">등록할 고객이 모두 삭제되었습니다. [다시 붙여넣기]를 눌러 새로 입력하세요.</td></tr>`;
     } else {
         bulkParsedData.forEach((data, i) => {
             const isNameMissing = !data.고객명;
-            let trStyle = 'background:white;';
-            if (isNameMissing) trStyle = 'background:#fee2e2;';
-            else if (data.isDuplicate) trStyle = 'background:#fffbeb;';
+            let trClass = '';
+            if (isNameMissing) trClass = 'row-error';
+            else if (data.isDuplicate) trClass = 'row-duplicate';
 
-            const nameStyle = isNameMissing ? 'color:#ef4444; font-weight:800;' : 'font-weight:700; color:#1e293b;';
+            const nameStyle = isNameMissing ? 'color:#ef4444; font-weight:800;' : 'font-weight:700; color:#0f172a;';
 
             let dupBadge = '';
             if (data.isDuplicate) {
-                dupBadge = `<span style="display:inline-block; font-size:11px; font-weight:700; color:#b45309; background:#fef3c7; border:1px solid #fde68a; padding:1px 6px; border-radius:4px; margin-left:6px;" title="${data.dupInfo}">⚠️ ${data.dupInfo}</span>`;
+                dupBadge = `<span class="bulk-badge-tag bulk-badge-dup" style="font-size:11px; padding:1px 6px; margin-left:4px;" title="${data.dupInfo}">⚠️ ${data.dupInfo}</span>`;
             }
 
             const isChecked = data.checked ? 'checked' : '';
@@ -9212,19 +9213,19 @@ window.renderBulkPreviewTable = function() {
             const juminDisplay = (data.주민번호 && data.주민번호.trim()) ? data.주민번호 : '<span style="color:#cbd5e1;">-</span>';
             const phoneDisplay = (data.폰번호 && data.폰번호.trim()) ? data.폰번호 : '<span style="color:#cbd5e1;">-</span>';
 
-            html += `<tr style="${trStyle}">
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; text-align:center; width:36px; min-width:36px;">
-                    <input type="checkbox" class="bulk-row-check" data-idx="${i}" ${isChecked} ${isDisabled} onchange="window.handleBulkRowCheckChange(${i}, this.checked)" style="width:15px; height:15px; cursor:pointer;">
+            html += `<tr class="${trClass}">
+                <td style="text-align:center; width:44px;">
+                    <input type="checkbox" class="bulk-row-check" data-idx="${i}" ${isChecked} ${isDisabled} onchange="window.handleBulkRowCheckChange(${i}, this.checked)" style="width:16px; height:16px; cursor:pointer;">
                 </td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#3b82f6; text-align:center; width:70px; min-width:70px;">${data.고객번호}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; ${nameStyle} min-width:90px;">${data.고객명 || '이름 누락(등록불가)'} ${dupBadge}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; width:125px; min-width:125px;">${juminDisplay}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; font-weight:600; color:#0284c7; width:115px; min-width:115px;">${phoneDisplay}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; min-width:160px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${data.주소 || ''}">${addrDisplay}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; min-width:85px;">${jobDisplay}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; font-size:12.5px; min-width:140px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${data.특이사항 || ''}">${memoDisplay}</td>
-                <td style="padding:10px 8px; border-bottom:1px solid #e2e8f0; text-align:center; width:60px; min-width:60px;">
-                    <button type="button" onclick="window.deleteBulkRow(${i})" style="background:#fee2e2; border:1.5px solid #fca5a5; color:#dc2626; border-radius:6px; width:26px; height:26px; font-weight:900; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:0.15s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" title="이 고객 삭제">✕</button>
+                <td style="font-weight:800; color:#3b82f6; text-align:center; width:75px;">${data.고객번호}</td>
+                <td style="${nameStyle} width:140px;">${data.고객명 || '이름 누락(등록불가)'} ${dupBadge}</td>
+                <td style="font-size:12.5px; color:#64748b; width:135px;">${juminDisplay}</td>
+                <td style="font-size:12.5px; font-weight:700; color:#0284c7; width:130px;">${phoneDisplay}</td>
+                <td style="font-size:12.5px; min-width:180px; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${data.주소 || ''}">${addrDisplay}</td>
+                <td style="font-size:12.5px; width:95px;">${jobDisplay}</td>
+                <td style="font-size:12.5px; min-width:150px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${data.특이사항 || ''}">${memoDisplay}</td>
+                <td style="text-align:center; width:55px;">
+                    <button type="button" onclick="window.deleteBulkRow(${i})" class="bulk-del-row-btn" title="이 고객 삭제">✕</button>
                 </td>
             </tr>`;
         });
@@ -9237,13 +9238,19 @@ window.renderBulkPreviewTable = function() {
     if (tbody) tbody.innerHTML = html;
 
     // 배지 및 중복삭제 버튼 제어
+    const okBadgeEl = document.getElementById('bulkOkBadge');
+    const okCountEl = document.getElementById('bulkOkCount');
+    if (okBadgeEl && okCountEl) {
+        okCountEl.innerText = okCount;
+        okBadgeEl.style.display = (okCount > 0) ? 'inline-flex' : 'none';
+    }
+
     const dupBadgeEl = document.getElementById('bulkDupBadge');
     const deleteDupBtn = document.getElementById('bulkDeleteDupBtn');
-    const excludeBtn = document.getElementById('bulkExcludeDupBtn');
     if (dupBadgeEl) {
         if (dupCount > 0) {
-            dupBadgeEl.innerText = `중복 ${dupCount}건 감지`;
-            dupBadgeEl.style.display = 'inline-block';
+            dupBadgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> 중복 ${dupCount}건 감지`;
+            dupBadgeEl.style.display = 'inline-flex';
         } else {
             dupBadgeEl.style.display = 'none';
         }
@@ -9251,9 +9258,6 @@ window.renderBulkPreviewTable = function() {
     if (deleteDupBtn) {
         deleteDupBtn.style.display = (dupCount > 0) ? 'inline-flex' : 'none';
         deleteDupBtn.innerHTML = `<i class="fa-solid fa-trash-can" style="margin-right:4px;"></i>중복 ${dupCount}건 일괄 삭제`;
-    }
-    if (excludeBtn) {
-        excludeBtn.style.display = (dupCount > 0) ? 'inline-block' : 'none';
     }
 
     window.updateBulkSubmitCount();
@@ -9459,14 +9463,32 @@ window.updateBulkSubmitCount = function() {
     if (el) el.innerText = checked;
     const btn = document.getElementById('bulkSubmitBtn');
     if (btn) {
-        btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> 선택한 ${checked}명 등록`;
+        btn.innerHTML = `<i class="fa-solid fa-check" style="margin-right:4px;"></i> 선택 고객 ${checked}명 일괄 등록`;
         btn.disabled = (checked === 0);
         btn.style.opacity = (checked === 0) ? '0.5' : '1';
+        btn.style.cursor = (checked === 0) ? 'not-allowed' : 'pointer';
     }
     const allBox = document.getElementById('bulkSelectAll');
     if (allBox) {
         const enabledBoxes = document.querySelectorAll('.bulk-row-check:not(:disabled)');
         allBox.checked = enabledBoxes.length > 0 && checked === enabledBoxes.length;
+    }
+};
+
+window.bulkToggleSelectAll = function(checked) {
+    if (typeof window.toggleBulkSelectAll === 'function') {
+        window.toggleBulkSelectAll(checked);
+    } else {
+        bulkParsedData.forEach(d => {
+            if (d.고객명) {
+                d.checked = checked;
+                d.userChecked = true;
+            }
+        });
+        document.querySelectorAll('.bulk-row-check:not(:disabled)').forEach(cb => {
+            cb.checked = checked;
+        });
+        window.updateBulkSubmitCount();
     }
 };
 

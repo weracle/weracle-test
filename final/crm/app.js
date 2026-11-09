@@ -1750,9 +1750,9 @@ function getCrmHeaders(sheetType) {
 }
 
 function getCrmEndCol(sheetType) {
-    if (sheetType === "보험관리") return "AZ";
-    if (sheetType === "corporatecrm" || sheetType === "사업자고객") return "AZ";
-    return "AZ"; // Expand to AZ so all columns (including 은행명, 계좌번호) are fetched
+    if (sheetType === "보험관리") return "AC";
+    if (sheetType === "corporatecrm" || sheetType === "사업자고객") return "Z";
+    return "X";
 }
 
 // 구글 드라이브 내 전용 시트 검색 및 생성
@@ -1918,7 +1918,13 @@ async function fetchClientsFromSheet(targetSheetParam) {
       let bestRows = null;
       
       // HOTFIX: Do not loop over all candidates (causes 429 Too Many Requests). Just pick the first matched one.
-      if (existingTitles.includes(sName)) {
+      // Smart candidate discovery: match exact, trimmed, whitespace-insensitive, or keyword
+      const normTarget = sName.replace(/\s+/g, '').toLowerCase();
+      const smartMatched = existingTitles.find(t => t.replace(/\s+/g, '').toLowerCase() === normTarget)
+                        || (sName === "보험관리" ? existingTitles.find(t => t.includes("보험") || t.includes("계약")) : null);
+      if (smartMatched) {
+          bestCandidate = smartMatched;
+      } else if (existingTitles.includes(sName)) {
           bestCandidate = sName;
       } else if (sheetCandidates.length > 0) {
           bestCandidate = sheetCandidates[0];
@@ -1926,11 +1932,18 @@ async function fetchClientsFromSheet(targetSheetParam) {
 
       if (bestCandidate) {
           try {
-              const endColStr = getCrmEndCol(bestCandidate);
-              bestResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: spreadsheetId, range: `${bestCandidate}!A1:${endColStr}` });
+              // Standard Sheets API v4: full sheet name without cell range retrieves all rows and columns safely
+              bestResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: spreadsheetId, range: `'${bestCandidate}'` });
               bestRows = bestResp.result.values;
           } catch(e) {
-              console.warn("Failed to fetch best candidate", e);
+              console.warn("Full sheet fetch by name fallback:", e);
+              try {
+                  const endColStr = getCrmEndCol(bestCandidate);
+                  bestResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: spreadsheetId, range: `'${bestCandidate}'!A1:${endColStr}` });
+                  bestRows = bestResp.result.values;
+              } catch(e2) {
+                  console.error("Failed to fetch sheet values", e2);
+              }
           }
       }
       
@@ -2169,7 +2182,7 @@ async function saveClientToServer(clientObj, insRows) {
             if (window.isFamilySubmitInProgress && window.familyInsRowsCache) {
                 allInsRows = window.familyInsRowsCache;
             } else {
-                const insResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: insSheetName + "!A2:AZ" });
+                const insResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: insSheetName + "!A2:AC" });
                 allInsRows = insResp.result.values || [];
             }
             allInsRows = allInsRows.filter(row => {
@@ -2230,7 +2243,7 @@ async function saveClientToServer(clientObj, insRows) {
                 }
             }
             if (window.isFamilySubmitInProgress) { window.familyInsRowsCache = allInsRows; }
-            await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: insSheetName + "!A2:AZ" });
+            await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: insSheetName + "!A2:AC" });
             if (allInsRows.length > 0) {
                 await gapi.client.sheets.spreadsheets.values.update({
                     spreadsheetId,
@@ -11062,7 +11075,7 @@ window.forceSyncInsuranceSheet = async function() {
         }
     });
     
-    await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: insSheetName + "!A2:AZ" });
+    await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: insSheetName + "!A2:AC" });
     if (allInsRows.length > 0) {
         await gapi.client.sheets.spreadsheets.values.update({
             spreadsheetId,

@@ -46,7 +46,88 @@
   window._crmPickerOpenedOnce = false;
 
   // 1. 데이터 수신 및 로컬 캐시 동기화
+  
+  // [직접 구글 시트 연동] CRM 화면을 거치지 않아도 토큰/시트ID가 있으면 '보험관리' 탭 실시간 직접 조회
+  async function syncFromGoogleSheetsDirect() {
+    try {
+      const token = (function() {
+        try {
+          return localStorage.getItem('g_access_token') || sessionStorage.getItem('g_access_token');
+        } catch(e) { return null; }
+      })();
+      const sheetId = (function() {
+        try {
+          return localStorage.getItem('g_sheet_id') || sessionStorage.getItem('g_sheet_id');
+        } catch(e) { return null; }
+      })();
+
+      if (!token || !sheetId) return;
+
+      console.log('[CRM Picker] 구글 시트 직접 동기화 시작 (토큰/시트ID 확인됨)');
+
+      // 1. 보험관리 탭 직접 조회
+      const insUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/' + encodeURIComponent("'보험관리'") + '?valueRenderOption=FORMATTED_VALUE';
+      const insResp = await fetch(insUrl, { headers: { Authorization: 'Bearer ' + token } });
+      if (insResp.ok) {
+        const insJson = await insResp.json();
+        const rows = insJson.values || [];
+        if (rows.length > 1) {
+          const headers = rows[0].map(h => String(h || '').trim());
+          const parsedIns = rows.slice(1).map(r => {
+            const obj = {};
+            headers.forEach((h, i) => { obj[h] = r[i] !== undefined ? r[i] : ''; });
+            return obj;
+          });
+          window.crmPickerState.insuranceRows = parsedIns;
+          try { localStorage.setItem('weracle_crm_insurance_cache', JSON.stringify(parsedIns)); } catch(e) {}
+          console.log('[CRM Picker] 보험관리 직접 조회 성공:', parsedIns.length, '건');
+        }
+      }
+
+      // 2. 고객 목록이 비어있으면 weraclecrm 직접 조회
+      if (!window.crmPickerState.customers || window.crmPickerState.customers.length === 0) {
+        const custUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/' + encodeURIComponent("'weraclecrm'") + '?valueRenderOption=FORMATTED_VALUE';
+        const custResp = await fetch(custUrl, { headers: { Authorization: 'Bearer ' + token } });
+        if (custResp.ok) {
+          const custJson = await custResp.json();
+          const rows = custJson.values || [];
+          if (rows.length > 1) {
+            const headers = rows[0].map(h => String(h || '').trim());
+            const parsedCust = rows.slice(1).map((r, idx) => {
+              const obj = { rowNumber: idx + 2 };
+              headers.forEach((h, i) => { obj[h] = r[i] !== undefined ? r[i] : ''; });
+              return obj;
+            });
+            window.crmPickerState.customers = parsedCust;
+            window.claimCustomerData = parsedCust;
+            try { localStorage.setItem('weracle_crm_customers_cache', JSON.stringify(parsedCust)); } catch(e) {}
+            console.log('[CRM Picker] 고객목록 직접 조회 성공:', parsedCust.length, '건');
+          }
+        }
+      }
+
+      // UI 즉시 재렌더링
+      if (typeof isModalOpen === 'function' && isModalOpen()) {
+        if (window.crmPickerState.currentView === 'search') {
+          renderCustomerList();
+        } else {
+          // 현재 선택된 고객 데이터 최신화
+          if (window.crmPickerState.insuredCustomer) {
+            window.crmPickerState.insuredData = sanitizeCustomer(window.crmPickerState.insuredCustomer);
+          }
+          if (window.crmPickerState.contractorCustomer) {
+            window.crmPickerState.contractorData = sanitizeCustomer(window.crmPickerState.contractorCustomer);
+          }
+          renderSetupView();
+        }
+      }
+    } catch (e) {
+      console.warn('[CRM Picker] 구글 시트 직접 동기화 오류 (정상 폴백 진행):', e);
+    }
+  }
+
   function initDataSync() {
+    setTimeout(syncFromGoogleSheetsDirect, 100);
     try {
       const cached = localStorage.getItem('weracle_crm_customers_cache')
                   || localStorage.getItem('demo_crm_data')
@@ -428,13 +509,15 @@
       for (const item of insCache) {
         if (!item || typeof item !== 'object') continue;
         const iCid = String(item['고객번호'] || '').trim();
-        const iName = String(item['고객명'] || item['피보험자'] || item['계약자'] || '').trim();
+        const iName = String(item['고객명'] || '').trim();
+        const iInsur = String(item['피보험자'] || '').trim();
+        const iCont = String(item['계약자'] || '').trim();
         const iRrn = String(item['주민번호'] || '').replace(/[^0-9]/g, '');
 
         let isMatch = false;
         if (_cid && iCid && _cid === iCid) isMatch = true;
         else if (_crrn.length >= 6 && iRrn.length >= 6 && _crrn === iRrn) isMatch = true;
-        else if (_cname && iName && _cname === iName) isMatch = true;
+        else if (_cname && (iName === _cname || iInsur === _cname || iCont === _cname)) isMatch = true;
 
         if (isMatch) {
           allContracts.push(item);
@@ -603,9 +686,14 @@
     if (cleanPhone.length === 10 && cleanPhone.startsWith('10')) cleanPhone = '0' + cleanPhone;
     if (cleanPhone.length === 8) cleanPhone = '010' + cleanPhone;
 
+    const firstContract = allContracts.length > 0 ? allContracts[0] : null;
+    const contractContName = firstContract ? String(firstContract['계약자'] || '').trim() : '';
+
     return {
       raw: client,
       name: rawName,
+      contractorName: contractContName,
+      contracts: allContracts,
       phone: cleanPhone,
       formattedPhone: formatPhoneDisplay(cleanPhone),
       rrn: cleanRrn,
@@ -777,6 +865,7 @@
 
   // 모달 열기
   window.openCrmPickerModal = function () {
+    syncFromGoogleSheetsDirect();
     ensureModalDom();
     injectCustomStyles();
     initDataSync();
@@ -1109,7 +1198,7 @@
       }
     }
 
-    // 4. 피보험자 정보 주입
+    // 4. 피보험자(치료받은 분) 기본 인적사항 주입
     if (insured) {
       setFieldValue('insName', insured.name);
       setFieldValue('insRrn', insured.rrn);
@@ -1119,41 +1208,78 @@
       setFieldValue('insAddress', insured.address);
     }
 
-    // 5. 계약자 / 수익자 정보 주입
-    if (isDiff && contractor) {
-      // 손해보험 cont* 필드 주입
-      setFieldValue('contName', contractor.name);
-      setFieldValue('contRrn', contractor.rrn);
-      setFieldValue('contRrn_front', contractor.rrnFront);
-      setFieldValue('contRrn_back', contractor.rrnBack);
-      setFieldValue('contPhone', contractor.phone);
-      setFieldValue('contAddress', contractor.address);
+    // 5. [핵심] 계좌 및 수령자 정보 주입 규칙 (동일함 vs 다름)
+    if (isDiff) {
+      // 👥 [다름 모드] - 수령자는 100% 무조건 계약자/수익자!
+      const contName = (contractor ? contractor.name : '') || (insured ? insured.contractorName : '');
+      const contPhone = contractor ? contractor.phone : '';
+      const contRrn = contractor ? contractor.rrn : '';
+      const contRrnFront = contractor ? contractor.rrnFront : '';
+      const contRrnBack = contractor ? contractor.rrnBack : '';
+      const contAddress = contractor ? contractor.address : '';
 
-      // 생명보험 bene* 필드 주입
-      setFieldValue('beneName', contractor.name);
-      setFieldValue('beneRrn', contractor.rrn);
-      setFieldValue('beneRrn_front', contractor.rrnFront);
-      setFieldValue('beneRrn_back', contractor.rrnBack);
-      setFieldValue('benePhone', contractor.phone);
-      setFieldValue('beneAddress', contractor.address);
-
-      // 보상안내(guide*) 주입
-      setFieldValue('guideName', contractor.name);
-      setFieldValue('guidePhone', contractor.phone);
+      // 계약자/수익자 필드 채우기
+      if (contName) {
+        setFieldValue('contName', contName);
+        setFieldValue('beneName', contName);
+        setFieldValue('guideName', contName);
+      }
+      if (contPhone) {
+        setFieldValue('contPhone', contPhone);
+        setFieldValue('benePhone', contPhone);
+        setFieldValue('guidePhone', contPhone);
+      }
+      if (contRrn) {
+        setFieldValue('contRrn', contRrn);
+        setFieldValue('contRrn_front', contRrnFront);
+        setFieldValue('contRrn_back', contRrnBack);
+        setFieldValue('beneRrn', contRrn);
+        setFieldValue('beneRrn_front', contRrnFront);
+        setFieldValue('beneRrn_back', contRrnBack);
+      }
+      if (contAddress) {
+        setFieldValue('contAddress', contAddress);
+        setFieldValue('beneAddress', contAddress);
+      }
       setFieldValue('guideRelation', '계약자');
 
-      // ★ [핵심] 다를 때는 100% 무조건 계약자/수익자 정보를 예금주 및 수령계좌로 주입!
-      injectBankData(contractor);
+      // 계좌 및 예금주: 계약자 계좌 우선, 없으면 계약에 등록된 은행/계좌 활용
+      const finalBank = (contractor && contractor.bankName) || (insured && insured.bankName) || '';
+      const finalAccount = (contractor && contractor.bankAccount) || (insured && insured.bankAccount) || '';
+      const finalOwner = (contractor && isValidOwnerName(contractor.name) ? contractor.name : '')
+                      || (isValidOwnerName(contName) ? contName : '');
 
-    } else if (!isDiff && insured) {
-      // 동일 모드: 피보험자 계좌 및 보상안내 주입
+      setFieldValue('bankName', finalBank);
+      setFieldValue('bankAccount', finalAccount);
+      setFieldValue('bankOwner', finalOwner); // ★ 다를 때는 절대 피보험자 이름이 들어가지 않음!
+      setFieldValue('bankOwnerRrn', contRrn);
+      setFieldValue('bankOwnerRel', '계약자');
+
+    } else if (insured) {
+      // 👤 [동일함 모드] - 본인 수령
       setFieldValue('guideName', insured.name);
       setFieldValue('guidePhone', insured.phone);
       setFieldValue('guideRelation', '본인');
-      injectBankData(insured);
-    } else if (isDiff && !contractor && insured) {
-      // 다름 모드이나 계약자가 아직 선택되지 않은 경우
-      injectBankData(insured);
+
+      const finalBank = insured.bankName || '';
+      const finalAccount = insured.bankAccount || '';
+      const finalOwner = (isValidOwnerName(insured.bankOwner) ? insured.bankOwner : '')
+                      || (isValidOwnerName(insured.name) ? insured.name : '');
+
+      setFieldValue('bankName', finalBank);
+      setFieldValue('bankAccount', finalAccount);
+      setFieldValue('bankOwner', finalOwner);
+      setFieldValue('bankOwnerRrn', insured.rrn);
+      setFieldValue('bankOwnerRel', '본인');
+    }
+
+    // 자동이체 수령 라디오버튼이 있는 경우 '아니오 (계좌 직접입력)'으로 명시적 선택하여 필드 노출 보장
+    const autoNoRadio = document.querySelector('input[name="autoTransfer"][value="no"]');
+    if (autoNoRadio) {
+      autoNoRadio.checked = true;
+      if (typeof window.toggleBankFields === 'function') {
+        window.toggleBankFields(false);
+      }
     }
 
     // 펫보험 정보 주입 (피보험자 기준)
@@ -1166,7 +1292,6 @@
       setFieldValue('petColor', p.color);
     }
 
-    // 모달 닫기
     closeCrmPickerModal();
 
     // 1단계 슬라이드 이동 및 토스트 표시

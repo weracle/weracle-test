@@ -2,6 +2,9 @@
 <html lang="ko">
 <head>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weracle Dashboard</title>
@@ -545,35 +548,274 @@
             font-size: 12px !important;
         }
     }
-    </style>
-</head>
-<body style="margin:0; padding:0; background-color: #f2f4f6;">
-<div id="sb-video-gallery-widget-root" class="sb-platform">
-          
-  <main class="insight-content">
     
-    <!-- 통합 헤더 (Flexbox 대칭형 레이아웃) -->
-    <div class="vlab-header-bg" style="padding: 10px 0 20px; display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-        <h1 class="vlab-main-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 900; color: var(--text-main);">
-          <span>보험 영상 아카데미</span>
-          <span style="font-size: 22px;">🎥</span>
-        </h1>
+    /* ============================================================== */
+    /* [Weracle Insight Unified Theme - 영업소식지 & 한장비교표 일체화] */
+    /* ============================================================== */
+    :root {
+      --primary: #113f67 !important;
+      --primary-hover: #0a253d !important;
+      --title-blue: #0284c7 !important;
+      --accent-blue: #0284c7 !important;
+      --accent-green: #059669 !important;
+      --bg-body: #f5f5f7 !important;
+      --bg-panel: #ffffff !important;
+      --border: rgba(0, 0, 0, 0.08) !important;
+      --text-main: #1d1d1f !important;
+      --text-sub: #86868b !important;
+      --text-muted: #a1a1a6 !important;
+      --bg-main: radial-gradient(circle at 50% 30%, #f4f8fc 0%, #e2edf7 100%) !important;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+      letter-spacing: -0.015em;
+    }
+
+    body {
+      margin: 0 !important;
+      padding: 16px 20px !important;
+      background: var(--bg-main) !important;
+      color: #1e293b !important;
+      min-height: 100vh !important;
+      overflow-x: hidden !important;
+    }
+
+    /* Weracle Floating Bento Container */
+    .insight-window-container {
+      max-width: 1560px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 24px;
+      box-shadow: 0 20px 45px -10px rgba(17, 63, 103, 0.08), 0 4px 12px rgba(17, 63, 103, 0.03);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 36px);
+    }
+
+    /* Unified Header (영업소식지/한장비교표 스타일) */
+    .insight-header {
+      background: linear-gradient(180deg, #f0f8ff 0%, #ffffff 100%);
+      border-bottom: 1px solid #e2e8f0;
+      padding: 20px 28px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .insight-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .insight-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .insight-brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #113f67, #0284c7);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(17, 63, 103, 0.15);
+      flex-shrink: 0;
+    }
+
+    .insight-title {
+      font-size: 21px;
+      font-weight: 900;
+      color: #0284c7;
+      letter-spacing: -0.5px;
+      margin: 0;
+    }
+
+    .sb-btn-add-video {
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+    }
+    .sb-btn-add-video:hover {
+      background: #0369a1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+    }
+
+    /* Category Tabs Nav (영업소식지 & 한장비교표 스타일) */
+    .insight-tabs-nav {
+      display: flex;
+      gap: 28px;
+      border-bottom: 1px solid #e2e8f0;
+      margin-top: 4px;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+    }
+    .insight-tabs-nav::-webkit-scrollbar { display: none; }
+
+    .insight-tab-btn {
+      background: transparent !important;
+      border: none !important;
+      border-bottom: 2.5px solid transparent !important;
+      border-radius: 0 !important;
+      padding: 10px 4px 12px !important;
+      font-size: 14.5px !important;
+      font-weight: 700 !important;
+      color: #86868b !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      box-shadow: none !important;
+      line-height: 1.2 !important;
+    }
+    .insight-tab-btn:hover {
+      color: #1d1d1f !important;
+    }
+    .insight-tab-btn.active {
+      color: #0284c7 !important;
+      font-weight: 800 !important;
+      border-bottom-color: #0284c7 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    .insight-main-content {
+      padding: 24px 28px 36px;
+      flex: 1;
+      background: #ffffff;
+    }
+
+    /* Playlist Cards Unified */
+    .playlist-item {
+      display: flex !important;
+      gap: 14px !important;
+      background: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+      padding: 12px 14px !important;
+      border-radius: 14px !important;
+      cursor: pointer !important;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      align-items: flex-start !important;
+      text-align: left !important;
+      box-shadow: none !important;
+    }
+    .playlist-item:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 8px 20px rgba(17, 63, 103, 0.08) !important;
+      border-color: #bae6fd !important;
+    }
+    .playlist-item.active {
+      background: #f0f9ff !important;
+      border: 1.5px solid #0284c7 !important;
+      border-left: 5px solid #0284c7 !important;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.12) !important;
+    }
+
+    .main-video-info {
+      background: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 18px !important;
+      padding: 22px !important;
+      box-shadow: 0 4px 16px rgba(17, 63, 103, 0.04) !important;
+    }
+
+    .main-video-info .v-badge {
+      background: #eff6ff !important;
+      color: #0284c7 !important;
+      border: 1px solid #bfdbfe !important;
+      font-size: 12px !important;
+      font-weight: 800 !important;
+      padding: 4px 12px !important;
+      border-radius: 20px !important;
+    }
+
+    .comments-section-wrap {
+      background: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 18px !important;
+      padding: 20px !important;
+      box-shadow: 0 4px 16px rgba(17, 63, 103, 0.04) !important;
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 8px !important; }
+      .insight-window-container { border-radius: 16px !important; min-height: auto !important; }
+      .insight-header { padding: 16px 16px 0 !important; }
+      .insight-main-content { padding: 16px 12px 24px !important; }
+      .insight-tabs-nav { gap: 16px !important; }
+      .playlist-layout { flex-direction: column !important; }
+      .playlist-sidebar { width: 100% !important; height: auto !important; max-height: 480px !important; }
+      .thumb-wrapper { flex: 0 0 130px !important; height: 80px !important; }
+    }
+
+</style>
+</head>
+<body style="margin:0; padding:16px 20px; background: radial-gradient(circle at 50% 30%, #f4f8fc 0%, #e2edf7 100%); min-height: 100vh;">
+<div id="sb-video-gallery-widget-root" class="sb-platform">
+  
+  <!-- Outer Window Container (영업소식지 & 한장비교표 공식 일체형 벤토박스) -->
+  <div class="insight-window-container">
+    
+    <!-- 1. 헤더 & 4대 카테고리 탭 (영업소식지/한장비교표 디자인 통일) -->
+    <header class="insight-header">
+      <div class="insight-header-top">
+        <div class="insight-brand">
+          <div class="insight-brand-icon">
+            <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="insight-title">보험 영상 아카데미</h1>
+          </div>
+        </div>
+
         <div id="admin-add-btn-container" style="display: none; flex: 0 0 auto;">
-          <button class="sb-btn sb-btn-primary" id="sb-btn-admin-add" style="padding: 8px 16px; font-size: 13px; font-weight: 800; cursor: pointer;">➕ 새 교육 영상 등록</button>
+          <button class="sb-btn-add-video" id="sb-btn-admin-add">➕ 새 교육 영상 등록</button>
         </div>
       </div>
       
-      <div class="category-nav" id="video-category-tabs">
-        <a class="tab-btn active" id="tab-btn-sales" data-category="sales" style="cursor: pointer;">실전 영업 노하우</a>
-        <a class="tab-btn" id="tab-btn-product" data-category="product" style="cursor: pointer;">상품 및 보상 분석</a>
-        <a class="tab-btn" id="tab-btn-mindset" data-category="mindset" style="cursor: pointer;">영업마인드셋</a>
-        <a class="tab-btn" id="tab-btn-adjuster" data-category="adjuster" style="cursor: pointer;">손해사정사</a>
-      </div>
-    </div>
+      <!-- 4대 카테고리 탭 (영업소식지/한장비교표 스타일) -->
+      <nav class="insight-tabs-nav category-nav" id="video-category-tabs">
+        <button type="button" class="insight-tab-btn tab-btn active" id="tab-btn-sales" data-category="sales">
+          <span>실전 영업 노하우</span>
+        </button>
+        <button type="button" class="insight-tab-btn tab-btn" id="tab-btn-product" data-category="product">
+          <span>상품 및 보상 분석</span>
+        </button>
+        <button type="button" class="insight-tab-btn tab-btn" id="tab-btn-mindset" data-category="mindset">
+          <span>영업마인드셋</span>
+        </button>
+        <button type="button" class="insight-tab-btn tab-btn" id="tab-btn-adjuster" data-category="adjuster">
+          <span>손해사정사</span>
+        </button>
+      </nav>
+    </header>
 
-    <!-- 플레이리스트 레이아웃 -->
-    <div class="playlist-layout">
+    <!-- 2. 본문 플레이어 및 플레이리스트 영역 -->
+    <main class="insight-main-content">
+      <div class="playlist-layout">
       
       <!-- 좌측: 비디오 플레이어 및 상세 설명, 댓글 영역 -->
       <div class="main-player-section">
@@ -620,6 +862,7 @@
       </div>
     </div>
   </main>
+  </div>
 
   <!-- 관리자용 영상 등록/수정 모달 팝업 -->
   <div class="vlab-modal-overlay" id="video-editor-modal">

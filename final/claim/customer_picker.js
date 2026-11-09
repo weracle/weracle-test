@@ -48,7 +48,9 @@
   // 1. 데이터 수신 및 로컬 캐시 동기화
   function initDataSync() {
     try {
-      const cached = localStorage.getItem('weracle_crm_customers_cache');
+      const cached = localStorage.getItem('weracle_crm_customers_cache')
+                  || localStorage.getItem('demo_crm_data')
+                  || localStorage.getItem('weracle_crm_cached_data');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -70,10 +72,21 @@
       window.opener.postMessage({ type: 'requestSyncData' }, '*');
     }
 
+    // 부모 창이나 opener의 전역 고객 변수 직접 참조 (초고속 즉시 동기화)
+    try {
+      const parentData = (window.parent && window.parent.globalCustomerData)
+                      || (window.opener && window.opener.globalCustomerData)
+                      || window.claimCustomerData;
+      if (Array.isArray(parentData) && parentData.length > 0 && (!window.crmPickerState.customers || window.crmPickerState.customers.length === 0)) {
+        window.crmPickerState.customers = parentData;
+        window.claimCustomerData = parentData;
+      }
+    } catch (e) {}
+
     // 메시지 수신 대기
     window.addEventListener('message', function (event) {
       if (!event.data) return;
-      if (event.data.type === 'syncData' || event.data.type === 'crmData' || event.data.type === 'CUSTOMER_DATA_SYNC') {
+      if (event.data.type === 'syncData' || event.data.type === 'syncCrmData' || event.data.type === 'crmData' || event.data.type === 'CUSTOMER_DATA_SYNC') {
         const data = event.data.data || event.data.customers;
         if (Array.isArray(data) && data.length > 0) {
           window.crmPickerState.customers = data;
@@ -89,14 +102,25 @@
     });
   }
 
-  // 2. 고객 데이터 정제기
+  // 2. 고객 데이터 정제기 (CRM 한글/영문 모든 키 100% 호환)
   function sanitizeCustomer(client) {
     if (!client) return null;
 
-    const rawName = client.name || client.client_name || client.customerName || '';
-    const rawPhone = client.phone || client.mobile || client.client_phone || '';
-    const rawRrn = client.rrn || client.jumin || client.client_jumin || client.idNum || '';
-    const rawAddress = client.address || client.addr || client.client_address || '';
+    // 1. 고객명 (한글: 고객명, 이름, 대표자명, 상호명 / 영문: name, client_name, customerName)
+    const rawName = client['고객명'] || client['이름'] || client['대표자명'] || client['상호명']
+                 || client.name || client.client_name || client.customerName || '';
+
+    // 2. 전화번호 (한글: 폰번호, 휴대폰, 전화번호, 연락처, 휴대전화 / 영문: phone, mobile, client_phone)
+    const rawPhone = client['폰번호'] || client['휴대폰'] || client['전화번호'] || client['연락처'] || client['휴대전화']
+                  || client.phone || client.mobile || client.client_phone || '';
+
+    // 3. 주민번호 (한글: 주민번호, 주민등록번호, 생년월일, 사업자번호 / 영문: rrn, jumin, client_jumin)
+    const rawRrn = client['주민번호'] || client['주민등록번호'] || client['생년월일'] || client['사업자번호']
+                || client.rrn || client.jumin || client.client_jumin || client.idNum || '';
+
+    // 4. 주소 (한글: 주소, 사업장주소, 상세주소 / 영문: address, addr, client_address)
+    const rawAddress = client['주소'] || client['사업장주소'] || client['상세주소']
+                    || client.address || client.addr || client.client_address || '';
 
     const cleanRrn = String(rawRrn).replace(/[^0-9]/g, '');
     let rrnFront = '', rrnBack = '';
@@ -107,17 +131,38 @@
       const parts = String(rawRrn).split('-');
       rrnFront = (parts[0] || '').replace(/[^0-9]/g, '');
       rrnBack = (parts[1] || '').replace(/[^0-9]/g, '');
+    } else if (cleanRrn.length >= 6) {
+      rrnFront = cleanRrn.substring(0, 6);
+      rrnBack = cleanRrn.substring(6);
     }
 
-    const cleanPhone = String(rawPhone).replace(/[^0-9]/g, '');
+    let cleanPhone = String(rawPhone).replace(/[^0-9]/g, '');
+    if (cleanPhone.length === 10 && cleanPhone.startsWith('10')) cleanPhone = '0' + cleanPhone;
+    if (cleanPhone.length === 8) cleanPhone = '010' + cleanPhone;
+    let formattedPhone = cleanPhone;
+    if (cleanPhone.length === 11) {
+      formattedPhone = cleanPhone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+    } else if (cleanPhone.length === 10) {
+      formattedPhone = cleanPhone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+    }
 
-    const bankName = client.bank_name || client.bankName || client.bank || '';
-    const bankAccount = String(client.account_number || client.accountNumber || client.bankAccount || '').replace(/[^0-9]/g, '');
-    const bankOwner = client.account_holder || client.accountHolder || client.bankOwner || rawName;
+    // 5. 은행 / 계좌 (한글: 은행명, 은행, 계좌번호, 계좌, 예금주 / 영문: bank_name, account_number 등)
+    const bankName = client['은행명'] || client['은행'] || client.bank_name || client.bankName || client.bank || '';
+    const bankAccount = String(client['계좌번호'] || client['계좌'] || client.account_number || client.accountNumber || client.bankAccount || '').replace(/[^0-9]/g, '');
+    const bankOwner = client['예금주'] || client.account_holder || client.accountHolder || client.bankOwner || rawName;
 
+    // 6. 반려동물 정보 (CRM 시트의 '반려동물', '동물이름' 및 pets 배열 모두 지원)
     let pets = [];
     if (Array.isArray(client.pets) && client.pets.length > 0) {
       pets = client.pets;
+    } else if (client['반려동물'] || client['동물이름']) {
+      pets.push({
+        name: client['동물이름'] || client['반려동물이름'] || '',
+        breed: client['반려동물'] || client['품종'] || '',
+        birth: client['동물생일'] || '',
+        gender: client['동물성별'] || '',
+        color: client['동물모색'] || ''
+      });
     } else if (client.pet_name || client.petName) {
       pets.push({
         name: client.pet_name || client.petName || '',
@@ -132,6 +177,7 @@
       raw: client,
       name: rawName,
       phone: cleanPhone,
+      formattedPhone: formattedPhone,
       rrn: cleanRrn,
       rrnFront: rrnFront,
       rrnBack: rrnBack,
@@ -528,10 +574,13 @@
     let filtered = all;
     if (keyword) {
       filtered = all.filter(c => {
-        const name = (c.name || c.client_name || c.customerName || '').toLowerCase();
-        const phone = (c.phone || c.mobile || c.client_phone || '').replace(/[^0-9]/g, '');
-        const rrn = (c.rrn || c.jumin || c.client_jumin || '').replace(/[^0-9]/g, '');
-        return name.includes(keyword) || phone.includes(keyword) || rrn.includes(keyword);
+        const s = sanitizeCustomer(c);
+        if (!s) return false;
+        const name = (s.name || '').toLowerCase();
+        const phone = (s.phone || '').replace(/[^0-9]/g, '');
+        const rrn = (s.rrn || '').replace(/[^0-9]/g, '');
+        const addr = (s.address || '').toLowerCase();
+        return name.includes(keyword) || phone.includes(keyword) || rrn.includes(keyword) || addr.includes(keyword);
       });
     }
 
@@ -556,17 +605,17 @@
       html += `
         <div class="crm-customer-card" onclick="selectCustomerFromList(${idx})">
           <div class="card-left">
-            <div class="customer-avatar">${sanitized.name.charAt(0) || '고'}</div>
+            <div class="customer-avatar">${sanitized.name ? sanitized.name.charAt(0) : '고'}</div>
           </div>
           <div class="card-center">
             <div class="customer-main-line">
-              <span class="customer-name">${sanitized.name}</span>
+              <span class="customer-name">${sanitized.name || '이름 없음'}</span>
               <span class="customer-rrn">${sanitized.rrnFront ? sanitized.rrnFront + '-*******' : '주민번호 미등록'}</span>
               ${petBadge}
               ${bankBadge}
             </div>
             <div class="customer-sub-line">
-              <span class="customer-phone">📞 ${sanitized.phone || '연락처 없음'}</span>
+              <span class="customer-phone">📞 ${sanitized.formattedPhone || sanitized.phone || '연락처 없음'}</span>
               <span class="customer-addr">🏠 ${sanitized.address || '주소 미등록'}</span>
             </div>
           </div>
@@ -587,10 +636,13 @@
     let filtered = all;
     if (keyword) {
       filtered = all.filter(c => {
-        const name = (c.name || c.client_name || c.customerName || '').toLowerCase();
-        const phone = (c.phone || c.mobile || c.client_phone || '').replace(/[^0-9]/g, '');
-        const rrn = (c.rrn || c.jumin || c.client_jumin || '').replace(/[^0-9]/g, '');
-        return name.includes(keyword) || phone.includes(keyword) || rrn.includes(keyword);
+        const s = sanitizeCustomer(c);
+        if (!s) return false;
+        const name = (s.name || '').toLowerCase();
+        const phone = (s.phone || '').replace(/[^0-9]/g, '');
+        const rrn = (s.rrn || '').replace(/[^0-9]/g, '');
+        const addr = (s.address || '').toLowerCase();
+        return name.includes(keyword) || phone.includes(keyword) || rrn.includes(keyword) || addr.includes(keyword);
       });
     }
 

@@ -106,6 +106,8 @@
   function sanitizeCustomer(client) {
     if (!client) return null;
 
+    const koreanBanks = ['국민', 'KB', '신한', '우리', '하나', '농협', 'NH', '기업', 'IBK', '카카오', '토스', '새마을', '신협', '우체국', '수협', 'SC제일', '씨티', '대구', '부산', '광주', '제주', '전북', '경남', '케이뱅크'];
+
     // 만약 배열 형태로 넘어왔을 경우 (Google Sheets raw 2D row)
     if (Array.isArray(client)) {
       const colName = String(client[1] || client[0] || '').trim();
@@ -117,6 +119,34 @@
 
       const cleanRrn = colRrn.replace(/[^0-9]/g, '');
       const cleanPhone = colPhone.replace(/[^0-9]/g, '');
+
+      let arrBankName = '';
+      let arrAccount = '';
+      if (client.length > 26 && client[25] && client[26]) {
+        arrBankName = String(client[25]).trim();
+        arrAccount = String(client[26]).replace(/[^0-9]/g, '');
+      }
+      if (!arrBankName || !arrAccount) {
+        for (const cell of client) {
+          const s = String(cell || '').trim();
+          if (!s) continue;
+          if (!arrBankName) {
+            for (const b of koreanBanks) {
+              if (s.includes(b) && (s.includes('은행') || s.length <= 8)) {
+                arrBankName = s;
+                break;
+              }
+            }
+          }
+          if (!arrAccount) {
+            const digits = s.replace(/[^0-9]/g, '');
+            if (digits.length >= 9 && digits.length <= 16 && !digits.startsWith('010') && digits.length !== 13) {
+              arrAccount = digits;
+            }
+          }
+        }
+      }
+
       return {
         raw: client,
         name: colName,
@@ -126,8 +156,8 @@
         rrnFront: cleanRrn.length >= 6 ? cleanRrn.substring(0, 6) : '',
         rrnBack: cleanRrn.length >= 7 ? cleanRrn.substring(6) : '',
         address: colAddr,
-        bankName: '',
-        bankAccount: '',
+        bankName: arrBankName,
+        bankAccount: arrAccount,
         bankOwner: colName,
         pets: []
       };
@@ -169,11 +199,58 @@
     // 4. 주소
     const rawAddress = getVal(['주소', '자택주소', '거주지', '사업장주소', '상세주소', '소재지', 'address', 'addr', 'client_address']);
 
-    // 5. 은행 / 계좌
-    const bankName = getVal(['은행명', '은행', '환급은행', 'bank_name', 'bankName', 'bank']);
-    const rawAccount = getVal(['계좌번호', '계좌', '환급계좌', 'account_number', 'accountNumber', 'bankAccount']);
-    const bankAccount = rawAccount.replace(/[^0-9]/g, '');
-    const bankOwner = getVal(['예금주', '예금주명', 'account_holder', 'accountHolder', 'bankOwner']) || rawName;
+    // 5. 은행 / 계좌 / 예금주 지능형 다중 경로 탐색
+    let bankName = getVal(['은행명', '은행', '환급은행', '이체은행', '결제은행', '차_은행명', 'bank_name', 'bankName', 'bank', 'bank_nm', '환급은행명', '수령은행', '수령은행명']);
+    let rawAccount = getVal(['계좌번호', '계좌', '환급계좌', '이체계좌', '결제계좌', '차_계좌번호', 'account_number', 'accountNumber', 'bankAccount', 'account', '환급계좌번호', '수령계좌', '수령계좌번호']);
+    let bankOwner = getVal(['예금주', '예금주명', '계좌예금주', '환급예금주', 'bankOwner', 'accountHolder', 'account_holder', 'bank_owner', 'owner_name', '수령예금주']);
+
+    // 5-1. 결제정보 문자열 파싱 (예: "국민은행 / 1234567890" 또는 "자동이체(신한 / 110-123)")
+    if (!bankName || !rawAccount) {
+      const payInfo = getVal(['결제정보', '차_결제정보', 'payInfo', '결제내역', '결제방식']);
+      if (payInfo && payInfo.includes('/')) {
+        const parts = payInfo.split('/');
+        if (!bankName && parts[0]) bankName = parts[0].replace(/.*\(|\).*/g, '').trim();
+        if (!rawAccount && parts[1]) rawAccount = parts[1].replace(/.*\(|\).*/g, '').trim();
+      }
+    }
+
+    // 5-2. CRM 연동: 보험가입리스트(보험관리 시트) 내부 탐색
+    if (!bankName || !rawAccount) {
+      const insList = client['보험가입리스트'] || client['insuranceList'] || client['insList'] || client['가입내역'];
+      let listArr = [];
+      if (Array.isArray(insList)) {
+        listArr = insList;
+      } else if (typeof insList === 'string' && insList.trim().startsWith('[')) {
+        try { listArr = JSON.parse(insList); } catch(e) {}
+      }
+
+      if (Array.isArray(listArr) && listArr.length > 0) {
+        const getFromItem = (item, keys) => {
+          for (const k of keys) {
+            if (item[k] !== undefined && item[k] !== null && String(item[k]).trim()) return String(item[k]).trim();
+          }
+          return '';
+        };
+
+        for (const item of listArr) {
+          if (!bankName) bankName = getFromItem(item, ['은행명', '차_은행명', '환급은행', '이체은행', 'bank_name', 'bankName', 'bank']);
+          if (!rawAccount) rawAccount = getFromItem(item, ['계좌번호', '차_계좌번호', '환급계좌', '이체계좌', 'account_number', 'accountNumber', 'bankAccount']);
+          if (!bankOwner) bankOwner = getFromItem(item, ['예금주', '예금주명', '계좌예금주', '환급예금주', 'bankOwner', 'accountHolder', '계약자']);
+          if (!bankName || !rawAccount) {
+            const itemPay = getFromItem(item, ['결제정보', '차_결제정보', 'payInfo']);
+            if (itemPay && itemPay.includes('/')) {
+              const parts = itemPay.split('/');
+              if (!bankName && parts[0]) bankName = parts[0].replace(/.*\(|\).*/g, '').trim();
+              if (!rawAccount && parts[1]) rawAccount = parts[1].replace(/.*\(|\).*/g, '').trim();
+            }
+          }
+          if (bankName && rawAccount) break;
+        }
+      }
+    }
+
+    const bankAccount = String(rawAccount).replace(/[^0-9]/g, '');
+    bankOwner = bankOwner || rawName;
 
     // 6. 반려동물
     const petBreed = getVal(['반려동물', '품종', '견종', '묘종', 'pet_breed', 'petBreed']);
@@ -596,15 +673,17 @@
       setFieldValue('guideName', contractor.name);
       setFieldValue('guidePhone', contractor.phone);
 
-      // 계좌정보 주입 (계약자 우선, 없으면 피보험자)
-      const moneyTarget = contractor.bankAccount ? contractor : (insured || contractor);
-      injectBankData(moneyTarget);
+      // ★ [핵심] 다를 때는 100% 무조건 계약자/수익자 정보를 예금주 및 수령계좌로 주입!
+      injectBankData(contractor);
 
     } else if (!isDiff && insured) {
       // 동일 모드: 피보험자 계좌 및 보상안내 주입
       setFieldValue('guideName', insured.name);
       setFieldValue('guidePhone', insured.phone);
       setFieldValue('guideRelation', '본인');
+      injectBankData(insured);
+    } else if (isDiff && !contractor && insured) {
+      // 다름 모드이나 계약자가 아직 선택되지 않은 경우
       injectBankData(insured);
     }
 
@@ -635,7 +714,20 @@
     setFieldValue('bankAccount', target.bankAccount);
     setFieldValue('bankOwner', target.bankOwner || target.name);
     setFieldValue('bankOwnerRrn', target.rrn);
-    setFieldValue('bankOwnerRel', target === window.crmPickerState.insuredData ? '본인' : '계약자');
+
+    // 관계 설정: 다름 모드이고 계약자 대상이면 '계약자', 동일 모드이거나 피보험자 대상이면 '본인'
+    const isDiff = window.crmPickerState.isDifferent;
+    const isContractor = isDiff && (target === window.crmPickerState.contractorData);
+    setFieldValue('bankOwnerRel', isContractor ? '계약자' : '본인');
+
+    // 자동이체 수령 라디오버튼이 있는 경우 '아니오 (계좌 직접입력)'으로 명시적 선택하여 필드 노출 보장
+    const autoNoRadio = document.querySelector('input[name="autoTransfer"][value="no"]');
+    if (autoNoRadio) {
+      autoNoRadio.checked = true;
+      if (typeof window.toggleBankFields === 'function') {
+        window.toggleBankFields(false);
+      }
+    }
   }
 
   // 필드 값 안전 주입

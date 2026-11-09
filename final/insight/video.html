@@ -553,7 +553,24 @@
   <main class="insight-content">
     
     <!-- 통합 헤더 (Flexbox 대칭형 레이아웃) -->
-    
+    <div class="vlab-header-bg" style="padding: 10px 0 20px; display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <h1 class="vlab-main-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 900; color: var(--text-main);">
+          <span>보험 영상 아카데미</span>
+          <span style="font-size: 22px;">🎥</span>
+        </h1>
+        <div id="admin-add-btn-container" style="display: none; flex: 0 0 auto;">
+          <button class="sb-btn sb-btn-primary" id="sb-btn-admin-add" style="padding: 8px 16px; font-size: 13px; font-weight: 800; cursor: pointer;">➕ 새 교육 영상 등록</button>
+        </div>
+      </div>
+      
+      <div class="category-nav" id="video-category-tabs">
+        <a class="tab-btn active" id="tab-btn-sales" data-category="sales" style="cursor: pointer;">실전 영업 노하우</a>
+        <a class="tab-btn" id="tab-btn-product" data-category="product" style="cursor: pointer;">상품 및 보상 분석</a>
+        <a class="tab-btn" id="tab-btn-mindset" data-category="mindset" style="cursor: pointer;">영업마인드셋</a>
+        <a class="tab-btn" id="tab-btn-adjuster" data-category="adjuster" style="cursor: pointer;">손해사정사</a>
+      </div>
+    </div>
 
     <!-- 플레이리스트 레이아웃 -->
     <div class="playlist-layout">
@@ -1067,9 +1084,9 @@
         checkSbAndStart();
     }
     function bindEvents() {
-        
-        
-        
+        ['sales', 'product', 'mindset', 'adjuster'].forEach(cat => {
+            container.querySelector('#tab-btn-' + cat)?.addEventListener('click', () => filterVideoSubcategory(cat));
+        });
         
         container.querySelector('#btn-like-video')?.addEventListener('click', () => toggleVideoLike());
         container.querySelector('#video-comment-form')?.addEventListener('submit', (e) => submitVideoComment(e));
@@ -1127,12 +1144,19 @@
     }
     function filterVideoSubcategory(subcategory) {
         currentSubcategory = subcategory;
-        
-        
-        
-        
-        
-        filteredVideos = allVideos.filter(v => v.subcategory === subcategory);
+        container.querySelectorAll('.category-nav .tab-btn').forEach(btn => btn.classList.remove('active'));
+        container.querySelector('#tab-btn-' + subcategory)?.classList.add('active');
+
+        filteredVideos = allVideos.filter(v => {
+            if (!v.subcategory) return false;
+            const s = String(v.subcategory).trim();
+            if (subcategory === 'sales') return s === 'sales' || s.includes('영업 노하우') || s === '영업';
+            if (subcategory === 'product') return s === 'product' || s.includes('보상') || s.includes('상품');
+            if (subcategory === 'mindset') return s === 'mindset' || s.includes('마인드셋');
+            if (subcategory === 'adjuster') return s === 'adjuster' || s.includes('손해사정');
+            return s === subcategory;
+        });
+
         const sidebar = container.querySelector('#playlist-container');
         if (filteredVideos.length === 0) {
             sidebar.innerHTML = `

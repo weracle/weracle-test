@@ -1446,6 +1446,35 @@ async function confirmAndSendFax() {
 
     const result = await response.json();
     if (result.success) {
+      // [청구관리 구글 시트 자동 기록]
+      try {
+        if (typeof window.saveClaimRecordToGoogleSheet === 'function') {
+          await window.saveClaimRecordToGoogleSheet({
+            clientName: currentTargetClientName || '',
+            insuredName: (document.getElementById('insName') ? document.getElementById('insName').value : '') || currentTargetClientName || '',
+            insuredRrn: (document.getElementById('insRrn') ? document.getElementById('insRrn').value : '') || '',
+            contractorName: (document.getElementById('contName') ? document.getElementById('contName').value : '') || '',
+            contractorRrn: (document.getElementById('contRrn') ? document.getElementById('contRrn').value : '') || '',
+            companyName: currentTargetCompanyName || '',
+            category: (typeof selectedCategory !== 'undefined' ? selectedCategory : '') || '',
+            accType: (function() {
+              const r = document.querySelector('input[name="accType_ds"]:checked, input[name="accType_dh"]:checked, input[name="accType_pet"]:checked, input[name="accType"]:checked');
+              return r ? r.value : ((typeof selectedCategory !== 'undefined') ? selectedCategory : '');
+            })(),
+            accDate: (function() {
+              const el = document.getElementById('accDate_ds') || document.getElementById('accDate_dh') || document.getElementById('accDate_pet') || document.getElementById('accDate_liability') || document.getElementById('accDate_property') || document.getElementById('accDate');
+              return el ? el.value : '';
+            })(),
+            faxNumber: cleanFaxNumber || currentTargetFaxNumber || '',
+            receiptNum: result.receiptNum || '',
+            status: '접수완료',
+            plannerName: plannerName || ''
+          });
+        }
+      } catch (logErr) {
+        console.warn('[Claim Google Sheet Append Error]', logErr);
+      }
+
       alert('팩스 전송 및 알림톡 접수 안내가 정상 처리되었습니다!\n(접수번호: ' + result.receiptNum + ')\n\n통신사 전송 완료 시 카카오톡 알림톡으로 최종 결과가 안내됩니다.\n확인용 PDF 파일도 기기에 저장합니다.');
       downloadCurrentPdf();
       closePdfPreviewModal();

@@ -2238,4 +2238,173 @@
   window.attachCustomerPickerButtons = attachButtonsToForm;
   window.updateStepperBar = updateStepperBar;
 
+  // ==============================================================================
+  // [청구관리 구글 시트 자동 기록 엔진]
+  // ==============================================================================
+  async function saveClaimRecordToGoogleSheet(claimInfo) {
+    try {
+      if (!claimInfo) return false;
+
+      // 1. Google OAuth 토큰 및 시트 ID 탐색
+      const token = (function() {
+        try {
+          return localStorage.getItem('g_access_token') ||
+                 sessionStorage.getItem('g_access_token') ||
+                 (window.gToken) ||
+                 (window.parent && window.parent.gToken) ||
+                 (window.opener && window.opener.gToken);
+        } catch(e) { return null; }
+      })();
+
+      const sheetId = (function() {
+        try {
+          return localStorage.getItem('g_sheet_id') ||
+                 sessionStorage.getItem('g_sheet_id') ||
+                 (window.gSheetId) ||
+                 (window.parent && window.parent.gSheetId) ||
+                 (window.opener && window.opener.gSheetId);
+        } catch(e) { return null; }
+      })();
+
+      if (!token || !sheetId) {
+        console.warn('[Claim Logger] Google Sheet token or sheetId missing, skipping sheet append.');
+        return false;
+      }
+
+      console.log('[Claim Logger] 구글 시트 청구관리 기록 시작... SheetId:', sheetId);
+
+      // 2. 스프레드시트 메타데이터 조회하여 '청구관리' 탭 존재 여부 확인
+      const metaUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '?fields=sheets.properties.title';
+      const metaResp = await fetch(metaUrl, {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+
+      if (!metaResp.ok) {
+        console.warn('[Claim Logger] 메타데이터 조회 실패:', metaResp.status);
+        return false;
+      }
+
+      const metaJson = await metaResp.json();
+      const existingSheets = (metaJson.sheets || []).map(function(s) {
+        return s.properties && s.properties.title;
+      });
+
+      const tabTitle = '청구관리';
+      const tabExists = existingSheets.indexOf(tabTitle) !== -1;
+
+      // 3. '청구관리' 탭이 없으면 자동 생성 및 첫 행 헤더 입력
+      if (!tabExists) {
+        console.log('[Claim Logger] "청구관리" 탭이 없어 새로 생성합니다...');
+        const addSheetUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + ':batchUpdate';
+        const addSheetResp = await fetch(addSheetUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            requests: [
+              {
+                addSheet: {
+                  properties: {
+                    title: tabTitle,
+                    gridProperties: {
+                      frozenRowCount: 1
+                    }
+                  }
+                }
+              }
+            ]
+          })
+        });
+
+        if (!addSheetResp.ok) {
+          console.warn('[Claim Logger] "청구관리" 탭 생성 실패:', await addSheetResp.text());
+          return false;
+        }
+
+        // 헤더 행 작성
+        const headerRow = [
+          '청구일시',
+          '피보험자(고객명)',
+          '피보험자 주민번호',
+          '계약자',
+          '계약자 주민번호',
+          '접수보험사',
+          '청구분야',
+          '사고유형',
+          '사고/발병일자',
+          '수신팩스번호',
+          '팩스접수번호',
+          '전송상태',
+          '담당설계사'
+        ];
+
+        const headerUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/' + encodeURIComponent("'" + tabTitle + "'!A1") + ':append?valueInputOption=USER_ENTERED';
+        await fetch(headerUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            values: [headerRow]
+          })
+        });
+        console.log('[Claim Logger] "청구관리" 탭 헤더 생성 완료!');
+      }
+
+      // 4. 한국 시간 기준 일시 포맷팅 (YYYY-MM-DD HH:mm)
+      const now = new Date();
+      const kstOffset = 9 * 60 * 60 * 1000;
+      const kstDate = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + kstOffset);
+      const pad = function(n) { return String(n).padStart(2, '0'); };
+      const claimDateStr = kstDate.getFullYear() + '-' + pad(kstDate.getMonth() + 1) + '-' + pad(kstDate.getDate()) + ' ' + pad(kstDate.getHours()) + ':' + pad(kstDate.getMinutes());
+
+      // 5. 새 청구 데이터 행 구성
+      const newRow = [
+        claimDateStr,
+        claimInfo.insuredName || claimInfo.clientName || '',
+        claimInfo.insuredRrn || '',
+        claimInfo.contractorName || claimInfo.insuredName || claimInfo.clientName || '',
+        claimInfo.contractorRrn || claimInfo.insuredRrn || '',
+        claimInfo.companyName || '',
+        claimInfo.category || '',
+        claimInfo.accType || '',
+        claimInfo.accDate || '',
+        claimInfo.faxNumber || '',
+        claimInfo.receiptNum || '',
+        claimInfo.status || '접수완료',
+        claimInfo.plannerName || ''
+      ];
+
+      // 6. 구글 시트 '청구관리' 탭의 맨 아래에 한 줄 추가 (append)
+      const appendUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/' + encodeURIComponent("'" + tabTitle + "'!A1") + ':append?valueInputOption=USER_ENTERED';
+      const appendResp = await fetch(appendUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          values: [newRow]
+        })
+      });
+
+      if (appendResp.ok) {
+        console.log('[Claim Logger] "청구관리" 탭에 청구 이력 저장 성공:', newRow);
+        return true;
+      } else {
+        console.warn('[Claim Logger] 행 추가 실패:', await appendResp.text());
+        return false;
+      }
+    } catch (err) {
+      console.error('[Claim Logger Critical Error]', err);
+      return false;
+    }
+  }
+
+  window.saveClaimRecordToGoogleSheet = saveClaimRecordToGoogleSheet;
+
+
 })();

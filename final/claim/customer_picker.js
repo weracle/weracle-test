@@ -102,25 +102,94 @@
     });
   }
 
-  // 2. 고객 데이터 정제기 (CRM 한글/영문 모든 키 100% 호환)
+  // 2. 고객 데이터 정제기 (CRM 한글/영문/공백/배열 모든 구조 완벽 호환)
   function sanitizeCustomer(client) {
     if (!client) return null;
 
-    // 1. 고객명 (한글: 고객명, 이름, 대표자명, 상호명 / 영문: name, client_name, customerName)
-    const rawName = client['고객명'] || client['이름'] || client['대표자명'] || client['상호명']
-                 || client.name || client.client_name || client.customerName || '';
+    // 만약 배열 형태로 넘어왔을 경우 (Google Sheets raw 2D row)
+    if (Array.isArray(client)) {
+      const colName = String(client[1] || client[0] || '').trim();
+      if (!colName || colName === '고객명' || colName === '이름' || colName === '성명') return null;
+      const colPhone = String(client[8] || client[11] || client[2] || '').trim();
+      const colRrn = String(client[3] || client[6] || '').trim();
+      const colAddr = String(client[11] || client[13] || '').trim();
+      if (!colName && !colPhone && !colRrn) return null;
 
-    // 2. 전화번호 (한글: 폰번호, 휴대폰, 전화번호, 연락처, 휴대전화 / 영문: phone, mobile, client_phone)
-    const rawPhone = client['폰번호'] || client['휴대폰'] || client['전화번호'] || client['연락처'] || client['휴대전화']
-                  || client.phone || client.mobile || client.client_phone || '';
+      const cleanRrn = colRrn.replace(/[^0-9]/g, '');
+      const cleanPhone = colPhone.replace(/[^0-9]/g, '');
+      return {
+        raw: client,
+        name: colName,
+        phone: cleanPhone,
+        formattedPhone: formatPhoneDisplay(cleanPhone),
+        rrn: cleanRrn,
+        rrnFront: cleanRrn.length >= 6 ? cleanRrn.substring(0, 6) : '',
+        rrnBack: cleanRrn.length >= 7 ? cleanRrn.substring(6) : '',
+        address: colAddr,
+        bankName: '',
+        bankAccount: '',
+        bankOwner: colName,
+        pets: []
+      };
+    }
 
-    // 3. 주민번호 (한글: 주민번호, 주민등록번호, 생년월일, 사업자번호 / 영문: rrn, jumin, client_jumin)
-    const rawRrn = client['주민번호'] || client['주민등록번호'] || client['생년월일'] || client['사업자번호']
-                || client.rrn || client.jumin || client.client_jumin || client.idNum || '';
+    // 객체 형태: 키 앞뒤 공백 및 대소문자 무관 안전 추출 헬퍼
+    const getVal = (possibleKeys) => {
+      for (const k of possibleKeys) {
+        if (client[k] !== undefined && client[k] !== null) {
+          const val = String(client[k]).trim();
+          if (val) return val;
+        }
+      }
+      const objKeys = Object.keys(client);
+      for (const k of possibleKeys) {
+        const normTarget = k.replace(/\s+/g, '').toLowerCase();
+        const found = objKeys.find(ok => ok.replace(/\s+/g, '').toLowerCase() === normTarget);
+        if (found && client[found] !== undefined && client[found] !== null) {
+          const val = String(client[found]).trim();
+          if (val) return val;
+        }
+      }
+      return '';
+    };
 
-    // 4. 주소 (한글: 주소, 사업장주소, 상세주소 / 영문: address, addr, client_address)
-    const rawAddress = client['주소'] || client['사업장주소'] || client['상세주소']
-                    || client.address || client.addr || client.client_address || '';
+    // 1. 이름
+    const rawName = getVal(['고객명', '이름', '성명', '피보험자', '피보험자명', '대표자명', '상호명', 'name', 'client_name', 'customerName']);
+    if (!rawName || rawName === '고객명' || rawName === '이름' || rawName === '성명') return null;
+
+    // 2. 전화번호
+    const rawPhone = getVal(['폰번호', '휴대폰', '전화번호', '핸드폰', '연락처', '휴대전화', 'phone', 'mobile', 'client_phone']);
+
+    // 3. 주민번호 / 생년월일
+    const rawRrn = getVal(['주민번호', '주민등록번호', '생년월일', '주민', '사업자번호', 'rrn', 'jumin', 'client_jumin', 'idNum']);
+
+    // 빈 행 필터링: 이름과 폰번호/주민번호가 모두 없는 가짜 행 제외
+    if (!rawName && !rawPhone && !rawRrn) return null;
+
+    // 4. 주소
+    const rawAddress = getVal(['주소', '자택주소', '거주지', '사업장주소', '상세주소', '소재지', 'address', 'addr', 'client_address']);
+
+    // 5. 은행 / 계좌
+    const bankName = getVal(['은행명', '은행', '환급은행', 'bank_name', 'bankName', 'bank']);
+    const rawAccount = getVal(['계좌번호', '계좌', '환급계좌', 'account_number', 'accountNumber', 'bankAccount']);
+    const bankAccount = rawAccount.replace(/[^0-9]/g, '');
+    const bankOwner = getVal(['예금주', '예금주명', 'account_holder', 'accountHolder', 'bankOwner']) || rawName;
+
+    // 6. 반려동물
+    const petBreed = getVal(['반려동물', '품종', '견종', '묘종', 'pet_breed', 'petBreed']);
+    const petName = getVal(['동물이름', '반려동물이름', '반려견이름', 'pet_name', 'petName']);
+    let pets = [];
+    if (Array.isArray(client.pets) && client.pets.length > 0) {
+      pets = client.pets;
+    } else if (petBreed || petName) {
+      pets.push({
+        name: petName,
+        breed: petBreed,
+        birth: getVal(['동물생일', 'pet_birth']),
+        gender: getVal(['동물성별', 'pet_gender']),
+        color: getVal(['동물모색', 'pet_color'])
+      });
+    }
 
     const cleanRrn = String(rawRrn).replace(/[^0-9]/g, '');
     let rrnFront = '', rrnBack = '';
@@ -139,45 +208,12 @@
     let cleanPhone = String(rawPhone).replace(/[^0-9]/g, '');
     if (cleanPhone.length === 10 && cleanPhone.startsWith('10')) cleanPhone = '0' + cleanPhone;
     if (cleanPhone.length === 8) cleanPhone = '010' + cleanPhone;
-    let formattedPhone = cleanPhone;
-    if (cleanPhone.length === 11) {
-      formattedPhone = cleanPhone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
-    } else if (cleanPhone.length === 10) {
-      formattedPhone = cleanPhone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
-    }
-
-    // 5. 은행 / 계좌 (한글: 은행명, 은행, 계좌번호, 계좌, 예금주 / 영문: bank_name, account_number 등)
-    const bankName = client['은행명'] || client['은행'] || client.bank_name || client.bankName || client.bank || '';
-    const bankAccount = String(client['계좌번호'] || client['계좌'] || client.account_number || client.accountNumber || client.bankAccount || '').replace(/[^0-9]/g, '');
-    const bankOwner = client['예금주'] || client.account_holder || client.accountHolder || client.bankOwner || rawName;
-
-    // 6. 반려동물 정보 (CRM 시트의 '반려동물', '동물이름' 및 pets 배열 모두 지원)
-    let pets = [];
-    if (Array.isArray(client.pets) && client.pets.length > 0) {
-      pets = client.pets;
-    } else if (client['반려동물'] || client['동물이름']) {
-      pets.push({
-        name: client['동물이름'] || client['반려동물이름'] || '',
-        breed: client['반려동물'] || client['품종'] || '',
-        birth: client['동물생일'] || '',
-        gender: client['동물성별'] || '',
-        color: client['동물모색'] || ''
-      });
-    } else if (client.pet_name || client.petName) {
-      pets.push({
-        name: client.pet_name || client.petName || '',
-        breed: client.pet_breed || client.petBreed || '',
-        birth: client.pet_birth || client.petBirth || '',
-        gender: client.pet_gender || client.petGender || '',
-        color: client.pet_color || client.petColor || ''
-      });
-    }
 
     return {
       raw: client,
       name: rawName,
       phone: cleanPhone,
-      formattedPhone: formattedPhone,
+      formattedPhone: formatPhoneDisplay(cleanPhone),
       rrn: cleanRrn,
       rrnFront: rrnFront,
       rrnBack: rrnBack,
@@ -189,179 +225,13 @@
     };
   }
 
-  // 3. 모달 DOM 생성
-  function ensureModalDom() {
-    if (document.getElementById('crmPickerModalBackdrop')) return;
-
-    const modalHtml = `
-      <div id="crmPickerModalBackdrop" class="crm-modal-backdrop" onclick="handleBackdropClick(event)">
-        <div class="crm-modal-card" onclick="event.stopPropagation()">
-          
-          <!-- 모달 헤더 -->
-          <div class="crm-modal-header">
-            <div class="crm-header-text">
-              <h3 id="crmModalTitle">📋 보험금 청구 대상자 설정</h3>
-              <p id="crmModalSubtitle">청구서 작성 전 대상자 관계 및 고객 정보를 설정합니다.</p>
-            </div>
-            <button type="button" class="crm-modal-close" onclick="closeCrmPickerModal()" aria-label="닫기">✕</button>
-          </div>
-
-          <!-- 메인 설정 위저드 뷰 (Setup View) -->
-          <div id="crmSetupView" class="crm-view-container">
-            <div id="crmSetupScroll" class="crm-modal-scroll">
-              <!-- JS에서 동적 렌더링 -->
-            </div>
-            <div class="crm-modal-footer">
-              <button type="button" class="btn-footer-skip" onclick="skipToDirectWrite()">
-                ✍️ 건너뛰고 직접 수기 작성
-              </button>
-              <button type="button" class="btn-footer-apply" onclick="applyCustomerSetup()">
-                ✨ 설정 완료 및 청구서 작성 시작
-              </button>
-            </div>
-          </div>
-
-          <!-- 고객 검색 뷰 (Search View) -->
-          <div id="crmSearchView" class="crm-view-container" style="display: none;">
-            <div class="crm-search-bar-wrap">
-              <button type="button" class="btn-search-back" onclick="switchView('setup')">
-                ‹ 이전
-              </button>
-              <div class="crm-search-input-box">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input type="text" id="crmSearchInput" placeholder="이름, 연락처(뒷자리), 주민번호 앞자리 검색..." autocomplete="off">
-                <button type="button" id="crmSearchClear" class="crm-search-clear" onclick="clearSearchInput()" style="display: none;">✕</button>
-              </div>
-            </div>
-            <div class="crm-search-role-guide" id="crmSearchRoleGuide">
-              <!-- 피보험자 선택 모드 or 계약자 선택 모드 안내 문구 -->
-            </div>
-            <div id="crmCustomerList" class="crm-customer-list">
-              <!-- 고객 카드 동적 렌더링 -->
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- 성공 토스트 알림 -->
-      <div id="crmSuccessToast" class="crm-success-toast">
-        <span class="toast-icon">✨</span>
-        <span id="crmToastMessage" class="toast-message">청구 대상자 설정이 완료되었습니다.</span>
-      </div>
-    `;
-
-    const wrap = document.createElement('div');
-    wrap.innerHTML = modalHtml;
-    document.body.appendChild(wrap);
-
-    // 검색 인풋 이벤트 리스너
-    const searchInput = document.getElementById('crmSearchInput');
-    const clearBtn = document.getElementById('crmSearchClear');
-    if (searchInput) {
-      searchInput.addEventListener('input', function (e) {
-        window.crmPickerState.searchKeyword = e.target.value.trim();
-        if (clearBtn) {
-          clearBtn.style.display = window.crmPickerState.searchKeyword ? 'flex' : 'none';
-        }
-        renderCustomerList();
-      });
-      searchInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-          clearSearchInput();
-        }
-      });
-    }
+  function formatPhoneDisplay(num) {
+    if (!num) return '';
+    const clean = String(num).replace(/[^0-9]/g, '');
+    if (clean.length === 11) return clean.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+    if (clean.length === 10) return clean.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+    return clean;
   }
-
-  // 모달 열림 여부 확인
-  function isModalOpen() {
-    const backdrop = document.getElementById('crmPickerModalBackdrop');
-    return backdrop && backdrop.classList.contains('active');
-  }
-
-  // 백드롭 클릭 핸들러
-  window.handleBackdropClick = function (e) {
-    if (e.target && e.target.id === 'crmPickerModalBackdrop') {
-      closeCrmPickerModal();
-    }
-  };
-
-  // 검색 인풋 초기화
-  window.clearSearchInput = function () {
-    const searchInput = document.getElementById('crmSearchInput');
-    const clearBtn = document.getElementById('crmSearchClear');
-    if (searchInput) {
-      searchInput.value = '';
-      searchInput.focus();
-    }
-    if (clearBtn) clearBtn.style.display = 'none';
-    window.crmPickerState.searchKeyword = '';
-    renderCustomerList();
-  };
-
-  // 뷰 전환 (setup vs search)
-  window.switchView = function (viewName) {
-    window.crmPickerState.currentView = viewName;
-    const setupView = document.getElementById('crmSetupView');
-    const searchView = document.getElementById('crmSearchView');
-    const titleEl = document.getElementById('crmModalTitle');
-    const subtitleEl = document.getElementById('crmModalSubtitle');
-
-    if (viewName === 'setup') {
-      if (setupView) setupView.style.display = 'flex';
-      if (searchView) searchView.style.display = 'none';
-      if (titleEl) titleEl.innerText = '📋 보험금 청구 대상자 설정';
-      if (subtitleEl) subtitleEl.innerText = '청구서 작성 전 대상자 관계 및 고객 정보를 설정합니다.';
-      renderSetupView();
-    } else {
-      if (setupView) setupView.style.display = 'none';
-      if (searchView) searchView.style.display = 'flex';
-      const roleText = window.crmPickerState.selectingRole === 'insured' ? '피보험자 (치료받은 분)' : '계약자 / 수익자 (보험금 수령자)';
-      if (titleEl) titleEl.innerText = '🔍 ' + roleText + ' 고객 찾기';
-      if (subtitleEl) subtitleEl.innerText = '위라클랩 CRM에 등록된 고객을 검색하여 선택해주세요.';
-
-      const guideEl = document.getElementById('crmSearchRoleGuide');
-      if (guideEl) {
-        guideEl.innerHTML = '<strong>' + roleText + '</strong>로 지정할 고객을 선택해주세요.';
-      }
-
-      const searchInput = document.getElementById('crmSearchInput');
-      if (searchInput) {
-        searchInput.value = '';
-        setTimeout(() => searchInput.focus(), 80);
-      }
-      window.crmPickerState.searchKeyword = '';
-      renderCustomerList();
-    }
-  };
-
-  // 모달 열기
-  window.openCrmPickerModal = function () {
-    ensureModalDom();
-    injectCustomStyles();
-    initDataSync();
-
-    const backdrop = document.getElementById('crmPickerModalBackdrop');
-    if (backdrop) {
-      backdrop.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-
-    switchView('setup');
-  };
-
-  // 모달 닫기
-  window.closeCrmPickerModal = function () {
-    const backdrop = document.getElementById('crmPickerModalBackdrop');
-    if (backdrop) {
-      backdrop.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-  };
 
   // ========================================================
   // [메인 뷰 1] 대상자 사전 설정 위저드 (Setup View)
@@ -559,6 +429,9 @@
   // ========================================================
   // [메인 뷰 2] 고객 검색 목록 렌더러 (Search View)
   // ========================================================
+  // ========================================================
+  // [고객 리스트 렌더링 및 실시간 검색]
+  // ========================================================
   function renderCustomerList() {
     const listEl = document.getElementById('crmCustomerList');
     if (!listEl) return;
@@ -569,13 +442,14 @@
       window.crmPickerState.customers = all;
     }
 
+    // 유효한 고객만 정제 (빈 행/헤더행 완전 제외)
+    const validCustomers = all.map(c => sanitizeCustomer(c)).filter(Boolean);
+
     const keyword = (window.crmPickerState.searchKeyword || '').toLowerCase().trim();
 
-    let filtered = all;
+    let filtered = validCustomers;
     if (keyword) {
-      filtered = all.filter(c => {
-        const s = sanitizeCustomer(c);
-        if (!s) return false;
+      filtered = validCustomers.filter(s => {
         const name = (s.name || '').toLowerCase();
         const phone = (s.phone || '').replace(/[^0-9]/g, '');
         const rrn = (s.rrn || '').replace(/[^0-9]/g, '');
@@ -596,8 +470,7 @@
     }
 
     let html = '';
-    filtered.forEach((client, idx) => {
-      const sanitized = sanitizeCustomer(client);
+    filtered.forEach((sanitized, idx) => {
       const petCount = sanitized.pets ? sanitized.pets.length : 0;
       const petBadge = petCount > 0 ? `<span class="badge-pet">🐾 반려견 ${petCount}마리</span>` : '';
       const bankBadge = sanitized.bankName ? `<span class="badge-bank">${sanitized.bankName}</span>` : '';
@@ -626,37 +499,23 @@
       `;
     });
 
+    window._lastFilteredCustomers = filtered;
     listEl.innerHTML = html;
   }
 
-  // 고객 검색 목록에서 고객 선택 완료
+  // 고객 선택 핸들러
   window.selectCustomerFromList = function (idx) {
-    let all = window.crmPickerState.customers || [];
-    const keyword = (window.crmPickerState.searchKeyword || '').toLowerCase().trim();
-    let filtered = all;
-    if (keyword) {
-      filtered = all.filter(c => {
-        const s = sanitizeCustomer(c);
-        if (!s) return false;
-        const name = (s.name || '').toLowerCase();
-        const phone = (s.phone || '').replace(/[^0-9]/g, '');
-        const rrn = (s.rrn || '').replace(/[^0-9]/g, '');
-        const addr = (s.address || '').toLowerCase();
-        return name.includes(keyword) || phone.includes(keyword) || rrn.includes(keyword) || addr.includes(keyword);
-      });
-    }
+    const list = window._lastFilteredCustomers || [];
+    const sanitized = list[idx];
+    if (!sanitized) return;
 
-    const client = filtered[idx];
-    if (!client) return;
-
-    const sanitized = sanitizeCustomer(client);
     const role = window.crmPickerState.selectingRole;
 
     if (role === 'insured') {
-      window.crmPickerState.insuredCustomer = client;
+      window.crmPickerState.insuredCustomer = sanitized.raw;
       window.crmPickerState.insuredData = sanitized;
     } else {
-      window.crmPickerState.contractorCustomer = client;
+      window.crmPickerState.contractorCustomer = sanitized.raw;
       window.crmPickerState.contractorData = sanitized;
     }
 

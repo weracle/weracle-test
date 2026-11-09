@@ -1390,6 +1390,10 @@ try {
 } catch(e) { console.warn("보험관리 패치 실패", e); }
 allClients = [...general, ...corp];
 globalCustomerData = allClients;
+try {
+    localStorage.setItem("weracle_crm_customers_cache", JSON.stringify(globalCustomerData));
+    localStorage.setItem("demo_crm_data", JSON.stringify(globalCustomerData));
+} catch(e) {}
 } catch(e) {
 console.warn("Failed to fetch all clients for metrics", e);
 allClients = globalCustomerData; // fallback

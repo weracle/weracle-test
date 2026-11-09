@@ -3961,9 +3961,9 @@ function loadCustomerForFamily(task) {
     if (statusSel) {
         const rawSt = String(client["상태"] || "").trim();
         if (rawSt.includes("관심") || rawSt.includes("가망")) statusSel.value = "관심고객";
-        else if (rawSt.includes("상담") || rawSt.includes("설계")) statusSel.value = "상담설계중";
-        else if (rawSt.includes("계약") || rawSt.includes("체결") || rawSt.includes("유지")) statusSel.value = "계약유지고객";
-        else if (rawSt.includes("케어") || rawSt.includes("집중") || rawSt.includes("VIP")) statusSel.value = "집중케어";
+        else if (rawSt.includes("상담") || rawSt.includes("설계")) statusSel.value = "상담고객";
+        else if (rawSt.includes("계약") || rawSt.includes("체결") || rawSt.includes("유지")) statusSel.value = "계약고객";
+        else if (rawSt.includes("케어") || rawSt.includes("집중") || rawSt.includes("VIP")) statusSel.value = "케어고객";
         else statusSel.value = "관심고객";
     }
 
@@ -4446,9 +4446,9 @@ const touchInsightVal = (checkedPillVals.length > 0)
 
 let normalizedStatus = formData.get("상태") || (existingClient ? existingClient["상태"] : "관심고객");
 if (normalizedStatus.includes("관심") || normalizedStatus.includes("가망")) normalizedStatus = "관심고객";
-else if (normalizedStatus.includes("상담") || normalizedStatus.includes("설계")) normalizedStatus = "상담설계중";
-else if (normalizedStatus.includes("계약") || normalizedStatus.includes("체결") || normalizedStatus.includes("유지")) normalizedStatus = "계약유지고객";
-else if (normalizedStatus.includes("케어") || normalizedStatus.includes("집중") || normalizedStatus.includes("VIP")) normalizedStatus = "집중케어";
+else if (normalizedStatus.includes("상담") || normalizedStatus.includes("설계")) normalizedStatus = "상담고객";
+else if (normalizedStatus.includes("계약") || normalizedStatus.includes("체결") || normalizedStatus.includes("유지")) normalizedStatus = "계약고객";
+else if (normalizedStatus.includes("케어") || normalizedStatus.includes("집중") || normalizedStatus.includes("VIP")) normalizedStatus = "케어고객";
 else normalizedStatus = "관심고객";
 
 let finalGainHistory = "";

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <script>window.location.replace('/meta_ads.html');</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>광고관리 - 위라클</title>
+  
+  <!-- Pretendard 폰트 및 FontAwesome -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --navy-dark: #0f172a;
+      --text-main: #1e293b;
+      --text-sub: #475569;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --accent: #f59e0b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 32px 20px 80px;
+    }
+
+    .ad-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* 상단 헤더 */
+    .ad-header {
+      margin-bottom: 28px;
+    }
+    .ad-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      background: #fef3c7;
+      color: #b45309;
+      margin-bottom: 10px;
+    }
+    .ad-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--navy-dark);
+      letter-spacing: -0.5px;
+    }
+    .ad-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* 통계 KPI 카드 */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    }
+    .kpi-info-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .kpi-info-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--navy-dark);
+    }
+    .kpi-icon-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: #eff6ff;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    /* 본문 메인 카드 */
+    .main-section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--navy-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-create-ad {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-create-ad:hover {
+      background: var(--primary-hover);
+    }
+
+    /* 빈 데이터 알림 영역 */
+    .empty-ad-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .empty-icon {
+      font-size: 48px;
+      color: #cbd5e1;
+      margin-bottom: 16px;
+    }
+    .empty-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+    .empty-desc {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ad-container">
+    <!-- 헤더 -->
+    <div class="ad-header">
+      <div class="ad-tag"><i class="fa-solid fa-bullhorn"></i> 마케팅 솔루션</div>
+      <h1 class="ad-title">광고관리</h1>
+      <p class="ad-desc">온라인 광고 캠페인 집행 현황 및 고객 유입 성과를 실시간으로 모니터링하고 관리합니다.</p>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-info-title">진행 중인 캠페인</div>
+          <div class="kpi-info-val">0<span style="font-size:16px; font-weight:600; color:var(--text-muted);">건</span></div>
+        </div>
+        <div class="kpi-icon-wrap" style="background:#fef3c7; color:#b45309;"><i class="fa-solid fa-toggle-on"></i></div>
+      </div>
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-info-title">누적 노출수</div>
+          <div class="kpi-info-val">0<span style="font-size:16px; font-weight:600; color:var(--text-muted);">회</span></div>
+        </div>
+        <div class="kpi-icon-wrap" style="background:#eff6ff; color:#0284c7;"><i class="fa-solid fa-eye"></i></div>
+      </div>
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-info-title">총 유입 클릭수</div>
+          <div class="kpi-info-val">0<span style="font-size:16px; font-weight:600; color:var(--text-muted);">클릭</span></div>
+        </div>
+        <div class="kpi-icon-wrap" style="background:#ecfdf5; color:#059669;"><i class="fa-solid fa-arrow-pointer"></i></div>
+      </div>
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-info-title">신규 상담 접수</div>
+          <div class="kpi-info-val">0<span style="font-size:16px; font-weight:600; color:var(--text-muted);">건</span></div>
+        </div>
+        <div class="kpi-icon-wrap" style="background:#fdf2f8; color:#db2777;"><i class="fa-solid fa-user-plus"></i></div>
+      </div>
+    </div>
+
+    <!-- 광고 목록 메인 카드 -->
+    <div class="main-section-card">
+      <div class="section-head">
+        <div class="section-title">
+          <i class="fa-solid fa-list-check" style="color:var(--primary);"></i>
+          <span>광고 캠페인 목록</span>
+        </div>
+        <button type="button" class="btn-create-ad" onclick="alert('신규 광고 캠페인 등록 기능이 곧 제공될 예정입니다.')">
+          <i class="fa-solid fa-plus"></i> 새 캠페인 만들기
+        </button>
+      </div>
+
+      <div class="empty-ad-state">
+        <div class="empty-icon"><i class="fa-solid fa-bullhorn"></i></div>
+        <div class="empty-title">등록된 광고 캠페인이 없습니다.</div>
+        <div class="empty-desc">새 캠페인을 등록하고 타겟 고객 유입을 시작해 보세요.</div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

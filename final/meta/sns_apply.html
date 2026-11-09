@@ -1,0 +1,2986 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>퍼스널 브랜딩 매거진 & 1:1 무료 맞춤 점검 신청</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --theme-main: #113f67;
+      --theme-accent: #0284c7;
+      --theme-soft: #f0f9ff;
+      --cta-color: #f97316;
+      --text: #1e293b;
+      --sub: #64748b;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: #e2e8f0;
+      color: var(--text);
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+    }
+
+    .studio-workspace {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 26px;
+      padding: 0;
+      min-height: 100vh;
+    }
+    body.is-editing .studio-workspace {
+      padding: 18px 14px;
+    }
+
+    .easy-editor-panel {
+      display: none;
+      width: 465px;
+      max-width: 100%;
+      background: #ffffff;
+      border-radius: 22px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.16);
+      border: 1px solid #cbd5e1;
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 500;
+    }
+    body.is-editing .easy-editor-panel {
+      display: flex;
+    }
+
+    .eep-header {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 15px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .eep-title { font-size: 14.5px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+    .eep-sub-tip {
+      background: #fff7ed;
+      color: #c2410c;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 9px 16px;
+      border-bottom: 1px solid #fed7aa;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      line-height: 1.4;
+    }
+
+    .eep-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      padding: 9px 12px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .eep-tab-btn {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      padding: 7px 5px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.15s;
+      text-align: center;
+    }
+    .eep-tab-btn.active {
+      background: var(--theme-main);
+      color: #ffffff;
+      border-color: var(--theme-main);
+      box-shadow: 0 3px 8px rgba(17, 63, 103, 0.2);
+    }
+
+    .eep-body {
+      padding: 16px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+    .eep-tab-pane { display: none; flex-direction: column; gap: 14px; }
+    .eep-tab-pane.active { display: flex; }
+
+    .eep-card {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 14px;
+      transition: all 0.3s ease;
+    }
+    @keyframes pulseCardHighlight {
+      0% { border-color: #f97316; box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.55); background: #fff7ed; }
+      50% { border-color: #f97316; box-shadow: 0 0 0 8px rgba(249, 115, 22, 0); background: #fff7ed; }
+      100% { border-color: #f97316; box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); background: #f8fafc; }
+    }
+    .eep-card.highlight-focus {
+      border-color: #f97316 !important;
+      animation: pulseCardHighlight 1.4s ease 2;
+    }
+
+    .eep-card-title {
+      font-size: 12.5px;
+      font-weight: 900;
+      color: #0f172a;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .eep-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+      color: #475569;
+      margin-bottom: 5px;
+      margin-top: 9px;
+    }
+    .eep-label:first-child { margin-top: 0; }
+    .eep-input, .eep-textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #0f172a;
+      background: #ffffff;
+      font-family: inherit;
+      outline: none;
+      transition: 0.2s;
+    }
+    .eep-input:focus, .eep-textarea:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+    }
+
+    .fine-tune-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 9px 11px;
+      margin-top: 7px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .ft-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .ft-row span.ft-name {
+      width: 102px;
+      flex-shrink: 0;
+      color: #475569;
+    }
+    .ft-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--theme-accent);
+      cursor: pointer;
+      height: 5px;
+    }
+    .ft-row span.ft-val {
+      width: 42px;
+      text-align: right;
+      font-weight: 900;
+      color: var(--theme-main);
+      font-size: 11px;
+    }
+
+    .pill-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .pill-choice-btn {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      color: #334155;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pill-choice-btn:hover { border-color: #94a3b8; background: #f1f5f9; }
+    .pill-choice-btn.active {
+      background: #eff6ff;
+      border-color: #2563eb;
+      color: #1d4ed8;
+    }
+
+    .icon-picker-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .icon-pick-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: 1.5px solid #cbd5e1;
+      background: #ffffff;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .icon-pick-btn.active {
+      border-color: #f97316;
+      background: #fff7ed;
+      transform: scale(1.08);
+    }
+
+    .eep-footer {
+      padding: 11px 16px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 8px;
+    }
+
+    @media (max-width: 960px) {
+      .studio-workspace { flex-direction: column; align-items: center; }
+      .easy-editor-panel { position: relative; top: 0; width: 480px; max-height: none; margin-bottom: 20px; }
+    }
+
+    .magazine-wrapper {
+      width: 100%;
+      max-width: 480px;
+      background: #ffffff;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+      box-shadow: 0 22px 65px rgba(15, 23, 42, 0.18);
+      padding-bottom: 68px;
+      flex-shrink: 0;
+    }
+    body.is-editing .magazine-wrapper {
+      border-radius: 26px;
+      border: 4px solid #0f172a;
+    }
+
+    .serif-font { font-family: 'Gowun Batang', serif; }
+    .script-en { font-family: 'Caveat', cursive; }
+    .script-kr { font-family: 'Nanum Pen Script', cursive; }
+
+    body.is-editing [data-edit-link] {
+      cursor: pointer;
+      transition: outline 0.15s, box-shadow 0.15s;
+    }
+    body.is-editing [data-edit-link]:hover {
+      outline: 2px dashed #f97316 !important;
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+    .smart-hover-badge {
+      position: fixed;
+      z-index: 9999;
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 10px;
+      border-radius: 20px;
+      border: 1.5px solid #f97316;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+      pointer-events: none;
+      display: none;
+      white-space: nowrap;
+    }
+    body.is-editing .pan-photo-target { cursor: grab; }
+    body.is-editing .pan-photo-target:active { cursor: grabbing; }
+    body.is-editing .free-drag-item { cursor: move; }
+
+    .ratio-photo-frame {
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+    .ratio-photo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 50% 50%;
+      transform-origin: center center;
+      display: block;
+      pointer-events: none;
+      will-change: transform, object-position;
+    }
+
+    .mag-header {
+      position: sticky; top: 0; z-index: 300;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      height: 54px; padding: 0 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    .mag-brand { display: flex; align-items: center; gap: 8px; }
+    .mag-logo-mark {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: linear-gradient(135deg, var(--theme-main), var(--theme-accent));
+      color: #fff; font-weight: 900; font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .mag-brand-name { font-size: 13px; font-weight: 900; color: var(--theme-main); letter-spacing: -0.3px; }
+    .mag-brand-sub { font-size: 9.5px; color: var(--sub); font-weight: 600; display: block; }
+
+    .btn-toggle-edit {
+      background: var(--theme-main); color: #fff; border: none;
+      padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s;
+      box-shadow: 0 4px 12px rgba(17, 63, 103, 0.2);
+    }
+    body.is-editing .btn-toggle-edit { background: #10b981; }
+
+    .pr-photo-sticker {
+      position: absolute;
+      z-index: 18;
+      user-select: none;
+      max-width: 280px;
+      transition: transform 0.15s;
+    }
+    .sticker-pos-tl { left: 18px; top: 18px; }
+    .sticker-pos-tr { right: 18px; top: 18px; }
+    .sticker-pos-bl { left: 18px; bottom: 135px; }
+    .sticker-pos-br { right: 18px; bottom: 135px; }
+
+    .sticker-style-hand {
+      font-family: 'Nanum Pen Script', cursive;
+      font-size: 25px;
+      line-height: 1.15;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(15, 23, 42, 0.85), 0 0 4px rgba(0,0,0,0.6);
+      transform: rotate(-4deg);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    .sticker-style-serif {
+      font-family: 'Gowun Batang', serif;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+      color: #ffffff;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(6px);
+      padding: 8px 14px;
+      border-left: 3.5px solid var(--cta-color);
+      border-radius: 4px 12px 12px 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    }
+    .sticker-style-badge {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 12.5px;
+      font-weight: 900;
+      color: var(--theme-main);
+      background: rgba(255, 255, 255, 0.92);
+      padding: 7px 14px;
+      border-radius: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.22);
+      border: 1.5px solid rgba(255,255,255,0.9);
+    }
+
+    .hero-stage {
+      position: relative;
+      height: 570px;
+      background: linear-gradient(160deg, var(--theme-soft) 0%, #ffffff 55%, var(--theme-soft) 100%);
+      overflow: hidden;
+    }
+    .hero-diagonal-bg {
+      position: absolute;
+      top: 0; right: -40px;
+      width: 68%; height: 100%;
+      background: linear-gradient(165deg, var(--theme-soft) 0%, var(--theme-accent) 45%, var(--theme-main) 100%);
+      clip-path: polygon(32% 0, 100% 0, 100% 100%, 0% 100%);
+      z-index: 1;
+    }
+    .hero-person-photo {
+      position: absolute;
+      right: -10px; bottom: 0;
+      width: 80%; height: 96%;
+      z-index: 2;
+      mask-image: linear-gradient(to right, transparent 0%, black 16%, black 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 16%, black 100%);
+    }
+
+    .hero-custom-logo {
+      position: absolute;
+      left: 22px; top: 18px;
+      z-index: 16;
+      display: none;
+      user-select: none;
+      padding: 6px 12px;
+      border-radius: 12px;
+    }
+    .hero-custom-logo img {
+      width: 115px; height: auto; display: block; pointer-events: none;
+    }
+
+    .hero-draggable-title {
+      position: absolute;
+      left: 20px; top: 58px;
+      z-index: 12;
+      width: 300px;
+    }
+    .hero-main-headline {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.32;
+      letter-spacing: -0.8px;
+      transform: rotate(-2deg);
+      transform-origin: left center;
+      text-shadow: 0 2px 12px rgba(255,255,255,0.95);
+      word-break: keep-all;
+      white-space: pre-line;
+    }
+
+    .hero-draggable-sub {
+      position: absolute;
+      left: 20px; top: 198px;
+      z-index: 12;
+      width: 275px;
+    }
+    .hero-sub-lead {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.55;
+      background: rgba(255, 255, 255, 0.82);
+      display: block;
+      padding: 8px 12px;
+      border-radius: 10px;
+      word-break: keep-all;
+      white-space: pre-line;
+    }
+    .hero-en-brush {
+      font-size: 23px;
+      color: var(--theme-accent);
+      line-height: 1.05;
+      transform: rotate(-4deg);
+      margin: 6px 0 0 4px;
+      text-shadow: 0 1px 6px rgba(255,255,255,0.85);
+    }
+
+    .hero-side-vertical {
+      position: absolute;
+      right: 14px; top: 185px;
+      z-index: 14;
+      color: #ffffff;
+      font-size: 11.5px; font-weight: 700; line-height: 1.55;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.45);
+      text-align: right;
+      background: rgba(17, 63, 103, 0.65);
+      backdrop-filter: blur(5px);
+      padding: 11px 12px;
+      border-radius: 12px;
+      border-left: 3px solid var(--cta-color);
+      white-space: pre-line;
+    }
+
+    .hero-floating-card {
+      position: absolute;
+      left: 18px; bottom: 34px;
+      width: 245px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(8px);
+      border-radius: 18px;
+      padding: 14px 16px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
+      border: 1px solid rgba(255,255,255,0.95);
+      z-index: 11;
+    }
+    .hfc-top { display: flex; align-items: center; gap: 11px; }
+    .hfc-icon {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--theme-main), var(--theme-accent));
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+    .hfc-label { font-size: 11px; color: var(--theme-accent); font-weight: 800; margin-bottom: 2px; }
+    .hfc-name { font-size: 16.5px; font-weight: 900; color: var(--theme-main); letter-spacing: -0.3px; }
+    .hfc-tagline {
+      margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0;
+      font-size: 11px; color: #475569; font-weight: 700;
+      display: flex; align-items: center; gap: 5px;
+    }
+
+    .hero-wave-bottom {
+      position: absolute; bottom: -1px; left: 0; width: 100%; z-index: 8; line-height: 0; pointer-events: none;
+    }
+
+    .essay-section {
+      background: linear-gradient(180deg, #ffffff 0%, #fef9ee 70%, #ffffff 100%);
+      padding: 46px 28px 50px;
+      position: relative;
+      overflow: hidden;
+    }
+    .essay-tag { font-size: 10.5px; font-weight: 800; color: var(--theme-accent); letter-spacing: 2px; margin-bottom: 10px; display: block; }
+    .essay-title { font-size: 21px; font-weight: 700; color: #0f172a; line-height: 1.5; margin-bottom: 20px; word-break: keep-all; white-space: pre-line; }
+    .essay-body { font-size: 13.5px; color: #475569; line-height: 1.95; font-weight: 400; white-space: pre-line; word-break: keep-all; position: relative; z-index: 2; }
+    .essay-watermark { font-size: 52px; font-weight: 900; color: rgba(17, 63, 103, 0.045); letter-spacing: 4px; position: absolute; bottom: 8px; left: -10px; white-space: nowrap; pointer-events: none; }
+
+    .slash-trio-section { padding: 10px 0 36px; background: #ffffff; position: relative; }
+    .slash-photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); height: 170px; gap: 4px; overflow: hidden; }
+    .slash-photo-item {
+      position: relative;
+      clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+    }
+    .slash-photo-item:first-child { clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%); }
+    .slash-photo-item:last-child { clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%); }
+
+    .slash-badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 12px; margin-top: -22px; position: relative; z-index: 4; }
+    .slash-badge-card { background: #ffffff; border-radius: 12px; padding: 12px 8px 10px; text-align: center; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08); border: 1px solid #f1f5f9; }
+    .slash-badge-icon { width: 32px; height: 32px; border-radius: 50%; background: var(--theme-soft); color: var(--theme-accent); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; font-size: 13.5px; }
+    .slash-badge-title { font-size: 12px; font-weight: 900; color: var(--theme-main); margin-bottom: 3px; }
+    .slash-badge-sub { font-size: 10px; color: var(--sub); font-weight: 600; line-height: 1.3; white-space: pre-line; }
+
+    .expertise-summary-copy { text-align: center; padding: 28px 24px 8px; }
+    .expertise-summary-copy p { font-size: 14.5px; font-weight: 700; color: #1e293b; line-height: 1.75; word-break: keep-all; white-space: pre-line; }
+
+    .mid-portrait-section {
+      position: relative;
+      height: 500px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 28px 24px;
+      overflow: hidden;
+      background: #0f172a;
+    }
+    .mid-bg-img-wrap {
+      position: absolute; inset: 0; z-index: 1;
+    }
+    .mid-portrait-overlay {
+      position: absolute; inset: 0; z-index: 2;
+      background: linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(15,23,42,0.22) 45%, rgba(15,23,42,0.84) 100%);
+      pointer-events: none;
+    }
+    .mid-portrait-content { position: relative; z-index: 5; color: #ffffff; }
+    .mid-portrait-tag { display: inline-block; background: var(--cta-color); color: #ffffff; font-size: 10.5px; font-weight: 800; padding: 4px 11px; border-radius: 20px; margin-bottom: 10px; }
+    .mid-portrait-title { font-size: 22px; font-weight: 700; line-height: 1.42; margin-bottom: 8px; word-break: keep-all; white-space: pre-line; text-shadow: 0 2px 10px rgba(0,0,0,0.45); }
+    .mid-portrait-sub { font-size: 13px; opacity: 0.92; line-height: 1.6; word-break: keep-all; white-space: pre-line; }
+
+    .editorial-split-section { position: relative; background: #ffffff; }
+    .ed-left-mint { background: linear-gradient(180deg, var(--theme-soft) 0%, #fefce8 100%); padding: 38px 24px 32px; position: relative; }
+    .ed-heading-en { font-size: 20px; font-weight: 700; color: var(--theme-main); letter-spacing: 1.5px; margin-bottom: 6px; }
+    .ed-heading-kr { font-size: 14px; font-weight: 800; color: #334155; margin-bottom: 20px; }
+    .standard-icon-list { display: flex; flex-direction: column; gap: 12px; }
+    .std-row { display: flex; align-items: center; gap: 13px; background: rgba(255, 255, 255, 0.92); padding: 13px 15px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.95); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03); }
+    .std-num-circle { width: 34px; height: 34px; border-radius: 50%; background: var(--theme-main); color: #ffffff; font-weight: 900; font-size: 12.5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .std-text-title { font-size: 13.5px; font-weight: 900; color: #1e293b; margin-bottom: 2px; }
+    .std-text-sub { font-size: 11.5px; color: #64748b; font-weight: 600; line-height: 1.4; }
+
+    .ed-right-magazine { padding: 42px 24px 38px; background: #ffffff; position: relative; }
+    .speech-bubble-hand { display: inline-block; border: 1.5px solid #cbd5e1; border-radius: 30px; padding: 6px 18px; font-size: 20px; color: #334155; background: #fff; margin-bottom: 14px; transform: rotate(-2deg); box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+    .goods-slider-wrap { position: relative; width: 100%; height: 310px; border-radius: 16px; margin-bottom: 18px; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1); background: #0f172a; overflow: hidden; }
+    .goods-slide-stage { width: 100%; height: 100%; border-radius: 16px; }
+    .mag-big-num { position: absolute; top: -28px; right: 14px; font-size: 56px; font-weight: 700; color: var(--theme-accent); opacity: 0.35; font-family: 'Gowun Batang', serif; line-height: 1; z-index: 6; pointer-events: none; }
+    .slider-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.92); color: var(--theme-main); border: none; font-size: 16px; font-weight: 900; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .slider-nav-btn.prev { left: 10px; }
+    .slider-nav-btn.next { right: 10px; }
+    .slider-counter-pill { position: absolute; top: 12px; left: 12px; background: rgba(15, 23, 42, 0.75); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 14px; z-index: 10; pointer-events: none; }
+    .slider-dots { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; z-index: 10; }
+    .slider-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); cursor: pointer; transition: 0.2s; }
+    .slider-dot.active { width: 20px; border-radius: 10px; background: #ffffff; }
+    .mag-caption-title { font-size: 15.5px; font-weight: 900; color: var(--theme-main); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .mag-caption-desc { font-size: 13px; color: #475569; line-height: 1.78; word-break: keep-all; white-space: pre-line; }
+
+    .topics-section { background: linear-gradient(180deg, #f8fafc 0%, var(--theme-soft) 100%); padding: 42px 22px 44px; border-top: 1px solid #e2e8f0; position: relative; }
+    .topics-header { text-align: center; margin-bottom: 24px; }
+    .topics-leaf { color: var(--theme-accent); font-size: 18px; margin-bottom: 4px; }
+    .topics-en { font-size: 23px; font-weight: 700; color: var(--theme-main); letter-spacing: 2px; }
+    .topics-kr { font-size: 13px; color: #475569; font-weight: 700; margin-top: 4px; }
+    .care-list-wrap { display: flex; flex-direction: column; gap: 11px; }
+    .care-list-row { display: flex; align-items: flex-start; gap: 13px; background: #ffffff; padding: 15px 16px; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04); }
+    .care-num-badge { width: 34px; height: 34px; border-radius: 10px; background: var(--theme-soft); color: var(--theme-accent); font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; border: 1px solid rgba(2, 132, 199, 0.2); }
+    .care-pill-tag { display: inline-block; background: var(--theme-main); color: #ffffff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; margin-bottom: 5px; }
+    .care-list-title { font-size: 14px; font-weight: 900; color: #0f172a; line-height: 1.38; margin-bottom: 3px; word-break: keep-all; }
+    .care-list-sub { font-size: 12px; color: #64748b; font-weight: 600; line-height: 1.48; word-break: keep-all; }
+
+    .ending-photo-banner {
+      position: relative;
+      height: 490px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 28px 24px 66px;
+      overflow: hidden;
+      background: #0f172a;
+    }
+    .ending-bg-img-wrap {
+      position: absolute; inset: 0; z-index: 1;
+    }
+    .ending-photo-overlay {
+      position: absolute; inset: 0; z-index: 2;
+      background: linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(15,23,42,0.3) 45%, rgba(15,23,42,0.88) 100%);
+      pointer-events: none;
+    }
+    .ending-closing-box { position: relative; z-index: 5; color: #ffffff; }
+    .ending-closing-quote { font-size: 22px; color: #38bdf8; margin-bottom: 6px; }
+    .ending-closing-title { font-size: 22px; font-weight: 700; line-height: 1.45; margin-bottom: 8px; word-break: keep-all; white-space: pre-line; text-shadow: 0 2px 10px rgba(0,0,0,0.45); }
+    .ending-closing-sign { font-size: 13px; color: #cbd5e1; font-weight: 600; }
+
+    .ending-overlap-card { position: relative; z-index: 6; margin: -42px 18px 0; background: #ffffff; border-radius: 18px; padding: 20px 20px 18px; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12); border: 1px solid #e2e8f0; text-align: center; }
+    .ending-badge { display: inline-flex; align-items: center; gap: 5px; background: #fff7ed; color: var(--cta-color); border: 1px solid #fed7aa; font-size: 11px; font-weight: 800; padding: 4px 11px; border-radius: 20px; margin-bottom: 8px; }
+    .ending-title { font-size: 18px; font-weight: 900; color: var(--theme-main); line-height: 1.38; word-break: keep-all; margin-bottom: 6px; }
+    .ending-sub { font-size: 12px; color: var(--sub); font-weight: 600; }
+
+    .form-body { padding: 20px 22px 34px; background: #ffffff; }
+    .question-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 15px 16px; margin-bottom: 18px; }
+    .q-title { font-size: 13.5px; font-weight: 900; color: var(--theme-main); margin-bottom: 10px; line-height: 1.4; }
+    .radio-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #334155; padding: 9px 11px; border-radius: 9px; background: #ffffff; border: 1px solid #e2e8f0; margin-bottom: 7px; cursor: pointer; }
+    .radio-item:last-child { margin-bottom: 0; }
+    .radio-item input { accent-color: var(--cta-color); width: 16px; height: 16px; margin: 0; }
+
+    .field-group { margin-bottom: 14px; }
+    .field-label { display: block; font-size: 12.5px; font-weight: 800; color: #334155; margin-bottom: 6px; }
+    .field-input, .field-select { width: 100%; padding: 13px 14px; border: 1.5px solid #cbd5e1; border-radius: 11px; font-size: 14px; font-weight: 600; color: var(--text); background: #f8fafc; outline: none; }
+    .field-input:focus, .field-select:focus { background: #ffffff; border-color: var(--theme-accent); }
+
+    .privacy-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 11px; padding: 12px 14px; margin: 16px 0 20px; font-size: 11.5px; color: var(--sub); }
+    .privacy-label { display: flex; align-items: center; gap: 8px; font-weight: 800; color: #334155; cursor: pointer; }
+    .privacy-label input { width: 16px; height: 16px; accent-color: var(--theme-main); margin: 0; }
+
+    .btn-submit-pill {
+      width: 100%; background: var(--cta-color); color: #ffffff; border: none;
+      padding: 16px 20px; border-radius: 40px; font-size: 15.5px; font-weight: 900; cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18); display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+
+    .bottom-sticky-bar {
+      position: fixed; bottom: 0; width: 100%; max-width: 480px; height: 56px;
+      display: grid; grid-template-columns: 1fr 1fr; z-index: 250;
+      box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.14);
+    }
+    .bsb-left { background: var(--theme-main); color: #ffffff; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 800; }
+    .bsb-right { background: var(--cta-color); color: #ffffff; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 900; }
+
+    .reward-view { display: none; padding: 26px 22px 34px; text-align: center; background: #fff; }
+    .reward-icon { width: 58px; height: 58px; border-radius: 50%; background: #ecfdf5; color: #10b981; font-size: 26px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+    .reward-card { background: var(--theme-soft); border: 1.5px solid #bae6fd; border-radius: 16px; padding: 18px; text-align: left; margin: 16px 0; }
+    .reward-card h4 { margin: 0 0 10px 0; font-size: 15px; font-weight: 900; color: var(--theme-main); }
+    .tip-list { margin: 0; padding-left: 18px; font-size: 13px; color: #334155; line-height: 1.65; font-weight: 600; }
+    .btn-download-pdf { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--theme-main); color: #ffffff; text-decoration: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 900; margin-top: 12px; }
+  </style>
+</head>
+<body>
+
+  <input type="file" id="globalImagePicker" accept="image/*" style="display:none;" />
+  <input type="file" id="goodsMultiPicker" accept="image/*" multiple style="display:none;" />
+
+  <div class="smart-hover-badge" id="smartHoverBadge">✏️ 클릭하면 왼쪽 수정창으로 바로 이동합니다</div>
+
+  <div class="studio-workspace">
+
+    <aside class="easy-editor-panel" id="easyEditorPanel">
+      <div class="eep-header">
+        <div class="eep-title">
+          <i class="fa-solid fa-wand-magic-sparkles" style="color:#38bdf8;"></i>
+          <span>내 PR 페이지 스마트 스튜디오</span>
+        </div>
+        <button type="button" onclick="saveAndCloseStudio()" style="background:#10b981; color:#fff; border:none; padding:6px 12px; border-radius:16px; font-size:11.5px; font-weight:800; cursor:pointer;">
+          ✓ 서버 저장 및 완료
+        </button>
+      </div>
+
+      <div class="eep-sub-tip">
+        <i class="fa-solid fa-bolt"></i>
+        <span><strong>오른쪽 화면에서 고치고 싶은 글씨나 사진을 클릭</strong>해보세요! 왼쪽 편집창이 해당 위치로 자동 이동합니다.</span>
+      </div>
+
+      <div class="eep-tabs">
+        <button type="button" class="eep-tab-btn active" onclick="switchEditorTab(0, true)">① 컬러·로고</button>
+        <button type="button" class="eep-tab-btn" onclick="switchEditorTab(1, true)">② 메인화보</button>
+        <button type="button" class="eep-tab-btn" onclick="switchEditorTab(2, true)">③ 철학·전문성</button>
+        <button type="button" class="eep-tab-btn" onclick="switchEditorTab(3, true)">④ 상담화보</button>
+        <button type="button" class="eep-tab-btn" onclick="switchEditorTab(4, true)">⑤ 기준·굿즈</button>
+        <button type="button" class="eep-tab-btn" onclick="switchEditorTab(5, true)">⑥ 혜택·엔딩</button>
+      </div>
+
+      <div class="eep-body" id="eepScrollBody">
+
+        <div class="eep-tab-pane active" id="eepTab0">
+          <div class="eep-card" id="cardColorTheme">
+            <div class="eep-card-title">🎨 1. 내 퍼스널 컬러 선택</div>
+            <div class="pill-btn-group" style="margin-bottom:10px;">
+              <button type="button" class="pill-choice-btn" onclick="applyColorTheme('#113f67','#0284c7','#f0f9ff','#f97316')">
+                <span style="width:12px;height:12px;border-radius:50%;background:#113f67;"></span> 시그니처 네이비
+              </button>
+              <button type="button" class="pill-choice-btn" onclick="applyColorTheme('#0f766e','#14b8a6','#f0fdfa','#f59e0b')">
+                <span style="width:12px;height:12px;border-radius:50%;background:#0f766e;"></span> 에메랄드 틸
+              </button>
+              <button type="button" class="pill-choice-btn" onclick="applyColorTheme('#5c4033','#b45309','#fefce8','#ea580c')">
+                <span style="width:12px;height:12px;border-radius:50%;background:#5c4033;"></span> 웜 브라운
+              </button>
+              <button type="button" class="pill-choice-btn" onclick="applyColorTheme('#831843','#db2777','#fdf2f8','#e11d48')">
+                <span style="width:12px;height:12px;border-radius:50%;background:#831843;"></span> 로즈골드
+              </button>
+              <button type="button" class="pill-choice-btn" onclick="applyColorTheme('#1e3a2f','#15803d','#f0fdf4','#d97706')">
+                <span style="width:12px;height:12px;border-radius:50%;background:#1e3a2f;"></span> 포레스트 그린
+              </button>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center; font-size:11.5px; font-weight:700;">
+              <label>배경톤 직접선택: <input type="color" id="pickerMainColor" value="#113f67" onchange="applyCustomPickers()" /></label>
+              <label>신청 버튼색: <input type="color" id="pickerCtaColor" value="#f97316" onchange="applyCustomPickers()" /></label>
+            </div>
+          </div>
+
+          <div class="eep-card" id="cardLogoSetting">
+            <div class="eep-card-title">
+              <span>🏷️ 2. 본인 로고(PNG) 첨부 & 시인성 모드</span>
+              <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="chkLogoVisible" onchange="toggleLogoShow(this.checked)" /> 표시</label>
+            </div>
+            <button type="button" class="pill-choice-btn" style="width:100%; justify-content:center; background:#eff6ff; border-color:#38bdf8; color:#0284c7; padding:9px; margin-bottom:8px;" onclick="triggerImageUpload('LOGO_PNG')">
+              <i class="fa-solid fa-upload"></i> 내 PC에서 로고(PNG) 파일 선택하기
+            </button>
+
+            <div class="fine-tune-box">
+              <div class="ft-row">
+                <span class="ft-name">📏 로고 크기</span>
+                <input type="range" id="rangeLogoSize" min="40" max="240" value="115" oninput="updateLogoFineTune()" />
+                <span class="ft-val" id="valLogoSize">115px</span>
+              </div>
+
+              <span class="eep-label" style="margin-top:4px;">시인성 모드 선택 (광채 선택 시 네모 배경판은 자동 OFF!)</span>
+              <div class="pill-btn-group">
+                <button type="button" class="pill-choice-btn" id="btnLogoMode_none" onclick="setLogoEffectMode('none')">원본(배경없음)</button>
+                <button type="button" class="pill-choice-btn active" id="btnLogoMode_white" onclick="setLogoEffectMode('white')">🤍 화이트 배경판</button>
+                <button type="button" class="pill-choice-btn" id="btnLogoMode_dark" onclick="setLogoEffectMode('dark')">🖤 블랙·네이비판</button>
+                <button type="button" class="pill-choice-btn" id="btnLogoMode_glow" onclick="setLogoEffectMode('glow')">🌟 글씨 테두리 광채</button>
+              </div>
+
+              <div class="ft-row" id="rowLogoIntensity" style="margin-top:4px;">
+                <span class="ft-name" id="lblLogoIntensity">💧 배경판 투명도</span>
+                <input type="range" id="rangeLogoOpacity" min="0" max="100" value="85" oninput="updateLogoFineTune()" />
+                <span class="ft-val" id="valLogoOpacity">85%</span>
+              </div>
+
+              <div class="ft-row" style="padding-top:5px; border-top:1px dashed #e2e8f0;">
+                <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+                  <input type="checkbox" id="chkLogoInvert" onchange="updateLogoFineTune()" /> ✨ 로고 글씨를 순백색(White)으로 색상 반전
+                </label>
+              </div>
+            </div>
+
+            <span class="eep-label">빠른 위치 정렬 (오른쪽 화면에서 마우스 드래그도 가능)</span>
+            <div class="pill-btn-group">
+              <button type="button" class="pill-choice-btn" onclick="snapHeroElement('heroLogoBox', 20, 16)">↖ 좌측 상단</button>
+              <button type="button" class="pill-choice-btn" onclick="snapHeroElement('heroLogoBox', 175, 16)">⬆ 중앙 상단</button>
+              <button type="button" class="pill-choice-btn" onclick="snapHeroElement('heroLogoBox', 320, 16)">↗ 우측 상단</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="eep-tab-pane" id="eepTab1">
+          <div class="eep-card" id="cardHeroPhoto">
+            <div class="eep-card-title">📸 1. 메인 프로필 사진 & 구도 미세조절</div>
+            <button type="button" class="pill-choice-btn" style="width:100%; justify-content:center; background:#eff6ff; border-color:#38bdf8; color:#0284c7; padding:9px; margin-bottom:6px;" onclick="triggerImageUpload('HERO_MAIN')">
+              <i class="fa-solid fa-camera"></i> 메인 프로필 사진 올리기
+            </button>
+            <div class="fine-tune-box">
+              <div class="ft-row">
+                <span class="ft-name">↔ 좌우 초점</span>
+                <input type="range" id="rangeHeroX" min="0" max="100" value="50" oninput="onSliderPhotoPos('heroPhotoBox','Hero')" />
+                <span class="ft-val" id="valHeroX">50%</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">↕ 상하 초점</span>
+                <input type="range" id="rangeHeroY" min="0" max="100" value="15" oninput="onSliderPhotoPos('heroPhotoBox','Hero')" />
+                <span class="ft-val" id="valHeroY">15%</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">🔍 원본비율 확대</span>
+                <input type="range" id="rangeHeroZoom" min="100" max="220" value="100" oninput="onSliderPhotoPos('heroPhotoBox','Hero')" />
+                <span class="ft-val" id="valHeroZoom">100%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="eep-card" id="cardHeroTypo">
+            <div class="eep-card-title">✍️ 2. 메인 타이틀 & 서브문구 (투명도·크기·폭 조절)</div>
+            <span class="eep-label">메인 타이틀 문구</span>
+            <textarea class="eep-textarea" id="inpHeroHeadline" rows="3" oninput="syncHeroTexts()">숫자와 약관 너머에,
+당신의 빛나는 내일이
+있습니다.</textarea>
+
+            <div class="fine-tune-box">
+              <div class="ft-row">
+                <span class="ft-name">🔠 타이틀 크기</span>
+                <input type="range" id="rangeTitleSize" min="18" max="42" value="28" oninput="updateHeroTypoFineTune()" />
+                <span class="ft-val" id="valTitleSize">28px</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">↔ 타이틀 가로폭</span>
+                <input type="range" id="rangeTitleWidth" min="180" max="440" value="300" oninput="updateHeroTypoFineTune()" />
+                <span class="ft-val" id="valTitleWidth">300px</span>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+              <span class="eep-label" style="margin:0;">서브 소개문구</span>
+              <label style="font-size:11px; font-weight:800; cursor:pointer;">
+                <input type="checkbox" id="chkSubVisible" checked onchange="updateHeroTypoFineTune()" /> 화면에 표시
+              </label>
+            </div>
+            <textarea class="eep-textarea" id="inpHeroSubLead" rows="2" oninput="syncHeroTexts()" style="margin-top:5px;">가입 권유보다 숨은 보험금부터 찾아드리는
+성장과 안심의 1:1 전담 파트너</textarea>
+
+            <div class="fine-tune-box">
+              <div class="ft-row">
+                <span class="ft-name">🔠 서브 글자크기</span>
+                <input type="range" id="rangeSubSize" min="11" max="20" value="13" oninput="updateHeroTypoFineTune()" />
+                <span class="ft-val" id="valSubSize">13px</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">↔ 서브 가로폭</span>
+                <input type="range" id="rangeSubWidth" min="160" max="430" value="275" oninput="updateHeroTypoFineTune()" />
+                <span class="ft-val" id="valSubWidth">275px</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">🎨 배경 박스색</span>
+                <div class="pill-btn-group" style="flex:1;">
+                  <button type="button" class="pill-choice-btn active" id="btnSubBgWhite" onclick="setSubBaseColor('255,255,255','#1e293b')">🤍 화이트박스</button>
+                  <button type="button" class="pill-choice-btn" id="btnSubBgDark" onclick="setSubBaseColor('15,23,42','#ffffff')">🖤 블랙박스</button>
+                </div>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">💧 배경 투명도</span>
+                <input type="range" id="rangeSubOpacity" min="0" max="100" value="82" oninput="updateHeroTypoFineTune()" />
+                <span class="ft-val" id="valSubOpacity">82%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="eep-card" id="cardStickerHero" style="background:#fff7ed; border-color:#fed7aa;">
+            <div class="eep-card-title">
+              <span>👑 3. 메인 사진 위 PR 기호 & 감성 멘트</span>
+              <label style="font-size:11.5px; cursor:pointer;"><input type="checkbox" id="chkStickerHero" checked onchange="syncSticker('hero')" /> 표시</label>
+            </div>
+            <div class="icon-picker-grid" id="iconGridHero">
+              <button type="button" class="icon-pick-btn active" onclick="pickStickerIcon('hero','👑')">👑</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('hero','✔')">✔</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('hero','✨')">✨</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('hero','🏆')">🏆</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('hero','💡')">💡</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('hero','🌿')">🌿</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('hero','🛡️')">🛡️</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('hero','❤️')">❤️</button>
+            </div>
+            <span class="eep-label">감각적인 PR 한 줄 멘트</span>
+            <input type="text" class="eep-input" id="inpStickerTextHero" value="무리한 권유 ZERO · 숨은 보험금 찾기 전담" oninput="syncSticker('hero')" />
+            <span class="eep-label">폰트 & 디자인 스타일</span>
+            <div class="pill-btn-group">
+              <button type="button" class="pill-choice-btn active" onclick="setStickerStyle('hero','sticker-style-badge', 13, 92)">🏷️ 깔끔 캡슐배지</button>
+              <button type="button" class="pill-choice-btn" onclick="setStickerStyle('hero','sticker-style-hand', 25, 0)">🖋️ 감성 손글씨</button>
+              <button type="button" class="pill-choice-btn" onclick="setStickerStyle('hero','sticker-style-serif', 15, 70)">📖 화보 명조체</button>
+            </div>
+            <div class="fine-tune-box">
+              <div class="ft-row">
+                <span class="ft-name">🔠 멘트 글자크기</span>
+                <input type="range" id="rangeStickerSize_hero" min="11" max="34" value="13" oninput="syncSticker('hero')" />
+                <span class="ft-val" id="valStickerSize_hero">13px</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">💧 배경 투명도</span>
+                <input type="range" id="rangeStickerOpacity_hero" min="0" max="100" value="92" oninput="syncSticker('hero')" />
+                <span class="ft-val" id="valStickerOpacity_hero">92%</span>
+              </div>
+            </div>
+            <div class="pill-btn-group" style="margin-top:6px;">
+              <button type="button" class="pill-choice-btn" onclick="setStickerPos('hero','tl')">↖ 좌상</button>
+              <button type="button" class="pill-choice-btn active" onclick="setStickerPos('hero','tr')">↗ 우상</button>
+              <button type="button" class="pill-choice-btn" onclick="setStickerPos('hero','bl')">↙ 좌하</button>
+              <button type="button" class="pill-choice-btn" onclick="setStickerPos('hero','br')">↘ 우하</button>
+            </div>
+          </div>
+
+          <div class="eep-card" id="cardHeroProfile">
+            <div class="eep-card-title">🪪 4. 내 이름·직급 명함 카드</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div>
+                <span class="eep-label">성함</span>
+                <input type="text" class="eep-input" id="inpAgentName" value="박보환" oninput="syncHeroTexts()" />
+              </div>
+              <div>
+                <span class="eep-label">브랜드 별칭</span>
+                <input type="text" class="eep-input" id="inpAgentNick" value="(보답화니)" oninput="syncHeroTexts()" />
+              </div>
+            </div>
+            <span class="eep-label">소속 및 직함</span>
+            <input type="text" class="eep-input" id="inpAgentRole" value="위라클매니지먼트 대표팀장" oninput="syncHeroTexts()" />
+            <span class="eep-label">하단 한 줄 전문성 소개</span>
+            <input type="text" class="eep-input" id="inpAgentTagline" value="30개 생·손보사 비교 · 청구 전담 파트너" oninput="syncHeroTexts()" />
+
+            <div id="subCardVertBox" style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <span class="eep-label" style="margin:0;">우측 세로 포인트 박스</span>
+                <label style="font-size:11.5px; font-weight:800; cursor:pointer;">
+                  <input type="checkbox" id="chkVertBox" checked onchange="syncHeroTexts()" /> 화면에 표시
+                </label>
+              </div>
+              <textarea class="eep-textarea" id="inpVertText" rows="2" oninput="syncHeroTexts()">듣고, 공감하고,
+함께 내일을 지킵니다.</textarea>
+              <div class="fine-tune-box">
+                <div class="ft-row">
+                  <span class="ft-name">💧 박스 배경투명도</span>
+                  <input type="range" id="rangeVertOpacity" min="0" max="100" value="65" oninput="syncHeroTexts()" />
+                  <span class="ft-val" id="valVertOpacity">65%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="eep-tab-pane" id="eepTab2">
+          <div class="eep-card" id="cardPhilosophy">
+            <div class="eep-card-title">📖 1. 나의 보험 철학 (에세이)</div>
+            <span class="eep-label">철학 메인 타이틀</span>
+            <textarea class="eep-textarea" id="inpPhilTitle" rows="2" oninput="syncPhilosophy()">사람과 사람 사이의 신뢰,
+그것이 제가 일하는 원동력입니다.</textarea>
+            <span class="eep-label">철학 본문 이야기</span>
+            <textarea class="eep-textarea" id="inpPhilBody" rows="5" oninput="syncPhilosophy()">매달 꼬박꼬박 내는 보험료인데, 정작 병원에 갈 때면 "이게 청구가 될까? 누구한테 물어보지?" 하고 망설였던 적 없으신가요.
+
+저는 무작정 새로운 보험 가입을 권유하지 않습니다.
+고객님이 이미 가지고 계신 옛날 보험 속 소중한 보장을 먼저 찾아내어 지켜드리고, 불필요하게 새어 나가는 중복 특약만 정직하게 덜어내는 것.
+
+보험으로 받은 믿음에 평생의 관리로 보답하는 '보답화니'의 첫 번째 약속입니다.</textarea>
+          </div>
+
+          <div class="eep-card" id="cardSlashExpertise">
+            <div class="eep-card-title">
+              <span>⚡ 2. 3단 사선 사진 첨부 & 개별 위치·크기 미세조절</span>
+              <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="chkShowExpertise" checked onchange="toggleSecById('secExpertise', this.checked)" /> 표시</label>
+            </div>
+
+            <span class="eep-label">조절할 사선 사진 선택 (1 · 2 · 3번)</span>
+            <div class="pill-btn-group" style="margin-bottom:8px;">
+              <button type="button" class="pill-choice-btn active" id="btnPickSlash1" onclick="selectSlashPhotoForTune('slashPhoto1', 1)">1번 사진 선택</button>
+              <button type="button" class="pill-choice-btn" id="btnPickSlash2" onclick="selectSlashPhotoForTune('slashPhoto2', 2)">2번 사진 선택</button>
+              <button type="button" class="pill-choice-btn" id="btnPickSlash3" onclick="selectSlashPhotoForTune('slashPhoto3', 3)">3번 사진 선택</button>
+            </div>
+            <button type="button" class="pill-choice-btn" style="width:100%; justify-content:center; background:#eff6ff; border-color:#38bdf8; color:#0284c7; padding:8px; margin-bottom:6px;" onclick="triggerSelectedSlashUpload()">
+              <i class="fa-solid fa-camera"></i> <span id="lblSlashUploadBtn">선택된 [1번 사진] 파일 변경하기</span>
+            </button>
+
+            <div class="fine-tune-box">
+              <div class="ft-row">
+                <span class="ft-name">↔ 좌우 초점</span>
+                <input type="range" id="rangeSlashX" min="0" max="100" value="50" oninput="onSliderSlashPos()" />
+                <span class="ft-val" id="valSlashX">50%</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">↕ 상하 초점</span>
+                <input type="range" id="rangeSlashY" min="0" max="100" value="50" oninput="onSliderSlashPos()" />
+                <span class="ft-val" id="valSlashY">50%</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">🔍 원본비율 확대</span>
+                <input type="range" id="rangeSlashZoom" min="100" max="220" value="100" oninput="onSliderSlashPos()" />
+                <span class="ft-val" id="valSlashZoom">100%</span>
+              </div>
+            </div>
+
+            <span class="eep-label">첫 번째 강점 (지식)</span>
+            <input type="text" class="eep-input" id="inpExp1T" value="실전 약관·보상 지식" oninput="syncExpertise()" style="margin-bottom:4px;" />
+            <input type="text" class="eep-input" id="inpExp1S" value="까다로운 분쟁·약관까지 정확하게 해석합니다" oninput="syncExpertise()" />
+
+            <span class="eep-label">두 번째 강점 (경험)</span>
+            <input type="text" class="eep-input" id="inpExp2T" value="누적 1,200건+ 분석" oninput="syncExpertise()" style="margin-bottom:4px;" />
+            <input type="text" class="eep-input" id="inpExp2S" value="풍부한 현장 경험으로 보장 공백을 찾습니다" oninput="syncExpertise()" />
+
+            <span class="eep-label">세 번째 강점 (심사/노하우)</span>
+            <input type="text" class="eep-input" id="inpExp3T" value="유병자·맞춤 심사" oninput="syncExpertise()" style="margin-bottom:4px;" />
+            <input type="text" class="eep-input" id="inpExp3S" value="건강검진 유소견·병력도 최적 조건으로 연결" oninput="syncExpertise()" />
+          </div>
+        </div>
+
+        <div class="eep-tab-pane" id="eepTab3">
+          <div class="eep-card" id="cardMidPortrait">
+            <div class="eep-card-title">
+              <span>😊 1. 중단 대형 상담 화보 & 위치·크기 미세조절</span>
+              <label style="font-size:11.5px; cursor:pointer;"><input type="checkbox" id="chkShowMidPortrait" checked onchange="toggleSecById('secMidPortrait', this.checked)" /> 섹션 표시</label>
+            </div>
+            <button type="button" class="pill-choice-btn" style="width:100%; justify-content:center; background:#eff6ff; border-color:#38bdf8; color:#0284c7; padding:9px; margin-bottom:6px;" onclick="triggerImageUpload('MID_PORTRAIT')">
+              <i class="fa-solid fa-camera"></i> 상담하는 내 사진 올리기
+            </button>
+
+            <div class="fine-tune-box">
+              <div class="ft-row">
+                <span class="ft-name">↔ 좌우 초점</span>
+                <input type="range" id="rangeMidX" min="0" max="100" value="50" oninput="onSliderPhotoPos('secMidPortrait','Mid')" />
+                <span class="ft-val" id="valMidX">50%</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">↕ 상하 초점</span>
+                <input type="range" id="rangeMidY" min="0" max="100" value="30" oninput="onSliderPhotoPos('secMidPortrait','Mid')" />
+                <span class="ft-val" id="valMidY">30%</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">🔍 원본비율 확대</span>
+                <input type="range" id="rangeMidZoom" min="100" max="220" value="100" oninput="onSliderPhotoPos('secMidPortrait','Mid')" />
+                <span class="ft-val" id="valMidZoom">100%</span>
+              </div>
+            </div>
+
+            <span class="eep-label">화보 메인 타이틀</span>
+            <textarea class="eep-textarea" id="inpMidTitle" rows="2" oninput="syncMidPortrait()">"어려운 보험 용어 대신,
+고객님의 눈높이에서 웃으며 이야기합니다."</textarea>
+            <span class="eep-label">화보 서브 설명</span>
+            <textarea class="eep-textarea" id="inpMidSub" rows="2" oninput="syncMidPortrait()">단 한 번의 만남이라도 부담이 아닌 안심이 될 수 있도록, 가장 편안한 방법으로 소통합니다.</textarea>
+          </div>
+
+          <div class="eep-card" id="cardStickerMid" style="background:#fff7ed; border-color:#fed7aa;">
+            <div class="eep-card-title">
+              <span>✨ 2. 상담 사진 위 PR 기호 & 감성 멘트</span>
+              <label style="font-size:11.5px; cursor:pointer;"><input type="checkbox" id="chkStickerMid" checked onchange="syncSticker('mid')" /> 표시</label>
+            </div>
+            <div class="icon-picker-grid" id="iconGridMid">
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('mid','👑')">👑</button>
+              <button type="button" class="icon-pick-btn active" onclick="pickStickerIcon('mid','✨')">✨</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('mid','✔')">✔</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('mid','💬')">💬</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('mid','☕')">☕</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('mid','🌿')">🌿</button>
+            </div>
+            <span class="eep-label">포인트 멘트</span>
+            <input type="text" class="eep-input" id="inpStickerTextMid" value="카톡·비대면 상담도 언제나 환영합니다!" oninput="syncSticker('mid')" />
+            <div class="pill-btn-group" style="margin-top:6px;">
+              <button type="button" class="pill-choice-btn active" onclick="setStickerStyle('mid','sticker-style-hand', 25, 0)">🖋️ 감성 손글씨</button>
+              <button type="button" class="pill-choice-btn" onclick="setStickerStyle('mid','sticker-style-badge', 13, 92)">🏷️ 깔끔 캡슐배지</button>
+              <button type="button" class="pill-choice-btn" onclick="setStickerStyle('mid','sticker-style-serif', 15, 70)">📖 화보 명조체</button>
+            </div>
+            <div class="fine-tune-box">
+              <div class="ft-row">
+                <span class="ft-name">🔠 멘트 글자크기</span>
+                <input type="range" id="rangeStickerSize_mid" min="11" max="34" value="25" oninput="syncSticker('mid')" />
+                <span class="ft-val" id="valStickerSize_mid">25px</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">💧 배경 투명도</span>
+                <input type="range" id="rangeStickerOpacity_mid" min="0" max="100" value="0" oninput="syncSticker('mid')" />
+                <span class="ft-val" id="valStickerOpacity_mid">0%</span>
+              </div>
+            </div>
+            <div class="pill-btn-group" style="margin-top:6px;">
+              <button type="button" class="pill-choice-btn active" onclick="setStickerPos('mid','tl')">↖ 좌상</button>
+              <button type="button" class="pill-choice-btn" onclick="setStickerPos('mid','tr')">↗ 우상</button>
+              <button type="button" class="pill-choice-btn" onclick="setStickerPos('mid','bl')">↙ 좌하</button>
+              <button type="button" class="pill-choice-btn" onclick="setStickerPos('mid','br')">↘ 우하</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="eep-tab-pane" id="eepTab4">
+          <div class="eep-card" id="cardProductStandard">
+            <div class="eep-card-title">
+              <span>📋 1. 나만의 보험상품 선정 기준</span>
+              <button type="button" class="pill-choice-btn" onclick="addStandardItem()" style="color:#0284c7; border-color:#38bdf8;">+ 기준 추가</button>
+            </div>
+            <div id="eepStandardFormList" style="display:flex; flex-direction:column; gap:10px;"></div>
+          </div>
+
+          <div class="eep-card" id="cardGoodsShowcase">
+            <div class="eep-card-title">
+              <span>🎁 2. 03 굿즈 · 증권바인더 · 비교표 슬라이드</span>
+              <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="chkShowGoods" checked onchange="toggleSecById('secGoodsShowcase', this.checked)" /> 표시</label>
+            </div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;">
+              <button type="button" class="pill-choice-btn" style="flex:1; justify-content:center; background:#eff6ff; border-color:#38bdf8; color:#0284c7; padding:9px;" onclick="document.getElementById('goodsMultiPicker').click()">
+                <i class="fa-solid fa-images"></i> + 슬라이드 사진 추가 (여러장)
+              </button>
+              <button type="button" class="pill-choice-btn" style="color:#ef4444;" onclick="removeCurrentGoodsSlide()">현재 사진 삭제</button>
+            </div>
+
+            <div class="fine-tune-box">
+              <div style="font-size:10.5px; font-weight:800; color:var(--theme-accent);">🎯 현재 보고 있는 슬라이드 사진 초점·확대 미세조절</div>
+              <div class="ft-row">
+                <span class="ft-name">↔ 좌우 초점</span>
+                <input type="range" id="rangeGoodsX" min="0" max="100" value="50" oninput="onSliderGoodsPos()" />
+                <span class="ft-val" id="valGoodsX">50%</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">↕ 상하 초점</span>
+                <input type="range" id="rangeGoodsY" min="0" max="100" value="50" oninput="onSliderGoodsPos()" />
+                <span class="ft-val" id="valGoodsY">50%</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">🔍 원본비율 확대</span>
+                <input type="range" id="rangeGoodsZoom" min="100" max="220" value="100" oninput="onSliderGoodsPos()" />
+                <span class="ft-val" id="valGoodsZoom">100%</span>
+              </div>
+            </div>
+
+            <span class="eep-label">손글씨 말풍선 문구</span>
+            <input type="text" class="eep-input" id="inpGoodsBubble" value="&quot;가입 후 전달드리는 전용 증권 바인더와 한장비교표!&quot;" oninput="syncGoodsText()" />
+            <span class="eep-label">굿즈/서비스 제목</span>
+            <input type="text" class="eep-input" id="inpGoodsTitle" value="소장하고 싶은 [전용 증권 바인더 & 한장비교표 굿즈]" oninput="syncGoodsText()" />
+            <span class="eep-label">굿즈/서비스 상세 설명</span>
+            <textarea class="eep-textarea" id="inpGoodsDesc" rows="3" oninput="syncGoodsText()">서랍 속에 방치되던 수십 장의 증권을 한눈에 보이는 '신호등 한장비교표'와 시그니처 증권 바인더·캘린더 패키지로 깔끔하게 정리해 전달해 드립니다.</textarea>
+          </div>
+        </div>
+
+        <div class="eep-tab-pane" id="eepTab5">
+          <div class="eep-card" id="cardCareTopics">
+            <div class="eep-card-title">
+              <span>🌿 1. 케어 혜택 리스트 (최대 10개)</span>
+              <button type="button" class="pill-choice-btn" onclick="addCareTopicCard()" style="color:#0284c7; border-color:#38bdf8;">+ 혜택 추가</button>
+            </div>
+            <div id="eepCareFormList" style="display:flex; flex-direction:column; gap:10px;"></div>
+          </div>
+
+          <div class="eep-card" id="cardEndingSection">
+            <div class="eep-card-title">🤝 2. 마지막 엔딩 본인 화보 (원본비율 보존) & 미세조절</div>
+            <button type="button" class="pill-choice-btn" style="width:100%; justify-content:center; background:#eff6ff; border-color:#38bdf8; color:#0284c7; padding:9px; margin-bottom:6px;" onclick="triggerImageUpload('ENDING_PHOTO')">
+              <i class="fa-solid fa-camera"></i> 마지막 본인 화보 사진 올리기
+            </button>
+
+            <div class="fine-tune-box">
+              <div class="ft-row">
+                <span class="ft-name">↔ 좌우 초점</span>
+                <input type="range" id="rangeEndX" min="0" max="100" value="50" oninput="onSliderPhotoPos('endingPhotoBox','End')" />
+                <span class="ft-val" id="valEndX">50%</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">↕ 상하 초점</span>
+                <input type="range" id="rangeEndY" min="0" max="100" value="20" oninput="onSliderPhotoPos('endingPhotoBox','End')" />
+                <span class="ft-val" id="valEndY">20%</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">🔍 원본비율 확대</span>
+                <input type="range" id="rangeEndZoom" min="100" max="220" value="100" oninput="onSliderPhotoPos('endingPhotoBox','End')" />
+                <span class="ft-val" id="valEndZoom">100%</span>
+              </div>
+            </div>
+
+            <span class="eep-label">최종 클로징 멘트 타이틀</span>
+            <textarea class="eep-textarea" id="inpEndingTitle" rows="3" oninput="syncEndingSection()">수십 년을 함께할 우리 가족 보험,
+아플 때 가장 먼저 떠오르는
+든든한 '내 편'이 되겠습니다.</textarea>
+            <span class="eep-label">서명 문구</span>
+            <input type="text" class="eep-input" id="inpEndingSign" value="— 위라클매니지먼트 박보환 드림" oninput="syncEndingSection()" />
+          </div>
+
+          <div class="eep-card" id="cardStickerEnd" style="background:#fff7ed; border-color:#fed7aa;">
+            <div class="eep-card-title">
+              <span>🏆 3. 엔딩 화보 위 PR 기호 & 감성 멘트</span>
+              <label style="font-size:11.5px; cursor:pointer;"><input type="checkbox" id="chkStickerEnd" checked onchange="syncSticker('end')" /> 표시</label>
+            </div>
+            <div class="icon-picker-grid" id="iconGridEnd">
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('end','👑')">👑</button>
+              <button type="button" class="icon-pick-btn active" onclick="pickStickerIcon('end','🛡️')">🛡️</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('end','✔')">✔</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('end','❤️')">❤️</button>
+              <button type="button" class="icon-pick-btn" onclick="pickStickerIcon('end','🏆')">🏆</button>
+            </div>
+            <span class="eep-label">포인트 멘트</span>
+            <input type="text" class="eep-input" id="inpStickerTextEnd" value="언제든 편하게 연락 주세요!" oninput="syncSticker('end')" />
+            <div class="pill-btn-group" style="margin-top:6px;">
+              <button type="button" class="pill-choice-btn" onclick="setStickerStyle('end','sticker-style-badge', 13, 92)">🏷️ 깔끔 캡슐배지</button>
+              <button type="button" class="pill-choice-btn active" onclick="setStickerStyle('end','sticker-style-hand', 25, 0)">🖋️ 감성 손글씨</button>
+              <button type="button" class="pill-choice-btn" onclick="setStickerStyle('end','sticker-style-serif', 15, 70)">📖 화보 명조체</button>
+            </div>
+            <div class="fine-tune-box">
+              <div class="ft-row">
+                <span class="ft-name">🔠 멘트 글자크기</span>
+                <input type="range" id="rangeStickerSize_end" min="11" max="34" value="25" oninput="syncSticker('end')" />
+                <span class="ft-val" id="valStickerSize_end">25px</span>
+              </div>
+              <div class="ft-row">
+                <span class="ft-name">💧 배경 투명도</span>
+                <input type="range" id="rangeStickerOpacity_end" min="0" max="100" value="0" oninput="syncSticker('end')" />
+                <span class="ft-val" id="valStickerOpacity_end">0%</span>
+              </div>
+            </div>
+            <div class="pill-btn-group" style="margin-top:6px;">
+              <button type="button" class="pill-choice-btn active" onclick="setStickerPos('end','tl')">↖ 좌상</button>
+              <button type="button" class="pill-choice-btn" onclick="setStickerPos('end','tr')">↗ 우상</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="eep-footer">
+        <button type="button" id="btnSaveServerPr" class="pill-choice-btn" style="flex:1; justify-content:center; background:var(--theme-main); color:#fff; border:none; padding:11px;" onclick="saveAllPrState(true)">
+          💾 현재 설정 서버에 저장하기
+        </button>
+        <button type="button" class="pill-choice-btn" style="color:#ef4444;" onclick="resetAllPrState()">
+          초기화
+        </button>
+      </div>
+    </aside>
+
+    <!-- [우측 스마트폰 매거진 PR 페이지] -->
+    <div class="magazine-wrapper">
+
+      <header class="mag-header">
+        <div class="mag-brand">
+          <div class="mag-logo-mark">W</div>
+          <div>
+            <span class="mag-brand-name" id="headerBrandTitle">WERACLE PARTNERS</span>
+            <span class="mag-brand-sub">PERSONAL BRANDING MAGAZINE</span>
+          </div>
+        </div>
+        <button type="button" class="btn-toggle-edit" id="btnToggleEdit" onclick="toggleEditStudio()">
+          <i class="fa-solid fa-sliders"></i> <span id="editBtnText">🎨 쉽게 꾸미기 ON</span>
+        </button>
+      </header>
+
+      <!-- [1] HERO 섹션 -->
+      <section class="hero-stage" id="heroStage">
+        <div class="hero-diagonal-bg"></div>
+
+        <div class="hero-person-photo ratio-photo-frame pan-photo-target" id="heroPhotoBox"
+             data-photo-key="heroPhotoBox"
+             data-edit-link="1|cardHeroPhoto|rangeHeroZoom|📸 메인 프로필 사진 구도·변경">
+          <img class="ratio-photo-img" id="img_heroPhotoBox" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1000&q=85" alt="메인 프로필" />
+        </div>
+
+        <div class="hero-custom-logo free-drag-item" id="heroLogoBox"
+             data-edit-link="0|cardLogoSetting|rangeLogoSize|🏷️ 본인 로고 크기·시인성 설정">
+          <img id="heroLogoImg" src="" alt="내 브랜드 로고" />
+        </div>
+
+        <div class="pr-photo-sticker sticker-pos-tr sticker-style-badge free-drag-item" id="stickerBox_hero"
+             data-edit-link="1|cardStickerHero|inpStickerTextHero|👑 메인 사진 PR 포인트 멘트 수정">
+          <span id="stickerIcon_hero">👑</span>
+          <span id="stickerText_hero">무리한 권유 ZERO · 숨은 보험금 찾기 전담</span>
+        </div>
+
+        <div class="hero-draggable-title free-drag-item" id="dragTitleBox"
+             data-edit-link="1|cardHeroTypo|inpHeroHeadline|✍️ 메인 타이틀 문구·크기 수정">
+          <h1 class="hero-main-headline serif-font" id="heroHeadlineEl">숫자와 약관 너머에,
+당신의 빛나는 내일이
+있습니다.</h1>
+        </div>
+
+        <div class="hero-draggable-sub free-drag-item" id="dragSubBox"
+             data-edit-link="1|cardHeroTypo|inpHeroSubLead|✍️ 서브 소개문구·배경 투명도 수정">
+          <div class="hero-sub-lead" id="heroSubLeadEl">가입 권유보다 숨은 보험금부터 찾아드리는
+성장과 안심의 1:1 전담 파트너</div>
+          <div class="hero-en-brush script-en" id="heroEnBrushEl">Good Protection, Brighter Futures</div>
+        </div>
+
+        <div class="hero-side-vertical free-drag-item" id="dragVerticalBox"
+             data-edit-link="1|cardHeroProfile|inpVertText|🪪 우측 세로 포인트 문구·투명도 수정">듣고, 공감하고,
+함께 내일을 지킵니다.</div>
+
+        <div class="hero-floating-card free-drag-item" id="dragProfileCard"
+             data-edit-link="1|cardHeroProfile|inpAgentName|🪪 내 이름·소속 명함카드 수정">
+          <div class="hfc-top">
+            <div class="hfc-icon"><i class="fa-solid fa-award"></i></div>
+            <div>
+              <div class="hfc-label" id="heroRoleEl">위라클매니지먼트 대표팀장</div>
+              <div class="hfc-name">
+                <span id="heroAgentName">박보환</span>
+                <span style="font-size:11.5px; color:#64748b; font-weight:700;" id="heroNickEl">(보답화니)</span>
+              </div>
+            </div>
+          </div>
+          <div class="hfc-tagline">
+            <i class="fa-solid fa-circle-check" style="color:var(--theme-accent);"></i>
+            <span id="heroTaglineEl">30개 생·손보사 비교 · 청구 전담 파트너</span>
+          </div>
+        </div>
+
+        <div class="hero-wave-bottom">
+          <svg viewBox="0 0 1440 90" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:34px;" preserveAspectRatio="none">
+            <path d="M0,40 C360,95 1080,-15 1440,50 L1440,90 L0,90 Z" fill="#ffffff"></path>
+          </svg>
+        </div>
+      </section>
+
+      <!-- [2] PHILOSOPHY 섹션 -->
+      <section class="essay-section" id="philosophyAnchor"
+               data-edit-link="2|cardPhilosophy|inpPhilTitle|📖 나의 보험 철학 타이틀·본문 수정">
+        <span class="essay-tag">PHILOSOPHY & STORY</span>
+        <h2 class="essay-title serif-font" id="philTitleEl">사람과 사람 사이의 신뢰,
+그것이 제가 일하는 원동력입니다.</h2>
+        <p class="essay-body" id="philBodyEl">매달 꼬박꼬박 내는 보험료인데, 정작 병원에 갈 때면 "이게 청구가 될까? 누구한테 물어보지?" 하고 망설였던 적 없으신가요.
+
+저는 무작정 새로운 보험 가입을 권유하지 않습니다.
+고객님이 이미 가지고 계신 옛날 보험 속 소중한 보장을 먼저 찾아내어 지켜드리고, 불필요하게 새어 나가는 중복 특약만 정직하게 덜어내는 것.
+
+보험으로 받은 믿음에 평생의 관리로 보답하는 '보답화니'의 첫 번째 약속입니다.</p>
+        <div class="essay-watermark">BODAPHWANI</div>
+      </section>
+
+      <!-- [3] EXPERTISE 3단 사선 사진 & 배지 -->
+      <section class="slash-trio-section" id="secExpertise">
+        <div class="slash-photos-grid">
+          <div class="slash-photo-item ratio-photo-frame pan-photo-target" id="slashPhoto1"
+               data-photo-key="slashPhoto1"
+               data-edit-link="2|cardSlashExpertise|rangeSlashZoom|📷 1번 사선 사진 변경·구도 조절|SLASH_1">
+            <img class="ratio-photo-img" id="img_slashPhoto1" src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=500&q=80" alt="사선사진1" />
+          </div>
+          <div class="slash-photo-item ratio-photo-frame pan-photo-target" id="slashPhoto2"
+               data-photo-key="slashPhoto2"
+               data-edit-link="2|cardSlashExpertise|rangeSlashZoom|📷 2번 사선 사진 변경·구도 조절|SLASH_2">
+            <img class="ratio-photo-img" id="img_slashPhoto2" src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=500&q=80" alt="사선사진2" />
+          </div>
+          <div class="slash-photo-item ratio-photo-frame pan-photo-target" id="slashPhoto3"
+               data-photo-key="slashPhoto3"
+               data-edit-link="2|cardSlashExpertise|rangeSlashZoom|📷 3번 사선 사진 변경·구도 조절|SLASH_3">
+            <img class="ratio-photo-img" id="img_slashPhoto3" src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=500&q=80" alt="사선사진3" />
+          </div>
+        </div>
+
+        <div class="slash-badges-grid">
+          <div class="slash-badge-card" data-edit-link="2|cardSlashExpertise|inpExp1T|⚡ 첫 번째 전문성 배지 문구 수정">
+            <div class="slash-badge-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+            <div class="slash-badge-title" id="exp1Title">실전 약관·보상 지식</div>
+            <div class="slash-badge-sub" id="exp1Sub">까다로운 분쟁·약관까지 정확하게 해석합니다</div>
+          </div>
+          <div class="slash-badge-card" data-edit-link="2|cardSlashExpertise|inpExp2T|⚡ 두 번째 전문성 배지 문구 수정">
+            <div class="slash-badge-icon"><i class="fa-solid fa-chart-pie"></i></div>
+            <div class="slash-badge-title" id="exp2Title">누적 1,200건+ 분석</div>
+            <div class="slash-badge-sub" id="exp2Sub">풍부한 현장 경험으로 보장 공백을 찾습니다</div>
+          </div>
+          <div class="slash-badge-card" data-edit-link="2|cardSlashExpertise|inpExp3T|⚡ 세 번째 전문성 배지 문구 수정">
+            <div class="slash-badge-icon"><i class="fa-solid fa-file-medical"></i></div>
+            <div class="slash-badge-title" id="exp3Title">유병자·맞춤 심사</div>
+            <div class="slash-badge-sub" id="exp3Sub">건강검진 유소견·병력도 최적 조건으로 연결</div>
+          </div>
+        </div>
+
+        <div class="expertise-summary-copy serif-font">
+          <p id="expSummaryEl">보상 실무 지식과 30개 보험사 데이터를 바탕으로,
+우리 가족의 생애주기에 꼭 맞는
+가장 정직한 해답을 함께 찾아갑니다.</p>
+          <div class="script-en" style="font-size:21px; color:var(--theme-accent); margin-top:6px;">Small Details, Big Differences</div>
+        </div>
+      </section>
+
+      <!-- [4] 중단 대형 상담 화보 -->
+      <section class="mid-portrait-section pan-photo-target" id="secMidPortrait"
+               data-photo-key="secMidPortrait"
+               data-edit-link="3|cardMidPortrait|rangeMidZoom|😊 중단 상담 화보 사진·구도 수정">
+        <div class="mid-bg-img-wrap ratio-photo-frame">
+          <img class="ratio-photo-img" id="img_secMidPortrait" src="https://images.unsplash.com/photo-1573497620053-ea5300f94f21?auto=format&fit=crop&w=1000&q=85" alt="상담 화보" />
+        </div>
+        <div class="mid-portrait-overlay"></div>
+
+        <div class="pr-photo-sticker sticker-pos-tl sticker-style-hand free-drag-item" id="stickerBox_mid"
+             data-edit-link="3|cardStickerMid|inpStickerTextMid|✨ 상담 사진 위 PR 멘트 수정">
+          <span id="stickerIcon_mid">✨</span>
+          <span id="stickerText_mid">카톡·비대면 상담도 언제나 환영합니다!</span>
+        </div>
+
+        <div class="mid-portrait-content" data-edit-link="3|cardMidPortrait|inpMidTitle|😊 상담 화보 타이틀·서브문구 수정">
+          <span class="mid-portrait-tag">1:1 PRIVATE CONSULTING</span>
+          <h2 class="mid-portrait-title serif-font" id="midTitleEl">"어려운 보험 용어 대신,
+고객님의 눈높이에서 웃으며 이야기합니다."</h2>
+          <p class="mid-portrait-sub" id="midSubEl">단 한 번의 만남이라도 부담이 아닌 안심이 될 수 있도록, 가장 편안한 방법으로 소통합니다.</p>
+        </div>
+      </section>
+
+      <!-- [5] PRODUCT STANDARD & 03 굿즈 좌우 슬라이더 -->
+      <section class="editorial-split-section" id="secProductStandard">
+        <div class="ed-left-mint" data-edit-link="4|cardProductStandard||📋 나만의 보험상품 선정 기준 수정·추가">
+          <div class="ed-heading-en serif-font">PRODUCT STANDARD</div>
+          <div class="ed-heading-kr">내가 아닌 '내 가족'이 가입한다는 기준으로 고릅니다</div>
+          <div class="standard-icon-list" id="standardListContainer"></div>
+        </div>
+
+        <div class="ed-right-magazine" id="secGoodsShowcase">
+          <div class="speech-bubble-hand script-kr" id="goodsBubbleEl"
+               data-edit-link="4|cardGoodsShowcase|inpGoodsBubble|🎁 03 굿즈 손글씨 말풍선 수정">"가입 후 전달드리는 전용 증권 바인더와 한장비교표!"</div>
+
+          <div class="goods-slider-wrap" id="goodsSliderTouchArea"
+               data-edit-link="4|cardGoodsShowcase|rangeGoodsZoom|🎁 03 굿즈 슬라이드 사진 추가·구도 조절">
+            <span class="mag-big-num">03</span>
+            <span class="slider-counter-pill" id="goodsSlideCounter">1 / 3</span>
+            <button type="button" class="slider-nav-btn prev" onclick="event.stopPropagation(); moveGoodsSlide(-1)">‹</button>
+            <button type="button" class="slider-nav-btn next" onclick="event.stopPropagation(); moveGoodsSlide(1)">›</button>
+            <div class="goods-slide-stage ratio-photo-frame pan-photo-target" id="goodsSlideStage" data-photo-key="GOODS_SLIDE">
+              <img class="ratio-photo-img" id="img_goodsSlideStage" src="" alt="굿즈 슬라이드" />
+            </div>
+            <div class="slider-dots" id="goodsSliderDots"></div>
+          </div>
+
+          <div class="mag-caption-title" data-edit-link="4|cardGoodsShowcase|inpGoodsTitle|🎁 03 굿즈·서비스 제목 수정">
+            <i class="fa-solid fa-gift"></i>
+            <span id="goodsTitleEl">소장하고 싶은 [전용 증권 바인더 & 한장비교표 굿즈]</span>
+          </div>
+          <p class="mag-caption-desc" id="goodsDescEl" data-edit-link="4|cardGoodsShowcase|inpGoodsDesc|🎁 03 굿즈·서비스 상세 설명 수정">서랍 속에 방치되던 수십 장의 증권을 한눈에 보이는 '신호등 한장비교표'와 시그니처 증권 바인더·캘린더 패키지로 깔끔하게 정리해 전달해 드립니다.</p>
+        </div>
+      </section>
+
+      <!-- [6] CARE & BENEFITS 깔끔한 리스트형 (최대 10개) -->
+      <section class="topics-section" id="secCareTopics"
+               data-edit-link="5|cardCareTopics||🌿 케어 혜택 리스트 수정·추가">
+        <div class="topics-header">
+          <div class="topics-leaf"><i class="fa-solid fa-seedling"></i></div>
+          <div class="topics-en serif-font">CARE & BENEFITS</div>
+          <div class="topics-kr">가입 순간보다 가입 이후가 더 든든한 전담 케어 혜택</div>
+        </div>
+        <div class="care-list-wrap" id="careTopicsGrid"></div>
+      </section>
+
+      <!-- [7] 엔딩 대형 본인 화보 + 최종 타이틀 + 신청 폼 -->
+      <div id="applySectionAnchor">
+        <div class="ending-photo-banner pan-photo-target" id="endingPhotoBox"
+             data-photo-key="endingPhotoBox"
+             data-edit-link="5|cardEndingSection|rangeEndZoom|🤝 마지막 엔딩 화보 사진·구도 수정">
+          <div class="ending-bg-img-wrap ratio-photo-frame">
+            <img class="ratio-photo-img" id="img_endingPhotoBox" src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1000&q=85" alt="엔딩 화보" />
+          </div>
+          <div class="ending-photo-overlay"></div>
+
+          <div class="pr-photo-sticker sticker-pos-tl sticker-style-hand free-drag-item" id="stickerBox_end"
+               data-edit-link="5|cardStickerEnd|inpStickerTextEnd|🏆 엔딩 사진 위 PR 멘트 수정">
+            <span id="stickerIcon_end">🛡️</span>
+            <span id="stickerText_end">언제든 편하게 연락 주세요!</span>
+          </div>
+
+          <div class="ending-closing-box" data-edit-link="5|cardEndingSection|inpEndingTitle|🤝 최종 클로징 멘트·서명 수정">
+            <div class="ending-closing-quote"><i class="fa-solid fa-quote-left"></i></div>
+            <h2 class="ending-closing-title serif-font" id="endingClosingTitleEl">수십 년을 함께할 우리 가족 보험,
+아플 때 가장 먼저 떠오르는
+든든한 '내 편'이 되겠습니다.</h2>
+            <div class="ending-closing-sign" id="endingClosingSignEl">— 위라클매니지먼트 박보환 드림</div>
+          </div>
+        </div>
+
+        <div class="ending-overlap-card">
+          <span class="ending-badge"><i class="fa-solid fa-gift"></i> 10초 신청 시 핵심 자료 즉시 열람</span>
+          <h2 class="ending-title" id="uiTitle">숨은 병원비·약제비 무료 청구 및 맞춤 점검 신청</h2>
+          <p class="ending-sub" id="uiSub">부담스러운 전화 독촉 없이, 요청하신 자료와 안내를 먼저 보내드립니다.</p>
+        </div>
+
+        <div class="form-body" id="formViewSection">
+          <form id="leadApplyForm" onsubmit="submitLeadForm(event)">
+            <div class="question-box">
+              <div class="q-title" id="uiQuestion">Q. 어떤 안내를 가장 먼저 받아보고 싶으신가요?</div>
+              <label class="radio-item">
+                <input type="radio" name="qAnswer" value="핵심 요약 안내서(꿀팁 자료) 먼저 열람하기" checked />
+                <span>📄 핵심 요약 안내서(PDF 꿀팁 자료) 먼저 받기</span>
+              </label>
+              <label class="radio-item">
+                <input type="radio" name="qAnswer" value="1:1 비대면 간편 상담 및 비교표 신청하기" />
+                <span>💬 1:1 비대면 간편 상담 및 한장비교표 신청</span>
+              </label>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">성함 (필수) *</label>
+              <input type="text" id="inpName" class="field-input" placeholder="예: 홍길동" required />
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">연락처 (필수) *</label>
+              <input type="tel" id="inpPhone" class="field-input" placeholder="010-0000-0000" required oninput="autoHyphenPhone(this)" />
+            </div>
+
+            <div class="field-group" id="wrapRegion">
+              <label class="field-label">거주 지역 (시/군/구)</label>
+              <input type="text" id="inpRegion" class="field-input" placeholder="예: 경기도 의정부시, 서울 노원구" />
+            </div>
+
+            <div class="field-group" id="wrapAge" style="display:none;">
+              <label class="field-label">연령대</label>
+              <select id="inpAge" class="field-select">
+                <option value="">연령대 선택</option>
+                <option value="20대">20대</option>
+                <option value="30대" selected>30대</option>
+                <option value="40대">40대</option>
+                <option value="50대">50대</option>
+                <option value="60대 이상">60대 이상</option>
+              </select>
+            </div>
+
+            <div class="field-group" id="wrapTime" style="display:none;">
+              <label class="field-label">연락(카톡/안내) 편한 시간대</label>
+              <select id="inpTime" class="field-select">
+                <option value="언제든 가능 (카톡 안내 선호)">언제든 가능 (카톡 안내 선호)</option>
+                <option value="오전 (09:00 ~ 12:00)">오전 (09:00 ~ 12:00)</option>
+                <option value="오후 (12:00 ~ 18:00)">오후 (12:00 ~ 18:00)</option>
+                <option value="저녁 (18:00 이후)">저녁 (18:00 이후)</option>
+              </select>
+            </div>
+
+            <div class="privacy-box">
+              <label class="privacy-label">
+                <input type="checkbox" id="chkPrivacy" required checked />
+                <span>[필수] 개인정보 수집 및 무료 자료·상담 안내 동의</span>
+              </label>
+              <div style="margin-top:5px; line-height:1.4;">
+                입력하신 정보는 요청하신 안내 자료 제공 및 담당 컨설턴트의 1:1 안내 외 다른 용도로 절대 사용되지 않습니다.
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit-pill" id="btnSubmitForm">
+              <span>무료 안내서 즉시 열람 및 신청하기</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </form>
+        </div>
+
+        <div class="reward-view" id="rewardViewSection">
+          <div class="reward-icon"><i class="fa-solid fa-check"></i></div>
+          <h2 style="margin:0 0 6px 0; font-size:20px; font-weight:900; color:var(--theme-main);">신청 완료! 핵심 요약 자료가 열렸습니다</h2>
+          <p style="margin:0; font-size:13px; color:var(--sub); line-height:1.5;">
+            전담 컨설턴트에게도 안전하게 접수되었습니다.<br />아래 핵심 체크포인트를 지금 바로 확인해 보세요!
+          </p>
+
+          <div class="reward-card">
+            <h4 id="rewardGuideTitle">📌 꼭 챙겨야 할 핵심 꿀팁 3가지</h4>
+            <ul class="tip-list" id="rewardTipList">
+              <li>최근 3년 이내 통원 영수증 및 약국 처방전도 청구 대상에 포함됩니다.</li>
+              <li>비급여 치료 및 특약 중복 여부를 점검하면 고정 지출을 크게 아낄 수 있습니다.</li>
+              <li>병원 방문 또는 청구 전 담당 매니저에게 문의하시면 1:1 서류 체크를 도와드립니다.</li>
+            </ul>
+
+            <a href="#" target="_blank" id="btnPdfDownload" class="btn-download-pdf" style="display:none;">
+              <i class="fa-solid fa-file-arrow-down"></i> 상세 꿀팁 가이드북(PDF/자료) 전체 보기 ↗
+            </a>
+          </div>
+
+          <div style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:14px; font-size:12.5px; color:#475569; line-height:1.5;">
+            💡 <strong>추가 문의가 있으신가요?</strong><br />
+            곧 담당 컨설턴트가 카카오톡 또는 문자로 맞춤형 상세 자료를 한 번 더 발송해 드립니다.
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-sticky-bar">
+        <a href="#philosophyAnchor" class="bsb-left">
+          <i class="fa-regular fa-compass"></i>
+          <span>철학 · 선정기준 보기</span>
+        </a>
+        <a href="#applySectionAnchor" class="bsb-right">
+          <i class="fa-regular fa-calendar-check"></i>
+          <span>무료 자료 · 상담신청</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'weracle_pr_smart_studio_v5';
+
+    const TOPIC_TIPS_MAP = [
+      {
+        match: ['간병', '치매'],
+        title: '📌 간병인 플랜 & 지원비 핵심 체크포인트 3가지',
+        tips: [
+          '간병인 사용일당(체증형 여부) vs 간호간병통합서비스 보장 한도를 반드시 비교해야 합니다.',
+          '요양병원·일반병원·상급종합병원 입원 시 일당 지급 조건이 각각 다른지 체크하세요.',
+          '가족 간병 인정 여부와 면책·감액 기간(보통 90일~1년) 전에 미리 준비하는 것이 핵심입니다.'
+        ]
+      },
+      {
+        match: ['환급', '병원비', '실손'],
+        title: '📌 숨은 병원비·약제비 환급 핵심 체크포인트 3가지',
+        tips: [
+          '보험금 청구 소멸시효는 3년! 최근 3년 이내 동네 병원 통원비와 약값도 모두 합산 청구 가능합니다.',
+          '스마트폰으로 진료비 영수증·세부내역서·처방전 사진만 찍어도 비대면으로 간편 접수됩니다.',
+          '실손 외에 가입된 정액형 수술비·입원일당 특약이 누락되지 않았는지 동시에 점검받으세요.'
+        ]
+      },
+      {
+        match: ['검진', '유소견'],
+        title: '📌 건강검진 유소견자 병원 방문 전 필수 꿀팁',
+        tips: [
+          '검진 결과표에 용종·결절·혈압·당뇨 소견이 떴다면, 재검진(확진) 전 보장 공백부터 먼저 점검하세요.',
+          '대장·위 용종 제거 시 단순 실손뿐 아니라 수술비(1~5종/질병수술) 특약 해당 여부를 꼭 확인하세요.',
+          '약을 처방받아 복용하기 시작하면 일반 심사 대신 유병자 간편심사 대상이 될 수 있으니 순서가 중요합니다.'
+        ]
+      },
+      {
+        match: ['아이', '어린이', '태아'],
+        title: '📌 우리 아이 보험 30세 만기 vs 100세 만기 핵심 요약',
+        tips: [
+          '3대 중증 진단비(암·뇌·심장)와 수술비는 80~100세 만기로, 자잘한 생활 담보는 20~30세 만기로 혼합하면 보험료가 절반으로 줄어듭니다.',
+          '응급실 내원비, 골절·화상, 입원일당 등 영유아기 청구율이 가장 높은 필수 특약을 우선 배치하세요.'
+        ]
+      }
+    ];
+
+    let standardItems = [
+      { title: '30개 생·손보사 객관적 비교', sub: '특정 회사 상품만 권하지 않고 전 보험사 가성비를 비교합니다' },
+      { title: '보여주기식 자잘한 특약 배제', sub: '큰 병과 수술 시 진짜 목돈이 되는 3대 진단비·수술비·간병비 집중' },
+      { title: '끝까지 유지 가능한 합리적 예산', sub: '중도 해지 없이 평생 가져갈 수 있는 고정지출 다이어트 설계' }
+    ];
+
+    let goodsSlides = [
+      { url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=900&q=85', posX: 50, posY: 50, zoom: 100 },
+      { url: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=900&q=85', posX: 50, posY: 50, zoom: 100 },
+      { url: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=900&q=85', posX: 50, posY: 50, zoom: 100 }
+    ];
+    let currentGoodsSlideIdx = 0;
+
+    let careTopics = [
+      { pill: '평생 청구관리', title: '숨은 병원비·약제비 1:1 전담 청구 비서', sub: '진료비 영수증·처방전 사진만 카톡으로 보내주시면 소멸시효 3년 내 숨은 보험금까지 누락 없이 청구해 드립니다.' },
+      { pill: '한장비교표 제공', title: '우리 가족 맞춤형 [신호등 한장비교표] 제작', sub: '수십 장의 복잡한 보험 증권을 유지·조정·보완 신호등 표기로 정리해 한눈에 파악할 수 있도록 제작해 드립니다.' },
+      { pill: '전문가 네트워크', title: '손해사정사 · 세무 · 노무 전문가 협업 지원', sub: '까다로운 보험금 지급 분쟁이나 상속·증여·법인 절세 플랜까지 각 분야 전문가와 팀 단위로 해결해 드립니다.' },
+      { pill: '정기 점검케어', title: '연 1회 정기 보장 점검 & 상령일 알림 케어', sub: '가입 후 방치하지 않고 건강검진 시즌, 자녀 성장기, 상령일마다 먼저 연락드려 보장 공백을 챙겨드립니다.' }
+    ];
+
+    let photoPositionMap = {
+      heroPhotoBox: { x: 50, y: 15, zoom: 100 },
+      slashPhoto1: { x: 50, y: 50, zoom: 100 },
+      slashPhoto2: { x: 50, y: 50, zoom: 100 },
+      slashPhoto3: { x: 50, y: 50, zoom: 100 },
+      secMidPortrait: { x: 50, y: 30, zoom: 100 },
+      endingPhotoBox: { x: 50, y: 20, zoom: 100 }
+    };
+
+    let stickerMap = {
+      hero: { show: true, icon: '👑', text: '무리한 권유 ZERO · 숨은 보험금 찾기 전담', style: 'sticker-style-badge', pos: 'tr', size: 13, opacity: 92 },
+      mid: { show: true, icon: '✨', text: '카톡·비대면 상담도 언제나 환영합니다!', style: 'sticker-style-hand', pos: 'tl', size: 25, opacity: 0 },
+      end: { show: true, icon: '🛡️', text: '언제든 편하게 연락 주세요!', style: 'sticker-style-hand', pos: 'tl', size: 25, opacity: 0 }
+    };
+
+    let logoConfig = {
+      visible: false,
+      src: '',
+      size: 115,
+      mode: 'white',
+      intensity: 85,
+      invert: false
+    };
+
+    let heroTypoConfig = {
+      titleSize: 28,
+      titleWidth: 300,
+      subVisible: true,
+      subSize: 13,
+      subWidth: 275,
+      subBaseRgb: '255,255,255',
+      subTextColor: '#1e293b',
+      subOpacity: 82,
+      vertOpacity: 65
+    };
+
+    let elementPositions = {};
+    let sectionVisibility = {
+      secExpertise: true,
+      secMidPortrait: true,
+      secGoodsShowcase: true
+    };
+
+    let selectedSlashId = 'slashPhoto1';
+    let selectedSlashNum = 1;
+    let isEditMode = false;
+    let currentUploadTarget = '';
+    let activeMetaPixelId = '';
+    let storedAgentNotifyPhone = '';
+
+    const params = new URLSearchParams(window.location.search);
+    const campId = params.get('camp_id') || 'camp_direct';
+    const campTitle = params.get('camp') || params.get('title') || '숨은 병원비·약제비 무료 청구 및 맞춤 점검 신청';
+    const customQuestion = params.get('q') || '어떤 안내를 가장 먼저 받아보고 싶으신가요?';
+    const fieldsParam = params.get('fields') || 'name,phone,region';
+    const agentName = params.get('agent') || '';
+    const agentPhone = params.get('agent_phone') || '';
+    const agentIdParam = params.get('agent_id') || '';
+    const pixelIdParam = params.get('pixel_id') || '';
+    const sheetUrlParam = params.get('sheet') || '';
+    const docUrlParam = params.get('doc') || '';
+    const rawSourceParam = params.get('utm_source') || params.get('source') || '';
+    const sourceParam = (String(campId).startsWith('camp_ig_') || rawSourceParam.includes('insta'))
+      ? 'insta_dm_apply'
+      : (rawSourceParam || 'meta_ad');
+
+    function initDynamicMetaPixel(pixelId) {
+      const cleanPid = String(pixelId || '').replace(/[^0-9]/g, '');
+      if (!cleanPid || activeMetaPixelId === cleanPid) return;
+      activeMetaPixelId = cleanPid;
+
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+
+      window.fbq('init', cleanPid);
+      window.fbq('track', 'PageView');
+      window.fbq('track', 'ViewContent', { content_name: campTitle });
+    }
+
+    function getActiveUserKeys() {
+      const keys = new Set();
+      if (agentIdParam) keys.add(String(agentIdParam).trim().toLowerCase());
+      if (agentPhone) keys.add(String(agentPhone).trim().toLowerCase());
+
+      const emailCandidates = [
+        localStorage.getItem('user_email'),
+        localStorage.getItem('weracle_user_email'),
+        localStorage.getItem('crm_user_email'),
+        localStorage.getItem('email')
+      ];
+      emailCandidates.forEach(em => {
+        if (em && String(em).trim()) keys.add(String(em).trim().toLowerCase());
+      });
+
+      const storedPhone = localStorage.getItem('crm_agent_phone');
+      if (storedPhone && String(storedPhone).trim()) keys.add(String(storedPhone).trim().toLowerCase());
+
+      try {
+        const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
+        if (metaConn) {
+          if (metaConn.igUser) keys.add(String(metaConn.igUser).trim().toLowerCase());
+          if (metaConn.igId) keys.add(String(metaConn.igId).trim().toLowerCase());
+          if (metaConn.adAcc && metaConn.adAcc !== 'act_connected') keys.add(String(metaConn.adAcc).trim().toLowerCase());
+        }
+      } catch (e) {}
+
+      if (keys.size === 0 && agentName) keys.add(String(agentName).trim().toLowerCase());
+      return Array.from(keys);
+    }
+
+    function resolveActiveAgentKey() {
+      if (agentIdParam) return agentIdParam;
+      const keys = getActiveUserKeys();
+      return keys.length > 0 ? keys[0] : 'default';
+    }
+
+    const activeAgentKey = resolveActiveAgentKey();
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (pixelIdParam) {
+        initDynamicMetaPixel(pixelIdParam);
+      }
+
+      storedAgentNotifyPhone = agentPhone || localStorage.getItem('crm_agent_phone') || '';
+
+      loadSavedPrState();
+      await loadServerPrState();
+
+      renderStandardList();
+      renderGoodsSlider();
+      renderCareTopics();
+      renderAllStickers();
+      applyLogoDom();
+      applyHeroTypoDom();
+      Object.keys(photoPositionMap).forEach(id => applyPhotoPosToElement(id));
+      syncAllPhotoSlidersFromState();
+      initDirectPhotoPan();
+      initFreeDragItems();
+      initSmartClickBridge();
+      initGoodsTouchSwipe();
+
+      if (params.get('camp') || params.get('title')) {
+        document.getElementById('uiTitle').innerText = campTitle;
+      }
+      document.getElementById('uiQuestion').innerText = 'Q. ' + customQuestion;
+
+      if (agentName && !document.getElementById('heroAgentName').innerText.trim()) {
+        document.getElementById('heroAgentName').innerText = agentName;
+        document.getElementById('inpAgentName').value = agentName;
+      }
+
+      const fieldList = fieldsParam.split(',').map(s => s.trim());
+      document.getElementById('wrapRegion').style.display = fieldList.includes('region') ? 'block' : 'none';
+      document.getElementById('wrapAge').style.display = fieldList.includes('age') ? 'block' : 'none';
+      document.getElementById('wrapTime').style.display = fieldList.includes('time') ? 'block' : 'none';
+
+      const matchedTopic = TOPIC_TIPS_MAP.find(t => t.match.some(k => campTitle.includes(k)));
+      if (matchedTopic) {
+        document.getElementById('rewardGuideTitle').innerText = matchedTopic.title;
+        document.getElementById('rewardTipList').innerHTML = matchedTopic.tips.map(li => `<li>${li}</li>`).join('');
+      }
+
+      if (docUrlParam && docUrlParam.startsWith('http')) {
+        const pdfBtn = document.getElementById('btnPdfDownload');
+        pdfBtn.href = docUrlParam;
+        pdfBtn.style.display = 'flex';
+      }
+
+      const isEditParam = params.get('edit') === 'true';
+      const isCustomerView = (params.get('camp_id') || params.get('utm_source')) && !isEditParam && params.get('preview') !== 'true';
+
+      if (isCustomerView) {
+        document.getElementById('btnToggleEdit').style.display = 'none';
+      } else if (isEditParam) {
+        toggleEditStudio();
+      }
+    });
+
+    function initSmartClickBridge() {
+      const badge = document.getElementById('smartHoverBadge');
+
+      document.addEventListener('mousemove', e => {
+        if (!isEditMode) {
+          badge.style.display = 'none';
+          return;
+        }
+        const target = e.target.closest('[data-edit-link]');
+        if (target) {
+          const parts = target.getAttribute('data-edit-link').split('|');
+          const label = parts[3] || '클릭 시 왼쪽 편집창 이동';
+          badge.innerText = `✏️ ${label} (클릭)`;
+          badge.style.display = 'block';
+          badge.style.left = Math.min(window.innerWidth - 240, e.clientX + 12) + 'px';
+          badge.style.top = Math.max(10, e.clientY - 34) + 'px';
+        } else {
+          badge.style.display = 'none';
+        }
+      });
+
+      document.addEventListener('click', e => {
+        if (!isEditMode) return;
+        if (e.target.closest('#easyEditorPanel') || e.target.closest('#btnToggleEdit')) return;
+        const target = e.target.closest('[data-edit-link]');
+        if (!target) return;
+
+        const [tabIdxStr, cardId, inputId, , extraAction] = target.getAttribute('data-edit-link').split('|');
+        const tabIdx = parseInt(tabIdxStr, 10);
+
+        if (extraAction && extraAction.startsWith('SLASH_')) {
+          const sNum = parseInt(extraAction.split('_')[1], 10);
+          selectSlashPhotoForTune('slashPhoto' + sNum, sNum);
+        }
+
+        jumpToLeftEditorCard(tabIdx, cardId, inputId);
+      });
+    }
+
+    function jumpToLeftEditorCard(tabIdx, cardId, inputId) {
+      switchEditorTab(tabIdx, false);
+      const card = document.getElementById(cardId);
+      if (card) {
+        document.querySelectorAll('.eep-card.highlight-focus').forEach(c => c.classList.remove('highlight-focus'));
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        void card.offsetWidth;
+        card.classList.add('highlight-focus');
+      }
+      if (inputId) {
+        setTimeout(() => {
+          const inp = document.getElementById(inputId);
+          if (inp) {
+            inp.focus();
+            if (inp.select && inp.type === 'text') inp.select();
+          }
+        }, 260);
+      }
+    }
+
+    function toggleEditStudio() {
+      isEditMode = !isEditMode;
+      document.body.classList.toggle('is-editing', isEditMode);
+      document.getElementById('editBtnText').innerText = isEditMode ? '✓ 편집 닫기' : '🎨 쉽게 꾸미기 ON';
+      if (!isEditMode) {
+        document.getElementById('smartHoverBadge').style.display = 'none';
+        saveAllPrState(false);
+      }
+    }
+
+    async function saveAndCloseStudio() {
+      await saveAllPrState(true);
+      if (isEditMode) toggleEditStudio();
+    }
+
+    function switchEditorTab(idx, scrollRightPreview) {
+      document.querySelectorAll('.eep-tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+      document.querySelectorAll('.eep-tab-pane').forEach((p, i) => p.classList.toggle('active', i === idx));
+
+      if (scrollRightPreview) {
+        const previewAnchors = ['heroStage', 'heroStage', 'philosophyAnchor', 'secMidPortrait', 'secProductStandard', 'secCareTopics'];
+        const targetEl = document.getElementById(previewAnchors[idx]);
+        if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function toggleLogoShow(isChecked) {
+      logoConfig.visible = isChecked;
+      applyLogoDom();
+      saveAllPrState(false);
+    }
+
+    function setLogoEffectMode(mode) {
+      logoConfig.mode = mode;
+      ['none', 'white', 'dark', 'glow'].forEach(m => {
+        const btn = document.getElementById('btnLogoMode_' + m);
+        if (btn) btn.classList.toggle('active', m === mode);
+      });
+      updateLogoFineTune();
+    }
+
+    function updateLogoFineTune() {
+      logoConfig.size = Number(document.getElementById('rangeLogoSize').value);
+      logoConfig.intensity = Number(document.getElementById('rangeLogoOpacity').value);
+      logoConfig.invert = document.getElementById('chkLogoInvert').checked;
+
+      document.getElementById('valLogoSize').innerText = logoConfig.size + 'px';
+      document.getElementById('valLogoOpacity').innerText = logoConfig.intensity + '%';
+
+      const rowInt = document.getElementById('rowLogoIntensity');
+      const lblInt = document.getElementById('lblLogoIntensity');
+      if (logoConfig.mode === 'none') {
+        rowInt.style.display = 'none';
+      } else {
+        rowInt.style.display = 'flex';
+        lblInt.innerText = logoConfig.mode === 'glow' ? '🌟 광채 세기·번짐' : '💧 배경판 투명도';
+      }
+
+      applyLogoDom();
+      saveAllPrState(false);
+    }
+
+    function applyLogoDom() {
+      const box = document.getElementById('heroLogoBox');
+      const img = document.getElementById('heroLogoImg');
+      document.getElementById('chkLogoVisible').checked = !!logoConfig.visible;
+
+      ['none', 'white', 'dark', 'glow'].forEach(m => {
+        const btn = document.getElementById('btnLogoMode_' + m);
+        if (btn) btn.classList.toggle('active', m === logoConfig.mode);
+      });
+
+      if (!logoConfig.visible || !logoConfig.src) {
+        box.style.display = 'none';
+        return;
+      }
+      box.style.display = 'block';
+      img.src = logoConfig.src;
+      img.style.width = logoConfig.size + 'px';
+
+      let filters = [];
+      if (logoConfig.invert) filters.push('brightness(0) invert(1)');
+
+      const ratio = (logoConfig.intensity / 100).toFixed(2);
+
+      if (logoConfig.mode === 'white') {
+        box.style.background = `rgba(255, 255, 255, ${ratio})`;
+        box.style.backdropFilter = logoConfig.intensity > 10 ? 'blur(6px)' : 'none';
+        box.style.boxShadow = logoConfig.intensity > 15 ? '0 4px 14px rgba(0,0,0,0.1)' : 'none';
+        box.style.padding = '6px 12px';
+      } else if (logoConfig.mode === 'dark') {
+        box.style.background = `rgba(15, 23, 42, ${ratio})`;
+        box.style.backdropFilter = logoConfig.intensity > 10 ? 'blur(6px)' : 'none';
+        box.style.boxShadow = logoConfig.intensity > 15 ? '0 4px 14px rgba(0,0,0,0.22)' : 'none';
+        box.style.padding = '6px 12px';
+      } else if (logoConfig.mode === 'glow') {
+        box.style.background = 'transparent';
+        box.style.backdropFilter = 'none';
+        box.style.boxShadow = 'none';
+        box.style.padding = '2px';
+        const blurPx = Math.max(2, Math.round(logoConfig.intensity * 0.16));
+        filters.push(`drop-shadow(0 0 ${blurPx}px rgba(255,255,255,1)) drop-shadow(0 0 ${Math.round(blurPx * 0.6)}px rgba(255,255,255,0.95)) drop-shadow(0 2px 6px rgba(0,0,0,0.35))`);
+      } else {
+        box.style.background = 'transparent';
+        box.style.backdropFilter = 'none';
+        box.style.boxShadow = 'none';
+        box.style.padding = '0';
+      }
+
+      img.style.filter = filters.join(' ');
+    }
+
+    function snapHeroElement(elId, leftPx, topPx) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+      el.style.left = leftPx + 'px';
+      el.style.top = topPx + 'px';
+      elementPositions[elId] = { left: el.style.left, top: el.style.top };
+      saveAllPrState(false);
+    }
+
+    function setSubBaseColor(rgbStr, textColor) {
+      heroTypoConfig.subBaseRgb = rgbStr;
+      heroTypoConfig.subTextColor = textColor;
+      document.getElementById('btnSubBgWhite').classList.toggle('active', rgbStr === '255,255,255');
+      document.getElementById('btnSubBgDark').classList.toggle('active', rgbStr !== '255,255,255');
+      updateHeroTypoFineTune();
+    }
+
+    function updateHeroTypoFineTune() {
+      heroTypoConfig.titleSize = Number(document.getElementById('rangeTitleSize').value);
+      heroTypoConfig.titleWidth = Number(document.getElementById('rangeTitleWidth').value);
+      heroTypoConfig.subVisible = document.getElementById('chkSubVisible').checked;
+      heroTypoConfig.subSize = Number(document.getElementById('rangeSubSize').value);
+      heroTypoConfig.subWidth = Number(document.getElementById('rangeSubWidth').value);
+      heroTypoConfig.subOpacity = Number(document.getElementById('rangeSubOpacity').value);
+
+      document.getElementById('valTitleSize').innerText = heroTypoConfig.titleSize + 'px';
+      document.getElementById('valTitleWidth').innerText = heroTypoConfig.titleWidth + 'px';
+      document.getElementById('valSubSize').innerText = heroTypoConfig.subSize + 'px';
+      document.getElementById('valSubWidth').innerText = heroTypoConfig.subWidth + 'px';
+      document.getElementById('valSubOpacity').innerText = heroTypoConfig.subOpacity + '%';
+
+      applyHeroTypoDom();
+      saveAllPrState(false);
+    }
+
+    function applyHeroTypoDom() {
+      const titleBox = document.getElementById('dragTitleBox');
+      const headlineEl = document.getElementById('heroHeadlineEl');
+      titleBox.style.width = heroTypoConfig.titleWidth + 'px';
+      headlineEl.style.fontSize = heroTypoConfig.titleSize + 'px';
+
+      const subWrap = document.getElementById('dragSubBox');
+      const subLeadEl = document.getElementById('heroSubLeadEl');
+      subWrap.style.display = heroTypoConfig.subVisible ? 'block' : 'none';
+      subWrap.style.width = heroTypoConfig.subWidth + 'px';
+      subLeadEl.style.fontSize = heroTypoConfig.subSize + 'px';
+      subLeadEl.style.color = heroTypoConfig.subTextColor;
+
+      const alpha = (heroTypoConfig.subOpacity / 100).toFixed(2);
+      subLeadEl.style.background = `rgba(${heroTypoConfig.subBaseRgb}, ${alpha})`;
+      subLeadEl.style.padding = heroTypoConfig.subOpacity < 5 ? '2px 0' : '8px 12px';
+    }
+
+    function renderAllStickers() {
+      ['hero', 'mid', 'end'].forEach(key => {
+        const cfg = stickerMap[key];
+        const box = document.getElementById('stickerBox_' + key);
+        const iconEl = document.getElementById('stickerIcon_' + key);
+        const textEl = document.getElementById('stickerText_' + key);
+        if (!box) return;
+
+        box.style.display = cfg.show ? 'inline-flex' : 'none';
+        iconEl.innerText = cfg.icon;
+        textEl.innerText = cfg.text;
+        box.className = `pr-photo-sticker free-drag-item sticker-pos-${cfg.pos} ${cfg.style}`;
+        box.style.fontSize = (cfg.size || 15) + 'px';
+
+        const alpha = ((cfg.opacity ?? 85) / 100).toFixed(2);
+        if (cfg.style === 'sticker-style-badge') {
+          box.style.background = `rgba(255, 255, 255, ${alpha})`;
+        } else if (cfg.style === 'sticker-style-serif') {
+          box.style.background = `rgba(15, 23, 42, ${alpha})`;
+        } else {
+          box.style.background = cfg.opacity > 5 ? `rgba(15, 23, 42, ${alpha})` : 'transparent';
+        }
+      });
+    }
+
+    function pickStickerIcon(key, iconChar) {
+      stickerMap[key].icon = iconChar;
+      renderAllStickers();
+      saveAllPrState(false);
+    }
+
+    function setStickerStyle(key, styleClass, defaultSize, defaultOpacity) {
+      stickerMap[key].style = styleClass;
+      stickerMap[key].size = defaultSize;
+      stickerMap[key].opacity = defaultOpacity;
+      document.getElementById('rangeStickerSize_' + key).value = defaultSize;
+      document.getElementById('valStickerSize_' + key).innerText = defaultSize + 'px';
+      document.getElementById('rangeStickerOpacity_' + key).value = defaultOpacity;
+      document.getElementById('valStickerOpacity_' + key).innerText = defaultOpacity + '%';
+      renderAllStickers();
+      saveAllPrState(false);
+    }
+
+    function setStickerPos(key, posCode) {
+      const boxId = 'stickerBox_' + key;
+      const box = document.getElementById(boxId);
+      if (box) { box.style.left = ''; box.style.top = ''; box.style.right = ''; box.style.bottom = ''; }
+      delete elementPositions[boxId];
+      stickerMap[key].pos = posCode;
+      renderAllStickers();
+      saveAllPrState(false);
+    }
+
+    function syncSticker(key) {
+      const cap = key.charAt(0).toUpperCase() + key.slice(1);
+      const chk = document.getElementById('chkSticker' + cap);
+      const inp = document.getElementById('inpStickerText' + cap);
+      const sizeRange = document.getElementById('rangeStickerSize_' + key);
+      const opRange = document.getElementById('rangeStickerOpacity_' + key);
+
+      if (chk) stickerMap[key].show = chk.checked;
+      if (inp) stickerMap[key].text = inp.value;
+      if (sizeRange) {
+        stickerMap[key].size = Number(sizeRange.value);
+        document.getElementById('valStickerSize_' + key).innerText = stickerMap[key].size + 'px';
+      }
+      if (opRange) {
+        stickerMap[key].opacity = Number(opRange.value);
+        document.getElementById('valStickerOpacity_' + key).innerText = stickerMap[key].opacity + '%';
+      }
+      renderAllStickers();
+      saveAllPrState(false);
+    }
+
+    function applyPhotoPosToElement(elId) {
+      const img = document.getElementById('img_' + elId);
+      const pos = photoPositionMap[elId];
+      if (!img || !pos) return;
+      const scaleVal = Math.max(1, (pos.zoom || 100) / 100);
+      img.style.objectPosition = `${pos.x}% ${pos.y}%`;
+      img.style.transformOrigin = `${pos.x}% ${pos.y}%`;
+      img.style.transform = `scale(${scaleVal})`;
+    }
+
+    function onSliderPhotoPos(elId, prefix) {
+      const x = Number(document.getElementById('range' + prefix + 'X').value);
+      const y = Number(document.getElementById('range' + prefix + 'Y').value);
+      const zoom = Number(document.getElementById('range' + prefix + 'Zoom').value);
+
+      document.getElementById('val' + prefix + 'X').innerText = x + '%';
+      document.getElementById('val' + prefix + 'Y').innerText = y + '%';
+      document.getElementById('val' + prefix + 'Zoom').innerText = zoom + '%';
+
+      photoPositionMap[elId] = { x, y, zoom };
+      applyPhotoPosToElement(elId);
+      saveAllPrState(false);
+    }
+
+    function selectSlashPhotoForTune(slashId, num) {
+      selectedSlashId = slashId;
+      selectedSlashNum = num;
+      [1, 2, 3].forEach(n => document.getElementById('btnPickSlash' + n).classList.toggle('active', n === num));
+      document.getElementById('lblSlashUploadBtn').innerText = `선택된 [${num}번 사진] 파일 변경하기`;
+
+      const pos = photoPositionMap[slashId] || { x: 50, y: 50, zoom: 100 };
+      document.getElementById('rangeSlashX').value = pos.x;
+      document.getElementById('rangeSlashY').value = pos.y;
+      document.getElementById('rangeSlashZoom').value = Math.max(100, pos.zoom || 100);
+      document.getElementById('valSlashX').innerText = pos.x + '%';
+      document.getElementById('valSlashY').innerText = pos.y + '%';
+      document.getElementById('valSlashZoom').innerText = Math.max(100, pos.zoom || 100) + '%';
+    }
+
+    function triggerSelectedSlashUpload() {
+      triggerImageUpload('SLASH_' + selectedSlashNum);
+    }
+
+    function onSliderSlashPos() {
+      const x = Number(document.getElementById('rangeSlashX').value);
+      const y = Number(document.getElementById('rangeSlashY').value);
+      const zoom = Number(document.getElementById('rangeSlashZoom').value);
+
+      document.getElementById('valSlashX').innerText = x + '%';
+      document.getElementById('valSlashY').innerText = y + '%';
+      document.getElementById('valSlashZoom').innerText = zoom + '%';
+
+      photoPositionMap[selectedSlashId] = { x, y, zoom };
+      applyPhotoPosToElement(selectedSlashId);
+      saveAllPrState(false);
+    }
+
+    function onSliderGoodsPos() {
+      const cur = goodsSlides[currentGoodsSlideIdx];
+      if (!cur) return;
+      cur.posX = Number(document.getElementById('rangeGoodsX').value);
+      cur.posY = Number(document.getElementById('rangeGoodsY').value);
+      cur.zoom = Number(document.getElementById('rangeGoodsZoom').value);
+
+      document.getElementById('valGoodsX').innerText = cur.posX + '%';
+      document.getElementById('valGoodsY').innerText = cur.posY + '%';
+      document.getElementById('valGoodsZoom').innerText = cur.zoom + '%';
+      renderGoodsSlider();
+      saveAllPrState(false);
+    }
+
+    function syncGoodsSlidersUI() {
+      const cur = goodsSlides[currentGoodsSlideIdx] || { posX: 50, posY: 50, zoom: 100 };
+      const rx = document.getElementById('rangeGoodsX');
+      if (!rx) return;
+      const z = Math.max(100, cur.zoom ?? 100);
+      rx.value = cur.posX ?? 50;
+      document.getElementById('rangeGoodsY').value = cur.posY ?? 50;
+      document.getElementById('rangeGoodsZoom').value = z;
+      document.getElementById('valGoodsX').innerText = (cur.posX ?? 50) + '%';
+      document.getElementById('valGoodsY').innerText = (cur.posY ?? 50) + '%';
+      document.getElementById('valGoodsZoom').innerText = z + '%';
+    }
+
+    function syncAllPhotoSlidersFromState() {
+      const map = [
+        { id: 'heroPhotoBox', p: 'Hero' },
+        { id: 'secMidPortrait', p: 'Mid' },
+        { id: 'endingPhotoBox', p: 'End' }
+      ];
+      map.forEach(({ id, p }) => {
+        const pos = photoPositionMap[id] || { x: 50, y: 20, zoom: 100 };
+        const z = Math.max(100, pos.zoom || 100);
+        document.getElementById('range' + p + 'X').value = pos.x;
+        document.getElementById('range' + p + 'Y').value = pos.y;
+        document.getElementById('range' + p + 'Zoom').value = z;
+        document.getElementById('val' + p + 'X').innerText = pos.x + '%';
+        document.getElementById('val' + p + 'Y').innerText = pos.y + '%';
+        document.getElementById('val' + p + 'Zoom').innerText = z + '%';
+      });
+      selectSlashPhotoForTune(selectedSlashId, selectedSlashNum);
+      syncGoodsSlidersUI();
+    }
+
+    function initDirectPhotoPan() {
+      const targets = document.querySelectorAll('.pan-photo-target');
+      targets.forEach(el => {
+        let isPanning = false;
+        let startX = 0, startY = 0;
+        let startPosX = 50, startPosY = 50;
+
+        el.addEventListener('pointerdown', e => {
+          if (!isEditMode) return;
+          if (e.target.closest('.free-drag-item') || e.target.closest('button')) return;
+          isPanning = true;
+          el.setPointerCapture(e.pointerId);
+          startX = e.clientX;
+          startY = e.clientY;
+
+          const key = el.getAttribute('data-photo-key');
+          if (key === 'GOODS_SLIDE') {
+            const cur = goodsSlides[currentGoodsSlideIdx] || { posX: 50, posY: 50 };
+            startPosX = cur.posX ?? 50;
+            startPosY = cur.posY ?? 50;
+          } else {
+            const pos = photoPositionMap[key] || { x: 50, y: 30 };
+            startPosX = pos.x;
+            startPosY = pos.y;
+          }
+        });
+
+        el.addEventListener('pointermove', e => {
+          if (!isPanning || !isEditMode) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          const newX = Math.max(0, Math.min(100, Math.round(startPosX - dx * 0.22)));
+          const newY = Math.max(0, Math.min(100, Math.round(startPosY - dy * 0.22)));
+
+          const key = el.getAttribute('data-photo-key');
+          if (key === 'GOODS_SLIDE') {
+            if (goodsSlides[currentGoodsSlideIdx]) {
+              goodsSlides[currentGoodsSlideIdx].posX = newX;
+              goodsSlides[currentGoodsSlideIdx].posY = newY;
+              renderGoodsSlider();
+              syncGoodsSlidersUI();
+            }
+          } else if (photoPositionMap[key]) {
+            photoPositionMap[key].x = newX;
+            photoPositionMap[key].y = newY;
+            applyPhotoPosToElement(key);
+            syncAllPhotoSlidersFromState();
+          }
+        });
+
+        el.addEventListener('pointerup', () => {
+          if (isPanning) {
+            isPanning = false;
+            saveAllPrState(false);
+          }
+        });
+      });
+    }
+
+    function initFreeDragItems() {
+      const items = document.querySelectorAll('.free-drag-item');
+      items.forEach(el => {
+        let dragging = false;
+        let sx = 0, sy = 0, ox = 0, oy = 0;
+
+        el.addEventListener('pointerdown', e => {
+          if (!isEditMode) return;
+          e.stopPropagation();
+          dragging = true;
+          el.setPointerCapture(e.pointerId);
+          const parentRect = el.parentElement.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+          sx = e.clientX;
+          sy = e.clientY;
+          ox = elRect.left - parentRect.left;
+          oy = elRect.top - parentRect.top;
+
+          el.style.right = 'auto';
+          el.style.bottom = 'auto';
+          el.style.left = ox + 'px';
+          el.style.top = oy + 'px';
+          el.style.transform = 'none';
+        });
+
+        el.addEventListener('pointermove', e => {
+          if (!dragging || !isEditMode) return;
+          const dx = e.clientX - sx;
+          const dy = e.clientY - sy;
+          el.style.left = Math.max(-10, Math.min(420, ox + dx)) + 'px';
+          el.style.top = Math.max(0, Math.min(510, oy + dy)) + 'px';
+        });
+
+        el.addEventListener('pointerup', () => {
+          if (dragging) {
+            dragging = false;
+            if (el.id) {
+              elementPositions[el.id] = { left: el.style.left, top: el.style.top };
+            }
+            saveAllPrState(false);
+          }
+        });
+      });
+    }
+
+    function syncHeroTexts() {
+      document.getElementById('heroHeadlineEl').innerText = document.getElementById('inpHeroHeadline').value;
+      document.getElementById('heroSubLeadEl').innerText = document.getElementById('inpHeroSubLead').value;
+      document.getElementById('heroAgentName').innerText = document.getElementById('inpAgentName').value;
+      document.getElementById('heroNickEl').innerText = document.getElementById('inpAgentNick').value;
+      document.getElementById('heroRoleEl').innerText = document.getElementById('inpAgentRole').value;
+      document.getElementById('heroTaglineEl').innerText = document.getElementById('inpAgentTagline').value;
+
+      const vBox = document.getElementById('dragVerticalBox');
+      vBox.innerText = document.getElementById('inpVertText').value;
+      vBox.style.display = document.getElementById('chkVertBox').checked ? 'block' : 'none';
+
+      const vOp = Number(document.getElementById('rangeVertOpacity').value);
+      heroTypoConfig.vertOpacity = vOp;
+      document.getElementById('valVertOpacity').innerText = vOp + '%';
+      vBox.style.background = `rgba(17, 63, 103, ${(vOp / 100).toFixed(2)})`;
+      vBox.style.backdropFilter = vOp > 10 ? 'blur(5px)' : 'none';
+      saveAllPrState(false);
+    }
+
+    function syncPhilosophy() {
+      document.getElementById('philTitleEl').innerText = document.getElementById('inpPhilTitle').value;
+      document.getElementById('philBodyEl').innerText = document.getElementById('inpPhilBody').value;
+      saveAllPrState(false);
+    }
+
+    function syncExpertise() {
+      document.getElementById('exp1Title').innerText = document.getElementById('inpExp1T').value;
+      document.getElementById('exp1Sub').innerText = document.getElementById('inpExp1S').value;
+      document.getElementById('exp2Title').innerText = document.getElementById('inpExp2T').value;
+      document.getElementById('exp2Sub').innerText = document.getElementById('inpExp2S').value;
+      document.getElementById('exp3Title').innerText = document.getElementById('inpExp3T').value;
+      document.getElementById('exp3Sub').innerText = document.getElementById('inpExp3S').value;
+      saveAllPrState(false);
+    }
+
+    function syncMidPortrait() {
+      document.getElementById('midTitleEl').innerText = document.getElementById('inpMidTitle').value;
+      document.getElementById('midSubEl').innerText = document.getElementById('inpMidSub').value;
+      saveAllPrState(false);
+    }
+
+    function syncGoodsText() {
+      document.getElementById('goodsBubbleEl').innerText = document.getElementById('inpGoodsBubble').value;
+      document.getElementById('goodsTitleEl').innerText = document.getElementById('inpGoodsTitle').value;
+      document.getElementById('goodsDescEl').innerText = document.getElementById('inpGoodsDesc').value;
+      saveAllPrState(false);
+    }
+
+    function syncEndingSection() {
+      document.getElementById('endingClosingTitleEl').innerText = document.getElementById('inpEndingTitle').value;
+      document.getElementById('endingClosingSignEl').innerText = document.getElementById('inpEndingSign').value;
+      saveAllPrState(false);
+    }
+
+    function toggleSecById(secId, isShow) {
+      sectionVisibility[secId] = isShow;
+      const el = document.getElementById(secId);
+      if (el) el.style.display = isShow ? '' : 'none';
+      saveAllPrState(false);
+    }
+
+    function renderStandardList() {
+      renderStandardPreviewOnly();
+      const formBox = document.getElementById('eepStandardFormList');
+      if (formBox) {
+        formBox.innerHTML = standardItems.map((item, idx) => `
+          <div id="stdFormCard_${idx}" style="background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:10px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:11.5px; font-weight:800; color:var(--theme-main);">
+              <span>기준 0${idx + 1}</span>
+              <span style="color:#ef4444; cursor:pointer;" onclick="removeStandardItem(${idx})">✕ 삭제</span>
+            </div>
+            <input type="text" id="inpStdTitle_${idx}" class="eep-input" value="${item.title}" placeholder="기준 제목" oninput="standardItems[${idx}].title=this.value; renderStandardPreviewOnly();" style="margin-bottom:5px;" />
+            <input type="text" class="eep-input" value="${item.sub}" placeholder="상세 설명" oninput="standardItems[${idx}].sub=this.value; renderStandardPreviewOnly();" />
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderStandardPreviewOnly() {
+      const box = document.getElementById('standardListContainer');
+      box.innerHTML = standardItems.map((item, idx) => `
+        <div class="std-row" data-edit-link="4|cardProductStandard|inpStdTitle_${idx}|📋 상품 선정 기준 0${idx + 1} 수정">
+          <div class="std-num-circle">${String(idx + 1).padStart(2, '0')}</div>
+          <div style="flex:1;">
+            <div class="std-text-title">${item.title}</div>
+            <div class="std-text-sub">${item.sub}</div>
+          </div>
+        </div>
+      `).join('');
+      saveAllPrState(false);
+    }
+
+    function addStandardItem() {
+      if (standardItems.length >= 8) return alert('상품 선정 기준은 최대 8개까지 추가할 수 있습니다.');
+      standardItems.push({ title: '나만의 추가 상품 선정 기준', sub: '고객을 위해 지키는 원칙을 입력해 주세요' });
+      renderStandardList();
+      saveAllPrState(false);
+    }
+
+    function removeStandardItem(idx) {
+      if (standardItems.length <= 1) return alert('최소 1개는 유지되어야 합니다.');
+      standardItems.splice(idx, 1);
+      renderStandardList();
+      saveAllPrState(false);
+    }
+
+    function renderCareTopics() {
+      renderCarePreviewOnly();
+      const formBox = document.getElementById('eepCareFormList');
+      if (formBox) {
+        formBox.innerHTML = careTopics.map((item, idx) => `
+          <div id="careFormCard_${idx}" style="background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:10px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:11.5px; font-weight:800; color:var(--theme-main);">
+              <span>케어 혜택 ${String(idx + 1).padStart(2, '0')}</span>
+              <span style="color:#ef4444; cursor:pointer;" onclick="removeCareTopic(${idx})">✕ 삭제</span>
+            </div>
+            <div style="display:grid; grid-template-columns:110px 1fr; gap:5px; margin-bottom:5px;">
+              <input type="text" class="eep-input" value="${item.pill}" placeholder="배지" oninput="careTopics[${idx}].pill=this.value; renderCarePreviewOnly();" />
+              <input type="text" id="inpCareTitle_${idx}" class="eep-input" value="${item.title}" placeholder="혜택 제목" oninput="careTopics[${idx}].title=this.value; renderCarePreviewOnly();" />
+            </div>
+            <input type="text" class="eep-input" value="${item.sub}" placeholder="혜택 상세 설명" oninput="careTopics[${idx}].sub=this.value; renderCarePreviewOnly();" />
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderCarePreviewOnly() {
+      const grid = document.getElementById('careTopicsGrid');
+      grid.innerHTML = careTopics.map((item, idx) => `
+        <div class="care-list-row" data-edit-link="5|cardCareTopics|inpCareTitle_${idx}|🌿 케어 혜택 ${String(idx + 1).padStart(2, '0')} 수정">
+          <div class="care-num-badge">${String(idx + 1).padStart(2, '0')}</div>
+          <div style="flex:1;">
+            <span class="care-pill-tag">${item.pill}</span>
+            <div class="care-list-title">${item.title}</div>
+            <div class="care-list-sub">${item.sub}</div>
+          </div>
+        </div>
+      `).join('');
+      saveAllPrState(false);
+    }
+
+    function addCareTopicCard() {
+      if (careTopics.length >= 10) return alert('케어 혜택은 최대 10개까지 추가할 수 있습니다!');
+      careTopics.push({
+        pill: `특별 혜택 ${String(careTopics.length + 1).padStart(2, '0')}`,
+        title: '새로운 나만의 케어 혜택 제목',
+        sub: '고객님께 제공하는 차별화된 관리 서비스를 적어주세요.'
+      });
+      renderCareTopics();
+      saveAllPrState(false);
+    }
+
+    function removeCareTopic(idx) {
+      if (careTopics.length <= 1) return alert('최소 1개의 혜택은 유지되어야 합니다.');
+      careTopics.splice(idx, 1);
+      renderCareTopics();
+      saveAllPrState(false);
+    }
+
+    async function uploadBase64ToSupabaseStorage(dataUrl) {
+      if (!dataUrl || !String(dataUrl).startsWith('data:image')) return dataUrl;
+      try {
+        const res = await fetch('/api/meta-execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'UPLOAD_MEDIA', mediaBase64: dataUrl })
+        });
+        const json = await res.json();
+        if (json && json.success && json.mediaUrl) {
+          return json.mediaUrl;
+        }
+      } catch (e) {}
+      return dataUrl;
+    }
+
+    function renderGoodsSlider() {
+      const imgEl = document.getElementById('img_goodsSlideStage');
+      const counter = document.getElementById('goodsSlideCounter');
+      const dotsBox = document.getElementById('goodsSliderDots');
+      if (!imgEl) return;
+
+      if (goodsSlides.length === 0) {
+        goodsSlides.push({ url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=900&q=85', posX: 50, posY: 50, zoom: 100 });
+      }
+      if (currentGoodsSlideIdx >= goodsSlides.length) currentGoodsSlideIdx = 0;
+      if (currentGoodsSlideIdx < 0) currentGoodsSlideIdx = goodsSlides.length - 1;
+
+      const cur = goodsSlides[currentGoodsSlideIdx];
+      imgEl.src = cur.url;
+      const px = cur.posX ?? 50;
+      const py = cur.posY ?? 50;
+      const scaleVal = Math.max(1, (cur.zoom || 100) / 100);
+      imgEl.style.objectPosition = `${px}% ${py}%`;
+      imgEl.style.transformOrigin = `${px}% ${py}%`;
+      imgEl.style.transform = `scale(${scaleVal})`;
+
+      if (counter) counter.innerText = `${currentGoodsSlideIdx + 1} / ${goodsSlides.length}`;
+      if (dotsBox) {
+        dotsBox.innerHTML = goodsSlides.map((_, idx) =>
+          `<span class="slider-dot ${idx === currentGoodsSlideIdx ? 'active' : ''}" onclick="event.stopPropagation(); jumpGoodsSlide(${idx})"></span>`
+        ).join('');
+      }
+      syncGoodsSlidersUI();
+    }
+
+    function moveGoodsSlide(dir) { currentGoodsSlideIdx += dir; renderGoodsSlider(); }
+    function jumpGoodsSlide(idx) { currentGoodsSlideIdx = idx; renderGoodsSlider(); }
+    function removeCurrentGoodsSlide() {
+      if (goodsSlides.length <= 1) return alert('최소 1장의 슬라이드 사진은 유지되어야 합니다.');
+      goodsSlides.splice(currentGoodsSlideIdx, 1);
+      if (currentGoodsSlideIdx >= goodsSlides.length) currentGoodsSlideIdx = goodsSlides.length - 1;
+      renderGoodsSlider();
+      saveAllPrState(false);
+    }
+
+    document.getElementById('goodsMultiPicker').addEventListener('change', async e => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      const rawDataUrls = await Promise.all(files.map(file => new Promise(res => {
+        const r = new FileReader();
+        r.onload = ev => res(ev.target.result);
+        r.readAsDataURL(file);
+      })));
+
+      const uploadedSlides = [];
+      for (const dUrl of rawDataUrls) {
+        const finalUrl = await uploadBase64ToSupabaseStorage(dUrl);
+        uploadedSlides.push({ url: finalUrl, posX: 50, posY: 50, zoom: 100 });
+      }
+
+      goodsSlides.push(...uploadedSlides);
+      currentGoodsSlideIdx = goodsSlides.length - uploadedSlides.length;
+      renderGoodsSlider();
+      saveAllPrState(false);
+    });
+
+    function initGoodsTouchSwipe() {
+      const area = document.getElementById('goodsSliderTouchArea');
+      if (!area) return;
+      let sx = 0;
+      area.addEventListener('touchstart', e => { sx = e.changedTouches[0].screenX; }, { passive: true });
+      area.addEventListener('touchend', e => {
+        const diff = e.changedTouches[0].screenX - sx;
+        if (Math.abs(diff) > 40) moveGoodsSlide(diff < 0 ? 1 : -1);
+      }, { passive: true });
+    }
+
+    function applyColorTheme(main, accent, soft, cta) {
+      const root = document.documentElement;
+      root.style.setProperty('--theme-main', main);
+      root.style.setProperty('--theme-accent', accent);
+      root.style.setProperty('--theme-soft', soft);
+      root.style.setProperty('--cta-color', cta);
+      document.getElementById('pickerMainColor').value = main;
+      document.getElementById('pickerCtaColor').value = cta;
+      saveAllPrState(false);
+    }
+
+    function applyCustomPickers() {
+      const main = document.getElementById('pickerMainColor').value;
+      const cta = document.getElementById('pickerCtaColor').value;
+      const root = document.documentElement;
+      root.style.setProperty('--theme-main', main);
+      root.style.setProperty('--theme-accent', main);
+      root.style.setProperty('--cta-color', cta);
+      saveAllPrState(false);
+    }
+
+    function triggerImageUpload(targetKey) {
+      currentUploadTarget = targetKey;
+      const input = document.getElementById('globalImagePicker');
+      input.value = '';
+      input.click();
+    }
+
+    document.getElementById('globalImagePicker').addEventListener('change', e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async ev => {
+        const rawDataUrl = ev.target.result;
+        const uploadedUrl = await uploadBase64ToSupabaseStorage(rawDataUrl);
+
+        if (currentUploadTarget === 'LOGO_PNG') {
+          logoConfig.src = uploadedUrl;
+          logoConfig.visible = true;
+          applyLogoDom();
+        } else if (currentUploadTarget === 'HERO_MAIN') {
+          document.getElementById('img_heroPhotoBox').src = uploadedUrl;
+        } else if (currentUploadTarget === 'SLASH_1') {
+          document.getElementById('img_slashPhoto1').src = uploadedUrl;
+        } else if (currentUploadTarget === 'SLASH_2') {
+          document.getElementById('img_slashPhoto2').src = uploadedUrl;
+        } else if (currentUploadTarget === 'SLASH_3') {
+          document.getElementById('img_slashPhoto3').src = uploadedUrl;
+        } else if (currentUploadTarget === 'MID_PORTRAIT') {
+          document.getElementById('img_secMidPortrait').src = uploadedUrl;
+        } else if (currentUploadTarget === 'ENDING_PHOTO') {
+          document.getElementById('img_endingPhotoBox').src = uploadedUrl;
+        }
+        saveAllPrState(false);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function buildPrStatePayload() {
+      const notifyPh = localStorage.getItem('crm_agent_phone') || storedAgentNotifyPhone || '';
+      return {
+        standardItems,
+        goodsSlides,
+        careTopics,
+        photoPositionMap,
+        stickerMap,
+        logoConfig,
+        heroTypoConfig,
+        elementPositions,
+        sectionVisibility,
+        agentNotifyPhone: notifyPh,
+        metaPixelId: activeMetaPixelId || localStorage.getItem('weracle_meta_pixel_id') || '',
+        vertVisible: document.getElementById('chkVertBox').checked,
+        colors: {
+          main: getComputedStyle(document.documentElement).getPropertyValue('--theme-main').trim(),
+          accent: getComputedStyle(document.documentElement).getPropertyValue('--theme-accent').trim(),
+          soft: getComputedStyle(document.documentElement).getPropertyValue('--theme-soft').trim(),
+          cta: getComputedStyle(document.documentElement).getPropertyValue('--cta-color').trim()
+        },
+        photos: {
+          heroPhotoBox: document.getElementById('img_heroPhotoBox').src,
+          slashPhoto1: document.getElementById('img_slashPhoto1').src,
+          slashPhoto2: document.getElementById('img_slashPhoto2').src,
+          slashPhoto3: document.getElementById('img_slashPhoto3').src,
+          secMidPortrait: document.getElementById('img_secMidPortrait').src,
+          endingPhotoBox: document.getElementById('img_endingPhotoBox').src
+        },
+        texts: {
+          heroHeadlineEl: document.getElementById('heroHeadlineEl').innerText,
+          heroSubLeadEl: document.getElementById('heroSubLeadEl').innerText,
+          heroAgentName: document.getElementById('heroAgentName').innerText,
+          heroNickEl: document.getElementById('heroNickEl').innerText,
+          heroRoleEl: document.getElementById('heroRoleEl').innerText,
+          heroTaglineEl: document.getElementById('heroTaglineEl').innerText,
+          dragVerticalBox: document.getElementById('dragVerticalBox').innerText,
+          philTitleEl: document.getElementById('philTitleEl').innerText,
+          philBodyEl: document.getElementById('philBodyEl').innerText,
+          exp1Title: document.getElementById('exp1Title').innerText,
+          exp1Sub: document.getElementById('exp1Sub').innerText,
+          exp2Title: document.getElementById('exp2Title').innerText,
+          exp2Sub: document.getElementById('exp2Sub').innerText,
+          exp3Title: document.getElementById('exp3Title').innerText,
+          exp3Sub: document.getElementById('exp3Sub').innerText,
+          midTitleEl: document.getElementById('midTitleEl').innerText,
+          midSubEl: document.getElementById('midSubEl').innerText,
+          goodsBubbleEl: document.getElementById('goodsBubbleEl').innerText,
+          goodsTitleEl: document.getElementById('goodsTitleEl').innerText,
+          goodsDescEl: document.getElementById('goodsDescEl').innerText,
+          endingClosingTitleEl: document.getElementById('endingClosingTitleEl').innerText,
+          endingClosingSignEl: document.getElementById('endingClosingSignEl').innerText
+        }
+      };
+    }
+
+    async function saveAllPrState(syncToServer) {
+      if (syncToServer) {
+        const saveBtn = document.getElementById('btnSaveServerPr');
+        const origHtml = saveBtn ? saveBtn.innerHTML : '';
+        if (saveBtn) {
+          saveBtn.disabled = true;
+          saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 이미지 및 설정 서버 저장 중...';
+        }
+        try {
+          if (logoConfig.src && String(logoConfig.src).startsWith('data:image')) {
+            logoConfig.src = await uploadBase64ToSupabaseStorage(logoConfig.src);
+            document.getElementById('heroLogoImg').src = logoConfig.src;
+          }
+          const photoIds = ['heroPhotoBox', 'slashPhoto1', 'slashPhoto2', 'slashPhoto3', 'secMidPortrait', 'endingPhotoBox'];
+          for (const pid of photoIds) {
+            const imgEl = document.getElementById('img_' + pid);
+            if (imgEl && imgEl.src && String(imgEl.src).startsWith('data:image')) {
+              imgEl.src = await uploadBase64ToSupabaseStorage(imgEl.src);
+            }
+          }
+          for (let i = 0; i < goodsSlides.length; i++) {
+            if (goodsSlides[i].url && String(goodsSlides[i].url).startsWith('data:image')) {
+              goodsSlides[i].url = await uploadBase64ToSupabaseStorage(goodsSlides[i].url);
+            }
+          }
+          renderGoodsSlider();
+
+          const cleanState = buildPrStatePayload();
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanState));
+            if (cleanState.texts && cleanState.texts.heroAgentName) {
+              localStorage.setItem('crm_agent_name', cleanState.texts.heroAgentName);
+            }
+          } catch (e) {}
+
+          const userKeys = getActiveUserKeys();
+          const res = await fetch('/api/meta-execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'SAVE_PR_CONFIG',
+              agentId: activeAgentKey,
+              userKeys,
+              config: cleanState
+            })
+          });
+          const resJson = await res.json();
+          if (resJson && resJson.success) {
+            alert('✅ 내 매거진 PR 페이지 설정이 수파베이스 서버에 완벽하게 저장되었습니다!\n이제 인스타 DM 링크나 광고 링크로 접속하면 꾸미신 화면 그대로 나옵니다.');
+          } else {
+            alert('⚠️ 서버 응답 확인 필요: ' + (resJson.error || '다시 한 번 저장을 눌러주세요.'));
+          }
+        } catch (err) {
+          alert('⚠️ 서버 통신 오류: ' + err.message);
+        } finally {
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = origHtml;
+          }
+        }
+        return;
+      }
+
+      const state = buildPrStatePayload();
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        if (state.texts && state.texts.heroAgentName) {
+          localStorage.setItem('crm_agent_name', state.texts.heroAgentName);
+        }
+      } catch (e) {}
+    }
+
+    function applyStateObjectToDom(state) {
+      if (!state || typeof state !== 'object') return;
+      if (Array.isArray(state.standardItems)) standardItems = state.standardItems;
+      if (Array.isArray(state.goodsSlides) && state.goodsSlides.length) goodsSlides = state.goodsSlides;
+      if (Array.isArray(state.careTopics)) careTopics = state.careTopics;
+      if (state.photoPositionMap) photoPositionMap = { ...photoPositionMap, ...state.photoPositionMap };
+      if (state.stickerMap) stickerMap = { ...stickerMap, ...state.stickerMap };
+      if (state.logoConfig) logoConfig = { ...logoConfig, ...state.logoConfig };
+      if (state.heroTypoConfig) heroTypoConfig = { ...heroTypoConfig, ...state.heroTypoConfig };
+      if (state.elementPositions) elementPositions = { ...elementPositions, ...state.elementPositions };
+      if (state.sectionVisibility) sectionVisibility = { ...sectionVisibility, ...state.sectionVisibility };
+
+      if (state.agentNotifyPhone) {
+        storedAgentNotifyPhone = state.agentNotifyPhone;
+      }
+      if (state.metaPixelId && !activeMetaPixelId) {
+        initDynamicMetaPixel(state.metaPixelId);
+      }
+
+      document.getElementById('rangeLogoSize').value = logoConfig.size;
+      document.getElementById('valLogoSize').innerText = logoConfig.size + 'px';
+      document.getElementById('rangeLogoOpacity').value = logoConfig.intensity ?? 85;
+      document.getElementById('valLogoOpacity').innerText = (logoConfig.intensity ?? 85) + '%';
+      document.getElementById('chkLogoInvert').checked = !!logoConfig.invert;
+
+      document.getElementById('rangeTitleSize').value = heroTypoConfig.titleSize;
+      document.getElementById('valTitleSize').innerText = heroTypoConfig.titleSize + 'px';
+      document.getElementById('rangeTitleWidth').value = heroTypoConfig.titleWidth;
+      document.getElementById('valTitleWidth').innerText = heroTypoConfig.titleWidth + 'px';
+      document.getElementById('chkSubVisible').checked = !!heroTypoConfig.subVisible;
+      document.getElementById('rangeSubSize').value = heroTypoConfig.subSize;
+      document.getElementById('valSubSize').innerText = heroTypoConfig.subSize + 'px';
+      document.getElementById('rangeSubWidth').value = heroTypoConfig.subWidth;
+      document.getElementById('valSubWidth').innerText = heroTypoConfig.subWidth + 'px';
+      document.getElementById('rangeSubOpacity').value = heroTypoConfig.subOpacity;
+      document.getElementById('valSubOpacity').innerText = heroTypoConfig.subOpacity + '%';
+
+      if (state.vertVisible !== undefined) {
+        document.getElementById('chkVertBox').checked = !!state.vertVisible;
+        document.getElementById('dragVerticalBox').style.display = state.vertVisible ? 'block' : 'none';
+      }
+
+      if (state.colors) {
+        const root = document.documentElement;
+        if (state.colors.main) root.style.setProperty('--theme-main', state.colors.main);
+        if (state.colors.accent) root.style.setProperty('--theme-accent', state.colors.accent);
+        if (state.colors.soft) root.style.setProperty('--theme-soft', state.colors.soft);
+        if (state.colors.cta) root.style.setProperty('--cta-color', state.colors.cta);
+      }
+
+      if (state.photos) {
+        Object.keys(state.photos).forEach(id => {
+          const imgEl = document.getElementById('img_' + id);
+          if (imgEl && state.photos[id]) imgEl.src = state.photos[id];
+        });
+      }
+
+      if (state.texts) {
+        Object.keys(state.texts).forEach(id => {
+          const el = document.getElementById(id);
+          if (el && state.texts[id] !== undefined) el.innerText = state.texts[id];
+        });
+        const t = state.texts;
+        if (t.heroHeadlineEl !== undefined) document.getElementById('inpHeroHeadline').value = t.heroHeadlineEl;
+        if (t.heroSubLeadEl !== undefined) document.getElementById('inpHeroSubLead').value = t.heroSubLeadEl;
+        if (t.heroAgentName !== undefined) document.getElementById('inpAgentName').value = t.heroAgentName;
+        if (t.heroNickEl !== undefined) document.getElementById('inpAgentNick').value = t.heroNickEl;
+        if (t.heroRoleEl !== undefined) document.getElementById('inpAgentRole').value = t.heroRoleEl;
+        if (t.heroTaglineEl !== undefined) document.getElementById('inpAgentTagline').value = t.heroTaglineEl;
+        if (t.dragVerticalBox !== undefined) document.getElementById('inpVertText').value = t.dragVerticalBox;
+        if (t.philTitleEl !== undefined) document.getElementById('inpPhilTitle').value = t.philTitleEl;
+        if (t.philBodyEl !== undefined) document.getElementById('inpPhilBody').value = t.philBodyEl;
+        if (t.exp1Title !== undefined) document.getElementById('inpExp1T').value = t.exp1Title;
+        if (t.exp1Sub !== undefined) document.getElementById('inpExp1S').value = t.exp1Sub;
+        if (t.exp2Title !== undefined) document.getElementById('inpExp2T').value = t.exp2Title;
+        if (t.exp2Sub !== undefined) document.getElementById('inpExp2S').value = t.exp2Sub;
+        if (t.exp3Title !== undefined) document.getElementById('inpExp3T').value = t.exp3Title;
+        if (t.exp3Sub !== undefined) document.getElementById('inpExp3S').value = t.exp3Sub;
+        if (t.midTitleEl !== undefined) document.getElementById('inpMidTitle').value = t.midTitleEl;
+        if (t.midSubEl !== undefined) document.getElementById('inpMidSub').value = t.midSubEl;
+        if (t.goodsBubbleEl !== undefined) document.getElementById('inpGoodsBubble').value = t.goodsBubbleEl;
+        if (t.goodsTitleEl !== undefined) document.getElementById('inpGoodsTitle').value = t.goodsTitleEl;
+        if (t.goodsDescEl !== undefined) document.getElementById('inpGoodsDesc').value = t.goodsDescEl;
+        if (t.endingClosingTitleEl !== undefined) document.getElementById('inpEndingTitle').value = t.endingClosingTitleEl;
+        if (t.endingClosingSignEl !== undefined) document.getElementById('inpEndingSign').value = t.endingClosingSignEl;
+      }
+
+      Object.keys(elementPositions).forEach(elId => {
+        const el = document.getElementById(elId);
+        const pos = elementPositions[elId];
+        if (el && pos && pos.left) {
+          el.style.right = 'auto';
+          el.style.bottom = 'auto';
+          el.style.left = pos.left;
+          el.style.top = pos.top;
+          el.style.transform = 'none';
+        }
+      });
+
+      Object.keys(sectionVisibility).forEach(secId => {
+        const isShow = sectionVisibility[secId] !== false;
+        const el = document.getElementById(secId);
+        if (el) el.style.display = isShow ? '' : 'none';
+      });
+    }
+
+    function loadSavedPrState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        applyStateObjectToDom(JSON.parse(raw));
+      } catch (e) {}
+    }
+
+    async function loadServerPrState() {
+      try {
+        const userKeys = getActiveUserKeys();
+        const res = await fetch('/api/meta-execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'GET_PR_CONFIG', agentId: activeAgentKey, userKeys })
+        });
+        const json = await res.json();
+        if (json && json.success && json.config) {
+          applyStateObjectToDom(json.config);
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(json.config)); } catch (e) {}
+        }
+      } catch (e) {}
+    }
+
+    function resetAllPrState() {
+      if (!confirm('모든 설정을 초기 샘플 상태로 되돌리시겠습니까?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+
+    function autoHyphenPhone(el) {
+      let val = el.value.replace(/[^0-9]/g, '');
+      if (val.length > 3 && val.length <= 7) val = val.slice(0, 3) + '-' + val.slice(3);
+      else if (val.length > 7) val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7, 11);
+      el.value = val;
+    }
+
+    async function submitLeadForm(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitForm');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 자료 열람 및 신청 처리 중...';
+
+      const name = document.getElementById('inpName').value.trim();
+      const phone = document.getElementById('inpPhone').value.trim();
+      const region = document.getElementById('inpRegion').value.trim();
+      const age = document.getElementById('inpAge').value;
+      const callTime = document.getElementById('inpTime').value;
+      const qAnswerEl = document.querySelector('input[name="qAnswer"]:checked');
+      const qAnswer = qAnswerEl ? qAnswerEl.value : '';
+
+      const noteParts = [qAnswer];
+      if (age && document.getElementById('wrapAge').style.display !== 'none') noteParts.push(`연령:${age}`);
+      if (callTime && document.getElementById('wrapTime').style.display !== 'none') noteParts.push(`희망시간:${callTime}`);
+
+      const targetAgentNotifyPhone = agentPhone || storedAgentNotifyPhone || localStorage.getItem('crm_agent_phone') || '';
+      const displayedAgentName = (document.getElementById('heroAgentName') && document.getElementById('heroAgentName').innerText.trim()) || agentName || '담당설계사';
+
+      // 1. 메타 픽셀(Meta Pixel) 실제 신청 완료(Lead) 전환 신호 발사
+      if (window.fbq && activeMetaPixelId) {
+        try {
+          window.fbq('track', 'Lead', {
+            content_name: campTitle,
+            content_category: sourceParam
+          });
+        } catch (pxErr) {}
+      }
+
+      // 2. 백엔드(meta-webhook.js)로 리드 저장 + 팝빌(Popbill) 실시간 알림톡 발송 요청
+      try {
+        await fetch('/api/meta-webhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'SAVE_LEAD',
+            campaignId: campId,
+            campaignTitle: campTitle,
+            name,
+            phone,
+            region,
+            note: noteParts.filter(Boolean).join(' / '),
+            source: sourceParam,
+            agentId: activeAgentKey || 'default',
+            agentName: displayedAgentName,
+            agentPhone: targetAgentNotifyPhone,
+            sheetWebhookUrl: sheetUrlParam
+          })
+        });
+      } catch (err) {}
+
+      document.getElementById('formViewSection').style.display = 'none';
+      document.getElementById('rewardViewSection').style.display = 'block';
+      window.scrollTo({ top: document.getElementById('applySectionAnchor').offsetTop, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>

@@ -231,7 +231,7 @@ function openClaimPage() {
 
 function openAnalysisPage() {
   if (window.parent && typeof window.parent.loadSubPage === 'function') {
-    window.parent.loadSubPage('영업전략', '보장 분석', 'branding/pdf_p.html');
+    window.parent.loadSubPage('영업전략', '보장 브랜딩', 'branding/pdf_p.html');
   } else {
     window.location.href = '../branding/pdf_p.html';
   }
@@ -1504,7 +1504,7 @@ function renderPortalWidget() {
 
   const smartSolutions = [
     { name: '보험금 청구', emoji: '📄', action: 'openClaimPage()' },
-    { name: '보장 분석', emoji: '📊', action: 'openAnalysisPage()' }
+    { name: '보장 브랜딩', emoji: '📊', action: 'openAnalysisPage()' }
   ];
 
   const officialPortals = [
@@ -1648,6 +1648,11 @@ let currentContactTab = 'all';
 function openInsurerContactsModal() {
   const modal = document.getElementById('insurerContactsModal');
   if (modal) {
+    modal.scrollTop = 0;
+    try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch(e) {}
+    if (window.parent && window.parent !== window) {
+      try { window.parent.scrollTo({ top: 0, behavior: 'instant' }); } catch(e) {}
+    }
     modal.style.display = 'flex';
     const input = document.getElementById('contactSearchInput');
     if (input) {

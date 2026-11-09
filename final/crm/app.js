@@ -3880,7 +3880,26 @@ function loadCustomerForFamily(task) {
     }
 }function openEditMode(custId, initialMode = 'edit') {
     window.disableInitFamilyTabs = false;
-    const activeData = (window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData;
+    let activeData = (window._masterCustomerData && window._masterCustomerData.length > 0)
+        ? window._masterCustomerData
+        : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData);
+    if (!activeData || activeData.length <= 1) {
+        try {
+            const cached = localStorage.getItem("weracle_crm_customers_cache") || localStorage.getItem("demo_crm_data");
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > (activeData ? activeData.length : 0)) {
+                    activeData = parsed;
+                    window.globalCustomerData = parsed;
+                    globalCustomerData = parsed;
+                    window._masterCustomerData = parsed;
+                }
+            }
+        } catch(e) {}
+    }
+    if (activeData && activeData.length > 1 && (!window._masterCustomerData || window._masterCustomerData.length < activeData.length)) {
+        window._masterCustomerData = [...activeData];
+    }
     const client = activeData.find(c => String(c["고객번호"] || c["사업자번호"]) === String(custId));
     if (!client) {
         showCustomAlert("오류", "고객 정보를 찾을 수 없습니다.");
@@ -7546,7 +7565,26 @@ window.searchInsurance = function() {
     const comp = document.getElementById('ins-comp-select').value;
     if(!comp) return;
     
-    const activeData = (window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData;
+    let activeData = (window._masterCustomerData && window._masterCustomerData.length > 0)
+        ? window._masterCustomerData
+        : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData);
+    if (!activeData || activeData.length <= 1) {
+        try {
+            const cached = localStorage.getItem("weracle_crm_customers_cache") || localStorage.getItem("demo_crm_data");
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > (activeData ? activeData.length : 0)) {
+                    activeData = parsed;
+                    window.globalCustomerData = parsed;
+                    globalCustomerData = parsed;
+                    window._masterCustomerData = parsed;
+                }
+            }
+        } catch(e) {}
+    }
+    if (activeData && activeData.length > 1 && (!window._masterCustomerData || window._masterCustomerData.length < activeData.length)) {
+        window._masterCustomerData = [...activeData];
+    }
         let filtered = [...activeData];
     filtered = filtered.filter(c => {
         try {
@@ -7582,11 +7620,17 @@ window.getCrmHeaders = function(sheetType) {
 function getCrmHeaders(sheetType) { return window.getCrmHeaders(sheetType); }
 
 window.renderTable = function(data) {
-    const activeData = (data && Array.isArray(data) && data.length > 0) 
-        ? data 
-        : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData);
-    globalCustomerData = activeData;
-    window.globalCustomerData = activeData;
+    const masterData = (window._masterCustomerData && window._masterCustomerData.length > 0)
+        ? window._masterCustomerData
+        : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : (typeof globalCustomerData !== 'undefined' ? globalCustomerData : []));
+    if (masterData && masterData.length > 1 && (!window._masterCustomerData || window._masterCustomerData.length < masterData.length)) {
+        window._masterCustomerData = [...masterData];
+    }
+    const activeData = Array.isArray(data) ? data : masterData;
+
+
+
+
     
     const listArea = document.getElementById("masterListArea");
     if (!listArea) return;
@@ -7635,8 +7679,16 @@ window.renderTable = function(data) {
 
 window.filterMasterList = function() {
     try {
-        const q = document.getElementById("masterSearch").value.toLowerCase().replace(/[\s-]/g, "");
-        const filtered = window.globalCustomerData.filter(c => {
+        const q = (document.getElementById("masterSearch").value || "").toLowerCase().replace(/[\s-]/g, "");
+        const source = (window._masterCustomerData && window._masterCustomerData.length > 0)
+            ? window._masterCustomerData
+            : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : (typeof globalCustomerData !== 'undefined' ? globalCustomerData : []));
+            
+        if (!q) {
+            window.renderTable(source);
+            return;
+        }
+        const filtered = source.filter(c => {
             const name = String(c["고객명"] || c["이름"] || c["대표자명"] || "").toLowerCase().replace(/\s+/g, "");
             const phone = String(c["폰번호"] || c["대표자폰번호"] || "").toLowerCase().replace(/[\s-]/g, "");
             const num = String(c["고객번호"] || c["ID"] || "").replace(/\s+/g, "");
@@ -8065,7 +8117,8 @@ window.generateProfileHtml = function(client) {
         el.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.1)';
         el.style.background = '#eff6ff';
     }
-    const client = globalCustomerData.find(c => String(c["고객번호"] || c["ID"]) === String(idStr));
+    const allData = (window._masterCustomerData && window._masterCustomerData.length > 0) ? window._masterCustomerData : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData);
+    const client = (allData || []).find(c => String(c["고객번호"] || c["ID"]) === String(idStr));
     if(!client) return;
     const detailArea = document.getElementById("masterDetailArea");
     if(detailArea) detailArea.innerHTML = window.generateProfileHtml(client);
@@ -8084,7 +8137,8 @@ window.generateProfileHtml = function(client) {
         return;
     }
     
-    const client = globalCustomerData.find(c => String(c["고객번호"] || c["ID"]) === String(idStr));
+    const allData = (window._masterCustomerData && window._masterCustomerData.length > 0) ? window._masterCustomerData : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData);
+    const client = (allData || []).find(c => String(c["고객번호"] || c["ID"]) === String(idStr));
     if (!client) {
         alert("고객 정보를 찾을 수 없습니다.");
         return;
@@ -8238,7 +8292,26 @@ window.addEventListener('message', function(e) {
         activeFilters.forEach(b => b.classList.remove('active'));
         window.currentQuickFilter = '';
         
-        const activeData = (window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData;
+        let activeData = (window._masterCustomerData && window._masterCustomerData.length > 0)
+        ? window._masterCustomerData
+        : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData);
+    if (!activeData || activeData.length <= 1) {
+        try {
+            const cached = localStorage.getItem("weracle_crm_customers_cache") || localStorage.getItem("demo_crm_data");
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > (activeData ? activeData.length : 0)) {
+                    activeData = parsed;
+                    window.globalCustomerData = parsed;
+                    globalCustomerData = parsed;
+                    window._masterCustomerData = parsed;
+                }
+            }
+        } catch(e) {}
+    }
+    if (activeData && activeData.length > 1 && (!window._masterCustomerData || window._masterCustomerData.length < activeData.length)) {
+        window._masterCustomerData = [...activeData];
+    }
         let filtered = [...activeData];
         
                 if (fType === 'status') {
@@ -8854,7 +8927,26 @@ window.openTotalCustomers = function() {
     const activeFilters = document.querySelectorAll('.filter-btn, .status-filter-btn, .db-pipeline-btn');
     activeFilters.forEach(b => b.classList.remove('active'));
     
-    const activeData = (window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData;
+    let activeData = (window._masterCustomerData && window._masterCustomerData.length > 0)
+        ? window._masterCustomerData
+        : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData);
+    if (!activeData || activeData.length <= 1) {
+        try {
+            const cached = localStorage.getItem("weracle_crm_customers_cache") || localStorage.getItem("demo_crm_data");
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > (activeData ? activeData.length : 0)) {
+                    activeData = parsed;
+                    window.globalCustomerData = parsed;
+                    globalCustomerData = parsed;
+                    window._masterCustomerData = parsed;
+                }
+            }
+        } catch(e) {}
+    }
+    if (activeData && activeData.length > 1 && (!window._masterCustomerData || window._masterCustomerData.length < activeData.length)) {
+        window._masterCustomerData = [...activeData];
+    }
     if (typeof window.renderTable === 'function') {
         window.renderTable(activeData);
     }
@@ -9380,6 +9472,8 @@ window.closeMasterModal = function() {
     if (m) {
         m.classList.remove('active');
         setTimeout(() => m.style.display = 'none', 300);
+        const searchInput = document.getElementById('masterSearch');
+        if (searchInput) searchInput.value = '';
     }
 };
 

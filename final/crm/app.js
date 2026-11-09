@@ -2110,6 +2110,15 @@ async function saveClientToServer(clientObj, insRows) {
         const sName = (targetIdx !== -1 && globalCustomerData[targetIdx].sheetName) ? globalCustomerData[targetIdx].sheetName : (window.targetSheetName || "weraclecrm");
         const insSheetName = "보험관리";
         
+        // [UID 철통 보장 가드 1] 고객 등록/수정 어떤 경로로 들어오든 UID가 없거나 빈칸이면 즉시 자동 발급/보존
+        if (!clientObj["UID"] || !String(clientObj["UID"]).trim()) {
+            if (targetIdx !== -1 && globalCustomerData[targetIdx] && globalCustomerData[targetIdx]["UID"]) {
+                clientObj["UID"] = globalCustomerData[targetIdx]["UID"];
+            } else {
+                clientObj["UID"] = "UID_" + new Date().getTime() + "_" + Math.floor(Math.random() * 10000);
+            }
+        }
+
         let custHeaders = getCrmHeaders(sName);
         let custValues = custHeaders.map(h => clientObj[h] !== undefined ? clientObj[h] : "");
         let insHeaders = getInsuranceHeaders();
@@ -2198,7 +2207,12 @@ async function saveClientToServer(clientObj, insRows) {
                 let formattedInsRows = insRows.map(insObj => {
                     return insHeaders.map(h => {
                         if (h === "고객번호") return clientObj["고객번호"];
-                        if (h === "UID") return clientObj["UID"] || "";
+                        if (h === "UID") {
+                            if (!clientObj["UID"]) {
+                                clientObj["UID"] = "UID_" + new Date().getTime() + "_" + Math.floor(Math.random() * 10000);
+                            }
+                            return clientObj["UID"];
+                        }
                         if (h === "고객명" || h === "이름") return clientObj["고객명"] || clientObj["이름"] || clientObj["대표자명"] || "";
                         if (h === "주민번호") return clientObj["주민번호"] || clientObj["대표자 생일"] || "";
                         let val = "";
@@ -2223,7 +2237,12 @@ async function saveClientToServer(clientObj, insRows) {
                     let formattedTarget = tInsRows.map(insObj => {
                         return insHeaders.map(h => {
                             if (h === "고객번호") return tClient["고객번호"];
-                            if (h === "UID") return tClient["UID"] || "";
+                            if (h === "UID") {
+                                if (!tClient["UID"]) {
+                                    tClient["UID"] = "UID_" + new Date().getTime() + "_" + Math.floor(Math.random() * 10000);
+                                }
+                                return tClient["UID"];
+                            }
                             if (h === "고객명" || h === "이름") return tClient["고객명"] || tClient["이름"] || tClient["대표자명"] || "";
                             if (h === "주민번호") return tClient["주민번호"] || tClient["대표자 생일"] || "";
                             let val = "";
@@ -9380,6 +9399,9 @@ window.submitBulkData = async function() {
                     const savedAgent = localStorage.getItem("googleUserName");
                     if (savedAgent) rowArr[i] = savedAgent;
                 }
+                else if (head === "UID") {
+                    rowArr[i] = "UID_" + new Date().getTime() + "_" + Math.floor(Math.random() * 10000) + "_" + (data.고객번호 || i);
+                }
             });
 
             return rowArr;
@@ -11097,6 +11119,22 @@ async function updateMultipleCustomerIdsInSheet(updates, successMsg) {
                         valueInputOption: "USER_ENTERED",
                         resource: { values: [[item.newId]] }
                     });
+
+                    // [UID 철통 가드] UID가 누락된 고객인 경우 UID 자동 발급 및 시트 업데이트
+                    if (!targetClient["UID"]) {
+                        targetClient["UID"] = "UID_" + new Date().getTime() + "_" + Math.floor(Math.random() * 10000);
+                        const allHeaders = getCrmHeaders(sName);
+                        const uidColIdx = allHeaders.indexOf("UID");
+                        if (uidColIdx !== -1) {
+                            const colLetter = String.fromCharCode(65 + uidColIdx);
+                            await gapi.client.sheets.spreadsheets.values.update({
+                                spreadsheetId,
+                                range: `${sName}!${colLetter}${rNum}`,
+                                valueInputOption: "USER_ENTERED",
+                                resource: { values: [[targetClient["UID"]]] }
+                            });
+                        }
+                    }
 
                     // 가족관계 업데이트
                     if (item.newRelation) {

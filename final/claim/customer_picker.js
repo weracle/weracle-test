@@ -102,7 +102,7 @@
     });
   }
 
-  // 2. 고객 데이터 정제기 (CRM 한글/영문/공백/배열 모든 구조 완벽 호환)
+  // 2. 고객 데이터 정제기 (CRM 한글/영문 모든 키 100% 호환)
   function sanitizeCustomer(client) {
     if (!client) return null;
 
@@ -310,6 +310,179 @@
     return clean;
   }
 
+  function ensureModalDom() {
+    if (document.getElementById('crmPickerModalBackdrop')) return;
+
+    const modalHtml = `
+      <div id="crmPickerModalBackdrop" class="crm-modal-backdrop" onclick="handleBackdropClick(event)">
+        <div class="crm-modal-card" onclick="event.stopPropagation()">
+          
+          <!-- 모달 헤더 -->
+          <div class="crm-modal-header">
+            <div class="crm-header-text">
+              <h3 id="crmModalTitle">📋 보험금 청구 대상자 설정</h3>
+              <p id="crmModalSubtitle">청구서 작성 전 대상자 관계 및 고객 정보를 설정합니다.</p>
+            </div>
+            <button type="button" class="crm-modal-close" onclick="closeCrmPickerModal()" aria-label="닫기">✕</button>
+          </div>
+
+          <!-- 메인 설정 위저드 뷰 (Setup View) -->
+          <div id="crmSetupView" class="crm-view-container">
+            <div id="crmSetupScroll" class="crm-modal-scroll">
+              <!-- JS에서 동적 렌더링 -->
+            </div>
+            <div class="crm-modal-footer">
+              <button type="button" class="btn-footer-skip" onclick="skipToDirectWrite()">
+                ✍️ 건너뛰고 직접 수기 작성
+              </button>
+              <button type="button" class="btn-footer-apply" onclick="applyCustomerSetup()">
+                ✨ 설정 완료 및 청구서 작성 시작
+              </button>
+            </div>
+          </div>
+
+          <!-- 고객 검색 뷰 (Search View) -->
+          <div id="crmSearchView" class="crm-view-container" style="display: none;">
+            <div class="crm-search-bar-wrap">
+              <button type="button" class="btn-search-back" onclick="switchView('setup')">
+                ‹ 이전
+              </button>
+              <div class="crm-search-input-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="crmSearchInput" placeholder="이름, 연락처(뒷자리), 주민번호 앞자리 검색..." autocomplete="off">
+                <button type="button" id="crmSearchClear" class="crm-search-clear" onclick="clearSearchInput()" style="display: none;">✕</button>
+              </div>
+            </div>
+            <div class="crm-search-role-guide" id="crmSearchRoleGuide">
+              <!-- 피보험자 선택 모드 or 계약자 선택 모드 안내 문구 -->
+            </div>
+            <div id="crmCustomerList" class="crm-customer-list">
+              <!-- 고객 카드 동적 렌더링 -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 성공 토스트 알림 -->
+      <div id="crmSuccessToast" class="crm-success-toast">
+        <span class="toast-icon">✨</span>
+        <span id="crmToastMessage" class="toast-message">청구 대상자 설정이 완료되었습니다.</span>
+      </div>
+    `;
+
+    const wrap = document.createElement('div');
+    wrap.innerHTML = modalHtml;
+    document.body.appendChild(wrap);
+
+    // 검색 인풋 이벤트 리스너
+    const searchInput = document.getElementById('crmSearchInput');
+    const clearBtn = document.getElementById('crmSearchClear');
+    if (searchInput) {
+      searchInput.addEventListener('input', function (e) {
+        window.crmPickerState.searchKeyword = e.target.value.trim();
+        if (clearBtn) {
+          clearBtn.style.display = window.crmPickerState.searchKeyword ? 'flex' : 'none';
+        }
+        renderCustomerList();
+      });
+      searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          clearSearchInput();
+        }
+      });
+    }
+  }
+
+  // 모달 열림 여부 확인
+  function isModalOpen() {
+    const backdrop = document.getElementById('crmPickerModalBackdrop');
+    return backdrop && backdrop.classList.contains('active');
+  }
+
+  // 백드롭 클릭 핸들러
+  window.handleBackdropClick = function (e) {
+    if (e.target && e.target.id === 'crmPickerModalBackdrop') {
+      closeCrmPickerModal();
+    }
+  };
+
+  // 검색 인풋 초기화
+  window.clearSearchInput = function () {
+    const searchInput = document.getElementById('crmSearchInput');
+    const clearBtn = document.getElementById('crmSearchClear');
+    if (searchInput) {
+      searchInput.value = '';
+      searchInput.focus();
+    }
+    if (clearBtn) clearBtn.style.display = 'none';
+    window.crmPickerState.searchKeyword = '';
+    renderCustomerList();
+  };
+
+  // 뷰 전환 (setup vs search)
+  window.switchView = function (viewName) {
+    window.crmPickerState.currentView = viewName;
+    const setupView = document.getElementById('crmSetupView');
+    const searchView = document.getElementById('crmSearchView');
+    const titleEl = document.getElementById('crmModalTitle');
+    const subtitleEl = document.getElementById('crmModalSubtitle');
+
+    if (viewName === 'setup') {
+      if (setupView) setupView.style.display = 'flex';
+      if (searchView) searchView.style.display = 'none';
+      if (titleEl) titleEl.innerText = '📋 보험금 청구 대상자 설정';
+      if (subtitleEl) subtitleEl.innerText = '청구서 작성 전 대상자 관계 및 고객 정보를 설정합니다.';
+      renderSetupView();
+    } else {
+      if (setupView) setupView.style.display = 'none';
+      if (searchView) searchView.style.display = 'flex';
+      const roleText = window.crmPickerState.selectingRole === 'insured' ? '피보험자 (치료받은 분)' : '계약자 / 수익자 (보험금 수령자)';
+      if (titleEl) titleEl.innerText = '🔍 ' + roleText + ' 고객 찾기';
+      if (subtitleEl) subtitleEl.innerText = '위라클랩 CRM에 등록된 고객을 검색하여 선택해주세요.';
+
+      const guideEl = document.getElementById('crmSearchRoleGuide');
+      if (guideEl) {
+        guideEl.innerHTML = '<strong>' + roleText + '</strong>로 지정할 고객을 선택해주세요.';
+      }
+
+      const searchInput = document.getElementById('crmSearchInput');
+      if (searchInput) {
+        searchInput.value = '';
+        setTimeout(() => searchInput.focus(), 80);
+      }
+      window.crmPickerState.searchKeyword = '';
+      renderCustomerList();
+    }
+  };
+
+  // 모달 열기
+  window.openCrmPickerModal = function () {
+    ensureModalDom();
+    injectCustomStyles();
+    initDataSync();
+
+    const backdrop = document.getElementById('crmPickerModalBackdrop');
+    if (backdrop) {
+      backdrop.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    switchView('setup');
+  };
+
+  // 모달 닫기
+  window.closeCrmPickerModal = function () {
+    const backdrop = document.getElementById('crmPickerModalBackdrop');
+    if (backdrop) {
+      backdrop.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  };
+
   // ========================================================
   // [메인 뷰 1] 대상자 사전 설정 위저드 (Setup View)
   // ========================================================
@@ -506,9 +679,6 @@
   // ========================================================
   // [메인 뷰 2] 고객 검색 목록 렌더러 (Search View)
   // ========================================================
-  // ========================================================
-  // [고객 리스트 렌더링 및 실시간 검색]
-  // ========================================================
   function renderCustomerList() {
     const listEl = document.getElementById('crmCustomerList');
     if (!listEl) return;
@@ -535,17 +705,6 @@
       });
     }
 
-    if (filtered.length === 0) {
-      listEl.innerHTML = `
-        <div class="crm-empty-state">
-          <div class="empty-icon">🔍</div>
-          <p class="empty-title">${keyword ? '일치하는 고객이 없습니다' : '등록된 고객 데이터가 없습니다'}</p>
-          <p class="empty-sub">${keyword ? '검색어를 다시 확인해주세요.' : '위라클랩 CRM에서 고객을 먼저 등록해주세요.'}</p>
-        </div>
-      `;
-      return;
-    }
-
     let html = '';
     filtered.forEach((sanitized, idx) => {
       const petCount = sanitized.pets ? sanitized.pets.length : 0;
@@ -554,24 +713,20 @@
 
       html += `
         <div class="crm-customer-card" onclick="selectCustomerFromList(${idx})">
-          <div class="card-left">
-            <div class="customer-avatar">${sanitized.name ? sanitized.name.charAt(0) : '고'}</div>
-          </div>
+          <div class="customer-avatar">${(sanitized.name || '고')[0]}</div>
           <div class="card-center">
             <div class="customer-main-line">
-              <span class="customer-name">${sanitized.name || '이름 없음'}</span>
-              <span class="customer-rrn">${sanitized.rrnFront ? sanitized.rrnFront + '-*******' : '주민번호 미등록'}</span>
+              <span class="customer-name">${sanitized.name}</span>
+              <span class="customer-rrn">${sanitized.rrnFront ? sanitized.rrnFront + '-*******' : '생년월일 미등록'}</span>
               ${petBadge}
               ${bankBadge}
             </div>
             <div class="customer-sub-line">
-              <span class="customer-phone">📞 ${sanitized.formattedPhone || sanitized.phone || '연락처 없음'}</span>
-              <span class="customer-addr">🏠 ${sanitized.address || '주소 미등록'}</span>
+              <span>📞 ${sanitized.phone || '연락처 없음'}</span>
+              <span>🏠 ${sanitized.address || '주소 없음'}</span>
             </div>
           </div>
-          <div class="card-right">
-            <button type="button" class="btn-select-client">선택 ›</button>
-          </div>
+          <button type="button" class="btn-select-client">선택</button>
         </div>
       `;
     });
@@ -600,9 +755,6 @@
     switchView('setup');
   };
 
-  // ========================================================
-  // [단일 주입 엔진 (Clean Staging)]
-  // ========================================================
   window.applyCustomerSetup = function () {
     const isDiff = window.crmPickerState.isDifferent;
     const insured = window.crmPickerState.insuredData;
@@ -668,6 +820,10 @@
       setFieldValue('beneRrn_back', contractor.rrnBack);
       setFieldValue('benePhone', contractor.phone);
       setFieldValue('beneAddress', contractor.address);
+
+      // 보상안내(guide*) 주입
+      setFieldValue('guideName', contractor.name);
+      setFieldValue('guidePhone', contractor.phone);
 
       // 보상안내(guide*) 주입
       setFieldValue('guideName', contractor.name);

@@ -400,6 +400,15 @@ function saveCurrentFormToState() {
     }
     
     target.data = dataObj;
+    if (typeof window.getPetSerializedData === 'function') {
+        const petSer = window.getPetSerializedData();
+        dataObj['반려동물'] = petSer.species;
+        dataObj['동물이름'] = petSer.names;
+        dataObj['코드'] = petSer.codes;
+    }
+    if (typeof window.getPetRowsData === 'function') {
+        target.petData = window.getPetRowsData();
+    }
     
         // Update tab label if name changed or relationship changed
     if (target.isRoot) {
@@ -486,6 +495,13 @@ function loadStateToForm(personId) {
         } else {
             insListDom.innerHTML = '';
         }
+    }
+    
+    // Restore pets
+    if (typeof window.restorePetRowsFromData === 'function' && target.petData !== undefined) {
+        window.restorePetRowsFromData(target.petData);
+    } else if (typeof window.restorePetRows === 'function') {
+        window.restorePetRows(target.data);
     }
     
     // --- ANTIGRAVITY 터치인사이트 UI 동기화 ---

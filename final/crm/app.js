@@ -4561,6 +4561,7 @@ const clientObj = {
 };
 return await saveClientToServer(clientObj, typeof insList !== 'undefined' ? insList : []);
 }
+window.submitCrmData = submitCrmData;
 // ==========================================
 // 9. 타 서비스(보험금 청구 등) 연동 지원
 // ==========================================
@@ -4635,7 +4636,100 @@ window.copyJumin = function(val, mask = false) {
 // ==========================================
 
 // ==========================================
+// ==========================================
 // [반려동물 다중 등록 & 복원 관리 모듈]
+// ==========================================
+window.getPetSerializedData = function() {
+    const petCb = document.getElementById("has-pet-cb");
+    const isPetChecked = (petCb && petCb.checked);
+    let finalPetSpecies = "";
+    let finalPetNames = "";
+    let finalPetCodes = "";
+
+    if (isPetChecked) {
+        const petRows = document.querySelectorAll("#pet-rows-list .pet-row-item");
+        const sArr = [];
+        const nArr = [];
+        const cArr = [];
+        petRows.forEach(row => {
+            const typeEl = row.querySelector(".pet-type-select");
+            const breedEl = row.querySelector(".pet-breed-input");
+            const nameEl = row.querySelector(".pet-name-input");
+            const codeEl = row.querySelector(".pet-code-input");
+            const typeVal = typeEl ? typeEl.value.trim() : "강아지";
+            const breedVal = breedEl ? breedEl.value.trim() : "";
+            const nameVal = nameEl ? nameEl.value.trim() : "";
+            const codeVal = codeEl ? codeEl.value.trim() : "";
+            if (breedVal || nameVal || codeVal) {
+                const fullSp = breedVal ? `${typeVal}(${breedVal})` : typeVal;
+                sArr.push(fullSp || "-");
+                nArr.push(nameVal || "-");
+                cArr.push(codeVal || "-");
+            }
+        });
+        if (sArr.length > 0) {
+            finalPetSpecies = sArr.join(", ");
+            finalPetNames = nArr.join(", ");
+            finalPetCodes = cArr.join(", ");
+        } else {
+            finalPetSpecies = "유";
+            finalPetNames = "-";
+            finalPetCodes = "-";
+        }
+    }
+    return {
+        species: finalPetSpecies,
+        names: finalPetNames,
+        codes: finalPetCodes
+    };
+};
+
+window.getPetRowsData = function() {
+    const petCb = document.getElementById("has-pet-cb");
+    const isChecked = !!(petCb && petCb.checked);
+    const petRows = document.querySelectorAll("#pet-rows-list .pet-row-item");
+    const rows = [];
+    petRows.forEach(row => {
+        const typeEl = row.querySelector(".pet-type-select");
+        const breedEl = row.querySelector(".pet-breed-input");
+        const nameEl = row.querySelector(".pet-name-input");
+        const codeEl = row.querySelector(".pet-code-input");
+        rows.push({
+            type: typeEl ? typeEl.value : "강아지",
+            breed: breedEl ? breedEl.value : "",
+            name: nameEl ? nameEl.value : "",
+            code: codeEl ? codeEl.value : ""
+        });
+    });
+    return { isChecked, rows };
+};
+
+window.restorePetRowsFromData = function(petData) {
+    const petCb = document.getElementById("has-pet-cb");
+    const list = document.getElementById("pet-rows-list");
+    if (!petData) {
+        if (petCb) {
+            petCb.checked = false;
+            window.handlePetToggle(false);
+        }
+        if (list) list.innerHTML = "";
+        return;
+    }
+    const isChecked = !!petData.isChecked;
+    if (petCb) {
+        petCb.checked = isChecked;
+        window.handlePetToggle(isChecked);
+    }
+    if (list) {
+        list.innerHTML = "";
+        if (isChecked && Array.isArray(petData.rows) && petData.rows.length > 0) {
+            petData.rows.forEach(p => window.addPetRow(p));
+        } else if (isChecked) {
+            window.addPetRow();
+        }
+    }
+};
+
 // ==========================================
 window.parsePetData = function(speciesRaw, namesRaw, codesRaw) {
     if (!speciesRaw && !namesRaw && !codesRaw) return [];

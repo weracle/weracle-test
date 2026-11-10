@@ -2774,11 +2774,14 @@
        위라클 브랜딩 파란색 반짝임 갤러리 커버
        ========================================================================== */
     .view-stage {
-        display: none;
+        display: none !important;
         animation: fadeInView 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .view-stage.active {
-        display: block;
+        display: block !important;
+    }
+    #view-gallery.view-stage.active {
+        display: flex !important;
     }
     @keyframes fadeInView {
         from { opacity: 0; transform: translateY(8px); }
@@ -2790,14 +2793,10 @@
         background-image: radial-gradient(circle at 15% 0%, #e0f2fe 0%, #f8fafc 40%);
         min-height: 100vh;
         box-sizing: border-box;
-        display: flex;
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
         overflow: hidden;
-    }
-    #view-gallery.active {
-        display: flex;
     }
     .gallery-wrap {
         width: 100%;
@@ -4281,6 +4280,8 @@
         if (viewG && viewD) {
             viewG.classList.remove('active');
             viewD.classList.add('active');
+            viewG.style.display = 'none';
+            viewD.style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         if (targetPaneId && typeof switchFramePane === 'function') {
@@ -4295,7 +4296,10 @@
         if (viewG && viewD) {
             viewD.classList.remove('active');
             viewG.classList.add('active');
+            viewD.style.display = 'none';
+            viewG.style.display = 'flex';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (typeof resizeCanvas === 'function') resizeCanvas();
         }
     }
     </script>

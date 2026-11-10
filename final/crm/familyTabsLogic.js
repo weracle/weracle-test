@@ -621,8 +621,13 @@ window.upgradeAllInsurancesToSmartUI = function() {
         const cIdInp = card.querySelector('input[name="' + prefix + '계약자_id"]');
         const iIdInp = card.querySelector('input[name="' + prefix + '피보험자_id"]');
         
-        let cVal = cInp && cInp.value ? cInp.value : (window.familyState[0].data['고객명'] || '본인');
-        let iVal = iInp && iInp.value ? iInp.value : (window.familyState[0].data['고객명'] || '본인');
+        const activeF = (window.familyState && window.activeFamilyId) ? window.familyState.find(x => x.id === window.activeFamilyId) : (window.familyState ? window.familyState[0] : null);
+        const activeName = (activeF && activeF.data && activeF.data['고객명']) ? activeF.data['고객명'] : (window.familyState && window.familyState[0] && window.familyState[0].data['고객명'] ? window.familyState[0].data['고객명'] : '본인');
+
+        let cVal = cInp && cInp.value ? cInp.value.trim() : activeName;
+        let iVal = iInp && iInp.value ? iInp.value.trim() : activeName;
+        
+        const cleanStr = (s) => String(s || '').replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, '');
         
         let cIdVal = cIdInp && cIdInp.value ? cIdInp.value : "";
         if (!cIdVal) {
@@ -706,23 +711,40 @@ function buildSmartInsUI(prefix, cVal, cIdVal, iVal, iIdVal, directHtml) {
 
 function initSmartInsPills(card) {
     const groups = card.querySelectorAll('.smart-ins-group');
+    const cleanStr = (s) => String(s || '').replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, '');
     groups.forEach(group => {
         const idInput = group.querySelector('.real-id-input');
+        const nameInput = group.querySelector('.real-input');
         const outsiderWrap = group.querySelector('.outsider-input-wrap');
         const pills = group.querySelectorAll('.ins-pill-btn');
         
+        let targetId = idInput ? String(idInput.value || '').trim() : '';
+        let targetName = nameInput ? cleanStr(nameInput.value) : '';
+        
         let matched = false;
-        if (idInput.value) {
+        if (targetId && targetId !== 'outsider') {
             pills.forEach(p => {
-                if (p.dataset.id === idInput.value && !p.classList.contains('outsider-btn')) {
+                if (p.dataset.id === targetId && !p.classList.contains('outsider-btn')) {
                     p.classList.add('active');
+                    if (nameInput) nameInput.value = p.dataset.name;
+                    matched = true;
+                }
+            });
+        }
+        if (!matched && targetName) {
+            pills.forEach(p => {
+                if (!matched && !p.classList.contains('outsider-btn') && cleanStr(p.dataset.name) === targetName) {
+                    p.classList.add('active');
+                    if (idInput) idInput.value = p.dataset.id;
+                    if (nameInput) nameInput.value = p.dataset.name;
                     matched = true;
                 }
             });
         }
         if (!matched) {
-            group.querySelector('.outsider-btn').classList.add('active');
-            outsiderWrap.style.display = 'block';
+            const outBtn = group.querySelector('.outsider-btn');
+            if (outBtn) outBtn.classList.add('active');
+            if (outsiderWrap) outsiderWrap.style.display = 'block';
         }
     });
 }

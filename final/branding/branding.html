@@ -3017,317 +3017,326 @@
 <style>
 
     /* ==================================================
-       PERFECT NO-CROP BENTO GRID (글자/외곽 잘림 없는 콤팩트 그리드)
+       WERACLE SIGNATURE BRANDING SHOWCASE (대형 인터랙티브 각인 연출)
        ================================================== */
-    .compact-bento-grid {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        grid-auto-rows: 114px;
+    .control-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
         gap: 10px;
-        width: 100%;
-        margin-top: 10px;
+        background: rgba(18, 24, 38, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(16px);
+        padding: 10px 18px;
+        border-radius: 50px;
+        margin: 0 auto 22px;
+        max-width: 820px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
 
-    .bento-cell {
-        position: relative;
-        border-radius: 12px;
-        overflow: hidden;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
-        display: flex;
+    .mode-btn {
+        background: transparent;
+        border: 1px solid transparent;
+        color: #94a3b8;
+        padding: 7px 16px;
+        border-radius: 30px;
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+        gap: 7px;
     }
 
-    .bento-cell:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    .mode-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.08);
     }
 
-    /* 이미지 래퍼 및 contain (잘림 방지) */
-    .bento-img-wrap {
+    .mode-btn.active {
+        color: #ffffff;
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        border-color: rgba(56, 189, 248, 0.5);
+        box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+    }
+
+    .divider-v {
+        width: 1px;
+        height: 22px;
+        background: rgba(255, 255, 255, 0.15);
+        margin: 0 3px;
+    }
+
+    .action-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #f8fafc;
+        padding: 7px 14px;
+        border-radius: 30px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .speed-select {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #f8fafc;
+        padding: 6px 12px;
+        border-radius: 30px;
+        font-size: 13px;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .speed-select option {
+        background: #1e293b;
+        color: #f8fafc;
+    }
+
+    /* 메인 쇼케이스 스테이지 */
+    .showcase-stage {
+        position: relative;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 
+            0 25px 60px rgba(0, 0, 0, 0.4),
+            0 0 0 1px rgba(255, 255, 255, 0.12),
+            0 0 45px rgba(2, 132, 199, 0.15);
+        background: #111;
+        user-select: none;
+        aspect-ratio: 16 / 9;
+    }
+
+    /* 이미지 레이어 */
+    .layer-base,
+    .layer-branded {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #ffffff;
-        overflow: hidden;
+        object-fit: cover;
+        pointer-events: none;
     }
 
-    .bento-img-wrap img {
+    .layer-base {
+        z-index: 1;
+    }
+
+    .layer-branded-wrap {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
-        object-fit: contain;
-        display: block;
-        transition: transform 0.3s ease;
+        z-index: 2;
+        overflow: hidden;
+        transition: opacity 0.3s ease;
     }
 
-    .bento-cell:hover .bento-img-wrap img {
-        transform: scale(1.03);
+    .layer-branded {
+        width: 100%;
+        height: 100%;
     }
 
-    /* 각 이미지별 맞춤 비정형 그리드 배치 */
-    .c-goods { grid-column: 1 / span 2; grid-row: 1 / span 4; }
-    .c-proposal { grid-column: 3 / span 1; grid-row: 1 / span 2; }
-    .c-brochure { grid-column: 4 / span 1; grid-row: 1 / span 2; }
-    .c-character { grid-column: 5 / span 2; grid-row: 1 / span 1; }
-    .c-card { grid-column: 5 / span 2; grid-row: 2 / span 1; }
-
-    .c-logo { grid-column: 3 / span 1; grid-row: 3 / span 1; }
-    .c-news { grid-column: 4 / span 1; grid-row: 3 / span 1; }
-    .c-workstation { grid-column: 5 / span 2; grid-row: 3 / span 1; }
-
-    .c-meeting { grid-column: 3 / span 1; grid-row: 4 / span 1; }
-    .c-binder1 { grid-column: 4 / span 1; grid-row: 4 / span 1; }
-    .c-binder2 { grid-column: 5 / span 1; grid-row: 4 / span 1; }
-    .c-binder3 { grid-column: 6 / span 1; grid-row: 4 / span 1; }
-
-    /* 포인트 카드 (마우스 오버 시에만 돋보기 표시) */
-    .point-card {
-        cursor: zoom-in;
+    /* 레이저 스캔 빔 */
+    .scan-laser-line {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, 
+            transparent 0%, 
+            rgba(255, 255, 255, 0.95) 20%, 
+            #38bdf8 50%, 
+            rgba(255, 255, 255, 0.95) 80%, 
+            transparent 100%);
+        box-shadow: 
+            0 0 20px #38bdf8,
+            0 0 45px rgba(56, 189, 248, 0.95),
+            0 0 75px rgba(255, 255, 255, 0.9);
+        z-index: 5;
+        display: none;
+        pointer-events: none;
     }
 
-    .point-card:hover {
-        border-color: #0284c7;
-        box-shadow: 0 8px 20px rgba(2, 132, 199, 0.16);
+    /* 대각선 반사광 */
+    .shimmer-sweep {
+        position: absolute;
+        top: -50%;
+        left: -100%;
+        width: 80%;
+        height: 200%;
+        background: linear-gradient(
+            65deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.05) 45%,
+            rgba(255, 255, 255, 0.7) 50%,
+            rgba(56, 189, 248, 0.8) 53%,
+            rgba(255, 255, 255, 0.3) 58%,
+            transparent 70%
+        );
+        transform: rotate(20deg);
+        z-index: 6;
+        pointer-events: none;
+        opacity: 0;
     }
 
-    /* 굿즈 풀세트 인터랙티브 히어로 (상단 컨트롤 바 & 비포/애프터 연출) */
-    .bento-interactive-hero {
-        background: #0f172a !important;
-        border: 1px solid #1e293b !important;
+    .shimmer-sweep.animate {
+        animation: sweepPass 1.25s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    @keyframes sweepPass {
+        0% { left: -100%; opacity: 0; }
+        30% { opacity: 1; }
+        100% { left: 150%; opacity: 0; }
+    }
+
+    /* 파티클 캔버스 */
+    #particleCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 7;
+        pointer-events: none;
+    }
+
+    /* 짜잔! 리빌 배지 */
+    .tada-badge {
+        position: absolute;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%) scale(0.6);
+        opacity: 0;
+        z-index: 10;
+        background: rgba(15, 23, 42, 0.92);
+        border: 1px solid rgba(56, 189, 248, 0.6);
+        backdrop-filter: blur(12px);
+        padding: 12px 30px;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 
+            0 15px 35px rgba(0, 0, 0, 0.6),
+            0 0 25px rgba(56, 189, 248, 0.45);
+        pointer-events: none;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .tada-badge.show {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+    }
+
+    .tada-icon {
+        font-size: 20px;
+        color: #38bdf8;
+        animation: pulseIcon 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulseIcon {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.25); filter: drop-shadow(0 0 8px #38bdf8); }
+    }
+
+    .tada-text-wrap {
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        padding: 8px;
-        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.25);
     }
 
-    .bento-ctrl-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 4px;
-        padding: 4px;
-        background: rgba(30, 41, 59, 0.85);
-        border-radius: 8px;
-        backdrop-filter: blur(8px);
-        margin-bottom: 6px;
-        width: 100%;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        z-index: 5;
-    }
-
-    .bento-ctrl-btn {
-        background: transparent;
-        color: #94a3b8;
-        border: none;
-        font-size: 11px;
-        font-weight: 600;
-        padding: 4px 7px;
-        border-radius: 6px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-    }
-
-    .bento-ctrl-btn:hover {
+    .tada-title {
+        font-size: 15px;
+        font-weight: 800;
         color: #ffffff;
-        background: rgba(255, 255, 255, 0.1);
+        letter-spacing: -0.3px;
     }
 
-    .bento-ctrl-btn.active {
-        background: #0284c7;
-        color: #ffffff;
-        box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
-    }
-
-    .bento-ctrl-btn.icon-only {
-        padding: 4px 6px;
+    .tada-sub {
         font-size: 12px;
+        color: #bae6fd;
+        font-weight: 500;
     }
 
-    .bento-stage-wrap {
-        position: relative;
-        width: 100%;
-        flex: 1;
-        min-height: 200px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        overflow: hidden;
-        background: #ffffff;
-        cursor: pointer;
-        user-select: none;
-    }
-
-    .bento-layer-blank {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        display: block;
-        user-select: none;
-        pointer-events: none;
-    }
-
-    .bento-layer-branded-wrap {
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        transition: width 0.15s ease-out;
-        will-change: width;
-    }
-
-    .bento-layer-branded {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        display: block;
-        user-select: none;
-        pointer-events: none;
-    }
-
-    .bento-laser-line {
+    /* 슬라이더 조절 핸들 */
+    .slider-handle {
         position: absolute;
         top: 0;
         bottom: 0;
-        left: 100%;
         width: 3px;
-        background: linear-gradient(180deg, rgba(2, 132, 199, 0) 0%, #38bdf8 50%, rgba(2, 132, 199, 0) 100%);
-        box-shadow: 0 0 12px 2px #38bdf8;
-        opacity: 0;
-        pointer-events: none;
-        transition: left 0.15s ease-out, opacity 0.2s ease;
-        z-index: 3;
-    }
-
-    .bento-slider-handle {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 50%;
-        width: 2px;
-        background: rgba(255, 255, 255, 0.95);
+        background: #ffffff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5), 0 0 15px rgba(255,255,255,0.8);
+        z-index: 8;
         cursor: ew-resize;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s ease;
-        z-index: 4;
-        box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+        display: none;
+        touch-action: none;
     }
 
-    .bento-slider-handle.active {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .bento-handle-grip {
+    .slider-circle {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 26px;
-        height: 26px;
+        width: 44px;
+        height: 44px;
+        background: #ffffff;
+        border: 3px solid #0f172a;
         border-radius: 50%;
-        background: #0284c7;
-        color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 8px;
-        gap: 2px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-        border: 2px solid #ffffff;
-        cursor: ew-resize;
+        color: #0f172a;
+        font-size: 14px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        gap: 4px;
     }
 
-    .bento-tag {
+    /* 상태 라벨 표시 */
+    .status-tag {
         position: absolute;
-        top: 8px;
-        padding: 2px 7px;
-        border-radius: 4px;
-        font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.5px;
-        pointer-events: none;
-        z-index: 2;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-
-    .bento-tag-blank {
-        left: 8px;
-        background: rgba(15, 23, 42, 0.7);
-        color: #cbd5e1;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .bento-tag-branded {
-        right: 8px;
-        background: rgba(2, 132, 199, 0.85);
-        color: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .bento-bottom-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 6px 4px 2px;
-        width: 100%;
-    }
-
-    .bento-bottom-title {
-        font-size: 11px;
+        top: 20px;
+        z-index: 9;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
         font-weight: 700;
-        color: #f8fafc;
-        display: block;
-        letter-spacing: -0.2px;
+        backdrop-filter: blur(8px);
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        transition: opacity 0.3s ease;
     }
 
-    .bento-bottom-sub {
-        font-size: 10px;
-        color: #94a3b8;
-        display: block;
-        margin-top: 1px;
-    }
-
-    .zoom-indicator {
-        position: absolute;
-        bottom: 6px;
-        right: 6px;
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
+    .tag-blank {
+        left: 20px;
         background: rgba(15, 23, 42, 0.75);
-        color: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        backdrop-filter: blur(4px);
-        opacity: 0;
-        transition: opacity 0.2s ease, transform 0.2s ease;
-        pointer-events: none;
+        color: #94a3b8;
+        border: 1px solid rgba(255, 255, 255, 0.15);
     }
 
-    .point-card:hover .zoom-indicator {
-        opacity: 1;
-        transform: scale(1.05);
+    .tag-branded {
+        right: 20px;
+        background: rgba(2, 132, 199, 0.4);
+        color: #bae6fd;
+        border: 1px solid rgba(56, 189, 248, 0.5);
     }
 
     /* 라이트박스 모달 */
@@ -3450,152 +3459,83 @@
                 </button>
             </div>
 
-            <!-- 6열 x 4행 콤팩트 무절단 비정형 그리드 (글자/외곽 잘림 없이 100% 원본 노출) -->
-            <div class="compact-bento-grid">
+            <!-- 컨트롤 바 ("위에 버튼") -->
+            <div class="control-bar">
+                <button type="button" class="mode-btn" id="btnModeCinematic" onclick="setMode('cinematic')">
+                    <i class="fa-solid fa-film"></i>
+                    <span>시네마틱 자동 연출</span>
+                </button>
+                <button type="button" class="mode-btn active" id="btnModeLaser" onclick="setMode('laser')">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>레이저 각인 연출</span>
+                </button>
+                <button type="button" class="mode-btn" id="btnModeSlider" onclick="setMode('slider')">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Before / After 슬라이더</span>
+                </button>
+                <button type="button" class="mode-btn" id="btnModeHover" onclick="setMode('hover')">
+                    <i class="fa-solid fa-hand-pointer"></i>
+                    <span>마우스 호버 반응</span>
+                </button>
 
-                <!-- 1. [포인트] 굿즈 풀세트 (대형 메인 2x4 Hero - 인터랙티브 각인 연출) -->
-                <div class="bento-cell c-goods bento-interactive-hero" id="bentoGoodsCell">
-                    <!-- 상단 컨트롤 버튼 바 ("위에 버튼") -->
-                    <div class="bento-ctrl-bar">
-                        <button type="button" class="bento-ctrl-btn active" id="bentoBtnAuto" onclick="setBentoHeroMode('auto', event)" title="시네마틱 자동 각인 연출">
-                            <i class="fa-solid fa-film"></i>
-                            <span>자동 연출</span>
-                        </button>
-                        <button type="button" class="bento-ctrl-btn" id="bentoBtnLaser" onclick="setBentoHeroMode('laser', event)" title="레이저 각인 스캔">
-                            <i class="fa-solid fa-bolt"></i>
-                            <span>레이저</span>
-                        </button>
-                        <button type="button" class="bento-ctrl-btn" id="bentoBtnSlider" onclick="setBentoHeroMode('slider', event)" title="Before/After 직접 조절">
-                            <i class="fa-solid fa-sliders"></i>
-                            <span>슬라이더</span>
-                        </button>
-                        <button type="button" class="bento-ctrl-btn" id="bentoBtnHover" onclick="setBentoHeroMode('hover', event)" title="마우스 호버 반응">
-                            <i class="fa-solid fa-hand-pointer"></i>
-                            <span>호버</span>
-                        </button>
-                        <button type="button" class="bento-ctrl-btn icon-only" onclick="replayBentoHero(event)" title="다시 재생">
-                            <i class="fa-solid fa-rotate-right"></i>
-                        </button>
-                    </div>
+                <div class="divider-v"></div>
 
-                    <!-- 중앙 쇼케이스 스테이지 -->
-                    <div class="bento-stage-wrap" id="bentoStage" onclick="openLightbox('images/브랜딩_파스텔_branded.jpg')" title="클릭하여 고화질 확대보기">
-                        <!-- 1층: 무지 상품 원본 -->
-                        <img src="images/브랜딩_파스텔_blank.jpg" alt="무지 굿즈" class="bento-layer-blank" id="bentoImgBlank">
+                <button type="button" class="action-btn" onclick="restartAnimation()" title="처음부터 다시 재생">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>다시 재생</span>
+                </button>
 
-                        <!-- 2층: 로고 완성 상품 -->
-                        <div class="bento-layer-branded-wrap" id="bentoBrandedWrap">
-                            <img src="images/브랜딩_파스텔_branded.jpg" alt="보답화니 브랜드 굿즈" class="bento-layer-branded" id="bentoImgBranded">
-                        </div>
+                <select class="speed-select" id="speedSelect" onchange="changeSpeed(this.value)">
+                    <option value="1">속도: 보통 (2.2초)</option>
+                    <option value="1.5">속도: 천천히 (3.3초)</option>
+                    <option value="0.6">속도: 빠르게 (1.3초)</option>
+                </select>
 
-                        <!-- 레이저 라인 -->
-                        <div class="bento-laser-line" id="bentoLaserLine"></div>
+                <button type="button" class="action-btn" id="btnSound" onclick="toggleSound()" title="효과음 켜기/끄기">
+                    <i class="fa-solid fa-volume-xmark" id="soundIcon"></i>
+                    <span>효과음</span>
+                </button>
+            </div>
 
-                        <!-- 슬라이더 조절 핸들 -->
-                        <div class="bento-slider-handle" id="bentoSliderHandle">
-                            <div class="bento-handle-grip">
-                                <i class="fa-solid fa-chevron-left"></i>
-                                <i class="fa-solid fa-chevron-right"></i>
-                            </div>
-                        </div>
+            <!-- 메인 쇼케이스 스테이지 ("2번 레이저 버전") -->
+            <div class="showcase-stage is-wide" id="showcaseStage">
+                <!-- 1층: 로고 없는 무지 상품 -->
+                <img src="images/브랜딩_파스텔_blank.jpg" alt="무지 상품" class="layer-base" id="imgBlank">
 
-                        <!-- 상태 태그 -->
-                        <div class="bento-tag bento-tag-blank">BLANK</div>
-                        <div class="bento-tag bento-tag-branded">BRANDED</div>
+                <!-- 2층: 로고 입혀진 완성 상품 -->
+                <div class="layer-branded-wrap" id="brandedWrap">
+                    <img src="images/브랜딩_파스텔_branded.jpg" alt="보답화니 완성 굿즈" class="layer-branded" id="imgBranded">
+                </div>
 
-                        <!-- 확대보기 인디케이터 -->
-                        <div class="zoom-indicator"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
-                    </div>
+                <!-- 레이저 라인 -->
+                <div class="scan-laser-line" id="laserLine"></div>
 
-                    <!-- 하단 감성 캡션 바 -->
-                    <div class="bento-bottom-bar">
-                        <div class="bento-bottom-text">
-                            <span class="bento-bottom-title">보답화니 시그니처 굿즈 풀세트</span>
-                            <span class="bento-bottom-sub">가죽 바인더 · 플래너 · 텀블러 · 캘린더 · 제안서</span>
-                        </div>
+                <!-- 대각선 빛 스윕 -->
+                <div class="shimmer-sweep" id="shimmerSweep"></div>
+
+                <!-- 파티클 이펙트 캔버스 -->
+                <canvas id="particleCanvas"></canvas>
+
+                <!-- 슬라이더 조절 핸들 -->
+                <div class="slider-handle" id="sliderHandle">
+                    <div class="slider-circle">
+                        <i class="fa-solid fa-chevron-left" style="font-size:10px"></i>
+                        <i class="fa-solid fa-chevron-right" style="font-size:10px"></i>
                     </div>
                 </div>
 
-                <!-- 2. [포인트] 맞춤형 보장분석제안서 (세로 1x2) -->
-                <div class="bento-cell c-proposal point-card" onclick="openLightbox('images/브랜딩10.jpg')" title="클릭하여 확대보기">
-                    <div class="bento-img-wrap">
-                        <img src="images/브랜딩10.jpg" alt="보장분석제안서" loading="lazy">
-                        <div class="zoom-indicator"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+                <!-- 상태 태그 -->
+                <div class="status-tag tag-blank" id="tagBlank">BLANK MATERIALS</div>
+                <div class="status-tag tag-branded" id="tagBranded">BRAND IDENTITY</div>
+
+                <!-- 짜잔! 배지 -->
+                <div class="tada-badge" id="tadaBadge">
+                    <div class="tada-icon"><i class="fa-solid fa-heart"></i></div>
+                    <div class="tada-text-wrap">
+                        <div class="tada-title" id="tadaTitle">보답화니 브랜드 굿즈 풀세트 완성!</div>
+                        <div class="tada-sub" id="tadaSub">Executive Signature Identity Package</div>
                     </div>
                 </div>
-
-                <!-- 3. 서브: 브로슈어 내지 인포그래픽 (세로 1x2) -->
-                <div class="bento-cell c-brochure">
-                    <div class="bento-img-wrap">
-                        <img src="images/브랜딩11.jpg" alt="인포그래픽 브로슈어" loading="lazy">
-                    </div>
-                </div>
-
-                <!-- 4. 서브: 실제 설계사 캐릭터화 (가로 2x1 3:1비율) -->
-                <div class="bento-cell c-character">
-                    <div class="bento-img-wrap">
-                        <img src="images/브랜딩7.jpg" alt="캐릭터 브랜딩" loading="lazy">
-                    </div>
-                </div>
-
-                <!-- 5. 서브: 명함 & 스테이셔너리 (가로 2x1 3:1비율) -->
-                <div class="bento-cell c-card">
-                    <div class="bento-img-wrap">
-                        <img src="images/브랜딩4.jpg" alt="명함 스테이셔너리" loading="lazy">
-                    </div>
-                </div>
-
-                <!-- 6. [포인트] 로고 디자인 프로세스 (1x1) -->
-                <div class="bento-cell c-logo point-card" onclick="openLightbox('images/브랜딩9.jpg')" title="클릭하여 확대보기">
-                    <div class="bento-img-wrap">
-                        <img src="images/브랜딩9.jpg" alt="로고 디자인" loading="lazy">
-                        <div class="zoom-indicator"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
-                    </div>
-                </div>
-
-                <!-- 7. [포인트] SNS 마케팅 카드뉴스 (1x1 정방형) -->
-                <div class="bento-cell c-news point-card" onclick="openLightbox('images/브랜딩8.jpg')" title="클릭하여 확대보기">
-                    <div class="bento-img-wrap">
-                        <img src="images/브랜딩8.jpg" alt="마케팅 콘텐츠" loading="lazy">
-                        <div class="zoom-indicator"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
-                    </div>
-                </div>
-
-                <!-- 8. 서브: 디자인 워크스테이션 (가로 2x1 3:1비율) -->
-                <div class="bento-cell c-workstation">
-                    <div class="bento-img-wrap">
-                        <img src="images/브랜딩3.jpg" alt="워크스테이션" loading="lazy">
-                    </div>
-                </div>
-
-                <!-- 9. 서브: 미팅룸 인테리어 현판 (1x1) -->
-                <div class="bento-cell c-meeting">
-                    <div class="bento-img-wrap">
-                        <img src="images/브랜딩5.png" alt="미팅룸" loading="lazy">
-                    </div>
-                </div>
-
-                <!-- 10. 서브: 바인더 레드 (1x1) -->
-                <div class="bento-cell c-binder1">
-                    <div class="bento-img-wrap">
-                        <img src="images/브랜딩1.jpg" alt="바인더 레드" loading="lazy">
-                    </div>
-                </div>
-
-                <!-- 11. 서브: 바인더 네이비 (1x1) -->
-                <div class="bento-cell c-binder2">
-                    <div class="bento-img-wrap">
-                        <img src="images/브랜딩6.jpg" alt="바인더 네이비" loading="lazy">
-                    </div>
-                </div>
-
-                <!-- 12. 서브: 바인더 블랙&골드 (1x1) -->
-                <div class="bento-cell c-binder3">
-                    <div class="bento-img-wrap">
-                        <img src="images/브랜딩12.jpg" alt="바인더 블랙&골드" loading="lazy">
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
@@ -4619,190 +4559,372 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<!-- Bento Grid 굿즈 히어로 인터랙티브 컨트롤 스크립트 -->
+<!-- WERACLE SIGNATURE BRANDING 쇼케이스 인터랙티브 스크립트 (2번 레이저 각인 기본 활성화) -->
 <script>
-let bentoHeroMode = 'auto';
-let bentoHeroAnimId = null;
-let bentoHeroProgress = 100; // start branded
-let bentoIsDragging = false;
+let currentMode = 'laser'; // 기본 모드: 2번 레이저 각인 연출
+let speedMultiplier = 1;
+let animTimeline = null;
+let isSoundEnabled = false;
+let audioCtx = null;
 
-function setBentoHeroMode(mode, e) {
-    if (e) e.stopPropagation();
-    bentoHeroMode = mode;
+const stage = document.getElementById('showcaseStage');
+const brandedWrap = document.getElementById('brandedWrap');
+const laserLine = document.getElementById('laserLine');
+const shimmerSweep = document.getElementById('shimmerSweep');
+const sliderHandle = document.getElementById('sliderHandle');
+const tadaBadge = document.getElementById('tadaBadge');
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas ? canvas.getContext('2d') : null;
 
-    document.querySelectorAll('.bento-ctrl-btn').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.getElementById(
-        mode === 'auto' ? 'bentoBtnAuto' :
-        mode === 'laser' ? 'bentoBtnLaser' :
-        mode === 'slider' ? 'bentoBtnSlider' : 'bentoBtnHover'
-    );
-    if (activeBtn) activeBtn.classList.add('active');
-
-    const handle = document.getElementById('bentoSliderHandle');
-    const laser = document.getElementById('bentoLaserLine');
-
-    if (bentoHeroAnimId) {
-        cancelAnimationFrame(bentoHeroAnimId);
-        bentoHeroAnimId = null;
-    }
-
-    if (handle) handle.classList.toggle('active', mode === 'slider');
-    if (laser) laser.style.opacity = (mode === 'laser' || mode === 'auto') ? '1' : '0';
-
-    if (mode === 'auto') {
-        runBentoCinematic();
-    } else if (mode === 'laser') {
-        runBentoLaserSweep();
-    } else if (mode === 'slider') {
-        updateBentoWidth(50);
-    } else if (mode === 'hover') {
-        updateBentoWidth(0);
-        if (laser) laser.style.opacity = '0';
-    }
+// 캔버스 크기 맞춤
+function resizeCanvas() {
+    if (!canvas || !stage) return;
+    canvas.width = stage.clientWidth;
+    canvas.height = stage.clientHeight;
 }
+window.addEventListener('resize', resizeCanvas);
 
-function updateBentoWidth(percent) {
-    percent = Math.max(0, Math.min(100, percent));
-    bentoHeroProgress = percent;
-    const wrap = document.getElementById('bentoBrandedWrap');
-    const handle = document.getElementById('bentoSliderHandle');
-    const laser = document.getElementById('bentoLaserLine');
+// 사운드 효과 (Web Audio API)
+function playChimeSound() {
+    if (!isSoundEnabled) return;
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
 
-    if (wrap) wrap.style.width = percent + '%';
-    if (handle) handle.style.left = percent + '%';
-    if (laser) laser.style.left = percent + '%';
-}
-
-function runBentoCinematic() {
-    let startTime = null;
-    const duration = 2400; // 2.4s smooth reveal
-
-    function step(timestamp) {
-        if (bentoHeroMode !== 'auto') return;
-        if (!startTime) startTime = timestamp;
-        const elapsed = timestamp - startTime;
-        let p = Math.min(1, elapsed / duration);
-        // easeOutCubic
-        let eased = 1 - Math.pow(1 - p, 3);
-        updateBentoWidth(eased * 100);
-
-        const laser = document.getElementById('bentoLaserLine');
-        if (laser) {
-            laser.style.opacity = (p < 0.98) ? '1' : '0';
-        }
-
-        if (p < 1) {
-            bentoHeroAnimId = requestAnimationFrame(step);
-        } else {
-            // Pause at 100%, then optionally restart after 5s
+        const notes = [587.33, 739.99, 880.00, 1174.66, 1479.98];
+        notes.forEach((freq, idx) => {
             setTimeout(() => {
-                if (bentoHeroMode === 'auto') {
-                    updateBentoWidth(0);
-                    startTime = null;
-                    bentoHeroAnimId = requestAnimationFrame(step);
-                }
-            }, 5000);
-        }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.2);
+            }, idx * 90);
+        });
+    } catch (e) {
+        console.log('Audio error:', e);
     }
-    updateBentoWidth(0);
-    bentoHeroAnimId = requestAnimationFrame(step);
 }
 
-function runBentoLaserSweep() {
-    let startTime = null;
-    const duration = 1800;
-    let forward = true;
-
-    function step(timestamp) {
-        if (bentoHeroMode !== 'laser') return;
-        if (!startTime) startTime = timestamp;
-        const elapsed = timestamp - startTime;
-        let p = Math.min(1, elapsed / duration);
-        let eased = 0.5 - 0.5 * Math.cos(p * Math.PI); // easeInOutSine
-        let currentP = forward ? eased * 100 : (1 - eased) * 100;
-        updateBentoWidth(currentP);
-
-        const laser = document.getElementById('bentoLaserLine');
-        if (laser) laser.style.opacity = '1';
-
-        if (p < 1) {
-            bentoHeroAnimId = requestAnimationFrame(step);
-        } else {
-            forward = !forward;
-            startTime = null;
-            setTimeout(() => {
-                if (bentoHeroMode === 'laser') {
-                    bentoHeroAnimId = requestAnimationFrame(step);
-                }
-            }, 400);
+function toggleSound() {
+    isSoundEnabled = !isSoundEnabled;
+    const icon = document.getElementById('soundIcon');
+    const btn = document.getElementById('btnSound');
+    if (isSoundEnabled) {
+        if (icon) icon.className = 'fa-solid fa-volume-high';
+        if (btn) {
+            btn.style.borderColor = '#38bdf8';
+            btn.style.color = '#38bdf8';
         }
-    }
-    bentoHeroAnimId = requestAnimationFrame(step);
-}
-
-function replayBentoHero(e) {
-    if (e) e.stopPropagation();
-    if (bentoHeroMode === 'auto') {
-        runBentoCinematic();
-    } else if (bentoHeroMode === 'laser') {
-        runBentoLaserSweep();
+        playChimeSound();
     } else {
-        updateBentoWidth(0);
-        setTimeout(() => updateBentoWidth(100), 200);
+        if (icon) icon.className = 'fa-solid fa-volume-xmark';
+        if (btn) {
+            btn.style.borderColor = '';
+            btn.style.color = '';
+        }
     }
 }
 
-// Slider and hover events
-document.addEventListener('DOMContentLoaded', () => {
-    const stage = document.getElementById('bentoStage');
-    if (!stage) return;
+// 파티클 시스템
+let particles = [];
+class Particle {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = Math.random() * 4 + 2;
+        this.speedX = (Math.random() - 0.5) * 4;
+        this.speedY = (Math.random() - 0.5) * 4 - 1.5;
+        const palette = ['#38bdf8', '#0284c7', '#ffffff', '#fce08b'];
+        this.color = palette[Math.floor(Math.random() * palette.length)];
+        this.alpha = 1;
+        this.life = Math.random() * 40 + 30;
+        this.decay = 1 / this.life;
+    }
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.alpha -= this.decay;
+        this.size *= 0.96;
+    }
+    draw() {
+        if (!ctx) return;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, Math.max(0.5, this.size), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
 
-    function getPercentFromEvent(e) {
-        const rect = stage.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        return ((clientX - rect.left) / rect.width) * 100;
+function triggerSparkles() {
+    if (!canvas || !stage) return;
+    resizeCanvas();
+    particles = [];
+    const w = canvas.width;
+    const h = canvas.height;
+    const spots = [
+        { x: 0.22, y: 0.5, count: 18 }, // 왼쪽 제안서
+        { x: 0.35, y: 0.6, count: 16 }, // 텀블러
+        { x: 0.48, y: 0.5, count: 20 }, // 남색 플래너
+        { x: 0.48, y: 0.8, count: 20 }, // 검정 저널
+        { x: 0.65, y: 0.5, count: 18 }, // 캘린더
+        { x: 0.78, y: 0.82, count: 24 }, // 빨간 바인더
+        { x: 0.90, y: 0.6, count: 16 }  // 에코백
+    ];
+
+    spots.forEach(spot => {
+        for (let i = 0; i < spot.count; i++) {
+            particles.push(new Particle(
+                (w * spot.x) + (Math.random() - 0.5) * 80,
+                (h * spot.y) + (Math.random() - 0.5) * 60
+            ));
+        }
+    });
+
+    animateParticles();
+}
+
+function animateParticles() {
+    if (!ctx || !canvas) return;
+    if (particles.length === 0) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw();
+        if (particles[i].alpha <= 0) {
+            particles.splice(i, 1);
+        }
+    }
+    if (particles.length > 0) {
+        requestAnimationFrame(animateParticles);
+    } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
+// 모드 전환
+function setMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+    if (mode === 'cinematic') document.getElementById('btnModeCinematic')?.classList.add('active');
+    if (mode === 'laser') document.getElementById('btnModeLaser')?.classList.add('active');
+    if (mode === 'slider') document.getElementById('btnModeSlider')?.classList.add('active');
+    if (mode === 'hover') document.getElementById('btnModeHover')?.classList.add('active');
+
+    resetAllVisuals();
+
+    if (mode === 'cinematic') {
+        runCinematicMode();
+    } else if (mode === 'laser') {
+        runLaserMode();
+    } else if (mode === 'slider') {
+        enableSliderMode();
+    } else if (mode === 'hover') {
+        enableHoverMode();
+    }
+}
+
+function changeSpeed(val) {
+    speedMultiplier = parseFloat(val);
+    restartAnimation();
+}
+
+function resetAllVisuals() {
+    clearTimeout(animTimeline);
+    if (laserLine) laserLine.style.display = 'none';
+    if (sliderHandle) sliderHandle.style.display = 'none';
+    if (tadaBadge) tadaBadge.classList.remove('show');
+    if (shimmerSweep) shimmerSweep.classList.remove('animate');
+    if (stage) {
+        stage.onmousemove = null;
+        stage.onmouseleave = null;
+        stage.ontouchmove = null;
     }
 
-    stage.addEventListener('mouseenter', () => {
-        if (bentoHeroMode === 'hover') {
-            updateBentoWidth(100);
-        }
-    });
+    if (brandedWrap) {
+        brandedWrap.style.transition = 'none';
+        brandedWrap.style.opacity = '0';
+        brandedWrap.style.clipPath = 'none';
+        brandedWrap.style.filter = 'none';
+    }
+}
 
-    stage.addEventListener('mouseleave', () => {
-        if (bentoHeroMode === 'hover') {
-            updateBentoWidth(0);
-        }
-        bentoIsDragging = false;
-    });
+function restartAnimation() {
+    setMode(currentMode);
+}
 
-    stage.addEventListener('mousemove', (e) => {
-        if (bentoHeroMode === 'slider') {
-            updateBentoWidth(getPercentFromEvent(e));
-        }
-    });
+/* 1. 시네마틱 자동 연출 */
+function runCinematicMode() {
+    if (!brandedWrap) return;
+    brandedWrap.style.clipPath = 'none';
+    brandedWrap.style.opacity = '0';
 
-    stage.addEventListener('mousedown', (e) => {
-        if (bentoHeroMode === 'slider') {
-            bentoIsDragging = true;
-            updateBentoWidth(getPercentFromEvent(e));
-        }
-    });
+    const duration = 2500 * speedMultiplier;
 
-    window.addEventListener('mouseup', () => {
-        bentoIsDragging = false;
-    });
+    animTimeline = setTimeout(() => {
+        brandedWrap.style.transition = `opacity ${duration / 1000}s cubic-bezier(0.4, 0, 0.2, 1), filter ${duration / 1000}s ease`;
+        brandedWrap.style.opacity = '1';
+        brandedWrap.style.filter = 'drop-shadow(0 0 15px rgba(56, 189, 248, 0.4))';
 
-    stage.addEventListener('touchmove', (e) => {
-        if (bentoHeroMode === 'slider') {
-            updateBentoWidth(getPercentFromEvent(e));
-        }
-    }, { passive: true });
+        setTimeout(() => {
+            if (shimmerSweep) {
+                shimmerSweep.classList.remove('animate');
+                void shimmerSweep.offsetWidth;
+                shimmerSweep.classList.add('animate');
+            }
+        }, duration * 0.6);
 
-    // Auto-start cinematic animation smoothly on page load
-    setTimeout(() => {
-        runBentoCinematic();
+        setTimeout(() => {
+            if (brandedWrap) brandedWrap.style.filter = 'none';
+            if (tadaBadge) tadaBadge.classList.add('show');
+            triggerSparkles();
+            playChimeSound();
+
+            animTimeline = setTimeout(() => {
+                if (tadaBadge) tadaBadge.classList.remove('show');
+                if (brandedWrap) {
+                    brandedWrap.style.transition = 'opacity 1.2s ease';
+                    brandedWrap.style.opacity = '0';
+                }
+                animTimeline = setTimeout(() => {
+                    if (currentMode === 'cinematic') runCinematicMode();
+                }, 1500);
+            }, 4000);
+        }, duration);
     }, 600);
+}
+
+/* 2. 레이저 각인 연출 (핵심 모드) */
+function runLaserMode() {
+    if (!laserLine || !brandedWrap) return;
+    laserLine.style.display = 'block';
+    laserLine.style.top = '0%';
+    brandedWrap.style.opacity = '1';
+    brandedWrap.style.clipPath = 'inset(0 0 100% 0)';
+
+    const duration = 2200 * speedMultiplier;
+    let startTime = null;
+
+    function animateLaser(timestamp) {
+        if (currentMode !== 'laser') return;
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        const eased = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+        const percent = eased * 100;
+
+        laserLine.style.top = percent + '%';
+        brandedWrap.style.clipPath = `inset(0 0 ${100 - percent}% 0)`;
+
+        if (progress < 1) {
+            animTimeline = requestAnimationFrame(animateLaser);
+        } else {
+            laserLine.style.display = 'none';
+            if (shimmerSweep) shimmerSweep.classList.add('animate');
+            if (tadaBadge) tadaBadge.classList.add('show');
+            triggerSparkles();
+            playChimeSound();
+
+            animTimeline = setTimeout(() => {
+                if (tadaBadge) tadaBadge.classList.remove('show');
+                animTimeline = setTimeout(() => {
+                    if (currentMode === 'laser') runLaserMode();
+                }, 1500);
+            }, 3500);
+        }
+    }
+
+    animTimeline = setTimeout(() => {
+        requestAnimationFrame(animateLaser);
+    }, 500);
+}
+
+/* 3. Before / After 드래그 슬라이더 모드 */
+function enableSliderMode() {
+    if (!sliderHandle || !brandedWrap || !stage) return;
+    sliderHandle.style.display = 'block';
+    sliderHandle.style.left = '50%';
+    brandedWrap.style.opacity = '1';
+    brandedWrap.style.transition = 'none';
+    brandedWrap.style.clipPath = 'inset(0 0 0 50%)';
+
+    let isDragging = false;
+
+    function updateSlider(clientX) {
+        const rect = stage.getBoundingClientRect();
+        let posX = clientX - rect.left;
+        posX = Math.max(0, Math.min(posX, rect.width));
+        const percent = (posX / rect.width) * 100;
+
+        sliderHandle.style.left = percent + '%';
+        brandedWrap.style.clipPath = `inset(0 0 0 ${percent}%)`;
+    }
+
+    stage.onmousedown = (e) => {
+        isDragging = true;
+        updateSlider(e.clientX);
+    };
+
+    window.onmousemove = (e) => {
+        if (!isDragging) return;
+        updateSlider(e.clientX);
+    };
+
+    window.onmouseup = () => {
+        isDragging = false;
+    };
+
+    stage.ontouchstart = (e) => {
+        isDragging = true;
+        updateSlider(e.touches[0].clientX);
+    };
+
+    stage.ontouchmove = (e) => {
+        if (!isDragging) return;
+        updateSlider(e.touches[0].clientX);
+    };
+
+    stage.ontouchend = () => {
+        isDragging = false;
+    };
+}
+
+/* 4. 마우스 호버 반응 모드 */
+function enableHoverMode() {
+    if (!brandedWrap || !stage) return;
+    brandedWrap.style.opacity = '0';
+    brandedWrap.style.clipPath = 'none';
+    brandedWrap.style.transition = 'opacity 0.4s ease';
+
+    stage.onmouseenter = () => {
+        brandedWrap.style.opacity = '1';
+        if (tadaBadge) tadaBadge.classList.add('show');
+        triggerSparkles();
+    };
+
+    stage.onmouseleave = () => {
+        brandedWrap.style.opacity = '0';
+        if (tadaBadge) tadaBadge.classList.remove('show');
+    };
+}
+
+// 페이지 로드 시 2번 레이저 각인 버전 자동 실행
+document.addEventListener('DOMContentLoaded', () => {
+    resizeCanvas();
+    setTimeout(() => {
+        setMode('laser');
+    }, 400);
 });
 </script>
 

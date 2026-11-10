@@ -878,8 +878,10 @@ window.submitFamilyForm = async function(e) {
     
     window.isFamilySubmit = true;
     
-    loadStateToForm(activeF.id);
-    await new Promise(r => setTimeout(r, 50));
+    if (window.activeFamilyId !== activeF.id) {
+        loadStateToForm(activeF.id);
+        await new Promise(r => setTimeout(r, 50));
+    }
     
     if (!activeF.isRoot) {
         const rootData = window.familyState[0].data;

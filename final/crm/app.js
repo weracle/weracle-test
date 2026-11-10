@@ -112,31 +112,31 @@ function getGlobalInsuranceList(client, includeInsured = false) {
             
             let finalObj = {
                 ...d,
-                피보험자: client['보험' + i + '_피보험자'] || client['피보험자'] || d['피보험자'] || d['차_피보험자'] || d['기본피보험자'] || d['차_기본피보험자'] || '',
-                계약자: client['보험' + i + '_계약자'] || client['계약자'] || d['계약자'] || '',
-                company: client['보험' + i + '_사명'] || client['차_보험사'] || d['보험사명'] || d['차_보험사명'] || d['company'] || '',
-                product: client['보험' + i + '_상품명'] || client['차_상품명'] || d['상품명'] || d['차_상품명'] || d['product'] || '',
+                피보험자: d['피보험자'] || d['차_피보험자'] || d['기본피보험자'] || d['차_기본피보험자'] || client['보험' + i + '_피보험자'] || client['피보험자'] || '',
+                계약자: d['계약자'] || d['차_계약자'] || client['보험' + i + '_계약자'] || client['계약자'] || '',
+                company: d['보험사명'] || d['차_보험사명'] || d['company'] || client['보험' + i + '_사명'] || client['차_보험사'] || '',
+                product: d['상품명'] || d['차_상품명'] || d['product'] || client['보험' + i + '_상품명'] || '',
                 details: d,
-                date: client['보험' + i + '_체결일'] || d['체결일'] || '',
-                premium: client['보험' + i + '_보험료'] || d['보험료'] || '',
-                payDate: client['보험' + i + '_결제일'] || d['결제일'] || '',
-                payPeriod: client['보험' + i + '_납입기간'] || d['납입기간'] || '',
-                expireDate: client['보험' + i + '_만기일'] || d['만기일'] || '',
-                renewalDate: client['보험' + i + '_갱신일'] || d['갱신일'] || '',
+                date: d['체결일'] || d['책임개시일'] || d['date'] || client['보험' + i + '_체결일'] || '',
+                premium: d['보험료'] || d['차_보험료'] || d['premium'] || client['보험' + i + '_보험료'] || '',
+                payDate: d['결제일'] || d['차_결제일'] || d['payDate'] || client['보험' + i + '_결제일'] || '',
+                payPeriod: d['납입기간'] || d['payPeriod'] || client['보험' + i + '_납입기간'] || '',
+                expireDate: d['만기일'] || d['expireDate'] || client['보험' + i + '_만기일'] || '',
+                renewalDate: d['갱신일'] || d['renewalDate'] || client['보험' + i + '_갱신일'] || '',
                 payment: pVal,
-                paymentInfo: client['보험' + i + '_결제정보'] || d['결제정보'] || '',
-                보험사명: client['보험' + i + '_사명'] || client['차_보험사'] || d['보험사명'] || d['차_보험사명'] || d['company'] || '',
-                상품명: client['보험' + i + '_상품명'] || client['차_상품명'] || d['상품명'] || d['차_상품명'] || d['product'] || '',
+                paymentInfo: d['결제정보'] || d['차_결제정보'] || client['보험' + i + '_결제정보'] || '',
+                보험사명: d['보험사명'] || d['차_보험사명'] || d['company'] || client['보험' + i + '_사명'] || client['차_보험사'] || '',
+                상품명: d['상품명'] || d['차_상품명'] || d['product'] || client['보험' + i + '_상품명'] || '',
                 가입내역: parsedCov || d['가입내역'] || '',
                 _가입내역: d,
-                체결일: client['보험' + i + '_체결일'] || d['체결일'] || '',
-                보험료: client['보험' + i + '_보험료'] || d['보험료'] || '',
-                결제일: client['보험' + i + '_결제일'] || d['결제일'] || '',
-                납입기간: client['보험' + i + '_납입기간'] || d['납입기간'] || '',
-                만기일: client['보험' + i + '_만기일'] || d['만기일'] || '',
-                갱신일: client['보험' + i + '_갱신일'] || d['갱신일'] || '',
+                체결일: d['체결일'] || d['책임개시일'] || d['date'] || client['보험' + i + '_체결일'] || '',
+                보험료: d['보험료'] || d['차_보험료'] || d['premium'] || client['보험' + i + '_보험료'] || '',
+                결제일: d['결제일'] || d['차_결제일'] || d['payDate'] || client['보험' + i + '_결제일'] || '',
+                납입기간: d['납입기간'] || d['payPeriod'] || client['보험' + i + '_납입기간'] || '',
+                만기일: d['만기일'] || d['expireDate'] || client['보험' + i + '_만기일'] || '',
+                갱신일: d['갱신일'] || d['renewalDate'] || client['보험' + i + '_갱신일'] || '',
                 결제방식: pVal,
-                결제정보: client['보험' + i + '_결제정보'] || d['결제정보'] || ''
+                결제정보: d['결제정보'] || d['차_결제정보'] || client['보험' + i + '_결제정보'] || ''
             };
             list.push(finalObj);
         }
@@ -2166,12 +2166,16 @@ async function saveClientToServer(clientObj, insRows) {
   }
     showLoading(true);
     try {
+        let curEditMode = Boolean((typeof window.isEditMode !== 'undefined' && window.isEditMode) || (typeof isEditMode !== 'undefined' && isEditMode));
+        let curEditId = (window.editTargetId !== undefined && window.editTargetId !== null) ? window.editTargetId : (typeof editTargetId !== 'undefined' ? editTargetId : null);
+
         let targetIdx = -1;
-        if (window.isEditMode && window.editTargetId) {
-            if (clientObj["UID"]) targetIdx = globalCustomerData.findIndex(c => c["UID"] === clientObj["UID"]);
-            if (targetIdx === -1) targetIdx = globalCustomerData.findIndex(c => String(c["고객번호"] || c["사업자번호"]) === window.editTargetId);
+        if (curEditMode) {
+            if (clientObj["UID"]) targetIdx = globalCustomerData.findIndex(c => c["UID"] && c["UID"] === clientObj["UID"]);
+            if (targetIdx === -1 && curEditId) targetIdx = globalCustomerData.findIndex(c => String(c["고객번호"] || c["사업자번호"] || "").trim() === String(curEditId || "").trim());
+            if (targetIdx === -1 && clientObj["고객번호"]) targetIdx = globalCustomerData.findIndex(c => String(c["고객번호"] || c["사업자번호"] || "").trim() === String(clientObj["고객번호"] || "").trim());
         }
-        const sName = (targetIdx !== -1 && globalCustomerData[targetIdx].sheetName) ? globalCustomerData[targetIdx].sheetName : (window.targetSheetName || "weraclecrm");
+        const sName = (targetIdx !== -1 && globalCustomerData[targetIdx] && globalCustomerData[targetIdx].sheetName) ? globalCustomerData[targetIdx].sheetName : (window.targetSheetName || "weraclecrm");
         const insSheetName = "보험관리";
         
         // [UID 철통 보장 가드 1] 고객 등록/수정 어떤 경로로 들어오든 UID가 없거나 빈칸이면 즉시 자동 발급/보존
@@ -2184,7 +2188,7 @@ async function saveClientToServer(clientObj, insRows) {
         }
 
         let custHeaders = (window.sheetActualHeadersMap && window.sheetActualHeadersMap[sName]) ? [...window.sheetActualHeadersMap[sName]] : getCrmHeaders(sName);
-        // 시트에 새로운 펫 컬럼이 없으면 시트 1행 끝에 자동으로 추가 (기존 컬럼 위치는 절대 건드리지 않음)
+        // 시트에 새로운 펫 컬럼이 없으면 시트 1행 끝에 자동으로 추가
         const petNewCols = ["동물생일", "동물모색", "동물성별"];
         const missingNewCols = petNewCols.filter(col => !custHeaders.includes(col));
         if (missingNewCols.length > 0 && !isDemoMode && typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets) {
@@ -2198,7 +2202,7 @@ async function saveClientToServer(clientObj, insRows) {
                 const endLtr = getColLtr(custHeaders.length + missingNewCols.length - 1);
                 gapi.client.sheets.spreadsheets.values.update({
                     spreadsheetId,
-                    range: `${sName}!${startLtr}1:${endLtr}1`,
+                    range: `'${sName}'!${startLtr}1:${endLtr}1`,
                     valueInputOption: "USER_ENTERED",
                     resource: { values: [missingNewCols] }
                 });
@@ -2215,7 +2219,7 @@ async function saveClientToServer(clientObj, insRows) {
         let insHeaders = getInsuranceHeaders();
 
         if (isDemoMode) {
-            if (window.isEditMode && window.editTargetId) {
+            if (curEditMode && curEditId) {
                 if (targetIdx !== -1) {
                     clientObj.rowNumber = globalCustomerData[targetIdx].rowNumber;
                     globalCustomerData[targetIdx] = clientObj;
@@ -2226,17 +2230,16 @@ async function saveClientToServer(clientObj, insRows) {
             }
             localStorage.setItem("demo_crm_data", JSON.stringify(globalCustomerData));
             if (!window.isFamilySubmit) { showCustomAlert("저장 완료", "데모 환경에서 정보가 임시 저장되었습니다."); }
-            const modal = document.getElementById("regModal");
-            
             window.isSubmittingCrm = false;
             checkPendingFamilyRegistration();
             if (typeof renderTable === "function") { updateQuickFilterCounts(); renderTable(); }
             return;
         }
 
+        let existingSheets = [];
         try {
             const sheetMeta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
-            const existingSheets = sheetMeta.result.sheets.map(s => s.properties.title);
+            existingSheets = sheetMeta.result.sheets.map(s => s.properties.title);
             if (!existingSheets.includes(insSheetName)) {
                 await gapi.client.sheets.spreadsheets.batchUpdate({
                     spreadsheetId,
@@ -2244,30 +2247,28 @@ async function saveClientToServer(clientObj, insRows) {
                 });
                 await gapi.client.sheets.spreadsheets.values.update({
                     spreadsheetId,
-                    range: insSheetName + "!A1",
+                    range: `'${insSheetName}'!A1`,
                     valueInputOption: "USER_ENTERED",
                     resource: { values: [insHeaders] }
                 });
+                existingSheets.push(insSheetName);
             }
-
         } catch (e) { console.warn("시트 동기화 오류:", e); }
 
-        if (window.isEditMode && window.editTargetId) {
-            if (targetIdx !== -1) {
-                const rNum = globalCustomerData[targetIdx].rowNumber;
-                await gapi.client.sheets.spreadsheets.values.update({
-                    spreadsheetId,
-                    range: sName + "!A" + rNum,
-                    valueInputOption: "USER_ENTERED",
-                    resource: { values: [custValues] }
-                });
-                globalCustomerData[targetIdx] = clientObj;
-                clientObj.rowNumber = rNum;
-            }
+        if (curEditMode && targetIdx !== -1) {
+            const rNum = (globalCustomerData[targetIdx] && globalCustomerData[targetIdx].rowNumber) ? globalCustomerData[targetIdx].rowNumber : (targetIdx + 2);
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: `'${sName}'!A${rNum}`,
+                valueInputOption: "USER_ENTERED",
+                resource: { values: [custValues] }
+            });
+            globalCustomerData[targetIdx] = { ...globalCustomerData[targetIdx], ...clientObj, rowNumber: rNum };
+            clientObj.rowNumber = rNum;
         } else {
             const appendResp = await gapi.client.sheets.spreadsheets.values.append({
                 spreadsheetId,
-                range: sName + "!A1",
+                range: `'${sName}'!A1`,
                 valueInputOption: "USER_ENTERED",
                 resource: { values: [custValues] }
             });
@@ -2287,19 +2288,20 @@ async function saveClientToServer(clientObj, insRows) {
         }
 
         try {
+            const targetInsTab = (existingSheets && existingSheets.find(t => t.replace(/\s+/g, '').includes("보험관리") || t.replace(/\s+/g, '').includes("보험") || t.replace(/\s+/g, '').includes("계약"))) || insSheetName;
+            
             let allInsRows = [];
             if (window.isFamilySubmitInProgress && window.familyInsRowsCache) {
                 allInsRows = window.familyInsRowsCache;
             } else {
-                const actualInsSheet = (existingSheets && existingSheets.find(t => t.replace(/\s+/g, '').includes("보험관리") || t.replace(/\s+/g, '').includes("보험") || t.replace(/\s+/g, '').includes("계약"))) || insSheetName;
-                const insResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: `'${actualInsSheet}'!A2:AC` });
+                const insResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: `'${targetInsTab}'!A2:AC` });
                 allInsRows = insResp.result.values || [];
             }
             allInsRows = allInsRows.filter(row => {
                 const rowId = String(row[0] || "").trim();
                 const clientId = String(clientObj["고객번호"] || clientObj["사업자번호"] || clientObj["ID"] || "").trim();
                 if (clientId && rowId === clientId) return false;
-                if (window.isEditMode && window.editTargetId && rowId === String(window.editTargetId).trim()) return false;
+                if (curEditId && rowId === String(curEditId).trim()) return false;
                 return true;
             });
             
@@ -2357,7 +2359,6 @@ async function saveClientToServer(clientObj, insRows) {
                 }
             }
             if (window.isFamilySubmitInProgress) { window.familyInsRowsCache = allInsRows; }
-            const targetInsTab = (existingSheets && existingSheets.find(t => t.replace(/\s+/g, '').includes("보험관리") || t.replace(/\s+/g, '').includes("보험") || t.replace(/\s+/g, '').includes("계약"))) || insSheetName;
             await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `'${targetInsTab}'!A2:AC` });
             if (allInsRows.length > 0) {
                 await gapi.client.sheets.spreadsheets.values.update({
@@ -4038,6 +4039,9 @@ function loadCustomerForFamily(task) {
     if (typeof injectDynamicSaveButtons === 'function') injectDynamicSaveButtons();
     document.body.classList.remove('mode-new');
     editTargetId = String(custId);
+    window.editTargetId = String(custId);
+    window.isEditMode = true;
+    isEditMode = true;
     if (typeof initFamilyTabs === 'function') initFamilyTabs(custId, client["고객명"] || "본인");
     const modal = document.getElementById("regModal");
     const form = document.getElementById("crmRegForm");
@@ -4436,25 +4440,21 @@ if (iSmartGroup) {
     }
 }
 
-// 2. Direct input panel sync if smart group wasn't triggered
-if (insData['differentInsured']) {
-    const insNameInput = activeType === '자동차보험' ? activePanel.querySelector('input[name="차_피보험자"]') : activePanel.querySelector('input[name="피보험자"]');
-    if (insNameInput && insNameInput.value.trim()) {
-        if (activeType === '자동차보험') insData['차_피보험자'] = insNameInput.value.trim();
-        else insData['피보험자'] = insNameInput.value.trim();
-    }
-    const contractorInput = activeType === '자동차보험' ? activePanel.querySelector('input[name="차_계약자"]') : activePanel.querySelector('input[name="계약자"]');
-    if (contractorInput && contractorInput.value.trim()) {
-        if (activeType === '자동차보험') insData['차_계약자'] = contractorInput.value.trim();
-        else insData['계약자'] = contractorInput.value.trim();
-    }
-} else {
-    const basicInsNameInput = activeType === '자동차보험' ? activePanel.querySelector('input[name="차_기본피보험자"]') : activePanel.querySelector('input[name="기본피보험자"]');
-    const basicIns = basicInsNameInput ? basicInsNameInput.value.trim() : "";
-    if (basicIns) {
-        if (activeType === '자동차보험') insData['차_피보험자'] = basicIns;
-        else insData['피보험자'] = basicIns;
-    }
+// 2. Direct input panel sync
+const contractorInput = activePanel ? (activeType === '자동차보험' ? activePanel.querySelector('input[name="차_계약자"]') : activePanel.querySelector('input[name="계약자"]')) : null;
+const insNameInput = activePanel ? (activeType === '자동차보험' ? activePanel.querySelector('input[name="차_피보험자"]') : activePanel.querySelector('input[name="피보험자"]')) : null;
+const basicInsNameInput = activePanel ? (activeType === '자동차보험' ? activePanel.querySelector('input[name="차_기본피보험자"]') : activePanel.querySelector('input[name="기본피보험자"]')) : null;
+
+if (contractorInput && contractorInput.value.trim()) {
+    insData['계약자'] = contractorInput.value.trim();
+    insData['차_계약자'] = contractorInput.value.trim();
+}
+if (insNameInput && insNameInput.value.trim()) {
+    insData['피보험자'] = insNameInput.value.trim();
+    insData['차_피보험자'] = insNameInput.value.trim();
+} else if (basicInsNameInput && basicInsNameInput.value.trim()) {
+    insData['피보험자'] = basicInsNameInput.value.trim();
+    insData['차_피보험자'] = basicInsNameInput.value.trim();
 }
 
 // 3. Fallbacks ONLY if completely empty
@@ -7007,9 +7007,10 @@ div.className = "form-section-card insurance-entry";
 div.id = `ins-card-${insCount}`;
 
 // Determine differentInsured checked state and values
-const diffChecked = data && (data.differentInsured || (data.피보험자 && data.계약자 && data.피보험자 !== data.계약자)) ? "checked" : "";
-const extraDisplay = data && data.differentInsured ? "block" : "none";
-const basicDisplay = data && data.differentInsured ? "none" : "block";
+const isDiff = !!(data && (data.differentInsured || (data.피보험자 && data.계약자 && data.피보험자 !== data.계약자) || (data.차_피보험자 && data.차_계약자 && data.차_피보험자 !== data.차_계약자)));
+const diffChecked = isDiff ? "checked" : "";
+const extraDisplay = isDiff ? "block" : "none";
+const basicDisplay = isDiff ? "none" : "block";
 const insuredVal = data ? (data.피보험자 || "") : "";
 const basicInsuredVal = data ? (data.기본피보험자 || "") : "";
 const contractorVal = data ? (data.계약자 || "") : "";

@@ -104,6 +104,32 @@ function getGlobalInsuranceList(client, includeInsured = false) {
         d = { ...slotData, ...d };
 
         if (client['보험' + i + '_사명'] || client['보험' + i + '_상품명'] || client['차_보험사'] || client['차_상품명'] || d['보험사명'] || d['상품명'] || d['차_보험사명'] || d['차_상품명'] || d['company'] || d['product']) {
+            const rawC = String(d['계약자'] || d['차_계약자'] || client['보험' + i + '_계약자'] || client['계약자'] || '').trim();
+            const rawI = String(d['피보험자'] || d['차_피보험자'] || d['기본피보험자'] || d['차_기본피보험자'] || client['보험' + i + '_피보험자'] || client['피보험자'] || '').trim();
+            
+            const extractPureNameLocal = (str) => {
+                if (!str) return "";
+                let s = String(str).replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, '');
+                const suffixes = ["본인", "배우자", "자녀", "부", "모", "동생", "형제", "자매", "형님", "대표", "대표자"];
+                for (let suf of suffixes) {
+                    if (s.endsWith(suf) && s !== suf) {
+                        s = s.slice(0, -suf.length);
+                        break;
+                    }
+                }
+                return s;
+            };
+
+            const myCustName = extractPureNameLocal(client['고객명'] || client['이름'] || client['대표자명'] || '');
+            const cleanC = extractPureNameLocal(rawC);
+            const cleanI = extractPureNameLocal(rawI);
+
+            // If contractor or insured is specified, ensure client is either contractor or insured
+            if ((cleanC || cleanI) && myCustName) {
+                if (cleanC !== myCustName && cleanI !== myCustName) {
+                    continue; // Skip: client is neither contractor nor insured!
+                }
+            }
             let pVal = '자동이체';
             if (client['보험' + i + '_결제방식'] === '신용카드' || client['보험' + i + '_결제방식'] === '카드' || d['결제방식'] === '신용카드' || d['결제방식'] === '카드') pVal = '카드';
             
@@ -1413,28 +1439,21 @@ try {
 
             let isMatch = false;
 
-            // 1. UID match (exact or composite [insuredUid]_[contractorUid])
-            if (myUid && insUid) {
-                if (insUid === myUid || insUid.startsWith(myUid + "_") || insUid.endsWith("_" + myUid)) {
-                    isMatch = true;
-                }
-            }
+            // Check if contractor or insured is specified
+            const hasContractor = Boolean(insContractor);
+            const hasInsured = Boolean(insInsured);
 
-            // 2. 고객번호 match
-            if (!isMatch && cid && insCid && cid === insCid) {
+            const isContractor = hasContractor && (myName === insContractor || (myUid && insUid && (insUid === myUid || insUid.endsWith("_" + myUid))));
+            const isInsured = hasInsured && (myName === insInsured || (myUid && insUid && (insUid === myUid || insUid.startsWith(myUid + "_"))));
+
+            if (isContractor || isInsured) {
                 isMatch = true;
-            }
-
-            // 3. Name match (contractor, insured, or owner)
-            if (!isMatch && myName) {
-                if (myName === insContractor || myName === insInsured || myName === insOwner) {
-                    isMatch = true;
-                }
-            }
-
-            // 4. Resident number match
-            if (!isMatch && myRrn && myRrn.length >= 7 && insRrn && insRrn.length >= 7 && myRrn === insRrn) {
-                isMatch = true;
+            } else if (!hasContractor && !hasInsured) {
+                // Fallback for legacy rows without contractor/insured
+                if (myUid && insUid && insUid === myUid) isMatch = true;
+                else if (cid && insCid && cid === insCid) isMatch = true;
+                else if (myName && insOwner && myName === insOwner) isMatch = true;
+                else if (myRrn && myRrn.length >= 7 && insRrn && insRrn.length >= 7 && myRrn === insRrn) isMatch = true;
             }
 
             if (isMatch) {
@@ -1659,28 +1678,21 @@ try {
 
             let isMatch = false;
 
-            // 1. UID match (exact or composite [insuredUid]_[contractorUid])
-            if (myUid && insUid) {
-                if (insUid === myUid || insUid.startsWith(myUid + "_") || insUid.endsWith("_" + myUid)) {
-                    isMatch = true;
-                }
-            }
+            // Check if contractor or insured is specified
+            const hasContractor = Boolean(insContractor);
+            const hasInsured = Boolean(insInsured);
 
-            // 2. 고객번호 match
-            if (!isMatch && cid && insCid && cid === insCid) {
+            const isContractor = hasContractor && (myName === insContractor || (myUid && insUid && (insUid === myUid || insUid.endsWith("_" + myUid))));
+            const isInsured = hasInsured && (myName === insInsured || (myUid && insUid && (insUid === myUid || insUid.startsWith(myUid + "_"))));
+
+            if (isContractor || isInsured) {
                 isMatch = true;
-            }
-
-            // 3. Name match (contractor, insured, or owner)
-            if (!isMatch && myName) {
-                if (myName === insContractor || myName === insInsured || myName === insOwner) {
-                    isMatch = true;
-                }
-            }
-
-            // 4. Resident number match
-            if (!isMatch && myRrn && myRrn.length >= 7 && insRrn && insRrn.length >= 7 && myRrn === insRrn) {
-                isMatch = true;
+            } else if (!hasContractor && !hasInsured) {
+                // Fallback for legacy rows without contractor/insured
+                if (myUid && insUid && insUid === myUid) isMatch = true;
+                else if (cid && insCid && cid === insCid) isMatch = true;
+                else if (myName && insOwner && myName === insOwner) isMatch = true;
+                else if (myRrn && myRrn.length >= 7 && insRrn && insRrn.length >= 7 && myRrn === insRrn) isMatch = true;
             }
 
             if (isMatch) {
@@ -2140,9 +2152,35 @@ async function saveClientToServer(clientObj, insRows) {
             return s;
         };
 
-        // [CRITICAL FIX] Preserve all entered insurances on clientObj and in insRows
-        clientObj["가입내역"] = JSON.stringify(insRows);
-        clientObj["보험가입리스트"] = insRows;
+        // [CRITICAL FIX] Only store insurances where this client is contractor or insured
+        const extractPureNameParty = (str) => {
+            if (!str) return "";
+            let s = String(str).replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, '');
+            const suffixes = ["본인", "배우자", "자녀", "부", "모", "동생", "형제", "자매", "형님", "대표", "대표자"];
+            for (let suf of suffixes) {
+                if (s.endsWith(suf) && s !== suf) {
+                    s = s.slice(0, -suf.length);
+                    break;
+                }
+            }
+            return s;
+        };
+
+        const myNameClean = extractPureNameParty(clientObj["고객명"] || clientObj["대표자명"]);
+        const myIdClean = String(clientObj["고객번호"] || "").trim();
+
+        const myInsRows = (insRows || []).filter(ins => {
+            const cN = extractPureNameParty(ins["계약자"] || ins["차_계약자"]);
+            const iN = extractPureNameParty(ins["피보험자"] || ins["차_피보험자"]);
+            const cI = String(ins["계약자_id"] || ins["차_계약자_id"] || "").trim();
+            const iI = String(ins["피보험자_id"] || ins["차_피보험자_id"] || "").trim();
+            
+            if (!cN && !iN && !cI && !iI) return true;
+            return cN === myNameClean || iN === myNameClean || cI === myIdClean || iI === myIdClean;
+        });
+
+        clientObj["가입내역"] = myInsRows.length > 0 ? JSON.stringify(myInsRows) : "";
+        clientObj["보험가입리스트"] = myInsRows;
         
         for (let tIdx in routedMap) {
             let tClient = globalCustomerData[tIdx];

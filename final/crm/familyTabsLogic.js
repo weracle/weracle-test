@@ -494,7 +494,42 @@ function loadStateToForm(personId) {
     const insListDom = document.getElementById('insurance-area');
     if (insListDom) {
         if (target.insHtml) {
-            insListDom.innerHTML = target.insHtml;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = target.insHtml;
+            const entries = tempDiv.querySelectorAll('.insurance-entry');
+            const clean = (s) => String(s || '').replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, '');
+            const myName = clean(target.data['고객명']);
+            const myId = String(target.data['고객번호'] || target.id).trim();
+
+            let hasValid = false;
+            entries.forEach(entry => {
+                const activeTypeSel = entry.querySelector('input[name="보험종류"]');
+                const activeType = activeTypeSel ? activeTypeSel.value : '장기보험';
+                const prefix = activeType === '자동차보험' ? '차_' : '';
+
+                const cInp = entry.querySelector('input[name="' + prefix + '계약자"]');
+                const iInp = entry.querySelector('input[name="' + prefix + '피보험자"]');
+                const cIdInp = entry.querySelector('input[name="' + prefix + '계약자_id"]');
+                const iIdInp = entry.querySelector('input[name="' + prefix + '피보험자_id"]');
+
+                const cN = clean(cInp ? cInp.value : '');
+                const iN = clean(iInp ? iInp.value : '');
+                const cI = cIdInp ? String(cIdInp.value || '').trim() : '';
+                const iI = iIdInp ? String(iIdInp.value || '').trim() : '';
+
+                const isParty = (!cN && !iN) || (cN === myName || iN === myName || cI === myId || iI === myId);
+                if (!isParty) {
+                    entry.remove();
+                } else {
+                    hasValid = true;
+                }
+            });
+
+            if (hasValid) {
+                insListDom.innerHTML = tempDiv.innerHTML;
+            } else {
+                insListDom.innerHTML = '';
+            }
         } else if (target.data["가입내역"] || (target.data["보험가입리스트"] && target.data["보험가입리스트"].length > 0)) {
             // If insHtml is empty but data exists (e.g. loaded from DB), regenerate it!
             insListDom.innerHTML = '';

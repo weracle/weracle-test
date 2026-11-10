@@ -1,4 +1,4 @@
-// familyTabsLogic.js
+﻿// familyTabsLogic.js
 // Handles the 2-Tier Tab UI and state swapping for Family Household CRM Input
 
 window.familyState = [];
@@ -47,11 +47,21 @@ function initFamilyTabs(baseId, baseLabel) {
             const nm = client["고객명"] || "";
             let _rel = rel; if(!isRoot && !_rel.includes('계약자')) _rel = '계약자의 ' + _rel; const displayLabel = isRoot ? (nm ? nm + ' (메인 계약자)' : '메인 계약자(이름 미정)') : (nm ? nm + ' (' + _rel + ')' : '이름 미정 (' + _rel + ')');
             
+            let pData = undefined;
+            if (typeof window.parsePetData === 'function') {
+                const pets = window.parsePetData(client['반려동물'], client['동물이름'], client['코드']);
+                const hasPet = pets.length > 0 || (client['반려동물'] && client['반려동물'] !== '무' && client['반려동물'] !== '없음' && client['반려동물'] !== '-');
+                pData = {
+                    isChecked: hasPet,
+                    rows: pets
+                };
+            }
             return {
                 id: cId,
                 label: displayLabel,
                 isRoot: isRoot,
                 data: { ...client },
+                petData: pData,
                 insHtml: '',
                 isSaved: true
             };

@@ -2186,6 +2186,15 @@ async function saveClientToServer(clientObj, insRows) {
             globalCustomerData.push(clientObj);
         }
 
+        window.globalCustomerData = globalCustomerData;
+        if (window._masterCustomerData) {
+            const mIdx = window._masterCustomerData.findIndex(c => String(c["고객번호"] || c["사업자번호"]) === String(clientObj["고객번호"] || clientObj["사업자번호"]));
+            if (mIdx !== -1) window._masterCustomerData[mIdx] = clientObj;
+            else window._masterCustomerData.push(clientObj);
+        } else {
+            window._masterCustomerData = [...globalCustomerData];
+        }
+
         try {
             let allInsRows = [];
             if (window.isFamilySubmitInProgress && window.familyInsRowsCache) {
@@ -3901,27 +3910,27 @@ function loadCustomerForFamily(task) {
     }
 }function openEditMode(custId, initialMode = 'edit') {
     window.disableInitFamilyTabs = false;
-    let activeData = (window._masterCustomerData && window._masterCustomerData.length > 0)
-        ? window._masterCustomerData
-        : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData);
-    if (!activeData || activeData.length <= 1) {
+    let liveData = (window.globalCustomerData && window.globalCustomerData.length > 0)
+        ? window.globalCustomerData
+        : ((typeof globalCustomerData !== 'undefined' && globalCustomerData.length > 0) ? globalCustomerData : (window._masterCustomerData || []));
+    if (!liveData || liveData.length <= 1) {
         try {
             const cached = localStorage.getItem("weracle_crm_customers_cache") || localStorage.getItem("demo_crm_data");
             if (cached) {
                 const parsed = JSON.parse(cached);
-                if (Array.isArray(parsed) && parsed.length > (activeData ? activeData.length : 0)) {
-                    activeData = parsed;
+                if (Array.isArray(parsed) && parsed.length > (liveData ? liveData.length : 0)) {
+                    liveData = parsed;
                     window.globalCustomerData = parsed;
                     globalCustomerData = parsed;
-                    window._masterCustomerData = parsed;
                 }
             }
         } catch(e) {}
     }
-    if (activeData && activeData.length > 1 && (!window._masterCustomerData || window._masterCustomerData.length < activeData.length)) {
-        window._masterCustomerData = [...activeData];
+    if (liveData && liveData.length > 0) {
+        window._masterCustomerData = liveData;
     }
-    const client = activeData.find(c => String(c["고객번호"] || c["사업자번호"]) === String(custId));
+    const client = (liveData && liveData.find(c => String(c["고객번호"] || c["사업자번호"]) === String(custId)))
+                || (window._masterCustomerData && window._masterCustomerData.find(c => String(c["고객번호"] || c["사업자번호"]) === String(custId)));
     if (!client) {
         showCustomAlert("오류", "고객 정보를 찾을 수 없습니다.");
         return;
@@ -4031,6 +4040,19 @@ function loadCustomerForFamily(task) {
     // 반려동물 체크박스 및 다중 행 완벽 복원
     if (typeof window.restorePetRows === 'function') {
         window.restorePetRows(client);
+    }
+    if (window.familyState && window.activeFamilyId && typeof window.getPetRowsData === 'function') {
+        const curTarget = window.familyState.find(f => f.id === window.activeFamilyId);
+        if (curTarget) {
+            curTarget.petData = window.getPetRowsData();
+            if (typeof window.getPetSerializedData === 'function') {
+                const petSer = window.getPetSerializedData();
+                if (!curTarget.data) curTarget.data = {};
+                curTarget.data['반려동물'] = petSer.species;
+                curTarget.data['동물이름'] = petSer.names;
+                curTarget.data['코드'] = petSer.codes;
+            }
+        }
     }
 
     // 3. 터치인사이트 다중 태그 체크박스 완벽 복원 (배열, 쉼표, 슬래시, JSON 모두 지원)
@@ -4733,9 +4755,20 @@ window.restorePetRowsFromData = function(petData) {
 // ==========================================
 window.parsePetData = function(speciesRaw, namesRaw, codesRaw) {
     if (!speciesRaw && !namesRaw && !codesRaw) return [];
-    const sList = speciesRaw ? String(speciesRaw).split(/[,/]/).map(s => s.trim()) : [];
-    const nList = namesRaw ? String(namesRaw).split(/[,/]/).map(s => s.trim()) : [];
-    const cList = codesRaw ? String(codesRaw).split(/[,/]/).map(s => s.trim()) : [];
+    const splitMulti = (str) => {
+        if (!str) return [];
+        const s = String(str).trim();
+        if (s.includes(',')) {
+            return s.split(',').map(item => item.trim()).filter(Boolean);
+        }
+        if (s.includes('/')) {
+            return s.split('/').map(item => item.trim()).filter(Boolean);
+        }
+        return [s];
+    };
+    const sList = splitMulti(speciesRaw);
+    const nList = splitMulti(namesRaw);
+    const cList = splitMulti(codesRaw);
     const count = Math.max(sList.length, nList.length, cList.length);
     const pets = [];
     for (let i = 0; i < count; i++) {
@@ -8099,12 +8132,11 @@ window.getCrmHeaders = function(sheetType) {
 function getCrmHeaders(sheetType) { return window.getCrmHeaders(sheetType); }
 
 window.renderTable = function(data) {
-    const masterData = (window._masterCustomerData && window._masterCustomerData.length > 0)
-        ? window._masterCustomerData
-        : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : (typeof globalCustomerData !== 'undefined' ? globalCustomerData : []));
-    if (masterData && masterData.length > 1 && (!window._masterCustomerData || window._masterCustomerData.length < masterData.length)) {
-        window._masterCustomerData = [...masterData];
-    }
+    const liveData = (window.globalCustomerData && window.globalCustomerData.length > 0)
+        ? window.globalCustomerData
+        : ((typeof globalCustomerData !== 'undefined' && globalCustomerData.length > 0) ? globalCustomerData : (window._masterCustomerData || []));
+    window._masterCustomerData = liveData;
+    const masterData = liveData;
     const activeData = Array.isArray(data) ? data : masterData;
 
 

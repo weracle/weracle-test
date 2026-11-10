@@ -830,12 +830,14 @@ function renderV3Calendar() {
         }).join('');
 
         if (displayEvents.length > maxShow) {
-          eventsHtml += `<div class="cal-event-more" onclick="openDayDetailModal('${fullDateStr}'); event.stopPropagation();" title="이 날의 전체 일정 상세 보기">+ ${displayEvents.length - maxShow}개 더보기</div>`;
+          eventsHtml += `<div class="cal-event-more" title="전체 일정 보기">+ ${displayEvents.length - maxShow}개 더보기</div>`;
         }
       }
 
       const cell = document.createElement("div");
       cell.className = `cal-cell-monthly${isToday ? ' is-today' : ''}${!isCurrentMonth ? ' other-month' : ''}`;
+      cell.style.cursor = 'pointer';
+      cell.title = '클릭하여 이 날의 전체 일정 보기';
       cell.innerHTML = `
         <div class="cal-cell-monthly-head">
           <span class="cal-monthly-num">${dateNum}</span>
@@ -843,10 +845,8 @@ function renderV3Calendar() {
         </div>
         <div class="cal-monthly-events">${eventsHtml}</div>
       `;
-      cell.onclick = (e) => {
-        if (!e.target.closest('.cal-event-chip') && !e.target.closest('.cal-event-more')) {
-          openDayDetailModal(fullDateStr);
-        }
+      cell.onclick = () => {
+        openDayDetailModal(fullDateStr);
       };
       grid.appendChild(cell);
     });
@@ -1870,17 +1870,24 @@ window.addEventListener('click', (e) => {
   if (e.target === modal) {
     closeInsurerContactsModal();
   }
+  const dayModal = document.getElementById('dayDetailModal');
+  if (e.target === dayModal) {
+    closeDayDetailModal();
+  }
 });
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeInsurerContactsModal();
+    closeDayDetailModal();
   }
 });
 
 // 전역 바인딩
 window.openInsurerContactsModal = openInsurerContactsModal;
 window.closeInsurerContactsModal = closeInsurerContactsModal;
+window.openDayDetailModal = openDayDetailModal;
+window.closeDayDetailModal = closeDayDetailModal;
 window.setContactTab = setContactTab;
 window.filterContacts = filterContacts;
 window.copyContactNumber = copyContactNumber;

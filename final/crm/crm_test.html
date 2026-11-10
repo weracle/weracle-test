@@ -1912,8 +1912,8 @@ window.addEventListener('error', function(e) {
 </div>
 
 
-<script src="app.js?v=20261110_1520"></script>
-  <script src="familyTabsLogic.js?v=20261110_1520"></script>
+<script src="app.js?v=20261110_1540"></script>
+  <script src="familyTabsLogic.js?v=20261110_1540"></script>
   <script src="crm_speed_center.js?v=20261104"></script>
   <script src="crm_smart_reg.js?v=20261104"></script>
   <script src="crm_enhancements.js?v=20261109_1920"></script>
@@ -3383,8 +3383,36 @@ window.renderListModalDirect = function(filtered, titleStr, fType, fVal) {
                         '<td style="padding:14px 16px; font-weight:800; color:#dc2626;">' + expDateStr + '</td>' +
                         '<td style="padding:14px 16px; font-weight:600; color:#475569;">' + phone + '</td>';
                 } else if (fType === 'insurance') {
+                    let matchedProd = "-";
+                    try {
+                        let gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : (Array.isArray(c.가입내역) ? c.가입내역 : (Array.isArray(c.보험가입리스트) ? c.보험가입리스트 : []));
+                        if (gArr && gArr.length > 0) {
+                            let expItem = gArr.find(i => {
+                                let comp = String(i['보험사명'] || i['차_보험사명'] || i['차_보험사'] || i['company'] || '').trim();
+                                let prod = String(i['상품명'] || i['차_상품명'] || i['product'] || '').trim();
+                                if (fVal === '생보 전체보기') {
+                                    const lifeComps = ["한화생명","교보생명","농협생명","메트라이프","KDB생명","DB생명","흥국생명","동양생명","미래에셋생명","라이나생명","푸본현대생명","신한라이프","ABL생명","iM라이프","KB라이프","IBK연금보험","처브라이프","카디프생명","하나생명","AIA생명"];
+                                    return lifeComps.some(lc => comp.includes(lc) || lc.includes(comp));
+                                } else if (fVal === '손보 전체보기') {
+                                    const nonlifeComps = ["삼성화재","메리츠화재","DB손해보험","KB손해보험","현대해상","한화손해보험","롯데손해보험","흥국화재","하나손해보험","NH농협손해보험","라이나손보","AIG손보","MG손해보험"];
+                                    return nonlifeComps.some(nc => comp.includes(nc) || nc.includes(comp));
+                                }
+                                return !fVal || comp === fVal || comp.includes(fVal) || prod.includes(fVal);
+                            }) || gArr[0];
+                            if (expItem) {
+                                let comp = expItem['보험사명'] || expItem['차_보험사명'] || expItem['차_보험사'] || expItem.company || "";
+                                let prod = expItem['상품명'] || expItem['차_상품명'] || expItem.product || (expItem['보험종류'] === '자동차보험' ? '자동차보험' : (typeof expItem['가입내역'] === 'string' ? expItem['가입내역'] : ''));
+                                matchedProd = (comp && prod && !prod.includes(comp)) ? (comp + ' ' + prod) : (prod || comp || '-');
+                            }
+                        } else if (typeof c.가입내역 === 'string' && !c.가입내역.startsWith('[')) {
+                            matchedProd = c.가입내역;
+                        } else if (c.상품명) {
+                            matchedProd = c.상품명;
+                        }
+                    } catch(e) {}
+
                     trContent = '<td style="padding:14px 16px; font-weight:800; color:#0f172a; font-size:14.5px;">' + name + '</td>' +
-                        '<td style="padding:14px 16px; font-weight:700; color:#2563eb;">' + (c.가입내역 || '-') + '</td>' +
+                        '<td style="padding:14px 16px; font-weight:700; color:#2563eb;">' + matchedProd + '</td>' +
                         '<td style="padding:14px 16px;"><span style="padding:3px 9px; border-radius:12px; font-size:12px; font-weight:800; ' + badgeStyle + '">' + status + '</span></td>' +
                         '<td style="padding:14px 16px; font-weight:600; color:#475569;">' + phone + '</td>';
                 } else {
@@ -3506,9 +3534,28 @@ window.renderMobileCustomerCards = function(list, fType, fVal) {
                 '<span style="color:#cbd5e1;">·</span>' +
                 '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
         } else if (fType === 'insurance') {
+            let matchedProd = "-";
+            try {
+                let gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : (Array.isArray(c.가입내역) ? c.가입내역 : (Array.isArray(c.보험가입리스트) ? c.보험가입리스트 : []));
+                if (gArr && gArr.length > 0) {
+                    let expItem = gArr.find(i => {
+                        let comp = String(i['보험사명'] || i['차_보험사명'] || i['차_보험사'] || i['company'] || '').trim();
+                        let prod = String(i['상품명'] || i['차_상품명'] || i['product'] || '').trim();
+                        return !fVal || comp === fVal || comp.includes(fVal) || prod.includes(fVal);
+                    }) || gArr[0];
+                    if (expItem) {
+                        let comp = expItem['보험사명'] || expItem['차_보험사명'] || expItem['차_보험사'] || expItem.company || "";
+                        let prod = expItem['상품명'] || expItem['차_상품명'] || expItem.product || (expItem['보험종류'] === '자동차보험' ? '자동차보험' : (typeof expItem['가입내역'] === 'string' ? expItem['가입내역'] : ''));
+                        matchedProd = (comp && prod && !prod.includes(comp)) ? (comp + ' ' + prod) : (prod || comp || '-');
+                    }
+                } else if (typeof c.가입내역 === 'string' && !c.가입내역.startsWith('[')) {
+                    matchedProd = c.가입내역;
+                }
+            } catch(e) {}
+
             partSummaryHtml = '<span style="color:#2563eb; font-weight:800;"><i class="fa-solid fa-building-shield" style="font-size:11px; margin-right:3px;"></i>' + (c.보험사 || fVal) + '</span>' +
                 '<span style="color:#cbd5e1;">·</span>' +
-                '<span style="color:#334155; font-weight:600;">' + (c.가입내역 || '-') + '</span>' +
+                '<span style="color:#334155; font-weight:600;">' + matchedProd + '</span>' +
                 '<span style="color:#cbd5e1;">·</span>' +
                 '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
         } else {

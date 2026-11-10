@@ -8218,7 +8218,23 @@ window.renderProfileModal = function(mId) {
     if(client['특이사항']) taskSpec += '<strong>[특이사항]</strong><br>' + client['특이사항'].replace(/\n/g, '<br>');
     setEl('pfTask', taskSpec || '-');
     
-    setEl('pfJoinInfo', (client['가입내역'] || '-').replace(/\n/g, '<br>'));
+    let joinInfoStr = '-';
+    try {
+        let insList = (Array.isArray(client['가입내역']) ? client['가입내역'] : (Array.isArray(client['보험가입리스트']) ? client['보험가입리스트'] : []));
+        if (insList.length === 0 && typeof client['가입내역'] === 'string' && (client['가입내역'].startsWith('[') || client['가입내역'].startsWith('{'))) {
+            try { insList = JSON.parse(client['가입내역']); } catch(e){}
+        }
+        if (insList && insList.length > 0) {
+            joinInfoStr = insList.map(ins => {
+                const comp = ins['보험사명'] || ins['차_보험사명'] || ins['company'] || '';
+                const prod = ins['상품명'] || ins['차_상품명'] || ins['product'] || (ins['보험종류'] === '자동차보험' ? '자동차보험' : (typeof ins['가입내역'] === 'string' ? ins['가입내역'] : ''));
+                return (comp && prod && !prod.includes(comp)) ? `[${comp}] ${prod}` : (prod || comp || '보험');
+            }).filter(Boolean).join(', ') || '-';
+        } else if (typeof client['가입내역'] === 'string' && client['가입내역'].trim() && !client['가입내역'].startsWith('[')) {
+            joinInfoStr = client['가입내역'].replace(/\n/g, '<br>');
+        }
+    } catch(e) {}
+    setEl('pfJoinInfo', joinInfoStr);
     
     setEl('pfRouteAndDrive', '운전: ' + (client['운전여부'] || '-') + ' / 차량: ' + (client['차량용도'] || '-'));
     

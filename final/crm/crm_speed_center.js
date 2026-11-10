@@ -266,11 +266,11 @@ window.handleQuickEditSearch = function() {
 
         let matches = window.globalCustomerData.slice();
 
-        // 1. Text Search query
+        // 1. Text Search query (고객명, 폰번호, 대표자명 등 표준 컬럼 통합 지원)
         if (query) {
             matches = matches.filter(c => {
-                const name = String(c['성함'] || c['대표자명'] || '').toLowerCase();
-                const phone = String(c['연락처'] || c['전화번호'] || '').replace(/-/g, '');
+                const name = String(c['고객명'] || c['이름'] || c['성함'] || c['대표자명'] || '').toLowerCase();
+                const phone = String(c['폰번호'] || c['연락처'] || c['전화번호'] || c['대표자폰번호'] || '').replace(/-/g, '');
                 const qClean = query.replace(/-/g, '');
                 const memo = String(c['특이사항'] || c['메모'] || '').toLowerCase();
                 const job = String(c['직업'] || '').toLowerCase();
@@ -284,10 +284,17 @@ window.handleQuickEditSearch = function() {
         if (f.activeType) {
             if (f.activeType === 'driver' && f.driver) {
                 matches = matches.filter(c => {
-                    const driverVal = String(c['운전'] || '').toLowerCase();
+                    const driverVal = String(c['운전여부'] || c['운전'] || '').toLowerCase();
                     const carUsageVal = String(c['차량용도'] || '').toLowerCase();
                     const combined = driverVal + " " + carUsageVal;
-                    return combined.includes(f.driver.toLowerCase());
+                    const target = f.driver.toLowerCase();
+                    if (target === '운전안함') {
+                        return driverVal === '비운전' || driverVal.includes('안함') || driverVal === '무' || driverVal === '없음';
+                    }
+                    if (target === '자가용' || target === '영업용' || target === '이륜차') {
+                        return carUsageVal.includes(target) || driverVal.includes(target);
+                    }
+                    return combined.includes(target);
                 });
             } else if (f.activeType === 'pet' && f.hasPet) {
                 matches = matches.filter(c => {
@@ -297,11 +304,19 @@ window.handleQuickEditSearch = function() {
                 });
             } else if (f.activeType === 'biz' && f.bizType) {
                 matches = matches.filter(c => {
-                    const biz = String(c['사업자구분'] || c['직업'] || c['상세직무'] || '').toLowerCase();
-                    if (f.bizType === '개인사업자') return biz.includes('개인') || biz.includes('자영업') || biz.includes('대표');
-                    if (f.bizType === '법인사업자') return biz.includes('법인');
-                    if (f.bizType === '일반고객') return !biz.includes('사업자') && !biz.includes('법인');
-                    return biz.includes(f.bizType.toLowerCase());
+                    const isBiz = String(c['사업여부'] || '').toUpperCase() === 'Y';
+                    const biz = String(c['사업자구분'] || c['상호명'] || c['직업'] || c['상세직무'] || c['상세업무'] || '').toLowerCase();
+                    const isCorp = biz.includes('법인') || (c['상호명'] && (c['상호명'].includes('주식회사') || c['상호명'].includes('(주)')));
+                    if (f.bizType === '개인사업자') {
+                        return (isBiz && !isCorp) || biz.includes('개인') || biz.includes('자영업') || biz.includes('대표') || biz.includes('사업');
+                    }
+                    if (f.bizType === '법인사업자') {
+                        return isCorp;
+                    }
+                    if (f.bizType === '일반고객') {
+                        return !isBiz && !isCorp && !biz.includes('사업자') && !biz.includes('자영업');
+                    }
+                    return isBiz || biz.includes(f.bizType.toLowerCase());
                 });
             } else if (f.activeType === 'pay' && f.payMethod) {
                 const targetMethod = f.payMethod.trim().toLowerCase();
@@ -409,7 +424,9 @@ window.handleQuickEditSearch = function() {
                 const phone = (window.formatPhone ? window.formatPhone(rawPhone) : rawPhone) || '-';
                 const ageGender = (c['나이'] ? c['나이'] + '세' : '-') + ' / ' + (c['성별'] || '-');
                 const birth = c['생년월일'] || c['생일'] || '-';
-                const driver = (c['운전'] || '-') + (c['차량용도'] ? ' (' + c['차량용도'] + ')' : '');
+                const driveStatus = c['운전여부'] || c['운전'] || '-';
+                const carUsage = (c['차량용도'] && c['차량용도'] !== '-') ? ' (' + c['차량용도'] + ')' : '';
+                const driver = (driveStatus !== '-' ? driveStatus : '') + carUsage || '-';
                 const hasPet = (c['반려동물'] && c['반려동물'] !== '무' && c['반려동물'] !== '없음');
                 const pet = hasPet 
                             ? `<span style="color:#d97706; font-weight:700;">🐾 ${c['반려동물']}</span>` 
@@ -488,7 +505,8 @@ window.handleQuickEditSearch = function() {
                 if (tab === '1차') {
                     let tagItems = '';
                     if (job && job !== '-') tagItems += `<span style="background:#eff6ff; color:#1e40af; border:1px solid #dbeafe; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-briefcase"></i> ${job}</span>`;
-                    if (c['운전'] && c['운전'] !== '무' && c['운전'] !== '없음') tagItems += `<span style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-car"></i> ${driver}</span>`;
+                    const isDriver = (c['운전여부'] === '운전' || (c['운전'] && c['운전'] !== '무' && c['운전'] !== '없음' && c['운전'] !== '비운전'));
+                    if (isDriver) tagItems += `<span style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-car"></i> ${driver}</span>`;
                     if (hasPet) tagItems += `<span style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;">🐾 ${c['반려동물']}</span>`;
 
                     mobileCardHtml += `

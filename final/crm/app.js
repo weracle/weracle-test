@@ -10321,22 +10321,38 @@ window.submitBulkData = async function() {
                 }
             }
 
-            // 헤더 인덱스에 맞춰 데이터 꽂아넣기
+            // 주민번호 하이픈 규격화 (XXXXXX-XXXXXXX)
+            const cleanJuminForFormat = (data.주민번호 || '').replace(/\D/g, '');
+            const normalizedJumin = (typeof formatJumin === 'function') 
+                ? formatJumin(data.주민번호) 
+                : (cleanJuminForFormat.length === 13 ? cleanJuminForFormat.replace(/(\d{6})(\d{7})/, '$1-$2') : data.주민번호);
+
+            // 헤더 인덱스에 맞춰 데이터 꽂아넣기 (24개 표준 컬럼 일관성 보장)
             headers.forEach((h, i) => {
                 const head = String(h).trim();
                 if (head === "고객번호" || head === "ID") rowArr[i] = data.고객번호;
                 else if (head === "고객명" || head === "대표자명") rowArr[i] = data.고객명;
-                else if (head === "주민번호" || head === "사업자번호") rowArr[i] = data.주민번호;
+                else if (head === "주민번호" || head === "사업자번호") rowArr[i] = normalizedJumin;
                 else if (head === "폰번호" || head === "대표자폰번호") rowArr[i] = data.폰번호;
                 else if (head === "주소" || head === "대표주소") rowArr[i] = data.주소;
                 else if (head === "직업" || head === "업태") rowArr[i] = data.직업;
-                else if (head === "특이사항") rowArr[i] = data.특이사항;
+                else if (head === "상세업무" || head === "상세직무") rowArr[i] = "";
+                else if (head === "운전여부") rowArr[i] = "비운전";
+                else if (head === "차량용도") rowArr[i] = "-";
+                else if (head === "반려동물") rowArr[i] = "";
+                else if (head === "동물이름") rowArr[i] = "";
+                else if (head === "가족사항") rowArr[i] = "";
+                else if (head === "코드") rowArr[i] = "";
+                else if (head === "터치인사이트") rowArr[i] = "";
+                else if (head === "특이사항") rowArr[i] = data.특이사항 || "";
+                else if (head === "가입내역") rowArr[i] = "";
                 else if (head === "등록일") rowArr[i] = todayStr;
                 else if (head === "상태") rowArr[i] = "관심고객";
-                else if (head === "나이" && calculatedAge) rowArr[i] = calculatedAge;
-                else if (head === "성별" && calculatedGender) rowArr[i] = calculatedGender;
-                else if (head === "상령일" && calculatedSang) rowArr[i] = calculatedSang;
-                else if (head === "생일" && calculatedBirth) rowArr[i] = calculatedBirth;
+                else if (head === "사업여부") rowArr[i] = "N";
+                else if (head === "나이") rowArr[i] = calculatedAge || "";
+                else if (head === "성별") rowArr[i] = calculatedGender || "";
+                else if (head === "상령일") rowArr[i] = calculatedSang || "";
+                else if (head === "생일") rowArr[i] = calculatedBirth || "";
                 else if (head === "담당자") {
                     const savedAgent = localStorage.getItem("googleUserName");
                     if (savedAgent) rowArr[i] = savedAgent;
@@ -10349,10 +10365,10 @@ window.submitBulkData = async function() {
             return rowArr;
         });
 
-        // 한 번에 Append
+        // 한 번에 Append (A1 기준 안전 Append로 행 밀림 및 포맷 보호)
         await gapi.client.sheets.spreadsheets.values.append({
             spreadsheetId: spreadsheetId,
-            range: `${sName}!A:A`, // 시트의 A열 끝에 자동으로 맞춰서 삽입
+            range: `${sName}!A1`,
             valueInputOption: "USER_ENTERED",
             resource: { values: valuesToAppend }
         });

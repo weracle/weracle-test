@@ -215,13 +215,23 @@ window.submitSmartReg = async function() {
             else if (head === "폰번호" || head === "대표자폰번호" || head === "연락처") rowArr[i] = phone;
             else if (head === "주소" || head === "대표주소") rowArr[i] = addr;
             else if (head === "직업" || head === "대표업태") rowArr[i] = job;
+            else if (head === "상세업무" || head === "상세직무") rowArr[i] = "";
+            else if (head === "운전여부") rowArr[i] = "비운전";
+            else if (head === "차량용도") rowArr[i] = "-";
+            else if (head === "반려동물") rowArr[i] = "";
+            else if (head === "동물이름") rowArr[i] = "";
+            else if (head === "가족사항") rowArr[i] = "";
+            else if (head === "코드") rowArr[i] = "";
+            else if (head === "터치인사이트") rowArr[i] = "";
             else if (head === "특이사항" || head === "메모") rowArr[i] = memo;
+            else if (head === "가입내역") rowArr[i] = "";
             else if (head === "상태") rowArr[i] = "관심고객";
             else if (head === "나이") rowArr[i] = calculatedAge;
             else if (head === "성별") rowArr[i] = calculatedGender;
             else if (head === "생일") rowArr[i] = calculatedBirth;
             else if (head === "상령일") rowArr[i] = calculatedSang;
             else if (head === "등록일") rowArr[i] = todayStr;
+            else if (head === "사업여부") rowArr[i] = "N";
             else if (head === "UID") rowArr[i] = newUid;
         });
         
@@ -246,6 +256,9 @@ window.submitSmartReg = async function() {
             newObj.rowNumber = globalCustomerData.length > 0 ? Math.max(...globalCustomerData.map(c => c.rowNumber || 0)) + 1 : 2;
             newObj.sheetName = "weraclecrm";
             globalCustomerData.push(newObj);
+            if (window._masterCustomerData) {
+                window._masterCustomerData.push(newObj);
+            }
             
             if (typeof updateQuickFilterCounts === 'function') updateQuickFilterCounts();
             if (typeof renderTable === 'function') renderTable();

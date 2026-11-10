@@ -1200,20 +1200,19 @@ function openDayDetailModal(fullDateStr) {
   const dayOfWeek = dayNames[targetDate.getDay()];
 
   const titleEl = document.getElementById('dayDetailModalTitle');
-  const subEl = document.getElementById('dayDetailModalSub');
+  const countEl = document.getElementById('dayDetailCountBadge');
   const bodyEl = document.getElementById('dayDetailModalBody');
   const btnAdd = document.getElementById('btnDayDetailAdd');
 
-  if (titleEl) titleEl.innerText = `${y}년 ${m}월 ${d}일 (${dayOfWeek}) 일정 상세`;
+  if (titleEl) titleEl.innerText = `${y}년 ${m}월 ${d}일 (${dayOfWeek}) 일정`;
 
   const dayGoogle = (agentEvents || []).filter(e => e.fullDate === fullDateStr);
   const dayCrm = (crmEventsList || []).filter(e => e.fullDate === fullDateStr);
   const totalCount = dayGoogle.length + dayCrm.length;
 
-  if (subEl) {
-    subEl.innerHTML = totalCount > 0 
-      ? `등록된 일정 및 고객 이벤트 총 <strong style="color:var(--primary);">${totalCount}</strong>건`
-      : '등록된 일정이 없습니다.';
+  if (countEl) {
+    countEl.innerText = `총 ${totalCount}건`;
+    countEl.style.display = totalCount > 0 ? 'inline-block' : 'none';
   }
 
   if (btnAdd) {
@@ -1227,41 +1226,39 @@ function openDayDetailModal(fullDateStr) {
 
   if (totalCount === 0) {
     bodyEl.innerHTML = `
-      <div style="text-align:center; padding:36px 16px; background:#ffffff; border:1px dashed #cbd5e1; border-radius:10px;">
-        <i class="fa-regular fa-calendar-xmark" style="font-size:28px; color:#cbd5e1; margin-bottom:8px; display:block;"></i>
-        <div style="font-size:13.5px; font-weight:700; color:#475569;">등록된 일정이 없습니다.</div>
-        <div style="font-size:12px; color:#94a3b8; margin-top:3px;">하단의 [+ 새 일정 추가] 버튼을 눌러 일정을 등록해보세요.</div>
+      <div style="text-align:center; padding:32px 16px; color:#94a3b8; font-size:13.5px; font-weight:700;">
+        <i class="fa-regular fa-calendar-xmark" style="font-size:24px; color:#cbd5e1; margin-bottom:6px; display:block;"></i>
+        등록된 일정이 없습니다.
       </div>
     `;
   } else {
-    let cardsHtml = '';
+    let rowsHtml = '';
 
-    // 1. Google Personal Events
+    // 1. Google Personal Events (1줄 컴팩트)
     dayGoogle.forEach(e => {
-      const timeStr = e.isAllDay ? '종일' : (e.timeStr || '시간 미지정');
-      cardsHtml += `
-        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-            <span style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:5px;">
-              <i class="fa-solid fa-clock" style="font-size:9px; margin-right:3px;"></i>구글 내 일정
+      const timeStr = e.isAllDay ? '종일' : (e.timeStr || '');
+      const noteStr = e.note ? ` · ${escapeHtml(e.note)}` : '';
+      rowsHtml += `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 18px; border-bottom:1px solid #f1f5f9; gap:12px; font-size:13px; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">
+          <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
+            <span style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; font-weight:800; padding:2px 7px; border-radius:4px; flex-shrink:0;">
+              🟢 일정
             </span>
-            <span style="font-size:11.5px; font-weight:700; color:#10b981;">${escapeHtml(timeStr)}</span>
+            ${timeStr ? `<span style="font-size:12px; font-weight:700; color:#059669; flex-shrink:0;">${escapeHtml(timeStr)}</span>` : ''}
+            <span style="font-weight:800; color:#0f172a; flex-shrink:0;">${escapeHtml(e.title || '일정')}</span>
+            <span style="font-size:12px; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${noteStr}</span>
           </div>
-          <div style="font-size:14px; font-weight:800; color:#0f172a; margin-top:2px;">${escapeHtml(e.title || '제목 없음')}</div>
-          ${e.note ? `<div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.4;">${escapeHtml(e.note)}</div>` : ''}
-          <div style="display:flex; justify-content:flex-end; margin-top:8px; padding-top:6px; border-top:1px dashed #f1f5f9;">
-            <button type="button" class="modal-btn secondary" style="padding:4px 10px; font-size:11.5px;" onclick="closeDayDetailModal(); openGoogleEventDetail('${e.id}')">
-              <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;"></i> 상세 / 수정
-            </button>
+          <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+            <button type="button" class="modal-btn secondary" style="padding:4px 8px; font-size:11.5px;" onclick="closeDayDetailModal(); openGoogleEventDetail('${e.id}')">상세</button>
           </div>
         </div>
       `;
     });
 
-    // 2. CRM Customer Events
+    // 2. CRM Customer Events (1줄 컴팩트)
     dayCrm.forEach(e => {
       let badgeStyle = "background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;";
-      let badgeLabel = "고객 이벤트";
+      let badgeLabel = "고객";
       if (e.type === 'bday') {
         badgeStyle = "background:#fff1f2; color:#e11d48; border:1px solid #fecdd3;";
         badgeLabel = "🎂 생일";
@@ -1270,50 +1267,42 @@ function openDayDetailModal(fullDateStr) {
         badgeLabel = "📈 상령일";
       } else if (e.type === 'expiry') {
         badgeStyle = "background:#fefce8; color:#ca8a04; border:1px solid #fef08a;";
-        badgeLabel = "📑 만기·갱신";
+        badgeLabel = "📑 만기";
       } else if (e.type === 'pay') {
         badgeStyle = "background:#f0f9ff; color:#0284c7; border:1px solid #bae6fd;";
-        badgeLabel = "💳 결제일";
+        badgeLabel = "💳 결제";
       }
 
       const phone = e.phone || '';
-      const prod = e.prod || '';
+      let descStr = '';
+      if (e.prod) descStr += `[${e.prod}]`;
+      if (phone) descStr += (descStr ? ' · ' : '') + phone;
 
-      cardsHtml += `
-        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-            <span style="${badgeStyle} font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:5px;">
+      rowsHtml += `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 18px; border-bottom:1px solid #f1f5f9; gap:12px; font-size:13px; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">
+          <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
+            <span style="${badgeStyle} font-size:11px; font-weight:800; padding:2px 7px; border-radius:4px; flex-shrink:0;">
               ${badgeLabel}
             </span>
-            ${prod ? `<span style="font-size:11.5px; font-weight:600; color:#64748b; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(prod)}</span>` : ''}
+            <span style="font-weight:800; color:#0f172a; flex-shrink:0;">${escapeHtml(e.name || '')}</span>
+            <span style="font-size:12px; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${escapeHtml(descStr)}</span>
           </div>
-          <div style="font-size:14.5px; font-weight:800; color:#0f172a; margin-top:2px;">
-            ${escapeHtml(e.name || '')} <span style="font-weight:600; font-size:12.5px; color:#475569;">고객님</span>
-          </div>
-          ${e.note ? `<div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.4;">${escapeHtml(e.note)}</div>` : ''}
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:6px; border-top:1px dashed #f1f5f9;">
-            <span style="font-size:12px; font-weight:600; color:#475569;">
-              ${phone ? `<i class="fa-solid fa-phone" style="font-size:10px; color:#94a3b8; margin-right:3px;"></i>${phone}` : '-'}
-            </span>
-            <div style="display:flex; gap:6px;">
-              ${phone ? `
-                <a href="tel:${phone}" class="modal-btn secondary" style="padding:4px 9px; font-size:11.5px; text-decoration:none;">
-                  <i class="fa-solid fa-phone" style="color:#10b981;"></i> 통화
-                </a>
-                <a href="sms:${phone}" class="modal-btn secondary" style="padding:4px 9px; font-size:11.5px; text-decoration:none;">
-                  <i class="fa-solid fa-comment-sms" style="color:#0ea5e9;"></i> 문자
-                </a>
-              ` : ''}
-              <button type="button" class="modal-btn secondary" style="padding:4px 9px; font-size:11.5px;" onclick="closeDayDetailModal(); openCrmEventDetail('${e.type}', '${escapeJs(e.name)}', '${escapeJs(e.phone)}', '${escapeJs(e.prod)}', '${escapeJs(e.note)}', '${fullDateStr}')">
-                가이드
-              </button>
-            </div>
+          <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+            ${phone ? `
+              <a href="tel:${phone}" class="modal-btn secondary" style="width:26px; height:26px; padding:0; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;" title="통화">
+                <i class="fa-solid fa-phone" style="font-size:10.5px; color:#10b981;"></i>
+              </a>
+              <a href="sms:${phone}" class="modal-btn secondary" style="width:26px; height:26px; padding:0; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;" title="문자">
+                <i class="fa-solid fa-comment-sms" style="font-size:10.5px; color:#0ea5e9;"></i>
+              </a>
+            ` : ''}
+            <button type="button" class="modal-btn secondary" style="padding:4px 8px; font-size:11.5px;" onclick="closeDayDetailModal(); openCrmEventDetail('${e.type}', '${escapeJs(e.name)}', '${escapeJs(e.phone)}', '${escapeJs(e.prod)}', '${escapeJs(e.note)}', '${fullDateStr}')">가이드</button>
           </div>
         </div>
       `;
     });
 
-    bodyEl.innerHTML = cardsHtml;
+    bodyEl.innerHTML = rowsHtml;
   }
 
   const modal = document.getElementById('dayDetailModal');

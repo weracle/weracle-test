@@ -192,9 +192,10 @@ window.updateSpeedCardUI = function(activeType) {
         if (!activeType) {
             badgeText.innerText = '전체 고객 (필터 없음)';
         } else if (activeType === 'driver') {
-            badgeText.innerText = '운전여부: ' + (window.speedCenterFilters.driver || '선택 대기');
+            const dVal = window.speedCenterFilters.driver;
+            badgeText.innerText = '운전여부: ' + (dVal === '운전' ? '운전자 (운전함)' : dVal === '운전안함' ? '비운전자 (운전안함)' : dVal || '선택 대기');
         } else if (activeType === 'pet') {
-            badgeText.innerText = '반려동물: ' + (window.speedCenterFilters.hasPet === '유' ? '보유(유)' : '없음(무)');
+            badgeText.innerText = '반려동물: ' + (window.speedCenterFilters.hasPet === '유' ? '보유 (유)' : '없음 (무)');
         } else if (activeType === 'biz') {
             badgeText.innerText = '사업자구분: ' + (window.speedCenterFilters.bizType || '선택 대기');
         } else if (activeType === 'pay') {
@@ -266,16 +267,33 @@ window.handleQuickEditSearch = function() {
 
         let matches = window.globalCustomerData.slice();
 
-        // 1. Text Search query (고객명, 폰번호, 대표자명 등 표준 컬럼 통합 지원)
+        // 1. Text Search query (고객명, 폰번호, 대표자명, 고객번호, UID, 특이사항, 직업, 주소, 가족사항, 터치인사이트, 차량, 반려동물, 보험사/상품명 종합 검색)
         if (query) {
             matches = matches.filter(c => {
                 const name = String(c['고객명'] || c['이름'] || c['성함'] || c['대표자명'] || '').toLowerCase();
                 const phone = String(c['폰번호'] || c['연락처'] || c['전화번호'] || c['대표자폰번호'] || '').replace(/-/g, '');
                 const qClean = query.replace(/-/g, '');
+                const idVal = (String(c['고객번호'] || '') + ' ' + String(c['ID'] || '') + ' ' + String(c['UID'] || '')).toLowerCase();
                 const memo = String(c['특이사항'] || c['메모'] || '').toLowerCase();
                 const job = String(c['직업'] || '').toLowerCase();
                 const addr = String(c['주소'] || '').toLowerCase();
-                return name.includes(query) || phone.includes(qClean) || memo.includes(query) || job.includes(query) || addr.includes(query);
+                const family = String(c['가족사항'] || '').toLowerCase();
+                const touch = String(c['터치인사이트'] || '').toLowerCase();
+                const car = String(c['차량용도'] || '').toLowerCase();
+                const pet = String(c['반려동물'] || '').toLowerCase();
+
+                let insText = '';
+                try {
+                    let insList = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
+                    if (insList && insList.length > 0) {
+                        insText = insList.map(i => (i['보험사명'] || i['회사명'] || '') + ' ' + (i['상품명'] || '')).join(' ').toLowerCase();
+                    }
+                } catch(e) {}
+
+                return name.includes(query) || phone.includes(qClean) || idVal.includes(query) || 
+                       memo.includes(query) || job.includes(query) || addr.includes(query) || 
+                       family.includes(query) || touch.includes(query) || car.includes(query) || 
+                       pet.includes(query) || insText.includes(query);
             });
         }
 
@@ -284,16 +302,36 @@ window.handleQuickEditSearch = function() {
         if (f.activeType) {
             if (f.activeType === 'driver' && f.driver) {
                 matches = matches.filter(c => {
-                    const driverVal = String(c['운전여부'] || c['운전'] || '').toLowerCase();
-                    const carUsageVal = String(c['차량용도'] || '').toLowerCase();
+                    const driverVal = String(c['운전여부'] || c['운전'] || '').trim().toLowerCase();
+                    const carUsageVal = String(c['차량용도'] || '').trim().toLowerCase();
                     const combined = driverVal + " " + carUsageVal;
-                    const target = f.driver.toLowerCase();
-                    if (target === '운전안함') {
-                        return driverVal === '비운전' || driverVal.includes('안함') || driverVal === '무' || driverVal === '없음';
+                    const target = f.driver.trim().toLowerCase();
+
+                    // 1. 비운전자 (운전안함)
+                    if (target === '운전안함' || target === '비운전') {
+                        return driverVal === '비운전' || driverVal.includes('안함') || driverVal === '무' || driverVal === '없음' || carUsageVal === '-' || carUsageVal === '';
                     }
-                    if (target === '자가용' || target === '영업용' || target === '이륜차') {
-                        return carUsageVal.includes(target) || driverVal.includes(target);
+
+                    // 2. 운전자 전체 (운전함) - 비운전이 아니거나 차량용도가 존재하는 모든 고객
+                    if (target === '운전' || target === '운전자' || target === '운전함') {
+                        return driverVal === '운전' || (driverVal !== '비운전' && !driverVal.includes('안함') && carUsageVal && carUsageVal !== '-');
                     }
+
+                    // 3. 자가용 (개인용, 출퇴근용, 승용차, 자가용 포함)
+                    if (target === '자가용') {
+                        return carUsageVal.includes('자가용') || carUsageVal.includes('개인용') || carUsageVal.includes('출퇴근') || carUsageVal.includes('승용차');
+                    }
+
+                    // 4. 영업용 (업무용, 화물용, 영업용 포함)
+                    if (target === '영업용') {
+                        return carUsageVal.includes('영업용') || carUsageVal.includes('업무용') || carUsageVal.includes('화물');
+                    }
+
+                    // 5. 이륜차 (바이크, 오토바이, 원동기, 이륜차 포함)
+                    if (target === '이륜차') {
+                        return carUsageVal.includes('이륜차') || carUsageVal.includes('바이크') || carUsageVal.includes('오토바이') || carUsageVal.includes('원동기');
+                    }
+
                     return combined.includes(target);
                 });
             } else if (f.activeType === 'pet' && f.hasPet) {
@@ -307,21 +345,34 @@ window.handleQuickEditSearch = function() {
                     const isBiz = String(c['사업여부'] || '').toUpperCase() === 'Y';
                     const biz = String(c['사업자구분'] || c['상호명'] || c['직업'] || c['상세직무'] || c['상세업무'] || '').toLowerCase();
                     const isCorp = biz.includes('법인') || (c['상호명'] && (c['상호명'].includes('주식회사') || c['상호명'].includes('(주)')));
-                    if (f.bizType === '개인사업자') {
-                        return (isBiz && !isCorp) || biz.includes('개인') || biz.includes('자영업') || biz.includes('대표') || biz.includes('사업');
+
+                    // 1. 사업자 전체 (개인+법인 모든 사업자)
+                    if (f.bizType === '사업자') {
+                        return isBiz || isCorp || biz.includes('사업') || biz.includes('자영업') || biz.includes('대표');
                     }
-                    if (f.bizType === '법인사업자') {
-                        return isCorp;
-                    }
+
+                    // 2. 일반고객 (비사업자/직장인 전체)
                     if (f.bizType === '일반고객') {
-                        return !isBiz && !isCorp && !biz.includes('사업자') && !biz.includes('자영업');
+                        return !isBiz && !isCorp && !biz.includes('사업자') && !biz.includes('자영업') && !biz.includes('대표');
                     }
+
+                    // 3. 개인사업자
+                    if (f.bizType === '개인사업자') {
+                        return (isBiz && !isCorp) || biz.includes('개인') || biz.includes('자영업') || (biz.includes('대표') && !isCorp);
+                    }
+
+                    // 4. 법인사업자
+                    if (f.bizType === '법인사업자') {
+                        return isCorp || (isBiz && biz.includes('법인'));
+                    }
+
                     return isBiz || biz.includes(f.bizType.toLowerCase());
                 });
             } else if (f.activeType === 'pay' && f.payMethod) {
                 const targetMethod = f.payMethod.trim().toLowerCase();
                 const isCardSearch = targetMethod.includes('카드');
                 const isTransferSearch = targetMethod.includes('이체') || targetMethod.includes('계좌');
+                const isUnregistered = targetMethod.includes('미등록');
 
                 matches = matches.filter(c => {
                     let payStr = String(c['결제방식'] || c['결제방법'] || c['차_결제방식'] || c['수납방법'] || c['납부방법'] || c['결제정보'] || '').toLowerCase();
@@ -329,15 +380,20 @@ window.handleQuickEditSearch = function() {
                         if (c['보험' + k + '_결제방식']) payStr += ' ' + String(c['보험' + k + '_결제방식']).toLowerCase();
                         if (c['보험' + k + '_결제정보']) payStr += ' ' + String(c['보험' + k + '_결제정보']).toLowerCase();
                     }
+                    let insCount = 0;
                     try {
                         let insList = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
                         if (insList && insList.length > 0) {
+                            insCount = insList.length;
                             insList.forEach(i => {
                                 payStr += ' ' + String(i['결제방식'] || i['차_결제방식'] || i['납입방법'] || i['결제방법'] || i['결제정보'] || i['payMethod'] || '').toLowerCase();
                             });
                         }
                     } catch(e) {}
 
+                    if (isUnregistered) {
+                        return !payStr.trim() && insCount === 0;
+                    }
                     if (isCardSearch) {
                         return payStr.includes('카드') || payStr.includes('신용') || payStr.includes('체크');
                     } else if (isTransferSearch) {

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -1912,7 +1912,7 @@ window.addEventListener('error', function(e) {
 </div>
 
 
-<script src="app.js?v=20261110_1540"></script>
+<script src="app.js?v=20261110_1545"></script>
   <script src="familyTabsLogic.js?v=20261110_1540"></script>
   <script src="crm_speed_center.js?v=20261104"></script>
   <script src="crm_smart_reg.js?v=20261104"></script>
@@ -3346,10 +3346,10 @@ window.renderListModalDirect = function(filtered, titleStr, fType, fVal) {
                         '<td style="padding:14px 16px;"><span style="padding:3px 9px; border-radius:12px; font-size:12px; font-weight:800; ' + badgeStyle + '">' + status + '</span></td>' +
                         '<td style="padding:14px 16px; font-weight:600; color:#475569;">' + phone + '</td>';
                 } else if (fType === 'expiry') {
-                    let insDesc = c.가입내역 || '';
+                    let insDesc = (typeof c.가입내역 === 'string' && !c.가입내역.startsWith('[')) ? c.가입내역 : '';
                     let expDateStr = c.만기일 || c.갱신일 || '';
                     try {
-                        const gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
+                        const gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : (Array.isArray(c.가입내역) ? c.가입내역 : []);
                         const today = new Date();
                         const curYear = today.getFullYear(), curMonth = today.getMonth(), curDate = today.getDate();
                         const expItem = gArr.find(i => {
@@ -3367,16 +3367,16 @@ window.renderListModalDirect = function(filtered, titleStr, fType, fVal) {
                                 return (py === curYear && pm === curMonth && pd === curDate);
                             }
                             return false;
-                        });
+                        }) || (gArr.length > 0 ? gArr[0] : null);
                         if (expItem) {
                             let comp = expItem['보험사명'] || expItem['차_보험사명'] || expItem['company'] || '';
-                            let prod = expItem['상품명'] || expItem['차_상품명'] || expItem['product'] || '';
-                            insDesc = (comp ? comp + ' ' : '') + prod;
+                            let prod = expItem['상품명'] || expItem['차_상품명'] || expItem['product'] || (expItem['보험종류'] === '자동차보험' ? '자동차보험' : '');
+                            insDesc = (comp && prod && !prod.includes(comp)) ? (comp + ' ' + prod) : (prod || comp || insDesc);
                             expDateStr = expItem['갱신일자'] || expItem['만기일자'] || expItem['갱신일'] || expItem['만기일'] || expItem['expireDate'] || expItem['renewalDate'] || expDateStr;
                         }
                     } catch(e) {}
-                    if (!insDesc) insDesc = '-';
-                    if (!expDateStr) expDateStr = '오늘 만기';
+                    if (!insDesc || typeof insDesc !== 'string') insDesc = '-';
+                    if (!expDateStr) expDateStr = '만기/갱신 예정';
 
                     trContent = '<td style="padding:14px 16px; font-weight:800; color:#0f172a; font-size:14.5px;">' + name + '</td>' +
                         '<td style="padding:14px 16px; font-weight:600; color:#334155;">' + insDesc + '</td>' +
@@ -3501,9 +3501,9 @@ window.renderMobileCustomerCards = function(list, fType, fVal) {
                 '<span style="color:#cbd5e1;">·</span>' +
                 '<span style="color:#475569; font-weight:600;">' + phone + '</span>';
         } else if (fType === 'expiry') {
-            let insDesc = c.가입내역 || '';
+            let insDesc = (typeof c.가입내역 === 'string' && !c.가입내역.startsWith('[')) ? c.가입내역 : '';
             try {
-                const gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
+                const gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : (Array.isArray(c.가입내역) ? c.가입내역 : []);
                 const today = new Date();
                 const curYear = today.getFullYear(), curMonth = today.getMonth(), curDate = today.getDate();
                 const expItem = gArr.find(i => {
@@ -3521,14 +3521,14 @@ window.renderMobileCustomerCards = function(list, fType, fVal) {
                         return (py === curYear && pm === curMonth && pd === curDate);
                     }
                     return false;
-                });
+                }) || (gArr.length > 0 ? gArr[0] : null);
                 if (expItem) {
                     let comp = expItem['보험사명'] || expItem['차_보험사명'] || expItem['company'] || '';
-                    let prod = expItem['상품명'] || expItem['차_상품명'] || expItem['product'] || '';
-                    insDesc = (comp ? comp + ' ' : '') + prod;
+                    let prod = expItem['상품명'] || expItem['차_상품명'] || expItem['product'] || (expItem['보험종류'] === '자동차보험' ? '자동차보험' : '');
+                    insDesc = (comp && prod && !prod.includes(comp)) ? (comp + ' ' + prod) : (prod || comp || insDesc);
                 }
             } catch(e) {}
-            if (!insDesc) insDesc = '-';
+            if (!insDesc || typeof insDesc !== 'string') insDesc = '-';
 
             partSummaryHtml = '<span style="color:#dc2626; font-weight:800;"><i class="fa-solid fa-clock" style="font-size:11px; margin-right:3px;"></i>오늘 만기: ' + insDesc + '</span>' +
                 '<span style="color:#cbd5e1;">·</span>' +
@@ -3583,13 +3583,16 @@ window.renderMobileCustomerCards = function(list, fType, fVal) {
             }
 
             insSlotsHtml = insList.map(function(p, pIdx) {
+                const pComp = p.보험사 || p.보험사명 || p.company || '-';
+                const pProd = p.상품명 || p.product || (p.보험종류 === '자동차보험' ? '자동차보험' : '-');
+                const pCov = p.특약내역 || (typeof p.가입내역 === 'string' ? p.가입내역 : '') || '';
                 return '<div id="card-' + i + '-ins-slot-' + pIdx + '" style="display:' + (pIdx === 0 ? 'block' : 'none') + ';">' +
                     '<div style="background:white; border:1.5px solid #bae6fd; border-radius:10px; padding:12px; box-shadow:0 1px 3px rgba(2,132,199,0.06);">' +
                         '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; border-bottom:1px dashed #e0f2fe; padding-bottom:8px;">' +
                             '<div>' +
                                 '<span style="background:#0284c7; color:white; font-size:10.5px; font-weight:800; padding:2px 6px; border-radius:4px; margin-right:6px;">' + (pIdx + 1) + '번 보험</span>' +
-                                '<span style="font-size:14px; font-weight:800; color:#0369a1;">' + (p.보험사 || '-') + '</span>' +
-                                '<div style="font-size:13px; font-weight:800; color:#0f172a; margin-top:3px;">' + (p.상품명 || '-') + '</div>' +
+                                '<span style="font-size:14px; font-weight:800; color:#0369a1;">' + pComp + '</span>' +
+                                '<div style="font-size:13px; font-weight:800; color:#0f172a; margin-top:3px;">' + pProd + '</div>' +
                             '</div>' +
                             '<span style="font-size:13px; font-weight:800; color:#2563eb; background:#eff6ff; padding:3px 8px; border-radius:6px; border:1px solid #bfdbfe;">' + (p.보험료 || '-') + '</span>' +
                         '</div>' +
@@ -3598,7 +3601,7 @@ window.renderMobileCustomerCards = function(list, fType, fVal) {
                             '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">체결/만기일</span><span style="color:#0f172a; font-weight:600;">' + (p.체결일 || '-') + ' ~ ' + (p.만기일 || '-') + '</span></div>' +
                             '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">납입기간</span><span style="color:#0f172a; font-weight:600;">' + (p.납입기간 || '-') + '</span></div>' +
                             '<div style="display:flex;"><span style="width:72px; color:#64748b; font-weight:700; flex-shrink:0;">결제방식</span><span style="color:#0f172a; font-weight:600;">' + (p.결제방식 || '-') + (p.결제일 ? ' (' + p.결제일 + ')' : '') + '</span></div>' +
-                            (p.특약내역 ? '<div style="margin-top:4px; padding-top:6px; border-top:1px dashed #f1f5f9;"><span style="display:block; color:#64748b; font-weight:700; margin-bottom:2px;">주요 보장 특약</span><div style="background:#f8fafc; padding:7px 9px; border-radius:6px; font-size:11.5px; color:#334155; line-height:1.4;">' + p.특약내역 + '</div></div>' : '') +
+                            (pCov ? '<div style="margin-top:4px; padding-top:6px; border-top:1px dashed #f1f5f9;"><span style="display:block; color:#64748b; font-weight:700; margin-bottom:2px;">주요 보장 특약</span><div style="background:#f8fafc; padding:7px 9px; border-radius:6px; font-size:11.5px; color:#334155; line-height:1.4;">' + pCov + '</div></div>' : '') +
                         '</div>' +
                     '</div>' +
                 '</div>';

@@ -1752,7 +1752,7 @@ function getCrmHeaders(sheetType) {
 function getCrmEndCol(sheetType) {
     if (sheetType === "보험관리") return "AC";
     if (sheetType === "corporatecrm" || sheetType === "사업자고객") return "Z";
-    return "X";
+    return "AA";
 }
 
 // 구글 드라이브 내 전용 시트 검색 및 생성
@@ -4533,41 +4533,67 @@ const isPetChecked = (petCb && petCb.checked);
 let finalPetSpecies = "";
 let finalPetNames = "";
 let finalPetCodes = "";
+let finalPetBirths = "";
+let finalPetColors = "";
+let finalPetGenders = "";
 
 if (isPetChecked) {
     const petRows = document.querySelectorAll("#pet-rows-list .pet-row-item");
     const sArr = [];
     const nArr = [];
     const cArr = [];
+    const bArr = [];
+    const colArr = [];
+    const gArr = [];
     petRows.forEach(row => {
         const typeEl = row.querySelector(".pet-type-select");
         const breedEl = row.querySelector(".pet-breed-input");
         const nameEl = row.querySelector(".pet-name-input");
+        const genderEl = row.querySelector(".pet-gender-select");
+        const birthEl = row.querySelector(".pet-birth-input");
+        const colorEl = row.querySelector(".pet-color-input");
         const codeEl = row.querySelector(".pet-code-input");
+
         const typeVal = typeEl ? typeEl.value.trim() : "강아지";
         const breedVal = breedEl ? breedEl.value.trim() : "";
         const nameVal = nameEl ? nameEl.value.trim() : "";
+        const genderVal = genderEl ? genderEl.value.trim() : "";
+        const birthVal = birthEl ? birthEl.value.trim() : "";
+        const colorVal = colorEl ? colorEl.value.trim() : "";
         const codeVal = codeEl ? codeEl.value.trim() : "";
-        if (breedVal || nameVal || codeVal) {
+
+        if (breedVal || nameVal || codeVal || birthVal || colorVal || genderVal) {
             const fullSp = breedVal ? `${typeVal}(${breedVal})` : typeVal;
             sArr.push(fullSp || "-");
             nArr.push(nameVal || "-");
             cArr.push(codeVal || "-");
+            bArr.push(birthVal || "-");
+            colArr.push(colorVal || "-");
+            gArr.push(genderVal || "-");
         }
     });
     if (sArr.length > 0) {
         finalPetSpecies = sArr.join(", ");
         finalPetNames = nArr.join(", ");
         finalPetCodes = cArr.join(", ");
+        finalPetBirths = bArr.join(", ");
+        finalPetColors = colArr.join(", ");
+        finalPetGenders = gArr.join(", ");
     } else {
         finalPetSpecies = "유";
         finalPetNames = "-";
         finalPetCodes = "-";
+        finalPetBirths = "-";
+        finalPetColors = "-";
+        finalPetGenders = "-";
     }
 } else {
     finalPetSpecies = "";
     finalPetNames = "";
     finalPetCodes = "";
+    finalPetBirths = "";
+    finalPetColors = "";
+    finalPetGenders = "";
 }
 
 const clientObj = {
@@ -4589,6 +4615,9 @@ const clientObj = {
     "동물이름": finalPetNames,
     "가족사항": formData.get("가족사항") || (existingClient ? existingClient["가족사항"] : ""),
     "코드": finalPetCodes,
+    "동물생일": finalPetBirths,
+    "동물모색": finalPetColors,
+    "동물성별": finalPetGenders,
     "터치인사이트": touchInsightVal,
     "특이사항": formData.get("특이사항") || (existingClient ? existingClient["특이사항"] : ""),
     "가입내역": finalGainHistory,
@@ -4696,42 +4725,68 @@ window.getPetSerializedData = function() {
     let finalPetSpecies = "";
     let finalPetNames = "";
     let finalPetCodes = "";
+    let finalPetBirths = "";
+    let finalPetColors = "";
+    let finalPetGenders = "";
 
     if (isPetChecked) {
         const petRows = document.querySelectorAll("#pet-rows-list .pet-row-item");
         const sArr = [];
         const nArr = [];
         const cArr = [];
+        const bArr = [];
+        const colArr = [];
+        const gArr = [];
         petRows.forEach(row => {
             const typeEl = row.querySelector(".pet-type-select");
             const breedEl = row.querySelector(".pet-breed-input");
             const nameEl = row.querySelector(".pet-name-input");
+            const genderEl = row.querySelector(".pet-gender-select");
+            const birthEl = row.querySelector(".pet-birth-input");
+            const colorEl = row.querySelector(".pet-color-input");
             const codeEl = row.querySelector(".pet-code-input");
+
             const typeVal = typeEl ? typeEl.value.trim() : "강아지";
             const breedVal = breedEl ? breedEl.value.trim() : "";
             const nameVal = nameEl ? nameEl.value.trim() : "";
+            const genderVal = genderEl ? genderEl.value.trim() : "";
+            const birthVal = birthEl ? birthEl.value.trim() : "";
+            const colorVal = colorEl ? colorEl.value.trim() : "";
             const codeVal = codeEl ? codeEl.value.trim() : "";
-            if (breedVal || nameVal || codeVal) {
+
+            if (breedVal || nameVal || codeVal || birthVal || colorVal || genderVal) {
                 const fullSp = breedVal ? `${typeVal}(${breedVal})` : typeVal;
                 sArr.push(fullSp || "-");
                 nArr.push(nameVal || "-");
                 cArr.push(codeVal || "-");
+                bArr.push(birthVal || "-");
+                colArr.push(colorVal || "-");
+                gArr.push(genderVal || "-");
             }
         });
         if (sArr.length > 0) {
             finalPetSpecies = sArr.join(", ");
             finalPetNames = nArr.join(", ");
             finalPetCodes = cArr.join(", ");
+            finalPetBirths = bArr.join(", ");
+            finalPetColors = colArr.join(", ");
+            finalPetGenders = gArr.join(", ");
         } else {
             finalPetSpecies = "유";
             finalPetNames = "-";
             finalPetCodes = "-";
+            finalPetBirths = "-";
+            finalPetColors = "-";
+            finalPetGenders = "-";
         }
     }
     return {
         species: finalPetSpecies,
         names: finalPetNames,
-        codes: finalPetCodes
+        codes: finalPetCodes,
+        births: finalPetBirths,
+        colors: finalPetColors,
+        genders: finalPetGenders
     };
 };
 
@@ -4744,11 +4799,17 @@ window.getPetRowsData = function() {
         const typeEl = row.querySelector(".pet-type-select");
         const breedEl = row.querySelector(".pet-breed-input");
         const nameEl = row.querySelector(".pet-name-input");
+        const genderEl = row.querySelector(".pet-gender-select");
+        const birthEl = row.querySelector(".pet-birth-input");
+        const colorEl = row.querySelector(".pet-color-input");
         const codeEl = row.querySelector(".pet-code-input");
         rows.push({
             type: typeEl ? typeEl.value : "강아지",
             breed: breedEl ? breedEl.value : "",
             name: nameEl ? nameEl.value : "",
+            gender: genderEl ? genderEl.value : "",
+            birth: birthEl ? birthEl.value : "",
+            color: colorEl ? colorEl.value : "",
             code: codeEl ? codeEl.value : ""
         });
     });
@@ -4782,8 +4843,8 @@ window.restorePetRowsFromData = function(petData) {
 };
 
 // ==========================================
-window.parsePetData = function(speciesRaw, namesRaw, codesRaw) {
-    if (!speciesRaw && !namesRaw && !codesRaw) return [];
+window.parsePetData = function(speciesRaw, namesRaw, codesRaw, birthsRaw, colorsRaw, gendersRaw) {
+    if (!speciesRaw && !namesRaw && !codesRaw && !birthsRaw && !colorsRaw && !gendersRaw) return [];
     const splitMulti = (str) => {
         if (!str) return [];
         const s = String(str).trim();
@@ -4798,12 +4859,18 @@ window.parsePetData = function(speciesRaw, namesRaw, codesRaw) {
     const sList = splitMulti(speciesRaw);
     const nList = splitMulti(namesRaw);
     const cList = splitMulti(codesRaw);
-    const count = Math.max(sList.length, nList.length, cList.length);
+    const bList = splitMulti(birthsRaw);
+    const colList = splitMulti(colorsRaw);
+    const gList = splitMulti(gendersRaw);
+    const count = Math.max(sList.length, nList.length, cList.length, bList.length, colList.length, gList.length);
     const pets = [];
     for (let i = 0; i < count; i++) {
         const s = sList[i] || '';
         const n = nList[i] === '-' ? '' : (nList[i] || '');
         const c = cList[i] === '-' ? '' : (cList[i] || '');
+        const b = bList[i] === '-' ? '' : (bList[i] || '');
+        const col = colList[i] === '-' ? '' : (colList[i] || '');
+        const g = gList[i] === '-' ? '' : (gList[i] || '');
         let type = '강아지';
         let breed = s;
         const m = s.match(/^(강아지|고양이|기타)\s*(?:\((.*)\))?$/);
@@ -4820,8 +4887,8 @@ window.parsePetData = function(speciesRaw, namesRaw, codesRaw) {
             type = '강아지';
             breed = '';
         }
-        if (type || breed || n || c) {
-            pets.push({ type, breed, name: n, code: c });
+        if (type || breed || n || c || b || col || g) {
+            pets.push({ type, breed, name: n, code: c, birth: b, color: col, gender: g });
         }
     }
     return pets;
@@ -4855,23 +4922,47 @@ window.handlePetToggle = function(checked) {
 window.addPetRow = function(data) {
     const list = document.getElementById('pet-rows-list');
     if (!list) return;
-    const pet = data || { type: '강아지', breed: '', name: '', code: '' };
+    const pet = data || { type: '강아지', breed: '', name: '', code: '', birth: '', color: '', gender: '' };
     const row = document.createElement('div');
     row.className = 'pet-row-item';
-    row.style.cssText = 'display:flex; gap:8px; align-items:center;';
+    row.style.cssText = 'display:flex; flex-direction:column; gap:6px; padding:10px 12px; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.03); margin-bottom:4px;';
     
     row.innerHTML = `
-        <select class="form-input pet-type-select" style="flex:0 0 100px; padding:7px 8px; font-weight:600; font-size:12.5px; border-radius:6px; background:#fff;">
-            <option value="강아지" ${pet.type === '강아지' ? 'selected' : ''}>🐶 강아지</option>
-            <option value="고양이" ${pet.type === '고양이' ? 'selected' : ''}>🐱 고양이</option>
-            <option value="기타" ${pet.type === '기타' ? 'selected' : ''}>🐾 기타</option>
-        </select>
-        <input type="text" class="form-input pet-breed-input" value="${(pet.breed || '').replace(/"/g, '&quot;')}" placeholder="품종 (예: 말티즈, 푸들, 코숏)" style="flex:1; padding:7px 10px; font-size:12.5px; border-radius:6px; background:#fff;">
-        <input type="text" class="form-input pet-name-input" value="${(pet.name || '').replace(/"/g, '&quot;')}" placeholder="이름 (예: 뽀삐, 나비)" style="flex:1; padding:7px 10px; font-size:12.5px; border-radius:6px; background:#fff;">
-        <input type="text" class="form-input pet-code-input" value="${(pet.code || '').replace(/"/g, '&quot;')}" placeholder="동물 등록번호(선택)" style="flex:1.2; padding:7px 10px; font-size:12.5px; border-radius:6px; background:#fff;">
-        <button type="button" onclick="window.removePetRow(this)" title="삭제" style="flex:0 0 45px; height:34px; border:1px solid #fee2e2; background:#fef2f2; color:#ef4444; border-radius:6px; cursor:pointer; font-size:12px; display:inline-flex; align-items:center; justify-content:center; transition:0.15s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
-            <i class="fa-solid fa-trash-can"></i>
-        </button>
+        <!-- 1행: 구분, 품종, 이름, 성별, 삭제 -->
+        <div style="display:flex; gap:8px; align-items:center; width:100%;">
+            <select class="form-input pet-type-select" style="flex:0 0 100px; padding:7px 8px; font-weight:600; font-size:12.5px; border-radius:6px; background:#f8fafc;">
+                <option value="강아지" ${pet.type === '강아지' ? 'selected' : ''}>🐶 강아지</option>
+                <option value="고양이" ${pet.type === '고양이' ? 'selected' : ''}>🐱 고양이</option>
+                <option value="기타" ${pet.type === '기타' ? 'selected' : ''}>🐾 기타</option>
+            </select>
+            <input type="text" class="form-input pet-breed-input" value="${(pet.breed || '').replace(/"/g, '&quot;')}" placeholder="품종 (예: 말티즈, 포메, 코숏)" style="flex:1.2; padding:7px 10px; font-size:12.5px; border-radius:6px; background:#fff;">
+            <input type="text" class="form-input pet-name-input" value="${(pet.name || '').replace(/"/g, '&quot;')}" placeholder="이름 (예: 뽀삐)" style="flex:1; padding:7px 10px; font-size:12.5px; border-radius:6px; background:#fff;">
+            <select class="form-input pet-gender-select" style="flex:0 0 115px; padding:7px 8px; font-size:12px; border-radius:6px; background:#f8fafc;">
+                <option value="" ${!pet.gender ? 'selected' : ''}>성별 선택</option>
+                <option value="남아" ${pet.gender === '남아' ? 'selected' : ''}>남아 ♂</option>
+                <option value="여아" ${pet.gender === '여아' ? 'selected' : ''}>여아 ♀</option>
+                <option value="중성화(남)" ${pet.gender === '중성화(남)' ? 'selected' : ''}>중성화(남)</option>
+                <option value="중성화(여)" ${pet.gender === '중성화(여)' ? 'selected' : ''}>중성화(여)</option>
+            </select>
+            <button type="button" onclick="window.removePetRow(this)" title="삭제" style="flex:0 0 38px; height:34px; border:1px solid #fee2e2; background:#fef2f2; color:#ef4444; border-radius:6px; cursor:pointer; font-size:12px; display:inline-flex; align-items:center; justify-content:center; transition:0.15s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </div>
+        <!-- 2행: 생년월일, 모색, 등록번호 -->
+        <div style="display:flex; gap:8px; align-items:center; width:100%;">
+            <div style="flex:1; display:flex; align-items:center; gap:6px;">
+                <span style="font-size:11.5px; color:#64748b; font-weight:600; white-space:nowrap;"><i class="fa-regular fa-calendar"></i> 생년월일:</span>
+                <input type="date" class="form-input pet-birth-input" value="${(pet.birth || '').replace(/"/g, '&quot;')}" style="flex:1; padding:6px 8px; font-size:12px; border-radius:6px; background:#fff;">
+            </div>
+            <div style="flex:1; display:flex; align-items:center; gap:6px;">
+                <span style="font-size:11.5px; color:#64748b; font-weight:600; white-space:nowrap;"><i class="fa-solid fa-palette"></i> 모색:</span>
+                <input type="text" class="form-input pet-color-input" value="${(pet.color || '').replace(/"/g, '&quot;')}" placeholder="예: 갈색, 화이트, 치즈" style="flex:1; padding:6px 8px; font-size:12px; border-radius:6px; background:#fff;">
+            </div>
+            <div style="flex:1.2; display:flex; align-items:center; gap:6px;">
+                <span style="font-size:11.5px; color:#64748b; font-weight:600; white-space:nowrap;"><i class="fa-solid fa-id-card"></i> 등록번호:</span>
+                <input type="text" class="form-input pet-code-input" value="${(pet.code || '').replace(/"/g, '&quot;')}" placeholder="선택 (410...)" style="flex:1; padding:6px 8px; font-size:12px; border-radius:6px; background:#fff;">
+            </div>
+        </div>
     `;
     list.appendChild(row);
 };
@@ -4883,6 +4974,44 @@ window.removePetRow = function(btn) {
     row.remove();
     if (list && list.children.length === 0) {
         window.addPetRow();
+    }
+};
+
+window.restorePetRows = function(client) {
+    const petCb = document.getElementById('has-pet-cb');
+    const list = document.getElementById('pet-rows-list');
+    if (list) list.innerHTML = '';
+    
+    if (!client) {
+        if (petCb) {
+            petCb.checked = false;
+            window.handlePetToggle(false);
+        }
+        return;
+    }
+    
+    const sRaw = client['반려동물'] || '';
+    const nRaw = client['동물이름'] || '';
+    const cRaw = client['코드'] || '';
+    const bRaw = client['동물생일'] || client['동물생년월일'] || '';
+    const colRaw = client['동물모색'] || '';
+    const gRaw = client['동물성별'] || '';
+    
+    const pets = window.parsePetData(sRaw, nRaw, cRaw, bRaw, colRaw, gRaw);
+    const hasAny = (pets.length > 0) || (sRaw && sRaw !== '무' && sRaw !== '없음' && sRaw !== '-' && sRaw !== 'x');
+    
+    if (petCb) {
+        petCb.checked = hasAny;
+        window.handlePetToggle(hasAny);
+    }
+    
+    if (hasAny && list) {
+        list.innerHTML = '';
+        if (pets.length > 0) {
+            pets.forEach(p => window.addPetRow(p));
+        } else {
+            window.addPetRow();
+        }
     }
 };
 
@@ -8159,6 +8288,14 @@ window.searchInsurance = function() {
 // 
 // ===== ANTIGRAVITY PATCH: OVERRIDE FUNCTIONS ===== //
 window.getCrmHeaders = function(sheetType) {
+    if (sheetType === "보험관리") return getInsuranceHeaders();
+    if (sheetType === "corporatecrm" || sheetType === "사업자고객") {
+        return [
+            "고객번호", "상호명", "사업자번호", "업종코드", "상태", "대표자명", "주민번호", "나이", "성별", "생일", "상령일", 
+            "폰번호", "상세업무", "주소", "운전여부", "차량용도", "반려동물", "동물이름", "가족사항", "코드", "터치인사이트", 
+            "특이사항", "가입내역", "등록일", "사업여부", "UID"
+        ];
+    }
     return [
         "고객번호", "고객명", "상태", "주민번호", "나이", "성별", "생일", "상령일", "폰번호",
         "직업", "상세업무", "주소", "운전여부", "차량용도", "반려동물", "동물이름", "가족사항", 

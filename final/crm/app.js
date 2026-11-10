@@ -2431,7 +2431,7 @@ const safeJumin = String(formatJumin(member["주민번호"] || member["사업자
             <div class="detail-item"><strong>사업자번호 / 설립일</strong><span>${member["사업자번호"] || "-"} / ${member["설립일"] || "-"}</span></div>
             <div class="detail-item"><strong>법인번호 / 법인명</strong><span>${member["법인번호"] || "-"} / ${member["법인명"] || "-"}</span></div>
             <div class="detail-item"><strong>대표업종 / 상태</strong><span>${member["대표업종"] || member["대표업태"] || "-"} / ${member["상태"] || "-"}</span></div>
-            <div class="detail-item"><strong>대표자명 / 주민번호</strong><span>${member["대표자명"] || "-"} / ${formatJumin(member["대표자주민번호"]) || "-"}</span></div>
+            <div class="detail-item"><strong>대표자명 / 주민번호</strong><span>${member["대표자명"] || "-"} / ${member["대표자주민번호"] ? renderJuminInteractive(member["대표자주민번호"], 'fam-corp-' + (member["고객번호"] || (rowId + '-m-' + (mIdx || '0')))) : "-"}</span></div>
             <div class="detail-item" style="grid-column: 1 / -1;"><strong>사업장주소(대표주소)</strong><span>${member["사업장주소"] || member["대표주소"] || member["주소"] || "-"}</span></div>
             <div class="detail-item"><strong>폰번호 / 회사전화번호</strong><span>${formatPhone(member["대표자폰번호"] || member["대표자핸드폰"] || member["대표핸드폰"]) || "-"} / ${formatPhone(member["사업자전화번호"] || member["사업장전화번호"] || member["회사전화번호"]) || "-"}</span></div>
             <div class="detail-item" style="grid-column: 1 / -1;"><strong>터치인사이트</strong><span>${cleanTouchInsight(member["터치인사이트"] || "-")}</span></div>
@@ -2441,7 +2441,7 @@ const safeJumin = String(formatJumin(member["주민번호"] || member["사업자
         info1Html = `<div class="detail-grid">
             <div class="detail-item"><strong>폰번호 / 상태</strong><span>${formatPhone(member["폰번호"] || "")} / ${member["상태"] || "-"}</span></div>
             <div class="detail-item"><strong>나이/성별/직업(상세)</strong><span>${member["나이"] ? member["나이"] + "세" : "-"} / ${member["성별"] || "-"} / ${member["직업"] || member["업태"] || "-"} (${member["상세업무"] || "-"})</span></div>
-            <div class="detail-item"><strong>주민번호</strong><span>${formatJumin(member["주민번호"] || member["사업자번호"]) || "-"} <span class="copy-badge" style="background: #f1f5f9; color: #4f46e5; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 6px; border: 1px solid #c7d2fe; display: inline-block;" onclick="copyJumin('${member["주민번호"] || member["사업자번호"]}', false)" title="주민번호 전체 복사">복사</span> <span class="copy-badge" style="background: #f8fafc; color: #64748b; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 3px; border: 1px solid #cbd5e1; display: inline-block;" onclick="copyJumin('${member["주민번호"] || member["사업자번호"]}', true)" title="뒷자리 마스킹(*) 복사">마스킹(*)</span></span></div>
+            <div class="detail-item"><strong>주민번호</strong><span>${renderJuminInteractive(member["주민번호"] || member["사업자번호"], 'fam-' + (member["고객번호"] || (rowId + '-m-' + (mIdx || '0'))))}</span></div>
             <div class="detail-item"><strong>생일 / 상령일</strong><span>${member["생일"] || "-"} / ${member["상령일"] || "-"}</span></div>
             <div class="detail-item" style="grid-column: 1 / -1;"><strong>상세 주소</strong><span>${member["주소"] || member["대표주소"] || "-"}</span></div>
         </div>`;
@@ -3121,7 +3121,7 @@ info1Html = `
                  <div class="detail-item"><strong>사업자번호 / 설립일</strong><span>${client["사업자번호"] || "-"} / ${client["설립일"] || "-"}</span></div>
                  <div class="detail-item"><strong>법인번호 / 법인명</strong><span>${client["법인번호"] || "-"} / ${client["법인명"] || "-"}</span></div>
                  <div class="detail-item"><strong>대표업종 / 상태</strong><span>${client["대표업종"] || client["대표업태"] || "-"} / ${client["상태"] || "-"}</span></div>
-                 <div class="detail-item"><strong>대표자명 / 주민번호</strong><span>${client["대표자명"] || "-"} / ${formatJumin(client["대표자주민번호"]) || "-"}</span></div>
+                 <div class="detail-item"><strong>대표자명 / 주민번호</strong><span>${client["대표자명"] || "-"} / ${client["대표자주민번호"] ? renderJuminInteractive(client["대표자주민번호"], 'corp-' + rowId) : "-"}</span></div>
                  <div class="detail-item" style="grid-column: 1 / -1;"><strong>사업장주소(대표주소)</strong><span>${client["사업장주소"] || client["대표주소"] || client["주소"] || "-"}</span></div>
                  <div class="detail-item"><strong>폰번호 / 회사전화번호</strong><span>${formatPhone(client["대표자폰번호"] || client["대표자핸드폰"] || client["대표핸드폰"]) || "-"} / ${formatPhone(client["사업자전화번호"] || client["사업장전화번호"] || client["회사전화번호"]) || "-"}</span></div>
                  <div class="detail-item" style="grid-column: 1 / -1;"><strong>터치인사이트</strong><span><div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;">${tagsHtml || "-"}</div></span></div>
@@ -3133,7 +3133,7 @@ info1Html = `
              <div class="detail-grid">
                  <div class="detail-item"><strong>폰번호 / 상태</strong><span>${formatPhone(client["폰번호"] || "")} / ${client["상태"] || "-"}</span></div>
                  <div class="detail-item"><strong>나이/성별/직업(상세)</strong><span>${client["나이"] ? client["나이"] + "세" : "-"} / ${client["성별"] || "-"} / ${client["직업"] || client["업태"] || "-"} (${client["상세업무"] || "-"})</span></div>
-                 <div class="detail-item"><strong>주민번호</strong><span>${formatJumin(client["주민번호"] || client["사업자번호"]) || "-"} <span class="copy-badge" style="background: #f1f5f9; color: #4f46e5; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 6px; border: 1px solid #c7d2fe; display: inline-block;" onclick="copyJumin('${client["주민번호"] || client["사업자번호"]}', false)" title="주민번호 전체 복사">복사</span> <span class="copy-badge" style="background: #f8fafc; color: #64748b; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 3px; border: 1px solid #cbd5e1; display: inline-block;" onclick="copyJumin('${client["주민번호"] || client["사업자번호"]}', true)" title="뒷자리 마스킹(*) 복사">마스킹(*)</span></span></div>
+                 <div class="detail-item"><strong>주민번호</strong><span>${renderJuminInteractive(client["주민번호"] || client["사업자번호"], 'row-' + rowId)}</span></div>
                  <div class="detail-item"><strong>생일 / 상령일</strong><span>${client["생일"] || "-"} / ${client["상령일"] || "-"}</span></div>
                  <div class="detail-item" style="grid-column: 1 / -1;"><strong>상세 주소</strong><span>${client["주소"] || client["대표주소"] || "-"}</span></div>
              </div>
@@ -4589,6 +4589,173 @@ window.copyJumin = function(val, mask = false) {
     let text = formatJumin(val, mask) || val;
     copyT(text);
 };
+
+// ==========================================
+// [보안 & 편의] 주민번호 대화형 UI 렌더러 (기본 뒷자리 마스킹, 보기/숨기기 토글, 전체/앞부분 선택 복사)
+// ==========================================
+function renderJuminInteractive(rawVal, uniqueId) {
+    if (!rawVal || rawVal === '-' || String(rawVal).trim() === '') {
+        return '<span style="color:#94a3b8;">-</span>';
+    }
+    const clean = String(rawVal).trim();
+    const digits = clean.replace(/[^0-9]/g, '');
+    
+    // 기본은 뒷자리 마스킹
+    let masked = clean;
+    let full = clean;
+    let front = clean;
+
+    if (digits.length === 13) {
+        masked = digits.substring(0, 6) + '-' + digits[6] + '******';
+        full = digits.substring(0, 6) + '-' + digits.substring(6);
+        front = digits.substring(0, 6);
+    } else if (digits.length >= 7) {
+        masked = digits.substring(0, 6) + '-' + digits[6] + '*'.repeat(Math.max(1, digits.length - 7));
+        full = digits.substring(0, 6) + '-' + digits.substring(6);
+        front = digits.substring(0, 6);
+    } else if (digits.length === 6) {
+        masked = digits;
+        full = digits;
+        front = digits;
+    }
+
+    const safeFull = full.replace(/'/g, "\\'");
+    const safeFront = front.replace(/'/g, "\\'");
+    const uid = uniqueId || ('jm-' + Math.random().toString(36).substring(2, 9));
+    const hasHidden = (digits.length >= 7);
+
+    return `
+    <span class="jumin-interactive-wrap" id="jumin-wrap-${uid}" style="display:inline-flex; align-items:center; gap:6px; position:relative; vertical-align:middle;">
+        <span id="jumin-val-${uid}" 
+              data-masked="${masked}" 
+              data-full="${full}" 
+              data-shown="false" 
+              style="font-family:'Pretendard', monospace; font-size:13.5px; font-weight:700; color:#1e293b; letter-spacing:0.3px;">
+            ${masked}
+        </span>
+        
+        ${hasHidden ? `
+        <button type="button" 
+                class="btn-jumin-toggle" 
+                id="jumin-btn-toggle-${uid}" 
+                onclick="window.toggleJuminView('${uid}', event)" 
+                title="주민번호 뒷자리 보기/숨기기"
+                style="background:#f8fafc; color:#475569; border:1px solid #cbd5e1; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px; line-height:1; transition:all 0.15s;" 
+                onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background=(document.getElementById('jumin-val-${uid}') && document.getElementById('jumin-val-${uid}').getAttribute('data-shown') === 'true' ? '#eff6ff' : '#f8fafc')">
+            <i class="fa-regular fa-eye" id="jumin-eye-${uid}" style="font-size:10.5px;"></i>
+            <span id="jumin-toggle-label-${uid}">보기</span>
+        </button>
+        ` : ''}
+
+        <div style="position:relative; display:inline-block;">
+            <button type="button" 
+                    class="btn-jumin-copy-trigger" 
+                    id="jumin-copy-btn-${uid}" 
+                    onclick="window.toggleJuminCopyMenu('${uid}', event)" 
+                    title="주민번호 복사 옵션"
+                    style="background:#f1f5f9; color:#4f46e5; border:1px solid #c7d2fe; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px; line-height:1; transition:all 0.15s;" 
+                    onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#f1f5f9'">
+                <i class="fa-regular fa-clone" style="font-size:10.5px;"></i>
+                <span>복사</span>
+                <i class="fa-solid fa-chevron-down" style="font-size:8px; margin-left:1px; opacity:0.8;"></i>
+            </button>
+
+            <div id="jumin-menu-${uid}" 
+                 class="jumin-copy-menu" 
+                 style="display:none; position:absolute; top:calc(100% + 4px); left:0; z-index:99999; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 10px 25px -5px rgba(15,23,42,0.18), 0 4px 10px -2px rgba(15,23,42,0.08); min-width:145px; padding:4px; text-align:left;">
+                <button type="button" 
+                        onclick="window.execJuminCopy('${safeFull}', '전체 주민번호', '${uid}', event)" 
+                        style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:7px 10px; border:none; background:transparent; font-size:11.5px; font-weight:700; color:#1e293b; border-radius:5px; cursor:pointer; transition:background 0.15s;" 
+                        onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                    <span>전체 복사 (13자리)</span>
+                    <i class="fa-solid fa-clone" style="font-size:9.5px; color:#4f46e5;"></i>
+                </button>
+                <button type="button" 
+                        onclick="window.execJuminCopy('${safeFront}', '앞 6자리', '${uid}', event)" 
+                        style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:7px 10px; border:none; background:transparent; font-size:11.5px; font-weight:700; color:#475569; border-radius:5px; cursor:pointer; transition:background 0.15s;" 
+                        onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                    <span>앞부분 복사 (6자리)</span>
+                    <i class="fa-solid fa-scissors" style="font-size:9.5px; color:#64748b;"></i>
+                </button>
+            </div>
+        </div>
+    </span>`;
+}
+window.renderJuminInteractive = renderJuminInteractive;
+
+window.toggleJuminView = function(uid, ev) {
+    if (ev) ev.stopPropagation();
+    const valEl = document.getElementById('jumin-val-' + uid);
+    const labelEl = document.getElementById('jumin-toggle-label-' + uid);
+    const eyeEl = document.getElementById('jumin-eye-' + uid);
+    const btnEl = document.getElementById('jumin-btn-toggle-' + uid);
+    if (!valEl) return;
+
+    const isShown = valEl.getAttribute('data-shown') === 'true';
+    if (isShown) {
+        valEl.innerText = valEl.getAttribute('data-masked');
+        valEl.setAttribute('data-shown', 'false');
+        if (labelEl) labelEl.innerText = '보기';
+        if (eyeEl) { eyeEl.className = 'fa-regular fa-eye'; }
+        if (btnEl) {
+            btnEl.style.background = '#f8fafc';
+            btnEl.style.color = '#475569';
+            btnEl.style.borderColor = '#cbd5e1';
+        }
+    } else {
+        valEl.innerText = valEl.getAttribute('data-full');
+        valEl.setAttribute('data-shown', 'true');
+        if (labelEl) labelEl.innerText = '숨기기';
+        if (eyeEl) { eyeEl.className = 'fa-regular fa-eye-slash'; }
+        if (btnEl) {
+            btnEl.style.background = '#eff6ff';
+            btnEl.style.color = '#2563eb';
+            btnEl.style.borderColor = '#bfdbfe';
+        }
+    }
+};
+
+window.toggleJuminCopyMenu = function(uid, ev) {
+    if (ev) ev.stopPropagation();
+    const targetMenu = document.getElementById('jumin-menu-' + uid);
+    const isAlreadyOpen = targetMenu && (targetMenu.style.display === 'block');
+
+    document.querySelectorAll('.jumin-copy-menu').forEach(m => {
+        m.style.display = 'none';
+    });
+
+    if (targetMenu && !isAlreadyOpen) {
+        targetMenu.style.display = 'block';
+    }
+};
+
+window.execJuminCopy = function(text, label, uid, ev) {
+    if (ev) ev.stopPropagation();
+    if (!text || text === '-') {
+        if (typeof showCustomAlert === 'function') {
+            showCustomAlert("복사 실패", "복사할 번호가 없습니다.");
+        } else {
+            alert("복사할 번호가 없습니다.");
+        }
+        return;
+    }
+    copyT(text);
+
+    const targetMenu = document.getElementById('jumin-menu-' + uid);
+    if (targetMenu) targetMenu.style.display = 'none';
+};
+
+if (!window._juminMenuListenerAttached) {
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.jumin-interactive-wrap')) {
+            document.querySelectorAll('.jumin-copy-menu').forEach(m => {
+                m.style.display = 'none';
+            });
+        }
+    });
+    window._juminMenuListenerAttached = true;
+}
+
 function formatBizNum(val) {
     if(!val) return "";
     val = val.toString().replace(/[^0-9]/g, '');
@@ -8051,11 +8218,7 @@ window.generateProfileHtml = function(client) {
                         <div style="display: flex; justify-content: space-between; align-items:center; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; margin-bottom: 16px;">
                             <span style="color: #64748b; font-size: 15px;">주민번호</span>
                             <span style="font-weight: 700; color: #1e293b; font-size: 15px; display:flex; align-items:center;">
-                                ` + (formatJumin(client["주민번호"] || client["사업자번호"]) || "-") + `
-                                ` + ((client["주민번호"] || client["사업자번호"]) ? `
-                                <span class="copy-badge" style="background: #f1f5f9; color: #4f46e5; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 8px; border: 1px solid #c7d2fe; display: inline-block;" onclick="copyJumin('${(client["주민번호"] || client["사업자번호"]).replace(/'/g, "\\'")}', false)" title="주민번호 전체 복사">복사</span>
-                                <span class="copy-badge" style="background: #f8fafc; color: #64748b; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 4px; border: 1px solid #cbd5e1; display: inline-block;" onclick="copyJumin('${(client["주민번호"] || client["사업자번호"]).replace(/'/g, "\\'")}', true)" title="뒷자리 마스킹(*) 복사">마스킹(*)</span>
-                                ` : "") + `
+                                ` + renderJuminInteractive(client["주민번호"] || client["사업자번호"], 'pf-' + idStr) + `
                             </span>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; margin-bottom: 16px;">

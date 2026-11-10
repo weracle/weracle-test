@@ -11916,9 +11916,10 @@ window.deleteCustomerFromProfile = async function(custId, custName) {
 };
 
 window.forceSyncInsuranceSheet = async function() {
-    // Re-generate the 보험관리 sheet to remove the deleted customer's records
+    // Re-generate the 보험관리 sheet to remove the deleted customer's records safely using standard 29 headers
     const spreadsheetId = (window.spreadsheetId || localStorage.getItem("g_sheet_id"));
     const insSheetName = "보험관리";
+    const insHeaders = getInsuranceHeaders();
     
     const allInsRows = [];
     globalCustomerData.forEach(c => {
@@ -11935,47 +11936,45 @@ window.forceSyncInsuranceSheet = async function() {
         if (Array.isArray(insList) && insList.length > 0) {
             let custIdStr = String(c["고객번호"] || c["사업자번호"] || "");
             let custNameStr = c["고객명"] || c["대표자명"] || "";
+            let custJuminStr = c["주민번호"] || c["주민등록번호"] || "";
+            let custUidStr = c["UID"] || "";
+
             let formattedInsRows = insList.map(ins => {
-                let isAuto = (ins.isAuto === true || ins.isAuto === "true" || ins.isCar === true || ins['보험분류'] === '자동차' || ins['보험분류'] === '이륜차');
-                
-                let pName = ins['상품명'] || ins['차_상품명'] || (isAuto ? "자동차(이륜차)" : "");
-                let comp = ins['보험사명'] || ins['차_보험사명'] || ins['company'] || "";
-                let con = ins['계약자'] || ins['차_계약자'] || "";
-                let inr = ins['피보험자'] || ins['차_피보험자'] || ins['기본피보험자'] || "";
-                let prem = ins['총보험료'] || ins['보험료'] || ins['차_보험료'] || ins['premium'] || "";
-                let payMethod = ins.결제방식 || ins['차_결제방식'] || ins.paymentMethod || ins.payment || ins['결제방식'] || "-";
-                let pay = ins['결제정보'] || ins['차_결제수단'] || ins['payInfo'] || "";
-                if (payMethod === '카드') {
-                    const cardNo = ins['카드번호'] || ins['차_카드번호'] || "";
-                    const cardValid = ins['유효기간'] || ins['차_유효기간'] || "";
-                    if (cardNo || cardValid) pay = `${cardNo} / ${cardValid}`;
-                } else if (payMethod === '자동이체' || payMethod === '가상계좌') {
-                    const bName = ins['은행명'] || ins['차_은행명'] || "";
-                    const aNo = ins['계좌번호'] || ins['차_계좌번호'] || "";
-                    if (bName || aNo) pay = `${bName} / ${aNo}`;
-                }
-                let cov = ins['가입내역'] || ins['특이사항'] || "";
-                
-                let type = ins['보험분류'] || ins['보험종류'] || "";
-                let signD = ins['체결일'] || "";
-                let expD = ins['만기일자'] || ins['만기일'] || "";
-                let renD = ins['갱신일자'] || ins['갱신일'] || "";
-                let payTerm = ins['납입기간'] || "";
-                
-                let carNo = ins['차량번호'] || ins['차_차량번호'] || "";
-                let carUsg = ins['차량용도'] || ins['차_차량용도'] || "";
-                let detUsg = ins['상세용도'] || ins['차_상세용도'] || ins['이륜차용도'] || "";
-                let respD = ins['책임개시일'] || "";
-                
-                let covText = (typeof cov === 'string') ? cov : JSON.stringify(cov);
-                
-                return [
-                    custIdStr, custNameStr, isAuto ? "자동차" : "장기",
-                    pName, comp, con, inr, prem, pay,
-                    type, signD, expD, renD, payTerm,
-                    carNo, carUsg, detUsg, respD,
-                    covText
-                ];
+                let isAuto = (ins.isAuto === true || ins.isAuto === "true" || ins.isCar === true || ins['보험종류'] === '자동차보험' || ins['보험분류'] === '자동차');
+                return insHeaders.map(h => {
+                    if (h === "고객번호") return custIdStr;
+                    if (h === "고객명") return custNameStr;
+                    if (h === "주민번호") return custJuminStr;
+                    if (h === "UID") return ins["UID"] || custUidStr;
+                    let val = "";
+                    if (h === "계약자") val = ins["계약자"] || ins["차_계약자"] || custNameStr;
+                    else if (h === "피보험자") val = ins["피보험자"] || ins["차_피보험자"] || custNameStr;
+                    else if (h === "보험종류") val = ins["보험종류"] || (isAuto ? "자동차보험" : "장기보험");
+                    else if (h === "보험분류") val = ins["보험분류"] || "";
+                    else if (h === "보험사명") val = ins["보험사명"] || ins["차_보험사명"] || ins["company"] || "";
+                    else if (h === "상품명") val = ins["상품명"] || ins["차_상품명"] || (isAuto ? "자동차보험" : "");
+                    else if (h === "가입내역") val = ins["가입내역"] || ins["특이사항"] || "";
+                    else if (h === "차종") val = ins["차종"] || "";
+                    else if (h === "차량번호") val = ins["차량번호"] || ins["차_차량번호"] || "";
+                    else if (h === "차량용도") val = ins["차량용도"] || ins["차_차량용도"] || "";
+                    else if (h === "운전자특약") val = ins["운전자특약"] || "";
+                    else if (h === "연령특약") val = ins["연령특약"] || "";
+                    else if (h === "다이렉트여부") val = ins["다이렉트여부"] || "";
+                    else if (h === "체결일") val = ins["체결일"] || ins["책임개시일"] || "";
+                    else if (h === "만기일") val = ins["만기일"] || ins["만기일자"] || "";
+                    else if (h === "갱신일") val = ins["갱신일"] || ins["갱신일자"] || "";
+                    else if (h === "보험료") val = ins["보험료"] || ins["총보험료"] || ins["차_보험료"] || ins["premium"] || "";
+                    else if (h === "결제일") val = ins["결제일"] || ins["차_결제일"] || "";
+                    else if (h === "납입기간") val = ins["납입기간"] || "";
+                    else if (h === "결제방식") val = ins["결제방식"] || ins["차_결제방식"] || "";
+                    else if (h === "카드번호") val = ins["카드번호"] || ins["차_카드번호"] || "";
+                    else if (h === "유효기간") val = ins["유효기간"] || ins["차_유효기간"] || "";
+                    else if (h === "은행명") val = ins["은행명"] || ins["차_은행명"] || "";
+                    else if (h === "계좌번호") val = ins["계좌번호"] || ins["차_계좌번호"] || "";
+                    else if (h === "알릴의무사항") val = ins["알릴의무사항"] || "";
+                    else val = ins[h] !== undefined ? ins[h] : "";
+                    return typeof val === 'object' ? JSON.stringify(val) : val;
+                });
             });
             allInsRows.push(...formattedInsRows);
         }
@@ -11991,21 +11990,6 @@ window.forceSyncInsuranceSheet = async function() {
         });
     }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // [ANTIGRAVITY FIX] 전역 모달 오버레이 클릭 차단 (배경 클릭 시 꺼짐 및 먹통 방지)
 document.addEventListener('click', function(e) {

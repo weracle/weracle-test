@@ -49,7 +49,7 @@ function initFamilyTabs(baseId, baseLabel) {
             
             let pData = undefined;
             if (typeof window.parsePetData === 'function') {
-                const pets = window.parsePetData(client['반려동물'], client['동물이름'], client['코드']);
+                const pets = window.parsePetData(client['반려동물'], client['동물이름'], client['코드'], client['동물생일'] || client['동물생년월일'], client['동물모색'], client['동물성별']);
                 const hasPet = pets.length > 0 || (client['반려동물'] && client['반려동물'] !== '무' && client['반려동물'] !== '없음' && client['반려동물'] !== '-');
                 pData = {
                     isChecked: hasPet,
@@ -415,6 +415,9 @@ function saveCurrentFormToState() {
         dataObj['반려동물'] = petSer.species;
         dataObj['동물이름'] = petSer.names;
         dataObj['코드'] = petSer.codes;
+        dataObj['동물생일'] = petSer.births;
+        dataObj['동물모색'] = petSer.colors;
+        dataObj['동물성별'] = petSer.genders;
     }
     if (typeof window.getPetRowsData === 'function') {
         target.petData = window.getPetRowsData();

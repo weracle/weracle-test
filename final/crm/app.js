@@ -1968,6 +1968,8 @@ if (rows.length > 0 && (headerJoin.includes("고객명") || headerJoin.includes(
     headers = rows[0].map(h => String(h || '').trim());
     dataRows = rows.slice(1);
 }
+if (!window.sheetActualHeadersMap) window.sheetActualHeadersMap = {};
+window.sheetActualHeadersMap[sName] = [...headers];
 return dataRows.map((row, idx) => {
 const client = { rowNumber: idx + 2, sheetName: sName };
 headers.forEach((header, colIdx) => {
@@ -2119,8 +2121,35 @@ async function saveClientToServer(clientObj, insRows) {
             }
         }
 
-        let custHeaders = getCrmHeaders(sName);
-        let custValues = custHeaders.map(h => clientObj[h] !== undefined ? clientObj[h] : "");
+        let custHeaders = (window.sheetActualHeadersMap && window.sheetActualHeadersMap[sName]) ? [...window.sheetActualHeadersMap[sName]] : getCrmHeaders(sName);
+        // 시트에 새로운 펫 컬럼이 없으면 시트 1행 끝에 자동으로 추가 (기존 컬럼 위치는 절대 건드리지 않음)
+        const petNewCols = ["동물생일", "동물모색", "동물성별"];
+        const missingNewCols = petNewCols.filter(col => !custHeaders.includes(col));
+        if (missingNewCols.length > 0 && !isDemoMode && typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets) {
+            try {
+                const getColLtr = (idx) => {
+                    let s = '';
+                    while (idx >= 0) { s = String.fromCharCode((idx % 26) + 65) + s; idx = Math.floor(idx / 26) - 1; }
+                    return s;
+                };
+                const startLtr = getColLtr(custHeaders.length);
+                const endLtr = getColLtr(custHeaders.length + missingNewCols.length - 1);
+                gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId,
+                    range: `${sName}!${startLtr}1:${endLtr}1`,
+                    valueInputOption: "USER_ENTERED",
+                    resource: { values: [missingNewCols] }
+                });
+                custHeaders.push(...missingNewCols);
+                if (window.sheetActualHeadersMap) window.sheetActualHeadersMap[sName] = custHeaders;
+            } catch(e) { console.warn("Missing pet header auto-append:", e); }
+        }
+        let custValues = custHeaders.map(h => {
+            if (h === '동물생일' || h === '동물생년월일') return clientObj['동물생일'] || clientObj['동물생년월일'] || '';
+            if (h === '동물모색') return clientObj['동물모색'] || '';
+            if (h === '동물성별') return clientObj['동물성별'] || '';
+            return clientObj[h] !== undefined ? clientObj[h] : '';
+        });
         let insHeaders = getInsuranceHeaders();
 
         if (isDemoMode) {
@@ -4897,7 +4926,10 @@ window.renderPetProfileHtml = function(client) {
     const sRaw = client['반려동물'] || '';
     const nRaw = client['동물이름'] || '';
     const cRaw = client['코드'] || '';
-    const pets = window.parsePetData(sRaw, nRaw, cRaw);
+    const bRaw = client['동물생일'] || client['동물생년월일'] || '';
+    const colRaw = client['동물모색'] || '';
+    const gRaw = client['동물성별'] || '';
+    const pets = window.parsePetData(sRaw, nRaw, cRaw, bRaw, colRaw, gRaw);
     if (!pets || pets.length === 0) {
         if (sRaw && sRaw !== '-' && sRaw !== '무' && sRaw !== '없음') {
             return '<span style="color:#1e293b; font-weight:600;">' + sRaw + (nRaw ? ' (' + nRaw + ')' : '') + (cRaw ? ' / 코드: ' + cRaw : '') + '</span>';
@@ -4908,10 +4940,14 @@ window.renderPetProfileHtml = function(client) {
         const icon = p.type === '고양이' ? 'fa-cat' : (p.type === '기타' ? 'fa-paw' : 'fa-dog');
         const breedStr = p.breed ? '(' + p.breed + ')' : '';
         const nameStr = p.name ? '<strong>' + p.name + '</strong>' : '<span style="color:#94a3b8;">이름 미입력</span>';
-        const codeStr = (p.code && p.code !== '-') ? '<span style="font-size:12px; color:#64748b; margin-left:4px; font-weight:normal;">[등록: ' + p.code + ']</span>' : '';
-        return '<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px dashed #f1f5f9; font-size:14px; color:#1e293b;">' +
+        const genderBadge = p.gender ? `<span style="font-size:11px; padding:2px 7px; border-radius:12px; background:#eff6ff; color:#2563eb; font-weight:700; border:1px solid #bfdbfe; margin-left:4px;">${p.gender}</span>` : '';
+        const birthStr = p.birth ? `<span style="font-size:12px; color:#64748b; margin-left:6px;"><i class="fa-regular fa-calendar" style="font-size:10px; margin-right:3px;"></i>${p.birth}</span>` : '';
+        const colorStr = p.color ? `<span style="font-size:12px; color:#64748b; margin-left:6px;"><i class="fa-solid fa-palette" style="font-size:10px; margin-right:3px;"></i>${p.color}</span>` : '';
+        const codeStr = (p.code && p.code !== '-') ? '<span style="font-size:12px; color:#64748b; margin-left:6px; font-weight:normal;">[등록: ' + p.code + ']</span>' : '';
+        return '<div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px; padding:6px 0; border-bottom:1px dashed #f1f5f9; font-size:13.5px; color:#1e293b;">' +
             '<i class="fa-solid ' + icon + '" style="color:#3b82f6; width:16px;"></i>' +
-            '<span>' + p.type + breedStr + ' : ' + nameStr + ' ' + codeStr + '</span>' +
+            '<span>[' + p.type + '] ' + breedStr + ' ' + nameStr + '</span>' +
+            genderBadge + birthStr + colorStr + codeStr +
         '</div>';
     }).join('');
 };

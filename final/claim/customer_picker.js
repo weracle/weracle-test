@@ -664,7 +664,7 @@
       pets.push({
         name: petName,
         breed: petBreed,
-        birth: getVal(['동물생일', 'pet_birth']),
+        birth: getVal(['동물생일', '동물생년월일', 'pet_birth']),
         gender: getVal(['동물성별', 'pet_gender']),
         color: getVal(['동물모색', 'pet_color'])
       });

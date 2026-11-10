@@ -1912,7 +1912,7 @@ window.addEventListener('error', function(e) {
 </div>
 
 
-<script src="app.js?v=20261110_1545"></script>
+<script src="app.js?v=20261110_1550"></script>
   <script src="familyTabsLogic.js?v=20261110_1540"></script>
   <script src="crm_speed_center.js?v=20261104"></script>
   <script src="crm_smart_reg.js?v=20261104"></script>
@@ -3371,7 +3371,14 @@ window.renderListModalDirect = function(filtered, titleStr, fType, fVal) {
                         if (expItem) {
                             let comp = expItem['보험사명'] || expItem['차_보험사명'] || expItem['company'] || '';
                             let prod = expItem['상품명'] || expItem['차_상품명'] || expItem['product'] || (expItem['보험종류'] === '자동차보험' ? '자동차보험' : '');
-                            insDesc = (comp && prod && !prod.includes(comp)) ? (comp + ' ' + prod) : (prod || comp || insDesc);
+                            if (comp && prod) {
+                                let cleanProd = prod.replace(new RegExp('^\\[?' + comp.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\]?\\s*'), '').trim();
+                                insDesc = '[' + comp + '] ' + (cleanProd || prod);
+                            } else if (comp) {
+                                insDesc = '[' + comp + ']';
+                            } else if (prod) {
+                                insDesc = prod;
+                            }
                             expDateStr = expItem['갱신일자'] || expItem['만기일자'] || expItem['갱신일'] || expItem['만기일'] || expItem['expireDate'] || expItem['renewalDate'] || expDateStr;
                         }
                     } catch(e) {}
@@ -3402,12 +3409,19 @@ window.renderListModalDirect = function(filtered, titleStr, fType, fVal) {
                             if (expItem) {
                                 let comp = expItem['보험사명'] || expItem['차_보험사명'] || expItem['차_보험사'] || expItem.company || "";
                                 let prod = expItem['상품명'] || expItem['차_상품명'] || expItem.product || (expItem['보험종류'] === '자동차보험' ? '자동차보험' : (typeof expItem['가입내역'] === 'string' ? expItem['가입내역'] : ''));
-                                matchedProd = (comp && prod && !prod.includes(comp)) ? (comp + ' ' + prod) : (prod || comp || '-');
+                                if (comp && prod) {
+                                    let cleanProd = prod.replace(new RegExp('^\\[?' + comp.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\]?\\s*'), '').trim();
+                                    matchedProd = '[' + comp + '] ' + (cleanProd || prod);
+                                } else if (comp) {
+                                    matchedProd = '[' + comp + ']';
+                                } else if (prod) {
+                                    matchedProd = prod;
+                                }
                             }
                         } else if (typeof c.가입내역 === 'string' && !c.가입내역.startsWith('[')) {
                             matchedProd = c.가입내역;
                         } else if (c.상품명) {
-                            matchedProd = c.상품명;
+                            matchedProd = (c.보험사 ? '[' + c.보험사 + '] ' : '') + c.상품명;
                         }
                     } catch(e) {}
 
@@ -3525,7 +3539,14 @@ window.renderMobileCustomerCards = function(list, fType, fVal) {
                 if (expItem) {
                     let comp = expItem['보험사명'] || expItem['차_보험사명'] || expItem['company'] || '';
                     let prod = expItem['상품명'] || expItem['차_상품명'] || expItem['product'] || (expItem['보험종류'] === '자동차보험' ? '자동차보험' : '');
-                    insDesc = (comp && prod && !prod.includes(comp)) ? (comp + ' ' + prod) : (prod || comp || insDesc);
+                    if (comp && prod) {
+                        let cleanProd = prod.replace(new RegExp('^\\[?' + comp.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\]?\\s*'), '').trim();
+                        insDesc = '[' + comp + '] ' + (cleanProd || prod);
+                    } else if (comp) {
+                        insDesc = '[' + comp + ']';
+                    } else if (prod) {
+                        insDesc = prod;
+                    }
                 }
             } catch(e) {}
             if (!insDesc || typeof insDesc !== 'string') insDesc = '-';
@@ -3546,10 +3567,19 @@ window.renderMobileCustomerCards = function(list, fType, fVal) {
                     if (expItem) {
                         let comp = expItem['보험사명'] || expItem['차_보험사명'] || expItem['차_보험사'] || expItem.company || "";
                         let prod = expItem['상품명'] || expItem['차_상품명'] || expItem.product || (expItem['보험종류'] === '자동차보험' ? '자동차보험' : (typeof expItem['가입내역'] === 'string' ? expItem['가입내역'] : ''));
-                        matchedProd = (comp && prod && !prod.includes(comp)) ? (comp + ' ' + prod) : (prod || comp || '-');
+                        if (comp && prod) {
+                            let cleanProd = prod.replace(new RegExp('^\\[?' + comp.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\]?\\s*'), '').trim();
+                            matchedProd = '[' + comp + '] ' + (cleanProd || prod);
+                        } else if (comp) {
+                            matchedProd = '[' + comp + ']';
+                        } else if (prod) {
+                            matchedProd = prod;
+                        }
                     }
                 } else if (typeof c.가입내역 === 'string' && !c.가입내역.startsWith('[')) {
                     matchedProd = c.가입내역;
+                } else if (c.상품명) {
+                    matchedProd = (c.보험사 ? '[' + c.보험사 + '] ' : '') + c.상품명;
                 }
             } catch(e) {}
 

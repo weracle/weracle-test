@@ -1,3 +1,11 @@
+window.openProfileFromSpeedCenter = function(id) {
+    if (typeof openProfile === 'function') {
+        openProfile(id);
+    } else if (typeof showMasterDetail === 'function') {
+        showMasterDetail(id);
+    }
+};
+
 /**
  * crm_speed_center.js
  * 스피드 작업 센터 - [3번 옵션: 5대 포커스 카드 + 나이 직접 검색]
@@ -501,11 +509,11 @@ window.handleQuickEditSearch = function() {
                 else if (status.includes('관심')) { statusBg = '#f0fdf4'; statusColor = '#15803d'; statusBorder = '#bbf7d0'; }
 
                 // 1. PC Table Row
-                tbHtml += `<tr style="border-bottom:1px solid #f1f5f9; cursor:pointer;" onmouseover="this.style.background='#f8fafc';" onmouseout="this.style.background='#ffffff';">`;
+                tbHtml += `<tr style="border-bottom:1px solid #f1f5f9; cursor:pointer;" onclick="if(typeof openProfileFromSpeedCenter==='function'){openProfileFromSpeedCenter('${id}');}else if(typeof openProfile==='function'){openProfile('${id}');}" onmouseover="this.style.background='#f1f5f9';" onmouseout="this.style.background='#ffffff';">`;
                 
                 if (tab === '1차') {
                     tbHtml += `
-                        <td style="padding:9px 10px; font-weight:800; color:#1e293b; font-size:12.5px; white-space:nowrap;" onclick="if(typeof openProfile==='function'){openProfile('${id}');}else if(typeof showMasterDetail==='function'){showMasterDetail('${id}');}">${name}</td>
+                        <td style="padding:9px 10px; font-weight:800; color:#1e293b; font-size:12.5px; white-space:nowrap; cursor:pointer;" onmouseover="this.style.color='#2563eb';" onmouseout="this.style.color='#1e293b';"><i class="fa-solid fa-user" style="margin-right:5px; color:#3b82f6; font-size:11px;"></i>${name}</td>
                         <td style="padding:9px 10px; white-space:nowrap;"><span style="display:inline-block; padding:2px 7px; border-radius:5px; font-size:11px; font-weight:700; background:${statusBg}; color:${statusColor};">${status}</span></td>
                         <td style="padding:9px 10px; color:#475569; font-size:12px; white-space:nowrap;">${ageGender}</td>
                         <td style="padding:9px 10px; color:#475569; font-size:12px; white-space:nowrap;">${birth}</td>
@@ -519,7 +527,7 @@ window.handleQuickEditSearch = function() {
                     `;
                 } else if (tab === '터치') {
                     tbHtml += `
-                        <td style="padding:12px 14px; font-weight:800; color:#1e293b;" onclick="if(typeof openProfile==='function'){openProfile('${id}');}else if(typeof showMasterDetail==='function'){showMasterDetail('${id}');}">${name}</td>
+                        <td style="padding:12px 14px; font-weight:800; color:#1e293b; cursor:pointer;" onmouseover="this.style.color='#2563eb';" onmouseout="this.style.color='#1e293b';"><i class="fa-solid fa-user" style="margin-right:5px; color:#3b82f6; font-size:11px;"></i>${name}</td>
                         <td style="padding:12px 14px;"><span style="display:inline-block; padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:700; background:${statusBg}; color:${statusColor};">${status}</span></td>
                         <td style="padding:12px 14px; color:#4338ca; font-weight:600; font-size:13px;">${touch}</td>
                         <td style="padding:12px 14px; color:#64748b; font-size:13px;">${memo}</td>
@@ -539,7 +547,7 @@ window.handleQuickEditSearch = function() {
                     } catch(e) {}
 
                     tbHtml += `
-                        <td style="padding:12px 14px; font-weight:800; color:#1e293b;" onclick="if(typeof openProfile==='function'){openProfile('${id}');}else if(typeof showMasterDetail==='function'){showMasterDetail('${id}');}">${name}</td>
+                        <td style="padding:12px 14px; font-weight:800; color:#1e293b; cursor:pointer;" onmouseover="this.style.color='#2563eb';" onmouseout="this.style.color='#1e293b';"><i class="fa-solid fa-user" style="margin-right:5px; color:#3b82f6; font-size:11px;"></i>${name}</td>
                         <td style="padding:12px 14px;"><span style="display:inline-block; padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:700; background:${statusBg}; color:${statusColor};">${status}</span></td>
                         <td style="padding:12px 14px; color:#334155;">${insSummary}</td>
                     `;
@@ -547,7 +555,7 @@ window.handleQuickEditSearch = function() {
                 tbHtml += '</tr>';
 
                 // 2. Mobile Version A (Info Card)
-                mobileCardHtml += `<div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px; box-shadow:0 1px 3px rgba(0,0,0,0.03); cursor:pointer; transition:all 0.15s;" onclick="if(typeof openProfile==='function'){openProfile('${id}');}else if(typeof showMasterDetail==='function'){showMasterDetail('${id}');}">`;
+                mobileCardHtml += `<div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px; box-shadow:0 1px 3px rgba(0,0,0,0.03); cursor:pointer; transition:all 0.15s;" onclick="if(typeof openProfileFromSpeedCenter==='function'){openProfileFromSpeedCenter('${id}');}else if(typeof openProfile==='function'){openProfile('${id}');}">`;
                 mobileCardHtml += `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:7px;">
                         <div style="display:flex; align-items:center; gap:6px;">

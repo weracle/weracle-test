@@ -1440,14 +1440,16 @@ try {
             let isMatch = false;
 
             // Check if contractor or insured is specified
-            const hasContractor = Boolean(insContractor);
-            const hasInsured = Boolean(insInsured);
+            const hasContractor = Boolean(insContractor && insContractor !== "-" && insContractor !== "미등록");
+            const hasInsured = Boolean(insInsured && insInsured !== "-" && insInsured !== "미등록");
 
-            const isContractor = hasContractor && (myName === insContractor || (myUid && insUid && (insUid === myUid || insUid.endsWith("_" + myUid))));
-            const isInsured = hasInsured && (myName === insInsured || (myUid && insUid && (insUid === myUid || insUid.startsWith(myUid + "_"))));
+            // Customer is contractor ONLY if their name matches insContractor
+            const isContractor = hasContractor && (myName === insContractor);
+            // Customer is insured ONLY if their name matches insInsured
+            const isInsured = hasInsured && (myName === insInsured);
 
-            if (isContractor || isInsured) {
-                isMatch = true;
+            if (hasContractor || hasInsured) {
+                isMatch = (isContractor || isInsured);
             } else if (!hasContractor && !hasInsured) {
                 // Fallback for legacy rows without contractor/insured
                 if (myUid && insUid && insUid === myUid) isMatch = true;
@@ -1679,14 +1681,16 @@ try {
             let isMatch = false;
 
             // Check if contractor or insured is specified
-            const hasContractor = Boolean(insContractor);
-            const hasInsured = Boolean(insInsured);
+            const hasContractor = Boolean(insContractor && insContractor !== "-" && insContractor !== "미등록");
+            const hasInsured = Boolean(insInsured && insInsured !== "-" && insInsured !== "미등록");
 
-            const isContractor = hasContractor && (myName === insContractor || (myUid && insUid && (insUid === myUid || insUid.endsWith("_" + myUid))));
-            const isInsured = hasInsured && (myName === insInsured || (myUid && insUid && (insUid === myUid || insUid.startsWith(myUid + "_"))));
+            // Customer is contractor ONLY if their name matches insContractor
+            const isContractor = hasContractor && (myName === insContractor);
+            // Customer is insured ONLY if their name matches insInsured
+            const isInsured = hasInsured && (myName === insInsured);
 
-            if (isContractor || isInsured) {
-                isMatch = true;
+            if (hasContractor || hasInsured) {
+                isMatch = (isContractor || isInsured);
             } else if (!hasContractor && !hasInsured) {
                 // Fallback for legacy rows without contractor/insured
                 if (myUid && insUid && insUid === myUid) isMatch = true;
@@ -9090,33 +9094,50 @@ window.generateProfileHtml = function(client) {
 
 
   window.openProfile = function(idStr) {
+    const modal = document.getElementById("profileModal");
     if (!idStr) {
-        const modal = document.getElementById("profileModal");
         if (modal) {
+            modal.style.zIndex = "100005";
             modal.style.display = "flex";
             setTimeout(() => modal.classList.add("show"), 10);
         }
         return;
     }
     
-    const allData = (window._masterCustomerData && window._masterCustomerData.length > 0) ? window._masterCustomerData : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : globalCustomerData);
-    const client = (allData || []).find(c => String(c["고객번호"] || c["ID"]) === String(idStr));
+    const allData = (window._masterCustomerData && window._masterCustomerData.length > 0) ? window._masterCustomerData : ((window.globalCustomerData && window.globalCustomerData.length > 0) ? window.globalCustomerData : (typeof globalCustomerData !== 'undefined' ? globalCustomerData : []));
+    const targetStr = String(idStr).trim();
+    const client = (allData || []).find(c => 
+        String(c["고객번호"] || '').trim() === targetStr ||
+        String(c["ID"] || '').trim() === targetStr ||
+        String(c["UID"] || '').trim() === targetStr ||
+        String(c["id"] || '').trim() === targetStr ||
+        String(c["고객명"] || c["대표자명"] || '').trim() === targetStr
+    );
     if (!client) {
         alert("고객 정보를 찾을 수 없습니다.");
         return;
     }
     
     const profileContent = document.getElementById("profileModalContent");
-    if(profileContent) {
+    if(profileContent && typeof window.generateProfileHtml === 'function') {
         profileContent.innerHTML = window.generateProfileHtml(client);
     }
     
-    const modal = document.getElementById("profileModal");
     if (modal) {
+        modal.style.zIndex = "100005";
         modal.style.display = "flex";
         setTimeout(() => modal.classList.add("show"), 10);
     }
 };
+
+window.closeProfile = function() {
+    const modal = document.getElementById("profileModal");
+    if (modal) {
+        modal.classList.remove("show");
+        setTimeout(() => { modal.style.display = "none"; }, 200);
+    }
+};
+function closeProfile() { return window.closeProfile(); }
     function renderTable(d) { return window.renderTable(d); }
 
 
@@ -10871,268 +10892,19 @@ window.handleQuickEditDropdown = function(type) {
     window.handleQuickEditSearch();
 };
 
-window.openQuickEditModal = function() {
-    const modal = document.getElementById('quickEditModal');
-    if(modal) {
-        modal.style.display = 'flex';
-        modal.classList.add('active');
-        modal.style.alignItems = 'flex-start';
-        modal.style.justifyContent = 'center';
-        modal.style.padding = '32px 16px 60px';
-        modal.style.overflowY = 'auto';
-        modal.scrollTop = 0;
-
-        const content = modal.querySelector('.modal-content');
-        if (content) {
-            content.style.margin = '0 auto';
-            content.style.transform = 'none';
-            content.style.top = '0';
-        }
-
-        const sInput = document.getElementById('quickEditSearchInput');
-        if (sInput) sInput.value = '';
-        const rArea = document.getElementById('quickEditResultArea');
-        if (rArea) rArea.innerHTML = '<tr><td colspan="10" style="text-align:center; color:#94a3b8; font-size:15px; font-weight:600; padding:80px 0;">검색어를 입력하시면 고객 리스트가 나타납니다.</td></tr>';
-        const tHeader = document.getElementById('quickEditTableHeader');
-        if (tHeader) tHeader.innerHTML = '';
-        const qCount = document.getElementById('quickEditCount');
-        if (qCount) qCount.innerText = "0";
-        
-        if (typeof window.populateQuickEditDropdowns === 'function') {
-            window.populateQuickEditDropdowns();
-        }
-        
-        setTimeout(() => {
-            if (sInput) {
-                try {
-                    sInput.focus({ preventScroll: true });
-                } catch(e) {
-                    sInput.focus();
-                }
-            }
-            if (modal) modal.scrollTop = 0;
-        }, 100);
-    }
-};
-
-window.closeQuickEditModal = function() {
-    const modal = document.getElementById('quickEditModal');
-    if(modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('active');
-    }
-};
-
-window.currentQuickEditTab = 'basic';
-
-window.setQuickEditTab = function(tab) {
-    window.currentQuickEditTab = tab;
-    // Update Tab Styles
-    ['basic', 'touch', 'insure'].forEach(t => {
-        const btn = document.getElementById('qe-tab-' + t);
-        if(btn) {
-            if(t === tab) {
-                btn.style.color = '#3b82f6';
-                btn.style.fontWeight = '800';
-                btn.style.borderBottom = '3px solid #3b82f6';
-            } else {
-                btn.style.color = '#94a3b8';
-                btn.style.fontWeight = '700';
-                btn.style.borderBottom = '3px solid transparent';
-            }
-        }
-    });
-    window.handleQuickEditSearch();
-};
-
-window.currentQuickEditTab = '1차';
-
-window.setQuickEditTab = function(tabName) {
-    window.currentQuickEditTab = tabName;
-    ['1차', '터치', '보험'].forEach(t => {
-        const btn = document.getElementById('qeTab-' + t);
-        if (btn) {
-            if (t === tabName) {
-                btn.style.background = '#3b82f6';
-                btn.style.color = 'white';
-                btn.style.boxShadow = '0 2px 4px rgba(59,130,246,0.2)';
-            } else {
-                btn.style.background = '#e2e8f0';
-                btn.style.color = '#475569';
-                btn.style.boxShadow = 'none';
-            }
-        }
-    });
-    window.handleQuickEditSearch();
-};
-
-window.handleQuickEditSearch = function() {
-    try {
-        const query = document.getElementById('quickEditSearchInput').value.trim().toLowerCase();
-        const resultArea = document.getElementById('quickEditResultArea');
-        const theadArea = document.getElementById('quickEditTableHeader');
-        const countArea = document.getElementById('quickEditCount');
-        
-        if(!window.globalCustomerData || window.globalCustomerData.length === 0) {
-            resultArea.innerHTML = '<tr><td colspan="15" style="text-align:center; padding:100px 20px; color:#ef4444; font-weight:600; font-size:15px;">데이터가 아직 로드되지 않았습니다.</td></tr>';
-            if(countArea) countArea.innerText = "0";
-            return;
-        }
-        
-        const cleanQuery = query.replace(/[\s-]/g, "");
-        let matches = window.globalCustomerData;
-        
-        if(cleanQuery) {
-            matches = matches.filter(c => {
-                let allValuesStr = "";
-                for (let key in c) {
-                    if (c.hasOwnProperty(key)) {
-                        let val = c[key];
-                        if (typeof val === 'object') val = JSON.stringify(val);
-                        allValuesStr += String(val).toLowerCase().replace(/[\s-]/g, "") + "|";
-                    }
-                }
-                return allValuesStr.includes(cleanQuery);
-            });
-        }
-        
-        matches = matches.slice(0, 50);
-        if(countArea) countArea.innerText = matches.length;
-        
-        const thStyle = "padding:14px; font-size:13px; font-weight:800; color:#475569; border-bottom:1px solid #e2e8f0; white-space:nowrap; background:#f1f5f9; position:sticky; top:0;";
-        let theadHtml = '<tr>';
-        
-        const tab = window.currentQuickEditTab;
-        
-        if (tab === '1차') {
-            theadHtml += `<th style="${thStyle} min-width:80px;">고객명</th>
-                          <th style="${thStyle} min-width:90px;">상태</th>
-                          <th style="${thStyle}">나이/성별</th>
-                          <th style="${thStyle}">생일</th>
-                          <th style="${thStyle}">폰번호</th>
-                          <th style="${thStyle}">주소</th>
-                          <th style="${thStyle}">직업(상세)</th>
-                          <th style="${thStyle}">특이사항</th>
-                          <th style="${thStyle}">가족사항</th>`;
-        } else if (tab === '터치') {
-            theadHtml += `<th style="${thStyle} width:10%;">고객명</th>
-                          <th style="${thStyle} width:10%;">상태</th>
-                          <th style="${thStyle} width:50%;">터치인사이트</th>
-                          <th style="${thStyle} width:20%;">특이사항</th>`;
-        } else if (tab === '보험') {
-            theadHtml += `<th style="${thStyle} width:10%;">고객명</th>
-                          <th style="${thStyle} width:10%;">상태</th>
-                          <th style="${thStyle} width:70%;">가입내역</th>`;
-        }
-        
-        theadHtml += `<th style="${thStyle} text-align:right;">상세보기</th></tr>`;
-        theadArea.innerHTML = theadHtml;
-        
-        if(matches.length === 0) {
-            resultArea.innerHTML = `<tr><td colspan="15" style="text-align:center; padding:100px 20px; color:#94a3b8; font-weight:600; font-size:15px;">일치하는 데이터가 없습니다.</td></tr>`;
-            return;
-        }
-        
-        const escapeHtml = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const tdStyle = "padding:12px 14px; font-size:13px; font-weight:600; color:#475569; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;";
-        const tdNormal = "padding:12px 14px; font-size:13px; font-weight:600; color:#475569; white-space:normal; line-height:1.5;";
-        
-        let html = '';
-        matches.forEach(r => {
-            const id = escapeHtml(r["고객번호"] || r["ID"] || "");
-            const name = escapeHtml(r["고객명"] || "-");
-            const status = escapeHtml(r["상태"] || "-");
-            
-            html += `<tr style="border-bottom:1px solid #f1f5f9; transition:0.2s; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" onclick="if(typeof document!=='undefined'){document.getElementById('quickEditModal').style.display='none';} if(typeof openProfile==='function') openProfile('${id}');">`;
-            
-            if (tab === '1차') {
-                const ageGen = escapeHtml((r["나이"]||'') + " " + (r["성별"]||'')).trim() || "-";
-                const birth = escapeHtml(r["생일"] || "-");
-                const phone = escapeHtml(r["폰번호"] || "-");
-                const addr = escapeHtml(r["주소"] || r["거주지"] || "-");
-                const job = escapeHtml((r["직업"]||'') + " " + (r["상세업무"]||'')).trim() || "-";
-                const note = escapeHtml(r["특이사항"] || "-");
-                const fam = escapeHtml(r["가족사항"] || "-");
-                
-                html += `<td style="${tdStyle} font-weight:800; color:#0f172a;">${name}</td>`;
-                html += `<td style="${tdStyle} color:#3b82f6;">${status}</td>`;
-                html += `<td style="${tdStyle}">${ageGen}</td>`;
-                html += `<td style="${tdStyle}">${birth}</td>`;
-                html += `<td style="${tdStyle}">${phone}</td>`;
-                html += `<td style="${tdStyle} max-width:150px;">${addr}</td>`;
-                html += `<td style="${tdStyle} max-width:150px;">${job}</td>`;
-                html += `<td style="${tdNormal} max-width:150px;">${note}</td>`;
-                html += `<td style="${tdStyle} max-width:150px;">${fam}</td>`;
-            } else if (tab === '터치') {
-                const insight = escapeHtml(r["터치인사이트"] || "-");
-                const note = escapeHtml(r["특이사항"] || "-");
-                html += `<td style="${tdStyle} font-weight:800; color:#0f172a;">${name}</td>`;
-                html += `<td style="${tdStyle} color:#3b82f6;">${status}</td>`;
-                html += `<td style="${tdNormal} max-width:400px; color:#1e293b; font-weight:700;">${insight}</td>`;
-                html += `<td style="${tdNormal} max-width:200px;">${note}</td>`;
-            } else if (tab === '보험') {
-                let insDisplay = "-";
-                let _gList = typeof getGlobalInsuranceList === "function" ? getGlobalInsuranceList(r, true) : [];
-                if (_gList.length > 0) {
-                    try {
-                        const parsed = _gList;
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            insDisplay = parsed.map(ins => {
-                                const type = ins.보험분류 || ins.type || ins.보험종류 || "";
-                                const comp = ins.보험사명 || ins.차_보험사명 || ins.company || "";
-                                const prod = ins.보험종류 === "자동차보험" ? (ins.차량번호 || "자동차보험") : (ins.상품명 || ins.product || "");
-                                const date = ins.체결일 || ins.책임개시일 || ins.date || "";
-                                
-                                const insured = ins.피보험자 || ins.차_피보험자 || "";
-                                const payMethod = ins.결제방식 || ins.차_결제방식 || "";
-                                let payInfo = "";
-                                if (payMethod === "카드") {
-                                    const cardNo = ins.카드번호 || ins.차_카드번호 || "";
-                                    const cardValid = ins.유효기간 || ins.차_유효기간 || "";
-                                    if (cardNo || cardValid) payInfo = `${payMethod}(${cardNo} / ${cardValid})`;
-                                } else if (payMethod === "자동이체" || payMethod === "가상계좌") {
-                                    const bankName = ins.은행명 || ins.차_은행명 || "";
-                                    const accountNo = ins.계좌번호 || ins.차_계좌번호 || "";
-                                    if (bankName || accountNo) payInfo = `${payMethod}(${bankName} / ${accountNo})`;
-                                } else if (ins.결제정보) {
-                                    payInfo = ins.결제정보;
-                                }
-                                
-                                const insuredStr = insured && insured !== "-" ? ` | 피보:${insured}` : "";
-                                const premStr = ins.보험료 ? ` | 월:${ins.보험료}` : "";
-                                const payStr = payInfo && payInfo !== "-" && !payInfo.includes('(/)') && !payInfo.includes('( / )') ? ` | 결제:${payInfo}` : "";
-
-                                return `<span style="display:inline-block; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:5px 8px; border-radius:6px; margin:2px 4px 4px 0; font-size:12.5px;">
-                                    <strong>${comp}</strong> ${type} ${prod ? '('+prod+')' : ''} ${date} 
-                                    <span style="color:#3b82f6; font-size:11.5px; margin-left:4px;">${insuredStr}${premStr}${payStr}</span>
-                                </span>`;
-                            }).join(' ');
-                        } else {
-                            insDisplay = escapeHtml(r["가입내역"]);
-                        }
-                    } catch(e) {
-                        insDisplay = escapeHtml(r["가입내역"]);
-                    }
-                }
-                html += `<td style="${tdStyle} font-weight:800; color:#0f172a;">${name}</td>`;
-                html += `<td style="${tdStyle} color:#3b82f6;">${status}</td>`;
-                html += `<td style="${tdNormal} max-width:500px; color:#334155; font-weight:700;">${insDisplay}</td>`;
-            }
-            
-            // Render a distinct, highly visible OPEN button
-            html += `<td style="${tdStyle} text-align:right;">
-                <button type="button" style="background:#4f46e5; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:800; font-size:13px; cursor:pointer; box-shadow:0 2px 4px rgba(79,70,229,0.3); transition:all 0.2s;" onmouseover="this.style.background='#4338ca'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#4f46e5'; this.style.transform='translateY(0)';">
-                    <i class='fa-solid fa-folder-open'></i> 프로필 열기
-                </button>
-            </td>`;
-            html += `</tr>`;
-        });
-        
-        resultArea.innerHTML = html;
-    } catch(e) {
-        console.error("Speed Search Error:", e);
-    }
-};
+// Quick Edit / Speed Search modal handlers are implemented in crm_speed_center.js.
+// Forwarding delegations for backwards compatibility:
+if (typeof window.openQuickEditModal !== 'function') {
+    window.openQuickEditModal = function() {
+        if (typeof window.openSpeedCenterModal === 'function') window.openSpeedCenterModal();
+    };
+}
+if (typeof window.closeQuickEditModal !== 'function') {
+    window.closeQuickEditModal = function() {
+        const m = document.getElementById('quickEditModal');
+        if (m) { m.style.display = 'none'; m.classList.remove('active'); }
+    };
+}
 // --- INJECTED FIXES ---
 window.addEventListener('message', function(event) {
     if(event.data && event.data.type === 'FORCE_SHEET_ID') {

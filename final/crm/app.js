@@ -2118,39 +2118,9 @@ async function saveClientToServer(clientObj, insRows) {
             return s;
         };
 
-        let myName = extractPureName(clientObj['고객명']);
-        let myRootId = String(clientObj['고객번호'] || '').split('-')[0];
-        let currentTabInsRows = [];
-        
-        insRows.forEach(ins => {
-            let rawContractor = ins['계약자'] || ins['차_계약자'] || "";
-            let cleanContractor = extractPureName(rawContractor);
-            
-            if (!cleanContractor || cleanContractor === myName || cleanContractor === "본인") {
-                currentTabInsRows.push(ins);
-            } else {
-                const targetIdx = globalCustomerData.findIndex(c => {
-                    const cid = String(c['고객번호'] || '');
-                    return cid.split('-')[0] === myRootId && extractPureName(c['고객명']) === cleanContractor;
-                });
-                
-                if (targetIdx !== -1) {
-                    if (!routedMap[targetIdx]) routedMap[targetIdx] = [];
-                    let rawInsured = ins['피보험자'] || ins['차_피보험자'] || "";
-                    if (!rawInsured || extractPureName(rawInsured) === "본인") {
-                        if ('피보험자' in ins || !('차_피보험자' in ins)) ins['피보험자'] = myName;
-                        if ('차_피보험자' in ins) ins['차_피보험자'] = myName;
-                    }
-                    routedMap[targetIdx].push(ins);
-                } else {
-                    currentTabInsRows.push(ins);
-                }
-            }
-        });
-        
-        insRows = currentTabInsRows; 
-        clientObj["가입내역"] = JSON.stringify(currentTabInsRows);
-        clientObj["보험가입리스트"] = currentTabInsRows;
+        // [CRITICAL FIX] Preserve all entered insurances on clientObj and in insRows
+        clientObj["가입내역"] = JSON.stringify(insRows);
+        clientObj["보험가입리스트"] = insRows;
         
         for (let tIdx in routedMap) {
             let tClient = globalCustomerData[tIdx];
@@ -2321,7 +2291,8 @@ async function saveClientToServer(clientObj, insRows) {
             if (window.isFamilySubmitInProgress && window.familyInsRowsCache) {
                 allInsRows = window.familyInsRowsCache;
             } else {
-                const insResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: insSheetName + "!A2:AC" });
+                const actualInsSheet = (existingSheets && existingSheets.find(t => t.replace(/\s+/g, '').includes("보험관리") || t.replace(/\s+/g, '').includes("보험") || t.replace(/\s+/g, '').includes("계약"))) || insSheetName;
+                const insResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: `'${actualInsSheet}'!A2:AC` });
                 allInsRows = insResp.result.values || [];
             }
             allInsRows = allInsRows.filter(row => {
@@ -2386,11 +2357,12 @@ async function saveClientToServer(clientObj, insRows) {
                 }
             }
             if (window.isFamilySubmitInProgress) { window.familyInsRowsCache = allInsRows; }
-            await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: insSheetName + "!A2:AC" });
+            const targetInsTab = (existingSheets && existingSheets.find(t => t.replace(/\s+/g, '').includes("보험관리") || t.replace(/\s+/g, '').includes("보험") || t.replace(/\s+/g, '').includes("계약"))) || insSheetName;
+            await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `'${targetInsTab}'!A2:AC` });
             if (allInsRows.length > 0) {
                 await gapi.client.sheets.spreadsheets.values.update({
                     spreadsheetId,
-                    range: insSheetName + "!A2",
+                    range: `'${targetInsTab}'!A2`,
                     valueInputOption: "USER_ENTERED",
                     resource: { values: allInsRows }
                 });
@@ -4279,10 +4251,15 @@ function removeInsuranceFields(id) {
     if (typeof updateAddButtonsVisibility === 'function') updateAddButtonsVisibility();
 }
 async function submitCrmData(event) {
-  event.preventDefault();
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
   if (window.isSubmittingCrm) return false;
-window.isSubmittingCrm = true;
-const form = document.getElementById("crmRegForm");
+  window.isSubmittingCrm = true;
+
+  const existingClient = (window.isEditMode && window.editTargetId && Array.isArray(globalCustomerData)) 
+      ? globalCustomerData.find(c => String(c["고객번호"] || c["사업자번호"]) === String(window.editTargetId)) 
+      : null;
+
+  const form = document.getElementById("crmRegForm");
     const wiz = document.getElementById("regSetupWizard"); if(wiz) wiz.style.display = "none";
     if(form) form.style.display = "flex";
     const mw = document.querySelector(".sian-main-wrapper"); if(mw) mw.style.display = "flex";
@@ -4636,7 +4613,7 @@ return;
 
 // 시트 대표 보험 정보 호환용 (첫 번째 보험 상품 추출)
 const firstIns = insList[0] || {};
-const existingClient = window.isEditMode ? globalCustomerData.find(c => c["고객번호"] === window.editTargetId) : null;
+// existingClient already hoisted to top of submitCrmData
 
 // Format first insurance alril details as readable string for backward compatibility
 let firstInsAlrilText = " ";

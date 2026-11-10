@@ -1574,22 +1574,32 @@ window.addEventListener('error', function(e) {
                     
                     <div style="display: flex; flex-direction: column; gap: 0; margin-bottom: 24px;">
                         
-                        <div class="row-table">
-                            <div class="row-label" style="display:flex; align-items:center; gap:8px;">
+                        <div class="row-table" style="align-items: flex-start;">
+                            <div class="row-label" style="display:flex; align-items:center; gap:8px; padding-top: 10px;">
                                  반려동물
                             </div>
-                            <div class="row-input">
-                                <div style="display:flex; align-items:center; gap:16px;">
+                            <div class="row-input" style="flex-direction:column; align-items:flex-start; gap:10px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
                                     <label class="switch" style="margin:0;">
-                                        <input type="checkbox" id="has-pet-cb" onchange="const f = document.getElementById('pet-fields'); if(this.checked){ f.style.display='flex'; setTimeout(()=>f.style.opacity='1',10); } else { f.style.opacity='0'; setTimeout(()=>f.style.display='none',200); }">
+                                        <input type="checkbox" id="has-pet-cb" onchange="window.handlePetToggle(this.checked)">
                                         <span class="slider round"></span>
                                     </label>
-                                    
-                                    
-                                    <div id="pet-fields" style="display:none; opacity:0; flex:1; gap:8px; transition:opacity 0.2s ease;">
-                                        <input type="text" name="반려동물" class="form-input" placeholder="종 (예: 푸들)" style="flex:1;">
-                                        <input type="text" name="동물이름" class="form-input" placeholder="이름 (예: 뽀삐)" style="flex:1;">
-                                        <input type="text" name="코드" class="form-input" placeholder="동물 등록번호" style="flex:1;">
+                                    <span style="font-size:13px; color:#64748b; font-weight:600;" id="has-pet-label">반려동물 없음</span>
+                                </div>
+                                
+                                <div id="pet-fields" style="display:none; opacity:0; width:100%; flex-direction:column; gap:8px; transition:opacity 0.2s ease; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; box-sizing:border-box;">
+                                    <div style="display:flex; gap:8px; align-items:center; padding:0 4px; font-size:12px; font-weight:700; color:#475569;">
+                                        <div style="flex:0 0 100px;">구분</div>
+                                        <div style="flex:1;">품종 (견종/묘종)</div>
+                                        <div style="flex:1;">이름</div>
+                                        <div style="flex:1.2;">동물 등록번호 (선택)</div>
+                                        <div style="flex:0 0 45px; text-align:center;">삭제</div>
+                                    </div>
+                                    <div id="pet-rows-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                                    <div style="margin-top:4px;">
+                                        <button type="button" onclick="window.addPetRow()" style="background:#ffffff; color:#3b82f6; border:1.5px dashed #93c5fd; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.15s;" onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#3b82f6';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#93c5fd';">
+                                            <i class="fa-solid fa-plus"></i> 반려동물 추가
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1905,7 +1915,7 @@ window.addEventListener('error', function(e) {
 </div>
 
 
-<script src="app.js?v=20261110_1320"></script>
+<script src="app.js?v=20261110_1335"></script>
   <script src="familyTabsLogic.js?v=20261004213200"></script>
   <script src="crm_speed_center.js?v=20261104"></script>
   <script src="crm_smart_reg.js?v=20261104"></script>

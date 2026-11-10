@@ -3721,6 +3721,7 @@ function openRegModal(mode, specificId) {
       document.body.classList.add('mode-new');
     window.isEditMode = false;
     window.activeFamilyId = null;
+    if (typeof window.restorePetRows === 'function') window.restorePetRows(null);
     
     let nextId = 1;
     if (globalCustomerData && globalCustomerData.length > 0) {
@@ -3855,6 +3856,7 @@ function loadCustomerForFamily(task) {
         const input = form.querySelector("[name='" + f + "']");
         if (input) input.value = baseRow[f] || "";
     });
+    if (typeof window.restorePetRows === 'function') window.restorePetRows(baseRow);
 
         if (typeof task === "object" && task.insData) {
         const nameInput = form.querySelector('input[name="고객명"]');
@@ -4026,12 +4028,9 @@ function loadCustomerForFamily(task) {
     if (cbCommercial) cbCommercial.checked = rawCar.includes("영업");
     if (cbBike) cbBike.checked = rawCar.includes("바이크");
 
-    // 반려동물 체크박스 및 필드 복원
-    const petCb = document.getElementById("has-pet-cb");
-    if (petCb) {
-        petCb.checked = !!(client["반려동물"] || client["동물이름"] || (client["반려동물"] === "유"));
-        const petFields = document.getElementById("pet-fields");
-        if (petFields) petFields.style.display = petCb.checked ? "flex" : "none";
+    // 반려동물 체크박스 및 다중 행 완벽 복원
+    if (typeof window.restorePetRows === 'function') {
+        window.restorePetRows(client);
     }
 
     // 3. 터치인사이트 다중 태그 체크박스 완벽 복원 (배열, 쉼표, 슬래시, JSON 모두 지원)
@@ -4477,6 +4476,49 @@ if (insList && insList.length > 0 && (insList[0].보험사명 || insList[0].차_
     finalGainHistory = formData.get("가입내역") || (existingClient ? (existingClient["가입내역"] || "") : "");
 }
 
+// 반려동물 다중 입력 데이터 직렬화
+const petCb = document.getElementById("has-pet-cb");
+const isPetChecked = (petCb && petCb.checked);
+let finalPetSpecies = "";
+let finalPetNames = "";
+let finalPetCodes = "";
+
+if (isPetChecked) {
+    const petRows = document.querySelectorAll("#pet-rows-list .pet-row-item");
+    const sArr = [];
+    const nArr = [];
+    const cArr = [];
+    petRows.forEach(row => {
+        const typeEl = row.querySelector(".pet-type-select");
+        const breedEl = row.querySelector(".pet-breed-input");
+        const nameEl = row.querySelector(".pet-name-input");
+        const codeEl = row.querySelector(".pet-code-input");
+        const typeVal = typeEl ? typeEl.value.trim() : "강아지";
+        const breedVal = breedEl ? breedEl.value.trim() : "";
+        const nameVal = nameEl ? nameEl.value.trim() : "";
+        const codeVal = codeEl ? codeEl.value.trim() : "";
+        if (breedVal || nameVal || codeVal) {
+            const fullSp = breedVal ? `${typeVal}(${breedVal})` : typeVal;
+            sArr.push(fullSp || "-");
+            nArr.push(nameVal || "-");
+            cArr.push(codeVal || "-");
+        }
+    });
+    if (sArr.length > 0) {
+        finalPetSpecies = sArr.join(", ");
+        finalPetNames = nArr.join(", ");
+        finalPetCodes = cArr.join(", ");
+    } else {
+        finalPetSpecies = "유";
+        finalPetNames = "-";
+        finalPetCodes = "-";
+    }
+} else {
+    finalPetSpecies = "";
+    finalPetNames = "";
+    finalPetCodes = "";
+}
+
 const clientObj = {
     "고객번호": document.getElementById("base-cust-id").value,
     "고객명": formData.get("고객명") || (existingClient ? existingClient["고객명"] : "무명고객"),
@@ -4492,10 +4534,10 @@ const clientObj = {
     "주소": fullAddress || (existingClient ? existingClient["주소"] : ""),
     "운전여부": isDriveChecked ? "운전" : "비운전",
     "차량용도": carTypesSelected.length > 0 ? carTypesSelected.join(", ") : (isDriveChecked && existingClient ? (existingClient["차량용도"] || "-") : "-"),
-    "반려동물": formData.get("반려동물") || (existingClient ? existingClient["반려동물"] : ""),
-    "동물이름": formData.get("동물이름") || (existingClient ? existingClient["동물이름"] : ""),
+    "반려동물": finalPetSpecies,
+    "동물이름": finalPetNames,
     "가족사항": formData.get("가족사항") || (existingClient ? existingClient["가족사항"] : ""),
-    "코드": formData.get("코드") || (existingClient ? existingClient["코드"] : ""),
+    "코드": finalPetCodes,
     "터치인사이트": touchInsightVal,
     "특이사항": formData.get("특이사항") || (existingClient ? existingClient["특이사항"] : ""),
     "가입내역": finalGainHistory,
@@ -4591,6 +4633,162 @@ window.copyJumin = function(val, mask = false) {
 };
 
 // ==========================================
+
+// ==========================================
+// [반려동물 다중 등록 & 복원 관리 모듈]
+// ==========================================
+window.parsePetData = function(speciesRaw, namesRaw, codesRaw) {
+    if (!speciesRaw && !namesRaw && !codesRaw) return [];
+    const sList = speciesRaw ? String(speciesRaw).split(/[,/]/).map(s => s.trim()) : [];
+    const nList = namesRaw ? String(namesRaw).split(/[,/]/).map(s => s.trim()) : [];
+    const cList = codesRaw ? String(codesRaw).split(/[,/]/).map(s => s.trim()) : [];
+    const count = Math.max(sList.length, nList.length, cList.length);
+    const pets = [];
+    for (let i = 0; i < count; i++) {
+        const s = sList[i] || '';
+        const n = nList[i] === '-' ? '' : (nList[i] || '');
+        const c = cList[i] === '-' ? '' : (cList[i] || '');
+        let type = '강아지';
+        let breed = s;
+        const m = s.match(/^(강아지|고양이|기타)\s*(?:\((.*)\))?$/);
+        if (m) {
+            type = m[1];
+            breed = m[2] || '';
+        } else if (s.includes('고양이') || s.includes('묘')) {
+            type = '고양이';
+            breed = s.replace(/고양이|묘|\(|\)/g, '').trim();
+        } else if (s.includes('강아지') || s.includes('견')) {
+            type = '강아지';
+            breed = s.replace(/강아지|견|\(|\)/g, '').trim();
+        } else if (s === '유' || s === '있음') {
+            type = '강아지';
+            breed = '';
+        }
+        if (type || breed || n || c) {
+            pets.push({ type, breed, name: n, code: c });
+        }
+    }
+    return pets;
+};
+
+window.handlePetToggle = function(checked) {
+    const f = document.getElementById('pet-fields');
+    const label = document.getElementById('has-pet-label');
+    if (!f) return;
+    if (checked) {
+        f.style.display = 'flex';
+        setTimeout(() => f.style.opacity = '1', 10);
+        if (label) {
+            label.innerText = '반려동물 등록 (여러 마리 가능)';
+            label.style.color = '#2563eb';
+        }
+        const list = document.getElementById('pet-rows-list');
+        if (list && list.children.length === 0) {
+            window.addPetRow();
+        }
+    } else {
+        f.style.opacity = '0';
+        setTimeout(() => f.style.display = 'none', 200);
+        if (label) {
+            label.innerText = '반려동물 없음';
+            label.style.color = '#64748b';
+        }
+    }
+};
+
+window.addPetRow = function(data) {
+    const list = document.getElementById('pet-rows-list');
+    if (!list) return;
+    const pet = data || { type: '강아지', breed: '', name: '', code: '' };
+    const row = document.createElement('div');
+    row.className = 'pet-row-item';
+    row.style.cssText = 'display:flex; gap:8px; align-items:center;';
+    
+    row.innerHTML = `
+        <select class="form-input pet-type-select" style="flex:0 0 100px; padding:7px 8px; font-weight:600; font-size:12.5px; border-radius:6px; background:#fff;">
+            <option value="강아지" ${pet.type === '강아지' ? 'selected' : ''}>🐶 강아지</option>
+            <option value="고양이" ${pet.type === '고양이' ? 'selected' : ''}>🐱 고양이</option>
+            <option value="기타" ${pet.type === '기타' ? 'selected' : ''}>🐾 기타</option>
+        </select>
+        <input type="text" class="form-input pet-breed-input" value="${(pet.breed || '').replace(/"/g, '&quot;')}" placeholder="품종 (예: 말티즈, 푸들, 코숏)" style="flex:1; padding:7px 10px; font-size:12.5px; border-radius:6px; background:#fff;">
+        <input type="text" class="form-input pet-name-input" value="${(pet.name || '').replace(/"/g, '&quot;')}" placeholder="이름 (예: 뽀삐, 나비)" style="flex:1; padding:7px 10px; font-size:12.5px; border-radius:6px; background:#fff;">
+        <input type="text" class="form-input pet-code-input" value="${(pet.code || '').replace(/"/g, '&quot;')}" placeholder="동물 등록번호(선택)" style="flex:1.2; padding:7px 10px; font-size:12.5px; border-radius:6px; background:#fff;">
+        <button type="button" onclick="window.removePetRow(this)" title="삭제" style="flex:0 0 45px; height:34px; border:1px solid #fee2e2; background:#fef2f2; color:#ef4444; border-radius:6px; cursor:pointer; font-size:12px; display:inline-flex; align-items:center; justify-content:center; transition:0.15s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+            <i class="fa-solid fa-trash-can"></i>
+        </button>
+    `;
+    list.appendChild(row);
+};
+
+window.removePetRow = function(btn) {
+    const row = btn.closest('.pet-row-item');
+    if (!row) return;
+    const list = document.getElementById('pet-rows-list');
+    row.remove();
+    if (list && list.children.length === 0) {
+        window.addPetRow();
+    }
+};
+
+window.restorePetRows = function(client) {
+    const petCb = document.getElementById('has-pet-cb');
+    const list = document.getElementById('pet-rows-list');
+    if (list) list.innerHTML = '';
+    
+    if (!client) {
+        if (petCb) {
+            petCb.checked = false;
+            window.handlePetToggle(false);
+        }
+        return;
+    }
+    
+    const sRaw = client['반려동물'] || '';
+    const nRaw = client['동물이름'] || '';
+    const cRaw = client['코드'] || '';
+    
+    const pets = window.parsePetData(sRaw, nRaw, cRaw);
+    const hasAny = (pets.length > 0) || (sRaw && sRaw !== '무' && sRaw !== '없음' && sRaw !== '-' && sRaw !== 'x');
+    
+    if (petCb) {
+        petCb.checked = hasAny;
+        window.handlePetToggle(hasAny);
+    }
+    
+    if (hasAny && list) {
+        list.innerHTML = '';
+        if (pets.length > 0) {
+            pets.forEach(p => window.addPetRow(p));
+        } else {
+            window.addPetRow();
+        }
+    }
+};
+
+window.renderPetProfileHtml = function(client) {
+    if (!client) return '<span style="color:#94a3b8; font-weight:500;">-</span>';
+    const sRaw = client['반려동물'] || '';
+    const nRaw = client['동물이름'] || '';
+    const cRaw = client['코드'] || '';
+    const pets = window.parsePetData(sRaw, nRaw, cRaw);
+    if (!pets || pets.length === 0) {
+        if (sRaw && sRaw !== '-' && sRaw !== '무' && sRaw !== '없음') {
+            return '<span style="color:#1e293b; font-weight:600;">' + sRaw + (nRaw ? ' (' + nRaw + ')' : '') + (cRaw ? ' / 코드: ' + cRaw : '') + '</span>';
+        }
+        return '<span style="color:#94a3b8; font-weight:500;">등록된 반려동물 없음</span>';
+    }
+    return pets.map(p => {
+        const icon = p.type === '고양이' ? 'fa-cat' : (p.type === '기타' ? 'fa-paw' : 'fa-dog');
+        const breedStr = p.breed ? '(' + p.breed + ')' : '';
+        const nameStr = p.name ? '<strong>' + p.name + '</strong>' : '<span style="color:#94a3b8;">이름 미입력</span>';
+        const codeStr = (p.code && p.code !== '-') ? '<span style="font-size:12px; color:#64748b; margin-left:4px; font-weight:normal;">[등록: ' + p.code + ']</span>' : '';
+        return '<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px dashed #f1f5f9; font-size:14px; color:#1e293b;">' +
+            '<i class="fa-solid ' + icon + '" style="color:#3b82f6; width:16px;"></i>' +
+            '<span>' + p.type + breedStr + ' : ' + nameStr + ' ' + codeStr + '</span>' +
+        '</div>';
+    }).join('');
+};
+
 // [보안 & 편의] 주민번호 대화형 UI 렌더러 (기본 뒷자리 마스킹, 보기/숨기기 토글, 전체/앞부분 선택 복사)
 // ==========================================
 function renderJuminInteractive(rawVal, uniqueId) {
@@ -8243,8 +8441,8 @@ window.generateProfileHtml = function(client) {
                             ` + familyPillsHtml + `
                         </div>
                         <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                            <h4 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;"><i class="fa-solid fa-dog" style="color:#64748b; margin-right:6px;"></i> 반려동물 (등록코드)</h4>
-                            <div style="color: #475569; font-size: 15px; font-weight:600;">` + (client["반려동물"] || "-") + ` ` + (client["동물이름"] ? `(` + client["동물이름"] + `)` : "") + (client["코드"] ? ` / 코드: ` + client["코드"] : "") + `</div>
+                            <h4 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;"><i class="fa-solid fa-paw" style="color:#3b82f6; margin-right:6px;"></i> 반려동물 정보</h4>
+                            <div style="color: #475569; font-size: 14px; font-weight:600;">` + (typeof window.renderPetProfileHtml === 'function' ? window.renderPetProfileHtml(client) : ((client["반려동물"] || "-") + " " + (client["동물이름"] || ""))) + `</div>
                         </div>
                         <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                             <h4 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;"><i class="fa-solid fa-id-card-clip" style="color:#64748b; margin-right:6px;"></i> 운전여부</h4>

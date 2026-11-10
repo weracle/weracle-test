@@ -378,32 +378,33 @@ window.handleQuickEditSearch = function() {
         // Render Headers
         const tab = window.currentQuickEditTab || '1차';
         if (theadArea) {
+            const thStyle = 'padding:9px 10px; text-align:left; color:#475569; font-weight:700; font-size:12px; white-space:nowrap; letter-spacing:-0.3px;';
             if (tab === '1차') {
                 theadArea.innerHTML = `
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">고객명</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">진행상태</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">연령/성별</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">생년월일</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">연락처</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">운전</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">반려동물</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">직업</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">주소</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">특이사항</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">가족사항</th>
+                    <th style="${thStyle}">고객명</th>
+                    <th style="${thStyle}">진행상태</th>
+                    <th style="${thStyle}">연령/성별</th>
+                    <th style="${thStyle}">생년월일</th>
+                    <th style="${thStyle}">연락처</th>
+                    <th style="${thStyle}">운전</th>
+                    <th style="${thStyle}">반려동물</th>
+                    <th style="${thStyle}">직업</th>
+                    <th style="${thStyle}">주소</th>
+                    <th style="${thStyle}">특이사항</th>
+                    <th style="${thStyle}">가족사항</th>
                 `;
             } else if (tab === '터치') {
                 theadArea.innerHTML = `
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700; width:120px;">고객명</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700; width:100px;">진행상태</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">터치 인사이트 (우선순위 추천)</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">상담 메모</th>
+                    <th style="${thStyle} width:110px;">고객명</th>
+                    <th style="${thStyle} width:90px;">진행상태</th>
+                    <th style="${thStyle}">터치 인사이트 (우선순위 추천)</th>
+                    <th style="${thStyle}">상담 메모</th>
                 `;
             } else if (tab === '보험') {
                 theadArea.innerHTML = `
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700; width:120px;">고객명</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700; width:100px;">진행상태</th>
-                    <th style="padding:12px 14px; text-align:left; color:#475569; font-weight:700;">가입 증권 / 상품 내역</th>
+                    <th style="${thStyle} width:110px;">고객명</th>
+                    <th style="${thStyle} width:90px;">진행상태</th>
+                    <th style="${thStyle}">가입 증권 / 상품 내역</th>
                 `;
             }
         }
@@ -429,7 +430,7 @@ window.handleQuickEditSearch = function() {
                 const driver = (driveStatus !== '-' ? driveStatus : '') + carUsage || '-';
                 const hasPet = (c['반려동물'] && c['반려동물'] !== '무' && c['반려동물'] !== '없음');
                 const pet = hasPet 
-                            ? `<span style="color:#d97706; font-weight:700;">🐾 ${c['반려동물']}</span>` 
+                            ? `<span style="color:#d97706; font-weight:700;">${c['반려동물']}</span>` 
                             : '<span style="color:#94a3b8;">-</span>';
                 const job = (c['직업'] || '-') + (c['상세직무'] ? ` (${c['상세직무']})` : '');
                 const addr = c['주소'] || '-';
@@ -448,17 +449,17 @@ window.handleQuickEditSearch = function() {
                 
                 if (tab === '1차') {
                     tbHtml += `
-                        <td style="padding:12px 14px; font-weight:800; color:#1e293b;" onclick="if(typeof openProfile==='function'){openProfile('${id}');}else if(typeof showMasterDetail==='function'){showMasterDetail('${id}');}">${name}</td>
-                        <td style="padding:12px 14px;"><span style="display:inline-block; padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:700; background:${statusBg}; color:${statusColor};">${status}</span></td>
-                        <td style="padding:12px 14px; color:#475569; font-size:13px;">${ageGender}</td>
-                        <td style="padding:12px 14px; color:#475569; font-size:13px;">${birth}</td>
-                        <td style="padding:12px 14px; color:#0284c7; font-weight:700; font-size:13px;">${phone}</td>
-                        <td style="padding:12px 14px; color:#475569; font-size:13px;">${driver}</td>
-                        <td style="padding:12px 14px; color:#475569; font-size:13px;">${pet}</td>
-                        <td style="padding:12px 14px; color:#475569; font-size:13px;">${job}</td>
-                        <td style="padding:12px 14px; color:#64748b; font-size:12.5px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${addr}">${addr}</td>
-                        <td style="padding:12px 14px; color:#64748b; font-size:12.5px; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${memo}">${memo}</td>
-                        <td style="padding:12px 14px; color:#64748b; font-size:12.5px;">${family}</td>
+                        <td style="padding:9px 10px; font-weight:800; color:#1e293b; font-size:12.5px; white-space:nowrap;" onclick="if(typeof openProfile==='function'){openProfile('${id}');}else if(typeof showMasterDetail==='function'){showMasterDetail('${id}');}">${name}</td>
+                        <td style="padding:9px 10px; white-space:nowrap;"><span style="display:inline-block; padding:2px 7px; border-radius:5px; font-size:11px; font-weight:700; background:${statusBg}; color:${statusColor};">${status}</span></td>
+                        <td style="padding:9px 10px; color:#475569; font-size:12px; white-space:nowrap;">${ageGender}</td>
+                        <td style="padding:9px 10px; color:#475569; font-size:12px; white-space:nowrap;">${birth}</td>
+                        <td style="padding:9px 10px; color:#0284c7; font-weight:700; font-size:12px; white-space:nowrap;">${phone}</td>
+                        <td style="padding:9px 10px; color:#475569; font-size:12px; white-space:nowrap;">${driver}</td>
+                        <td style="padding:9px 10px; color:#475569; font-size:12px; white-space:nowrap;">${pet}</td>
+                        <td style="padding:9px 10px; color:#475569; font-size:12px; white-space:nowrap;">${job}</td>
+                        <td style="padding:9px 10px; color:#64748b; font-size:12px; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${addr}">${addr}</td>
+                        <td style="padding:9px 10px; color:#64748b; font-size:12px; max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${memo}">${memo}</td>
+                        <td style="padding:9px 10px; color:#64748b; font-size:12px; white-space:nowrap;">${family}</td>
                     `;
                 } else if (tab === '터치') {
                     tbHtml += `
@@ -507,7 +508,7 @@ window.handleQuickEditSearch = function() {
                     if (job && job !== '-') tagItems += `<span style="background:#eff6ff; color:#1e40af; border:1px solid #dbeafe; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-briefcase"></i> ${job}</span>`;
                     const isDriver = (c['운전여부'] === '운전' || (c['운전'] && c['운전'] !== '무' && c['운전'] !== '없음' && c['운전'] !== '비운전'));
                     if (isDriver) tagItems += `<span style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-car"></i> ${driver}</span>`;
-                    if (hasPet) tagItems += `<span style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;">🐾 ${c['반려동물']}</span>`;
+                    if (hasPet) tagItems += `<span style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;">${c['반려동물']}</span>`;
 
                     mobileCardHtml += `
                         ${tagItems ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:7px;">${tagItems}</div>` : ''}

@@ -1236,20 +1236,21 @@ function openDayDetailModal(fullDateStr) {
 
     // 1. Google Personal Events (1줄 컴팩트)
     dayGoogle.forEach(e => {
-      const timeStr = e.isAllDay ? '종일' : (e.timeStr || '');
-      const noteStr = e.note ? ` · ${escapeHtml(e.note)}` : '';
+      const timeStr = e.isAllDay ? '종일' : (e.timeText || e.timeStr || '');
+      const eventTitle = e.name || e.summary || e.title || '구글 일정';
+      const descStr = (e.description || e.note) ? ` · ${escapeHtml(e.description || e.note)}` : '';
       rowsHtml += `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 18px; border-bottom:1px solid #f1f5f9; gap:12px; font-size:13px; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid #f1f5f9; gap:10px; font-size:13px; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">
           <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
             <span style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; font-weight:800; padding:2px 7px; border-radius:4px; flex-shrink:0;">
               🟢 일정
             </span>
-            ${timeStr ? `<span style="font-size:12px; font-weight:700; color:#059669; flex-shrink:0;">${escapeHtml(timeStr)}</span>` : ''}
-            <span style="font-weight:800; color:#0f172a; flex-shrink:0;">${escapeHtml(e.title || '일정')}</span>
-            <span style="font-size:12px; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${noteStr}</span>
+            ${timeStr ? `<span style="font-size:12px; font-weight:700; color:#059669; flex-shrink:0;">[${escapeHtml(timeStr)}]</span>` : ''}
+            <span style="font-weight:800; color:#0f172a; flex-shrink:0;">${escapeHtml(eventTitle)}</span>
+            <span style="font-size:12px; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${descStr}</span>
           </div>
           <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
-            <button type="button" class="modal-btn secondary" style="padding:4px 8px; font-size:11.5px;" onclick="closeDayDetailModal(); openGoogleEventDetail('${e.id}')">상세</button>
+            <button type="button" class="modal-btn secondary" style="padding:4px 9px; font-size:11.5px;" onclick="closeDayDetailModal(); openGoogleEventDetail('${e.id}')">상세</button>
           </div>
         </div>
       `;
@@ -1273,18 +1274,21 @@ function openDayDetailModal(fullDateStr) {
         badgeLabel = "💳 결제";
       }
 
+      const clientName = e.name || '고객';
       const phone = e.phone || '';
-      let descStr = '';
-      if (e.prod) descStr += `[${e.prod}]`;
-      if (phone) descStr += (descStr ? ' · ' : '') + phone;
+      let descParts = [];
+      if (e.prod) descParts.push(`[${e.prod}]`);
+      if (phone) descParts.push(phone);
+      if (e.note && !e.prod) descParts.push(e.note);
+      const descStr = descParts.join(' · ');
 
       rowsHtml += `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 18px; border-bottom:1px solid #f1f5f9; gap:12px; font-size:13px; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid #f1f5f9; gap:10px; font-size:13px; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">
           <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
             <span style="${badgeStyle} font-size:11px; font-weight:800; padding:2px 7px; border-radius:4px; flex-shrink:0;">
               ${badgeLabel}
             </span>
-            <span style="font-weight:800; color:#0f172a; flex-shrink:0;">${escapeHtml(e.name || '')}</span>
+            <span style="font-weight:800; color:#0f172a; flex-shrink:0;">${escapeHtml(clientName)}</span>
             <span style="font-size:12px; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${escapeHtml(descStr)}</span>
           </div>
           <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">

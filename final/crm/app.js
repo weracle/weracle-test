@@ -2097,6 +2097,28 @@ return [];
 }
 }
 // ==========================================
+
+window.findCustomerByNameOrId = function(name, idVal) {
+    const clean = (s) => String(s || '').replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, '');
+    const pureName = clean(name);
+    const pureId = String(idVal || '').trim();
+    if (window.familyState && window.familyState.length > 0) {
+        let f = window.familyState.find(x => {
+            if (pureId && (String(x.id) === pureId || (x.data && String(x.data["고객번호"]) === pureId))) return true;
+            return clean(x.data && x.data["고객명"]) === pureName;
+        });
+        if (f && f.data) return f.data;
+    }
+    if (window.globalCustomerData && window.globalCustomerData.length > 0) {
+        let c = window.globalCustomerData.find(x => {
+            if (pureId && (String(x["고객번호"]) === pureId || String(x["UID"]) === pureId)) return true;
+            return clean(x["고객명"]) === pureName;
+        });
+        if (c) return c;
+    }
+    return null;
+};
+
 // 5. CRM 고객 CRUD 핵심 연동 구현
 // ==========================================
 
@@ -2297,27 +2319,67 @@ async function saveClientToServer(clientObj, insRows) {
                 const insResp = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: `'${targetInsTab}'!A2:AC` });
                 allInsRows = insResp.result.values || [];
             }
+            
+            const cleanCustName = (n) => String(n || '').replace(/\s*\([^)]*\)/g, '').trim();
+
+            // 1. Gather all family IDs and relevant customer IDs to remove obsolete insurance rows
+            const targetIdsToRemove = new Set([
+                String(clientObj["고객번호"] || "").trim(),
+                String(curEditId || "").trim()
+            ]);
+            if (window.familyState && window.familyState.length > 0) {
+                window.familyState.forEach(f => {
+                    if (f.id) targetIdsToRemove.add(String(f.id).trim());
+                    if (f.data && f.data["고객번호"]) targetIdsToRemove.add(String(f.data["고객번호"]).trim());
+                });
+            }
+            if (insRows && insRows.length > 0) {
+                insRows.forEach(insObj => {
+                    const cN = insObj["계약자"] || insObj["차_계약자"] || "";
+                    const cI = insObj["계약자_id"] || insObj["차_계약자_id"] || "";
+                    const matchedC = (typeof window.findCustomerByNameOrId === 'function') ? window.findCustomerByNameOrId(cN, cI) : null;
+                    if (matchedC && matchedC["고객번호"]) targetIdsToRemove.add(String(matchedC["고객번호"]).trim());
+                });
+            }
+
             allInsRows = allInsRows.filter(row => {
                 const rowId = String(row[0] || "").trim();
-                const clientId = String(clientObj["고객번호"] || clientObj["사업자번호"] || clientObj["ID"] || "").trim();
-                if (clientId && rowId === clientId) return false;
-                if (curEditId && rowId === String(curEditId).trim()) return false;
-                return true;
+                if (!rowId) return true;
+                return !targetIdsToRemove.has(rowId);
             });
             
-            // 항시 보험관리 탭용 배열로 매핑
+            // 2. Properly route and format each insurance contract based on its actual policyholder (계약자)
+            let formattedInsRows = [];
             if (insRows && insRows.length > 0) {
-                let formattedInsRows = insRows.map(insObj => {
+                formattedInsRows = insRows.map(insObj => {
+                    const cName = insObj["계약자"] || insObj["차_계약자"] || "";
+                    const cId = insObj["계약자_id"] || insObj["차_계약자_id"] || "";
+                    const iName = insObj["피보험자"] || insObj["차_피보험자"] || "";
+                    const iId = insObj["피보험자_id"] || insObj["차_피보험자_id"] || "";
+
+                    const cClient = ((typeof window.findCustomerByNameOrId === 'function') ? window.findCustomerByNameOrId(cName, cId) : null) || clientObj;
+                    const iClient = ((typeof window.findCustomerByNameOrId === 'function') ? window.findCustomerByNameOrId(iName, iId) : null) || cClient;
+
+                    // Calculate accurate composite or single UID
+                    const cUid = cClient["UID"] || insObj["UID"] || clientObj["UID"] || "";
+                    const iUid = iClient["UID"] || insObj["UID"] || cUid;
+                    
+                    let finalUid = "";
+                    if (cleanCustName(cName) === cleanCustName(iName) || cUid === iUid || !iUid) {
+                        finalUid = cUid;
+                    } else {
+                        finalUid = `${iUid}_${cUid}`;
+                    }
+                    insObj["UID"] = finalUid;
+
                     return insHeaders.map(h => {
-                        if (h === "고객번호") return clientObj["고객번호"];
-                        if (h === "UID") {
-                            return insObj["UID"] || insObj["uid"] || clientObj["UID"];
-                        }
-                        if (h === "고객명" || h === "이름") return clientObj["고객명"] || clientObj["이름"] || clientObj["대표자명"] || "";
-                        if (h === "주민번호") return clientObj["주민번호"] || clientObj["대표자 생일"] || "";
+                        if (h === "고객번호") return cClient["고객번호"] || clientObj["고객번호"];
+                        if (h === "UID") return finalUid;
+                        if (h === "고객명" || h === "이름") return cClient["고객명"] || cClient["이름"] || cClient["대표자명"] || clientObj["고객명"] || "";
+                        if (h === "주민번호") return cClient["주민번호"] || clientObj["주민번호"] || "";
                         let val = "";
-                        if (h === "계약자") val = insObj["계약자"] || insObj["차_계약자"] || "";
-                        else if (h === "피보험자") val = insObj["피보험자"] || insObj["차_피보험자"] || "";
+                        if (h === "계약자") val = cName || cClient["고객명"] || "";
+                        else if (h === "피보험자") val = iName || iClient["고객명"] || "";
                         else if (h === "보험사명") val = insObj["보험사명"] || insObj["차_보험사명"] || "";
                         else if (h === "상품명") val = insObj["상품명"] || insObj["차_상품명"] || "";
                         else if (h === "결제방식") val = insObj["결제방식"] || insObj["차_결제방식"] || "";
@@ -2330,34 +2392,55 @@ async function saveClientToServer(clientObj, insRows) {
                 });
                 allInsRows.push(...formattedInsRows);
             }
-            if (window._routedMap && Object.keys(window._routedMap).length > 0) {
-                for (let tIdx in window._routedMap) {
-                    let tClient = globalCustomerData[tIdx];
-                    let tInsRows = window._routedMap[tIdx];
-                    let formattedTarget = tInsRows.map(insObj => {
-                        return insHeaders.map(h => {
-                            if (h === "고객번호") return tClient["고객번호"];
-                            if (h === "UID") {
-                                return insObj["UID"] || insObj["uid"] || tClient["UID"];
-                            }
-                            if (h === "고객명" || h === "이름") return tClient["고객명"] || tClient["이름"] || tClient["대표자명"] || "";
-                            if (h === "주민번호") return tClient["주민번호"] || tClient["대표자 생일"] || "";
-                            let val = "";
-                            if (h === "계약자") val = insObj["계약자"] || insObj["차_계약자"] || "";
-                            else if (h === "피보험자") val = insObj["피보험자"] || insObj["차_피보험자"] || "";
-                            else if (h === "보험사명") val = insObj["보험사명"] || insObj["차_보험사명"] || "";
-                            else if (h === "상품명") val = insObj["상품명"] || insObj["차_상품명"] || "";
-                            else if (h === "결제방식") val = insObj["결제방식"] || insObj["차_결제방식"] || "";
-                            else if (h === "체결일") val = insObj["체결일"] || insObj["책임개시일"] || "";
-                            else if (h === "결제일") val = insObj["결제일"] || insObj["차_결제일"] || "";
-                            else if (h === "결제정보") val = insObj["결제정보"] || insObj["차_결제정보"] || "";
-                            else val = insObj[h] !== undefined ? insObj[h] : "";
-                            return typeof val === 'object' ? JSON.stringify(val) : val;
-                        });
+
+            // 3. Update each family member's row in weraclecrm sheet with their relevant insurances
+            if (window.familyState && window.familyState.length > 0) {
+                for (const f of window.familyState) {
+                    const fmId = String(f.data["고객번호"] || f.id).trim();
+                    const fmName = cleanCustName(f.data["고객명"]);
+                    const fmIns = insRows.filter(ins => {
+                        const cN = cleanCustName(ins["계약자"] || ins["차_계약자"]);
+                        const iN = cleanCustName(ins["피보험자"] || ins["차_피보험자"]);
+                        const cI = String(ins["계약자_id"] || ins["차_계약자_id"] || "").trim();
+                        const iI = String(ins["피보험자_id"] || ins["차_피보험자_id"] || "").trim();
+                        return cN === fmName || iN === fmName || cI === fmId || iI === fmId;
                     });
-                    allInsRows.push(...formattedTarget);
+                    
+                    const fmInsJson = fmIns.length > 0 ? JSON.stringify(fmIns) : "";
+                    f.data["가입내역"] = fmInsJson;
+                    f.data["보험가입리스트"] = fmIns;
+                    
+                    const gIdx = globalCustomerData.findIndex(c => String(c["고객번호"] || "").trim() === fmId);
+                    if (gIdx !== -1) {
+                        globalCustomerData[gIdx]["가입내역"] = fmInsJson;
+                        globalCustomerData[gIdx]["보험가입리스트"] = fmIns;
+                        
+                        if (fmId !== String(clientObj["고객번호"]).trim()) {
+                            const fmClient = globalCustomerData[gIdx];
+                            const fmRow = fmClient.rowNumber;
+                            if (fmRow && !isDemoMode && typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets) {
+                                try {
+                                    const fmHeaders = getCrmHeaders(fmClient.sheetName || "weraclecrm");
+                                    const fmValues = fmHeaders.map(h => fmClient[h] !== undefined ? fmClient[h] : "");
+                                    await gapi.client.sheets.spreadsheets.values.update({
+                                        spreadsheetId,
+                                        range: `'${fmClient.sheetName || "weraclecrm"}'!A${fmRow}`,
+                                        valueInputOption: "USER_ENTERED",
+                                        resource: { values: [fmValues] }
+                                    });
+                                } catch(err) {
+                                    console.warn("Family member weraclecrm row update failed:", err);
+                                }
+                            }
+                        }
+                    }
                 }
             }
+
+            try {
+                localStorage.setItem("weracle_crm_insurance_cache", JSON.stringify(allInsRows));
+            } catch(e) {}
+
             if (window.isFamilySubmitInProgress) { window.familyInsRowsCache = allInsRows; }
             await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `'${targetInsTab}'!A2:AC` });
             if (allInsRows.length > 0) {
@@ -4169,7 +4252,10 @@ function loadCustomerForFamily(task) {
     setFormVal("가입내역", gainVal);
 
     // 5. 다중 보험 내역 카드 복원 로직
-    let list = getGlobalInsuranceList(client, false);
+    let list = getGlobalInsuranceList(client, true);
+    if ((!list || list.length === 0) && Array.isArray(client["보험가입리스트"]) && client["보험가입리스트"].length > 0) {
+        list = getGlobalInsuranceList({ ...client, "가입내역": client["보험가입리스트"] }, true);
+    }
     let legacyAlril = null;
     if (client["알릴의무사항"]) {
         try {
@@ -8741,10 +8827,10 @@ window.generateInsListHtml = function(client) {
                     '</div>';
                 }).join('');
             } else {
-                insHtml = String(rawIns).replace(/\n/g, '<br>');
+                insHtml = '<div style="color: #94a3b8; font-size: 14px; font-weight: 600; padding: 20px 0;">등록된 보험 가입내역이 없습니다.</div>';
             }
         } catch (e) {
-            insHtml = String(rawIns).replace(/\n/g, '<br>');
+            insHtml = '<div style="color: #94a3b8; font-size: 14px; font-weight: 600; padding: 20px 0;">등록된 보험 가입내역이 없습니다.</div>';
         }
     return insHtml;
 }

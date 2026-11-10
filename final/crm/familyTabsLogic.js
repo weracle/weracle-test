@@ -495,11 +495,17 @@ function loadStateToForm(personId) {
     if (insListDom) {
         if (target.insHtml) {
             insListDom.innerHTML = target.insHtml;
-        } else if (target.data["가입내역"]) {
+        } else if (target.data["가입내역"] || (target.data["보험가입리스트"] && target.data["보험가입리스트"].length > 0)) {
             // If insHtml is empty but data exists (e.g. loaded from DB), regenerate it!
             insListDom.innerHTML = '';
             try {
-                const insArr = typeof target.data["가입내역"] === 'string' ? JSON.parse(target.data["가입내역"]) : target.data["가입내역"];
+                let insArr = [];
+                if (target.data["가입내역"]) {
+                    insArr = typeof target.data["가입내역"] === 'string' ? JSON.parse(target.data["가입내역"]) : target.data["가입내역"];
+                }
+                if ((!Array.isArray(insArr) || insArr.length === 0) && Array.isArray(target.data["보험가입리스트"])) {
+                    insArr = target.data["보험가입리스트"];
+                }
                 if (Array.isArray(insArr) && typeof window.addInsuranceFields === 'function') {
                     window.insCount = 0;
                     insArr.forEach(ins => window.addInsuranceFields(ins));

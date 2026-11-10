@@ -2431,7 +2431,7 @@ const safeJumin = String(formatJumin(member["주민번호"] || member["사업자
             <div class="detail-item"><strong>사업자번호 / 설립일</strong><span>${member["사업자번호"] || "-"} / ${member["설립일"] || "-"}</span></div>
             <div class="detail-item"><strong>법인번호 / 법인명</strong><span>${member["법인번호"] || "-"} / ${member["법인명"] || "-"}</span></div>
             <div class="detail-item"><strong>대표업종 / 상태</strong><span>${member["대표업종"] || member["대표업태"] || "-"} / ${member["상태"] || "-"}</span></div>
-            <div class="detail-item"><strong>대표자명 / 주민번호</strong><span>${member["대표자명"] || "-"} / ${member["대표자주민번호"] ? renderJuminInteractive(member["대표자주민번호"], 'fam-corp-' + (member["고객번호"] || (rowId + '-m-' + (mIdx || '0')))) : "-"}</span></div>
+            <div class="detail-item"><strong>대표자명 / 주민번호</strong><span>${member["대표자명"] || "-"} / ${member["대표자주민번호"] ? renderJuminInteractive(member["대표자주민번호"], 'fam-corp-' + (member["고객번호"] || mId || '0')) : "-"}</span></div>
             <div class="detail-item" style="grid-column: 1 / -1;"><strong>사업장주소(대표주소)</strong><span>${member["사업장주소"] || member["대표주소"] || member["주소"] || "-"}</span></div>
             <div class="detail-item"><strong>폰번호 / 회사전화번호</strong><span>${formatPhone(member["대표자폰번호"] || member["대표자핸드폰"] || member["대표핸드폰"]) || "-"} / ${formatPhone(member["사업자전화번호"] || member["사업장전화번호"] || member["회사전화번호"]) || "-"}</span></div>
             <div class="detail-item" style="grid-column: 1 / -1;"><strong>터치인사이트</strong><span>${cleanTouchInsight(member["터치인사이트"] || "-")}</span></div>
@@ -2441,7 +2441,7 @@ const safeJumin = String(formatJumin(member["주민번호"] || member["사업자
         info1Html = `<div class="detail-grid">
             <div class="detail-item"><strong>폰번호 / 상태</strong><span>${formatPhone(member["폰번호"] || "")} / ${member["상태"] || "-"}</span></div>
             <div class="detail-item"><strong>나이/성별/직업(상세)</strong><span>${member["나이"] ? member["나이"] + "세" : "-"} / ${member["성별"] || "-"} / ${member["직업"] || member["업태"] || "-"} (${member["상세업무"] || "-"})</span></div>
-            <div class="detail-item"><strong>주민번호</strong><span>${renderJuminInteractive(member["주민번호"] || member["사업자번호"], 'fam-' + (member["고객번호"] || (rowId + '-m-' + (mIdx || '0'))))}</span></div>
+            <div class="detail-item"><strong>주민번호</strong><span>${renderJuminInteractive(member["주민번호"] || member["사업자번호"], 'fam-' + (member["고객번호"] || mId || '0'))}</span></div>
             <div class="detail-item"><strong>생일 / 상령일</strong><span>${member["생일"] || "-"} / ${member["상령일"] || "-"}</span></div>
             <div class="detail-item" style="grid-column: 1 / -1;"><strong>상세 주소</strong><span>${member["주소"] || member["대표주소"] || "-"}</span></div>
         </div>`;
@@ -4641,7 +4641,7 @@ function renderJuminInteractive(rawVal, uniqueId) {
                 onclick="window.toggleJuminView('${uid}', event)" 
                 title="주민번호 뒷자리 보기/숨기기"
                 style="background:#f8fafc; color:#475569; border:1px solid #cbd5e1; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px; line-height:1; transition:all 0.15s;" 
-                onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background=(document.getElementById('jumin-val-${uid}') && document.getElementById('jumin-val-${uid}').getAttribute('data-shown') === 'true' ? '#eff6ff' : '#f8fafc')">
+                onmouseover="this.style.filter='brightness(0.92)'" onmouseout="this.style.filter='none'">
             <i class="fa-regular fa-eye" id="jumin-eye-${uid}" style="font-size:10.5px;"></i>
             <span id="jumin-toggle-label-${uid}">보기</span>
         </button>
@@ -4654,7 +4654,7 @@ function renderJuminInteractive(rawVal, uniqueId) {
                     onclick="window.toggleJuminCopyMenu('${uid}', event)" 
                     title="주민번호 복사 옵션"
                     style="background:#f1f5f9; color:#4f46e5; border:1px solid #c7d2fe; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px; line-height:1; transition:all 0.15s;" 
-                    onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#f1f5f9'">
+                    onmouseover="this.style.filter='brightness(0.92)'" onmouseout="this.style.filter='none'">
                 <i class="fa-regular fa-clone" style="font-size:10.5px;"></i>
                 <span>복사</span>
                 <i class="fa-solid fa-chevron-down" style="font-size:8px; margin-left:1px; opacity:0.8;"></i>
@@ -8218,7 +8218,7 @@ window.generateProfileHtml = function(client) {
                         <div style="display: flex; justify-content: space-between; align-items:center; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; margin-bottom: 16px;">
                             <span style="color: #64748b; font-size: 15px;">주민번호</span>
                             <span style="font-weight: 700; color: #1e293b; font-size: 15px; display:flex; align-items:center;">
-                                ` + renderJuminInteractive(client["주민번호"] || client["사업자번호"], 'pf-' + idStr) + `
+                                ` + renderJuminInteractive(client["주민번호"] || client["사업자번호"], 'pf-' + (client['고객번호'] || client['사업자번호'] || '0')) + `
                             </span>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; margin-bottom: 16px;">

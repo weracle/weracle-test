@@ -1261,17 +1261,10 @@ async function loadDataAndRender() {
       }
     }
 
-    // 3. Fallback to demo CRM data to ensure calendar is never blank
+    // 3. Fallback: If no CRM data exists, keep empty (no fake sample data)
     if (!crmData || crmData.length === 0) {
-      try {
-        const localData = localStorage.getItem('demo_crm_data');
-        if (localData) {
-          crmData = JSON.parse(localData);
-        } else {
-          crmData = getInitialMockData();
-          localStorage.setItem('demo_crm_data', JSON.stringify(crmData));
-        }
-      } catch(e) {}
+      crmData = [];
+      try { localStorage.removeItem('demo_crm_data'); } catch(e) {}
     }
   }
 
@@ -1280,47 +1273,7 @@ async function loadDataAndRender() {
 }
 
 function getInitialMockData() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  return [
-    {
-      '고객명': '김영수',
-      '폰번호': '010-3456-7890',
-      '주민번호': '880315-1******',
-      '생일': `${y}-${m}-15`,
-      '가입내역': JSON.stringify([
-        { '보험사명': '삼성화재', '상품명': '무배당 마이컴포트 종합보험', '만기일': `${y}-${m}-25`, '결제일': '15', '보험료': '125,000' }
-      ])
-    },
-    {
-      '고객명': '이정민',
-      '폰번호': '010-8765-4321',
-      '주민번호': '920820-2******',
-      '생일': `${y}-${m}-08`,
-      '가입내역': JSON.stringify([
-        { '보험사명': '현대해상', '상품명': '굿앤굿어린이종합보험', '만기일': `${y}-${m}-18`, '결제일': '20', '보험료': '89,000' }
-      ])
-    },
-    {
-      '고객명': '박서준',
-      '폰번호': '010-2345-6789',
-      '주민번호': '851125-1******',
-      '생일': `${y}-${m}-22`,
-      '가입내역': JSON.stringify([
-        { '보험사명': 'DB손해보험', '상품명': '프로미라이프 참좋은운전자보험', '만기일': `${y}-${m}-28`, '결제일': '10', '보험료': '45,000' }
-      ])
-    },
-    {
-      '고객명': '최유진',
-      '폰번호': '010-5678-1234',
-      '주민번호': '950610-2******',
-      '생일': `${y}-${m}-12`,
-      '가입내역': JSON.stringify([
-        { '보험사명': '메리츠화재', '상품명': '알파Plus보장보험', '만기일': `${y}-${m}-30`, '결제일': '25', '보험료': '160,000' }
-      ])
-    }
-  ];
+  return [];
 }
 
 async function initDashboard() {

@@ -993,7 +993,7 @@ window.addEventListener('error', function(e) {
     <!-- Center Speed Action Search Bar -->
     
     <!-- [1번 스타일] 고객 데이터 로딩 인디케이터 (초기 데이터 불러올 때만 깔끔하게 노출) -->
-    <div id="crm-initial-loading-indicator" style="display:none; margin: 0 auto 20px auto; max-width: 800px; background: #ffffff; border: 1.5px solid #bfdbfe; border-radius: 14px; padding: 13px 20px; box-shadow: 0 4px 12px rgba(59,130,246,0.08); align-items: center; justify-content: center; gap: 12px; transition: all 0.3s ease;">
+    <div id="crm-initial-loading-indicator" style="display:flex; margin: 0 auto 20px auto; max-width: 800px; background: #ffffff; border: 1.5px solid #bfdbfe; border-radius: 14px; padding: 13px 20px; box-shadow: 0 4px 12px rgba(59,130,246,0.08); align-items: center; justify-content: center; gap: 12px; transition: all 0.3s ease;">
         <div style="width: 20px; height: 20px; border: 2.5px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: crmSpinnerSpin 0.75s linear infinite; flex-shrink: 0;"></div>
         <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 13.5px; font-weight: 700; color: #1e293b;">고객 데이터를 불러오는 중...</span>
@@ -4060,9 +4060,9 @@ window.addEventListener('message', function(e) {
             el.innerText = total;
         });
         
-        // Hide initial loading indicator once data is updated
+        // Hide initial loading indicator ONLY when real customer data arrived
         const indicator = document.getElementById('crm-initial-loading-indicator');
-        if (indicator && (total > 0 || (window.globalCustomerData && Array.isArray(window.globalCustomerData)))) {
+        if (indicator && total > 0) {
             indicator.style.display = 'none';
         }
         return res;
@@ -4086,6 +4086,8 @@ function applyZeroCountsInitially() {
             window.updateQuickFilterCounts();
         }
         return;
+    } else {
+        if (indicator) indicator.style.display = 'flex';
     }
 
     if (total === 0) {

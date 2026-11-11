@@ -483,7 +483,7 @@
       <div class="insta-feed-grid" id="showroomGrid"></div>
     </section>
 
-    <!-- [탭 2] 실시간 광고 & 인스타그램 관리 (중복된 PR편집 버튼 제거 완료) -->
+    <!-- [탭 2] 실시간 광고 & 인스타그램 관리 -->
     <section id="view-manage" style="display:none;">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
         <div>
@@ -650,7 +650,7 @@
         </button>
       </div>
 
-      <!-- ★ 3. 실시간 DB 유입 알림톡 받을 내 휴대폰 번호 설정 -->
+      <!-- 3. 실시간 DB 유입 알림톡 받을 내 휴대폰 번호 설정 -->
       <div class="onboard-step-box" id="obBoxPhone" style="background:#f8fafc;">
         <div style="flex:1;">
           <div style="font-size:15px; font-weight:900; color:var(--text);">3. 신규 DB 유입 시 실시간 카카오 알림톡 받을 내 휴대폰 번호</div>
@@ -743,4 +743,785 @@
     <div class="modal-card">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:10px;">
-          <span id="wizardHeaderBadge" style="background:#eff6ff; color:var(--meta); font-weight:900; font-size:13px; padding:5px 12px; border-
+          <span id="wizardHeaderBadge" style="background:#eff6ff; color:var(--meta); font-weight:900; font-size:13px; padding:5px 12px; border-radius:20px;">
+            <i class="fa-brands fa-meta"></i> 메타 광고 세팅
+          </span>
+          <strong id="wizardHeaderTitle" style="font-size:17px; color:var(--navy);">콘텐츠 제목</strong>
+        </div>
+        <button class="btn-header-action" onclick="closeWizardModal()">✕ 닫기</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-left">
+          <div class="phone-mockup">
+            <div class="phone-notch">
+              <span>9:41</span>
+              <span id="phoneTopLabel">Instagram · Sponsored</span>
+              <span><i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-full"></i></span>
+            </div>
+
+            <div class="phone-screen-feed" id="phoneViewFeed">
+              <div class="ig-header">
+                <div class="ig-profile">
+                  <div class="ig-avatar"><div class="ig-avatar-inner">W</div></div>
+                  <div>
+                    <div class="ig-username" id="phoneIgName">내 인스타그램 계정</div>
+                    <div class="ig-sponsored" id="phoneSponsoredSub">Sponsored</div>
+                  </div>
+                </div>
+                <i class="fa-solid fa-ellipsis" style="color:#64748b;"></i>
+              </div>
+
+              <div class="phone-media-stage" id="phoneMediaStage"></div>
+
+              <div class="phone-cta-bar" id="phoneCtaBar">
+                <div style="display:flex; flex-direction:column; gap:2px; overflow:hidden; padding-right:8px;">
+                  <span id="phoneUrlDomainText" style="font-size:9.5px; color:#64748b; font-weight:700; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; display:none;"></span>
+                  <span id="phoneHeadlineText" style="font-size:12px; font-weight:900; color:var(--navy); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">지금 바로 무료 확인하기</span>
+                  <span id="phoneDescText" style="font-size:10.5px; color:#475569; font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">✔ 1분 무료 확인</span>
+                </div>
+                <span id="phoneCtaBtnLabel" style="background:var(--primary); color:#fff; padding:6px 10px; border-radius:7px; font-size:11px; font-weight:800; white-space:nowrap;">더 알아보기</span>
+              </div>
+
+              <div class="phone-caption-box" id="phoneCaptionText"></div>
+            </div>
+
+            <div class="phone-screen-form" id="phoneViewForm">
+              <div class="lead-form-card">
+                <div>
+                  <div style="font-size:11px; font-weight:800; color:var(--primary); margin-bottom:4px;" id="formPreviewModeBadge">⚡ 신청 양식 미리보기</div>
+                  <div style="font-size:15px; font-weight:900; color:var(--navy); margin-bottom:4px;" id="formPreviewTitle">무료 안내 자료 신청</div>
+                  <div style="font-size:11.5px; color:#475569; margin-bottom:14px;" id="formPreviewDesc">✔ 1분 무료 확인</div>
+
+                  <div style="background:#f1f5f9; padding:12px; border-radius:10px; margin-bottom:14px;">
+                    <div style="font-size:12px; font-weight:800; color:#334155; margin-bottom:8px;" id="formPreviewQuestion">
+                      Q. 어떤 안내를 가장 먼저 받아보고 싶으신가요?
+                    </div>
+                    <div style="font-size:12px; color:#475569; margin-bottom:5px;">🔘 핵심 요약 안내서(PDF 자료) 먼저 받기</div>
+                    <div style="font-size:12px; color:#475569;">⚪ 1:1 비대면 간편 상담 신청하기</div>
+                  </div>
+
+                  <div style="font-size:12px; font-weight:800; color:#334155; margin-bottom:8px;">고객 입력 항목</div>
+                  <div id="formPreviewFields" style="display:flex; flex-direction:column; gap:7px; margin-bottom:14px;"></div>
+                </div>
+
+                <div>
+                  <div style="font-size:11px; color:var(--sub); margin-bottom:10px;">☑️ 개인정보 수집 및 안내 연락 동의</div>
+                  <div style="background:var(--primary); color:#fff; text-align:center; padding:11px; border-radius:10px; font-size:13px; font-weight:800;">
+                    신청 완료하기
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="phone-home-indicator"><div class="phone-home-bar"></div></div>
+          </div>
+        </div>
+
+        <div class="modal-right">
+          <div style="display:flex; flex-direction:column; flex:1;">
+            <div class="step-indicator-bar" id="stepIndicatorBar"></div>
+
+            <!-- 메타 1단계: 17종 정밀 타겟 선택 -->
+            <div class="step-pane" id="pane-meta-1">
+              <h3 class="step-heading">1. 노출 타겟 선택 (마스터 시트 추천 타겟 & 메타 정밀 타겟팅 연동)</h3>
+
+              <div style="display:flex; flex-direction:column; justify-content:space-between; flex:1;">
+                <div class="target-section-spaced">
+                  <span class="target-label">👨‍👩‍👧 가족 · 생애주기</span>
+                  <div class="pill-group">
+                    <button type="button" class="pill-btn active" data-target-key="영유아" onclick="toggleTargetPill(this)">👶 영유아 부모 (0~2세)</button>
+                    <button type="button" class="pill-btn" data-target-key="미취학" onclick="toggleTargetPill(this)">🧒 미취학·초등 부모 (3~12세)</button>
+                    <button type="button" class="pill-btn" data-target-key="신혼" onclick="toggleTargetPill(this)">💍 신혼·결혼준비</button>
+                    <button type="button" class="pill-btn" data-target-key="1인 가구" onclick="toggleTargetPill(this)">🏠 1인 가구·자취</button>
+                  </div>
+                </div>
+
+                <div class="target-section-spaced">
+                  <span class="target-label">🏥 건강 · 의료 · 금융 관심사</span>
+                  <div class="pill-group">
+                    <button type="button" class="pill-btn active" data-target-key="건강검진" onclick="toggleTargetPill(this)">🏥 건강검진·병원·약국</button>
+                    <button type="button" class="pill-btn active" data-target-key="암·중증질환" onclick="toggleTargetPill(this)">💊 암·중증질환·수술 대비</button>
+                    <button type="button" class="pill-btn" data-target-key="치과" onclick="toggleTargetPill(this)">🦷 치과·임플란트·교정</button>
+                    <button type="button" class="pill-btn" data-target-key="부모님 효도" onclick="toggleTargetPill(this)">🧓 부모님 효도·치매·간병</button>
+                    <button type="button" class="pill-btn" data-target-key="보험·실손" onclick="toggleTargetPill(this)">💰 보험·실손·보장분석</button>
+                    <button type="button" class="pill-btn" data-target-key="재테크" onclick="toggleTargetPill(this)">📈 재테크·절세·연금·주식</button>
+                    <button type="button" class="pill-btn" data-target-key="내집마련" onclick="toggleTargetPill(this)">🏡 내집마련·부동산·아파트</button>
+                  </div>
+                </div>
+
+                <div class="target-section-spaced" style="margin-bottom:0;">
+                  <span class="target-label">🚗 라이프 · 사업자 · 채용</span>
+                  <div class="pill-group">
+                    <button type="button" class="pill-btn" data-target-key="자동차" onclick="toggleTargetPill(this)">🚗 자동차·운전자·신차구매</button>
+                    <button type="button" class="pill-btn" data-target-key="반려동물" onclick="toggleTargetPill(this)">🐶 반려동물 (강아지·고양이)</button>
+                    <button type="button" class="pill-btn" data-target-key="골프" onclick="toggleTargetPill(this)">⛳ 골프·운동·레저·여행</button>
+                    <button type="button" class="pill-btn" data-target-key="자영업자" onclick="toggleTargetPill(this)">🏪 자영업자·소상공인·식당</button>
+                    <button type="button" class="pill-btn" data-target-key="법인대표" onclick="toggleTargetPill(this)">🏢 법인대표·중소기업 임원</button>
+                    <button type="button" class="pill-btn" data-target-key="이직·구직" onclick="toggleTargetPill(this)">🤝 이직·구직·투잡·영업관심</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 메타 2단계: 지역 · 연령 · 예산 · 기간 -->
+            <div class="step-pane" id="pane-meta-2">
+              <h3 class="step-heading">2. 지역 · 연령 · 예산 · 기간</h3>
+
+              <div style="display:flex; flex-direction:column; justify-content:space-between; flex:1;">
+                <div class="target-section-spaced" style="margin-bottom:14px;">
+                  <span class="target-label">📍 노출 지역 검색 (실제 거주·생활권자 집중 타겟팅)</span>
+                  <div style="display:grid; grid-template-columns: 1fr 140px; gap:10px;">
+                    <div class="region-search-box">
+                      <input type="text" id="regionSearchInput" class="form-input" placeholder="시/군/구 또는 동 이름 검색 (예: 의정부, 민락동, 강남)" oninput="onSearchRegion(this.value)" onfocus="onSearchRegion(this.value)" />
+                      <div class="region-dropdown" id="regionDropdown"></div>
+                    </div>
+                    <select id="regionRadiusSelect" class="form-select">
+                      <option value="반경 5km">반경 5km</option>
+                      <option value="반경 10km" selected>반경 10km</option>
+                      <option value="반경 15km">반경 15km</option>
+                      <option value="반경 25km">반경 25km</option>
+                    </select>
+                  </div>
+                  <div class="selected-region-chips" id="selectedRegionChips"></div>
+                </div>
+
+                <div class="target-section-spaced" style="margin-bottom:14px; background:#f8fafc; border:1px solid var(--border); padding:13px 16px; border-radius:12px;">
+                  <div class="form-row-2" style="margin-bottom:10px;">
+                    <div>
+                      <span class="target-label" style="font-size:12px; margin-bottom:4px;">👥 타겟 연령</span>
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="number" id="setupAgeMin" class="form-input" value="30" min="18" max="65" style="background:#fff; padding:7px 10px;" />
+                        <span style="font-weight:800;">~</span>
+                        <input type="number" id="setupAgeMax" class="form-input" value="55" min="18" max="65" style="background:#fff; padding:7px 10px;" />
+                        <span style="font-size:13px; font-weight:700;">세</span>
+                      </div>
+                    </div>
+                    <div>
+                      <span class="target-label" style="font-size:12px; margin-bottom:4px;">🚻 성별</span>
+                      <select id="setupGender" class="form-select" style="background:#fff; padding:7px 10px;">
+                        <option value="0">남녀 전체</option>
+                        <option value="2" selected>여성 집중</option>
+                        <option value="1">남성 집중</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style="display:flex; flex-wrap:wrap; gap:14px;">
+                    <label style="display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:800; color:var(--navy); cursor:pointer;">
+                      <input type="checkbox" id="setupKoreanOnly" checked style="width:15px; height:15px; accent-color:var(--navy);" />
+                      🇰🇷 한국어(ko_KR) 100% 고정
+                    </label>
+                    <label style="display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:800; color:#0284c7; cursor:pointer;" title="모바일 게임 등 외부 배너 앱의 오클릭 예산 누수를 막고 인스타·페북 핵심 지면에만 집중 노출합니다.">
+                      <input type="checkbox" id="setupCorePlacementOnly" checked style="width:15px; height:15px; accent-color:#0284c7;" />
+                      🛡️ 외부 게임앱 오클릭 차단 (인스타·페북 핵심지면 집중)
+                    </label>
+                  </div>
+                </div>
+
+                <div class="target-section-spaced" style="margin-bottom:14px; background:#f8fafc; border:1px solid var(--border); padding:13px 16px; border-radius:12px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span class="target-label" style="margin:0;">💰 1일 예산</span>
+                    <strong id="budgetReachLabel" style="color:var(--primary); font-size:13px;">하루 10,000원 (예상 노출 1,500~3,000명)</strong>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <input type="range" id="setupBudgetRange" min="5000" max="100000" step="5000" value="10000" style="flex:1;" oninput="syncBudgetInput(this.value)" />
+                    <input type="number" id="setupBudgetNumber" class="form-input" value="10000" step="5000" style="width:120px; font-weight:800; background:#fff; padding:7px 10px;" oninput="syncBudgetInput(this.value)" />
+                  </div>
+                </div>
+
+                <div class="target-section-spaced" style="margin-bottom:0; background:#f8fafc; border:1px solid var(--border); padding:12px 16px; border-radius:12px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <span class="target-label" style="margin:0;">📅 게재 기간</span>
+                    <div style="display:flex; gap:14px;">
+                      <label style="font-size:12.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                        <input type="radio" name="scheduleMode" value="continuous" checked onchange="toggleScheduleDates()" /> 상시 게재
+                      </label>
+                      <label style="font-size:12.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                        <input type="radio" name="scheduleMode" value="scheduled" onchange="toggleScheduleDates()" /> 시작/종료일 지정
+                      </label>
+                    </div>
+                  </div>
+                  <div id="scheduleDateBox" style="display:none; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+                    <input type="date" id="setupStartDate" class="form-input" style="background:#fff; padding:7px 10px;" />
+                    <input type="date" id="setupEndDate" class="form-input" style="background:#fff; padding:7px 10px;" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 메타 3단계(최종): 광고 문구 · 신청 접수 방식 -->
+            <div class="step-pane" id="pane-meta-3">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 class="step-heading" style="margin:0;">3. 광고 문구 · 신청 접수 방식</h3>
+                <div style="display:flex; gap:6px;">
+                  <button type="button" class="btn-header-action" onclick="openMyPrStudioPopup()" style="font-size:11.5px; padding:5px 10px; color:var(--sky); border-color:var(--sky);">
+                    🪪 내 PR페이지 미리보기/편집
+                  </button>
+                  <button type="button" class="btn-header-action" onclick="togglePhonePreviewMode()" style="font-size:11.5px; padding:5px 10px;">
+                    📱 미리보기 전환 (피드 ↔ 양식)
+                  </button>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:14px; flex:1;">
+                <div>
+                  <span class="target-label">📝 광고 본문</span>
+                  <textarea id="setupAdCaption" class="form-textarea" rows="3" oninput="syncPhonePreview()"></textarea>
+                </div>
+
+                <div class="form-row-2">
+                  <div>
+                    <span class="target-label">📌 제목 (이미지 하단) *</span>
+                    <input type="text" id="setupHeadline" class="form-input" oninput="syncPhonePreview()" />
+                  </div>
+                  <div>
+                    <span class="target-label">💬 보조 설명</span>
+                    <input type="text" id="setupAdDescription" class="form-input" oninput="syncPhonePreview()" />
+                  </div>
+                </div>
+
+                <div class="form-row-2">
+                  <div>
+                    <span class="target-label">👆 행동 유도(CTA) 버튼</span>
+                    <select id="setupCtaBtn" class="form-select" onchange="syncPhonePreview()">
+                      <option value="LEARN_MORE">더 알아보기 (권장)</option>
+                      <option value="APPLY_NOW">지금 신청하기</option>
+                      <option value="GET_QUOTE">견적 받기</option>
+                      <option value="SIGN_UP">가입하기</option>
+                    </select>
+                  </div>
+                  <div>
+                    <span class="target-label">🎯 신청 접수 방식</span>
+                    <div style="display:flex; gap:10px; align-items:center; height:42px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:0 12px; flex-wrap:wrap;">
+                      <label style="font-size:12.5px; font-weight:800; color:var(--navy); cursor:pointer; display:flex; align-items:center; gap:4px;">
+                        <input type="radio" name="leadDestMode" value="instant" checked onchange="toggleLeadDestMode()" /> ⚡ 인스턴트 양식
+                      </label>
+                      <label style="font-size:12.5px; font-weight:800; color:var(--sky); cursor:pointer; display:flex; align-items:center; gap:4px;">
+                        <input type="radio" name="leadDestMode" value="pr_page" onchange="toggleLeadDestMode()" /> 🪪 내 PR 랜딩(픽셀전환)
+                      </label>
+                      <label style="font-size:12.5px; font-weight:700; color:#475569; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                        <input type="radio" name="leadDestMode" value="custom_url" onchange="toggleLeadDestMode()" /> 🔗 외부 URL
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="instantFormConfigBox" style="background:#f8fafc; border:1px solid var(--border); border-radius:14px; padding:13px 16px;">
+                  <div id="prModeGuideBanner" style="display:none; background:#f0f9ff; border:1px solid #bae6fd; color:#0369a1; padding:8px 12px; border-radius:9px; font-size:12px; font-weight:800; margin-bottom:10px;">
+                    🪪 <strong>[내 PR 랜딩 + 메타 픽셀 전환 최적화] 연결됨!</strong> 내 광고계정 전용 메타 픽셀이 자동 장착되어, 단순 클릭이 아닌 <strong>실제 신청폼 제출 완료(Lead)</strong> 타겟을 학습합니다.
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                    <span class="target-label" style="margin:0;">✅ 양식 수집 항목</span>
+                    <div class="pill-group">
+                      <button type="button" class="pill-btn active" style="pointer-events:none; padding:5px 11px; font-size:12px;">✔ 이름</button>
+                      <button type="button" class="pill-btn active" style="pointer-events:none; padding:5px 11px; font-size:12px;">✔ 연락처</button>
+                      <button type="button" class="pill-btn active" id="fieldBtnRegion" style="padding:5px 11px; font-size:12px;" onclick="toggleTargetPill(this); syncPhonePreview();">사는 지역</button>
+                      <button type="button" class="pill-btn" id="fieldBtnAge" style="padding:5px 11px; font-size:12px;" onclick="toggleTargetPill(this); syncPhonePreview();">나이대</button>
+                      <button type="button" class="pill-btn" id="fieldBtnTime" style="padding:5px 11px; font-size:12px;" onclick="toggleTargetPill(this); syncPhonePreview();">통화 편한 시간</button>
+                    </div>
+                  </div>
+                  <div class="form-row-2">
+                    <div>
+                      <span style="font-size:11.5px; font-weight:800; color:#475569; display:block; margin-bottom:4px;">❓ 상단 질문</span>
+                      <input type="text" id="setupCustomQuestion" class="form-input" value="어떤 안내를 가장 먼저 받아보고 싶으신가요?" style="background:#fff; padding:8px 11px; font-size:12.5px;" oninput="syncPhonePreview()" />
+                    </div>
+                    <div>
+                      <span style="font-size:11.5px; font-weight:800; color:#475569; display:block; margin-bottom:4px;">🎁 제공할 꿀팁 PDF 링크 (마스터 시트 연동)</span>
+                      <input type="url" id="setupPdfDocUrl" class="form-input" placeholder="https://drive.google.com/..." style="background:#fff; padding:8px 11px; font-size:12.5px;" />
+                    </div>
+                  </div>
+                  <div style="margin-top:8px;">
+                    <input type="text" id="setupMetaCompliance" class="form-input" placeholder="⚖️ 심의필 번호 (선택 입력 - 비워두면 표기 안 함)" style="background:#fff; padding:7px 11px; font-size:12px;" oninput="renderModalPhoneMedia()" />
+                  </div>
+                </div>
+
+                <div id="customUrlConfigBox" style="display:none; background:#f0f9ff; border:1px solid #bae6fd; border-radius:14px; padding:14px 16px;">
+                  <span class="target-label" style="margin-bottom:6px;">🔗 연결할 외부 웹사이트 URL</span>
+                  <input type="url" id="setupLandingUrl" class="form-input" style="background:#fff;" placeholder="https://" oninput="syncPhonePreview()" />
+                </div>
+              </div>
+            </div>
+
+            <!-- 인스타그램 일반 게시물 (댓글 자동 DM) -->
+            <div class="step-pane" id="pane-insta-1">
+              <h3 class="step-heading">📸 인스타그램 게시 & 24시간 댓글 자동 DM</h3>
+
+              <div style="display:flex; flex-direction:column; gap:15px; flex:1;">
+                <div>
+                  <span class="target-label">📝 게시물 본문 (댓글 유도 문구 및 해시태그)</span>
+                  <textarea id="setupInstaCaption" class="form-textarea" rows="4" oninput="syncPhonePreview()"></textarea>
+                </div>
+
+                <div class="form-row-2">
+                  <div>
+                    <span class="target-label">💬 감지할 댓글 키워드 (쉼표로 여러 개 가능)</span>
+                    <input type="text" id="setupInstaDmKeyword" class="form-input" value="궁금" placeholder="예: 궁금, 환급, 간병" />
+                  </div>
+                  <div>
+                    <span class="target-label">🎁 신청 완료 시 열어줄 꿀팁 PDF 링크 (시트 연동)</span>
+                    <input type="url" id="setupInstaPdfUrl" class="form-input" placeholder="https://drive.google.com/..." />
+                  </div>
+                </div>
+
+                <div class="form-row-2">
+                  <div>
+                    <span class="target-label">💌 댓글 작성자에게 자동 발송할 DM 메시지</span>
+                    <input type="text" id="setupInstaDmMessage" class="form-input" value="댓글 감사합니다! 요청하신 핵심 가이드북(PDF) 열람 및 신청 링크입니다 👉 {신청링크}" />
+                  </div>
+                  <div>
+                    <span class="target-label">⚖️ 심의필 번호 (선택)</span>
+                    <input type="text" id="setupInstaCompliance" class="form-input" placeholder="비워두면 표기 안 함" oninput="renderModalPhoneMedia()" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="modal-footer-nav">
+            <button type="button" class="btn-prev" id="btnWizardPrev" onclick="moveWizardStep(-1)">← 이전 단계</button>
+            <div style="display:flex; gap:10px;">
+              <button type="button" class="btn-next" id="btnWizardNext" onclick="moveWizardStep(1)">다음 단계로 ➔</button>
+              <button type="button" class="btn-launch" id="btnWizardSubmit" onclick="submitWizardAction()" style="display:none;">
+                🚀 지금 바로 시작하기
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const META_APP_ID = '872047289263262';
+    const META_CONFIG_ID = '2040222510013447';
+
+    // 위라클랩 본사 마스터 구글 시트 웹앱 URL 고정 내장
+    const MASTER_SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyNT3YdCDNa7QoucBY0nNAOUah4Yffd4-QRjDc6Dkw7tZ_xyhVTpqwv4IcWF-n3V07A/exec';
+
+    // 댓글 감지 시 자동으로 달릴 기본 공개 답글(대댓글) 문구 고정
+    const DEFAULT_PUBLIC_COMMENT_REPLY = '안녕하세요! 요청하신 안내자료 신청링크 보내드렸습니다! 😊';
+
+    const CARD_GRADIENTS = [
+      'linear-gradient(135deg, #113f67, #1e5c94)',
+      'linear-gradient(135deg, #0f766e, #115e59)',
+      'linear-gradient(135deg, #1e293b, #0284c7)',
+      'linear-gradient(135deg, #312e81, #1e40af)'
+    ];
+
+    const CTA_LABELS_KR = {
+      LEARN_MORE: '더 알아보기',
+      APPLY_NOW: '지금 신청하기',
+      GET_QUOTE: '견적 받기',
+      SIGN_UP: '가입하기',
+      CONTACT_US: '문의하기'
+    };
+
+    // ★ 17개 버튼별 정밀 타겟팅 사전 (한국어 공식 키워드 + 영문 표준 키워드 이중 매칭으로 빈값 원천 차단)
+    const TARGET_INTEREST_KEYWORDS = {
+      '영유아': {
+        group: 'life',
+        queries: ['육아', '아기', '유아용품', 'Parenting', 'Baby']
+      },
+      '미취학': {
+        group: 'life',
+        queries: ['육아', '어린이', '교육', '초등교육', 'Parenting', 'Primary education']
+      },
+      '신혼': {
+        group: 'life',
+        queries: ['결혼식', '웨딩', '신혼여행', '커플', 'Weddings', 'Marriage']
+      },
+      '1인 가구': {
+        group: 'life',
+        queries: ['인테리어 디자인', '가구', '가전제품', 'Interior design', 'Furniture']
+      },
+      '건강검진': {
+        group: 'interest',
+        queries: ['피트니스 및 웰빙', '웰빙', '운동', '영양', 'Physical fitness', 'Wellness']
+      },
+      '암·중증질환': {
+        group: 'interest',
+        queries: ['보험', '가족', '웰빙', '저축', 'Health insurance', 'Family']
+      },
+      '치과': {
+        group: 'interest',
+        queries: ['미용', '스킨케어', '웰빙', '가족', 'Personal care', 'Wellness']
+      },
+      '부모님 효도': {
+        group: 'interest',
+        queries: ['가족', '은퇴', '여행', '보험', 'Retirement', 'Family']
+      },
+      '보험·실손': {
+        group: 'interest',
+        queries: ['보험', '개인 금융', '저축', '투자', 'Insurance', 'Personal finance']
+      },
+      '재테크': {
+        group: 'interest',
+        queries: ['투자', '주식 시장', '개인 금융', '저축', 'Investment', 'Personal finance']
+      },
+      '내집마련': {
+        group: 'interest',
+        queries: ['부동산', '아파트', '주택', '인테리어 디자인', 'Real estate', 'Apartment', 'House']
+      },
+      '자동차': {
+        group: 'life_biz',
+        queries: ['자동차', 'SUV', '전기차', '운전', 'Automobiles', 'Vehicle insurance']
+      },
+      '반려동물': {
+        group: 'life_biz',
+        queries: ['반려동물', '반려견', '반려묘', 'Pets', 'Dogs', 'Cats']
+      },
+      '골프': {
+        group: 'life_biz',
+        queries: ['골프', '여행', '아웃도어', '등산', 'Golf', 'Travel']
+      },
+      '자영업자': {
+        group: 'life_biz',
+        queries: ['소규모 비즈니스', '창업', '소매', '외식', 'Small business', 'Entrepreneurship']
+      },
+      '법인대표': {
+        group: 'life_biz',
+        queries: ['비즈니스', '기업가정신', '경영', '중소기업', 'Business', 'Management']
+      },
+      '이직·구직': {
+        group: 'recruit',
+        queries: ['경력', '자기계발', '기업가정신', '비즈니스', 'Career', 'Entrepreneurship']
+      }
+    };
+
+    const EXCLUDE_COMPETITOR_QUERIES = ['Insurance Broker', '보험 중개인'];
+
+    const KOREA_GEO_MAP = [
+      { key: '민락동', lat: 37.7458, lng: 127.0945 },
+      { key: '금오동', lat: 37.7533, lng: 127.0711 },
+      { key: '호원동', lat: 37.7192, lng: 127.0468 },
+      { key: '신곡동', lat: 37.7314, lng: 127.0628 },
+      { key: '의정부', lat: 37.7381, lng: 127.0337 },
+      { key: '양주', lat: 37.7853, lng: 127.0458 },
+      { key: '옥정', lat: 37.8205, lng: 127.0912 },
+      { key: '남양주', lat: 37.6360, lng: 127.2165 },
+      { key: '다산', lat: 37.6200, lng: 127.1520 },
+      { key: '별내', lat: 37.6485, lng: 127.1255 },
+      { key: '구리', lat: 37.5943, lng: 127.1296 },
+      { key: '고양', lat: 37.6584, lng: 126.8320 },
+      { key: '일산', lat: 37.6750, lng: 126.7700 },
+      { key: '파주', lat: 37.7599, lng: 126.7802 },
+      { key: '성남', lat: 37.4200, lng: 127.1267 },
+      { key: '분당', lat: 37.3827, lng: 127.1189 },
+      { key: '수원', lat: 37.2636, lng: 127.0286 },
+      { key: '화성', lat: 37.1995, lng: 126.8313 },
+      { key: '동탄', lat: 37.2005, lng: 127.0968 },
+      { key: '용인', lat: 37.2411, lng: 127.1776 },
+      { key: '김포', lat: 37.6152, lng: 126.7156 },
+      { key: '부천', lat: 37.5034, lng: 126.7660 },
+      { key: '하남', lat: 37.5393, lng: 127.2149 },
+      { key: '노원', lat: 37.6542, lng: 127.0568 },
+      { key: '도봉', lat: 37.6688, lng: 127.0471 },
+      { key: '강북', lat: 37.6396, lng: 127.0257 },
+      { key: '성북', lat: 37.5891, lng: 127.0182 },
+      { key: '강남', lat: 37.5172, lng: 127.0473 },
+      { key: '서초', lat: 37.4837, lng: 127.0324 },
+      { key: '송파', lat: 37.5145, lng: 127.1066 },
+      { key: '강동', lat: 37.5301, lng: 127.1238 },
+      { key: '마포', lat: 37.5663, lng: 126.9016 },
+      { key: '영등포', lat: 37.5264, lng: 126.8962 },
+      { key: '강서', lat: 37.5510, lng: 126.8495 },
+      { key: '인천', lat: 37.4563, lng: 126.7052 },
+      { key: '송도', lat: 37.3860, lng: 126.6435 },
+      { key: '부산', lat: 35.1796, lng: 129.0756 },
+      { key: '해운대', lat: 35.1631, lng: 129.1636 }
+    ];
+
+    function autoHyphenObPhone(el) {
+      let val = el.value.replace(/[^0-9]/g, '');
+      if (val.length > 3 && val.length <= 7) val = val.slice(0, 3) + '-' + val.slice(3);
+      else if (val.length > 7) val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7, 11);
+      el.value = val;
+    }
+
+    function getActiveUserKeys() {
+      const keys = new Set();
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlEmail = urlParams.get('user_email') || urlParams.get('email');
+      if (urlEmail) {
+        localStorage.setItem('user_email', urlEmail.trim());
+      }
+
+      const emailCandidates = [
+        localStorage.getItem('user_email'),
+        localStorage.getItem('weracle_user_email'),
+        localStorage.getItem('crm_user_email'),
+        localStorage.getItem('email')
+      ];
+      emailCandidates.forEach(em => {
+        if (em && String(em).trim()) keys.add(String(em).trim().toLowerCase());
+      });
+
+      const phone = localStorage.getItem('crm_agent_phone');
+      if (phone && String(phone).trim()) keys.add(String(phone).trim().toLowerCase());
+
+      try {
+        const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
+        if (metaConn) {
+          if (metaConn.igUser) keys.add(String(metaConn.igUser).trim().toLowerCase());
+          if (metaConn.igId) keys.add(String(metaConn.igId).trim().toLowerCase());
+          if (metaConn.adAcc && metaConn.adAcc !== 'act_connected') keys.add(String(metaConn.adAcc).trim().toLowerCase());
+          if (metaConn.pageId) keys.add(String(metaConn.pageId).trim().toLowerCase());
+        }
+      } catch (e) {}
+
+      const name = localStorage.getItem('crm_agent_name');
+      if (keys.size === 0 && name && String(name).trim()) {
+        keys.add(String(name).trim().toLowerCase());
+      }
+
+      return Array.from(keys);
+    }
+
+    function getActiveAgentId() {
+      const keys = getActiveUserKeys();
+      return keys.length > 0 ? keys[0] : 'default';
+    }
+
+    function openMyPrStudioPopup() {
+      const agentId = getActiveAgentId();
+      const agentName = localStorage.getItem('crm_agent_name') || '';
+      const agentPhone = localStorage.getItem('crm_agent_phone') || '';
+      const url = `/sns_apply.html?edit=true&agent_id=${encodeURIComponent(agentId)}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}`;
+      window.open(url, '_blank');
+    }
+
+    function buildClientGeoLocations(regionStr) {
+      if (!regionStr || regionStr === '전국') {
+        return { countries: ['KR'], location_types: ['home', 'recent'] };
+      }
+      const parts = regionStr.split(',').map(s => s.trim()).filter(Boolean);
+      const customLocations = [];
+      for (const part of parts) {
+        const radMatch = part.match(/(\d+)\s*km/i);
+        const radiusKm = radMatch ? Math.min(80, Math.max(2, parseInt(radMatch[1], 10))) : 10;
+        const found = KOREA_GEO_MAP.find(g => part.includes(g.key));
+        if (found) {
+          customLocations.push({
+            latitude: found.lat,
+            longitude: found.lng,
+            radius: radiusKm,
+            distance_unit: 'kilometer'
+          });
+        }
+      }
+      if (customLocations.length > 0) {
+        return { custom_locations: customLocations, location_types: ['home', 'recent'] };
+      }
+      return { countries: ['KR'], location_types: ['home', 'recent'] };
+    }
+
+    async function ensureMetaPixelId(cleanActId, token, adAccountName) {
+      try {
+        const pxRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adspixels?fields=id,name&limit=5&access_token=${token}`);
+        const pxData = await pxRes.json();
+        if (pxData && Array.isArray(pxData.data) && pxData.data.length > 0 && pxData.data[0].id) {
+          localStorage.setItem('weracle_meta_pixel_id', pxData.data[0].id);
+          return pxData.data[0].id;
+        }
+        const createPxRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adspixels`, {
+          method: 'POST',
+          body: new URLSearchParams({
+            name: `[위라클랩 전환픽셀] ${adAccountName || cleanActId}`,
+            access_token: token
+          })
+        });
+        const createPxData = await createPxRes.json();
+        if (createPxData && createPxData.id) {
+          localStorage.setItem('weracle_meta_pixel_id', createPxData.id);
+          return createPxData.id;
+        }
+      } catch (e) {}
+      return '';
+    }
+
+    function formatClientMetaError(errObj) {
+      if (!errObj) return '알 수 없는 오류';
+      const detail = errObj.error_user_msg || errObj.error_user_title || '';
+      const sub = errObj.error_subcode ? ` (subcode: ${errObj.error_subcode})` : '';
+      return `${errObj.message}${detail ? ' - ' + detail : ''}${sub}`;
+    }
+
+    function buildCleanShortApplyUrl(recordId) {
+      const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
+      return `${curOrigin}/api/meta-execute?c=${encodeURIComponent(recordId)}`;
+    }
+
+    function cleanDmMessageText(rawMsg, recordId) {
+      const shortUrl = buildCleanShortApplyUrl(recordId);
+      let msg = String(rawMsg || '').trim();
+      if (!msg) {
+        return `안녕하세요! 댓글 남겨주셔서 감사합니다 😊 요청하신 핵심 가이드북(PDF) 열람 및 무료 상담 신청 링크입니다 👉 ${shortUrl}`;
+      }
+      if (msg.includes('{신청링크}')) {
+        msg = msg.replace(/\{신청링크\}/g, shortUrl);
+      }
+      msg = msg.replace(/https:\/\/weracle-crm\.vercel\.app\/sns_apply\.html\?[^\s]+/g, shortUrl);
+      if (!msg.includes('http')) {
+        msg = `${msg} 👉 ${shortUrl}`;
+      }
+      return msg;
+    }
+
+    const KOREA_REGIONS_DB = [
+      '경기도 의정부시 전체', '경기도 의정부시 민락동', '경기도 의정부시 금오동', '경기도 의정부시 호원동', '경기도 의정부시 신곡동',
+      '경기도 양주시 옥정신도시', '경기도 양주시 회천동', '경기도 남양주시 다산신도시', '경기도 남양주시 별내동', '경기도 구리시 인창동',
+      '경기도 고양시 일산동구', '경기도 고양시 덕양구', '경기도 파주시 운정신도시', '경기도 성남시 분당구', '경기도 수원시 영통구',
+      '경기도 화성시 동탄신도시', '경기도 용인시 수지구', '경기도 김포시 한강신도시', '경기도 부천시 중동', '경기도 하남시 미사강변도시',
+      '서울특별시 노원구 상계동', '서울특별시 노원구 중계동', '서울특별시 도봉구 창동', '서울특별시 강북구 미아동', '서울특별시 성북구 길음동',
+      '서울특별시 강남구 역삼동', '서울특별시 서초구 반포동', '서울특별시 송파구 잠실동', '서울특별시 강동구 고덕동', '서울특별시 마포구 상암동',
+      '서울특별시 영등포구 여의도동', '서울특별시 강서구 마곡동', '인천광역시 연수구 송도동', '인천광역시 서구 청라동', '부산광역시 해운대구 우동'
+    ];
+
+    let sheetContents = [];
+    let isSheetLoading = true;
+    let sheetLoadError = false;
+    let customContents = JSON.parse(localStorage.getItem('weracle_custom_v6') || '[]');
+    let myCampaigns = JSON.parse(localStorage.getItem('weracle_campaigns_v6') || '[]');
+    let myLeads = JSON.parse(localStorage.getItem('weracle_leads_v6') || '[]');
+    let currentFilter = 'all';
+    let currentManageFilter = 'all';
+    let currentLeadFilter = 'all';
+    let slideIndexes = {};
+
+    let fetchedAdAccounts = [];
+    let fetchedPages = [];
+    let recentIgMediaList = [];
+    let selectedExtIgMediaId = '';
+
+    let activeItem = null;
+    let modalSlideIdx = 0;
+    let wizardTrack = 'meta';
+    let currentStep = 1;
+    let selectedRegions = ['경기도 의정부시 전체 (반경 10km)'];
+    let isScanningInstaComments = false;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initConnectionState();
+      renderShowroomGrid();
+      loadMasterSheetContents();
+      renderMyAdsDashboard();
+      renderMyLeadsTable();
+
+      setInterval(() => {
+        const hasInstaRules = myCampaigns.some(c => c.track === 'insta' && c.status === 'ACTIVE');
+        if (hasInstaRules && !isScanningInstaComments) {
+          scanAndSendInstaCommentDms(false);
+        }
+      }, 30000);
+    });
+
+    function normalizeMediaUrl(rawUrl) {
+      if (!rawUrl) return '';
+      const u = rawUrl.trim();
+      const driveMatch = u.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (driveMatch && driveMatch[1]) {
+        return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+      }
+      return u;
+    }
+
+    function isPlayableVideoUrl(url) {
+      if (!url) return false;
+      const u = String(url).trim();
+      if (u.startsWith('blob:')) return true;
+      return /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(u);
+    }
+
+    function normalizeRatio(rawRatio, isVid) {
+      const s = String(rawRatio || '').trim();
+      if (s === '1:1' || s === '4:5' || s === '9:16') return s;
+      if (s.includes('9:16') || s.includes('09:16')) return '9:16';
+      if (s.includes('4:5') || s.includes('04:05')) return '4:5';
+      if (s.includes('1:1') || s.includes('01:01')) return '1:1';
+      return isVid ? '9:16' : '1:1';
+    }
+
+    async function loadMasterSheetContents() {
+      if (!MASTER_SHEET_WEBAPP_URL) {
+        isSheetLoading = false;
+        renderShowroomGrid();
+        return;
+      }
+
+      isSheetLoading = true;
+      sheetLoadError = false;
+      renderShowroomGrid();
+
+      const statusPill = document.getElementById('sheetSyncStatusPill');
+      if (statusPill) {
+        statusPill.style.display = 'inline';
+        statusPill.style.color = '#0284c7';
+        statusPill.innerText = '⏳ 마스터 시트 동기화 중...';
+      }
+
+      try {
+        const res = await fetch(`${MASTER_SHEET_WEBAPP_URL}?mode=SNS_CONTENTS&_t=${Date.now()}`, {
+          method: 'GET',
+          redirect: 'follow',
+          cache: 'no-store'
+        });
+        const json = await res.json();
+        const rows = Array.isArray(json) ? json : (json && Array.isArray(json.data) ? json.data : []);
+
+        sheetContents = rows.map((row, idx) => {
+          const fallbackRaw = String(row.fallbackCardText || row.cardText || '').trim();
+          const parts = fallbackRaw ? fallbackRaw.split('|').map(s => s.trim()) : [];
+
+          const urlList = String(row.mediaUrls || '')
+            .split(/[\n,]+/)
+            .map(s => normalizeMediaUrl(s))
+            .filter(Boolean);
+
+          const rawMediaType = String(row.mediaType || row.type || '').trim().toLowerCase();
+          const hasPlayableVid = urlList[0] && isPlayableVideoUrl(urlList[0]);
+          const isVid = rawMediaType === 'video' || rawMediaType === 'reels' || hasPlayableVid;
+          const cleanRatio = normalizeRatio(row.ratio, isVid);
+          const defaultGradient = CARD_GRADIENTS[idx % CARD_GRADIENTS.length];
+
+          let cardTag = '';
+          let cardTitle = '';
+          let cardSub = '';
+
+          if (fallbackRaw) {
+            if (parts.length >= 3) {
+              cardTag = parts[0];
+              cardTitle = parts[1];
+              cardSub = parts.slice(2).join(' ');
+            } else if (parts.length === 2) {
+              cardTag = parts[0];
+              cardTitle = parts[1];
+              cardSub = '';
+            } else {
+              cardTag = isVid ? '🎬 9:16 릴스' : '추천 카드뉴스';
+              cardTitle = parts[0];
+              cardSub = '';
+            }
+          } else {
+            cardTag = isVid ? '🎬 9:16 릴스' : '추천 안내';
+            cardTitle = row.headline || '무료 확인하기';
+            cardSub = row.description || '';
+          }
+
+          let slides = [];
+          if (urlList.length > 0) {
+            if (isVid) {
+              slides = [{
+                bg: defaultGradient,
+                imgUrl: hasPlayableVid ? '' : urlList[0],
+                tag: cardTag,
+                title: cardTitle,
+                sub: cardSub,
+                showOverlayText: false
+              }];
+            } else {
+              slides = urlList.map((u, sIdx) => ({
+                bg: defaultGradient,
+                imgUrl: u,
+                tag: urlList

@@ -5721,19 +5721,23 @@ let customQuestionsList = [
       const agentId = getActiveAgentId();
       const srcTag = wizardTrack === 'insta' ? 'insta_dm' : 'meta_ad';
       const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
-
-      const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions));
+const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions));
       const prLandingUrl = `${curOrigin}/sns_apply.html?utm_source=${srcTag}&camp_id=${encodeURIComponent(recordId)}&camp=${encodeURIComponent(title)}&fields=${encodeURIComponent(selectedFields.join(','))}&q=${encodeURIComponent(primaryQuestionLabel)}&qs=${encodedCustomQs}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}&agent_id=${encodeURIComponent(agentId)}&pixel_id=${encodeURIComponent(detectedPixelId)}&doc=${encodeURIComponent(pdfDocUrl)}`;
 
-      // 3가지 신청 접수 방식 명확 분리:
-      // 1) 인스턴트 양식: 완료 시 구글 드라이브 PDF 원본 즉시 열기 (PDF 없을 때만 명함 페이지)
-      // 2) 내 PR 랜딩: 내가 꾸민 PR 랜딩페이지(sns_apply.html)로 이동해 하단 폼 접수
-      // 3) 외부 URL: 입력한 외부 링크로 즉시 이동
-      const instantFollowUpUrl = (pdfDocUrl && pdfDocUrl.startsWith('http')) ? pdfDocUrl : `${curOrigin}/sns_apply.html?agent_id=${encodeURIComponent(agentId)}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}`;
-      const finalLandingUrl = isCustomUrl
-        ? (customLandingUrl && customLandingUrl.startsWith('http') ? customLandingUrl : prLandingUrl)
-        : prLandingUrl;
+      // DB에는 전체 설정이 담긴 prLandingUrl을 저장하고, 메타 광고 소재에는 길이 제한(2061013)에 절대 걸리지 않는 단축 URL 전달
+      const shortPrRedirectUrl = buildCleanShortApplyUrl(recordId);
+      const instantFollowUpUrl = (pdfDocUrl && pdfDocUrl.startsWith('http')) ? pdfDocUrl : shortPrRedirectUrl;
 
+      // DB 저장용 실제 목적지 URL
+      const dbLandingUrl = isCustomUrl
+        ? (customLandingUrl && customLandingUrl.startsWith('http') ? customLandingUrl : prLandingUrl)
+        : (isInstantMode ? instantFollowUpUrl : prLandingUrl);
+
+      // 메타 광고 소재(link)에 등록할 짧은 URL
+      const finalLandingUrl = isCustomUrl
+        ? (customLandingUrl && customLandingUrl.startsWith('http') ? customLandingUrl : shortPrRedirectUrl)
+        : shortPrRedirectUrl;
+   
       const dmMessage = cleanDmMessageText(rawInstaDmMsg, recordId);
 
       let createdMetaCampaignId = '';
@@ -6422,7 +6426,7 @@ let customQuestionsList = [
           title,
           description: description || '',
           cta_type: ctaType,
-          landing_url: isInstantMode ? instantFollowUpUrl : finalLandingUrl,
+         landing_url: dbLandingUrl,
           start_date: startDate || new Date().toISOString().slice(0, 10),
           end_date: endDate || '상시 게재',
           ratio: normalizeRatio(activeItem.ratio, activeItem.type === 'video'),

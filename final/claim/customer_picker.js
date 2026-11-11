@@ -729,7 +729,12 @@
               <h3 id="crmModalTitle">📋 보험금 청구 대상자 설정</h3>
               <p id="crmModalSubtitle">청구서 작성 전 대상자 관계 및 고객 정보를 설정합니다.</p>
             </div>
-            <button type="button" class="crm-modal-close" onclick="closeCrmPickerModal()" aria-label="닫기">✕</button>
+            <div class="crm-header-actions">
+              <button type="button" class="btn-header-skip" onclick="skipToDirectWrite()" title="고객 정보 선택 없이 바로 청구서를 작성합니다">
+                ✍️ 건너뛰고 수기작성
+              </button>
+              <button type="button" class="crm-modal-close" onclick="closeCrmPickerModal()" aria-label="닫기">✕</button>
+            </div>
           </div>
 
           <!-- 메인 설정 위저드 뷰 (Setup View) -->
@@ -738,9 +743,6 @@
               <!-- JS에서 동적 렌더링 -->
             </div>
             <div class="crm-modal-footer">
-              <button type="button" class="btn-footer-skip" onclick="skipToDirectWrite()">
-                ✍️ 건너뛰고 직접 수기 작성
-              </button>
               <button type="button" class="btn-footer-apply" onclick="applyCustomerSetup()">
                 ✨ 설정 완료 및 청구서 작성 시작
               </button>
@@ -1110,6 +1112,18 @@
         const addr = (s.address || '').toLowerCase();
         return name.includes(keyword) || phone.includes(keyword) || rrn.includes(keyword) || addr.includes(keyword);
       });
+    }
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = `
+        <div class="crm-empty-search-state" style="padding: 60px 20px; text-align: center; color: #94a3b8;">
+          <div style="font-size: 38px; margin-bottom: 12px; opacity: 0.6;">🔍</div>
+          <div style="font-size: 15.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">등록된 고객이 없습니다.</div>
+          <div style="font-size: 13px; color: #94a3b8;">검색어를 다시 확인하시거나, 우측 상단의 [건너뛰고 수기작성]을 이용해주세요.</div>
+        </div>
+      `;
+      window._lastFilteredCustomers = [];
+      return;
     }
 
     let html = '';
@@ -1922,14 +1936,47 @@
       }
 
       /* 모달 푸터 버튼 */
+      .crm-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+      .btn-header-skip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: #ffffff;
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        border-radius: 10px;
+        padding: 7px 14px;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.28);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        white-space: nowrap;
+      }
+      .btn-header-skip:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        box-shadow: 0 4px 14px rgba(220, 38, 38, 0.42);
+        transform: translateY(-1px);
+      }
       .crm-modal-footer {
         padding: 16px 24px 20px;
         background: #ffffff;
         border-top: 1px solid #f1f5f9;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         gap: 12px;
+      }
+      .crm-modal-footer .btn-footer-apply {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       .btn-footer-skip {
         background: transparent;

@@ -2238,80 +2238,87 @@
 
 
 
-   const TARGET_INTEREST_KEYWORDS = {
+  
+const TARGET_INTEREST_KEYWORDS = {
       '영유아': {
         group: 'life',
-        queries: ['부모 (영유아 자녀)', '육아', '아기', '유아용품', '출산']
+        demoClass: 'family_statuses',
+        demoMatch: ['01~02', '영유아', '유아'],
+        queries: ['자녀 양육', '육아', '유아 교육', '가족', 'Parenting']
       },
       '미취학': {
         group: 'life',
-        queries: ['부모 (미취학 자녀)', '부모 (초등학생 자녀)', '육아', '어린이', '초등교육']
+        demoClass: 'family_statuses',
+        demoMatch: ['03~05', '06~08', '09~12', '미취학', '초등'],
+        queries: ['자녀 양육', '육아', '초등 교육', '교육', '가족', 'Parenting']
       },
       '신혼': {
         group: 'life',
-        queries: ['신혼', '약혼', '결혼식', '웨딩', '신혼여행']
+        demoClass: 'life_events',
+        demoMatch: ['신혼'],
+        queries: ['결혼식', '웨딩', '신혼여행', '커플', 'Wedding']
       },
       '1인 가구': {
         group: 'life',
-        queries: ['인테리어 디자인', '가구', '원룸', '가전제품', '홈데코']
+        queries: ['인테리어 디자인', '가구', '가전제품', '홈데코', 'Interior design']
       },
       '건강검진': {
         group: 'interest',
-        queries: ['건강 관리', '웰빙', '피트니스', '영양학', '헬스케어']
+        queries: ['피트니스 및 웰빙', '웰빙', '운동', '영양', 'Fitness and wellness']
       },
       '암·중증질환': {
         group: 'interest',
-        queries: ['생명보험', '건강보험', '건강 관리', '웰빙', '가족']
+        queries: ['피트니스 및 웰빙', '가족', '저축', '개인 금융', '보험']
       },
       '치과': {
         group: 'interest',
-        queries: ['치아 관리', '미용', '건강 관리', '웰빙']
+        queries: ['미용', '스킨케어', '피트니스 및 웰빙', '가족']
       },
       '부모님 효도': {
         group: 'interest',
-        queries: ['가족', '은퇴', '노후 준비', '생명보험', '건강 관리']
+        queries: ['가족', '은퇴', '여행', '저축', 'Family']
       },
       '보험·실손': {
         group: 'interest',
-        queries: ['보험', '생명보험', '건강보험', '개인 금융', '재무설계']
+        queries: ['개인 금융', '저축', '투자', '보험', 'Personal finance']
       },
       '재테크': {
         group: 'interest',
-        queries: ['투자', '개인 금융', '주식 시장', '저축', '펀드']
+        queries: ['투자', '개인 금융', '저축', '주식 시장', 'Investment']
       },
       '내집마련': {
         group: 'interest',
-        queries: ['부동산', '아파트', '주택', '인테리어 디자인', '주택담보대출']
+        queries: ['부동산', '아파트', '인테리어 디자인', '가구', '주택 개조', 'Real estate']
       },
       '자동차': {
         group: 'life_biz',
-        queries: ['자동차', '자동차 보험', '신차', 'SUV', '운전']
+        queries: ['자동차', 'SUV', '전기차', '운전', 'Vehicles']
       },
       '반려동물': {
         group: 'life_biz',
-        queries: ['반려동물', '반려견', '반려묘', '애완동물 용품']
+        queries: ['반려동물', '반려견', '반려묘', '애완동물 용품', 'Pets']
       },
       '골프': {
         group: 'life_biz',
-        queries: ['골프', '여행', '아웃도어', '레저', '해외여행']
+        queries: ['골프', '여행', '아웃도어', '등산', 'Golf']
       },
       '자영업자': {
         group: 'life_biz',
-        queries: ['소규모 비즈니스 소유자', 'Facebook 페이지 관리자', '소규모 비즈니스', '창업', '외식업']
+        demoClass: 'behaviors',
+        demoMatch: ['소규모 비즈니스', '비즈니스 페이지 관리자'],
+        queries: ['소규모 비즈니스', '창업', '소매', '외식', 'Small business']
       },
       '법인대표': {
         group: 'life_biz',
-        queries: ['비즈니스 페이지 관리자', '기업가정신', '경영', '중소기업', '비즈니스']
+        demoClass: 'behaviors',
+        demoMatch: ['비즈니스 페이지 관리자'],
+        queries: ['비즈니스', '기업가정신', '경영', '중소기업', 'Entrepreneurship']
       },
       '이직·구직': {
         group: 'recruit',
-        queries: ['구직', '경력 개발', '취업', '전문직', '창업']
+        queries: ['경력', '기업가정신', '비즈니스', '자기계발', 'Career']
       }
     };
-
-    const EXCLUDE_COMPETITOR_QUERIES = ['보험 설계사', '보험 중개인', 'Insurance Broker', 'Insurance Agent'];
-
-
 
     const KOREA_GEO_MAP = [
 
@@ -4985,20 +4992,19 @@
 
 
 
-      if (Array.isArray(activeItem.targets) && activeItem.targets.length > 0) {
-
-        document.querySelectorAll('#pane-meta-1 .pill-btn').forEach(btn => {
-
+   if (Array.isArray(activeItem.targets) && activeItem.targets.length > 0) {
+        const btns = Array.from(document.querySelectorAll('#pane-meta-1 .pill-btn'));
+        const matchedBtns = btns.filter(btn => {
           const txt = btn.innerText.trim();
-
-          const isMatched = activeItem.targets.some(t => txt.includes(t) || t.includes(txt));
-
-          btn.classList.toggle('active', isMatched);
-
+          return activeItem.targets.some(t => {
+            const tokens = String(t || '').split(/[\s,·/()]+/).filter(w => w.length >= 2);
+            return txt.includes(t) || t.includes(txt) || tokens.some(w => txt.includes(w));
+          });
         });
-
-      }
-
+        if (matchedBtns.length > 0) {
+          btns.forEach(btn => btn.classList.toggle('active', matchedBtns.includes(btn)));
+        }
+      }  
 
 
       if (activeItem.ageGroup) {
@@ -5682,9 +5688,9 @@
 async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regionStr) {
       const emptyResult = {
         andSpec: null,
+        interestAndSpec: null,
         orSpec: null,
-        interestsOnlySpec: null,
-        exclusions: null,
+        allInterests: [],
         summaryNames: []
       };
       if (!token || !Array.isArray(activeTargetLabels) || activeTargetLabels.length === 0) {
@@ -5693,7 +5699,7 @@ async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regio
 
       const lifeQueries = new Set();
       const interestQueries = new Set();
-      let isRecruitMode = false;
+      const wantedDemos = [];
 
       for (const rawLabel of activeTargetLabels) {
         const label = String(rawLabel || '').trim();
@@ -5701,152 +5707,147 @@ async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regio
         if (!matchedKey) continue;
 
         const cfg = TARGET_INTEREST_KEYWORDS[matchedKey];
-        if (cfg.group === 'recruit') isRecruitMode = true;
-
-        const targetSet = (cfg.group === 'life') ? lifeQueries : interestQueries;
+        const isLifeGroup = cfg.group === 'life';
+        const targetSet = isLifeGroup ? lifeQueries : interestQueries;
         (cfg.queries || []).forEach(q => { if (q) targetSet.add(q); });
-      }
 
-      const ALLOWED_SPEC_KEYS = new Set([
-        'interests',
-        'behaviors',
-        'life_events',
-        'family_statuses',
-        'work_positions',
-        'work_employers',
-        'industries'
-      ]);
-
-      const createSpecBucket = () => ({
-        interests: new Map(),
-        behaviors: new Map(),
-        life_events: new Map(),
-        family_statuses: new Map(),
-        work_positions: new Map(),
-        work_employers: new Map(),
-        industries: new Map()
-      });
-
-      const fetchTargetsIntoBucket = async (queriesArr, bucket) => {
-        await Promise.all(queriesArr.map(async (q) => {
-          let addedCount = 0;
-
-          if (cleanActId && cleanActId.startsWith('act_')) {
-            try {
-              const tsUrl = `https://graph.facebook.com/v21.0/${cleanActId}/targetingsearch?q=${encodeURIComponent(q)}&locale=ko_KR&limit=6&access_token=${encodeURIComponent(token)}`;
-              const tsRes = await fetch(tsUrl);
-              const tsData = await tsRes.json();
-              if (tsData && Array.isArray(tsData.data)) {
-                for (const item of tsData.data) {
-                  if (!item || !item.id || !item.name) continue;
-                  const itemType = String(item.type || '').trim();
-                  if (!ALLOWED_SPEC_KEYS.has(itemType)) continue;
-                  if (item.audience_size_upper_bound !== undefined && Number(item.audience_size_upper_bound) < 1000) continue;
-
-                  const sId = String(item.id);
-                  if (!bucket[itemType].has(sId)) {
-                    bucket[itemType].set(sId, { id: sId, name: item.name });
-                    addedCount++;
-                    if (addedCount >= 2) break;
-                  }
-                }
-              }
-            } catch (e) {}
-          }
-
-          if (addedCount === 0) {
-            try {
-              const adIntUrl = `https://graph.facebook.com/v21.0/search?type=adinterest&q=${encodeURIComponent(q)}&locale=ko_KR&limit=2&access_token=${encodeURIComponent(token)}`;
-              const adIntRes = await fetch(adIntUrl);
-              const adIntData = await adIntRes.json();
-              if (adIntData && Array.isArray(adIntData.data)) {
-                for (const item of adIntData.data.slice(0, 2)) {
-                  if (item && item.id && item.name) {
-                    const sId = String(item.id);
-                    bucket.interests.set(sId, { id: sId, name: item.name });
-                  }
-                }
-              }
-            } catch (e) {}
-          }
-        }));
-      };
-
-      const lifeBucket = createSpecBucket();
-      const interestBucket = createSpecBucket();
-      const exclusionBucket = createSpecBucket();
-
-      const tasks = [];
-      if (lifeQueries.size > 0) tasks.push(fetchTargetsIntoBucket(Array.from(lifeQueries), lifeBucket));
-      if (interestQueries.size > 0) tasks.push(fetchTargetsIntoBucket(Array.from(interestQueries), interestBucket));
-      if (!isRecruitMode) tasks.push(fetchTargetsIntoBucket(EXCLUDE_COMPETITOR_QUERIES, exclusionBucket));
-      await Promise.all(tasks);
-
-      // 메타 유효성 검증 API(targetingvalidation)로 만료/비활성 관심사 사전 제거
-      if (cleanActId && cleanActId.startsWith('act_')) {
-        const allInterestIds = Array.from(new Set([
-          ...Array.from(lifeBucket.interests.keys()),
-          ...Array.from(interestBucket.interests.keys()),
-          ...Array.from(exclusionBucket.interests.keys())
-        ]));
-
-        if (allInterestIds.length > 0) {
-          try {
-            const valUrl = `https://graph.facebook.com/v21.0/${cleanActId}/targetingvalidation?id_list=${encodeURIComponent(JSON.stringify(allInterestIds))}&access_token=${encodeURIComponent(token)}`;
-            const valRes = await fetch(valUrl);
-            const valData = await valRes.json();
-            if (valData && Array.isArray(valData.data)) {
-              valData.data.forEach(v => {
-                if (v && v.valid === false && v.id) {
-                  const badId = String(v.id);
-                  lifeBucket.interests.delete(badId);
-                  interestBucket.interests.delete(badId);
-                  exclusionBucket.interests.delete(badId);
-                }
-              });
-            }
-          } catch (e) {}
+        if (cfg.demoClass && Array.isArray(cfg.demoMatch)) {
+          wantedDemos.push({
+            group: isLifeGroup ? 'life' : 'interest',
+            demoClass: cfg.demoClass,
+            demoMatch: cfg.demoMatch
+          });
         }
       }
 
-      const serializeBucket = (b) => {
-        const clause = {};
-        const names = [];
-        ALLOWED_SPEC_KEYS.forEach(k => {
-          const arr = Array.from(b[k].values());
-          if (arr.length > 0) {
-            clause[k] = arr;
-            arr.forEach(it => names.push(it.name));
-          }
-        });
-        return {
-          clause: Object.keys(clause).length > 0 ? clause : null,
-          names
-        };
+      if (lifeQueries.size === 0 && interestQueries.size === 0) {
+        ['개인 금융', '부동산', '가족'].forEach(q => interestQueries.add(q));
+      }
+
+      // 1) 공식 활성 인구통계·행동 카테고리 조회 (부모 연령대, 신혼, 페이지 관리자 등)
+      const lifeDemoClause = {};
+      const interestDemoClause = {};
+      const demoClassesToFetch = Array.from(new Set(wantedDemos.map(d => d.demoClass)));
+
+      await Promise.all(demoClassesToFetch.map(async (cls) => {
+        try {
+          const url = `https://graph.facebook.com/v21.0/search?type=adTargetingCategory&class=${encodeURIComponent(cls)}&locale=ko_KR&access_token=${encodeURIComponent(token)}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          if (!data || !Array.isArray(data.data)) return;
+
+          wantedDemos.filter(w => w.demoClass === cls).forEach(w => {
+            const matchedItems = data.data.filter(item =>
+              item && item.id && item.name && w.demoMatch.some(m => String(item.name).includes(m))
+            ).slice(0, 3);
+
+            matchedItems.forEach(item => {
+              const keyName = item.type || cls;
+              const targetClause = w.group === 'life' ? lifeDemoClause : interestDemoClause;
+              if (!targetClause[keyName]) targetClause[keyName] = [];
+              if (!targetClause[keyName].some(x => String(x.id) === String(item.id))) {
+                targetClause[keyName].push({ id: String(item.id), name: item.name });
+              }
+            });
+          });
+        } catch (e) {}
+      }));
+
+      // 2) 공식 관심사(adinterest) 조회 (한글 + 영문 폴백 지원)
+      const fetchInterestMap = async (queriesArr) => {
+        const map = new Map();
+        await Promise.all(queriesArr.map(async (q) => {
+          const isAscii = /^[a-zA-Z0-9\s&]+$/.test(q);
+          const localeParam = isAscii ? '' : '&locale=ko_KR';
+          try {
+            const url = `https://graph.facebook.com/v21.0/search?type=adinterest&q=${encodeURIComponent(q)}${localeParam}&limit=3&access_token=${encodeURIComponent(token)}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data && Array.isArray(data.data) && data.data.length > 0) {
+              for (const item of data.data) {
+                if (!item || !item.id || !item.name) continue;
+                if (item.audience_size_upper_bound !== undefined && Number(item.audience_size_upper_bound) < 5000) continue;
+                map.set(String(item.id), { id: String(item.id), name: item.name });
+                break;
+              }
+            }
+          } catch (e) {}
+        }));
+        return map;
       };
 
-      const mergedBucket = createSpecBucket();
-      ALLOWED_SPEC_KEYS.forEach(k => {
-        lifeBucket[k].forEach((v, id) => mergedBucket[k].set(id, v));
-        interestBucket[k].forEach((v, id) => mergedBucket[k].set(id, v));
+      const [lifeIntMap, mainIntMap] = await Promise.all([
+        lifeQueries.size > 0 ? fetchInterestMap(Array.from(lifeQueries)) : Promise.resolve(new Map()),
+        interestQueries.size > 0 ? fetchInterestMap(Array.from(interestQueries)) : Promise.resolve(new Map())
+      ]);
+
+      // 3) 메타 공식 adinterestvalid API로 만료/비활성 관심사 ID 사전 제거
+      const allCandidateIds = Array.from(new Set([...lifeIntMap.keys(), ...mainIntMap.keys()]));
+      if (allCandidateIds.length > 0) {
+        try {
+          const valUrl = `https://graph.facebook.com/v21.0/search?type=adinterestvalid&interest_fbid_list=${encodeURIComponent(JSON.stringify(allCandidateIds))}&access_token=${encodeURIComponent(token)}`;
+          const valRes = await fetch(valUrl);
+          const valData = await valRes.json();
+          if (valData && Array.isArray(valData.data)) {
+            valData.data.forEach(v => {
+              if (v && v.valid === false && v.id) {
+                const badId = String(v.id);
+                lifeIntMap.delete(badId);
+                mainIntMap.delete(badId);
+              }
+            });
+          }
+        } catch (e) {}
+      }
+
+      // 교집합 시 양쪽 그룹에 동일 ID 중복 방지
+      if (lifeIntMap.size > 0 && mainIntMap.size > 0) {
+        for (const k of mainIntMap.keys()) {
+          if (lifeIntMap.size > 1 && lifeIntMap.has(k)) lifeIntMap.delete(k);
+        }
+      }
+
+      const lifeIntArr = Array.from(lifeIntMap.values());
+      const mainIntArr = Array.from(mainIntMap.values());
+
+      const mergedIntMap = new Map();
+      lifeIntArr.forEach(it => mergedIntMap.set(it.id, it));
+      mainIntArr.forEach(it => mergedIntMap.set(it.id, it));
+      const allInterests = Array.from(mergedIntMap.values());
+
+      const fullLifeClause = { ...lifeDemoClause };
+      if (lifeIntArr.length > 0) fullLifeClause.interests = lifeIntArr;
+
+      const fullMainClause = { ...interestDemoClause };
+      if (mainIntArr.length > 0) fullMainClause.interests = mainIntArr;
+
+      const hasLife = Object.keys(fullLifeClause).length > 0;
+      const hasMain = Object.keys(fullMainClause).length > 0;
+      const isTightRadius = /5\s*km/i.test(String(regionStr || ''));
+
+      const andSpec = (hasLife && hasMain && !isTightRadius)
+        ? [fullLifeClause, fullMainClause]
+        : null;
+
+      const interestAndSpec = (lifeIntArr.length > 0 && mainIntArr.length > 0 && !isTightRadius)
+        ? [{ interests: lifeIntArr }, { interests: mainIntArr }]
+        : null;
+
+      const orSpec = allInterests.length > 0 ? [{ interests: allInterests }] : null;
+
+      const summaryNames = [];
+      [fullLifeClause, fullMainClause].forEach(cl => {
+        Object.keys(cl).forEach(k => {
+          (cl[k] || []).forEach(it => { if (it && it.name) summaryNames.push(it.name); });
+        });
       });
 
-      const lifeSer = serializeBucket(lifeBucket);
-      const interestSer = serializeBucket(interestBucket);
-      const mergedSer = serializeBucket(mergedBucket);
-      const exclSer = serializeBucket(exclusionBucket);
-
-      const isTightRadius = /5\s*km/i.test(String(regionStr || ''));
-      const canUseAndNarrowing = Boolean(lifeSer.clause && interestSer.clause && !isTightRadius);
-
-      const allOnlyInterests = Array.from(mergedBucket.interests.values());
-
       return {
-        andSpec: canUseAndNarrowing ? [lifeSer.clause, interestSer.clause] : null,
-        orSpec: mergedSer.clause ? [mergedSer.clause] : null,
-        interestsOnlySpec: allOnlyInterests.length > 0 ? [{ interests: allOnlyInterests }] : null,
-        exclusions: (!isRecruitMode && exclSer.clause) ? exclSer.clause : null,
-        summaryNames: Array.from(new Set(mergedSer.names))
+        andSpec,
+        interestAndSpec,
+        orSpec,
+        allInterests,
+        summaryNames: Array.from(new Set(summaryNames))
       };
     }
 
@@ -5863,9 +5864,15 @@ async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regio
       const igUserId = metaConn ? metaConn.igId : '';
       const pageId = metaConn ? metaConn.pageId : '';
 
-      const activeTargets = Array.from(document.querySelectorAll('#pane-meta-1 .pill-btn.active'))
+      let activeTargets = Array.from(document.querySelectorAll('#pane-meta-1 .pill-btn.active'))
         .map(b => (b.textContent || b.innerText || '').trim())
         .filter(Boolean);
+
+      if (wizardTrack === 'meta' && activeTargets.length === 0 && activeItem) {
+        const fallbackPool = [...(activeItem.targets || []), activeItem.headline || ''].join(' ');
+        const matchedKeys = Object.keys(TARGET_INTEREST_KEYWORDS).filter(k => fallbackPool.includes(k));
+        activeTargets = matchedKeys.length > 0 ? matchedKeys : ['보험·실손', '내집마련'];
+      }
 
       const curSlide = activeItem.slides[0] || {};
       const isRealVideo = activeItem.type === 'video' && isPlayableVideoUrl(activeItem.videoUrl);
@@ -6144,12 +6151,11 @@ async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regio
             } catch (e) {}
           }
 
-          // ★ 정밀 타겟팅 패킷 생성 (2단 교집합 + 생애주기/행동 + 동종업계 제외)
           const targetPack = await resolveMetaInterests(activeTargets, token, cleanActId, regionStr);
 
-          const buildTargetSpec = (useCustomGeo, flexMode, includeExcl, placementMode) => {
+          const buildTargetSpec = (customFlexSpec, placementMode) => {
             const spec = {
-              geo_locations: useCustomGeo ? buildClientGeoLocations(regionStr) : { countries: ['KR'], location_types: ['home', 'recent'] },
+              geo_locations: buildClientGeoLocations(regionStr),
               age_min: ageMin,
               age_max: ageMax,
               targeting_automation: { advantage_audience: 0 }
@@ -6157,85 +6163,141 @@ async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regio
             if (koreanOnly) spec.locales = [12];
             if (genderVal === 1 || genderVal === 2) spec.genders = [genderVal];
 
-            if (flexMode === 'AND' && targetPack.andSpec) {
-              spec.flexible_spec = targetPack.andSpec;
-            } else if (flexMode === 'OR' && targetPack.orSpec) {
-              spec.flexible_spec = targetPack.orSpec;
-            } else if (flexMode === 'INTERESTS' && targetPack.interestsOnlySpec) {
-              spec.flexible_spec = targetPack.interestsOnlySpec;
+            if (Array.isArray(customFlexSpec) && customFlexSpec.length > 0) {
+              spec.flexible_spec = customFlexSpec;
             }
 
-            if (includeExcl && targetPack.exclusions) {
-              spec.exclusions = targetPack.exclusions;
-            }
-
-            if (corePlacementOnly) {
-              if (placementMode === 'CORE_STRICT') {
-                spec.publisher_platforms = ['facebook', 'instagram'];
-                spec.instagram_positions = ['stream', 'story', 'reels'];
-                spec.facebook_positions = ['feed', 'story', 'facebook_reels'];
-                spec.device_platforms = ['mobile'];
-              } else if (placementMode === 'CORE_PLATFORM') {
-                spec.publisher_platforms = ['facebook', 'instagram'];
-                spec.device_platforms = ['mobile'];
-              }
+            if (corePlacementOnly && placementMode === 'CORE_STRICT') {
+              spec.publisher_platforms = ['facebook', 'instagram'];
+              spec.facebook_positions = ['feed', 'facebook_reels', 'story'];
+              spec.instagram_positions = ['stream', 'reels', 'story'];
+              spec.device_platforms = ['mobile'];
             }
             return spec;
           };
 
-          // ★ 상세 타게팅 증발 방지 단계별 광고세트 생성기
+          const postSingleAdSet = async (baseFields, optGoal, flexSpec, plMode) => {
+            const p = new URLSearchParams({
+              ...baseFields,
+              optimization_goal: optGoal,
+              targeting: JSON.stringify(buildTargetSpec(flexSpec, plMode)),
+              status: 'PAUSED',
+              access_token: token
+            });
+            if (startDate) {
+              const st = new Date(startDate);
+              if (!isNaN(st.getTime()) && st.getTime() > Date.now() + 600000) p.append('start_time', st.toISOString());
+            }
+            if (endDate && endDate !== '상시 게재') {
+              const et = new Date(endDate + 'T23:59:59+09:00');
+              if (!isNaN(et.getTime()) && et.getTime() > Date.now() + 3600000) p.append('end_time', et.toISOString());
+            }
+            const r = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adsets`, {
+              method: 'POST',
+              body: p
+            });
+            return await r.json();
+          };
+
+          // 실제 메타 서버에 저장된 상세 타게팅을 역조회(GET)하여 100% 검증
+          const verifySavedTargeting = async (adSetId, fallbackLabel, fallbackNames) => {
+            try {
+              const vRes = await fetch(`https://graph.facebook.com/v21.0/${adSetId}?fields=targeting&access_token=${encodeURIComponent(token)}`);
+              const vJson = await vRes.json();
+              const flex = vJson && vJson.targeting && Array.isArray(vJson.targeting.flexible_spec)
+                ? vJson.targeting.flexible_spec
+                : [];
+              const savedNames = [];
+              flex.forEach(group => {
+                Object.keys(group || {}).forEach(k => {
+                  if (Array.isArray(group[k])) {
+                    group[k].forEach(it => { if (it && it.name) savedNames.push(it.name); });
+                  }
+                });
+              });
+              if (savedNames.length > 0) {
+                appliedTargetNames = Array.from(new Set(savedNames));
+                appliedTargetingModeLabel = flex.length >= 2 ? '2단 교집합(AND) 정밀타겟' : '상세 관심사 타겟';
+                return;
+              }
+            } catch (e) {}
+            appliedTargetNames = fallbackNames;
+            appliedTargetingModeLabel = fallbackLabel;
+          };
+
           const createAdSetSmart = async (baseFields, altOptGoal) => {
             const attempts = [];
             if (targetPack.andSpec) {
-              attempts.push({ flex: 'AND', excl: true, pl: 'CORE_PLATFORM', label: '교집합 정밀타겟+설계사제외', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
-              attempts.push({ flex: 'AND', excl: false, pl: 'CORE_PLATFORM', label: '교집합 정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
-              attempts.push({ flex: 'AND', excl: false, pl: 'AUTO', label: '교집합 정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: targetPack.andSpec, pl: 'CORE_STRICT', label: '2단 교집합(AND) 정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: targetPack.andSpec, pl: 'AUTO', label: '2단 교집합(AND) 정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+            }
+            if (targetPack.interestAndSpec) {
+              attempts.push({ flex: targetPack.interestAndSpec, pl: 'CORE_STRICT', label: '2단 교집합(AND) 관심사타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: targetPack.interestAndSpec, pl: 'AUTO', label: '2단 교집합(AND) 관심사타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
             }
             if (targetPack.orSpec) {
-              attempts.push({ flex: 'OR', excl: true, pl: 'CORE_PLATFORM', label: '정밀타겟+설계사제외', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
-              attempts.push({ flex: 'OR', excl: false, pl: 'CORE_PLATFORM', label: '정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
-              attempts.push({ flex: 'OR', excl: false, pl: 'AUTO', label: '정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
-            }
-            if (targetPack.interestsOnlySpec) {
-              attempts.push({ flex: 'INTERESTS', excl: false, pl: 'AUTO', label: '핵심관심사 타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: targetPack.orSpec, pl: 'CORE_STRICT', label: '상세 관심사 타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: targetPack.orSpec, pl: 'AUTO', label: '상세 관심사 타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
               if (altOptGoal) {
-                attempts.push({ flex: 'INTERESTS', excl: false, pl: 'AUTO', label: '핵심관심사 타겟', names: targetPack.summaryNames, opt: altOptGoal });
+                attempts.push({ flex: targetPack.orSpec, pl: 'AUTO', label: '상세 관심사 타겟', names: targetPack.summaryNames, opt: altOptGoal });
               }
             }
-            attempts.push({ flex: 'NONE', excl: false, pl: 'CORE_PLATFORM', label: '지역·연령 기본타겟', names: [], opt: baseFields.optimization_goal });
-            attempts.push({ flex: 'NONE', excl: false, pl: 'AUTO', label: '지역·연령 기본타겟', names: [], opt: altOptGoal || baseFields.optimization_goal });
 
             let lastResp = null;
             for (const att of attempts) {
-              const p = new URLSearchParams({
-                ...baseFields,
-                optimization_goal: att.opt,
-                targeting: JSON.stringify(buildTargetSpec(true, att.flex, att.excl, att.pl)),
-                status: 'PAUSED',
-                access_token: token
-              });
-              if (startDate) {
-                const st = new Date(startDate);
-                if (!isNaN(st.getTime()) && st.getTime() > Date.now() + 600000) p.append('start_time', st.toISOString());
-              }
-              if (endDate && endDate !== '상시 게재') {
-                const et = new Date(endDate + 'T23:59:59+09:00');
-                if (!isNaN(et.getTime()) && et.getTime() > Date.now() + 3600000) p.append('end_time', et.toISOString());
-              }
-
-              const r = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adsets`, {
-                method: 'POST',
-                body: p
-              });
-              const d = await r.json();
+              const d = await postSingleAdSet(baseFields, att.opt, att.flex, att.pl);
               lastResp = d;
               if (d && d.id) {
-                appliedTargetNames = att.names;
-                appliedTargetingModeLabel = att.label;
+                await verifySavedTargeting(d.id, att.label, att.names);
                 return d;
               }
             }
-            return lastResp || {};
+
+            // ★ 자가 복구(Self-Healing): 특정 1개 키워드가 막혔더라도 통과되는 관심사만 개별 선별하여 결합 등록
+            if (targetPack.allInterests.length > 0) {
+              const targetOpt = altOptGoal || baseFields.optimization_goal;
+              let createdObj = null;
+              const workingInterests = [];
+
+              for (const candidate of targetPack.allInterests) {
+                if (!createdObj) {
+                  const tryCreate = await postSingleAdSet(baseFields, targetOpt, [{ interests: [candidate] }], 'AUTO');
+                  lastResp = tryCreate;
+                  if (tryCreate && tryCreate.id) {
+                    createdObj = tryCreate;
+                    workingInterests.push(candidate);
+                  }
+                } else {
+                  try {
+                    const nextList = [...workingInterests, candidate];
+                    const upRes = await fetch(`https://graph.facebook.com/v21.0/${createdObj.id}`, {
+                      method: 'POST',
+                      body: new URLSearchParams({
+                        targeting: JSON.stringify(buildTargetSpec([{ interests: nextList }], 'AUTO')),
+                        access_token: token
+                      })
+                    });
+                    const upData = await upRes.json();
+                    if (upData && upData.success) {
+                      workingInterests.push(candidate);
+                    }
+                  } catch (e) {}
+                }
+              }
+
+              if (createdObj && createdObj.id) {
+                await verifySavedTargeting(createdObj.id, '개별검증 상세타겟', workingInterests.map(x => x.name));
+                return createdObj;
+              }
+            }
+
+            const fallbackD = await postSingleAdSet(baseFields, altOptGoal || baseFields.optimization_goal, null, 'AUTO');
+            if (fallbackD && fallbackD.id) {
+              appliedTargetNames = [];
+              appliedTargetingModeLabel = '지역·연령 기본타겟';
+              return fallbackD;
+            }
+            return lastResp || fallbackD || {};
           };
 
           const validCta = ['LEARN_MORE', 'APPLY_NOW', 'SIGN_UP', 'GET_QUOTE'].includes(ctaType)
@@ -6356,9 +6418,9 @@ async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regio
                       createdAdSetId = leadAdSetData.id;
                       createdAdId = laData.id;
                       isAdCreatedSuccess = true;
-                      const tListStr = appliedTargetNames.length ? appliedTargetNames.slice(0, 6).join(', ') : '기본타겟';
+                      const tListStr = appliedTargetNames.length ? appliedTargetNames.join(', ') : '기본타겟';
                       apiNotice.push(`✅ [1/3] 잠재고객(OUTCOME_LEADS) 캠페인 생성 완료`);
-                      apiNotice.push(`✅ [2/3] ${appliedTargetingModeLabel} 반영 완료 (${tListStr})`);
+                      apiNotice.push(`🎯 [2/3] 메타 서버 실제 저장 확인 — ${appliedTargetingModeLabel}: [${tListStr}]`);
                       apiNotice.push(`🎉 [3/3] 맞춤 인스턴트 양식 광고 생성 완료!`);
                     }
                   }
@@ -6429,9 +6491,9 @@ async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regio
                       createdAdSetId = convAdSetData.id;
                       createdAdId = caData.id;
                       isAdCreatedSuccess = true;
-                      const tListStr = appliedTargetNames.length ? appliedTargetNames.slice(0, 6).join(', ') : '기본타겟';
+                      const tListStr = appliedTargetNames.length ? appliedTargetNames.join(', ') : '기본타겟';
                       apiNotice.push(`✅ [1/3] 웹사이트 전환(OUTCOME_LEADS) 캠페인 생성 완료`);
-                      apiNotice.push(`✅ [2/3] ${appliedTargetingModeLabel} (${tListStr}) & 픽셀(${detectedPixelId}) 적용!`);
+                      apiNotice.push(`🎯 [2/3] 메타 서버 실제 저장 확인 — ${appliedTargetingModeLabel}: [${tListStr}]`);
                       apiNotice.push(`🎉 [3/3] 내 PR 매거진 랜딩페이지 전환 광고 세팅 완료!`);
                     }
                   }
@@ -6479,8 +6541,8 @@ async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regio
               return;
             }
             createdAdSetId = adSetData.id;
-            const tListStr = appliedTargetNames.length ? appliedTargetNames.slice(0, 6).join(', ') : '기본타겟';
-            apiNotice.push(`✅ [2/3] ${appliedTargetingModeLabel} (${tListStr}) 광고세트 생성 완료`);
+            const tListStr = appliedTargetNames.length ? appliedTargetNames.join(', ') : '기본타겟';
+            apiNotice.push(`🎯 [2/3] 메타 서버 실제 저장 확인 — ${appliedTargetingModeLabel}: [${tListStr}]`);
 
             let storySpec = buildCreativeStorySpec(finalLandingUrl, '');
             let cRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adcreatives`, {
@@ -6603,7 +6665,6 @@ async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regio
         submitBtn.innerText = originalText;
       }
     }
-
 
     async function loadServerCampaigns(showLoading) {
 

@@ -414,7 +414,7 @@
                 <!-- 2단계: 상세 보기 -->
                 <div id="ssDetailView">
                     <div class="ss-detail-header-main">
-                        <button class="ss-back-btn" onclick="closeSsDetail()"></button>
+                        <button class="ss-back-btn" onclick="closeSsDetail()" title="목록으로 돌아가기"><i class="fa-solid fa-arrow-left"></i></button>
                         <div class="ss-detail-title" id="ssDetailTitle">타이틀이 여기에 표시됩니다.</div>
                     </div>
 
@@ -455,8 +455,8 @@
                                     <div class="ss-blind-panel" id="ssDetailTextRight"></div>
                                     
                                     <img id="ssDetailImgRight" src="" alt="제안서" style="cursor: zoom-in;" onclick="openSsZoom(this.src, 'right')">
-                                    <button class="ss-carousel-nav ss-nav-prev" onclick="event.stopPropagation(); ssChangeProposalSlide(-1)"></button>
-                                    <button class="ss-carousel-nav ss-nav-next" onclick="event.stopPropagation(); ssChangeProposalSlide(1)"></button>
+                                    <button class="ss-carousel-nav ss-nav-prev" onclick="event.stopPropagation(); ssChangeProposalSlide(-1)" title="이전"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <button class="ss-carousel-nav ss-nav-next" onclick="event.stopPropagation(); ssChangeProposalSlide(1)" title="다음"><i class="fa-solid fa-chevron-right"></i></button>
                                     <div class="ss-slide-indicator" id="ssProposalIndicator">1 / 1</div>
                                 </div>
                             </div>
@@ -492,12 +492,12 @@
 
   <!--  [개선] Zoom 오버레이 (스마트 갤러리 뷰 + 휠/드래그 지원) -->
     <div id="ssZoomOverlay" class="ss-zoom-overlay">
-        <button class="ss-zoom-close" onclick="closeSsZoom()"></button>
+        <button class="ss-zoom-close" onclick="closeSsZoom()" title="닫기">&times;</button>
         
         <!--  [신규] 좌우 넘기기 버튼 및 인디케이터 -->
         <div class="ss-zoom-indicator" id="ssZoomIndicator" style="display:none;">1 / 1</div>
-        <button class="ss-zoom-nav ss-zoom-prev" id="ssZoomPrev" onclick="event.stopPropagation(); changeSsZoom(-1)" style="display:none;"></button>
-        <button class="ss-zoom-nav ss-zoom-next" id="ssZoomNext" onclick="event.stopPropagation(); changeSsZoom(1)" style="display:none;"></button>
+        <button class="ss-zoom-nav ss-zoom-prev" id="ssZoomPrev" onclick="event.stopPropagation(); changeSsZoom(-1)" style="display:none;" title="이전"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="ss-zoom-nav ss-zoom-next" id="ssZoomNext" onclick="event.stopPropagation(); changeSsZoom(1)" style="display:none;" title="다음"><i class="fa-solid fa-chevron-right"></i></button>
         
         <!-- 이 영역 안에서 마우스 휠과 드래그가 작동합니다 -->
         <div class="ss-zoom-viewport" id="ssZoomViewport">
@@ -533,7 +533,7 @@
          ========================================================================= -->
     <div class="modal-overlay" id="wideKakaoModal">
         <div class="modal-content wide-modal">
-            <button class="wide-btn-close" onclick="closeWideModal('wideKakaoModal')"></button>
+            <button class="wide-btn-close" onclick="closeWideModal('wideKakaoModal')" title="닫기">&times;</button>
             <div class="modal-left-phone">
                 <div class="kakao-header">미리보기 (카카오톡)</div>
                 <div class="kakao-chat">
@@ -1201,7 +1201,7 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
 
           const prevBtn = document.createElement('button');
           prevBtn.className = 'ss-page-btn';
-          prevBtn.innerText = '';
+          prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
           prevBtn.disabled = ssCurrentPage === 1;
           prevBtn.onclick = () => { if(ssCurrentPage > 1) { ssCurrentPage--; applySsFiltersPaginationOnly(); } };
           container.appendChild(prevBtn);
@@ -1216,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
 
           const nextBtn = document.createElement('button');
           nextBtn.className = 'ss-page-btn';
-          nextBtn.innerText = '';
+          nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
           nextBtn.disabled = ssCurrentPage === totalPages;
           nextBtn.onclick = () => { if(ssCurrentPage < totalPages) { ssCurrentPage++; applySsFiltersPaginationOnly(); } };
           container.appendChild(nextBtn);
@@ -1489,7 +1489,7 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
               <div class="group-control-box" style="width: 100%; display: flex; align-items: center; gap: 6px; padding: 4px 0 8px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px;">
                   <button type="button" onclick="changeSsCustomerPage(${ssCustomerCurrentPage - 1})" 
                       ${prevDisabled ? 'disabled style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #cbd5e1; cursor: default; display: flex; align-items: center; justify-content: center; font-size: 11px;"' : 'style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; transition: all 0.15s;"'}>
-                      ◀
+                      <i class="fa-solid fa-chevron-left"></i>
                   </button>
 
                   <select onchange="changeSsCustomerPage(parseInt(this.value, 10))" 
@@ -1507,7 +1507,7 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
 
                   <button type="button" onclick="changeSsCustomerPage(${ssCustomerCurrentPage + 1})" 
                       ${nextDisabled ? 'disabled style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #cbd5e1; cursor: default; display: flex; align-items: center; justify-content: center; font-size: 11px;"' : 'style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; transition: all 0.15s;"'}>
-                      ▶
+                      <i class="fa-solid fa-chevron-right"></i>
                   </button>
               </div>
               `;

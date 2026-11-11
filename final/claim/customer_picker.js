@@ -946,47 +946,69 @@
 
     if (accList.length === 0) {
       return `
-        <div class="crm-acc-empty-badge" style="margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; color: #b45309; font-size: 12px; font-weight: 600;">
-          <span>⚠️</span>
-          <span>계좌 미등록 (청구서에서 직접 입력)</span>
+        <div class="crm-acc-empty-badge" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; color: #b45309; font-size: 12.5px; font-weight: 600;">
+          <span style="font-size: 15px;">⚠️</span>
+          <span>계좌 미등록 (청구서 본문에서 계좌를 직접 입력해주세요)</span>
         </div>
       `;
     }
 
     if (accList.length === 1) {
       const acc = accList[0];
-      const compLabel = acc.company ? `<span style="font-size: 11px; color: #475569; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 600;">${acc.company}</span>` : '';
+      const compLabel = acc.company ? `<span style="font-size: 11.5px; color: #1e40af; background: #dbeafe; padding: 3px 8px; border-radius: 5px; font-weight: 700;">${acc.company}</span>` : '';
       return `
-        <div style="margin-top: 6px; color: #1e293b; font-size: 13px; font-weight: 600; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
-          <span>🏦 ${acc.bankName} ${acc.bankAccount}</span>
-          <span style="font-size: 12px; color: #64748b; font-weight: 500;">(예금주: ${acc.bankOwner || customer.name})</span>
+        <div style="padding: 10px 14px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; color: #1e293b; font-weight: 600;">
+            <span style="color: #0284c7; font-size: 15px;">🏦</span>
+            <span style="font-weight: 800; color: #0f172a;">${acc.bankName}</span>
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace; color: #2563eb; font-weight: 700; font-size: 13.5px; letter-spacing: 0.3px;">${acc.bankAccount}</span>
+            <span style="font-size: 12px; color: #64748b; font-weight: 500;">(예금주: ${acc.bankOwner || customer.name})</span>
+          </div>
           ${compLabel}
         </div>
       `;
     }
 
-    // 2개 이상의 계좌 보유 시 (드롭다운 선택기 노출)
+    // 2개 이상의 계좌 보유 시 (넓고 시원한 드롭다운 선택기 노출)
     const selIdx = (typeof customer.selectedAccountIndex === 'number' && customer.selectedAccountIndex >= 0 && customer.selectedAccountIndex < accList.length)
       ? customer.selectedAccountIndex
       : 0;
+    const curAcc = accList[selIdx];
 
     return `
-      <div class="crm-multi-account-box" style="margin-top: 8px; padding: 10px 12px; background: #eff6ff; border: 1.5px solid #3b82f6; border-radius: 10px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-          <span style="font-size: 12px; font-weight: 800; color: #1e40af; display: flex; align-items: center; gap: 4px;">
-            🏦 입금 계좌 선택 <span style="background: #2563eb; color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 10px;">${accList.length}개 보유</span>
-          </span>
-          <span style="font-size: 11px; color: #2563eb; font-weight: 600;">
-            ✓ 선택한 계좌로 자동 입력
-          </span>
+      <div class="crm-multi-account-box" style="padding: 12px 14px; background: #f0f7ff; border: 1.5px solid #3b82f6; border-radius: 12px; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.08);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 13px; font-weight: 800; color: #1e40af;">🏦 입금 계좌 선택</span>
+            <span style="background: #2563eb; color: #ffffff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px;">${accList.length}개 보유</span>
+          </div>
+          <span style="font-size: 11.5px; color: #2563eb; font-weight: 600;">✓ 선택한 계좌로 청구서 자동 반영</span>
         </div>
-        <select class="crm-account-select" onchange="selectCustomerAccount('${role}', this.value)" style="width: 100%; padding: 8px 10px; font-size: 13px; font-weight: 600; color: #0f172a; background: #ffffff; border: 1.5px solid #60a5fa; border-radius: 8px; cursor: pointer; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-          ${accList.map((acc, aIdx) => {
-            const isSel = aIdx === selIdx;
-            const compTxt = acc.company ? ` (${acc.company})` : '';
-            return `<option value="${aIdx}" ${isSel ? 'selected' : ''}>${acc.bankName} ${acc.bankAccount}${compTxt} [예금주: ${acc.bankOwner || customer.name}]</option>`;
-          }).join('')}
-        </select>
+
+        <div style="position: relative; width: 100%;">
+          <select class="crm-account-select" onchange="selectCustomerAccount('${role}', this.value)" style="width: 100%; min-height: 44px; padding: 10px 38px 10px 14px; font-size: 12.5px; font-weight: 600; color: #0f172a; background: #ffffff; border: 1.5px solid #60a5fa; border-radius: 8px; cursor: pointer; outline: none; box-shadow: 0 1px 3px rgba(0,0,0,0.06); appearance: none; -webkit-appearance: none; -moz-appearance: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4;">
+            ${accList.map((acc, aIdx) => {
+              const isSel = aIdx === selIdx;
+              const compTxt = acc.company ? ` · ${acc.company}` : '';
+              const ownerTxt = `(예금주: ${acc.bankOwner || customer.name})`;
+              return `<option value="${aIdx}" ${isSel ? 'selected' : ''}>[${acc.bankName}]  ${acc.bankAccount}${compTxt}  ${ownerTxt}</option>`;
+            }).join('')}
+          </select>
+          <div style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #2563eb; font-size: 11px; font-weight: 800;">
+            ▼
+          </div>
+        </div>
+
+        <!-- 현재 선택된 계좌 상세 하단 가이드 칩 -->
+        <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; padding: 7px 12px; background: #ffffff; border-radius: 8px; border: 1px solid #bfdbfe; font-size: 12px; color: #1e3a8a;">
+          <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <span style="font-weight: 700; color: #1d4ed8;">선택 계좌:</span>
+            <span style="font-weight: 800; color: #0f172a;">${curAcc.bankName}</span>
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace; font-weight: 700; color: #2563eb; font-size: 12.5px; letter-spacing: 0.3px;">${curAcc.bankAccount}</span>
+            <span style="color: #64748b;">(예금주: ${curAcc.bankOwner || customer.name})</span>
+          </div>
+          ${curAcc.company ? `<span style="background: #eff6ff; color: #1d4ed8; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; border: 1px solid #dbeafe;">${curAcc.company}</span>` : ''}
+        </div>
       </div>
     `;
   }
@@ -1088,21 +1110,26 @@
     if (insured) {
       html += `
         <div class="crm-selected-client-card">
-          <div class="crm-client-avatar">👤</div>
-          <div class="crm-client-meta">
-            <div class="crm-client-title">
-              <span class="crm-c-name">${insured.name}</span>
-              <span class="crm-c-rrn">${insured.rrnFront ? insured.rrnFront + '-*******' : '주민번호 미등록'}</span>
+          <div class="crm-client-top-row">
+            <div class="crm-client-identity">
+              <div class="crm-client-avatar">👤</div>
+              <div class="crm-client-title">
+                <span class="crm-c-name">${insured.name}</span>
+                <span class="crm-c-rrn">${insured.rrnFront ? insured.rrnFront + '-*******' : '주민번호 미등록'}</span>
+              </div>
             </div>
-            <div class="crm-client-details">
-              <span>📞 ${insured.phone || '연락처 없음'}</span>
-              <span>🏠 ${insured.address || '주소 없음'}</span>
-              ${renderAccountSection('insured', insured)}
+            <div class="crm-client-actions">
+              <button type="button" class="btn-card-change" onclick="startCustomerSearch('insured')">변경</button>
+              <button type="button" class="btn-card-remove" onclick="removeCustomer('insured')" title="선택 해제">✕</button>
             </div>
           </div>
-          <div class="crm-client-actions">
-            <button type="button" class="btn-card-change" onclick="startCustomerSearch('insured')">변경</button>
-            <button type="button" class="btn-card-remove" onclick="removeCustomer('insured')" title="선택 해제">✕</button>
+          <div class="crm-client-sub-info">
+            <span>📞 ${insured.phone || '연락처 없음'}</span>
+            <span style="color:#cbd5e1;">|</span>
+            <span>🏠 ${insured.address || '주소 없음'}</span>
+          </div>
+          <div class="crm-client-account-wrap">
+            ${renderAccountSection('insured', insured)}
           </div>
         </div>
       `;
@@ -1134,22 +1161,27 @@
 
       if (contractor) {
         html += `
-          <div class="crm-selected-client-card">
-            <div class="crm-client-avatar contractor">👥</div>
-            <div class="crm-client-meta">
-              <div class="crm-client-title">
-                <span class="crm-c-name">${contractor.name}</span>
-                <span class="crm-c-rrn">${contractor.rrnFront ? contractor.rrnFront + '-*******' : '주민번호 미등록'}</span>
+          <div class="crm-selected-client-card contractor-theme">
+            <div class="crm-client-top-row">
+              <div class="crm-client-identity">
+                <div class="crm-client-avatar contractor">👥</div>
+                <div class="crm-client-title">
+                  <span class="crm-c-name">${contractor.name}</span>
+                  <span class="crm-c-rrn">${contractor.rrnFront ? contractor.rrnFront + '-*******' : '주민번호 미등록'}</span>
+                </div>
               </div>
-              <div class="crm-client-details">
-                <span>📞 ${contractor.phone || '연락처 없음'}</span>
-                <span>🏠 ${contractor.address || '주소 없음'}</span>
-                ${renderAccountSection('contractor', contractor)}
+              <div class="crm-client-actions">
+                <button type="button" class="btn-card-change" onclick="startCustomerSearch('contractor')">변경</button>
+                <button type="button" class="btn-card-remove" onclick="removeCustomer('contractor')" title="선택 해제">✕</button>
               </div>
             </div>
-            <div class="crm-client-actions">
-              <button type="button" class="btn-card-change" onclick="startCustomerSearch('contractor')">변경</button>
-              <button type="button" class="btn-card-remove" onclick="removeCustomer('contractor')" title="선택 해제">✕</button>
+            <div class="crm-client-sub-info">
+              <span>📞 ${contractor.phone || '연락처 없음'}</span>
+              <span style="color:#cbd5e1;">|</span>
+              <span>🏠 ${contractor.address || '주소 없음'}</span>
+            </div>
+            <div class="crm-client-account-wrap">
+              ${renderAccountSection('contractor', contractor)}
             </div>
           </div>
         `;
@@ -1694,7 +1726,7 @@
       .crm-modal-card {
         background: #ffffff;
         width: 100%;
-        max-width: 620px;
+        max-width: 660px;
         border-radius: 20px;
         box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.28);
         display: flex;
@@ -1976,40 +2008,67 @@
       .crm-selected-client-card {
         background: #f0fdf4;
         border: 1.5px solid #86efac;
-        border-radius: 12px;
-        padding: 12px 14px;
+        border-radius: 14px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s ease;
+      }
+      .crm-selected-client-card.contractor-theme {
+        background: #fdf2f8;
+        border-color: #f472b6;
+      }
+      .crm-client-top-row {
         display: flex;
         align-items: center;
-        gap: 12px;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .crm-client-identity {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+      .crm-client-sub-info {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 12.5px;
+        color: #475569;
+        padding-left: 2px;
+      }
+      .crm-client-account-wrap {
+        width: 100%;
+        margin-top: 2px;
       }
       .crm-client-avatar {
-        width: 38px;
-        height: 38px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         background: #dcfce7;
         color: #15803d;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 17px;
         flex-shrink: 0;
       }
       .crm-client-avatar.contractor {
         background: #fce7f3;
         color: #be185d;
       }
-      .crm-client-meta {
-        flex: 1;
-        min-width: 0;
-      }
       .crm-client-title {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-bottom: 2px;
+        margin-bottom: 0;
       }
       .crm-c-name {
-        font-size: 15px;
+        font-size: 15.5px;
         font-weight: 800;
         color: #0f172a;
       }
@@ -2017,16 +2076,10 @@
         font-size: 12px;
         color: #64748b;
         background: #ffffff;
-        padding: 1px 6px;
-        border-radius: 4px;
+        padding: 2px 7px;
+        border-radius: 5px;
         border: 1px solid #e2e8f0;
-      }
-      .crm-client-details {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        font-size: 12px;
-        color: #475569;
+        font-weight: 600;
       }
       .crm-client-actions {
         display: flex;
@@ -2038,23 +2091,30 @@
         border: 1px solid #cbd5e1;
         color: #334155;
         border-radius: 8px;
-        padding: 5px 10px;
+        padding: 6px 12px;
         font-size: 12px;
         font-weight: 700;
         cursor: pointer;
+        transition: all 0.15s ease;
       }
       .btn-card-change:hover {
         background: #f1f5f9;
+        border-color: #94a3b8;
       }
       .btn-card-remove {
         background: #fee2e2;
         border: 1px solid #fca5a5;
         color: #ef4444;
         border-radius: 8px;
-        padding: 5px 8px;
+        padding: 6px 10px;
         font-size: 12px;
         font-weight: 700;
         cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .btn-card-remove:hover {
+        background: #fecaca;
+        color: #dc2626;
       }
 
       /* 모달 푸터 버튼 */

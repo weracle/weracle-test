@@ -1476,7 +1476,7 @@ try {
 allClients = [...general, ...corp];
 globalCustomerData = allClients;
 try {
-    localStorage.setItem("weracle_crm_customers_cache", JSON.stringify(globalCustomerData));
+    localStorage.setItem("weracle_crm_customers_cache", JSON.stringify(globalCustomerData)); if (window.currentUser) { try { localStorage.setItem("weracle_cache_user_id", window.currentUser.id); } catch(e){} }
     localStorage.setItem("demo_crm_data", JSON.stringify(globalCustomerData));
 } catch(e) {}
 } catch(e) {

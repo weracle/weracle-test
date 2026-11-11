@@ -1353,17 +1353,43 @@ function updateDashboardV3Stats() {
 }
 
 async function loadDataAndRender() {
+  const currentProfile = getParentProp('currentProfile');
+  const currentUser = getParentProp('currentUser');
+
+  // [계정간 데이터 혼입 완벽 방지] 로그인 사용자가 없거나 게스트인 경우 캐시 무효화 및 데이터 백지화
+  if (!currentUser && !currentProfile) {
+    crmData = [];
+    targetData = [];
+    agentEvents = [];
+    crmEventsList = [];
+    analyzeCrmData();
+    renderV3Calendar();
+    return;
+  }
+
   const globalCust = getParentProp('globalCustomerData');
   if (globalCust && globalCust.length > 0) {
     crmData = globalCust;
     const globalTgt = getParentProp('globalTargetData');
     if (globalTgt) targetData = globalTgt;
   } else {
-    // 1. Check persistent localStorage cache
+    // 1. Check persistent localStorage cache ONLY if user matches
     try {
-      const cached = localStorage.getItem('weracle_crm_cached_data');
-      if (cached) {
-        crmData = JSON.parse(cached);
+      const currentUserId = currentUser ? currentUser.id : (currentProfile ? currentProfile.id : '');
+      const cachedOwner = localStorage.getItem('weracle_cache_user_id');
+      
+      if (currentUserId && cachedOwner && currentUserId !== cachedOwner) {
+        // 다른 아이디의 캐시인 경우 즉시 영구 삭제!
+        localStorage.removeItem('weracle_crm_cached_data');
+        localStorage.removeItem('weracle_crm_customers_cache');
+        localStorage.removeItem('weracle_crm_insurance_cache');
+        localStorage.removeItem('cached_profile');
+        crmData = [];
+      } else {
+        const cached = localStorage.getItem('weracle_crm_cached_data');
+        if (cached) {
+          crmData = JSON.parse(cached);
+        }
       }
     } catch(e) {}
 
@@ -1475,6 +1501,17 @@ async function initDashboard() {
 
   if (!checkDataInterval) {
     checkDataInterval = setInterval(() => {
+      const currentUser = getParentProp('currentUser');
+      const currentProfile = getParentProp('currentProfile');
+      if (!currentUser && !currentProfile) {
+        if (crmData.length > 0 || crmEventsList.length > 0) {
+          crmData = [];
+          crmEventsList = [];
+          agentEvents = [];
+          renderV3Calendar();
+        }
+        return;
+      }
       const gCust = getParentProp('globalCustomerData');
       if (gCust && gCust.length > 0) {
         if (crmData.length !== gCust.length) {

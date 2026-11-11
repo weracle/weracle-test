@@ -939,7 +939,7 @@
     }
   };
 
-  // 계좌 표시 및 선택 컴포넌트 렌더러
+  // 계좌 표시 및 선택 컴포넌트 렌더러 (상단: 현재 선택 계좌 표시, 하단: 변경 선택 드롭다운)
   function renderAccountSection(role, customer) {
     if (!customer) return '';
     const accList = customer.accounts || [];
@@ -957,19 +957,19 @@
       const acc = accList[0];
       const compLabel = acc.company ? `<span style="font-size: 11.5px; color: #1e40af; background: #dbeafe; padding: 3px 8px; border-radius: 5px; font-weight: 700;">${acc.company}</span>` : '';
       return `
-        <div style="padding: 10px 14px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-          <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; color: #1e293b; font-weight: 600;">
-            <span style="color: #0284c7; font-size: 15px;">🏦</span>
+        <div style="padding: 11px 14px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13.5px; color: #1e293b; font-weight: 600;">
+            <span style="color: #0284c7; font-size: 16px;">🏦</span>
             <span style="font-weight: 800; color: #0f172a;">${acc.bankName}</span>
-            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace; color: #2563eb; font-weight: 700; font-size: 13.5px; letter-spacing: 0.3px;">${acc.bankAccount}</span>
-            <span style="font-size: 12px; color: #64748b; font-weight: 500;">(예금주: ${acc.bankOwner || customer.name})</span>
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace; color: #2563eb; font-weight: 700; font-size: 14px; letter-spacing: 0.3px;">${acc.bankAccount}</span>
+            <span style="font-size: 12.5px; color: #64748b; font-weight: 500;">(예금주: ${acc.bankOwner || customer.name})</span>
           </div>
           ${compLabel}
         </div>
       `;
     }
 
-    // 2개 이상의 계좌 보유 시 (넓고 시원한 드롭다운 선택기 노출)
+    // 2개 이상의 계좌 보유 시: 상단에 선택된 계좌 강조 노출, 하단에 변경 선택기 배치
     const selIdx = (typeof customer.selectedAccountIndex === 'number' && customer.selectedAccountIndex >= 0 && customer.selectedAccountIndex < accList.length)
       ? customer.selectedAccountIndex
       : 0;
@@ -977,38 +977,52 @@
 
     return `
       <div class="crm-multi-account-box" style="padding: 12px 14px; background: #f0f7ff; border: 1.5px solid #3b82f6; border-radius: 12px; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.08);">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 13px; font-weight: 800; color: #1e40af;">🏦 입금 계좌 선택</span>
-            <span style="background: #2563eb; color: #ffffff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px;">${accList.length}개 보유</span>
+        
+        <!-- 1. [상단] 현재 선택된 적용 계좌 정보 카드 -->
+        <div style="margin-bottom: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 12px; font-weight: 800; color: #1d4ed8; letter-spacing: 0.2px;">✓ 입금 적용 계좌</span>
+              <span style="background: #2563eb; color: #ffffff; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 8px;">청구서 자동 반영</span>
+            </div>
+            ${curAcc.company ? `<span style="background: #ffffff; color: #1d4ed8; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 750; border: 1px solid #bfdbfe;">${curAcc.company}</span>` : ''}
           </div>
-          <span style="font-size: 11.5px; color: #2563eb; font-weight: 600;">✓ 선택한 계좌로 청구서 자동 반영</span>
+
+          <div style="padding: 10px 14px; background: #ffffff; border: 1.5px solid #60a5fa; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; box-shadow: 0 1px 4px rgba(37, 99, 235, 0.08);">
+            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13.5px; color: #0f172a; font-weight: 700;">
+              <span style="color: #0284c7; font-size: 16px;">🏦</span>
+              <span style="font-size: 14.5px; font-weight: 850; color: #0f172a;">${curAcc.bankName}</span>
+              <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace; color: #2563eb; font-weight: 750; font-size: 14px; letter-spacing: 0.3px;">${curAcc.bankAccount}</span>
+              <span style="font-size: 12.5px; color: #475569; font-weight: 500;">(예금주: ${curAcc.bankOwner || customer.name})</span>
+            </div>
+          </div>
         </div>
 
-        <div style="position: relative; width: 100%;">
-          <select class="crm-account-select" onchange="selectCustomerAccount('${role}', this.value)" style="width: 100%; min-height: 44px; padding: 10px 38px 10px 14px; font-size: 12.5px; font-weight: 600; color: #0f172a; background: #ffffff; border: 1.5px solid #60a5fa; border-radius: 8px; cursor: pointer; outline: none; box-shadow: 0 1px 3px rgba(0,0,0,0.06); appearance: none; -webkit-appearance: none; -moz-appearance: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4;">
-            ${accList.map((acc, aIdx) => {
-              const isSel = aIdx === selIdx;
-              const compTxt = acc.company ? ` · ${acc.company}` : '';
-              const ownerTxt = `(예금주: ${acc.bankOwner || customer.name})`;
-              return `<option value="${aIdx}" ${isSel ? 'selected' : ''}>[${acc.bankName}]  ${acc.bankAccount}${compTxt}  ${ownerTxt}</option>`;
-            }).join('')}
-          </select>
-          <div style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #2563eb; font-size: 11px; font-weight: 800;">
-            ▼
+        <!-- 2. [하단] 다른 계좌로 변경 선택기 (드롭다운) -->
+        <div style="border-top: 1px dashed #bfdbfe; padding-top: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <span style="font-size: 12px; font-weight: 700; color: #1e40af; display: flex; align-items: center; gap: 4px;">
+              <span>🔄 다른 계좌로 변경</span>
+              <span style="font-size: 11px; color: #475569; font-weight: 500;">(총 ${accList.length}개 보유)</span>
+            </span>
+            <span style="font-size: 11px; color: #2563eb; font-weight: 600;">목록에서 변경할 계좌를 선택하세요</span>
+          </div>
+
+          <div style="position: relative; width: 100%;">
+            <select class="crm-account-select" onchange="selectCustomerAccount('${role}', this.value)" style="width: 100%; min-height: 42px; padding: 9px 36px 9px 12px; font-size: 12.5px; font-weight: 600; color: #0f172a; background: #ffffff; border: 1.5px solid #93c5fd; border-radius: 8px; cursor: pointer; outline: none; box-shadow: 0 1px 3px rgba(0,0,0,0.04); appearance: none; -webkit-appearance: none; -moz-appearance: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4;">
+              ${accList.map((acc, aIdx) => {
+                const isSel = aIdx === selIdx;
+                const compTxt = acc.company ? ` · ${acc.company}` : '';
+                const ownerTxt = `(예금주: ${acc.bankOwner || customer.name})`;
+                return `<option value="${aIdx}" ${isSel ? 'selected' : ''}>${isSel ? '✓ [선택됨] ' : ''}[${acc.bankName}]  ${acc.bankAccount}${compTxt}  ${ownerTxt}</option>`;
+              }).join('')}
+            </select>
+            <div style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #2563eb; font-size: 11px; font-weight: 800;">
+              ▼
+            </div>
           </div>
         </div>
 
-        <!-- 현재 선택된 계좌 상세 하단 가이드 칩 -->
-        <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; padding: 7px 12px; background: #ffffff; border-radius: 8px; border: 1px solid #bfdbfe; font-size: 12px; color: #1e3a8a;">
-          <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 6px;">
-            <span style="font-weight: 700; color: #1d4ed8;">선택 계좌:</span>
-            <span style="font-weight: 800; color: #0f172a;">${curAcc.bankName}</span>
-            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace; font-weight: 700; color: #2563eb; font-size: 12.5px; letter-spacing: 0.3px;">${curAcc.bankAccount}</span>
-            <span style="color: #64748b;">(예금주: ${curAcc.bankOwner || customer.name})</span>
-          </div>
-          ${curAcc.company ? `<span style="background: #eff6ff; color: #1d4ed8; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; border: 1px solid #dbeafe;">${curAcc.company}</span>` : ''}
-        </div>
       </div>
     `;
   }

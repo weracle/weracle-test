@@ -115,10 +115,11 @@ function initFamilyTabs(baseId, baseLabel) {
         mainWrapper.style.flexDirection = 'row';
         mainWrapper.style.background = '#f8fafc';
         
+        const isSingle = (window.wizardMode === 'single');
         const famSidebar = document.createElement('div');
         famSidebar.id = 'tier-1-tabs';
         famSidebar.className = 'family-sidebar-wizard';
-        famSidebar.style.width = '240px'; famSidebar.style.minWidth = '240px'; famSidebar.style.background = '#ffffff'; famSidebar.style.borderRight = '1px solid #e2e8f0'; famSidebar.style.padding = '20px 10px'; famSidebar.style.display = 'flex'; famSidebar.style.flexDirection = 'column'; famSidebar.style.gap = '8px'; famSidebar.style.position = 'relative'; famSidebar.style.overflowY = 'auto';
+        famSidebar.style.width = '240px'; famSidebar.style.minWidth = '240px'; famSidebar.style.background = '#ffffff'; famSidebar.style.borderRight = '1px solid #e2e8f0'; famSidebar.style.padding = '20px 10px'; famSidebar.style.display = isSingle ? 'none' : 'flex'; famSidebar.style.flexDirection = 'column'; famSidebar.style.gap = '8px'; famSidebar.style.position = 'relative'; famSidebar.style.overflowY = 'auto';
 
         const rightArea = document.createElement('div');
         rightArea.style.flex = '1'; rightArea.style.display = 'flex'; rightArea.style.flexDirection = 'column'; rightArea.style.overflow = 'hidden';
@@ -211,7 +212,21 @@ function renderFamilyTabs() {
     if (!t1) return;
     
     const isNew = !window.isEditMode;
-    if(isNew) { document.body.classList.add('mode-new'); } else { document.body.classList.remove('mode-new'); }
+    const isSingle = (window.wizardMode === 'single');
+    
+    if (isNew && isSingle) {
+        t1.style.display = 'none';
+        if (typeof window.renderWizardBottomNav === 'function') window.renderWizardBottomNav();
+        return;
+    }
+    
+    if(isNew) { 
+        document.body.classList.add('mode-new'); 
+        t1.style.display = 'flex';
+    } else { 
+        document.body.classList.remove('mode-new'); 
+        t1.style.display = '';
+    }
     let html = '';
     
     if (isNew) {
@@ -1023,15 +1038,20 @@ window.renderWizardBottomNav = function() {
     }
     
     // Next / Save Button
+    const isSingle = (window.wizardMode === 'single');
     if (window.activeCategoryId < 3) {
         html += '<button type="button" onclick="switchCategoryTab(' + (window.activeCategoryId + 1) + ')" style="padding:14px 32px; border-radius:8px; border:none; background:#1e293b; color:#ffffff; font-size:15px; font-weight:700; cursor:pointer; transition:0.2s;">다음 단계 </button>';
     } else {
-        const currentIndex = window.familyState.findIndex(f => f.id === window.activeFamilyId);
-        if (currentIndex < window.familyState.length - 1) {
-            const nextFam = window.familyState[currentIndex + 1];
-            html += '<button type="button" onclick="switchFamilyTab(\'' + nextFam.id + '\'); switchCategoryTab(1);" style="padding:14px 32px; border-radius:8px; border:none; background:#3b82f6; color:#ffffff; font-size:15px; font-weight:700; cursor:pointer; transition:0.2s; box-shadow:0 4px 6px -1px rgba(59,130,246,0.3);">다음 가족(' + nextFam.label + ') 입력 </button>';
+        if (isSingle) {
+            html += '<button type="button" onclick="window.submitAllFamilyData(event)" style="padding:14px 32px; border-radius:8px; border:none; background:#10b981; color:#ffffff; font-size:14px; font-weight:800; cursor:pointer; transition:0.2s; box-shadow:0 4px 6px -1px rgba(16,185,129,0.3);"><i class="fa-solid fa-check" style="margin-right:6px;"></i> 고객 등록 완료</button>';
         } else {
-            html += '<button type="button" onclick="window.submitAllFamilyData(event)" style="padding:14px 32px; border-radius:8px; border:none; background:#10b981; color:#ffffff; font-size:14px; font-weight:800; cursor:pointer; transition:0.2s; box-shadow:0 4px 6px -1px rgba(16,185,129,0.3);">최종 일괄 저장 </button>';
+            const currentIndex = window.familyState.findIndex(f => f.id === window.activeFamilyId);
+            if (currentIndex < window.familyState.length - 1) {
+                const nextFam = window.familyState[currentIndex + 1];
+                html += '<button type="button" onclick="switchFamilyTab(\'' + nextFam.id + '\'); switchCategoryTab(1);" style="padding:14px 32px; border-radius:8px; border:none; background:#3b82f6; color:#ffffff; font-size:15px; font-weight:700; cursor:pointer; transition:0.2s; box-shadow:0 4px 6px -1px rgba(59,130,246,0.3);">다음 가족(' + nextFam.label + ') 입력 </button>';
+            } else {
+                html += '<button type="button" onclick="window.submitAllFamilyData(event)" style="padding:14px 32px; border-radius:8px; border:none; background:#10b981; color:#ffffff; font-size:14px; font-weight:800; cursor:pointer; transition:0.2s; box-shadow:0 4px 6px -1px rgba(16,185,129,0.3);">최종 일괄 저장 </button>';
+            }
         }
     }
     
@@ -1044,7 +1064,9 @@ window.submitAllFamilyData = async function(e) {
     
     saveCurrentFormToState();
     
-    if(!confirm('모든 가족 정보를 저장하시겠습니까?')) return;
+    const isSingle = (window.wizardMode === 'single');
+    const confirmMsg = isSingle ? '고객 정보를 등록하시겠습니까?' : '모든 가족 정보를 저장하시겠습니까?';
+    if(!confirm(confirmMsg)) return;
     
     window.isFamilySubmitInProgress = true;
     if(typeof showLoading === 'function') showLoading(true);

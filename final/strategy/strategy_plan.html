@@ -1448,124 +1448,177 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
       function renderCustomerListUI() {
           const listContainer = document.getElementById('ssTargetList');
           const headerContainer = document.getElementById('ssListHeader');
+          if (!listContainer || !headerContainer) return;
           
-          const totalPages = Math.ceil(ssFilteredCustomers.length / SS_CUSTOMERS_PER_PAGE) || 1;
-          let paginationHtml = `<div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; width: 100%; border-bottom: 1px solid #f1f5f9;">`;
-          
-          for (let i = 1; i <= totalPages; i++) {
-              let btnStyle = i === ssCustomerCurrentPage 
-                  ? "background: var(--primary); color: white; border: 1px solid var(--primary); box-shadow: 0 4px 10px rgba(17,63,103,0.2);"
-                  : "background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0;";
-              
-              paginationHtml += `
-                  <button onclick="changeSsCustomerPage(${i})" 
-                      style="flex-shrink: 0; padding: 6px 16px; border-radius: 20px; font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; ${btnStyle}">
-                      Group ${i}
+          const total = ssFilteredCustomers.length;
+          const totalPages = Math.ceil(total / SS_CUSTOMERS_PER_PAGE) || 1;
+          if (ssCustomerCurrentPage > totalPages) ssCustomerCurrentPage = 1;
+
+          // [타겟관리 100% 동일 스타일] 100명 초과 시에만 그룹 페이징 컨트롤 바 렌더링
+          let paginationHtml = '';
+          if (total > SS_CUSTOMERS_PER_PAGE) {
+              const prevDisabled = (ssCustomerCurrentPage === 1);
+              const nextDisabled = (ssCustomerCurrentPage === totalPages);
+
+              paginationHtml = `
+              <div class="group-control-box" style="width: 100%; display: flex; align-items: center; gap: 6px; padding: 4px 0 8px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px;">
+                  <button type="button" onclick="changeSsCustomerPage(${ssCustomerCurrentPage - 1})" 
+                      ${prevDisabled ? 'disabled style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #cbd5e1; cursor: default; display: flex; align-items: center; justify-content: center; font-size: 11px;"' : 'style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; transition: all 0.15s;"'}>
+                      ◀
                   </button>
+
+                  <select onchange="changeSsCustomerPage(parseInt(this.value, 10))" 
+                      style="flex: 1; height: 30px; font-size: 12.5px; font-weight: 700; color: #1e293b; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 10px; cursor: pointer; outline: none; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              `;
+
+              for (let p = 1; p <= totalPages; p++) {
+                  const s = (p - 1) * SS_CUSTOMERS_PER_PAGE + 1;
+                  const e = Math.min(p * SS_CUSTOMERS_PER_PAGE, total);
+                  paginationHtml += `<option value="${p}" ${p === ssCustomerCurrentPage ? 'selected' : ''}>${p}그룹 (${s.toLocaleString()}~${e.toLocaleString()}명) / 총 ${totalPages}그룹</option>`;
+              }
+
+              paginationHtml += `
+                  </select>
+
+                  <button type="button" onclick="changeSsCustomerPage(${ssCustomerCurrentPage + 1})" 
+                      ${nextDisabled ? 'disabled style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #cbd5e1; cursor: default; display: flex; align-items: center; justify-content: center; font-size: 11px;"' : 'style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; transition: all 0.15s;"'}>
+                      ▶
+                  </button>
+              </div>
               `;
           }
-          paginationHtml += `</div>`;
 
+          const startIndex = (ssCustomerCurrentPage - 1) * SS_CUSTOMERS_PER_PAGE;
+          const currentGroup = ssFilteredCustomers.slice(startIndex, startIndex + SS_CUSTOMERS_PER_PAGE);
+          const checkedCount = window.ssCurrentBaseData ? window.ssCurrentBaseData.filter(c => c.isChecked).length : 0;
+
+          // [타겟관리 통일 헤더] 현재그룹 체크박스 + 전체그룹 선택(100명 초과시) + 선택 카운트
           headerContainer.innerHTML = `
               ${paginationHtml}
-              <div style="display:flex; justify-content: space-between; align-items: center; width: 100%; padding-top: 4px;">
-                  <label style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
-                      <input type="checkbox" id="ssSelectAllCb" class="ss-custom-cb"> 
-                      <span id="ssSelectedCountText">전체선택</span>
-                  </label>
-                  <span id="ssCustomerCount" style="color:var(--title-blue); font-size:14px; font-weight:800;">총 ${ssFilteredCustomers.length}명</span>
+              <div style="display:flex; justify-content: space-between; align-items: center; width: 100%; padding-top: 5px; gap: 6px; flex-wrap: wrap;">
+                  <div style="display:flex; align-items: center; gap: 8px;">
+                      <label style="font-size: 12.5px; font-weight: 700; display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--text-main);">
+                          <input type="checkbox" id="ssSelectAllCb" class="ss-custom-cb" style="width: 15px; height: 15px;"> 
+                          <span>현재그룹 (${currentGroup.length}명)</span>
+                      </label>
+                      ${total > SS_CUSTOMERS_PER_PAGE ? `
+                      <label style="font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #0284c7; background: #f0f9ff; padding: 2px 7px; border-radius: 6px; border: 1px solid #bae6fd;">
+                          <input type="checkbox" id="ssSelectAllEntireGroupsCb" class="ss-custom-cb" style="width: 15px; height: 15px;"> 
+                          <span>전체그룹 선택 (${total.toLocaleString()}명)</span>
+                      </label>
+                      ` : ''}
+                  </div>
+                  <span id="ssSelectedCountText" style="font-size: 12px; color: #64748b; font-weight: 700;">
+                      ${checkedCount > 0 ? `<b style="color:#0284c7;">${checkedCount.toLocaleString()}명</b> 선택` : ''}
+                  </span>
               </div>
           `;
 
           listContainer.innerHTML = ''; 
-          const startIndex = (ssCustomerCurrentPage - 1) * SS_CUSTOMERS_PER_PAGE;
-          const currentGroup = ssFilteredCustomers.slice(startIndex, startIndex + SS_CUSTOMERS_PER_PAGE);
-          
+
+          // 빈 결과 처리
+          if (total === 0) {
+              listContainer.innerHTML = `
+                  <div style="padding: 50px 0; text-align: center; color: #94a3b8;">
+                      <i class="fa-regular fa-folder-open" style="font-size: 36px; margin-bottom: 10px; opacity: 0.5; display: block;"></i>
+                      <div style="font-size: 14.5px; font-weight: 700; color: #64748b;">조건에 해당하는 고객이 없습니다.</div>
+                  </div>
+              `;
+              return;
+          }
+
+          // [타겟관리 통일 아이템 렌더링]
           currentGroup.forEach(cust => {
               let pDigits = String(cust.phone || '').replace(/[^0-9]/g, '');
               let displayPhone = pDigits.length === 11 ? pDigits.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3') : (pDigits.length === 10 ? pDigits.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : (cust.phone || ''));
-              let tagColor = cust.color || 'var(--text-sub)';
-              let tagBg = cust.color ? cust.color + '15' : '#f5f5f7';
               
-              //  [장바구니 마법 3] 객체에 저장된 isChecked 값을 읽어와 화면에 반영
+              let tagHtml = '';
+              if (cust.tag && cust.tag !== '고객관리' && cust.tag !== '단독' && cust.tag !== '연락처 고객') {
+                  tagHtml += `<div style="font-size: 11px; color: ${cust.color || 'var(--text-sub)'}; margin-top: 3px; background: ${cust.color ? cust.color+'15' : '#f1f5f9'}; display: inline-block; padding: 2px 7px; border-radius: 6px; font-weight:600;">${cust.tag}</div>`;
+              } else if (!cust.tag || cust.tag === '기존 등록고객' || cust.tag === '고객관리') {
+                  tagHtml += `<div style="font-size: 11px; color: #0284c7; margin-top: 3px; background: #f0f9ff; display: inline-block; padding: 2px 7px; border-radius: 6px; font-weight:600; border: 1px solid #e0f2fe;">고객관리</div>`;
+              }
+              if (cust.targetBadge && cust.targetBadge.text && cust.targetBadge.text !== '고객관리' && cust.targetBadge.text !== '연락처 고객') {
+                  const mLeft = tagHtml ? '5px' : '0px';
+                  tagHtml += `<div style="font-size: 11px; color: ${cust.targetBadge.color || '#2563eb'}; margin-top: 3px; margin-left: ${mLeft}; background: ${cust.targetBadge.bg || '#eff6ff'}; display: inline-block; padding: 2px 7px; border-radius: 6px; font-weight:700;">${cust.targetBadge.text}</div>`;
+              }
+
               const isCheckedHtml = cust.isChecked ? 'checked' : '';
 
-              const html = `
-                  <div class="ss-target-item customer-list-item">
-                      <!--  [검색 마법 보강] data-phone과 data-name으로 정확히 식별 -->
-                      <input type="checkbox" class="ss-c-checkbox ss-custom-cb" data-name="${cust.originalName}" data-phone="${cust.phone}" ${isCheckedHtml}>
-                      <div style="display: flex; flex-direction: column; gap: 2px; align-items: flex-start;">
-                          <div style="font-weight: 700; font-size: 15px; color: var(--text-main);">${cust.name} <span style="font-size: 13px; color: var(--text-sub); font-weight: 500; margin-left: 4px;">${displayPhone}</span></div>
-                          <div style="font-size: 12px; color: ${tagColor}; background: ${tagBg}; display: inline-block; padding: 4px 8px; border-radius: 6px; font-weight:600; margin-top: 2px;">${cust.tag || '기존 등록고객'}</div>
+              const itemHtml = `
+                  <div class="ss-target-item customer-list-item" style="padding: 12px 14px; border-radius: 12px; margin-top: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; transition: all 0.2s; background: #fff;">
+                      <input type="checkbox" class="ss-c-checkbox ss-custom-cb" data-name="${cust.originalName || cust.name}" data-phone="${cust.phone}" ${isCheckedHtml} style="cursor:pointer; width: 18px; height: 18px;">
+                      <div style="display: flex; flex-direction: column; gap: 2px; align-items: flex-start; flex: 1; min-width: 0;">
+                          <div style="font-weight: 700; font-size: 14.5px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">
+                              ${cust.name} 
+                              <span style="font-size: 12.5px; color: var(--text-sub); font-weight: 500; margin-left: 4px;">${displayPhone}</span>
+                          </div>
+                          ${tagHtml}
                       </div>
                   </div>
               `;
-              listContainer.insertAdjacentHTML('beforeend', html);
+              listContainer.insertAdjacentHTML('beforeend', itemHtml);
           });
 
-          //  [장바구니 완벽 수정 2] 현재 화면 그룹과 전체 장바구니 데이터를 함께 넘김
-          attachSsCheckboxLogic(currentGroup, window.ssCurrentBaseData);
+          attachSsCheckboxLogic(currentGroup, window.ssCurrentBaseData || ssFilteredCustomers);
       }
 
       function changeSsCustomerPage(page) {
-          ssCustomerCurrentPage = parseInt(page);
+          ssCustomerCurrentPage = parseInt(page, 10);
           renderCustomerListUI();
       }
 
       function attachSsCheckboxLogic(currentGroup, baseData) {
           const selectAllCb = document.getElementById('ssSelectAllCb');
+          const selectAllEntireCb = document.getElementById('ssSelectAllEntireGroupsCb');
           const itemCbs = document.querySelectorAll('.ss-c-checkbox');
           const countText = document.getElementById('ssSelectedCountText');
-          const searchKeyword = document.getElementById('ssSearchInput').value.trim();
 
           const updateCountText = () => {
               const checkedCount = baseData.filter(c => c.isChecked).length;
-              if(countText) countText.innerText = `(${checkedCount}명 선택됨)`;
+              if (countText) {
+                  countText.innerHTML = checkedCount > 0 ? `<b style="color:#0284c7;">${checkedCount.toLocaleString()}명</b> 선택` : '';
+              }
+              if (selectAllCb) {
+                  selectAllCb.checked = itemCbs.length > 0 && Array.from(itemCbs).every(cb => cb.checked);
+              }
+              if (selectAllEntireCb) {
+                  selectAllEntireCb.checked = ssFilteredCustomers.length > 0 && ssFilteredCustomers.every(c => c.isChecked);
+              }
           };
 
-          if(selectAllCb) {
-              selectAllCb.checked = itemCbs.length > 0 && Array.from(itemCbs).every(c => c.checked);
-
+          if (selectAllCb) {
+              selectAllCb.checked = itemCbs.length > 0 && Array.from(itemCbs).every(cb => cb.checked);
               selectAllCb.onchange = (e) => {
                   const isChecked = e.target.checked;
-                  
-                  if (isChecked) {
-                      if (!searchKeyword) {
-                          baseData.forEach(c => c.isChecked = false);
-                      }
-                      currentGroup.forEach(c => c.isChecked = true);
-                  } else {
-                      currentGroup.forEach(c => c.isChecked = false);
-                  }
-
+                  currentGroup.forEach(c => c.isChecked = isChecked);
                   itemCbs.forEach(cb => cb.checked = isChecked);
                   updateCountText();
               };
-
-              itemCbs.forEach(cb => {
-                  cb.onchange = (e) => {
-                      const isChecked = e.target.checked;
-                      
-                      //  [카톡 계정 절대 방어선] 100명이 넘으려고 하면 에러 띄우고 강제 차단!!!
-                      if (isChecked) {
-                          const currentTotal = baseData.filter(c => c.isChecked).length;
-                          if (currentTotal >= 100) {
-                              alert(" [발송 제한] 카카오톡 계정 보호를 위해 한 번에 최대 100명까지만 선택할 수 있습니다.\n다른 고객의 체크를 해제한 후 다시 시도해주세요.");
-                              e.target.checked = false; // 체크박스 강제로 끄기
-                              return; // 로직 중단
-                          }
-                      }
-
-                      const targetCust = currentGroup.find(c => (e.target.dataset.phone && c.phone === e.target.dataset.phone) || (c.originalName === e.target.dataset.name));
-                      if (targetCust) targetCust.isChecked = isChecked;
-                      
-                      selectAllCb.checked = Array.from(itemCbs).every(c => c.checked);
-                      updateCountText();
-                  };
-              });
           }
+
+          if (selectAllEntireCb) {
+              selectAllEntireCb.checked = ssFilteredCustomers.length > 0 && ssFilteredCustomers.every(c => c.isChecked);
+              selectAllEntireCb.onchange = (e) => {
+                  const isChecked = e.target.checked;
+                  ssFilteredCustomers.forEach(c => c.isChecked = isChecked);
+                  itemCbs.forEach(cb => cb.checked = isChecked);
+                  updateCountText();
+              };
+          }
+
+          itemCbs.forEach(cb => {
+              cb.onchange = (e) => {
+                  const isChecked = e.target.checked;
+                  const targetCust = currentGroup.find(c => (e.target.dataset.phone && c.phone === e.target.dataset.phone) || (c.originalName === e.target.dataset.name));
+                  if (targetCust) targetCust.isChecked = isChecked;
+                  updateCountText();
+              };
+          });
+
           updateCountText();
       }
+      
       function overlayCopyScript(side) {
           const text = side === 'left' 
                          ? document.getElementById('ssRawScriptLeft').innerText 

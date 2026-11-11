@@ -2238,43 +2238,78 @@
 
 
 
-    const TARGET_INTEREST_KEYWORDS = {
-
-      '영유아': '육아',
-
-      '미취학': '초등교육',
-
-      '신혼': '결혼식',
-
-      '1인 가구': '인테리어',
-
-      '건강검진': '건강관리',
-
-      '암·중증질환': '의학',
-
-      '치과': '치의학',
-
-      '부모님 효도': '노인',
-
-      '보험·실손': '건강보험',
-
-      '재테크': '투자',
-
-      '내집마련': '부동산',
-
-      '자동차': '자동차 보험',
-
-      '반려동물': '반려견',
-
-      '골프': '골프',
-
-      '자영업자': '소규모 비즈니스',
-
-      '법인대표': '비즈니스',
-
-      '이직·구직': '구직'
-
+   const TARGET_INTEREST_KEYWORDS = {
+      '영유아': {
+        group: 'life',
+        queries: ['부모 (영유아 자녀)', '육아', '아기', '유아용품', '출산']
+      },
+      '미취학': {
+        group: 'life',
+        queries: ['부모 (미취학 자녀)', '부모 (초등학생 자녀)', '육아', '어린이', '초등교육']
+      },
+      '신혼': {
+        group: 'life',
+        queries: ['신혼', '약혼', '결혼식', '웨딩', '신혼여행']
+      },
+      '1인 가구': {
+        group: 'life',
+        queries: ['인테리어 디자인', '가구', '원룸', '가전제품', '홈데코']
+      },
+      '건강검진': {
+        group: 'interest',
+        queries: ['건강 관리', '웰빙', '피트니스', '영양학', '헬스케어']
+      },
+      '암·중증질환': {
+        group: 'interest',
+        queries: ['생명보험', '건강보험', '건강 관리', '웰빙', '가족']
+      },
+      '치과': {
+        group: 'interest',
+        queries: ['치아 관리', '미용', '건강 관리', '웰빙']
+      },
+      '부모님 효도': {
+        group: 'interest',
+        queries: ['가족', '은퇴', '노후 준비', '생명보험', '건강 관리']
+      },
+      '보험·실손': {
+        group: 'interest',
+        queries: ['보험', '생명보험', '건강보험', '개인 금융', '재무설계']
+      },
+      '재테크': {
+        group: 'interest',
+        queries: ['투자', '개인 금융', '주식 시장', '저축', '펀드']
+      },
+      '내집마련': {
+        group: 'interest',
+        queries: ['부동산', '아파트', '주택', '인테리어 디자인', '주택담보대출']
+      },
+      '자동차': {
+        group: 'life_biz',
+        queries: ['자동차', '자동차 보험', '신차', 'SUV', '운전']
+      },
+      '반려동물': {
+        group: 'life_biz',
+        queries: ['반려동물', '반려견', '반려묘', '애완동물 용품']
+      },
+      '골프': {
+        group: 'life_biz',
+        queries: ['골프', '여행', '아웃도어', '레저', '해외여행']
+      },
+      '자영업자': {
+        group: 'life_biz',
+        queries: ['소규모 비즈니스 소유자', 'Facebook 페이지 관리자', '소규모 비즈니스', '창업', '외식업']
+      },
+      '법인대표': {
+        group: 'life_biz',
+        queries: ['비즈니스 페이지 관리자', '기업가정신', '경영', '중소기업', '비즈니스']
+      },
+      '이직·구직': {
+        group: 'recruit',
+        queries: ['구직', '경력 개발', '취업', '전문직', '창업']
+      }
     };
+
+    const EXCLUDE_COMPETITOR_QUERIES = ['보험 설계사', '보험 중개인', 'Insurance Broker', 'Insurance Agent'];
 
 
 
@@ -5644,1512 +5679,930 @@
 
     }
 
+async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regionStr) {
+      const emptyResult = {
+        andSpec: null,
+        orSpec: null,
+        interestsOnlySpec: null,
+        exclusions: null,
+        summaryNames: []
+      };
+      if (!token || !Array.isArray(activeTargetLabels) || activeTargetLabels.length === 0) {
+        return emptyResult;
+      }
 
+      const lifeQueries = new Set();
+      const interestQueries = new Set();
+      let isRecruitMode = false;
 
-    async function resolveMetaInterests(activeTargetLabels, token) {
-
-      const interests = [];
-
-      for (const label of activeTargetLabels) {
-
+      for (const rawLabel of activeTargetLabels) {
+        const label = String(rawLabel || '').trim();
         const matchedKey = Object.keys(TARGET_INTEREST_KEYWORDS).find(k => label.includes(k));
+        if (!matchedKey) continue;
 
-        const searchKw = matchedKey ? TARGET_INTEREST_KEYWORDS[matchedKey] : '';
+        const cfg = TARGET_INTEREST_KEYWORDS[matchedKey];
+        if (cfg.group === 'recruit') isRecruitMode = true;
 
-        if (!searchKw) continue;
+        const targetSet = (cfg.group === 'life') ? lifeQueries : interestQueries;
+        (cfg.queries || []).forEach(q => { if (q) targetSet.add(q); });
+      }
 
-        try {
+      const ALLOWED_SPEC_KEYS = new Set([
+        'interests',
+        'behaviors',
+        'life_events',
+        'family_statuses',
+        'work_positions',
+        'work_employers',
+        'industries'
+      ]);
 
-          const res = await fetch(`https://graph.facebook.com/v21.0/search?type=adinterest&q=${encodeURIComponent(searchKw)}&locale=ko_KR&limit=1&access_token=${token}`);
+      const createSpecBucket = () => ({
+        interests: new Map(),
+        behaviors: new Map(),
+        life_events: new Map(),
+        family_statuses: new Map(),
+        work_positions: new Map(),
+        work_employers: new Map(),
+        industries: new Map()
+      });
 
-          const data = await res.json();
+      const fetchTargetsIntoBucket = async (queriesArr, bucket) => {
+        await Promise.all(queriesArr.map(async (q) => {
+          let addedCount = 0;
 
-          if (data && Array.isArray(data.data) && data.data[0]) {
+          if (cleanActId && cleanActId.startsWith('act_')) {
+            try {
+              const tsUrl = `https://graph.facebook.com/v21.0/${cleanActId}/targetingsearch?q=${encodeURIComponent(q)}&locale=ko_KR&limit=6&access_token=${encodeURIComponent(token)}`;
+              const tsRes = await fetch(tsUrl);
+              const tsData = await tsRes.json();
+              if (tsData && Array.isArray(tsData.data)) {
+                for (const item of tsData.data) {
+                  if (!item || !item.id || !item.name) continue;
+                  const itemType = String(item.type || '').trim();
+                  if (!ALLOWED_SPEC_KEYS.has(itemType)) continue;
+                  if (item.audience_size_upper_bound !== undefined && Number(item.audience_size_upper_bound) < 1000) continue;
 
-            interests.push({ id: data.data[0].id, name: data.data[0].name });
-
+                  const sId = String(item.id);
+                  if (!bucket[itemType].has(sId)) {
+                    bucket[itemType].set(sId, { id: sId, name: item.name });
+                    addedCount++;
+                    if (addedCount >= 2) break;
+                  }
+                }
+              }
+            } catch (e) {}
           }
 
-        } catch (e) {}
+          if (addedCount === 0) {
+            try {
+              const adIntUrl = `https://graph.facebook.com/v21.0/search?type=adinterest&q=${encodeURIComponent(q)}&locale=ko_KR&limit=2&access_token=${encodeURIComponent(token)}`;
+              const adIntRes = await fetch(adIntUrl);
+              const adIntData = await adIntRes.json();
+              if (adIntData && Array.isArray(adIntData.data)) {
+                for (const item of adIntData.data.slice(0, 2)) {
+                  if (item && item.id && item.name) {
+                    const sId = String(item.id);
+                    bucket.interests.set(sId, { id: sId, name: item.name });
+                  }
+                }
+              }
+            } catch (e) {}
+          }
+        }));
+      };
 
+      const lifeBucket = createSpecBucket();
+      const interestBucket = createSpecBucket();
+      const exclusionBucket = createSpecBucket();
+
+      const tasks = [];
+      if (lifeQueries.size > 0) tasks.push(fetchTargetsIntoBucket(Array.from(lifeQueries), lifeBucket));
+      if (interestQueries.size > 0) tasks.push(fetchTargetsIntoBucket(Array.from(interestQueries), interestBucket));
+      if (!isRecruitMode) tasks.push(fetchTargetsIntoBucket(EXCLUDE_COMPETITOR_QUERIES, exclusionBucket));
+      await Promise.all(tasks);
+
+      // 메타 유효성 검증 API(targetingvalidation)로 만료/비활성 관심사 사전 제거
+      if (cleanActId && cleanActId.startsWith('act_')) {
+        const allInterestIds = Array.from(new Set([
+          ...Array.from(lifeBucket.interests.keys()),
+          ...Array.from(interestBucket.interests.keys()),
+          ...Array.from(exclusionBucket.interests.keys())
+        ]));
+
+        if (allInterestIds.length > 0) {
+          try {
+            const valUrl = `https://graph.facebook.com/v21.0/${cleanActId}/targetingvalidation?id_list=${encodeURIComponent(JSON.stringify(allInterestIds))}&access_token=${encodeURIComponent(token)}`;
+            const valRes = await fetch(valUrl);
+            const valData = await valRes.json();
+            if (valData && Array.isArray(valData.data)) {
+              valData.data.forEach(v => {
+                if (v && v.valid === false && v.id) {
+                  const badId = String(v.id);
+                  lifeBucket.interests.delete(badId);
+                  interestBucket.interests.delete(badId);
+                  exclusionBucket.interests.delete(badId);
+                }
+              });
+            }
+          } catch (e) {}
+        }
       }
 
-      return interests;
+      const serializeBucket = (b) => {
+        const clause = {};
+        const names = [];
+        ALLOWED_SPEC_KEYS.forEach(k => {
+          const arr = Array.from(b[k].values());
+          if (arr.length > 0) {
+            clause[k] = arr;
+            arr.forEach(it => names.push(it.name));
+          }
+        });
+        return {
+          clause: Object.keys(clause).length > 0 ? clause : null,
+          names
+        };
+      };
 
+      const mergedBucket = createSpecBucket();
+      ALLOWED_SPEC_KEYS.forEach(k => {
+        lifeBucket[k].forEach((v, id) => mergedBucket[k].set(id, v));
+        interestBucket[k].forEach((v, id) => mergedBucket[k].set(id, v));
+      });
+
+      const lifeSer = serializeBucket(lifeBucket);
+      const interestSer = serializeBucket(interestBucket);
+      const mergedSer = serializeBucket(mergedBucket);
+      const exclSer = serializeBucket(exclusionBucket);
+
+      const isTightRadius = /5\s*km/i.test(String(regionStr || ''));
+      const canUseAndNarrowing = Boolean(lifeSer.clause && interestSer.clause && !isTightRadius);
+
+      const allOnlyInterests = Array.from(mergedBucket.interests.values());
+
+      return {
+        andSpec: canUseAndNarrowing ? [lifeSer.clause, interestSer.clause] : null,
+        orSpec: mergedSer.clause ? [mergedSer.clause] : null,
+        interestsOnlySpec: allOnlyInterests.length > 0 ? [{ interests: allOnlyInterests }] : null,
+        exclusions: (!isRecruitMode && exclSer.clause) ? exclSer.clause : null,
+        summaryNames: Array.from(new Set(mergedSer.names))
+      };
     }
 
-
-
     async function submitWizardAction() {
-
       const submitBtn = document.getElementById('btnWizardSubmit');
-
       const originalText = submitBtn.innerText;
-
       submitBtn.disabled = true;
-
-      submitBtn.innerText = '⏳ 광고 및 맞춤 설정 생성 중...';
-
-
+      submitBtn.innerText = '⏳ 광고 및 정밀 타겟팅 생성 중...';
 
       const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-
       const token = metaConn ? metaConn.token : '';
-
       const adAccountId = metaConn ? metaConn.adAcc : '';
-
       const adAccountName = metaConn ? (metaConn.adName || adAccountId) : '';
-
       const igUserId = metaConn ? metaConn.igId : '';
-
       const pageId = metaConn ? metaConn.pageId : '';
 
-
-
-      const activeTargets = Array.from(document.querySelectorAll('#pane-meta-1 .pill-btn.active')).map(b => b.innerText.trim());
+      const activeTargets = Array.from(document.querySelectorAll('#pane-meta-1 .pill-btn.active'))
+        .map(b => (b.textContent || b.innerText || '').trim())
+        .filter(Boolean);
 
       const curSlide = activeItem.slides[0] || {};
-
       const isRealVideo = activeItem.type === 'video' && isPlayableVideoUrl(activeItem.videoUrl);
 
-
-
       let finalMediaUrl = isRealVideo ? activeItem.videoUrl : '';
-
       let capturedBase64 = '';
-
       let rawBase64Only = '';
 
-
-
       if (!isRealVideo) {
-
         if (curSlide.imgUrl && curSlide.imgUrl.startsWith('http')) {
-
           finalMediaUrl = curSlide.imgUrl;
-
         } else if (curSlide.imgUrl && curSlide.imgUrl.startsWith('data:image')) {
-
           capturedBase64 = curSlide.imgUrl;
-
         } else {
-
           try {
-
             const feedView = document.getElementById('phoneViewFeed');
-
             const prevDisplay = feedView.style.display;
-
             feedView.style.display = 'flex';
-
             const targetBox = document.querySelector('#phoneMediaStage .ig-ratio-box');
-
             if (targetBox && window.html2canvas) {
-
               const canvas = await html2canvas(targetBox, { scale: 2, useCORS: true, backgroundColor: '#113f67' });
-
               capturedBase64 = canvas.toDataURL('image/jpeg', 0.92);
-
             }
-
             feedView.style.display = prevDisplay;
-
           } catch (capErr) {}
-
         }
-
       }
-
-
 
       if (capturedBase64) {
-
         rawBase64Only = capturedBase64.replace(/^data:image\/\w+;base64,/, '');
-
       }
-
-
 
       if ((!finalMediaUrl || !finalMediaUrl.startsWith('http')) && capturedBase64) {
-
         try {
-
           const upRes = await fetch('/api/meta-execute', {
-
             method: 'POST',
-
             headers: { 'Content-Type': 'application/json' },
-
             body: JSON.stringify({ action: 'UPLOAD_MEDIA', mediaBase64: capturedBase64 })
-
           });
-
           const upData = await upRes.json();
-
           if (upData && upData.mediaUrl) finalMediaUrl = upData.mediaUrl;
-
         } catch (e) {}
-
       }
-
-
 
       const title = document.getElementById('setupHeadline').value.trim() || activeItem.headline;
-
       const description = document.getElementById('setupAdDescription').value.trim();
-
       const ctaType = document.getElementById('setupCtaBtn').value || 'LEARN_MORE';
 
-
-
       const destMode = document.querySelector('input[name="leadDestMode"]:checked');
-
       const selectedModeVal = destMode ? destMode.value : 'instant';
-
       const isCustomUrl = selectedModeVal === 'custom_url';
-
       const isPrPage = selectedModeVal === 'pr_page';
-
       const customLandingUrl = isCustomUrl ? document.getElementById('setupLandingUrl').value.trim() : '';
 
-
-
       const koreanOnly = document.getElementById('setupKoreanOnly').checked;
-
       const corePlacementOnly = document.getElementById('setupCorePlacementOnly') ? document.getElementById('setupCorePlacementOnly').checked : true;
-
       const genderVal = Number(document.getElementById('setupGender').value || 0);
 
-
-
       const schedMode = document.querySelector('input[name="scheduleMode"]:checked');
-
       const isScheduled = schedMode && schedMode.value === 'scheduled';
-
       const startDate = isScheduled ? document.getElementById('setupStartDate').value : '';
-
       const endDate = isScheduled ? document.getElementById('setupEndDate').value : '';
 
-
-
       const caption = wizardTrack === 'meta'
-
         ? document.getElementById('setupAdCaption').value
-
         : document.getElementById('setupInstaCaption').value;
-
       const regionStr = wizardTrack === 'meta' ? (selectedRegions.join(', ') || '전국') : '인스타 피드·릴스';
-
       const ageMin = Math.max(18, parseInt(document.getElementById('setupAgeMin').value || '30', 10));
-
       const ageMax = Math.min(65, parseInt(document.getElementById('setupAgeMax').value || '55', 10));
-
       const budget = wizardTrack === 'meta' ? Math.max(5000, parseInt(document.getElementById('setupBudgetNumber').value || '10000', 10)) : 0;
 
-
-
       const keyword = wizardTrack === 'insta' ? document.getElementById('setupInstaDmKeyword').value.trim() : '';
-
       const rawInstaDmMsg = wizardTrack === 'insta' ? document.getElementById('setupInstaDmMessage').value.trim() : '';
 
-
-
       const recordId = (wizardTrack === 'insta' ? 'camp_ig_' : 'camp_') + Date.now();
-
       const selectedFields = ['name', 'phone'];
-
       const wantRegion = document.getElementById('fieldBtnRegion').classList.contains('active');
-
       const wantAge = document.getElementById('fieldBtnAge').classList.contains('active');
-
       const wantTime = document.getElementById('fieldBtnTime').classList.contains('active');
-
       if (wantRegion) selectedFields.push('region');
-
       if (wantAge) selectedFields.push('age');
-
       if (wantTime) selectedFields.push('time');
-
       const customQ = document.getElementById('setupCustomQuestion').value.trim() || '어떤 안내를 가장 먼저 받아보고 싶으신가요?';
 
-
-
       const pdfDocUrl = wizardTrack === 'meta'
-
         ? (document.getElementById('setupPdfDocUrl').value.trim() || activeItem.pdfUrl || '')
-
         : (document.getElementById('setupInstaPdfUrl').value.trim() || activeItem.pdfUrl || '');
 
-
-
       const cleanActId = adAccountId && adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
-
       let detectedPixelId = '';
-
       if (wizardTrack === 'meta' && token && adAccountId && adAccountId !== 'act_connected') {
-
         detectedPixelId = await ensureMetaPixelId(cleanActId, token, adAccountName);
-
       }
 
-
-
       const agentName = localStorage.getItem('crm_agent_name') || '';
-
       const agentPhone = localStorage.getItem('crm_agent_phone') || '';
-
       const agentId = getActiveAgentId();
-
       const srcTag = wizardTrack === 'insta' ? 'insta_dm' : 'meta_ad';
-
       const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
-
       const defaultLandingUrl = `${curOrigin}/sns_apply.html?utm_source=${srcTag}&camp_id=${encodeURIComponent(recordId)}&camp=${encodeURIComponent(title)}&fields=${encodeURIComponent(selectedFields.join(','))}&q=${encodeURIComponent(customQ)}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}&agent_id=${encodeURIComponent(agentId)}&pixel_id=${encodeURIComponent(detectedPixelId)}&doc=${encodeURIComponent(pdfDocUrl)}`;
-
       const finalLandingUrl = (customLandingUrl && customLandingUrl.startsWith('http')) ? customLandingUrl : defaultLandingUrl;
-
-
 
       const dmMessage = cleanDmMessageText(rawInstaDmMsg, recordId);
 
-
-
       let createdMetaCampaignId = '';
-
       let createdAdSetId = '';
-
       let createdAdId = '';
-
       let createdIgMediaId = '';
-
       let pageAccessToken = token;
-
       let activePageId = pageId;
-
       let apiNotice = [];
-
-
+      let appliedTargetNames = [];
+      let appliedTargetingModeLabel = '';
 
       try {
-
         if (token) {
-
           try {
-
             const pRes = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token&limit=25&access_token=${token}`);
-
             const pData = await pRes.json();
-
             if (pData && Array.isArray(pData.data) && pData.data.length > 0) {
-
               const matchedPage = pData.data.find(p => p.id === activePageId) || pData.data[0];
-
               activePageId = matchedPage.id;
-
               if (matchedPage.access_token) pageAccessToken = matchedPage.access_token;
-
             }
-
           } catch (e) {}
-
         }
-
-
 
         // [트랙 B] 인스타그램 일반 게시물 업로드 (+댓글 자동 답글 & DM)
-
         if (wizardTrack === 'insta') {
-
           if (!token || !igUserId) {
-
             alert('⚠️ 인스타 연동 정보가 없습니다. 우측 상단 [초기광고설정]에서 연동해 주세요.');
-
             return;
-
           }
-
           const containerParams = new URLSearchParams({
-
             caption: caption || title,
-
             access_token: token
-
           });
-
           if (isRealVideo) {
-
             containerParams.append('media_type', 'REELS');
-
             containerParams.append('video_url', finalMediaUrl);
-
           } else {
-
             containerParams.append('image_url', finalMediaUrl);
-
           }
-
-
 
           const containerRes = await fetch(`https://graph.facebook.com/v21.0/${igUserId}/media`, {
-
             method: 'POST',
-
             body: containerParams
-
           });
-
           const containerData = await containerRes.json();
 
-
-
           if (containerData.id) {
-
             const creationId = containerData.id;
-
             for (let i = 0; i < 5; i++) {
-
               await new Promise(r => setTimeout(r, isRealVideo ? 3000 : 1200));
-
               const stRes = await fetch(`https://graph.facebook.com/v21.0/${creationId}?fields=status_code&access_token=${token}`);
-
               const stData = await stRes.json();
-
               if (stData.status_code === 'FINISHED' || !stData.status_code) break;
-
             }
-
-
 
             const pubRes = await fetch(`https://graph.facebook.com/v21.0/${igUserId}/media_publish`, {
-
               method: 'POST',
-
               body: new URLSearchParams({ creation_id: creationId, access_token: token })
-
             });
-
             const pubData = await pubRes.json();
-
             if (pubData.id) {
-
               createdIgMediaId = pubData.id;
-
               apiNotice.push(`📸 내 인스타그램 피드에 게시물 업로드 및 24시간 댓글 자동답글+DM([${keyword}]) 설정 완료!`);
-
             } else {
-
               alert(`❌ 인스타 게시 오류:\n${formatClientMetaError(pubData.error)}`);
-
               return;
-
             }
-
           } else {
-
             alert(`❌ 인스타 미디어 등록 거절:\n${formatClientMetaError(containerData.error)}`);
-
             return;
-
           }
-
         }
 
-
-
         // [트랙 A] 메타 유료 광고 생성
-
         if (wizardTrack === 'meta') {
-
           if (!token || !adAccountId || adAccountId === 'act_connected') {
-
             alert('⚠️ 메타 광고계정 정보가 없습니다. 우측 상단 [초기광고설정]에서 연동해 주세요.');
-
             return;
-
           }
-
-
 
           const dateLabel = new Date().toLocaleDateString('ko-KR');
 
-
-
           let customCreatedFormId = '';
-
           if (!isCustomUrl && !isPrPage && activePageId) {
-
             try {
-
               const metaQuestions = [
-
                 {
-
                   type: 'CUSTOM',
-
                   key: 'q_main',
-
                   label: customQ,
-
                   options: [
-
                     { value: '핵심 요약 가이드북(PDF) 먼저 받기', key: 'opt_1' },
-
                     { value: '1:1 비대면 간편 상담 신청하기', key: 'opt_2' }
-
                   ]
-
                 },
-
                 { type: 'FULL_NAME' },
-
                 { type: 'PHONE' }
-
               ];
-
               if (wantRegion) metaQuestions.push({ type: 'CITY' });
-
               if (wantAge) metaQuestions.push({ type: 'CUSTOM', key: 'q_age', label: '연령대를 알려주세요 (예: 30대, 40대)' });
-
               if (wantTime) metaQuestions.push({ type: 'CUSTOM', key: 'q_time', label: '통화나 문자 편하신 시간대는 언제인가요?' });
 
-
-
               const newFormParams = new URLSearchParams({
-
                 name: `[위라클랩] ${title} (${Date.now().toString().slice(-4)})`,
-
                 locale: 'KO_KR',
-
                 questions: JSON.stringify(metaQuestions),
-
                 privacy_policy: JSON.stringify({
-
-                  url: `${(window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com'}/sns_apply.html`,
-
+                  url: `${curOrigin}/sns_apply.html`,
                   link_text: '개인정보 수집 및 안내 동의'
-
                 }),
-
                 thank_you_page: JSON.stringify({
-
                   title: '신청이 완료되었습니다!',
-
                   body: '아래 버튼을 누르시면 요청하신 핵심 요약 가이드북(PDF) 및 전담 파트너 매거진을 바로 열람하실 수 있습니다.',
-
                   button_text: '핵심 요약 가이드북(PDF) 바로 열기',
-
                   button_type: 'VIEW_WEBSITE',
-
                   website_url: finalLandingUrl
-
                 }),
-
                 follow_up_action_url: finalLandingUrl,
-
                 access_token: pageAccessToken
-
               });
-
-
 
               const createFormRes = await fetch(`https://graph.facebook.com/v21.0/${activePageId}/leadgen_forms`, {
-
                 method: 'POST',
-
                 body: newFormParams
-
               });
-
               const createFormData = await createFormRes.json();
 
-
-
               if (createFormData && createFormData.id) {
-
                 customCreatedFormId = createFormData.id;
-
               } else {
-
                 const lfRes = await fetch(`https://graph.facebook.com/v21.0/${activePageId}/leadgen_forms?fields=id,name,status&limit=5&access_token=${pageAccessToken}`);
-
                 const lfData = await lfRes.json();
-
                 if (lfData && Array.isArray(lfData.data) && lfData.data.length > 0) {
-
                   const activeForm = lfData.data.find(f => f.status === 'ACTIVE') || lfData.data[0];
-
                   if (activeForm && activeForm.id) customCreatedFormId = activeForm.id;
-
                 }
-
               }
-
             } catch (e) {}
-
           }
-
-
 
           let imageHash = '';
-
           let uploadedVideoId = '';
 
-
-
           if (isRealVideo && finalMediaUrl.startsWith('http')) {
-
             try {
-
               const vidRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/advideos`, {
-
                 method: 'POST',
-
                 body: new URLSearchParams({
-
                   file_url: finalMediaUrl,
-
                   name: title,
-
                   access_token: token
-
                 })
-
               });
-
               const vidData = await vidRes.json();
-
               if (vidData && vidData.id) uploadedVideoId = vidData.id;
-
             } catch (e) {}
-
           }
-
-
 
           if (rawBase64Only) {
-
             try {
-
               const imgRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adimages`, {
-
                 method: 'POST',
-
                 body: new URLSearchParams({ bytes: rawBase64Only, access_token: token })
-
               });
-
               const imgData = await imgRes.json();
-
               if (imgData && imgData.images) {
-
                 const firstKey = Object.keys(imgData.images)[0];
-
                 if (firstKey && imgData.images[firstKey].hash) {
-
                   imageHash = imgData.images[firstKey].hash;
-
                 }
-
               }
-
             } catch (e) {}
-
           }
 
+          // ★ 정밀 타겟팅 패킷 생성 (2단 교집합 + 생애주기/행동 + 동종업계 제외)
+          const targetPack = await resolveMetaInterests(activeTargets, token, cleanActId, regionStr);
 
-
-          const resolvedInterests = await resolveMetaInterests(activeTargets, token);
-
-
-
-          const buildTargetSpec = (useCustomGeo, includeInterests, useCorePlacements) => {
-
+          const buildTargetSpec = (useCustomGeo, flexMode, includeExcl, placementMode) => {
             const spec = {
-
               geo_locations: useCustomGeo ? buildClientGeoLocations(regionStr) : { countries: ['KR'], location_types: ['home', 'recent'] },
-
               age_min: ageMin,
-
               age_max: ageMax,
-
               targeting_automation: { advantage_audience: 0 }
-
             };
-
             if (koreanOnly) spec.locales = [12];
-
             if (genderVal === 1 || genderVal === 2) spec.genders = [genderVal];
 
-            if (includeInterests && resolvedInterests.length > 0) {
-
-              spec.flexible_spec = [{ interests: resolvedInterests }];
-
+            if (flexMode === 'AND' && targetPack.andSpec) {
+              spec.flexible_spec = targetPack.andSpec;
+            } else if (flexMode === 'OR' && targetPack.orSpec) {
+              spec.flexible_spec = targetPack.orSpec;
+            } else if (flexMode === 'INTERESTS' && targetPack.interestsOnlySpec) {
+              spec.flexible_spec = targetPack.interestsOnlySpec;
             }
 
-            if (useCorePlacements && corePlacementOnly) {
-
-              spec.publisher_platforms = ['instagram', 'facebook'];
-
-              spec.instagram_positions = ['stream', 'story', 'reels', 'explore'];
-
-              spec.facebook_positions = ['feed', 'story', 'facebook_reels'];
-
-              spec.device_platforms = ['mobile'];
-
+            if (includeExcl && targetPack.exclusions) {
+              spec.exclusions = targetPack.exclusions;
             }
 
+            if (corePlacementOnly) {
+              if (placementMode === 'CORE_STRICT') {
+                spec.publisher_platforms = ['facebook', 'instagram'];
+                spec.instagram_positions = ['stream', 'story', 'reels'];
+                spec.facebook_positions = ['feed', 'story', 'facebook_reels'];
+                spec.device_platforms = ['mobile'];
+              } else if (placementMode === 'CORE_PLATFORM') {
+                spec.publisher_platforms = ['facebook', 'instagram'];
+                spec.device_platforms = ['mobile'];
+              }
+            }
             return spec;
-
           };
 
+          // ★ 상세 타게팅 증발 방지 단계별 광고세트 생성기
+          const createAdSetSmart = async (baseFields, altOptGoal) => {
+            const attempts = [];
+            if (targetPack.andSpec) {
+              attempts.push({ flex: 'AND', excl: true, pl: 'CORE_PLATFORM', label: '교집합 정밀타겟+설계사제외', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: 'AND', excl: false, pl: 'CORE_PLATFORM', label: '교집합 정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: 'AND', excl: false, pl: 'AUTO', label: '교집합 정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+            }
+            if (targetPack.orSpec) {
+              attempts.push({ flex: 'OR', excl: true, pl: 'CORE_PLATFORM', label: '정밀타겟+설계사제외', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: 'OR', excl: false, pl: 'CORE_PLATFORM', label: '정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: 'OR', excl: false, pl: 'AUTO', label: '정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+            }
+            if (targetPack.interestsOnlySpec) {
+              attempts.push({ flex: 'INTERESTS', excl: false, pl: 'AUTO', label: '핵심관심사 타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              if (altOptGoal) {
+                attempts.push({ flex: 'INTERESTS', excl: false, pl: 'AUTO', label: '핵심관심사 타겟', names: targetPack.summaryNames, opt: altOptGoal });
+              }
+            }
+            attempts.push({ flex: 'NONE', excl: false, pl: 'CORE_PLATFORM', label: '지역·연령 기본타겟', names: [], opt: baseFields.optimization_goal });
+            attempts.push({ flex: 'NONE', excl: false, pl: 'AUTO', label: '지역·연령 기본타겟', names: [], opt: altOptGoal || baseFields.optimization_goal });
 
-
-          const validCta = ['LEARN_MORE', 'APPLY_NOW', 'SIGN_UP', 'GET_QUOTE'].includes(ctaType)
-
-            ? ctaType
-
-            : 'LEARN_MORE';
-
-
-
-          const multiSlideUrls = (activeItem.slides || [])
-
-            .map(s => s.imgUrl)
-
-            .filter(u => u && u.startsWith('http'));
-
-
-
-          const buildCreativeStorySpec = (targetLink, leadFormId) => {
-
-            const ctaObj = leadFormId
-
-              ? { type: validCta, value: { lead_gen_form_id: leadFormId } }
-
-              : { type: validCta, value: { link: targetLink } };
-
-
-
-            if (uploadedVideoId) {
-
-              const videoData = {
-
-                video_id: uploadedVideoId,
-
-                title: title,
-
-                message: caption || title,
-
-                call_to_action: ctaObj
-
-              };
-
-              if (finalMediaUrl && !isPlayableVideoUrl(finalMediaUrl)) {
-
-                videoData.image_url = finalMediaUrl;
-
+            let lastResp = null;
+            for (const att of attempts) {
+              const p = new URLSearchParams({
+                ...baseFields,
+                optimization_goal: att.opt,
+                targeting: JSON.stringify(buildTargetSpec(true, att.flex, att.excl, att.pl)),
+                status: 'PAUSED',
+                access_token: token
+              });
+              if (startDate) {
+                const st = new Date(startDate);
+                if (!isNaN(st.getTime()) && st.getTime() > Date.now() + 600000) p.append('start_time', st.toISOString());
+              }
+              if (endDate && endDate !== '상시 게재') {
+                const et = new Date(endDate + 'T23:59:59+09:00');
+                if (!isNaN(et.getTime()) && et.getTime() > Date.now() + 3600000) p.append('end_time', et.toISOString());
               }
 
-              return { page_id: activePageId, video_data: videoData };
-
+              const r = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adsets`, {
+                method: 'POST',
+                body: p
+              });
+              const d = await r.json();
+              lastResp = d;
+              if (d && d.id) {
+                appliedTargetNames = att.names;
+                appliedTargetingModeLabel = att.label;
+                return d;
+              }
             }
-
-
-
-            if (multiSlideUrls.length >= 2 && !leadFormId) {
-
-              const attachments = multiSlideUrls.slice(0, 10).map((u, idx) => ({
-
-                link: targetLink,
-
-                picture: u,
-
-                name: idx === 0 ? title : `${title} (${idx + 1})`,
-
-                description: description || '✔ 1분 무료 확인',
-
-                call_to_action: ctaObj
-
-              }));
-
-              return {
-
-                page_id: activePageId,
-
-                link_data: {
-
-                  link: targetLink,
-
-                  message: caption || title,
-
-                  child_attachments: attachments,
-
-                  multi_share_optimized: true
-
-                }
-
-              };
-
-            }
-
-
-
-            const linkData = {
-
-              link: leadFormId ? 'http://fb.me/' : targetLink,
-
-              message: caption || title,
-
-              name: title,
-
-              call_to_action: ctaObj
-
-            };
-
-            if (description) linkData.description = description;
-
-            if (imageHash) {
-
-              linkData.image_hash = imageHash;
-
-            } else if (finalMediaUrl && finalMediaUrl.startsWith('http') && !isRealVideo) {
-
-              linkData.picture = finalMediaUrl;
-
-            }
-
-            return { page_id: activePageId, link_data: linkData };
-
+            return lastResp || {};
           };
 
+          const validCta = ['LEARN_MORE', 'APPLY_NOW', 'SIGN_UP', 'GET_QUOTE'].includes(ctaType)
+            ? ctaType
+            : 'LEARN_MORE';
 
+          const multiSlideUrls = (activeItem.slides || [])
+            .map(s => s.imgUrl)
+            .filter(u => u && u.startsWith('http'));
+
+          const buildCreativeStorySpec = (targetLink, leadFormId) => {
+            const ctaObj = leadFormId
+              ? { type: validCta, value: { lead_gen_form_id: leadFormId } }
+              : { type: validCta, value: { link: targetLink } };
+
+            if (uploadedVideoId) {
+              const videoData = {
+                video_id: uploadedVideoId,
+                title: title,
+                message: caption || title,
+                call_to_action: ctaObj
+              };
+              if (finalMediaUrl && !isPlayableVideoUrl(finalMediaUrl)) {
+                videoData.image_url = finalMediaUrl;
+              }
+              return { page_id: activePageId, video_data: videoData };
+            }
+
+            if (multiSlideUrls.length >= 2 && !leadFormId) {
+              const attachments = multiSlideUrls.slice(0, 10).map((u, idx) => ({
+                link: targetLink,
+                picture: u,
+                name: idx === 0 ? title : `${title} (${idx + 1})`,
+                description: description || '✔ 1분 무료 확인',
+                call_to_action: ctaObj
+              }));
+              return {
+                page_id: activePageId,
+                link_data: {
+                  link: targetLink,
+                  message: caption || title,
+                  child_attachments: attachments,
+                  multi_share_optimized: true
+                }
+              };
+            }
+
+            const linkData = {
+              link: leadFormId ? 'http://fb.me/' : targetLink,
+              message: caption || title,
+              name: title,
+              call_to_action: ctaObj
+            };
+            if (description) linkData.description = description;
+            if (imageHash) {
+              linkData.image_hash = imageHash;
+            } else if (finalMediaUrl && finalMediaUrl.startsWith('http') && !isRealVideo) {
+              linkData.picture = finalMediaUrl;
+            }
+            return { page_id: activePageId, link_data: linkData };
+          };
 
           let isAdCreatedSuccess = false;
 
-
-
           if (!isCustomUrl && !isPrPage && customCreatedFormId && activePageId) {
-
             try {
-
               const leadCampRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/campaigns`, {
-
                 method: 'POST',
-
                 body: new URLSearchParams({
-
                   name: `[위라클랩] ${title} (${dateLabel})`,
-
                   objective: 'OUTCOME_LEADS',
-
                   status: 'PAUSED',
-
                   special_ad_categories: '["NONE"]',
-
                   is_adset_budget_sharing_enabled: 'false',
-
                   access_token: token
-
                 })
-
               });
-
               const leadCampData = await leadCampRes.json();
 
-
-
               if (leadCampData.id) {
-
-                const makeLeadAdSetParams = (useGeo, useInt, useCorePl) => {
-
-                  const p = new URLSearchParams({
-
-                    name: `[광고세트] ${regionStr} · ${ageMin}~${ageMax}세 · 한국어`,
-
-                    campaign_id: leadCampData.id,
-
-                    daily_budget: String(budget),
-
-                    billing_event: 'IMPRESSIONS',
-
-                    optimization_goal: 'LEAD_GENERATION',
-
-                    bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
-
-                    destination_type: 'ON_AD',
-
-                    promoted_object: JSON.stringify({ page_id: activePageId }),
-
-                    targeting: JSON.stringify(buildTargetSpec(useGeo, useInt, useCorePl)),
-
-                    status: 'PAUSED',
-
-                    access_token: token
-
-                  });
-
-                  if (startDate) {
-
-                    const st = new Date(startDate);
-
-                    if (!isNaN(st.getTime()) && st.getTime() > Date.now() + 600000) p.append('start_time', st.toISOString());
-
-                  }
-
-                  if (endDate && endDate !== '상시 게재') {
-
-                    const et = new Date(endDate + 'T23:59:59+09:00');
-
-                    if (!isNaN(et.getTime()) && et.getTime() > Date.now() + 3600000) p.append('end_time', et.toISOString());
-
-                  }
-
-                  return p;
-
-                };
-
-
-
-                let leadAdSetRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adsets`, {
-
-                  method: 'POST',
-
-                  body: makeLeadAdSetParams(true, true, true)
-
-                });
-
-                let leadAdSetData = await leadAdSetRes.json();
-
-
-
-                if (!leadAdSetData.id) {
-
-                  leadAdSetRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adsets`, {
-
-                    method: 'POST',
-
-                    body: makeLeadAdSetParams(true, false, false)
-
-                  });
-
-                  leadAdSetData = await leadAdSetRes.json();
-
-                }
-
-
+                const leadAdSetData = await createAdSetSmart({
+                  name: `[광고세트] ${regionStr} · ${ageMin}~${ageMax}세 · 정밀타겟`,
+                  campaign_id: leadCampData.id,
+                  daily_budget: String(budget),
+                  billing_event: 'IMPRESSIONS',
+                  optimization_goal: 'LEAD_GENERATION',
+                  bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
+                  destination_type: 'ON_AD',
+                  promoted_object: JSON.stringify({ page_id: activePageId })
+                }, '');
 
                 if (leadAdSetData.id) {
-
                   const storySpec = buildCreativeStorySpec(finalLandingUrl, customCreatedFormId);
-
                   const lcRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adcreatives`, {
-
                     method: 'POST',
-
                     body: new URLSearchParams({
-
                       name: `[인스턴트양식소재] ${title}`,
-
                       object_story_spec: JSON.stringify(storySpec),
-
                       access_token: token
-
                     })
-
                   });
-
                   const lcData = await lcRes.json();
 
-
-
                   if (lcData.id) {
-
                     const laRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/ads`, {
-
                       method: 'POST',
-
                       body: new URLSearchParams({
-
                         name: `[광고] ${title}`,
-
                         adset_id: leadAdSetData.id,
-
                         creative: JSON.stringify({ creative_id: lcData.id }),
-
                         status: 'PAUSED',
-
                         access_token: token
-
                       })
-
                     });
-
                     const laData = await laRes.json();
-
                     if (laData.id) {
-
                       createdMetaCampaignId = leadCampData.id;
-
                       createdAdSetId = leadAdSetData.id;
-
                       createdAdId = laData.id;
-
                       isAdCreatedSuccess = true;
-
+                      const tListStr = appliedTargetNames.length ? appliedTargetNames.slice(0, 6).join(', ') : '기본타겟';
                       apiNotice.push(`✅ [1/3] 잠재고객(OUTCOME_LEADS) 캠페인 생성 완료`);
-
-                      apiNotice.push(`✅ [2/3] 인스타·페북 핵심지면 & 정밀타겟 광고세트 생성 완료`);
-
+                      apiNotice.push(`✅ [2/3] ${appliedTargetingModeLabel} 반영 완료 (${tListStr})`);
                       apiNotice.push(`🎉 [3/3] 맞춤 인스턴트 양식 광고 생성 완료!`);
-
                     }
-
                   }
-
                 }
-
                 if (!isAdCreatedSuccess) {
-
                   await fetch(`https://graph.facebook.com/v21.0/${leadCampData.id}?access_token=${encodeURIComponent(token)}`, { method: 'DELETE' });
-
                 }
-
               }
-
             } catch (e) {}
-
           }
-
-
 
           if (!isAdCreatedSuccess && isPrPage && detectedPixelId) {
-
             try {
-
               const convCampRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/campaigns`, {
-
                 method: 'POST',
-
                 body: new URLSearchParams({
-
                   name: `[위라클랩 PR전환] ${title} (${dateLabel})`,
-
                   objective: 'OUTCOME_LEADS',
-
                   status: 'PAUSED',
-
                   special_ad_categories: '["NONE"]',
-
                   is_adset_budget_sharing_enabled: 'false',
-
                   access_token: token
-
                 })
-
               });
-
               const convCampData = await convCampRes.json();
 
-
-
               if (convCampData.id) {
-
-                const convAdSetParams = new URLSearchParams({
-
+                const convAdSetData = await createAdSetSmart({
                   name: `[PR전환세트] ${regionStr} · ${ageMin}~${ageMax}세 · 픽셀Lead`,
-
                   campaign_id: convCampData.id,
-
                   daily_budget: String(budget),
-
                   billing_event: 'IMPRESSIONS',
-
                   optimization_goal: 'OFFSITE_CONVERSIONS',
-
                   bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
-
                   destination_type: 'WEBSITE',
-
                   promoted_object: JSON.stringify({
-
                     pixel_id: detectedPixelId,
-
                     custom_event_type: 'LEAD'
-
-                  }),
-
-                  targeting: JSON.stringify(buildTargetSpec(true, true, true)),
-
-                  status: 'PAUSED',
-
-                  access_token: token
-
-                });
-
-
-
-                const convAdSetRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adsets`, {
-
-                  method: 'POST',
-
-                  body: convAdSetParams
-
-                });
-
-                const convAdSetData = await convAdSetRes.json();
-
-
+                  })
+                }, '');
 
                 if (convAdSetData.id) {
-
                   const storySpec = buildCreativeStorySpec(finalLandingUrl, '');
-
                   const ccRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adcreatives`, {
-
                     method: 'POST',
-
                     body: new URLSearchParams({
-
                       name: `[PR전환소재] ${title}`,
-
                       object_story_spec: JSON.stringify(storySpec),
-
                       access_token: token
-
                     })
-
                   });
-
                   const ccData = await ccRes.json();
 
-
-
                   if (ccData.id) {
-
                     const caRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/ads`, {
-
                       method: 'POST',
-
                       body: new URLSearchParams({
-
                         name: `[광고] ${title}`,
-
                         adset_id: convAdSetData.id,
-
                         creative: JSON.stringify({ creative_id: ccData.id }),
-
                         status: 'PAUSED',
-
                         access_token: token
-
                       })
-
                     });
-
                     const caData = await caRes.json();
-
                     if (caData.id) {
-
                       createdMetaCampaignId = convCampData.id;
-
                       createdAdSetId = convAdSetData.id;
-
                       createdAdId = caData.id;
-
                       isAdCreatedSuccess = true;
-
+                      const tListStr = appliedTargetNames.length ? appliedTargetNames.slice(0, 6).join(', ') : '기본타겟';
                       apiNotice.push(`✅ [1/3] 웹사이트 전환(OUTCOME_LEADS) 캠페인 생성 완료`);
-
-                      apiNotice.push(`✅ [2/3] 메타 픽셀(${detectedPixelId}) 기반 실제 신청완료(Lead) 최적화 적용!`);
-
+                      apiNotice.push(`✅ [2/3] ${appliedTargetingModeLabel} (${tListStr}) & 픽셀(${detectedPixelId}) 적용!`);
                       apiNotice.push(`🎉 [3/3] 내 PR 매거진 랜딩페이지 전환 광고 세팅 완료!`);
-
                     }
-
                   }
-
                 }
-
                 if (!isAdCreatedSuccess) {
-
                   await fetch(`https://graph.facebook.com/v21.0/${convCampData.id}?access_token=${encodeURIComponent(token)}`, { method: 'DELETE' });
-
                 }
-
               }
-
             } catch (e) {}
-
           }
-
-
 
           if (!isAdCreatedSuccess) {
-
             const campRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/campaigns`, {
-
               method: 'POST',
-
               body: new URLSearchParams({
-
                 name: `[위라클랩] ${title} (${dateLabel})`,
-
                 objective: 'OUTCOME_TRAFFIC',
-
                 status: 'PAUSED',
-
                 special_ad_categories: '["NONE"]',
-
                 is_adset_budget_sharing_enabled: 'false',
-
                 access_token: token
-
               })
-
             });
-
             const campData = await campRes.json();
 
-
-
             if (!campData.id) {
-
               alert(`❌ [1/3] 캠페인 생성 실패:\n${formatClientMetaError(campData.error)}`);
-
               return;
-
             }
-
             createdMetaCampaignId = campData.id;
-
             apiNotice.push(`✅ [1/3] 캠페인 생성 완료`);
 
-
-
-            const buildAdSetParams = (tSpec, optGoal) => {
-
-              const p = new URLSearchParams({
-
-                name: `[광고세트] ${regionStr} · ${ageMin}~${ageMax}세 · 한국어`,
-
-                campaign_id: createdMetaCampaignId,
-
-                daily_budget: String(budget),
-
-                billing_event: 'IMPRESSIONS',
-
-                optimization_goal: optGoal,
-
-                bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
-
-                targeting: JSON.stringify(tSpec),
-
-                status: 'PAUSED',
-
-                access_token: token
-
-              });
-
-              if (startDate) {
-
-                const st = new Date(startDate);
-
-                if (!isNaN(st.getTime()) && st.getTime() > Date.now() + 600000) p.append('start_time', st.toISOString());
-
-              }
-
-              if (endDate && endDate !== '상시 게재') {
-
-                const et = new Date(endDate + 'T23:59:59+09:00');
-
-                if (!isNaN(et.getTime()) && et.getTime() > Date.now() + 3600000) p.append('end_time', et.toISOString());
-
-              }
-
-              return p;
-
-            };
-
-
-
-            let adSetRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adsets`, {
-
-              method: 'POST',
-
-              body: buildAdSetParams(buildTargetSpec(true, true, true), 'LANDING_PAGE_VIEWS')
-
-            });
-
-            let adSetData = await adSetRes.json();
-
-
+            const adSetData = await createAdSetSmart({
+              name: `[광고세트] ${regionStr} · ${ageMin}~${ageMax}세 · 정밀타겟`,
+              campaign_id: createdMetaCampaignId,
+              daily_budget: String(budget),
+              billing_event: 'IMPRESSIONS',
+              optimization_goal: 'LANDING_PAGE_VIEWS',
+              bid_strategy: 'LOWEST_COST_WITHOUT_CAP'
+            }, 'LINK_CLICKS');
 
             if (!adSetData.id) {
-
-              adSetRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adsets`, {
-
-                method: 'POST',
-
-                body: buildAdSetParams(buildTargetSpec(true, false, false), 'LINK_CLICKS')
-
-              });
-
-              adSetData = await adSetRes.json();
-
-            }
-
-
-
-            if (!adSetData.id) {
-
               await fetch(`https://graph.facebook.com/v21.0/${createdMetaCampaignId}?access_token=${encodeURIComponent(token)}`, { method: 'DELETE' });
-
               alert(`❌ [2/3] 광고세트 생성 실패:\n${formatClientMetaError(adSetData.error)}`);
-
               return;
-
             }
-
             createdAdSetId = adSetData.id;
-
-            apiNotice.push(`✅ [2/3] 한국어·핵심지면 정밀타겟 광고세트 생성 완료`);
-
-
+            const tListStr = appliedTargetNames.length ? appliedTargetNames.slice(0, 6).join(', ') : '기본타겟';
+            apiNotice.push(`✅ [2/3] ${appliedTargetingModeLabel} (${tListStr}) 광고세트 생성 완료`);
 
             let storySpec = buildCreativeStorySpec(finalLandingUrl, '');
-
             let cRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adcreatives`, {
-
               method: 'POST',
-
               body: new URLSearchParams({
-
                 name: `[소재] ${title}`,
-
                 object_story_spec: JSON.stringify(storySpec),
-
                 access_token: token
-
               })
-
             });
-
             let cData = await cRes.json();
 
-
-
             if (!cData.id) {
-
               const fallbackLinkData = {
-
                 link: finalLandingUrl,
-
                 message: caption || title,
-
                 name: title,
-
                 call_to_action: { type: validCta, value: { link: finalLandingUrl } }
-
               };
-
               if (description) fallbackLinkData.description = description;
-
               if (imageHash) fallbackLinkData.image_hash = imageHash;
-
               else if (finalMediaUrl && finalMediaUrl.startsWith('http') && !isRealVideo) fallbackLinkData.picture = finalMediaUrl;
 
-
-
               cRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adcreatives`, {
-
                 method: 'POST',
-
                 body: new URLSearchParams({
-
                   name: `[소재] ${title}`,
-
                   object_story_spec: JSON.stringify({ page_id: activePageId, link_data: fallbackLinkData }),
-
                   access_token: token
-
                 })
-
               });
-
               cData = await cRes.json();
-
             }
-
-
 
             if (cData.id) {
-
               const aRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/ads`, {
-
                 method: 'POST',
-
                 body: new URLSearchParams({
-
                   name: `[광고] ${title}`,
-
                   adset_id: createdAdSetId,
-
                   creative: JSON.stringify({ creative_id: cData.id }),
-
                   status: 'PAUSED',
-
                   access_token: token
-
                 })
-
               });
-
               const aData = await aRes.json();
-
               if (aData.id) {
-
                 createdAdId = aData.id;
-
                 apiNotice.push(isPrPage ? `🎉 [3/3] 내 PR 매거진 랜딩페이지(픽셀 장착) 연결 광고 세팅 완료!` : `🎉 [3/3] 최종 광고 세팅 완료!`);
-
               } else {
-
                 await fetch(`https://graph.facebook.com/v21.0/${createdMetaCampaignId}?access_token=${encodeURIComponent(token)}`, { method: 'DELETE' });
-
                 if (confirm(`⚠️ 메타 계정 보안 확인(최초 1회 이메일 인증)이 필요합니다.\n\n지금 바로 메타 인증 화면을 여시겠습니까?`)) {
-
                   window.open('https://www.facebook.com/business-support-home/', '_blank');
-
                 }
-
                 return;
-
               }
-
             } else {
-
               await fetch(`https://graph.facebook.com/v21.0/${createdMetaCampaignId}?access_token=${encodeURIComponent(token)}`, { method: 'DELETE' });
-
               if (confirm(`⚠️ 메타 계정 보안 확인(최초 1회 이메일 인증)이 필요합니다.\n\n지금 바로 메타 인증 화면을 여시겠습니까?`)) {
-
                 window.open('https://www.facebook.com/business-support-home/', '_blank');
-
               }
-
               return;
-
             }
-
           }
-
         }
 
-
+        const targetSummaryText = appliedTargetNames.length > 0
+          ? `${appliedTargetingModeLabel}: ${appliedTargetNames.slice(0, 4).join(', ')}`
+          : activeTargets.slice(0, 2).join(', ');
 
         const targetSummaryValue = wizardTrack === 'meta'
-
-          ? `${ageMin}~${ageMax}세 · 한국어 · ${activeTargets.slice(0, 2).join(', ')}`
-
+          ? `${ageMin}~${ageMax}세 · ${targetSummaryText}`
           : JSON.stringify({
-
               pageId: activePageId || '',
-
               igId: igUserId || '',
-
               pageToken: pageAccessToken || '',
-
               pdfUrl: pdfDocUrl || ''
-
             });
 
-
-
         const dbRecord = {
-
           id: recordId,
-
           user_id: agentId,
-
           track: wizardTrack,
-
           title,
-
           description: description || '',
-
           cta_type: ctaType,
-
           landing_url: finalLandingUrl,
-
           start_date: startDate || new Date().toISOString().slice(0, 10),
-
           end_date: endDate || '상시 게재',
-
           ratio: normalizeRatio(activeItem.ratio, activeItem.type === 'video'),
-
           region: regionStr,
-
           target_summary: targetSummaryValue,
-
           budget,
-
           keyword,
-
           dm_message: dmMessage,
-
           status: wizardTrack === 'meta' ? 'PAUSED' : 'ACTIVE',
-
           meta_campaign_id: createdMetaCampaignId,
-
           adset_id: createdAdSetId,
-
           ad_id: createdAdId,
-
           ig_media_id: createdIgMediaId,
-
           leads_count: 0,
-
           dm_sent_count: 0,
-
           created_at: new Date().toISOString()
-
         };
 
-
-
         await fetch('/api/meta-execute', {
-
           method: 'POST',
-
           headers: { 'Content-Type': 'application/json' },
-
           body: JSON.stringify({ action: 'SAVE_RECORD', record: dbRecord })
-
         });
 
-
-
         closeWizardModal();
-
         switchMainTab('manage');
-
         await loadServerCampaigns(true);
-
         alert(`✅ 실행 결과 안내 (${adAccountName}):\n\n${apiNotice.join('\n')}\n\n💡 [광고관리] 탭에서 우측 스위치를 켜면(ON) 즉시 게재가 시작됩니다!`);
-
       } catch (e) {
-
         alert('통신 중 오류가 발생했습니다: ' + e.message);
-
       } finally {
-
         submitBtn.disabled = false;
-
         submitBtn.innerText = originalText;
-
       }
-
     }
-
 
 
     async function loadServerCampaigns(showLoading) {

@@ -9194,9 +9194,12 @@ window.updateQuickFilterCounts = function() {
         });
     });
     
+    document.querySelectorAll('[id^="touch-count-"], [id^="m-touch-count-"]').forEach(el => el.innerText = '0');
     Object.entries(insightCounts).forEach(([tag, count]) => {
         const el = document.getElementById('touch-count-' + tag);
         if (el) el.innerText = count;
+        const mEl = document.getElementById('m-touch-count-' + tag);
+        if (mEl) mEl.innerText = count;
     });
 
     const updateEls = (ids, text) => {

@@ -5864,7 +5864,7 @@ let customQuestionsList = [
 
           const dateLabel = new Date().toLocaleDateString('ko-KR');
 
-          // 1) 인스턴트 양식 전용 모드일 때만 메타 네이티브 양식 생성 (자유 질문 빌더 완벽 반영 + 완료 시 PDF 원본 직행)
+// 1) 인스턴트 양식 전용 모드일 때만 메타 네이티브 양식 생성 (자유 질문 빌더 반영 + 완료 시 PDF 원본 직행)
           let customCreatedFormId = '';
           if (isInstantMode && activePageId) {
             try {
@@ -5896,12 +5896,14 @@ let customQuestionsList = [
               if (wantTime) metaQuestions.push({ type: 'CUSTOM', key: 'q_time', label: '통화나 문자 편하신 시간대는 언제인가요?' });
 
               const hasPdfDirect = Boolean(pdfDocUrl && pdfDocUrl.startsWith('http'));
+              const safeFollowUpUrl = encodeURI(instantFollowUpUrl);
+
               const newFormParams = new URLSearchParams({
                 name: `[위라클랩] ${title.slice(0, 32)} (${Date.now().toString().slice(-5)})`,
                 locale: 'KO_KR',
                 questions: JSON.stringify(metaQuestions),
                 privacy_policy: JSON.stringify({
-                  url: `${curOrigin}/login/privacy.html`,
+                  url: `${curOrigin}/sns_apply.html`,
                   link_text: '개인정보 수집 및 안내 동의'
                 }),
                 thank_you_page: JSON.stringify({
@@ -5911,9 +5913,9 @@ let customQuestionsList = [
                     : '감사합니다! 담당자가 확인 후 빠르고 친절하게 안내드리겠습니다.',
                   button_text: hasPdfDirect ? '핵심 요약 가이드북(PDF) 바로 열기' : '담당자 안내 페이지 확인하기',
                   button_type: 'VIEW_WEBSITE',
-                  website_url: instantFollowUpUrl
+                  website_url: safeFollowUpUrl
                 }),
-                follow_up_action_url: instantFollowUpUrl,
+                follow_up_action_url: safeFollowUpUrl,
                 access_token: pageAccessToken
               });
 
@@ -6013,16 +6015,8 @@ let customQuestionsList = [
             return spec;
           };
 
-          // 페이스북 스토리 명칭 호환 보정 ('facebook_stories' 표준 적용)
-          const normalizePositionSpec = (rawSpec) => {
-            if (Array.isArray(rawSpec.facebook_positions)) {
-              rawSpec.facebook_positions = rawSpec.facebook_positions.map(pos => pos === 'story' ? 'facebook_stories' : pos);
-            }
-            return rawSpec;
-          };
-
           const postSingleAdSet = async (baseFields, optGoal, flexSpec, plMode, useExclusions) => {
-            const builtSpec = normalizePositionSpec(buildTargetSpec(flexSpec, plMode, useExclusions));
+            const builtSpec = buildTargetSpec(flexSpec, plMode, useExclusions);
             const p = new URLSearchParams({
               ...baseFields,
               optimization_goal: optGoal,
@@ -6077,12 +6071,12 @@ let customQuestionsList = [
           const createAdSetSmart = async (baseFields, altOptGoal) => {
             const attempts = [];
             if (targetPack.andSpec) {
-              attempts.push({ flex: targetPack.andSpec, pl: 'CORE_STRICT', ex: true, label: '핵심지면 · 2단 교집합(AND)', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
-              attempts.push({ flex: targetPack.andSpec, pl: 'CORE_FEED_REELS', ex: false, label: '핵심지면 · 2단 교집합(AND)', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: targetPack.andSpec, pl: 'CORE_FEED_REELS', ex: true, label: '핵심지면 · 2단 교집합(AND)', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: targetPack.andSpec, pl: 'CORE_STRICT', ex: false, label: '핵심지면 · 2단 교집합(AND)', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
             }
             if (targetPack.orSpec) {
-              attempts.push({ flex: targetPack.orSpec, pl: 'CORE_STRICT', ex: true, label: '핵심지면 · 로컬 정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
               attempts.push({ flex: targetPack.orSpec, pl: 'CORE_FEED_REELS', ex: true, label: '핵심지면 · 로컬 정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
+              attempts.push({ flex: targetPack.orSpec, pl: 'CORE_STRICT', ex: true, label: '핵심지면 · 로컬 정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
               attempts.push({ flex: targetPack.orSpec, pl: 'CORE_FEED_REELS', ex: false, label: '핵심지면 · 로컬 정밀타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
               attempts.push({ flex: targetPack.orSpec, pl: 'AUTO', ex: false, label: '상세 관심사 타겟', names: targetPack.summaryNames, opt: baseFields.optimization_goal });
               if (altOptGoal) {
@@ -6113,16 +6107,12 @@ let customQuestionsList = [
             ? ctaType
             : 'LEARN_MORE';
 
-          // 단일 이미지 / 다중 슬라이드(캐러셀) / 동영상 자동 판별 크리에이티브 빌더 (인스턴트 양식에서도 슬라이드 완벽 지원!)
           const buildCreativeStorySpec = (targetLink, leadFormId, forceSingleOnly) => {
             const ctaObj = leadFormId
               ? { type: validCta, value: { lead_gen_form_id: leadFormId } }
               : { type: validCta, value: { link: targetLink } };
 
             const storySpec = { page_id: activePageId };
-            if (resolvedIgActorId) {
-              storySpec.instagram_user_id = resolvedIgActorId;
-            }
 
             if (uploadedVideoId) {
               const videoData = {
@@ -6139,7 +6129,7 @@ let customQuestionsList = [
             }
 
             if (!forceSingleOnly && resolvedSlideUrls.length >= 2) {
-              const slideLink = leadFormId ? 'https://fb.me/' : targetLink;
+              const slideLink = leadFormId ? 'http://fb.me/' : targetLink;
               const attachments = resolvedSlideUrls.slice(0, 10).map((u, idx) => ({
                 link: slideLink,
                 picture: u,
@@ -6151,15 +6141,13 @@ let customQuestionsList = [
                 link: slideLink,
                 message: caption || title,
                 child_attachments: attachments,
-                multi_share_optimized: false,
-                multi_share_end_card: false,
-                call_to_action: ctaObj
+                multi_share_end_card: false
               };
               return storySpec;
             }
 
             const linkData = {
-              link: leadFormId ? 'https://fb.me/' : targetLink,
+              link: leadFormId ? 'http://fb.me/' : targetLink,
               message: caption || title,
               name: title,
               call_to_action: ctaObj
@@ -6174,42 +6162,44 @@ let customQuestionsList = [
             return storySpec;
           };
 
-          // '여러 광고주의 광고' 비활성화(OPT_OUT) + 메타 픽셀(웹사이트 이벤트) 상시 추적 연결 헬퍼
           const createCreativeAndAd = async (adSetIdToUse, creativeTitle, targetLink, leadFormId) => {
-            let storySpec = buildCreativeStorySpec(targetLink, leadFormId, false);
-            const makeCreativeParams = (specObj) => {
-              const cp = new URLSearchParams({
-                name: creativeTitle,
-                object_story_spec: JSON.stringify(specObj),
-                contextual_multi_ads: JSON.stringify({ enroll_status: 'OPT_OUT' }),
-                access_token: token
-              });
-              return cp;
-            };
+            const storySpec = buildCreativeStorySpec(targetLink, leadFormId, false);
 
+            // 1차 시도: 슬라이드/단일 소재 + '여러 광고주의 광고' 비활성화(OPT_OUT) 포함
             let cRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adcreatives`, {
               method: 'POST',
-              body: makeCreativeParams(storySpec)
+              body: new URLSearchParams({
+                name: creativeTitle,
+                object_story_spec: JSON.stringify(storySpec),
+                contextual_multi_ads: JSON.stringify({ enroll_status: 'OPT_OUT' }),
+                access_token: token
+              })
             });
             let cData = await cRes.json();
 
-            // 만약 외부 슬라이드 이미지 규격 문제 등으로 거절 시 ig_user_id 제거 또는 단일 이미지로 안전 재시도
-            if (!cData.id && storySpec.instagram_user_id) {
-              const retrySpec = { ...storySpec };
-              delete retrySpec.instagram_user_id;
+            // 2차 시도: contextual_multi_ads 파라미터 충돌 시 제거 후 슬라이드 그대로 재시도
+            if (!cData.id) {
               cRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adcreatives`, {
                 method: 'POST',
-                body: makeCreativeParams(retrySpec)
+                body: new URLSearchParams({
+                  name: creativeTitle,
+                  object_story_spec: JSON.stringify(storySpec),
+                  access_token: token
+                })
               });
               cData = await cRes.json();
             }
 
+            // 3차 안전망: 외부 이미지 비율 규격 등으로 슬라이드 거절 시 단일 이미지로 재시도
             if (!cData.id && resolvedSlideUrls.length >= 2) {
               const singleFallbackSpec = buildCreativeStorySpec(targetLink, leadFormId, true);
-              delete singleFallbackSpec.instagram_user_id;
               cRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adcreatives`, {
                 method: 'POST',
-                body: makeCreativeParams(singleFallbackSpec)
+                body: new URLSearchParams({
+                  name: creativeTitle,
+                  object_story_spec: JSON.stringify(singleFallbackSpec),
+                  access_token: token
+                })
               });
               cData = await cRes.json();
             }
@@ -6251,7 +6241,6 @@ let customQuestionsList = [
             : (resolvedSlideUrls.length >= 2 ? `슬라이드(${resolvedSlideUrls.length}장)` : '단일 이미지');
 
           let isAdCreatedSuccess = false;
-
           // [모드 1] ⚡ 인스턴트 양식 전용 생성 (PR 랜딩으로 몰래 넘어가지 않도록 명확히 처리)
           if (isInstantMode) {
             if (!customCreatedFormId || !activePageId) {

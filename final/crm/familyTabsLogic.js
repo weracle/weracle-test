@@ -1,4 +1,4 @@
-﻿// familyTabsLogic.js
+// familyTabsLogic.js
 // Handles the 2-Tier Tab UI and state swapping for Family Household CRM Input
 
 window.familyState = [];
@@ -424,7 +424,7 @@ function saveCurrentFormToState() {
         target.insHtml = insListDom.innerHTML;
     }
     
-    target.data = dataObj;
+    target.data = { ...(target.data || {}), ...dataObj };
     if (typeof window.getPetSerializedData === 'function') {
         const petSer = window.getPetSerializedData();
         dataObj['반려동물'] = petSer.species;
@@ -440,28 +440,42 @@ function saveCurrentFormToState() {
     
         // Update tab label if name changed or relationship changed
     if (target.isRoot) {
-        target.label = dataObj['고객명'] ? dataObj['고객명'] + ' (메인 계약자)' : '메인 계약자(이름 미정)';
+        const rootNm = dataObj['고객명'] || (target.data && target.data['고객명']);
+        target.label = rootNm ? rootNm + ' (메인 계약자)' : '메인 계약자(이름 미정)';
     } else {
-        const rel = dataObj['가족_관계'] || '가족';
-        let _rel = rel; if(!_rel.includes('계약자')) _rel = '계약자의 ' + _rel; target.label = dataObj['고객명'] ? dataObj['고객명'] + ' (' + _rel + ')' : '이름 미정 (' + _rel + ')';
+        const rel = dataObj['가족_관계'] || dataObj['가족사항'] || (target.data && target.data['가족_관계']) || (target.data && target.data['가족사항']) || '가족';
+        if (target.data) {
+            target.data['가족_관계'] = rel;
+            if (!target.data['가족사항']) target.data['가족사항'] = rel;
+        }
+        let _rel = rel; if(!_rel.includes('계약자')) _rel = '계약자의 ' + _rel; 
+        const curName = dataObj['고객명'] || (target.data && target.data['고객명']) || '';
+        target.label = curName ? curName + ' (' + _rel + ')' : '이름 미정 (' + _rel + ')';
     }
     renderFamilyTabs();
     
     if (window.familyState && window.familyState.length > 1) {
         const rootMember = window.familyState[0];
-        const familyStr = window.familyState
-            .filter(f => !f.isRoot)
-            .map(f => {
-                const fRel = f.data['가족_관계'] || f.data['가족사항'] || '가족';
-                const fName = f.data['고객명'] || '이름미상';
-                return fRel + '(' + fName + ')';
-            })
-            .join(', ');
-            
-        rootMember.data['가족사항'] = familyStr;
-        if (window.activeFamilyId === rootMember.id) {
-            const fsInput = document.querySelector('input[name="가족사항"]');
-            if (fsInput) fsInput.value = familyStr;
+        const isNew = !window.isEditMode;
+        // In new registration mode or when rootMember's 가족사항 is blank, auto-synthesize familyStr
+        if (isNew || !rootMember.data['가족사항']) {
+            const familyStr = window.familyState
+                .filter(f => !f.isRoot)
+                .map(f => {
+                    const fRel = (f.data && (f.data['가족_관계'] || f.data['가족사항'])) || '가족';
+                    const fName = (f.data && f.data['고객명']) || '이름미상';
+                    return fRel + '(' + fName + ')';
+                })
+                .filter(Boolean)
+                .join(', ');
+                
+            if (familyStr) {
+                rootMember.data['가족사항'] = familyStr;
+                if (window.activeFamilyId === rootMember.id) {
+                    const fsInput = document.querySelector('input[name="가족사항"]');
+                    if (fsInput && !fsInput.value) fsInput.value = familyStr;
+                }
+            }
         }
     }
 }

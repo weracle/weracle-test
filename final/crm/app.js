@@ -1308,7 +1308,7 @@ sheetIdVal = 0;
 }
 let isLoadingCRMData = false;
 let lastLoadCRMDataTime = 0;
-async function loadCRMData() { if (isLoadingCRMData) { console.log('loadCRMData already in progress, skipping.'); return; } const now = Date.now(); if (now - lastLoadCRMDataTime < 5000) { console.log('loadCRMData called too soon, skipping.'); return; } isLoadingCRMData = true; lastLoadCRMDataTime = now; const isInitialLoad = !window.globalCustomerData || window.globalCustomerData.length === 0; try { await _doLoadCRMData(!isInitialLoad); } finally { isLoadingCRMData = false; } } async function _doLoadCRMData(silent = false) { let retryCount = 0; while ((typeof gapi === 'undefined' || !gapi.client || !gapi.client.sheets) && retryCount < 10) { await new Promise(r => setTimeout(r, 500)); retryCount++; } if (!silent) showLoading(true);
+async function loadCRMData() { if (isLoadingCRMData) { console.log('loadCRMData already in progress, skipping.'); return; } const now = Date.now(); if (now - lastLoadCRMDataTime < 5000) { console.log('loadCRMData called too soon, skipping.'); return; } isLoadingCRMData = true; lastLoadCRMDataTime = now; const isInitialLoad = !window.globalCustomerData || window.globalCustomerData.length === 0; try { await _doLoadCRMData(!isInitialLoad); } finally { isLoadingCRMData = false; } } async function _doLoadCRMData(silent = false) { let retryCount = 0; while ((typeof gapi === 'undefined' || !gapi.client || !gapi.client.sheets) && retryCount < 10) { await new Promise(r => setTimeout(r, 500)); retryCount++; } // showLoading removed
 try {
 if (isDemoMode) {
 const localData = localStorage.getItem("demo_crm_data");
@@ -4134,6 +4134,8 @@ function loadCustomerForFamily(task) {
         });
     }
 }function openEditMode(custId, initialMode = 'edit') {
+    window.wizardMode = 'edit';
+    window.isEditMode = true;
     window.disableInitFamilyTabs = false;
     let liveData = (window.globalCustomerData && window.globalCustomerData.length > 0)
         ? window.globalCustomerData
@@ -6037,73 +6039,8 @@ fallbackCopyTextToClipboard(t);
 // 11. 모달 팝업 및 알림 헬퍼 구현
 // ==========================================
 function showLoading(visible, title, desc) {
-    let loader = document.getElementById("crm-loader");
-    if (!loader) {
-        loader = document.createElement("div");
-        loader.id = "crm-loader";
-        loader.style.cssText = "display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.4); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:999999; justify-content:center; align-items:flex-start; padding:32px 16px 0; box-sizing:border-box; pointer-events:auto;";
-        loader.innerHTML = `
-            <div class="crm-sync-banner">
-                <div class="crm-sync-icon-box">
-                    <div class="crm-sync-orbital-ring"></div>
-                    <div class="crm-sync-inner-badge">
-                        <i class="fa-solid fa-arrows-rotate"></i>
-                    </div>
-                </div>
-                <div style="display:flex; flex-direction:column; text-align:left;">
-                    <div class="crm-sync-title">
-                        <span id="crm-sync-title-text">데이터 동기화 진행 중</span>
-                        <span style="display:inline-flex; gap:3px; align-items:center;">
-                            <span class="crm-sync-dot" style="animation:crmSyncDot 1.4s infinite ease-in-out both;"></span>
-                            <span class="crm-sync-dot" style="animation:crmSyncDot 1.4s infinite ease-in-out both 0.2s;"></span>
-                            <span class="crm-sync-dot" style="animation:crmSyncDot 1.4s infinite ease-in-out both 0.4s;"></span>
-                        </span>
-                    </div>
-                    <div class="crm-sync-desc" id="crm-sync-desc-text">
-                        클라우드 구글 시트와 실시간 연동하고 있습니다.
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(loader);
-
-        if (!document.getElementById("crm-sync-style")) {
-            const style = document.createElement("style");
-            style.id = "crm-sync-style";
-            style.innerHTML = `
-                @keyframes crmSyncSlideDown {
-                    0% { opacity:0; transform:translateY(-24px) scale(0.96); }
-                    100% { opacity:1; transform:translateY(0) scale(1); }
-                }
-                @keyframes crmSyncRotate {
-                    0% { transform:rotate(0deg); }
-                    100% { transform:rotate(360deg); }
-                }
-                @keyframes crmSyncDot {
-                    0%, 80%, 100% { transform:scale(0.6); opacity:0.3; }
-                    40% { transform:scale(1.2); opacity:1; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }
-
-    if (visible) {
-        const titleEl = document.getElementById("crm-sync-title-text");
-        if (titleEl) titleEl.innerText = title || "데이터 동기화 진행 중";
-        const descEl = document.getElementById("crm-sync-desc-text");
-        if (descEl) descEl.innerText = desc || "클라우드 구글 시트와 실시간 연동하고 있습니다.";
-
-        loader.style.display = "flex";
-        const banner = loader.querySelector(".crm-sync-banner");
-        if (banner) {
-            banner.style.animation = "none";
-            banner.offsetHeight; // trigger reflow
-            banner.style.animation = "crmSyncSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards";
-        }
-    } else {
-        if (loader) loader.style.display = "none";
-    }
+    const loader = document.getElementById("crm-loader");
+    if (loader) loader.style.display = "none";
 }
 window.showLoading = showLoading;
 function openCustomPrompt(mode, title, desc) {

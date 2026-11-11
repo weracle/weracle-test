@@ -616,7 +616,7 @@ if (localToken && localToken !== "undefined" && localToken !== "null") {
 if (memoryAccessToken) {
     syncCredentialsToSupabase(memoryAccessToken, null);
 }
-if (false && profile.google_sheet_id) {
+if (profile && profile.google_sheet_id) {
 try { localStorage.setItem("g_sheet_id", profile.google_sheet_id); } catch(e) {}
 spreadsheetId = profile.google_sheet_id;
 console.log("Sync: Google Sheet ID loaded from Supabase profile.");
@@ -711,7 +711,7 @@ if (localToken && localToken !== "undefined" && localToken !== "null") {
 if (memoryAccessToken) {
     syncCredentialsToSupabase(memoryAccessToken, null);
 }
-if (false && profile.google_sheet_id) {
+if (profile && profile.google_sheet_id) {
 try { localStorage.setItem("g_sheet_id", profile.google_sheet_id); } catch(e) {}
 spreadsheetId = profile.google_sheet_id;
 } else {
@@ -1330,14 +1330,7 @@ return;
 // 구글 토큰 유효성 사전 검증
 const token = await ensureValidToken();
 if (!token) { window.isSubmittingCrm = false; return; }
-// [HOTFIX] 강제 초기화 트리거: 이전 버그로 인해 텅 빈 구형 시트 ID가 로컬 스토리지에 캐싱되어 꼬인 현상을 영구 해결.
-if (!window.forceClearedV5) {
-    console.log(" [HOTFIX] 강제로 로컬스토리지의 잘못된 시트 ID를 삭제합니다. (프레임 단위 완전 소독)");
-    localStorage.removeItem('g_sheet_id');
-    window.forceClearedV5 = true;
-    spreadsheetId = null;
-}
-// 0. 시트ID 복원 시도 (localStorage → Supabase 순서)
+// 0. 시트ID 복원 시도 (localStorage → Supabase profile 순서 - 다중 사용자 개별 연동 보장)
   if (!spreadsheetId) {
       const cachedSheetId = (function() { try { return localStorage.getItem('g_sheet_id'); } catch(e) { return null; } })();
       if (cachedSheetId) {
@@ -1345,10 +1338,10 @@ if (!window.forceClearedV5) {
           console.log(" 시트ID 로컬캐시에서 복원:", spreadsheetId);
       }
   }
-  if (false) {
+  if (!spreadsheetId && window.currentProfile && window.currentProfile.google_sheet_id) {
       spreadsheetId = window.currentProfile.google_sheet_id;
       try { localStorage.setItem("g_sheet_id", spreadsheetId); } catch(e) {}
-      console.log(" 시트ID Supabase에서 복원:", spreadsheetId);
+      console.log(" 시트ID 로그인 사용자 Supabase 프로필에서 복원:", spreadsheetId);
   }
 
   // 0.5. 검증: 시트가 유효한지 (휴지통에 있거나 삭제되지 않았는지) 확인
@@ -1867,10 +1860,11 @@ function getCrmEndCol(sheetType) {
 async function findOrCreateClientSheet() {
 const token = memoryAccessToken || (function() { try { return localStorage.getItem("g_access_token"); } catch(e) { return null; } })();
 
-// 1단계: Drive API로 기존 시트 검색
+// 1단계: Drive API로 기존 시트 다각도 검색 (시트명 다양성 지원 & 휴지통 제외)
 try {
-const listUrl = "https://www.googleapis.com/drive/v3/files?q=name%3D'위라클_고객관리'+and+mimeType%3D'application%2Fvnd.google-apps.spreadsheet'+and+trashed%3Dfalse&fields=files(id,name,createdTime)&orderBy=createdTime desc";
-console.log(" 기존 시트 검색 중...");
+const qStr = encodeURIComponent("(name = '위라클_고객관리' or name = '워라클_통합' or name contains '고객관리' or name contains 'weracle' or name contains '위라클' or name contains '워라클') and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false");
+const listUrl = "https://www.googleapis.com/drive/v3/files?q=" + qStr + "&fields=files(id,name,createdTime,modifiedTime)&orderBy=modifiedTime desc";
+console.log(" 기존 고객관리 시트 검색 중...");
 const resp = await fetch(listUrl, {
 headers: { Authorization: `Bearer ${token}` }
 });
@@ -1878,8 +1872,25 @@ headers: { Authorization: `Bearer ${token}` }
 if (resp.ok) {
 const result = await resp.json();
 if (result.files && result.files.length > 0) {
-    const existingId = result.files[0].id;
-    console.log(" 기존 시트 발견:", existingId, result.files[0].name);
+    console.log(` 후보 시트 ${result.files.length}개 발견:`, result.files.map(f => f.name + '(' + f.id + ')'));
+    
+    // 데이터가 있는 원본 시트를 우선적으로 선택 (빈 시트가 새로 만들어졌더라도 데이터가 있는 시트 자동 감지)
+    let selectedFile = result.files[0];
+    for (const f of result.files) {
+        try {
+            const check = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: f.id,
+                range: "weraclecrm!A2:B2"
+            });
+            if (check.result && check.result.values && check.result.values.length > 0) {
+                console.log(" 고객 데이터가 들어있는 원본 시트 우선 채택:", f.name, f.id);
+                selectedFile = f;
+                break;
+            }
+        } catch(e) {}
+    }
+    const existingId = selectedFile.id;
+    console.log(" 최종 연동 시트 확정:", existingId, selectedFile.name);
     try {
         const sheetMeta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: existingId });
         const existingTabs = sheetMeta.result.sheets.map(s => s.properties.title);

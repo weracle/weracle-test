@@ -1485,9 +1485,14 @@
           <p class="ending-sub" id="uiSub">부담스러운 전화 독촉 없이, 요청하신 자료와 안내를 먼저 보내드립니다.</p>
         </div>
 
+      <style>
+          #btnToggleEdit { display: none !important; }
+          body.can-edit-pr #btnToggleEdit { display: flex !important; }
+        </style>
+
         <div class="form-body" id="formViewSection">
-          <form id="leadApplyForm" onsubmit="submitLeadForm(event)">
-<div id="dynamicQuestionsWrap">
+          <form id="leadApplyForm" onsubmit="submitLeadForm(event); return false;">
+            <div id="dynamicQuestionsWrap">
               <div class="question-box custom-q-item" data-q-type="CHOICE" data-q-idx="0">
                 <div class="q-title" id="uiQuestion">Q. 어떤 안내를 가장 먼저 받아보고 싶으신가요?</div>
                 <label class="radio-item">
@@ -1548,7 +1553,7 @@
               </div>
             </div>
 
-            <button type="submit" class="btn-submit-pill" id="btnSubmitForm">
+            <button type="button" class="btn-submit-pill" id="btnSubmitForm" onclick="submitLeadForm(event)">
               <span>무료 안내서 즉시 열람 및 신청하기</span>
               <i class="fa-solid fa-arrow-right"></i>
             </button>
@@ -1559,20 +1564,20 @@
           <div class="reward-icon"><i class="fa-solid fa-check"></i></div>
           <h2 style="margin:0 0 6px 0; font-size:20px; font-weight:900; color:var(--theme-main);">신청 완료! 핵심 요약 자료가 열렸습니다</h2>
           <p style="margin:0; font-size:13px; color:var(--sub); line-height:1.5;">
-            전담 컨설턴트에게도 안전하게 접수되었습니다.<br />아래 핵심 체크포인트를 지금 바로 확인해 보세요!
+            전담 컨설턴트에게도 안전하게 접수되었습니다.<br />아래 버튼을 눌러 가이드북 원본을 바로 확인해 보세요!
           </p>
 
           <div class="reward-card">
+            <a href="#" target="_blank" rel="noopener noreferrer" id="btnPdfDownload" class="btn-download-pdf" style="display:none; margin-top:0; margin-bottom:14px; background:var(--cta-color);">
+              <i class="fa-solid fa-file-arrow-down"></i> 상세 꿀팁 가이드북(PDF/자료) 전체 보기 ↗
+            </a>
+
             <h4 id="rewardGuideTitle">📌 꼭 챙겨야 할 핵심 꿀팁 3가지</h4>
             <ul class="tip-list" id="rewardTipList">
               <li>최근 3년 이내 통원 영수증 및 약국 처방전도 청구 대상에 포함됩니다.</li>
               <li>비급여 치료 및 특약 중복 여부를 점검하면 고정 지출을 크게 아낄 수 있습니다.</li>
               <li>병원 방문 또는 청구 전 담당 매니저에게 문의하시면 1:1 서류 체크를 도와드립니다.</li>
             </ul>
-
-            <a href="#" target="_blank" id="btnPdfDownload" class="btn-download-pdf" style="display:none;">
-              <i class="fa-solid fa-file-arrow-down"></i> 상세 꿀팁 가이드북(PDF/자료) 전체 보기 ↗
-            </a>
           </div>
 
           <div style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:14px; font-size:12.5px; color:#475569; line-height:1.5;">
@@ -1600,6 +1605,15 @@
     const STORAGE_KEY = 'weracle_pr_smart_studio_v5';
 
     const TOPIC_TIPS_MAP = [
+      {
+        match: ['누수', '배관', '화재'],
+        title: '📌 우리 집 누수·배관 공사비 특약 핵심 체크포인트 3가지',
+        tips: [
+          '아랫집 피해(일배책)뿐 아니라 우리 집 바닥 단독 누수 시 탐지·파쇄·배관교체·복구비가 지원되는지 확인하세요.',
+          '예전 급배수설비 누출손해 특약은 젖은 도배·장판만 보상하거나 자기부담금이 발생할 수 있습니다.',
+          '가입 후 면책기간(보통 60~90일)이 적용되므로 배관 노후 사고 전에 미리 준비해 두는 것이 유리합니다.'
+        ]
+      },
       {
         match: ['간병', '치매'],
         title: '📌 간병인 플랜 & 지원비 핵심 체크포인트 3가지',
@@ -1708,7 +1722,7 @@
     let storedAgentNotifyPhone = '';
 
     const params = new URLSearchParams(window.location.search);
-    const campId = params.get('camp_id') || 'camp_direct';
+    const campId = params.get('camp_id') || params.get('c') || 'camp_direct';
     const campTitle = params.get('camp') || params.get('title') || '숨은 병원비·약제비 무료 청구 및 맞춤 점검 신청';
     const customQuestion = params.get('q') || '어떤 안내를 가장 먼저 받아보고 싶으신가요?';
     const fieldsParam = params.get('fields') || 'name,phone,region';
@@ -1782,6 +1796,14 @@
     const activeAgentKey = resolveActiveAgentKey();
 
     window.addEventListener('DOMContentLoaded', async () => {
+      const isEditParam = params.get('edit') === 'true';
+      const isPreviewParam = params.get('preview') === 'true';
+      const isInsideCrmAdmin = (window.self !== window.top) && !params.get('camp_id') && !params.get('utm_source');
+
+      if (isEditParam || isPreviewParam || isInsideCrmAdmin) {
+        document.body.classList.add('can-edit-pr');
+      }
+
       if (pixelIdParam) {
         initDynamicMetaPixel(pixelIdParam);
       }
@@ -1807,14 +1829,15 @@
       if (params.get('camp') || params.get('title')) {
         document.getElementById('uiTitle').innerText = campTitle;
       }
-   const rawQsParam = params.get('qs');
+
+      const rawQsParam = params.get('qs');
       let parsedCustomQs = [];
       if (rawQsParam) {
         try { parsedCustomQs = JSON.parse(rawQsParam); } catch (e) {}
       }
 
-      if (Array.isArray(parsedCustomQs) && parsedCustomQs.length > 0) {
-        const qWrap = document.getElementById('dynamicQuestionsWrap');
+      const qWrap = document.getElementById('dynamicQuestionsWrap');
+      if (qWrap && Array.isArray(parsedCustomQs) && parsedCustomQs.length > 0) {
         const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         qWrap.innerHTML = parsedCustomQs.map((q, idx) => {
           const qLabel = esc(q.label || customQuestion);
@@ -1827,14 +1850,14 @@
               </label>
             `).join('');
             return `
-              <div class="question-box custom-q-item" data-q-type="CHOICE" data-q-idx="${idx}" data-q-label="${qLabel}">
+              <div class="question-box custom-q-item" data-q-type="CHOICE" data-q-idx="${idx}">
                 <div class="q-title">Q${parsedCustomQs.length > 1 ? (idx + 1) : ''}. ${qLabel}</div>
                 ${radiosHtml}
               </div>
             `;
           } else {
             return `
-              <div class="question-box custom-q-item" data-q-type="TEXT" data-q-idx="${idx}" data-q-label="${qLabel}">
+              <div class="question-box custom-q-item" data-q-type="TEXT" data-q-idx="${idx}">
                 <div class="q-title">Q${parsedCustomQs.length > 1 ? (idx + 1) : ''}. ${qLabel}</div>
                 <input type="text" id="qTextAnswer_${idx}" class="field-input" style="background:#fff;" placeholder="답변을 간단히 입력해 주세요" />
               </div>
@@ -1842,7 +1865,8 @@
           }
         }).join('');
       } else {
-        document.getElementById('uiQuestion').innerText = 'Q. ' + customQuestion;
+        const uiQ = document.getElementById('uiQuestion');
+        if (uiQ) uiQ.innerText = 'Q. ' + customQuestion;
       }
 
       if (agentName && !document.getElementById('heroAgentName').innerText.trim()) {
@@ -1863,16 +1887,13 @@
 
       if (docUrlParam && docUrlParam.startsWith('http')) {
         const pdfBtn = document.getElementById('btnPdfDownload');
-        pdfBtn.href = docUrlParam;
-        pdfBtn.style.display = 'flex';
+        if (pdfBtn) {
+          pdfBtn.href = docUrlParam;
+          pdfBtn.style.display = 'flex';
+        }
       }
 
-      const isEditParam = params.get('edit') === 'true';
-      const isCustomerView = (params.get('camp_id') || params.get('utm_source')) && !isEditParam && params.get('preview') !== 'true';
-
-      if (isCustomerView) {
-        document.getElementById('btnToggleEdit').style.display = 'none';
-      } else if (isEditParam) {
+      if (isEditParam) {
         toggleEditStudio();
       }
     });
@@ -2963,18 +2984,40 @@
     }
 
     async function submitLeadForm(e) {
-      e.preventDefault();
+      if (e && e.preventDefault) e.preventDefault();
+
+      const nameEl = document.getElementById('inpName');
+      const phoneEl = document.getElementById('inpPhone');
+      const privEl = document.getElementById('chkPrivacy');
+
+      const name = nameEl ? nameEl.value.trim() : '';
+      const phone = phoneEl ? phoneEl.value.trim() : '';
+      if (!name) {
+        alert('성함을 입력해 주세요.');
+        if (nameEl) nameEl.focus();
+        return;
+      }
+      if (!phone || phone.replace(/[^0-9]/g, '').length < 9) {
+        alert('연락처를 정확히 입력해 주세요.');
+        if (phoneEl) phoneEl.focus();
+        return;
+      }
+      if (privEl && !privEl.checked) {
+        alert('개인정보 수집 및 안내 동의에 체크해 주세요.');
+        return;
+      }
+
       const btn = document.getElementById('btnSubmitForm');
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 자료 열람 및 신청 처리 중...';
 
-      const name = document.getElementById('inpName').value.trim();
-      const phone = document.getElementById('inpPhone').value.trim();
       const region = document.getElementById('inpRegion').value.trim();
       const age = document.getElementById('inpAge').value;
       const callTime = document.getElementById('inpTime').value;
-    const collectedAnswers = [];
-      document.querySelectorAll('.custom-q-item').forEach((box, idx) => {
+
+      const collectedAnswers = [];
+      const qBoxes = document.querySelectorAll('.custom-q-item');
+      qBoxes.forEach((box, idx) => {
         const qType = box.getAttribute('data-q-type');
         const dIdx = box.getAttribute('data-q-idx') ?? idx;
         if (qType === 'TEXT') {
@@ -2984,7 +3027,7 @@
         } else {
           const checkedEl = box.querySelector(`input[name="qAnswer_${dIdx}"]:checked`);
           if (checkedEl && checkedEl.value) {
-            collectedAnswers.push(collectedAnswers.length > 0 || document.querySelectorAll('.custom-q-item').length > 1 ? `Q${Number(dIdx) + 1}:${checkedEl.value}` : checkedEl.value);
+            collectedAnswers.push(qBoxes.length > 1 ? `Q${Number(dIdx) + 1}:${checkedEl.value}` : checkedEl.value);
           }
         }
       });
@@ -2996,7 +3039,6 @@
       const targetAgentNotifyPhone = agentPhone || storedAgentNotifyPhone || localStorage.getItem('crm_agent_phone') || '';
       const displayedAgentName = (document.getElementById('heroAgentName') && document.getElementById('heroAgentName').innerText.trim()) || agentName || '담당설계사';
 
-      // 1. 메타 픽셀(Meta Pixel) 실제 신청 완료(Lead) 전환 신호 발사
       if (window.fbq && activeMetaPixelId) {
         try {
           window.fbq('track', 'Lead', {
@@ -3006,7 +3048,6 @@
         } catch (pxErr) {}
       }
 
-      // 2. 백엔드(meta-webhook.js)로 리드 저장 + 팝빌(Popbill) 실시간 알림톡 발송 요청
       try {
         await fetch('/api/meta-webhook', {
           method: 'POST',
@@ -3029,8 +3070,29 @@
       } catch (err) {}
 
       document.getElementById('formViewSection').style.display = 'none';
-      document.getElementById('rewardViewSection').style.display = 'block';
-      window.scrollTo({ top: document.getElementById('applySectionAnchor').offsetTop, behavior: 'smooth' });
+      const rewardSec = document.getElementById('rewardViewSection');
+      rewardSec.style.display = 'block';
+
+      if (docUrlParam && docUrlParam.startsWith('http')) {
+        const pdfBtn = document.getElementById('btnPdfDownload');
+        if (pdfBtn) {
+          pdfBtn.href = docUrlParam;
+          pdfBtn.style.display = 'flex';
+        }
+      }
+
+      setTimeout(() => {
+        rewardSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 80);
+
+      if (docUrlParam && docUrlParam.startsWith('http')) {
+        setTimeout(() => {
+          const opened = window.open(docUrlParam, '_blank');
+          if (!opened) {
+            // 인스타 인앱 브라우저 팝업 차단 시 완료 화면의 주황색 버튼으로 바로 열람 가능
+          }
+        }, 350);
+      }
     }
   </script>
 </body>

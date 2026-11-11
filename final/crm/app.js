@@ -9215,6 +9215,10 @@ window.updateQuickFilterCounts = function() {
     updateEls(['mini-badge-birth'], birth + "명");
     updateEls(['mini-badge-sangryung'], sangryung + "명");
     updateEls(['mini-badge-expiry'], expiry + "명");
+
+    // [대표님 피드백 반영] 데이터가 화면에 출력되는 바로 그 순간 인디케이터 즉시 숨김
+    const ind = document.getElementById('crm-initial-loading-indicator');
+    if (ind) ind.style.display = 'none';
 };
 function updateQuickFilterCounts() { return window.updateQuickFilterCounts(); }
 

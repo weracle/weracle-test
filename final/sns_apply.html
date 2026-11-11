@@ -1487,16 +1487,18 @@
 
         <div class="form-body" id="formViewSection">
           <form id="leadApplyForm" onsubmit="submitLeadForm(event)">
-            <div class="question-box">
-              <div class="q-title" id="uiQuestion">Q. 어떤 안내를 가장 먼저 받아보고 싶으신가요?</div>
-              <label class="radio-item">
-                <input type="radio" name="qAnswer" value="핵심 요약 안내서(꿀팁 자료) 먼저 열람하기" checked />
-                <span>📄 핵심 요약 안내서(PDF 꿀팁 자료) 먼저 받기</span>
-              </label>
-              <label class="radio-item">
-                <input type="radio" name="qAnswer" value="1:1 비대면 간편 상담 및 비교표 신청하기" />
-                <span>💬 1:1 비대면 간편 상담 및 한장비교표 신청</span>
-              </label>
+<div id="dynamicQuestionsWrap">
+              <div class="question-box custom-q-item" data-q-type="CHOICE" data-q-idx="0">
+                <div class="q-title" id="uiQuestion">Q. 어떤 안내를 가장 먼저 받아보고 싶으신가요?</div>
+                <label class="radio-item">
+                  <input type="radio" name="qAnswer_0" value="핵심 요약 안내서(꿀팁 자료) 먼저 열람하기" checked />
+                  <span>📄 핵심 요약 안내서(PDF 꿀팁 자료) 먼저 받기</span>
+                </label>
+                <label class="radio-item">
+                  <input type="radio" name="qAnswer_0" value="1:1 비대면 간편 상담 및 비교표 신청하기" />
+                  <span>💬 1:1 비대면 간편 상담 및 한장비교표 신청</span>
+                </label>
+              </div>
             </div>
 
             <div class="field-group">
@@ -1805,7 +1807,43 @@
       if (params.get('camp') || params.get('title')) {
         document.getElementById('uiTitle').innerText = campTitle;
       }
-      document.getElementById('uiQuestion').innerText = 'Q. ' + customQuestion;
+   const rawQsParam = params.get('qs');
+      let parsedCustomQs = [];
+      if (rawQsParam) {
+        try { parsedCustomQs = JSON.parse(rawQsParam); } catch (e) {}
+      }
+
+      if (Array.isArray(parsedCustomQs) && parsedCustomQs.length > 0) {
+        const qWrap = document.getElementById('dynamicQuestionsWrap');
+        const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        qWrap.innerHTML = parsedCustomQs.map((q, idx) => {
+          const qLabel = esc(q.label || customQuestion);
+          const opts = Array.isArray(q.options) ? q.options.filter(Boolean) : [];
+          if (q.type === 'CHOICE' && opts.length > 0) {
+            const radiosHtml = opts.map((opt, oIdx) => `
+              <label class="radio-item">
+                <input type="radio" name="qAnswer_${idx}" value="${esc(opt)}" ${oIdx === 0 ? 'checked' : ''} />
+                <span>${esc(opt)}</span>
+              </label>
+            `).join('');
+            return `
+              <div class="question-box custom-q-item" data-q-type="CHOICE" data-q-idx="${idx}" data-q-label="${qLabel}">
+                <div class="q-title">Q${parsedCustomQs.length > 1 ? (idx + 1) : ''}. ${qLabel}</div>
+                ${radiosHtml}
+              </div>
+            `;
+          } else {
+            return `
+              <div class="question-box custom-q-item" data-q-type="TEXT" data-q-idx="${idx}" data-q-label="${qLabel}">
+                <div class="q-title">Q${parsedCustomQs.length > 1 ? (idx + 1) : ''}. ${qLabel}</div>
+                <input type="text" id="qTextAnswer_${idx}" class="field-input" style="background:#fff;" placeholder="답변을 간단히 입력해 주세요" />
+              </div>
+            `;
+          }
+        }).join('');
+      } else {
+        document.getElementById('uiQuestion').innerText = 'Q. ' + customQuestion;
+      }
 
       if (agentName && !document.getElementById('heroAgentName').innerText.trim()) {
         document.getElementById('heroAgentName').innerText = agentName;
@@ -2935,10 +2973,23 @@
       const region = document.getElementById('inpRegion').value.trim();
       const age = document.getElementById('inpAge').value;
       const callTime = document.getElementById('inpTime').value;
-      const qAnswerEl = document.querySelector('input[name="qAnswer"]:checked');
-      const qAnswer = qAnswerEl ? qAnswerEl.value : '';
+    const collectedAnswers = [];
+      document.querySelectorAll('.custom-q-item').forEach((box, idx) => {
+        const qType = box.getAttribute('data-q-type');
+        const dIdx = box.getAttribute('data-q-idx') ?? idx;
+        if (qType === 'TEXT') {
+          const txtEl = document.getElementById(`qTextAnswer_${dIdx}`);
+          const val = txtEl ? txtEl.value.trim() : '';
+          if (val) collectedAnswers.push(`Q${Number(dIdx) + 1}:${val}`);
+        } else {
+          const checkedEl = box.querySelector(`input[name="qAnswer_${dIdx}"]:checked`);
+          if (checkedEl && checkedEl.value) {
+            collectedAnswers.push(collectedAnswers.length > 0 || document.querySelectorAll('.custom-q-item').length > 1 ? `Q${Number(dIdx) + 1}:${checkedEl.value}` : checkedEl.value);
+          }
+        }
+      });
 
-      const noteParts = [qAnswer];
+      const noteParts = [collectedAnswers.join(' / ')];
       if (age && document.getElementById('wrapAge').style.display !== 'none') noteParts.push(`연령:${age}`);
       if (callTime && document.getElementById('wrapTime').style.display !== 'none') noteParts.push(`희망시간:${callTime}`);
 

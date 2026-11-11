@@ -153,11 +153,11 @@ window.isClaimCustomer = function(c) {
 // ==============================================================
 window.quickChangeCustomerStatus = async function(id, newStatus, selectEl) {
     if (!id || !newStatus) return;
-    if (newStatus.includes('관심') || newStatus.includes('가망')) newStatus = '관심고객';
-    else if (newStatus.includes('상담') || newStatus.includes('설계')) newStatus = '상담고객';
-    else if (newStatus.includes('계약') || newStatus.includes('체결') || newStatus.includes('유지')) newStatus = '계약고객';
-    else if (newStatus.includes('케어') || newStatus.includes('집중') || newStatus.includes('VIP')) newStatus = '케어고객';
-    else newStatus = '관심고객';
+    if (newStatus.includes('잠재') || newStatus.includes('가망') || newStatus.includes('신규')) newStatus = '잠재고객';
+    else if (newStatus.includes('관심')) newStatus = '관심고객';
+    else if (newStatus.includes('유력') || newStatus.includes('상담') || newStatus.includes('설계')) newStatus = '유력고객';
+    else if (newStatus.includes('계약') || newStatus.includes('체결') || newStatus.includes('케어') || newStatus.includes('유지') || newStatus.includes('집중') || newStatus.includes('VIP')) newStatus = '계약고객';
+    else newStatus = '잠재고객';
     
     if (!window.globalCustomerData) {
         alert("고객 데이터를 찾을 수 없습니다.");
@@ -171,7 +171,7 @@ window.quickChangeCustomerStatus = async function(id, newStatus, selectEl) {
     }
 
     const cust = window.globalCustomerData[targetIdx];
-    const prevStatus = cust['상태'] || cust['고객상태'] || '관심고객';
+    const prevStatus = cust['상태'] || cust['고객상태'] || '잠재고객';
     const custName = cust['고객명'] || cust['대표자명'] || '고객';
 
     // 1. 메모리 데이터 즉시 갱신 (Optimistic Update)
@@ -306,12 +306,15 @@ window.showToastNotice = function(text) {
         const currentDayStr = String(today.getDate()).padStart(2, '0');
         const currentMD = currentMonthStr + currentDayStr;
 
+        let potential = 0;
+        let influential = 0;
         rawData.forEach(c => {
             let s = String(c['상태'] || c['고객상태'] || '');
-            if (s.includes('관심') || s.includes('가망')) interest++;
-            else if (s.includes('상담') || s.includes('설계')) consult++;
-            else if (s.includes('체결') || s.includes('계약')) contract++;
-            else if (s.includes('케어') || s.includes('집중')) care++;
+            if (s.includes('잠재') || s.includes('가망') || s.includes('신규')) potential++;
+            else if (s.includes('관심')) interest++;
+            else if (s.includes('유력') || s.includes('상담') || s.includes('설계')) influential++;
+            else if (s.includes('계약') || s.includes('체결') || s.includes('케어') || s.includes('유지') || s.includes('집중') || s.includes('VIP')) contract++;
+            consult = influential; care = contract;
 
             // 생일
             let birthSource = String(c['생일'] || c['생년월일'] || c['주민번호'] || "");
@@ -372,16 +375,16 @@ window.showToastNotice = function(text) {
         setTxt('#qf-count-total, #qf-count-all', total + "명");
         setTxt('.m-sync-total', total);
 
-        // 2. 파이프라인 (PC & Mobile)
+        // 2. 파이프라인 (PC & Mobile - 잠재 / 관심 / 유력 / 계약)
+        setTxt('#pipe-count-potential', potential);
         setTxt('#pipe-count-interest, #qf-count-interest, #qf-interest', interest);
-        setTxt('#pipe-count-consult, #qf-count-consult', consult);
-        setTxt('#pipe-count-contract, #qf-count-contract, #qf-contract', contract);
-        setTxt('#pipe-count-care, #qf-count-care', care);
+        setTxt('#pipe-count-influential, #pipe-count-consult, #qf-count-consult', influential);
+        setTxt('#pipe-count-contract, #pipe-count-care, #qf-count-contract, #qf-contract, #qf-count-care', contract);
 
+        setTxt('.m-sync-potential', potential);
         setTxt('.m-sync-interest', interest);
-        setTxt('.m-sync-consult', consult);
-        setTxt('.m-sync-contract', contract);
-        setTxt('.m-sync-care', care);
+        setTxt('.m-sync-influential, .m-sync-consult', influential);
+        setTxt('.m-sync-contract, .m-sync-care', contract);
 
         // 3. 오늘 케어 카드 (PC)
         setTxt('#mini-badge-birth', birth + "명");
@@ -470,28 +473,29 @@ window.showToastNotice = function(text) {
             filtered.forEach(r => {
                 const name = r["고객명"] || r["대표자명"] || "-";
                 const phone = r["폰번호"] || r["대표자 연락처"] || r["연락처"] || "-";
-                const status = r["상태"] || r["고객상태"] || "관심고객";
+                const status = r["상태"] || r["고객상태"] || "잠재고객";
                 const job = r["직업"] || r["대표업태"] || "-";
                 const id = r["고객번호"] || r["ID"] || "";
 
                 tbHtml += "<tr>";
 
-                // Item 10: 파이프라인 1-클릭 상태 변경 셀렉트 박스
+                // Item 10: 파이프라인 1-클릭 상태 변경 셀렉트 박스 (잠재 / 관심 / 유력 / 계약)
                 if (fType === 'status') {
-                    let sBg = '#eff6ff', sColor = '#2563eb', sBorder = '#93c5fd';
-                    if (status.includes('상담') || status.includes('설계')) { sBg = '#fefce8'; sColor = '#ca8a04'; sBorder = '#fde047'; }
-                    else if (status.includes('체결') || status.includes('계약')) { sBg = '#ecfdf5'; sColor = '#059669'; sBorder = '#86efac'; }
-                    else if (status.includes('케어') || status.includes('집중')) { sBg = '#fee2e2'; sColor = '#dc2626'; sBorder = '#fca5a5'; }
+                    let sBg = '#eff6ff', sColor = '#1d4ed8', sBorder = '#bfdbfe';
+                    if (status.includes('잠재') || status.includes('가망') || status.includes('신규')) { sBg = '#eff6ff'; sColor = '#1d4ed8'; sBorder = '#bfdbfe'; }
+                    else if (status.includes('관심')) { sBg = '#fff7ed'; sColor = '#c2410c'; sBorder = '#fed7aa'; }
+                    else if (status.includes('유력') || status.includes('상담') || status.includes('설계')) { sBg = '#fef2f2'; sColor = '#b91c1c'; sBorder = '#fecaca'; }
+                    else if (status.includes('계약') || status.includes('체결') || status.includes('케어') || status.includes('유지') || status.includes('집중') || status.includes('VIP')) { sBg = '#f0fdf4'; sColor = '#15803d'; sBorder = '#bbf7d0'; }
 
-                    const statusOptions = ['관심고객', '상담고객', '계약고객', '케어고객'];
+                    const statusOptions = ['잠재고객', '관심고객', '유력고객', '계약고객'];
                     let selectHtml = `<select onchange="window.quickChangeCustomerStatus('${id}', this.value, this)" style="padding:4px 10px; border-radius:8px; font-weight:700; font-size:12.5px; border:1.5px solid ${sBorder}; background:${sBg}; color:${sColor}; outline:none; cursor:pointer;">`;
                     
                     statusOptions.forEach(opt => {
                         const isSel = (status === opt) || 
-                                      (opt === '관심고객' && (status.includes('관심') || status.includes('가망'))) ||
-                                      (opt === '상담고객' && (status.includes('상담') || status.includes('설계'))) ||
-                                      (opt === '계약고객' && (status.includes('체결') || status.includes('계약') || status.includes('유지'))) ||
-                                      (opt === '케어고객' && (status.includes('케어') || status.includes('집중') || status.includes('VIP')));
+                                      (opt === '잠재고객' && (status.includes('잠재') || status.includes('가망') || status.includes('신규'))) ||
+                                      (opt === '관심고객' && status.includes('관심')) ||
+                                      (opt === '유력고객' && (status.includes('유력') || status.includes('상담') || status.includes('설계'))) ||
+                                      (opt === '계약고객' && (status.includes('체결') || status.includes('계약') || status.includes('케어') || status.includes('유지') || status.includes('집중') || status.includes('VIP')));
                         selectHtml += `<option value="${opt}" ${isSel ? 'selected' : ''}>${opt}</option>`;
                     });
                     selectHtml += `</select>`;

@@ -1519,9 +1519,9 @@ achievedCountThisMonth++;
 }
 
 const status = client["상태"] || "";
-if (status === "관심" || status === "관심고객") {
+if (status.includes("잠재") || status.includes("가망") || status.includes("관심")) {
 prospectCount++;
-} else if (status === "체결" || status === "체결고객") {
+} else if (status.includes("계약") || status.includes("체결") || status.includes("케어")) {
 contractedCount++;
 }
 
@@ -1756,9 +1756,9 @@ achievedCountThisMonth++;
 }
 
 const status = client["상태"] || "";
-if (status === "관심" || status === "관심고객") {
+if (status.includes("잠재") || status.includes("가망") || status.includes("관심")) {
 prospectCount++;
-} else if (status === "체결" || status === "체결고객") {
+} else if (status.includes("계약") || status.includes("체결") || status.includes("케어")) {
 contractedCount++;
 }
 
@@ -4206,11 +4206,11 @@ function loadCustomerForFamily(task) {
     const statusSel = form.querySelector('[name="상태"]');
     if (statusSel) {
         const rawSt = String(client["상태"] || "").trim();
-        if (rawSt.includes("관심") || rawSt.includes("가망")) statusSel.value = "관심고객";
-        else if (rawSt.includes("상담") || rawSt.includes("설계")) statusSel.value = "상담고객";
-        else if (rawSt.includes("계약") || rawSt.includes("체결") || rawSt.includes("유지")) statusSel.value = "계약고객";
-        else if (rawSt.includes("케어") || rawSt.includes("집중") || rawSt.includes("VIP")) statusSel.value = "케어고객";
-        else statusSel.value = "관심고객";
+        if (rawSt.includes("잠재") || rawSt.includes("가망") || rawSt.includes("신규")) statusSel.value = "잠재고객";
+        else if (rawSt.includes("관심")) statusSel.value = "관심고객";
+        else if (rawSt.includes("유력") || rawSt.includes("상담") || rawSt.includes("설계")) statusSel.value = "유력고객";
+        else if (rawSt.includes("계약") || rawSt.includes("체결") || rawSt.includes("케어") || rawSt.includes("유지") || rawSt.includes("집중") || rawSt.includes("VIP")) statusSel.value = "계약고객";
+        else statusSel.value = "잠재고객";
     }
 
     setFormVal("주민번호", formatJumin(client["주민번호"] || ""));
@@ -4782,12 +4782,12 @@ const touchInsightVal = (checkedPillVals.length > 0)
     ? checkedPillVals.join(", ")
     : (formData.get("터치인사이트") || (existingClient ? (existingClient["터치인사이트"] || "") : ""));
 
-let normalizedStatus = formData.get("상태") || (existingClient ? existingClient["상태"] : "관심고객");
-if (normalizedStatus.includes("관심") || normalizedStatus.includes("가망")) normalizedStatus = "관심고객";
-else if (normalizedStatus.includes("상담") || normalizedStatus.includes("설계")) normalizedStatus = "상담고객";
-else if (normalizedStatus.includes("계약") || normalizedStatus.includes("체결") || normalizedStatus.includes("유지")) normalizedStatus = "계약고객";
-else if (normalizedStatus.includes("케어") || normalizedStatus.includes("집중") || normalizedStatus.includes("VIP")) normalizedStatus = "케어고객";
-else normalizedStatus = "관심고객";
+let normalizedStatus = formData.get("상태") || (existingClient ? existingClient["상태"] : "잠재고객");
+if (normalizedStatus.includes("잠재") || normalizedStatus.includes("가망") || normalizedStatus.includes("신규")) normalizedStatus = "잠재고객";
+else if (normalizedStatus.includes("관심")) normalizedStatus = "관심고객";
+else if (normalizedStatus.includes("유력") || normalizedStatus.includes("상담") || normalizedStatus.includes("설계")) normalizedStatus = "유력고객";
+else if (normalizedStatus.includes("계약") || normalizedStatus.includes("체결") || normalizedStatus.includes("케어") || normalizedStatus.includes("유지") || normalizedStatus.includes("집중") || normalizedStatus.includes("VIP")) normalizedStatus = "계약고객";
+else normalizedStatus = "잠재고객";
 
 let finalGainHistory = "";
 if (insList && insList.length > 0 && (insList[0].보험사명 || insList[0].차_보험사명 || insList[0].상품명 || insList.length > 1)) {
@@ -8229,17 +8229,17 @@ window.openDynamicList = function(type, param) {
 window.updateDashboardStats = function() {
     if (!window.globalCustomerData || window.globalCustomerData.length === 0) return;
     
-    let cntGwan = 0, cntSang = 0, cntChe = 0, cntJip = 0;
+    let cntPot = 0, cntInt = 0, cntInf = 0, cntCon = 0;
     const now = new Date();
     const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
     let cntBirth = 0, cntSangryung = 0;
     
     window.globalCustomerData.forEach(client => {
-        const cStatus = client['\uC0C1\uD0DC'] || '';
-        if (cStatus.includes('\uAD00\uC2EC')) cntGwan++;
-        else if (cStatus.includes('\uC0C1\uB2F4')) cntSang++;
-        else if (cStatus.includes('\uACC4\uC57D') || cStatus.includes('\uCCB4\uACB0') || cStatus.includes('\uC720\uC9C0')) cntChe++;
-        else if (cStatus.includes('\uC9D1\uC911') || cStatus.includes('케어')) cntJip++;
+        const cStatus = client['상태'] || client['\uC0C1\uD0DC'] || '';
+        if (cStatus.includes('잠재') || cStatus.includes('가망') || cStatus.includes('신규')) cntPot++;
+        else if (cStatus.includes('관심') || cStatus.includes('\uAD00\uC2EC')) cntInt++;
+        else if (cStatus.includes('유력') || cStatus.includes('상담') || cStatus.includes('설계') || cStatus.includes('\uC0C1\uB2F4')) cntInf++;
+        else if (cStatus.includes('계약') || cStatus.includes('체결') || cStatus.includes('케어') || cStatus.includes('유지') || cStatus.includes('집중') || cStatus.includes('VIP')) cntCon++;
         
         const birth = String(client['\uC0DD\uC77C'] || '');
         if (birth.includes('-' + currentMonth + '-') || birth.substring(2,4) === currentMonth || birth.substring(4,6) === currentMonth || birth.startsWith(currentMonth)) cntBirth++;
@@ -8250,10 +8250,10 @@ window.updateDashboardStats = function() {
     
     const pCards = document.querySelectorAll('.pipeline-card .pipe-count');
     if (pCards.length >= 4) {
-        pCards[0].innerText = cntGwan;
-        pCards[1].innerText = cntSang;
-        pCards[2].innerText = cntChe;
-        pCards[3].innerText = cntJip;
+        pCards[0].innerText = cntPot;
+        pCards[1].innerText = cntInt;
+        pCards[2].innerText = cntInf;
+        pCards[3].innerText = cntCon;
     }
     
     const birthBtn = document.querySelector('div[onclick="openDynamicList(\'birthday\')"]');
@@ -8627,10 +8627,12 @@ window.renderTable = function(data) {
         const rawPhone = client["폰번호"] || client["연락처"] || "";
         const phone = formatPhone(rawPhone) || "-";
         
-        let badgeBg = "#f1f5f9";
-        let badgeColor = "#64748b";
-        if(status==="체결" || status==="계약"){ badgeBg="#eff6ff"; badgeColor="#2563eb"; }
-        else if(status==="가망" || status==="관심"){ badgeBg="#fefce8"; badgeColor="#ca8a04"; }
+        let badgeBg = "#eff6ff";
+        let badgeColor = "#1d4ed8";
+        if (status.includes("잠재") || status.includes("가망") || status.includes("신규")) { badgeBg = "#eff6ff"; badgeColor = "#1d4ed8"; }
+        else if (status.includes("관심")) { badgeBg = "#fff7ed"; badgeColor = "#c2410c"; }
+        else if (status.includes("유력") || status.includes("상담") || status.includes("설계")) { badgeBg = "#fef2f2"; badgeColor = "#b91c1c"; }
+        else if (status.includes("계약") || status.includes("체결") || status.includes("케어") || status.includes("유지")) { badgeBg = "#f0fdf4"; badgeColor = "#15803d"; }
         
         html += `
             <div class="master-list-card" onclick="showMasterDetail('${idStr}', this)" style="padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: white; cursor: pointer; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='#3b82f6'; this.style.transform='translateY(-1px)';" onmouseout="if(!this.classList.contains('active-card')){this.style.borderColor='#e2e8f0'; this.style.transform='none';}">
@@ -9145,9 +9147,11 @@ function openProfile(id) { return window.openProfile(id); }
 
 window.updateQuickFilterCounts = function() {
     let total = globalCustomerData.length;
+    let potential = 0;
     let interest = 0;
-    let consult = 0;
+    let influential = 0;
     let contract = 0;
+    let consult = 0;
     let care = 0;
     
     let birth = 0;
@@ -9161,10 +9165,11 @@ window.updateQuickFilterCounts = function() {
 
     globalCustomerData.forEach(c => {
         let s = String(c['상태'] || c['고객상태'] || '');
-        if(s.includes('관심') || s.includes('가망')) interest++;
-        else if(s.includes('상담') || s.includes('설계')) consult++;
-        else if(s.includes('체결') || s.includes('계약')) contract++;
-        else if(s.includes('케어') || s.includes('집중')) care++;
+        if(s.includes('잠재') || s.includes('가망') || s.includes('신규')) potential++;
+        else if(s.includes('관심')) interest++;
+        else if(s.includes('유력') || s.includes('상담') || s.includes('설계')) influential++;
+        else if(s.includes('계약') || s.includes('체결') || s.includes('케어') || s.includes('유지') || s.includes('집중') || s.includes('VIP')) contract++;
+        consult = influential; care = contract;
         
         let birthSource = String(c['생일'] || c['생년월일'] || c['주민번호'] || "");
         let bMD = "";
@@ -9253,10 +9258,10 @@ window.updateQuickFilterCounts = function() {
     };
 
     updateEls(['qf-count-total'], total + "명");
-    updateEls(['qf-interest', 'qf-count-interest', 'pipe-count-interest'], interest);
-    updateEls(['qf-count-consult', 'pipe-count-consult'], consult);
-    updateEls(['qf-contract', 'qf-count-contract', 'pipe-count-contract'], contract);
-    updateEls(['qf-count-care', 'pipe-count-care'], care);
+    updateEls(['pipe-count-potential', '.m-sync-potential'], potential);
+    updateEls(['qf-interest', 'qf-count-interest', 'pipe-count-interest', '.m-sync-interest'], interest);
+    updateEls(['pipe-count-influential', 'pipe-count-consult', 'qf-count-consult', '.m-sync-influential', '.m-sync-consult'], influential);
+    updateEls(['pipe-count-contract', 'pipe-count-care', 'qf-contract', 'qf-count-contract', 'qf-count-care', '.m-sync-contract', '.m-sync-care'], contract);
     
     updateEls(['mini-badge-birth'], birth + "명");
     updateEls(['mini-badge-sangryung'], sangryung + "명");
@@ -10368,7 +10373,7 @@ window.submitBulkData = async function() {
                 else if (head === "특이사항") rowArr[i] = data.특이사항 || "";
                 else if (head === "가입내역") rowArr[i] = "";
                 else if (head === "등록일") rowArr[i] = todayStr;
-                else if (head === "상태") rowArr[i] = "관심고객";
+                else if (head === "상태") rowArr[i] = "잠재고객";
                 else if (head === "사업여부") rowArr[i] = "N";
                 else if (head === "나이") rowArr[i] = calculatedAge || "";
                 else if (head === "성별") rowArr[i] = calculatedGender || "";
@@ -10800,7 +10805,7 @@ window.submitSmartReg = async function() {
             else if (head === "주소" || head === "대표주소") rowArr[i] = addr;
             else if (head === "직업" || head === "대표업태") rowArr[i] = job;
             else if (head === "특이사항" || head === "메모") rowArr[i] = memo;
-            else if (head === "상태") rowArr[i] = "관심고객";
+            else if (head === "상태") rowArr[i] = "잠재고객";
             else if (head === "나이") rowArr[i] = calculatedAge;
             else if (head === "성별") rowArr[i] = calculatedGender;
             else if (head === "생일") rowArr[i] = calculatedBirth;

@@ -502,11 +502,11 @@ window.handleQuickEditSearch = function() {
                 const family = c['가족사항'] || '-';
                 const touch = c['터치인사이트'] || '-';
 
-                let statusBg = '#eff6ff'; let statusColor = '#2563eb'; let statusBorder = '#bfdbfe';
-                if (status.includes('상담')) { statusBg = '#fefce8'; statusColor = '#ca8a04'; statusBorder = '#fef08a'; }
-                else if (status.includes('체결') || status.includes('계약')) { statusBg = '#faf5ff'; statusColor = '#7e22ce'; statusBorder = '#e9d5ff'; }
-                else if (status.includes('케어')) { statusBg = '#fee2e2'; statusColor = '#dc2626'; statusBorder = '#fecaca'; }
-                else if (status.includes('관심')) { statusBg = '#f0fdf4'; statusColor = '#15803d'; statusBorder = '#bbf7d0'; }
+                let statusBg = '#eff6ff'; let statusColor = '#1d4ed8'; let statusBorder = '#bfdbfe';
+                if (status.includes('잠재') || status.includes('가망') || status.includes('신규')) { statusBg = '#eff6ff'; statusColor = '#1d4ed8'; statusBorder = '#bfdbfe'; }
+                else if (status.includes('관심')) { statusBg = '#fff7ed'; statusColor = '#c2410c'; statusBorder = '#fed7aa'; }
+                else if (status.includes('유력') || status.includes('상담') || status.includes('설계')) { statusBg = '#fef2f2'; statusColor = '#b91c1c'; statusBorder = '#fecaca'; }
+                else if (status.includes('계약') || status.includes('체결') || status.includes('케어') || status.includes('유지') || status.includes('집중') || status.includes('VIP')) { statusBg = '#f0fdf4'; statusColor = '#15803d'; statusBorder = '#bbf7d0'; }
 
                 // 1. PC Table Row
                 tbHtml += `<tr style="border-bottom:1px solid #f1f5f9; cursor:pointer;" onclick="if(typeof openProfileFromSpeedCenter==='function'){openProfileFromSpeedCenter('${id}');}else if(typeof openProfile==='function'){openProfile('${id}');}" onmouseover="this.style.background='#f1f5f9';" onmouseout="this.style.background='#ffffff';">`;

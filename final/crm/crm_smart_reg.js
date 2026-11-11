@@ -225,7 +225,7 @@ window.submitSmartReg = async function() {
             else if (head === "터치인사이트") rowArr[i] = "";
             else if (head === "특이사항" || head === "메모") rowArr[i] = memo;
             else if (head === "가입내역") rowArr[i] = "";
-            else if (head === "상태") rowArr[i] = "관심고객";
+            else if (head === "상태") rowArr[i] = "잠재고객";
             else if (head === "나이") rowArr[i] = calculatedAge;
             else if (head === "성별") rowArr[i] = calculatedGender;
             else if (head === "생일") rowArr[i] = calculatedBirth;

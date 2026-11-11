@@ -1021,33 +1021,60 @@ window.addEventListener('error', function(e) {
             <span style="font-size:12px; color:#94a3b8;">원터치로 단계별 고객 목록 즉시 필터링</span>
         </div>
         <div class="grid-4" style="margin-bottom:0;">
-            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '관심고객')">
-                <div class="pipe-info">
-                    <span class="pipe-title">관심고객</span>
-                    <span class="pipe-count" id="pipe-count-interest">0</span>
+            <!-- 1. 잠재고객 -->
+            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '잠재고객')" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:18px 20px;">
+                <div class="pipe-info" style="display:flex; flex-direction:column;">
+                    <div style="display:flex; align-items:baseline; gap:8px;">
+                        <span class="pipe-title" style="font-size:14px; font-weight:800; color:#1e293b;">잠재고객</span>
+                        <span class="pipe-count" id="pipe-count-potential" style="font-size:22px; font-weight:800; color:#2563eb;">0</span>
+                    </div>
+                    <span class="pipe-hint" style="font-size:11.5px; color:#64748b; margin-top:4px; font-weight:500; line-height:1.3;">어떤 보험이 필요한지 고민 중인 고객</span>
                 </div>
-                <i class="fa-solid fa-user-plus" style="font-size:24px; color:#cbd5e1;"></i>
+                <div style="width:40px; height:40px; border-radius:10px; background:#eff6ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i class="fa-solid fa-user-plus" style="font-size:18px; color:#2563eb;"></i>
+                </div>
             </div>
-            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '상담고객')">
-                <div class="pipe-info">
-                    <span class="pipe-title">상담고객</span>
-                    <span class="pipe-count" id="pipe-count-consult">0</span>
+
+            <!-- 2. 관심고객 -->
+            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '관심고객')" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:18px 20px;">
+                <div class="pipe-info" style="display:flex; flex-direction:column;">
+                    <div style="display:flex; align-items:baseline; gap:8px;">
+                        <span class="pipe-title" style="font-size:14px; font-weight:800; color:#1e293b;">관심고객</span>
+                        <span class="pipe-count" id="pipe-count-interest" style="font-size:22px; font-weight:800; color:#d97706;">0</span>
+                    </div>
+                    <span class="pipe-hint" style="font-size:11.5px; color:#64748b; margin-top:4px; font-weight:500; line-height:1.3;">어떤 상품을 선택할지 고민 중인 고객</span>
                 </div>
-                <i class="fa-solid fa-comments" style="font-size:24px; color:#cbd5e1;"></i>
+                <div style="width:40px; height:40px; border-radius:10px; background:#fff7ed; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i class="fa-solid fa-comments" style="font-size:18px; color:#d97706;"></i>
+                </div>
             </div>
-            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '계약고객')">
-                <div class="pipe-info">
-                    <span class="pipe-title">계약고객</span>
-                    <span class="pipe-count" id="pipe-count-contract">0</span>
+
+            <!-- 3. 유력고객 -->
+            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '유력고객')" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:18px 20px;">
+                <div class="pipe-info" style="display:flex; flex-direction:column;">
+                    <div style="display:flex; align-items:baseline; gap:8px;">
+                        <span class="pipe-title" style="font-size:14px; font-weight:800; color:#1e293b;">유력고객</span>
+                        <span class="pipe-count" id="pipe-count-influential" style="font-size:22px; font-weight:800; color:#dc2626;">0</span>
+                    </div>
+                    <span class="pipe-hint" style="font-size:11.5px; color:#64748b; margin-top:4px; font-weight:500; line-height:1.3;">디테일한 세부 설계를 고민 중인 고객</span>
                 </div>
-                <i class="fa-solid fa-file-signature" style="font-size:24px; color:#cbd5e1;"></i>
+                <div style="width:40px; height:40px; border-radius:10px; background:#fef2f2; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i class="fa-solid fa-fire" style="font-size:18px; color:#dc2626;"></i>
+                </div>
             </div>
-            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '케어고객')">
-                <div class="pipe-info">
-                    <span class="pipe-title">케어고객</span>
-                    <span class="pipe-count" style="color:var(--badge-red);" id="pipe-count-care">0</span>
+
+            <!-- 4. 계약고객 -->
+            <div class="pipeline-card" onclick="window.executeFilterAndShowList('status', '계약고객')" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:18px 20px;">
+                <div class="pipe-info" style="display:flex; flex-direction:column;">
+                    <div style="display:flex; align-items:baseline; gap:8px;">
+                        <span class="pipe-title" style="font-size:14px; font-weight:800; color:#1e293b;">계약고객</span>
+                        <span class="pipe-count" id="pipe-count-contract" style="font-size:22px; font-weight:800; color:#16a34a;">0</span>
+                    </div>
+                    <span class="pipe-hint" style="font-size:11.5px; color:#64748b; margin-top:4px; font-weight:500; line-height:1.3;">계약을 체결한 소중한 고객</span>
                 </div>
-                <i class="fa-solid fa-hand-holding-heart" style="font-size:24px; color:#cbd5e1;"></i>
+                <div style="width:40px; height:40px; border-radius:10px; background:#f0fdf4; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i class="fa-solid fa-file-signature" style="font-size:18px; color:#16a34a;"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -1224,21 +1251,37 @@ window.addEventListener('error', function(e) {
     <div class="mobile-card">
         <div style="font-size:13px; font-weight:800; color:#334155; margin-bottom:10px;"><i class="fa-solid fa-chart-pie" style="color:#3b82f6; margin-right:4px;"></i> 영업 파이프라인 단계</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div onclick="window.executeFilterAndShowList('status', '관심고객')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-                <div><div style="font-size:11px; color:#475569; font-weight:700;">관심고객</div><div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-interest">0</span>명</div></div>
-                <i class="fa-regular fa-compass" style="color:#059669; font-size:18px;"></i>
+            <div onclick="window.executeFilterAndShowList('status', '잠재고객')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:11px; color:#475569; font-weight:700;">잠재고객</div>
+                    <div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-potential">0</span>명</div>
+                    <div style="font-size:9.5px; color:#94a3b8; margin-top:2px;">보장 필요 고민</div>
+                </div>
+                <i class="fa-solid fa-user-plus" style="color:#2563eb; font-size:18px;"></i>
             </div>
-            <div onclick="window.executeFilterAndShowList('status', '상담고객')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-                <div><div style="font-size:11px; color:#475569; font-weight:700;">상담고객</div><div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-consult">0</span>명</div></div>
-                <i class="fa-solid fa-comments" style="color:#2563eb; font-size:18px;"></i>
+            <div onclick="window.executeFilterAndShowList('status', '관심고객')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:11px; color:#475569; font-weight:700;">관심고객</div>
+                    <div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-interest">0</span>명</div>
+                    <div style="font-size:9.5px; color:#94a3b8; margin-top:2px;">상품 선택 고민</div>
+                </div>
+                <i class="fa-solid fa-comments" style="color:#d97706; font-size:18px;"></i>
+            </div>
+            <div onclick="window.executeFilterAndShowList('status', '유력고객')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:11px; color:#475569; font-weight:700;">유력고객</div>
+                    <div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-influential">0</span>명</div>
+                    <div style="font-size:9.5px; color:#94a3b8; margin-top:2px;">세부 설계 고민</div>
+                </div>
+                <i class="fa-solid fa-fire" style="color:#dc2626; font-size:18px;"></i>
             </div>
             <div onclick="window.executeFilterAndShowList('status', '계약고객')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-                <div><div style="font-size:11px; color:#475569; font-weight:700;">계약고객</div><div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-contract">0</span>명</div></div>
-                <i class="fa-solid fa-file-signature" style="color:#7c3aed; font-size:18px;"></i>
-            </div>
-            <div onclick="window.executeFilterAndShowList('status', '케어고객')" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-                <div><div style="font-size:11px; color:#475569; font-weight:700;">케어고객</div><div style="font-size:16px; font-weight:800; color:#dc2626; margin-top:2px;"><span class="m-sync-care">0</span>명</div></div>
-                <i class="fa-solid fa-hand-holding-heart" style="color:#dc2626; font-size:18px;"></i>
+                <div>
+                    <div style="font-size:11px; color:#475569; font-weight:700;">계약고객</div>
+                    <div style="font-size:16px; font-weight:800; color:#0f172a; margin-top:2px;"><span class="m-sync-contract">0</span>명</div>
+                    <div style="font-size:9.5px; color:#94a3b8; margin-top:2px;">소중한 체결 고객</div>
+                </div>
+                <i class="fa-solid fa-file-signature" style="color:#16a34a; font-size:18px;"></i>
             </div>
         </div>
     </div>
@@ -1481,10 +1524,10 @@ window.addEventListener('error', function(e) {
                             <div class="row-input">
                                 <select name="상태" class="form-input" style="cursor:pointer; width: 250px;">
                                         <option value="">선택</option>
+                                        <option value="잠재고객" selected>잠재고객</option>
                                         <option value="관심고객">관심고객</option>
-                                        <option value="상담고객">상담고객</option>
+                                        <option value="유력고객">유력고객</option>
                                         <option value="계약고객">계약고객</option>
-                                        <option value="케어고객">케어고객</option>
                                     </select>
                             </div>
                         </div>
@@ -1921,11 +1964,11 @@ window.addEventListener('error', function(e) {
 </div>
 
 
-<script src="app.js?v=20261111_v1"></script>
+<script src="app.js?v=20261111_status"></script>
   <script src="familyTabsLogic.js?v=20261111_v1"></script>
-  <script src="crm_speed_center.js?v=20261111_v1"></script>
-  <script src="crm_smart_reg.js?v=20261110_final"></script>
-  <script src="crm_enhancements.js?v=20261110_final"></script>
+  <script src="crm_speed_center.js?v=20261111_status"></script>
+  <script src="crm_smart_reg.js?v=20261111_status"></script>
+  <script src="crm_enhancements.js?v=20261111_status"></script>
   
   
 
@@ -2948,11 +2991,11 @@ window.getActiveCRMData = function() {
 window.quickChangeCustomerStatus = async function(id, newStatus, selectEl) {
     if (!id || !newStatus) return;
 
-    if (newStatus.includes('관심') || newStatus.includes('가망')) newStatus = '관심고객';
-    else if (newStatus.includes('상담') || newStatus.includes('설계')) newStatus = '상담고객';
-    else if (newStatus.includes('계약') || newStatus.includes('체결') || newStatus.includes('유지')) newStatus = '계약고객';
-    else if (newStatus.includes('케어') || newStatus.includes('집중') || newStatus.includes('VIP')) newStatus = '케어고객';
-    else newStatus = '관심고객';
+    if (newStatus.includes('잠재') || newStatus.includes('가망') || newStatus.includes('신규')) newStatus = '잠재고객';
+    else if (newStatus.includes('관심')) newStatus = '관심고객';
+    else if (newStatus.includes('유력') || newStatus.includes('상담') || newStatus.includes('설계')) newStatus = '유력고객';
+    else if (newStatus.includes('계약') || newStatus.includes('체결') || newStatus.includes('케어') || newStatus.includes('유지') || newStatus.includes('집중') || newStatus.includes('VIP')) newStatus = '계약고객';
+    else newStatus = '잠재고객';
 
     let list = (window.globalCustomerData && Array.isArray(window.globalCustomerData) && window.globalCustomerData.length > 0)
         ? window.globalCustomerData
@@ -2978,37 +3021,37 @@ window.quickChangeCustomerStatus = async function(id, newStatus, selectEl) {
     // 2. Select box styling update
     if (selectEl) {
         let bg = '#eff6ff', color = '#2563eb', border = '#93c5fd';
-        if (newStatus.includes('관심')) {
-            bg = '#fef3c7'; color = '#b45309'; border = '#fde68a';
-        } else if (newStatus.includes('상담') || newStatus.includes('설계')) {
+        if (newStatus.includes('잠재') || newStatus.includes('가망') || newStatus.includes('신규')) {
             bg = '#eff6ff'; color = '#1d4ed8'; border = '#bfdbfe';
-        } else if (newStatus.includes('체결') || newStatus.includes('계약')) {
-            bg = '#f0fdf4'; color = '#15803d'; border = '#bbf7d0';
-        } else if (newStatus.includes('케어') || newStatus.includes('집중')) {
+        } else if (newStatus.includes('관심')) {
+            bg = '#fff7ed'; color = '#c2410c'; border = '#fed7aa';
+        } else if (newStatus.includes('유력') || newStatus.includes('상담') || newStatus.includes('설계')) {
             bg = '#fef2f2'; color = '#b91c1c'; border = '#fecaca';
+        } else if (newStatus.includes('계약') || newStatus.includes('체결') || newStatus.includes('케어') || newStatus.includes('유지') || newStatus.includes('집중') || newStatus.includes('VIP')) {
+            bg = '#f0fdf4'; color = '#15803d'; border = '#bbf7d0';
         }
         selectEl.style.background = bg;
         selectEl.style.color = color;
         selectEl.style.borderColor = border;
     }
 
-    // 3. Update Pipeline counts immediately across PC and Mobile
-    let cntInt = 0, cntCon = 0, cntChe = 0, cntCar = 0;
+    // 3. Update Pipeline counts immediately across PC and Mobile (잠재 / 관심 / 유력 / 계약)
+    let cntPot = 0, cntInt = 0, cntInf = 0, cntCon = 0;
     list.forEach(function(c) {
         const st = c['상태'] || c['고객상태'] || '';
-        if (st.includes('관심') || st.includes('가망')) cntInt++;
-        else if (st.includes('상담') || st.includes('설계')) cntCon++;
-        else if (st.includes('체결') || st.includes('계약') || st.includes('유지')) cntChe++;
-        else if (st.includes('케어') || st.includes('집중') || st.includes('VIP')) cntCar++;
+        if (st.includes('잠재') || st.includes('가망') || st.includes('신규')) cntPot++;
+        else if (st.includes('관심')) cntInt++;
+        else if (st.includes('유력') || st.includes('상담') || st.includes('설계')) cntInf++;
+        else if (st.includes('계약') || st.includes('체결') || st.includes('케어') || st.includes('유지') || st.includes('집중') || st.includes('VIP')) cntCon++;
     });
     
     function setTxt(sel, val) {
         document.querySelectorAll(sel).forEach(function(el) { el.innerText = val; });
     }
+    setTxt('#pipe-count-potential, .m-sync-potential', cntPot);
     setTxt('#pipe-count-interest, .m-sync-interest', cntInt);
-    setTxt('#pipe-count-consult, .m-sync-consult', cntCon);
-    setTxt('#pipe-count-contract, .m-sync-contract', cntChe);
-    setTxt('#pipe-count-care, .m-sync-care', cntCar);
+    setTxt('#pipe-count-influential, #pipe-count-consult, .m-sync-influential, .m-sync-consult', cntInf);
+    setTxt('#pipe-count-contract, #pipe-count-care, .m-sync-contract, .m-sync-care', cntCon);
 
     if (typeof window.updateQuickFilterCounts === 'function') {
         try { window.updateQuickFilterCounts(); } catch(e){}
@@ -3056,22 +3099,22 @@ window.quickChangeCustomerStatus = async function(id, newStatus, selectEl) {
 };
 
 window.buildStatusSelectHtml = function(status, id) {
-    status = status || '관심고객';
-    const statusOptions = ['관심고객', '상담고객', '계약고객', '케어고객'];
-    let sBg = '#eff6ff', sColor = '#2563eb', sBorder = '#93c5fd';
-    if (status.includes('관심')) { sBg = '#fef3c7'; sColor = '#b45309'; sBorder = '#fde68a'; }
-    else if (status.includes('상담') || status.includes('설계')) { sBg = '#eff6ff'; sColor = '#1d4ed8'; sBorder = '#bfdbfe'; }
-    else if (status.includes('체결') || status.includes('계약') || status.includes('유지')) { sBg = '#f0fdf4'; sColor = '#15803d'; sBorder = '#bbf7d0'; }
-    else if (status.includes('케어') || status.includes('집중') || status.includes('VIP')) { sBg = '#fef2f2'; sColor = '#b91c1c'; sBorder = '#fecaca'; }
+    status = status || '잠재고객';
+    const statusOptions = ['잠재고객', '관심고객', '유력고객', '계약고객'];
+    let sBg = '#eff6ff', sColor = '#1d4ed8', sBorder = '#bfdbfe';
+    if (status.includes('잠재') || status.includes('가망') || status.includes('신규')) { sBg = '#eff6ff'; sColor = '#1d4ed8'; sBorder = '#bfdbfe'; }
+    else if (status.includes('관심')) { sBg = '#fff7ed'; sColor = '#c2410c'; sBorder = '#fed7aa'; }
+    else if (status.includes('유력') || status.includes('상담') || status.includes('설계')) { sBg = '#fef2f2'; sColor = '#b91c1c'; sBorder = '#fecaca'; }
+    else if (status.includes('계약') || status.includes('체결') || status.includes('케어') || status.includes('유지') || status.includes('집중') || status.includes('VIP')) { sBg = '#f0fdf4'; sColor = '#15803d'; sBorder = '#bbf7d0'; }
 
     let selectHtml = '<select onchange="window.quickChangeCustomerStatus(\'' + id + '\', this.value, this)" onclick="event.stopPropagation();" ' +
         'style="padding:3px 8px; border-radius:8px; font-weight:800; font-size:12px; border:1.5px solid ' + sBorder + '; background:' + sBg + '; color:' + sColor + '; outline:none; cursor:pointer;">';
     statusOptions.forEach(function(opt) {
         let isSel = (status === opt) ||
-                    (opt === '관심고객' && (status.includes('관심') || status.includes('가망'))) ||
-                    (opt === '상담고객' && (status.includes('상담') || status.includes('설계'))) ||
-                    (opt === '계약고객' && (status.includes('계약') || status.includes('체결') || status.includes('유지'))) ||
-                    (opt === '케어고객' && (status.includes('케어') || status.includes('집중') || status.includes('VIP')));
+                    (opt === '잠재고객' && (status.includes('잠재') || status.includes('가망') || status.includes('신규'))) ||
+                    (opt === '관심고객' && status.includes('관심')) ||
+                    (opt === '유력고객' && (status.includes('유력') || status.includes('상담') || status.includes('설계'))) ||
+                    (opt === '계약고객' && (status.includes('계약') || status.includes('체결') || status.includes('케어') || status.includes('유지') || status.includes('집중') || status.includes('VIP')));
         selectHtml += '<option value="' + opt + '" ' + (isSel ? 'selected' : '') + '>' + opt + '</option>';
     });
     selectHtml += '</select>';
@@ -3184,10 +3227,13 @@ window.executeFilterAndShowList = function(fType, fVal) {
         titleStr = "영업 파이프라인: " + fVal;
         filtered = filtered.filter(function(c) {
             const st = String(c['상태'] || c['고객상태'] || "");
-            if (fVal.includes('관심')) return st.includes('관심') || st.includes('가망');
-            if (fVal.includes('상담') || fVal.includes('설계')) return st.includes('상담') || st.includes('설계');
-            if (fVal.includes('계약') || fVal.includes('체결') || fVal.includes('유지')) return st.includes('계약') || st.includes('체결') || st.includes('유지');
-            if (fVal.includes('케어') || fVal.includes('집중')) return st.includes('케어') || st.includes('집중') || st.includes('VIP');
+            if (fVal.includes('잠재')) return st.includes('잠재') || st.includes('가망') || st.includes('신규');
+            if (fVal.includes('관심')) return st.includes('관심');
+            if (fVal.includes('유력')) return st.includes('유력') || st.includes('상담') || st.includes('설계');
+            if (fVal.includes('계약')) return st.includes('계약') || st.includes('체결') || st.includes('케어') || st.includes('유지') || st.includes('집중') || st.includes('VIP');
+            // Legacy fallbacks
+            if (fVal.includes('상담') || fVal.includes('설계')) return st.includes('유력') || st.includes('상담') || st.includes('설계');
+            if (fVal.includes('케어')) return st.includes('계약') || st.includes('체결') || st.includes('케어') || st.includes('유지') || st.includes('집중') || st.includes('VIP');
             return st.includes(fVal);
         });
     } else if (fType === 'insight') {

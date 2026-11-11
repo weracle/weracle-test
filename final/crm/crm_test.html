@@ -4032,6 +4032,21 @@ window.loadSampleMockData = function() {
 
 
 
+
+window.hideCrmInitialLoading = function() {
+    const el = document.getElementById('crm-initial-loading-indicator');
+    if (el) el.style.display = 'none';
+};
+window.addEventListener('message', function(e) {
+    if (e.data && (e.data.type === 'syncData' || e.data.type === 'CRM_DATA_SYNC')) {
+        window.hideCrmInitialLoading();
+    }
+});
+// Failsafe auto-hide after 3.5 seconds
+setTimeout(function() {
+    window.hideCrmInitialLoading();
+}, 3500);
+
 // Synchronize PC and Mobile Total Headers on Google Sheets load
 (function() {
     const origUpdate = window.updateQuickFilterCounts;
@@ -4047,6 +4062,12 @@ window.loadSampleMockData = function() {
         document.querySelectorAll('.m-sync-total').forEach(function(el) {
             el.innerText = total;
         });
+        
+        // Hide initial loading indicator once data is updated
+        const indicator = document.getElementById('crm-initial-loading-indicator');
+        if (indicator && (total > 0 || (window.globalCustomerData && Array.isArray(window.globalCustomerData)))) {
+            indicator.style.display = 'none';
+        }
         return res;
     };
 })();

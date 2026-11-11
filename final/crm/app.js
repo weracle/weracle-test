@@ -1813,7 +1813,7 @@ body.innerHTML = `
 updateAgentHeaderUI(); // 권한 없음 등 에러 시에도 헤더 연동 해제 버튼 렌더링 보장
 }
 } finally {
-if (!silent) showLoading(false);
+if (!silent) showLoading(false); if (typeof window.hideCrmInitialLoading === "function") window.hideCrmInitialLoading();
 if(window.parent && window.parent !== window) {
     window.parent.postMessage({ type: 'syncData', data: globalCustomerData || [], crmContacts: window.crmContactsData || [] }, '*');
 }

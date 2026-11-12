@@ -2394,31 +2394,15 @@ async function saveClientToServer(clientObj, insRows) {
             
             const cleanCustName = (n) => String(n || '').replace(/\s*\([^)]*\)/g, '').trim();
 
-            // 1. Gather all family IDs and relevant customer IDs to remove obsolete insurance rows
-            const targetIdsToRemove = new Set([
-                String(clientObj["고객번호"] || "").trim(),
-                String(curEditId || "").trim()
-            ]);
-            if (window.familyState && window.familyState.length > 0) {
-                window.familyState.forEach(f => {
-                    if (f.id) targetIdsToRemove.add(String(f.id).trim());
-                    if (f.data && f.data["고객번호"]) targetIdsToRemove.add(String(f.data["고객번호"]).trim());
+            // 1. Strictly isolate insurance removal: ONLY replace previous rows for this specific customer when editing
+            const targetCustId = String(clientObj["고객번호"] || "").trim();
+            if (curEditMode && targetCustId) {
+                allInsRows = allInsRows.filter(row => {
+                    const rowId = String(row[0] || "").trim();
+                    if (!rowId) return true;
+                    return rowId !== targetCustId;
                 });
             }
-            if (insRows && insRows.length > 0) {
-                insRows.forEach(insObj => {
-                    const cN = insObj["계약자"] || insObj["차_계약자"] || "";
-                    const cI = insObj["계약자_id"] || insObj["차_계약자_id"] || "";
-                    const matchedC = (typeof window.findCustomerByNameOrId === 'function') ? window.findCustomerByNameOrId(cN, cI) : null;
-                    if (matchedC && matchedC["고객번호"]) targetIdsToRemove.add(String(matchedC["고객번호"]).trim());
-                });
-            }
-
-            allInsRows = allInsRows.filter(row => {
-                const rowId = String(row[0] || "").trim();
-                if (!rowId) return true;
-                return !targetIdsToRemove.has(rowId);
-            });
             
             // 2. Properly route and format each insurance contract based on its actual policyholder (계약자)
             let formattedInsRows = [];
@@ -2467,47 +2451,12 @@ async function saveClientToServer(clientObj, insRows) {
                 allInsRows.push(...formattedInsRows);
             }
 
-            // 3. Update each family member's row in weraclecrm sheet with their relevant insurances
+            // 3. Keep in-memory familyState synchronized without mutating other customers' rows in Google Sheets
             if (window.familyState && window.familyState.length > 0) {
-                for (const f of window.familyState) {
-                    const fmId = String(f.data["고객번호"] || f.id).trim();
-                    const fmName = cleanCustName(f.data["고객명"]);
-                    const fmIns = insRows.filter(ins => {
-                        const cN = cleanCustName(ins["계약자"] || ins["차_계약자"]);
-                        const iN = cleanCustName(ins["피보험자"] || ins["차_피보험자"]);
-                        const cI = String(ins["계약자_id"] || ins["차_계약자_id"] || "").trim();
-                        const iI = String(ins["피보험자_id"] || ins["차_피보험자_id"] || "").trim();
-                        return cN === fmName || iN === fmName || cI === fmId || iI === fmId;
-                    });
-                    
-                    const fmInsJson = fmIns.length > 0 ? JSON.stringify(fmIns) : "";
-                    f.data["가입내역"] = fmInsJson;
-                    f.data["보험가입리스트"] = fmIns;
-                    
-                    const gIdx = globalCustomerData.findIndex(c => String(c["고객번호"] || "").trim() === fmId);
-                    if (gIdx !== -1) {
-                        globalCustomerData[gIdx]["가입내역"] = fmInsJson;
-                        globalCustomerData[gIdx]["보험가입리스트"] = fmIns;
-                        
-                        if (fmId !== String(clientObj["고객번호"]).trim()) {
-                            const fmClient = globalCustomerData[gIdx];
-                            const fmRow = fmClient.rowNumber;
-                            if (fmRow && !isDemoMode && typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets) {
-                                try {
-                                    const fmHeaders = getCrmHeaders(fmClient.sheetName || "weraclecrm");
-                                    const fmValues = fmHeaders.map(h => fmClient[h] !== undefined ? fmClient[h] : "");
-                                    await gapi.client.sheets.spreadsheets.values.update({
-                                        spreadsheetId,
-                                        range: `'${fmClient.sheetName || "weraclecrm"}'!A${fmRow}`,
-                                        valueInputOption: "USER_ENTERED",
-                                        resource: { values: [fmValues] }
-                                    });
-                                } catch(err) {
-                                    console.warn("Family member weraclecrm row update failed:", err);
-                                }
-                            }
-                        }
-                    }
+                const targetF = window.familyState.find(f => String(f.data["고객번호"] || f.id).trim() === targetCustId);
+                if (targetF) {
+                    targetF.data["가입내역"] = clientObj["가입내역"] || "";
+                    targetF.data["보험가입리스트"] = insRows || [];
                 }
             }
 

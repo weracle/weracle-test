@@ -74,7 +74,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "N",
-    "UID": "CUST_A"
+    "UID": "CUST_A",
+    "동물생일": "",
+    "동물모색": "",
+    "동물성별": ""
   },
   {
     "rowNumber": 3,
@@ -101,7 +104,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "N",
-    "UID": "CUST_A1"
+    "UID": "CUST_A1",
+    "동물생일": "",
+    "동물모색": "",
+    "동물성별": ""
   },
   {
     "rowNumber": 4,
@@ -128,7 +134,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "N",
-    "UID": "CUST_A2"
+    "UID": "CUST_A2",
+    "동물생일": "",
+    "동물모색": "",
+    "동물성별": ""
   },
   {
     "rowNumber": 5,
@@ -155,7 +164,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "N",
-    "UID": "CUST_B"
+    "UID": "CUST_B",
+    "동물생일": "2021-05-15",
+    "동물모색": "화이트",
+    "동물성별": "암컷"
   },
   {
     "rowNumber": 6,
@@ -182,7 +194,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "N",
-    "UID": "CUST_B1"
+    "UID": "CUST_B1",
+    "동물생일": "2021-05-15",
+    "동물모색": "화이트",
+    "동물성별": "암컷"
   },
   {
     "rowNumber": 7,
@@ -209,7 +224,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "Y",
-    "UID": "CUST_C"
+    "UID": "CUST_C",
+    "동물생일": "2022-08-10",
+    "동물모색": "치즈태비",
+    "동물성별": "수컷"
   },
   {
     "rowNumber": 8,
@@ -236,7 +254,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "N",
-    "UID": "CUST_C1"
+    "UID": "CUST_C1",
+    "동물생일": "2022-08-10",
+    "동물모색": "치즈태비",
+    "동물성별": "수컷"
   },
   {
     "rowNumber": 9,
@@ -263,7 +284,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "Y",
-    "UID": "CUST_F"
+    "UID": "CUST_F",
+    "동물생일": "2020-03-20",
+    "동물모색": "크림",
+    "동물성별": "암컷"
   },
   {
     "rowNumber": 10,
@@ -290,7 +314,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "Y",
-    "UID": "CUST_G"
+    "UID": "CUST_G",
+    "동물생일": "",
+    "동물모색": "",
+    "동물성별": ""
   },
   {
     "rowNumber": 11,
@@ -317,7 +344,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "N",
-    "UID": "CUST_L"
+    "UID": "CUST_L",
+    "동물생일": "2023-01-15",
+    "동물모색": "그레이",
+    "동물성별": "수컷"
   },
   {
     "rowNumber": 12,
@@ -344,7 +374,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "Y",
-    "UID": "CUST_E"
+    "UID": "CUST_E",
+    "동물생일": "",
+    "동물모색": "",
+    "동물성별": ""
   },
   {
     "rowNumber": 13,
@@ -371,7 +404,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "Y",
-    "UID": "CUST_J"
+    "UID": "CUST_J",
+    "동물생일": "",
+    "동물모색": "",
+    "동물성별": ""
   },
   {
     "rowNumber": 14,
@@ -398,7 +434,10 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "N",
-    "UID": "CUST_N"
+    "UID": "CUST_N",
+    "동물생일": "",
+    "동물모색": "",
+    "동물성별": ""
   },
   {
     "rowNumber": 15,
@@ -425,9 +464,13 @@
     "가입내역": "",
     "등록일": "2026-11-10",
     "사업여부": "Y",
-    "UID": "CUST_M"
+    "UID": "CUST_M",
+    "동물생일": "",
+    "동물모색": "",
+    "동물성별": ""
   }
 ];
+  
   const DEFAULT_TEST_INSURANCES = [
   {
     "고객번호": "1001",
@@ -1582,6 +1625,23 @@
       };
     }
 
+    // [컬럼 밀림 자동 자가 복구 (Self-Healing)]
+    // 시트 헤더 확장(27열)과 구 엑셀 데이터(24열) 불일치로 '동물생일'에 가족사항, '동물모색'에 코드가 들어간 경우 자동 복구
+    const rawPetBirthVal = String(client['동물생일'] || client['동물생년월일'] || '').trim();
+    const rawPetColorVal = String(client['동물모색'] || '').trim();
+    if (/[가-힣]*(?:배우자|자녀|가족|계약자|부모|모친|부친|남편|아내|형제|자매|아들|딸|친족|피보험자)[가-힣]*/.test(rawPetBirthVal) || /^\d{10,}$/.test(rawPetColorVal)) {
+      if (!client['가족사항'] || /특이사항|고객|테스트/.test(client['가족사항'])) {
+        client['가족사항'] = rawPetBirthVal;
+      }
+      if (!client['코드'] || /특이사항|골프|절세|캠핑/.test(client['코드'])) {
+        client['코드'] = rawPetColorVal;
+      }
+      client['동물생일'] = '';
+      client['동물생년월일'] = '';
+      client['동물모색'] = '';
+      client['동물성별'] = '';
+    }
+
     // 객체 형태: 키 앞뒤 공백 및 대소문자 무관 안전 추출 헬퍼
     const getVal = (possibleKeys) => {
       for (const k of possibleKeys) {
@@ -1835,18 +1895,42 @@
     function normalizePetBirth(b) {
       if (!b) return '';
       const s = String(b).trim();
+      // 가족 관계 텍스트나 비정상 텍스트가 섞여있으면 즉시 무효화 (절대 생일로 오인 불가)
+      if (/[가-힣]*(?:배우자|자녀|가족|계약자|부모|모친|부친|남편|아내|형제|자매|아들|딸|친족|피보험자)[가-힣]*/.test(s)) {
+        return '';
+      }
       const digits = s.replace(/[^0-9]/g, '');
       if (digits.length === 8) {
-        return digits.substring(0, 4) + '-' + digits.substring(4, 6) + '-' + digits.substring(6, 8);
+        const y = parseInt(digits.substring(0, 4), 10);
+        const m = parseInt(digits.substring(4, 6), 10);
+        const d = parseInt(digits.substring(6, 8), 10);
+        if (y >= 1990 && y <= 2040 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+          return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        }
       }
       if (/^\d{4}[-./]\d{1,2}[-./]\d{1,2}$/.test(s)) {
         const parts = s.split(/[-./]/);
-        const y = parts[0];
-        const m = parts[1].padStart(2, '0');
-        const d = parts[2].padStart(2, '0');
-        return `${y}-${m}-${d}`;
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        const d = parseInt(parts[2], 10);
+        if (y >= 1990 && y <= 2040 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+          return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        }
       }
-      return s;
+      return '';
+    }
+
+    function normalizePetColor(c) {
+      if (!c) return '';
+      const s = String(c).trim();
+      // 8자리 이상의 숫자 코드(등록번호)나 가족/메모/특이사항 단어는 모색이 아님
+      if (/^\d{8,}$/.test(s) || /배우자|자녀|가족|계약자|테스트|보험|고객|골프|치아|캠핑/.test(s)) {
+        return '';
+      }
+      const colorMatch = s.match(/화이트|흰색|백색|갈색|브라운|블랙|검정|블랙탄|치즈태비|치즈|크림|세이블|그레이|회색|삼색|초코|골드|골든|실버|미색|레드/i);
+      if (colorMatch) return colorMatch[0];
+      if (s.length <= 6 && !/^\d+$/.test(s)) return s;
+      return '';
     }
 
     function normalizePetGender(g) {
@@ -1883,7 +1967,7 @@
       let bBirth = normalizePetBirth(getVal(['동물생일', '동물생년월일', '반려동물생일', '반려동물생년월일', '펫생일', '펫생년월일', '출생일', 'pet_birth', 'petBirth']));
       // ★ 중요: 사람의 '성별'은 절대 참조하지 않음! 순수 반려동물 성별 키만 탐색
       let bGender = normalizePetGender(getVal(['동물성별', '반려동물성별', '펫성별', '동물_성별', 'pet_gender', 'petGender']));
-      let bColor = getVal(['동물모색', '반려동물모색', '펫모색', '모색', '털색', 'pet_color', 'petColor']);
+      let bColor = normalizePetColor(getVal(['동물모색', '반려동물모색', '펫모색', '모색', '털색', 'pet_color', 'petColor']));
 
       // 텍스트 내 복합 정보 정밀 추출 (예: "말티즈 (암컷, 2021-05-15, 화이트)")
       const combinedStr = [petBreed, petName, getVal(['특이사항', '메모', '비고'])].filter(Boolean).join(' ');
@@ -1896,8 +1980,7 @@
         else if (/수컷|남아|\b수\b/i.test(combinedStr)) bGender = '수컷';
       }
       if (!bColor) {
-        const colorMatch = combinedStr.match(/화이트|흰색|백색|갈색|브라운|블랙|검정|블랙탄|치즈|치즈태비|크림|세이블|그레이|회색|삼색/i);
-        if (colorMatch) bColor = colorMatch[0];
+        bColor = normalizePetColor(combinedStr);
       }
       if (!petName) {
         const nameInParen = combinedStr.match(/\(([^,)\s]+)/);
@@ -1935,7 +2018,7 @@
           if (dateMatch) bBirth = normalizePetBirth(dateMatch[1]);
           if (/암컷|여아|\b암\b/i.test(detailStr)) bGender = '암컷';
           else if (/수컷|남아|\b수\b/i.test(detailStr)) bGender = '수컷';
-          const colorMatch = detailStr.match(/화이트|흰색|백색|갈색|브라운|블랙|검정|블랙탄|치즈|치즈태비|크림|세이블|그레이|회색|삼색/i);
+          const colorMatch = detailStr.match(/화이트|흰색|백색|갈색|브라운|블랙|검정|블랙탄|치즈태비|치즈|크림|세이블|그레이|회색|삼색/i);
           if (colorMatch) bColor = colorMatch[0];
 
           const parenMatch = detailStr.match(/([가-힣a-zA-Z0-9]+)\s*\(([^)]+)\)/);

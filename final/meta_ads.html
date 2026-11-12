@@ -6305,24 +6305,30 @@ const targetSummaryValue = wizardTrack === 'meta'
 
       try {
 
+// 새로고침 시 인스타 신규 댓글이 있으면 먼저 서버에 기록한 뒤 최신 목록을 가져옴
+        await scanAndSendInstaCommentDms(false);
+
         const res = await fetch('/api/meta-execute', {
-
           method: 'POST',
-
           headers: { 'Content-Type': 'application/json' },
-
           body: JSON.stringify({ action: 'LIST', userId, userKeys })
-
         });
-
         const json = await res.json();
-
         let rawList = (json.success && Array.isArray(json.data)) ? json.data : [];
 
+        if (json.success && Array.isArray(json.leads)) {
+          const serverLeads = json.leads;
+          // 방금 브라우저에서 감지된 인스타 내역이 서버 반영 시차로 누락되지 않도록 안전 병합
+          const serverKeySet = new Set(
+            serverLeads.map(sl => `${sl.campaign_id || ''}|${sl.name || ''}|${String(sl.note || '').slice(0, 18)}`)
+          );
+          const unsyncedLocalInsta = myLeads.filter(ll => {
+            if (!ll.comment_id) return false;
+            const k = `${ll.campaign_id || ''}|${ll.name || ''}|${String(ll.note || '').slice(0, 18)}`;
+            return !serverKeySet.has(k);
+          });
 
-
-      if (json.success && Array.isArray(json.leads)) {
-          myLeads = json.leads;
+          myLeads = [...unsyncedLocalInsta, ...serverLeads];
           localStorage.setItem('weracle_leads_v6', JSON.stringify(myLeads));
         }
         if (json.success && Array.isArray(json.customAssets)) {
@@ -6330,8 +6336,6 @@ const targetSummaryValue = wizardTrack === 'meta'
           try { localStorage.setItem('weracle_custom_v6', JSON.stringify(customContents)); } catch (e) {}
           renderShowroomGrid();
         }
-
-
         const syncedList = [];
 
         for (const row of rawList) {

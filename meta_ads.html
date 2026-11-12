@@ -5422,14 +5422,81 @@ const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions))
           } catch (e) {}
         }
 
-        // [트랙 B] 인스타그램 일반 게시물 업로드 (+댓글 자동 답글 & DM)
+// [트랙 B] 인스타그램 일반 게시물 업로드 (+인코딩 완료 대기 & 2207027 자동 재시도 완벽 대응)
         if (wizardTrack === 'insta') {
           if (!token || !igUserId) {
             alert('⚠️ 인스타 연동 정보가 없습니다. 우측 상단 [초기광고설정]에서 연동해 주세요.');
             return;
           }
 
+          // 인스타 미디어 컨테이너가 FINISHED 상태가 될 때까지 대기하는 헬퍼 함수
+          const waitUntilIgMediaReady = async (creationId, isVidItem) => {
+            const maxChecks = isVidItem ? 36 : 15; // 영상 최대 약 144초, 이미지/슬라이드 최대 약 30초 대기
+            const intervalMs = isVidItem ? 4000 : 2000;
+
+            for (let attempt = 1; attempt <= maxChecks; attempt++) {
+              submitBtn.innerText = isVidItem
+                ? `⏳ 인스타 릴스 인코딩 대기 중... (${attempt * 4}초 경과)`
+                : `⏳ 인스타 미디어 준비 확인 중... (${attempt}/${maxChecks})`;
+
+              await new Promise(r => setTimeout(r, intervalMs));
+
+              try {
+                const stRes = await fetch(`https://graph.facebook.com/v21.0/${creationId}?fields=status_code,status&access_token=${encodeURIComponent(token)}`);
+                const stData = await stRes.json();
+                const code = String(stData.status_code || '').toUpperCase();
+
+                if (code === 'FINISHED' || code === 'PUBLISHED') {
+                  return { ready: true };
+                }
+                if (code === 'ERROR' || code === 'EXPIRED') {
+                  return {
+                    ready: false,
+                    errorMsg: stData.status || '인스타그램 동영상/이미지 규격(MP4 H.264, 비율 등)을 확인해 주세요.'
+                  };
+                }
+                // status_code 필드를 반환하지 않는 단일 이미지 컨테이너는 즉시 통과
+                if (!code && !isVidItem && attempt >= 2) {
+                  return { ready: true };
+                }
+              } catch (e) {}
+            }
+            return { ready: true };
+          };
+
+          // 혹시라도 2207027(준비 중) 응답이 오면 최대 4회 자동 재시도하며 최종 게시하는 헬퍼 함수
+          const publishIgContainerSafely = async (creationId) => {
+            let lastPubData = null;
+            for (let pTry = 1; pTry <= 4; pTry++) {
+              submitBtn.innerText = pTry === 1
+                ? '📸 인스타그램 피드에 최종 게시 중...'
+                : `⏳ 미디어 마무리 대기 후 재시도 중... (${pTry}/4)`;
+
+              const pubRes = await fetch(`https://graph.facebook.com/v21.0/${igUserId}/media_publish`, {
+                method: 'POST',
+                body: new URLSearchParams({ creation_id: creationId, access_token: token })
+              });
+              const pubData = await pubRes.json();
+              lastPubData = pubData;
+
+              if (pubData && pubData.id) {
+                return pubData;
+              }
+
+              const subcode = pubData && pubData.error ? Number(pubData.error.error_subcode || 0) : 0;
+              const errMsg = pubData && pubData.error ? String(pubData.error.message || '') : '';
+              if (subcode === 2207027 || errMsg.includes('Media ID is not available')) {
+                await new Promise(r => setTimeout(r, 5000));
+                continue;
+              }
+              break;
+            }
+            return lastPubData || {};
+          };
+
+          // 1) 다중 슬라이드(캐러셀) 업로드
           if (!isRealVideo && resolvedSlideUrls.length >= 2) {
+            submitBtn.innerText = `⏳ 슬라이드 이미지 등록 중 (${resolvedSlideUrls.length}장)...`;
             const childIds = [];
             for (const sUrl of resolvedSlideUrls.slice(0, 10)) {
               const chRes = await fetch(`https://graph.facebook.com/v21.0/${igUserId}/media`, {
@@ -5455,21 +5522,29 @@ const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions))
               });
               const carData = await carRes.json();
               if (carData && carData.id) {
-                await new Promise(r => setTimeout(r, 1500));
-                const pubRes = await fetch(`https://graph.facebook.com/v21.0/${igUserId}/media_publish`, {
-                  method: 'POST',
-                  body: new URLSearchParams({ creation_id: carData.id, access_token: token })
-                });
-                const pubData = await pubRes.json();
+                const readyCheck = await waitUntilIgMediaReady(carData.id, false);
+                if (!readyCheck.ready) {
+                  alert(`❌ 인스타 슬라이드 처리 실패:\n${readyCheck.errorMsg}`);
+                  return;
+                }
+                const pubData = await publishIgContainerSafely(carData.id);
                 if (pubData && pubData.id) {
                   createdIgMediaId = pubData.id;
                   apiNotice.push(`📸 내 인스타그램 피드에 슬라이드(${childIds.length}장) 업로드 및 24시간 댓글 자동답글+DM([${keyword}]) 설정 완료!`);
+                } else {
+                  alert(`❌ 인스타 게시 오류:\n${formatClientMetaError(pubData.error)}`);
+                  return;
                 }
               }
             }
           }
 
+          // 2) 릴스 동영상 또는 단일 이미지 업로드
           if (!createdIgMediaId) {
+            submitBtn.innerText = isRealVideo
+              ? '⏳ 인스타그램 서버로 릴스 영상 전송 중...'
+              : '⏳ 인스타그램 이미지 전송 중...';
+
             const containerParams = new URLSearchParams({
               caption: caption || title,
               access_token: token
@@ -5477,6 +5552,7 @@ const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions))
             if (isRealVideo) {
               containerParams.append('media_type', 'REELS');
               containerParams.append('video_url', finalMediaUrl);
+              containerParams.append('share_to_feed', 'true');
             } else {
               containerParams.append('image_url', finalMediaUrl);
             }
@@ -5487,23 +5563,18 @@ const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions))
             });
             const containerData = await containerRes.json();
 
-            if (containerData.id) {
+            if (containerData && containerData.id) {
               const creationId = containerData.id;
-              for (let i = 0; i < 5; i++) {
-                await new Promise(r => setTimeout(r, isRealVideo ? 3000 : 1200));
-                const stRes = await fetch(`https://graph.facebook.com/v21.0/${creationId}?fields=status_code&access_token=${token}`);
-                const stData = await stRes.json();
-                if (stData.status_code === 'FINISHED' || !stData.status_code) break;
+              const readyCheck = await waitUntilIgMediaReady(creationId, isRealVideo);
+              if (!readyCheck.ready) {
+                alert(`❌ 인스타 영상 인코딩 실패:\n${readyCheck.errorMsg}`);
+                return;
               }
 
-              const pubRes = await fetch(`https://graph.facebook.com/v21.0/${igUserId}/media_publish`, {
-                method: 'POST',
-                body: new URLSearchParams({ creation_id: creationId, access_token: token })
-              });
-              const pubData = await pubRes.json();
-              if (pubData.id) {
+              const pubData = await publishIgContainerSafely(creationId);
+              if (pubData && pubData.id) {
                 createdIgMediaId = pubData.id;
-                apiNotice.push(`📸 내 인스타그램 피드에 게시물 업로드 및 24시간 댓글 자동답글+DM([${keyword}]) 설정 완료!`);
+                apiNotice.push(`📸 내 인스타그램 피드·릴스에 게시물 업로드 및 24시간 댓글 자동답글+DM([${keyword}]) 설정 완료!`);
               } else {
                 alert(`❌ 인스타 게시 오류:\n${formatClientMetaError(pubData.error)}`);
                 return;

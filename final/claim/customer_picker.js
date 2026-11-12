@@ -918,19 +918,70 @@
     }
   };
 
-  // 피보험자 단독 청구 서식 여부 (계약자란 부재사: 한화손보, 흥국화재, 하나손보)
-  function isInsuredOnlyCompany(compName) {
-    if (!compName) return false;
-    const c = String(compName).replace(/\s+/g, '');
-    return c.includes('한화손') || c.includes('흥국화재') || c.includes('하나손');
+  // 현재 카테고리 감지 (배상, 펫보험, 재물, 생보, 질병상해)
+  function getActiveClaimCategory() {
+    if (typeof selectedCategory !== 'undefined' && selectedCategory) return selectedCategory;
+    if (typeof window.selectedCategory !== 'undefined' && window.selectedCategory) return window.selectedCategory;
+    const path = (window.location.pathname || '').toLowerCase();
+    const title = (document.title || '').toLowerCase();
+    if (path.includes('liability') || title.includes('배상')) return '배상';
+    if (path.includes('pet') || title.includes('펫')) return '펫보험';
+    if (path.includes('property') || title.includes('재물')) return '재물';
+    if (path.includes('life') || title.includes('생명')) return '생보';
+    return '질병상해';
+  }
+
+  // 보험사별 서식 역할 모드: 'insuredOnly' (피보험자 단독), 'contractorOnly' (계약자 단독), 'normal' (동일/다름 선택)
+  function getCompanyRoleMode(compName) {
+    if (!compName) return 'normal';
+    const cat = getActiveClaimCategory();
+    const norm = String(compName).replace(/\s+/g, '');
+
+    // 1. 배상책임 전용 규칙
+    if (cat === '배상') {
+      if (norm.includes('예별')) return 'contractorOnly';
+      if (norm.includes('현대') || norm.includes('메리츠') || norm.includes('한화') || norm.includes('AIG') || norm.includes('aig')) return 'insuredOnly';
+    }
+
+    // 2. 재물보험 전용 규칙
+    if (cat === '재물') {
+      if (norm.includes('예별')) return 'contractorOnly';
+      if (norm.includes('메리츠') || norm.includes('한화') || norm.includes('현대')) return 'insuredOnly';
+    }
+
+    // 3. 질병상해 전용 규칙
+    if (cat === '질병상해') {
+      if (norm.includes('한화손') || norm.includes('흥국화재') || norm.includes('하나손')) return 'insuredOnly';
+    }
+
+    // 4. CONFIG 기반 자동 판별 폴백
+    if (window.CONFIG && window.CONFIG[cat]) {
+      let cfg = window.CONFIG[cat][compName];
+      if (!cfg) {
+        for (const k of Object.keys(window.CONFIG[cat])) {
+          if (k.replace(/\s+/g, '') === norm) { cfg = window.CONFIG[cat][k]; break; }
+        }
+      }
+      if (cfg && Array.isArray(cfg.step1)) {
+        const hasCont = cfg.step1.includes('contName') || cfg.step1.includes('contRrn');
+        const hasIns = cfg.step1.includes('insName') || cfg.step1.includes('insRrn');
+        if (hasCont && !hasIns) return 'contractorOnly';
+        if (hasIns && !hasCont) return 'insuredOnly';
+      }
+    }
+
+    return 'normal';
   }
 
   // 모달 열기
   window.openCrmPickerModal = function () {
     const select = document.getElementById('companySelect');
     const compName = select ? select.value : '';
-    if (isInsuredOnlyCompany(compName)) {
+    const roleMode = getCompanyRoleMode(compName);
+    if (roleMode === 'insuredOnly') {
       window.crmPickerState.isDifferent = false;
+    } else if (roleMode === 'contractorOnly') {
+      window.crmPickerState.isDifferent = true;
     }
 
     syncFromGoogleSheetsDirect();
@@ -1069,9 +1120,11 @@
     // 현재 선택된 보험사 명칭 확인
     const select = document.getElementById('companySelect');
     const compName = select ? select.value : '';
-    const isInsuredOnly = isInsuredOnlyCompany(compName);
-    if (isInsuredOnly) {
+    const roleMode = getCompanyRoleMode(compName);
+    if (roleMode === 'insuredOnly') {
       window.crmPickerState.isDifferent = false;
+    } else if (roleMode === 'contractorOnly') {
+      window.crmPickerState.isDifferent = true;
     }
 
     const isDiff = window.crmPickerState.isDifferent;
@@ -1090,9 +1143,9 @@
     }
 
     // ----------------------------------------------------
-    // Q1. 피보험자와 계약자(또는 수익자)가 같나요? (한화/흥국/하나손해는 계약자란 부재로 생략)
+    // Q1. 피보험자와 계약자(또는 수익자)가 같나요? (단독 서식은 생략)
     // ----------------------------------------------------
-    if (!isInsuredOnly) {
+    if (roleMode === 'normal') {
       html += `
         <div class="crm-wizard-card">
           <div class="crm-wizard-card-header">
@@ -1124,25 +1177,94 @@
     }
 
     // ----------------------------------------------------
-    // Q2. 고객 정보 불러오기 (위라클랩 CRM)
+    // 고객 정보 불러오기 카드 (위라클랩 CRM)
     // ----------------------------------------------------
+    let qTitle = '고객 정보 불러오기';
+    let qSub = '위라클랩에 등록된 고객을 검색하여 선택하거나 직접 입력하세요.';
+    let qBadge = 'Q2';
+    if (roleMode === 'insuredOnly') {
+      qTitle = '피보험자 고객 정보 불러오기';
+      qSub = '위라클랩에 등록된 피보험자(치료받은 분)를 선택하세요.';
+      qBadge = '✓';
+    } else if (roleMode === 'contractorOnly') {
+      qTitle = '계약자 고객 정보 불러오기';
+      qSub = '위라클랩에 등록된 계약자(보험계약자)를 선택하세요.';
+      qBadge = '✓';
+    }
+
     html += `
       <div class="crm-wizard-card">
         <div class="crm-wizard-card-header">
-          <div class="crm-q-badge">${isInsuredOnly ? '✓' : 'Q2'}</div>
+          <div class="crm-q-badge">${qBadge}</div>
           <div class="crm-q-title">
-            <h4>${isInsuredOnly ? '피보험자 고객 정보 불러오기' : '고객 정보 불러오기'}</h4>
-            <p>${isInsuredOnly ? '위라클랩에 등록된 피보험자(치료받은 분)를 선택하세요.' : '위라클랩에 등록된 고객을 검색하여 선택하거나 직접 입력하세요.'}</p>
+            <h4>${qTitle}</h4>
+            <p>${qSub}</p>
           </div>
         </div>
+    `;
 
-        <!-- Person A: 피보험자 -->
+    // A. 계약자 단독 서식 (예별손보 배상/재물 등)
+    if (roleMode === 'contractorOnly') {
+      const activeClient = contractor || insured;
+      html += `
+        <div class="crm-person-slot contractor-slot">
+          <div class="crm-slot-header">
+            <span class="crm-slot-tag contractor">보험계약자 (계약자)</span>
+            <span class="crm-slot-hint">보험계약을 체결하신 분</span>
+          </div>
+      `;
+
+      if (activeClient) {
+        html += `
+          <div class="crm-selected-client-card contractor-theme">
+            <div class="crm-client-top-row">
+              <div class="crm-client-identity">
+                <div class="crm-client-avatar contractor">👥</div>
+                <div class="crm-client-title">
+                  <span class="crm-c-name">${activeClient.name}</span>
+                  <span class="crm-c-rrn">${activeClient.rrnFront ? activeClient.rrnFront + '-*******' : '주민번호 미등록'}</span>
+                </div>
+              </div>
+              <div class="crm-client-actions">
+                <button type="button" class="btn-card-change" onclick="startCustomerSearch('contractor')">변경</button>
+                <button type="button" class="btn-card-remove" onclick="removeCustomer('contractor'); removeCustomer('insured');" title="선택 해제">✕</button>
+              </div>
+            </div>
+            <div class="crm-client-sub-info">
+              <span>📞 ${activeClient.phone || '연락처 없음'}</span>
+              <span style="color:#cbd5e1;">|</span>
+              <span>🏠 ${activeClient.address || '주소 없음'}</span>
+            </div>
+            <div class="crm-client-account-wrap">
+              ${renderAccountSection('contractor', activeClient)}
+            </div>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="crm-empty-slot-card">
+            <div class="crm-empty-slot-info">
+              <p class="crm-empty-text">아직 선택된 계약자 고객이 없습니다.</p>
+              <p class="crm-empty-sub">등록 고객을 찾거나, 청구서에서 직접 수기로 작성할 수 있습니다.</p>
+            </div>
+            <button type="button" class="btn-slot-search contractor" onclick="startCustomerSearch('contractor')">
+              🔍 계약자 고객 찾기
+            </button>
+          </div>
+        `;
+      }
+
+      html += `</div>`; // End contractor slot
+    } else {
+      // B. 일반 서식 및 피보험자 단독 서식
+      // Person A: 피보험자
+      html += `
         <div class="crm-person-slot">
           <div class="crm-slot-header">
             <span class="crm-slot-tag insured">치료받은 분 (피보험자)</span>
             <span class="crm-slot-hint">병원 진료 및 치료를 받으신 분</span>
           </div>
-    `;
+      `;
 
     if (insured) {
       html += `
@@ -1237,7 +1359,8 @@
       }
 
       html += `</div>`; // End Person B
-    }
+      }
+    } // End normal / insuredOnly else block
 
     html += `</div>`; // End Q2 card
 
@@ -1415,8 +1538,36 @@
       setFieldValue('insAddress', insured.address);
     }
 
-    // 5. [핵심] 계좌 및 수령자 정보 주입 규칙 (동일함 vs 다름)
-    if (isDiff) {
+    const select = document.getElementById('companySelect');
+    const compName = select ? select.value : '';
+    const activeRoleMode = getCompanyRoleMode(compName);
+
+    // 5. [핵심] 계좌 및 수령자 정보 주입 규칙 (계약자단독 vs 동일함 vs 다름)
+    if (activeRoleMode === 'contractorOnly') {
+      // 👥 [계약자 단독 서식 - 예별손보 배상/재물 등]
+      const targetClient = contractor || insured;
+      if (targetClient) {
+        setFieldValue('contName', targetClient.name);
+        setFieldValue('contRrn', targetClient.rrn);
+        setFieldValue('contRrn_front', targetClient.rrnFront);
+        setFieldValue('contRrn_back', targetClient.rrnBack);
+        setFieldValue('contPhone', targetClient.phone);
+        setFieldValue('contAddress', targetClient.address);
+        setFieldValue('docAddress', targetClient.address);
+        setFieldValue('guidePhone', targetClient.phone);
+        setFieldValue('guideRelation', '본인');
+
+        const finalBank = targetClient.bankName || '';
+        const finalAccount = targetClient.bankAccount || '';
+        const finalOwner = targetClient.bankOwner || targetClient.name || '';
+
+        setFieldValue('bankName', finalBank, true);
+        setFieldValue('bankAccount', finalAccount, true);
+        setFieldValue('bankOwner', finalBank ? finalOwner : '', true);
+        setFieldValue('bankOwnerRrn', targetClient.rrn);
+        setFieldValue('bankOwnerRel', '본인');
+      }
+    } else if (isDiff) {
       // 👥 [다름 모드] - 수령자는 100% 무조건 계약자/수익자!
       const contName = (contractor ? contractor.name : '') || (insured ? insured.contractorName : '');
       const contPhone = contractor ? contractor.phone : '';
@@ -1450,6 +1601,10 @@
         setFieldValue('beneAddress', contAddress);
       }
 
+      // 증권상 주소(docAddress - DB손보 배상책임/재물 등): 다를 시 계약자 주소 우선 주입
+      const finalDocAddr = contAddress || (insured ? insured.address : '');
+      setFieldValue('docAddress', finalDocAddr);
+
       // 관계 필드 스마트 주입 (롯데/MG: contRelation, 흥국: insRelation, 표준: guideRelation, AIG/생보: beneRelation)
       setFieldValue('contRelation', contRel);
       setFieldValue('insRelation', contRel);
@@ -1472,6 +1627,9 @@
       setFieldValue('guideName', insured.name);
       setFieldValue('guidePhone', insured.phone);
       setFieldValue('guideRelation', '본인');
+
+      // 증권상 주소(docAddress - DB손보 배상책임/재물 등): 동일 시 피보험자 주소 주입
+      setFieldValue('docAddress', insured.address);
 
       // 미성년자(자녀) 피보험자 연락처 없을 시 메인 계약자(부모) 연락처 자동 폴백
       if (!insured.phone && window.familyState && window.familyState[0] && window.familyState[0].data) {

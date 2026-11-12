@@ -3084,8 +3084,8 @@ async function submitLeadForm(e) {
       if (callTime && document.getElementById('wrapTime').style.display !== 'none') noteParts.push(`희망시간:${callTime}`);
       const finalNoteText = noteParts.filter(Boolean).join(' / ');
 
-      // 고객 기기의 로컬스토리지 이메일이 섞이지 않도록 URL의 agent_id를 최우선 사용
       const ownerAgentId = agentIdParam || 'default';
+      const ownerTag = (ownerAgentId && ownerAgentId !== 'default') ? ` [owner:${String(ownerAgentId).trim().toLowerCase()}]` : '';
       const targetAgentNotifyPhone = agentPhone || storedAgentNotifyPhone || '';
       const displayedAgentName = (document.getElementById('heroAgentName') && document.getElementById('heroAgentName').innerText.trim()) || agentName || '담당설계사';
 
@@ -3098,13 +3098,72 @@ async function submitLeadForm(e) {
         } catch (pxErr) {}
       }
 
-      // 1) 알림톡 및 시트 웹훅 발송 호출
+      // ★ 1순위: 수파베이스 meta_leads 테이블에 브라우저에서 직접 즉시 저장 (API 경로 오류 원천 차단!)
+      const SB_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
+      const SB_KEY = 'sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR';
+      let directSavedOk = false;
+
       try {
-        await fetch('/api/meta-webhook', {
+        const directPayload = {
+          campaign_id: String(campId || 'camp_direct'),
+          campaign_title: String(campTitle || '인스타 DM 상담 신청'),
+          source: String(campId || '').startsWith('camp_ig_') ? 'insta_dm_apply' : String(sourceParam || 'insta_dm_apply'),
+          name: name,
+          phone: phone,
+          region: region,
+          note: `${finalNoteText}${ownerTag}`.trim(),
+          status: hasPdfDoc ? '자료열람·신청완료' : '신규대기'
+        };
+
+        const sbRes = await fetch(`${SB_URL}/rest/v1/meta_leads`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SB_KEY,
+            'Authorization': `Bearer ${SB_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(directPayload)
+        });
+
+        if (sbRes.ok) {
+          directSavedOk = true;
+        }
+      } catch (sbErr) {}
+
+      // ★ 2순위: 만약 수파베이스 직접 저장이 RLS 등으로 막혔을 때만 백엔드 API로 저장
+      if (!directSavedOk) {
+        try {
+          const apiRes = await fetch('/api/meta-execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'SAVE_APPLY_LEAD',
+              campaignId: campId,
+              campaignTitle: campTitle,
+              name,
+              phone,
+              region,
+              note: finalNoteText,
+              source: sourceParam,
+              agentId: ownerAgentId,
+              hasPdf: hasPdfDoc
+            })
+          });
+          const apiJson = await apiRes.json();
+          if (apiJson && apiJson.success) directSavedOk = true;
+        } catch (err) {}
+      }
+
+      // ★ 3순위: 카카오 알림톡 발송용 웹훅 호출 (백그라운드 처리, 이미 DB에 들어갔으므로 중복 INSERT 방지 플래그 전달)
+      try {
+        fetch('/api/meta-webhook', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          keepalive: true,
           body: JSON.stringify({
             action: 'SAVE_LEAD',
+            skipDbInsert: directSavedOk,
             campaignId: campId,
             campaignTitle: campTitle,
             name,
@@ -3117,27 +3176,7 @@ async function submitLeadForm(e) {
             agentPhone: targetAgentNotifyPhone,
             sheetWebhookUrl: sheetUrlParam
           })
-        });
-      } catch (err) {}
-
-      // 2) 수파베이스 meta_leads 직접 영구 저장 보장 (웹훅 오류 시에도 100% 유입DB 기록 + 중복 자동방지)
-      try {
-        await fetch('/api/meta-execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'SAVE_APPLY_LEAD',
-            campaignId: campId,
-            campaignTitle: campTitle,
-            name,
-            phone,
-            region,
-            note: finalNoteText,
-            source: sourceParam,
-            agentId: ownerAgentId,
-            hasPdf: hasPdfDoc
-          })
-        });
+        }).catch(() => {});
       } catch (err) {}
 
       document.getElementById('formViewSection').style.display = 'none';

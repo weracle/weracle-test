@@ -2159,36 +2159,27 @@ function buildClientGeoLocations(regionStr) {
     }
 
 
-
-    function cleanDmMessageText(rawMsg, recordId) {
-
+function cleanDmMessageText(rawMsg, recordId, hasPdf) {
       const shortUrl = buildCleanShortApplyUrl(recordId);
-
       let msg = String(rawMsg || '').trim();
-
       if (!msg) {
-
-        return `안녕하세요! 댓글 남겨주셔서 감사합니다 😊 요청하신 핵심 가이드북(PDF) 열람 및 무료 상담 신청 링크입니다 👉 ${shortUrl}`;
-
+        return hasPdf
+          ? `안녕하세요! 댓글 남겨주셔서 감사합니다 😊 요청하신 핵심 가이드북(PDF) 열람 및 무료 상담 신청 링크입니다 👉 ${shortUrl}`
+          : `안녕하세요! 댓글 남겨주셔서 감사합니다 😊 요청하신 1:1 무료 맞춤 점검 및 상담 신청 링크입니다 👉 ${shortUrl}`;
       }
-
+      if (!hasPdf) {
+        msg = msg.replace(/핵심 가이드북\(PDF\)\s*열람 및\s*/g, '1:1 맞춤 점검 및 ');
+      }
       if (msg.includes('{신청링크}')) {
-
         msg = msg.replace(/\{신청링크\}/g, shortUrl);
-
       }
-
       msg = msg.replace(/https:\/\/weracle-crm\.vercel\.app\/sns_apply\.html\?[^\s]+/g, shortUrl);
-
       if (!msg.includes('http')) {
-
         msg = `${msg} 👉 ${shortUrl}`;
-
       }
-
       return msg;
-
     }
+ 
 
 
 
@@ -4580,17 +4571,31 @@ let customQuestionsList = [
       document.getElementById('setupLandingUrl').value = '';
       document.getElementById('setupCtaBtn').value = 'LEARN_MORE';
       document.getElementById('setupInstaDmKeyword').value = activeItem.keyword || '궁금';
+const hasPresetPdf = Boolean(activeItem.pdfUrl && String(activeItem.pdfUrl).trim().startsWith('http'));
       document.getElementById('setupPdfDocUrl').value = activeItem.pdfUrl || '';
       document.getElementById('setupInstaPdfUrl').value = activeItem.pdfUrl || '';
       document.getElementById('setupMetaCompliance').value = '';
       document.getElementById('setupInstaCompliance').value = '';
 
-   customQuestionsList = [
+      // PDF 자료 유무에 따라 인스타그램 자동 DM 기본 멘트 자동 전환
+      const dmMsgEl = document.getElementById('setupInstaDmMessage');
+      if (dmMsgEl) {
+        dmMsgEl.value = hasPresetPdf
+          ? '댓글 감사합니다! 요청하신 핵심 가이드북(PDF) 열람 및 무료 상담 신청 링크입니다 👉 {신청링크}'
+          : '댓글 감사합니다! 요청하신 1:1 무료 맞춤 점검 및 간편 상담 신청 링크입니다 👉 {신청링크}';
+      }
+
+      // PDF 자료 유무에 따라 메타 양식 첫 번째 기본 객관식 보기 자동 전환
+      const defaultOpts = hasPresetPdf
+        ? ['핵심 요약 가이드북(PDF) 먼저 받기', '1:1 비대면 간편 상담 신청하기']
+        : ['1:1 비대면 간편 상담 신청하기', '내 보험료·보장 점검 먼저 받아보기'];
+
+      customQuestionsList = [
         {
           type: 'CHOICE',
           label: '어떤 안내를 가장 먼저 받아보고 싶으신가요?',
-          optionsList: ['핵심 요약 가이드북(PDF) 먼저 받기', '1:1 비대면 간편 상담 신청하기'],
-          options: '핵심 요약 가이드북(PDF) 먼저 받기, 1:1 비대면 간편 상담 신청하기'
+          optionsList: defaultOpts,
+          options: defaultOpts.join(', ')
         }
       ];
       renderCustomQuestionsBuilder();
@@ -4704,13 +4709,18 @@ function toggleLeadDestMode() {
           ? '🪪 내 PR 랜딩페이지 신청폼 미리보기'
           : '⚡ 메타 앱 내장 인스턴트 양식 미리보기';
       }
+      const curPdfVal = document.getElementById('setupPdfDocUrl') ? document.getElementById('setupPdfDocUrl').value.trim() : '';
+      const hasPdfLink = curPdfVal.startsWith('http');
+
       if (footerGuide) {
         footerGuide.innerText = isPrPage
           ? '☑️ 내 PR 브랜딩 소개 확인 후 하단 폼 제출'
-          : '☑️ 인스타·페북 팝업 제출 즉시 PDF 원본 열기';
+          : (hasPdfLink ? '☑️ 인스타·페북 팝업 제출 즉시 PDF 원본 열기' : '☑️ 인스타·페북 팝업에서 간편 상담 신청 완료');
       }
       if (submitBtnTxt) {
-        submitBtnTxt.innerText = isPrPage ? '상담 및 자료 신청하기' : '제출 완료 및 PDF 바로 열기';
+        submitBtnTxt.innerText = isPrPage
+          ? '상담 및 점검 신청하기'
+          : (hasPdfLink ? '제출 완료 및 PDF 바로 열기' : '간편 상담 신청 완료하기');
       }
 
       updateWizardStepView();
@@ -5394,7 +5404,7 @@ const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions))
         ? (customLandingUrl && customLandingUrl.startsWith('http') ? customLandingUrl : shortPrRedirectUrl)
         : shortPrRedirectUrl;
    
-      const dmMessage = cleanDmMessageText(rawInstaDmMsg, recordId);
+      const dmMessage = cleanDmMessageText(rawInstaDmMsg, recordId, Boolean(pdfDocUrl && pdfDocUrl.startsWith('http')));
 
       let createdMetaCampaignId = '';
       let createdAdSetId = '';

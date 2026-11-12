@@ -2159,36 +2159,27 @@ function buildClientGeoLocations(regionStr) {
     }
 
 
-
-    function cleanDmMessageText(rawMsg, recordId) {
-
+function cleanDmMessageText(rawMsg, recordId, hasPdf) {
       const shortUrl = buildCleanShortApplyUrl(recordId);
-
       let msg = String(rawMsg || '').trim();
-
       if (!msg) {
-
-        return `안녕하세요! 댓글 남겨주셔서 감사합니다 😊 요청하신 핵심 가이드북(PDF) 열람 및 무료 상담 신청 링크입니다 👉 ${shortUrl}`;
-
+        return hasPdf
+          ? `안녕하세요! 댓글 남겨주셔서 감사합니다 😊 요청하신 핵심 가이드북(PDF) 열람 및 무료 상담 신청 링크입니다 👉 ${shortUrl}`
+          : `안녕하세요! 댓글 남겨주셔서 감사합니다 😊 요청하신 1:1 무료 맞춤 점검 및 상담 신청 링크입니다 👉 ${shortUrl}`;
       }
-
+      if (!hasPdf) {
+        msg = msg.replace(/핵심 가이드북\(PDF\)\s*열람 및\s*/g, '1:1 맞춤 점검 및 ');
+      }
       if (msg.includes('{신청링크}')) {
-
         msg = msg.replace(/\{신청링크\}/g, shortUrl);
-
       }
-
       msg = msg.replace(/https:\/\/weracle-crm\.vercel\.app\/sns_apply\.html\?[^\s]+/g, shortUrl);
-
       if (!msg.includes('http')) {
-
         msg = `${msg} 👉 ${shortUrl}`;
-
       }
-
       return msg;
-
     }
+ 
 
 
 
@@ -4580,17 +4571,31 @@ let customQuestionsList = [
       document.getElementById('setupLandingUrl').value = '';
       document.getElementById('setupCtaBtn').value = 'LEARN_MORE';
       document.getElementById('setupInstaDmKeyword').value = activeItem.keyword || '궁금';
+const hasPresetPdf = Boolean(activeItem.pdfUrl && String(activeItem.pdfUrl).trim().startsWith('http'));
       document.getElementById('setupPdfDocUrl').value = activeItem.pdfUrl || '';
       document.getElementById('setupInstaPdfUrl').value = activeItem.pdfUrl || '';
       document.getElementById('setupMetaCompliance').value = '';
       document.getElementById('setupInstaCompliance').value = '';
 
-   customQuestionsList = [
+      // PDF 자료 유무에 따라 인스타그램 자동 DM 기본 멘트 자동 전환
+      const dmMsgEl = document.getElementById('setupInstaDmMessage');
+      if (dmMsgEl) {
+        dmMsgEl.value = hasPresetPdf
+          ? '댓글 감사합니다! 요청하신 핵심 가이드북(PDF) 열람 및 무료 상담 신청 링크입니다 👉 {신청링크}'
+          : '댓글 감사합니다! 요청하신 1:1 무료 맞춤 점검 및 간편 상담 신청 링크입니다 👉 {신청링크}';
+      }
+
+      // PDF 자료 유무에 따라 메타 양식 첫 번째 기본 객관식 보기 자동 전환
+      const defaultOpts = hasPresetPdf
+        ? ['핵심 요약 가이드북(PDF) 먼저 받기', '1:1 비대면 간편 상담 신청하기']
+        : ['1:1 비대면 간편 상담 신청하기', '내 보험료·보장 점검 먼저 받아보기'];
+
+      customQuestionsList = [
         {
           type: 'CHOICE',
           label: '어떤 안내를 가장 먼저 받아보고 싶으신가요?',
-          optionsList: ['핵심 요약 가이드북(PDF) 먼저 받기', '1:1 비대면 간편 상담 신청하기'],
-          options: '핵심 요약 가이드북(PDF) 먼저 받기, 1:1 비대면 간편 상담 신청하기'
+          optionsList: defaultOpts,
+          options: defaultOpts.join(', ')
         }
       ];
       renderCustomQuestionsBuilder();
@@ -4704,13 +4709,18 @@ function toggleLeadDestMode() {
           ? '🪪 내 PR 랜딩페이지 신청폼 미리보기'
           : '⚡ 메타 앱 내장 인스턴트 양식 미리보기';
       }
+      const curPdfVal = document.getElementById('setupPdfDocUrl') ? document.getElementById('setupPdfDocUrl').value.trim() : '';
+      const hasPdfLink = curPdfVal.startsWith('http');
+
       if (footerGuide) {
         footerGuide.innerText = isPrPage
           ? '☑️ 내 PR 브랜딩 소개 확인 후 하단 폼 제출'
-          : '☑️ 인스타·페북 팝업 제출 즉시 PDF 원본 열기';
+          : (hasPdfLink ? '☑️ 인스타·페북 팝업 제출 즉시 PDF 원본 열기' : '☑️ 인스타·페북 팝업에서 간편 상담 신청 완료');
       }
       if (submitBtnTxt) {
-        submitBtnTxt.innerText = isPrPage ? '상담 및 자료 신청하기' : '제출 완료 및 PDF 바로 열기';
+        submitBtnTxt.innerText = isPrPage
+          ? '상담 및 점검 신청하기'
+          : (hasPdfLink ? '제출 완료 및 PDF 바로 열기' : '간편 상담 신청 완료하기');
       }
 
       updateWizardStepView();
@@ -4737,6 +4747,690 @@ function toggleLeadDestMode() {
     function updateWizardStepView() {
       document.querySelectorAll('.step-pane').forEach(p => p.classList.remove('active'));
       const indicator = document.getElementById('stepIndicatorBar');
+
+      if (wizardTrack === 'insta') {
+        indicator.innerHTML = `<span class="step-dot-pill active">📸 인스타그램 게시물 & 댓글 자동 DM 설정</span>`;
+        document.getElementById('pane-insta-1').classList.add('active');
+        document.getElementById('btnWizardPrev').style.visibility = 'hidden';
+        document.getElementById('btnWizardNext').style.display = 'none';
+        document.getElementById('btnWizardSubmit').style.display = 'inline-block';
+        document.getElementById('btnWizardSubmit').innerText = '📸 지금 내 인스타그램에 게시하기';
+        document.getElementById('phoneViewFeed').style.display = 'flex';
+        document.getElementById('phoneViewForm').style.display = 'none';
+        return;
+      }
+
+      const maxStep = getMaxMetaStep();
+      if (currentStep > maxStep) currentStep = maxStep;
+
+      const stepNames = maxStep === 3
+        ? ['1. 노출타겟 상세설정', '2. 지역·연령·예산·기간', '3. 광고문구·외부URL']
+        : ['1. 노출타겟 상세설정', '2. 지역·연령·예산·기간', '3. 광고문구·접수방식', '4. 질문·PDF 설정'];
+
+      indicator.innerHTML = stepNames.map((name, i) => {
+        const sNum = i + 1;
+        const cls = sNum === currentStep ? 'active' : (sNum < currentStep ? 'done' : '');
+        return `<span class="step-dot-pill ${cls}" onclick="jumpToMetaStep(${sNum})" style="cursor:pointer;">${name}</span>`;
+      }).join('');
+
+      const activePane = document.getElementById(`pane-meta-${currentStep}`);
+      if (activePane) activePane.classList.add('active');
+
+      document.getElementById('btnWizardPrev').style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+      if (currentStep === maxStep) {
+        document.getElementById('btnWizardNext').style.display = 'none';
+        document.getElementById('btnWizardSubmit').style.display = 'inline-block';
+        document.getElementById('btnWizardSubmit').innerText = '🚀 이 설정으로 메타 광고 시작하기';
+      } else {
+        document.getElementById('btnWizardNext').style.display = 'inline-block';
+        document.getElementById('btnWizardSubmit').style.display = 'none';
+      }
+
+      if (currentStep === 4) {
+        document.getElementById('phoneViewFeed').style.display = 'none';
+        document.getElementById('phoneViewForm').style.display = 'flex';
+      } else {
+        document.getElementById('phoneViewFeed').style.display = 'flex';
+        document.getElementById('phoneViewForm').style.display = 'none';
+      }
+    }
+
+    function moveWizardStep(dir) {
+      const maxStep = getMaxMetaStep();
+      const next = currentStep + dir;
+      if (next >= 1 && next <= maxStep) {
+        currentStep = next;
+        updateWizardStepView();
+      }
+    }
+
+    function jumpToMetaStep(stepNum) {
+      const maxStep = getMaxMetaStep();
+      if (stepNum >= 1 && stepNum <= maxStep) {
+        currentStep = stepNum;
+        updateWizardStepView();
+      }
+    }
+
+function renderModalPhoneMedia() {
+      const stage = document.getElementById('phoneMediaStage');
+      if (!stage || !activeItem) return;
+      const curSlide = activeItem.slides[modalSlideIdx] || activeItem.slides[0];
+      const total = activeItem.slides.length;
+      const ratio = normalizeRatio(activeItem.ratio, activeItem.type === 'video');
+
+      const compNo = wizardTrack === 'meta'
+        ? document.getElementById('setupMetaCompliance').value.trim()
+        : document.getElementById('setupInstaCompliance').value.trim();
+
+      const compHtml = compNo ? `<div class="tiny-compliance" style="display:block;">${compNo}</div>` : '';
+
+      if (activeItem.type === 'video') {
+        const canPlayVid = isPlayableVideoUrl(activeItem.videoUrl);
+        const hasImg = Boolean(curSlide.imgUrl);
+        const showFallbackText = !canPlayVid && !hasImg;
+        const fallbackBg = hasImg
+          ? `background-image:url('${curSlide.imgUrl}');`
+          : `background:${curSlide.bg || 'linear-gradient(135deg, #113f67, #0f172a)'};`;
+
+        stage.innerHTML = `
+          <span class="ig-ratio-pill">🎬 ${ratio}</span>
+          <div class="ig-ratio-box" data-ratio="${ratio}" style="${canPlayVid ? 'background:#0f172a;' : fallbackBg}">
+            ${canPlayVid ? `
+              <video src="${activeItem.videoUrl}#t=0.1" preload="metadata" playsinline loop style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0;" onclick="toggleShowcaseVideo(this.nextElementSibling, event)"></video>
+              <div class="video-play-overlay" onclick="toggleShowcaseVideo(this, event)" title="클릭하여 영상 재생/일시정지">
+                <div class="video-play-circle"><i class="fa-solid fa-play"></i></div>
+              </div>
+            ` : ''}
+            ${showFallbackText ? `
+              <span class="ig-slide-tag">${curSlide.tag || '🎬 영상'}</span>
+              <div style="position:relative; z-index:2; margin-top:auto;">
+                <div class="ig-slide-title">${curSlide.title || ''}</div>
+                ${curSlide.sub ? `<div class="ig-slide-sub">${curSlide.sub}</div>` : ''}
+              </div>
+            ` : ''}
+            ${compHtml}
+          </div>
+        `;
+      } else {
+        const hasImg = Boolean(curSlide.imgUrl);
+        const bgStyle = hasImg
+          ? `background-image:url('${curSlide.imgUrl}');`
+          : `background:${curSlide.bg || 'linear-gradient(135deg, #113f67, #1e5c94)'};`;
+
+        stage.innerHTML = `
+          <span class="ig-ratio-pill">📐 ${ratio}</span>
+          ${total > 1 ? `<span class="ig-badge-top">${modalSlideIdx + 1} / ${total}장</span>` : ''}
+          ${total > 1 && modalSlideIdx > 0 ? `<button class="ig-arrow left" onclick="modalSlideIdx--; renderModalPhoneMedia();">‹</button>` : ''}
+          ${total > 1 && modalSlideIdx < total - 1 ? `<button class="ig-arrow right" onclick="modalSlideIdx++; renderModalPhoneMedia();">›</button>` : ''}
+          <div class="ig-ratio-box" data-ratio="${ratio}" style="${bgStyle}">
+            ${!hasImg ? `
+              <span class="ig-slide-tag">${curSlide.tag || '추천 카드뉴스'}</span>
+              <div style="position:relative; z-index:2; margin-top:auto;">
+                <div class="ig-slide-title">${curSlide.title || ''}</div>
+                ${curSlide.sub ? `<div class="ig-slide-sub">${curSlide.sub}</div>` : ''}
+              </div>
+            ` : ''}
+            ${compHtml}
+          </div>
+        `;
+      }
+      syncPhonePreview();
+    }
+
+    function toggleTargetPill(btn) {
+      btn.classList.toggle('active');
+    }
+
+    function syncPhonePreview() {
+      const rawCaption = wizardTrack === 'meta'
+        ? document.getElementById('setupAdCaption').value
+        : document.getElementById('setupInstaCaption').value;
+      const compVal = wizardTrack === 'meta'
+        ? document.getElementById('setupMetaCompliance').value.trim()
+        : document.getElementById('setupInstaCompliance').value.trim();
+
+let displayCaption = rawCaption || '';
+      if (compVal) {
+        if (!displayCaption.includes(compVal)) displayCaption += `\n\n[${compVal}]`;
+      } else if (!displayCaption.includes('상품설명서 및 약관') && !displayCaption.includes('가입 가능 여부')) {
+        displayCaption += `\n\n${DEFAULT_INSURANCE_DISCLAIMER}`;
+      }
+      document.getElementById('phoneCaptionText').innerText = displayCaption;
+
+      const hl = document.getElementById('setupHeadline').value.trim() || '무료 확인하기';
+      const desc = document.getElementById('setupAdDescription').value.trim();
+      const ctaCode = document.getElementById('setupCtaBtn').value;
+      const ctaLabel = CTA_LABELS_KR[ctaCode] || '더 알아보기';
+
+      const destMode = document.querySelector('input[name="leadDestMode"]:checked');
+      const isCustomUrl = destMode && destMode.value === 'custom_url';
+      const customUrlVal = document.getElementById('setupLandingUrl').value.trim();
+
+      document.getElementById('wizardHeaderTitle').innerText = hl;
+      document.getElementById('phoneHeadlineText').innerText = hl;
+      document.getElementById('phoneDescText').innerText = desc;
+      document.getElementById('phoneDescText').style.display = desc ? 'block' : 'none';
+      document.getElementById('phoneCtaBtnLabel').innerText = ctaLabel;
+
+      const domainEl = document.getElementById('phoneUrlDomainText');
+      if (domainEl) {
+        if (isCustomUrl && customUrlVal) {
+          domainEl.style.display = 'block';
+          domainEl.innerText = customUrlVal.replace(/^https?:\/\//, '').split('/')[0];
+        } else {
+          domainEl.style.display = 'none';
+        }
+      }
+
+      document.getElementById('formPreviewTitle').innerText = hl;
+      document.getElementById('formPreviewDesc').innerText = desc;
+
+      const qWrap = document.getElementById('formPreviewQuestionsWrap');
+      if (qWrap) {
+        const validQs = customQuestionsList.filter(q => String(q.label || '').trim());
+        qWrap.innerHTML = validQs.map((q, idx) => {
+          if (q.type === 'CHOICE') {
+            const opts = String(q.options || '')
+              .split(',')
+              .map(s => s.trim())
+              .filter(Boolean);
+            const optHtml = (opts.length > 0 ? opts : ['네, 확인하고 싶습니다', '상담 먼저 원합니다'])
+              .map((o, oIdx) => `<div style="font-size:11.5px; color:#475569; margin-top:4px;">${oIdx === 0 ? '🔘' : '⚪'} ${o}</div>`)
+              .join('');
+            return `
+              <div style="background:#f1f5f9; padding:10px 12px; border-radius:10px;">
+                <div style="font-size:11.5px; font-weight:800; color:#334155;">Q${idx + 1}. ${q.label}</div>
+                ${optHtml}
+              </div>
+            `;
+          } else {
+            return `
+              <div style="background:#f1f5f9; padding:10px 12px; border-radius:10px;">
+                <div style="font-size:11.5px; font-weight:800; color:#334155; margin-bottom:5px;">Q${idx + 1}. ${q.label}</div>
+                <div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:6px 9px; font-size:11px; color:#94a3b8;">답변 직접 입력...</div>
+              </div>
+            `;
+          }
+        }).join('');
+      }
+
+      const fields = ['이름 입력란 (필수)', '전화번호 입력란 (010-XXXX-XXXX)'];
+      if (document.getElementById('fieldBtnRegion').classList.contains('active')) fields.push('사는 지역 입력란');
+      if (document.getElementById('fieldBtnAge').classList.contains('active')) fields.push('나이대 입력란');
+      if (document.getElementById('fieldBtnTime').classList.contains('active')) fields.push('통화 편한 시간대 입력란');
+
+      document.getElementById('formPreviewFields').innerHTML = fields.map(f =>
+        `<div style="background:#f8fafc; border:1px solid #cbd5e1; padding:8px 11px; border-radius:8px; font-size:12px; color:#475569; font-weight:700;">${f}</div>`
+      ).join('');
+    }
+
+    function onSearchRegion(query) {
+      const dropdown = document.getElementById('regionDropdown');
+      const q = query.trim();
+      const matched = q
+        ? KOREA_REGIONS_DB.filter(r => r.includes(q))
+        : KOREA_REGIONS_DB.slice(0, 7);
+
+      const listToRender = matched.length > 0 ? matched : [`${q} (직접 지역 추가)`];
+      dropdown.innerHTML = listToRender.map(reg => `
+        <div class="region-option" onclick="addRegionChip('${reg}')">
+          <span>📍 ${reg}</span>
+          <span style="color:var(--primary); font-size:12px;">+ 선택</span>
+        </div>
+      `).join('');
+      dropdown.style.display = 'block';
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.region-search-box')) {
+        const drop = document.getElementById('regionDropdown');
+        if (drop) drop.style.display = 'none';
+      }
+    });
+
+    function addRegionChip(regionName) {
+      const cleanName = regionName.replace(' (직접 지역 추가)', '');
+      const radius = document.getElementById('regionRadiusSelect').value;
+      const fullLabel = `${cleanName} (${radius})`;
+      if (!selectedRegions.includes(fullLabel)) {
+        selectedRegions.push(fullLabel);
+      }
+      document.getElementById('regionSearchInput').value = '';
+      document.getElementById('regionDropdown').style.display = 'none';
+      renderSelectedRegions();
+    }
+
+    function removeRegionChip(idx) {
+      selectedRegions.splice(idx, 1);
+      renderSelectedRegions();
+    }
+
+    function renderSelectedRegions() {
+      const box = document.getElementById('selectedRegionChips');
+      if (!box) return;
+      box.innerHTML = selectedRegions.map((reg, i) => `
+        <span class="region-chip">
+          📍 ${reg}
+          <i class="fa-solid fa-xmark" onclick="removeRegionChip(${i})"></i>
+        </span>
+      `).join('');
+    }
+
+    function syncBudgetInput(val) {
+      const num = Math.max(15000, parseInt(val || 15000, 10));
+      document.getElementById('setupBudgetRange').value = num;
+      document.getElementById('setupBudgetNumber').value = num;
+      const minR = Math.round((num / 10000) * 1500);
+      const maxR = Math.round((num / 10000) * 3000);
+      document.getElementById('budgetReachLabel').innerText =
+        `하루 ${num.toLocaleString()}원 (예상 노출 ${minR.toLocaleString()}~${maxR.toLocaleString()}명)`;
+    }
+
+    async function resolveMetaInterests(activeTargetLabels, token, cleanActId, regionStr) {
+      const emptyResult = {
+        andSpec: null,
+        interestAndSpec: null,
+        orSpec: null,
+        exclusionsSpec: null,
+        isRecruitMode: false,
+        allInterests: [],
+        summaryNames: []
+      };
+      if (!token || !Array.isArray(activeTargetLabels) || activeTargetLabels.length === 0) {
+        return emptyResult;
+      }
+
+      const ALLOWED_DEMO_KEYS = new Set(['family_statuses', 'life_events', 'behaviors', 'industries', 'work_positions']);
+      const isRecruitMode = activeTargetLabels.some(lbl => /이직|구직|투잡|영업관심|채용/.test(String(lbl || '')));
+
+      const lifeQueries = new Set();
+      const interestQueries = new Set();
+      const wantedDemos = [];
+
+      for (const rawLabel of activeTargetLabels) {
+        const label = String(rawLabel || '').trim();
+        const matchedKey = Object.keys(TARGET_INTEREST_KEYWORDS).find(k => label.includes(k));
+        if (!matchedKey) continue;
+
+        const cfg = TARGET_INTEREST_KEYWORDS[matchedKey];
+        const isLifeGroup = cfg.group === 'life';
+        const targetSet = isLifeGroup ? lifeQueries : interestQueries;
+        (cfg.queries || []).forEach(q => { if (q) targetSet.add(q); });
+
+        if (cfg.demoClass && Array.isArray(cfg.demoMatch)) {
+          wantedDemos.push({
+            group: isLifeGroup ? 'life' : 'interest',
+            demoClass: cfg.demoClass,
+            demoMatch: cfg.demoMatch
+          });
+        }
+      }
+
+      if (lifeQueries.size === 0 && interestQueries.size === 0) {
+        ['개인 금융', '부동산', '가족'].forEach(q => interestQueries.add(q));
+      }
+
+      const lifeDemoClause = {};
+      const interestDemoClause = {};
+      const demoClassesToFetch = Array.from(new Set(wantedDemos.map(d => d.demoClass)));
+
+      await Promise.all(demoClassesToFetch.map(async (cls) => {
+        if (!ALLOWED_DEMO_KEYS.has(cls)) return;
+        try {
+          const url = `https://graph.facebook.com/v21.0/search?type=adTargetingCategory&class=${encodeURIComponent(cls)}&locale=ko_KR&access_token=${encodeURIComponent(token)}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          if (!data || !Array.isArray(data.data)) return;
+
+          wantedDemos.filter(w => w.demoClass === cls).forEach(w => {
+            const matchedItems = data.data.filter(item =>
+              item && item.id && item.name && w.demoMatch.some(m => String(item.name).includes(m))
+            ).slice(0, 2);
+
+            matchedItems.forEach(item => {
+              const safeKey = ALLOWED_DEMO_KEYS.has(item.type) ? item.type : cls;
+              const targetClause = w.group === 'life' ? lifeDemoClause : interestDemoClause;
+              if (!targetClause[safeKey]) targetClause[safeKey] = [];
+              if (!targetClause[safeKey].some(x => String(x.id) === String(item.id))) {
+                targetClause[safeKey].push({ id: String(item.id), name: item.name });
+              }
+            });
+          });
+        } catch (e) {}
+      }));
+
+      const fetchInterestMap = async (queriesArr, allowInsuranceTerm) => {
+        const map = new Map();
+        await Promise.all(queriesArr.map(async (q) => {
+          try {
+            const searchEndpoint = cleanActId
+              ? `https://graph.facebook.com/v21.0/${cleanActId}/targetingsearch?q=${encodeURIComponent(q)}&limit=6&locale=ko_KR&access_token=${encodeURIComponent(token)}`
+              : `https://graph.facebook.com/v21.0/search?type=adinterest&q=${encodeURIComponent(q)}&limit=6&locale=ko_KR&access_token=${encodeURIComponent(token)}`;
+
+            const res = await fetch(searchEndpoint);
+            const data = await res.json();
+            const rows = (data && Array.isArray(data.data)) ? data.data : [];
+
+            for (const item of rows) {
+              if (!item || !item.id || !item.name) continue;
+              if (item.type && item.type !== 'interests' && item.type !== 'adinterest') continue;
+              if (/\(band\)|\(TV|\(song\)|\(film\)|My Family/i.test(item.name)) continue;
+              if (!allowInsuranceTerm && /보험|대출|신용카드|질병|병원|클리닉/i.test(item.name)) continue;
+              if (item.audience_size_upper_bound !== undefined && Number(item.audience_size_upper_bound) < 10000) continue;
+              map.set(String(item.id), { id: String(item.id), name: item.name });
+              break;
+            }
+          } catch (e) {}
+        }));
+        return map;
+      };
+
+      const [lifeIntMap, mainIntMap] = await Promise.all([
+        lifeQueries.size > 0 ? fetchInterestMap(Array.from(lifeQueries), isRecruitMode) : Promise.resolve(new Map()),
+        interestQueries.size > 0 ? fetchInterestMap(Array.from(interestQueries), isRecruitMode) : Promise.resolve(new Map())
+      ]);
+
+      // 상품 DB 광고일 때(채용 모드 아닐 때) 경쟁 보험설계사 직군/관심사 자동 제외(exclusions) 탐색
+      let exclusionsSpec = null;
+      if (!isRecruitMode) {
+        try {
+          const exInterests = [];
+          const exWorkPositions = [];
+          const exEndpoint = cleanActId
+            ? `https://graph.facebook.com/v21.0/${cleanActId}/targetingsearch?q=${encodeURIComponent('보험설계사')}&limit=5&locale=ko_KR&access_token=${encodeURIComponent(token)}`
+            : `https://graph.facebook.com/v21.0/search?type=adworkposition&q=${encodeURIComponent('보험설계사')}&limit=5&locale=ko_KR&access_token=${encodeURIComponent(token)}`;
+          const exRes = await fetch(exEndpoint);
+          const exData = await exRes.json();
+          if (exData && Array.isArray(exData.data)) {
+            exData.data.forEach(it => {
+              if (!it || !it.id || !it.name) return;
+              if (it.type === 'work_positions' || it.type === 'adworkposition') {
+                exWorkPositions.push({ id: String(it.id), name: it.name });
+              } else if ((it.type === 'interests' || it.type === 'adinterest') && /설계사|보험 영업|생명보험협회|손해보험협회/.test(it.name)) {
+                exInterests.push({ id: String(it.id), name: it.name });
+              }
+            });
+          }
+          const exObj = {};
+          if (exWorkPositions.length > 0) exObj.work_positions = exWorkPositions.slice(0, 3);
+          if (exInterests.length > 0) exObj.interests = exInterests.slice(0, 3);
+          if (Object.keys(exObj).length > 0) exclusionsSpec = exObj;
+        } catch (e) {}
+      }
+
+      if (lifeIntMap.size > 0 && mainIntMap.size > 0) {
+        for (const k of mainIntMap.keys()) {
+          if (lifeIntMap.size > 1 && lifeIntMap.has(k)) lifeIntMap.delete(k);
+        }
+      }
+
+      const lifeIntArr = Array.from(lifeIntMap.values());
+      const mainIntArr = Array.from(mainIntMap.values());
+
+      const mergedIntMap = new Map();
+      lifeIntArr.forEach(it => mergedIntMap.set(it.id, it));
+      mainIntArr.forEach(it => mergedIntMap.set(it.id, it));
+      const allInterests = Array.from(mergedIntMap.values());
+
+      const mergedDemoClause = {};
+      [lifeDemoClause, interestDemoClause].forEach(cl => {
+        Object.keys(cl).forEach(k => {
+          if (!mergedDemoClause[k]) mergedDemoClause[k] = [];
+          cl[k].forEach(item => {
+            if (!mergedDemoClause[k].some(x => x.id === item.id)) mergedDemoClause[k].push(item);
+          });
+        });
+      });
+
+      const fullLifeClause = { ...lifeDemoClause };
+      if (lifeIntArr.length > 0) fullLifeClause.interests = lifeIntArr;
+
+      const fullMainClause = { ...interestDemoClause };
+      if (mainIntArr.length > 0) fullMainClause.interests = mainIntArr;
+
+      const fullMergedOrClause = { ...mergedDemoClause };
+      if (allInterests.length > 0) fullMergedOrClause.interests = allInterests;
+
+      const hasLife = Object.keys(fullLifeClause).length > 0;
+      const hasMain = Object.keys(fullMainClause).length > 0;
+
+      // 로컬 반경(km) 타겟팅일 때는 모수 축소 방지를 위해 합집합(OR) 우선 적용, 전국/광역일 때만 2단 교집합(AND) 적용
+      const isLocalRadius = /반경|\d+\s*km/i.test(String(regionStr || '')) && String(regionStr || '') !== '전국';
+
+      const andSpec = (hasLife && hasMain && !isLocalRadius)
+        ? [fullLifeClause, fullMainClause]
+        : null;
+
+      const interestAndSpec = (lifeIntArr.length > 0 && mainIntArr.length > 0 && !isLocalRadius)
+        ? [{ interests: lifeIntArr }, { interests: mainIntArr }]
+        : null;
+
+      const orSpec = Object.keys(fullMergedOrClause).length > 0 ? [fullMergedOrClause] : null;
+
+      const summaryNames = [];
+      Object.keys(fullMergedOrClause).forEach(k => {
+        (fullMergedOrClause[k] || []).forEach(it => { if (it && it.name) summaryNames.push(it.name); });
+      });
+
+      return {
+        andSpec,
+        interestAndSpec,
+        orSpec,
+        exclusionsSpec,
+        isRecruitMode,
+        allInterests,
+        summaryNames: Array.from(new Set(summaryNames))
+      };
+    }
+
+    async function submitWizardAction() {
+      const submitBtn = document.getElementById('btnWizardSubmit');
+      const originalText = submitBtn.innerText;
+      submitBtn.disabled = true;
+      submitBtn.innerText = '⏳ 광고 및 정밀 타겟팅 생성 중...';
+
+      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
+      const token = metaConn ? metaConn.token : '';
+      const adAccountId = metaConn ? metaConn.adAcc : '';
+      const adAccountName = metaConn ? (metaConn.adName || adAccountId) : '';
+      const igUserId = metaConn ? metaConn.igId : '';
+      const pageId = metaConn ? metaConn.pageId : '';
+
+      let activeTargets = Array.from(document.querySelectorAll('#pane-meta-1 .pill-btn.active'))
+        .map(b => (b.textContent || b.innerText || '').trim())
+        .filter(Boolean);
+
+      if (wizardTrack === 'meta' && activeTargets.length === 0 && activeItem) {
+        const fallbackPool = [...(activeItem.targets || []), activeItem.headline || ''].join(' ');
+        const matchedKeys = Object.keys(TARGET_INTEREST_KEYWORDS).filter(k => fallbackPool.includes(k));
+        activeTargets = matchedKeys.length > 0 ? matchedKeys : ['보험·실손', '내집마련'];
+      }
+
+      const slidesList = Array.isArray(activeItem.slides) && activeItem.slides.length > 0 ? activeItem.slides : [{}];
+      const curSlide = slidesList[0] || {};
+      const isRealVideo = activeItem.type === 'video' && isPlayableVideoUrl(activeItem.videoUrl);
+
+      // 다중 슬라이드(캐러셀) 및 단일 이미지 URL 준비
+      const resolvedSlideUrls = [];
+      let capturedBase64 = '';
+      let rawBase64Only = '';
+
+      if (!isRealVideo) {
+        for (let sIdx = 0; sIdx < slidesList.length; sIdx++) {
+          const sl = slidesList[sIdx];
+          if (sl.imgUrl && sl.imgUrl.startsWith('http')) {
+            resolvedSlideUrls.push(sl.imgUrl);
+          } else if (sl.imgUrl && sl.imgUrl.startsWith('data:image')) {
+            if (sIdx === 0) capturedBase64 = sl.imgUrl;
+            try {
+              const upRes = await fetch('/api/meta-execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'UPLOAD_MEDIA', mediaBase64: sl.imgUrl })
+              });
+              const upData = await upRes.json();
+              if (upData && upData.mediaUrl) resolvedSlideUrls.push(upData.mediaUrl);
+            } catch (e) {}
+          }
+        }
+
+        if (resolvedSlideUrls.length === 0 && !capturedBase64) {
+          try {
+            const feedView = document.getElementById('phoneViewFeed');
+            const prevDisplay = feedView.style.display;
+            feedView.style.display = 'flex';
+            const targetBox = document.querySelector('#phoneMediaStage .ig-ratio-box');
+            if (targetBox && window.html2canvas) {
+              const canvas = await html2canvas(targetBox, { scale: 2, useCORS: true, backgroundColor: '#113f67' });
+              capturedBase64 = canvas.toDataURL('image/jpeg', 0.92);
+            }
+            feedView.style.display = prevDisplay;
+          } catch (capErr) {}
+        }
+
+        if (capturedBase64) {
+          rawBase64Only = capturedBase64.replace(/^data:image\/\w+;base64,/, '');
+          if (resolvedSlideUrls.length === 0) {
+            try {
+              const upRes = await fetch('/api/meta-execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'UPLOAD_MEDIA', mediaBase64: capturedBase64 })
+              });
+              const upData = await upRes.json();
+              if (upData && upData.mediaUrl) resolvedSlideUrls.push(upData.mediaUrl);
+            } catch (e) {}
+          }
+        }
+      }
+
+      const finalMediaUrl = isRealVideo ? activeItem.videoUrl : (resolvedSlideUrls[0] || '');
+
+      const title = document.getElementById('setupHeadline').value.trim() || activeItem.headline;
+      const description = document.getElementById('setupAdDescription').value.trim();
+      const ctaType = document.getElementById('setupCtaBtn').value || 'LEARN_MORE';
+
+     const destMode = document.querySelector('input[name="leadDestMode"]:checked');
+      const selectedModeVal = destMode ? destMode.value : 'instant';
+      const isCustomUrl = wizardTrack === 'meta' && selectedModeVal === 'custom_url';
+      const isPrPage = wizardTrack === 'meta' && selectedModeVal === 'pr_page';
+      const isInstantMode = wizardTrack === 'meta' && selectedModeVal === 'instant';
+      const customLandingUrl = isCustomUrl ? document.getElementById('setupLandingUrl').value.trim() : '';
+      const koreanOnly = document.getElementById('setupKoreanOnly').checked;
+      const corePlacementOnly = document.getElementById('setupCorePlacementOnly') ? document.getElementById('setupCorePlacementOnly').checked : true;
+      const genderVal = Number(document.getElementById('setupGender').value || 0);
+
+      const schedMode = document.querySelector('input[name="scheduleMode"]:checked');
+      const isScheduled = schedMode && schedMode.value === 'scheduled';
+      const startDate = isScheduled ? document.getElementById('setupStartDate').value : '';
+      const endDate = isScheduled ? document.getElementById('setupEndDate').value : '';
+
+      const rawInputCaption = wizardTrack === 'meta'
+        ? document.getElementById('setupAdCaption').value.trim()
+        : document.getElementById('setupInstaCaption').value.trim();
+const complianceVal = wizardTrack === 'meta'
+        ? document.getElementById('setupMetaCompliance').value.trim()
+        : document.getElementById('setupInstaCompliance').value.trim();
+
+      // 메타 광고 및 인스타그램 게시물 모두 심의필 미입력 시 필수 소비자 안내문구 자동 삽입
+      let caption = rawInputCaption || title;
+      if (complianceVal) {
+        if (!caption.includes(complianceVal)) caption += `\n\n[${complianceVal}]`;
+      } else if (!caption.includes('상품설명서 및 약관') && !caption.includes('가입 가능 여부')) {
+        caption += `\n\n${DEFAULT_INSURANCE_DISCLAIMER}`;
+      }
+
+      const regionStr = wizardTrack === 'meta' ? (selectedRegions.join(', ') || '전국') : '인스타 피드·릴스';
+      const ageMin = Math.max(18, parseInt(document.getElementById('setupAgeMin').value || '30', 10));
+      const ageMax = Math.min(65, parseInt(document.getElementById('setupAgeMax').value || '55', 10));
+      const budget = wizardTrack === 'meta' ? Math.max(15000, parseInt(document.getElementById('setupBudgetNumber').value || '15000', 10)) : 0;
+
+      const keyword = wizardTrack === 'insta' ? document.getElementById('setupInstaDmKeyword').value.trim() : '';
+      const rawInstaDmMsg = wizardTrack === 'insta' ? document.getElementById('setupInstaDmMessage').value.trim() : '';
+
+      const recordId = (wizardTrack === 'insta' ? 'camp_ig_' : 'camp_') + Date.now();
+      const selectedFields = ['name', 'phone'];
+      const wantRegion = document.getElementById('fieldBtnRegion').classList.contains('active');
+      const wantAge = document.getElementById('fieldBtnAge').classList.contains('active');
+      const wantTime = document.getElementById('fieldBtnTime').classList.contains('active');
+      if (wantRegion) selectedFields.push('region');
+      if (wantAge) selectedFields.push('age');
+      if (wantTime) selectedFields.push('time');
+
+const validCustomQuestions = customQuestionsList
+        .map(q => ({
+          type: q.type || 'CHOICE',
+          label: String(q.label || '').trim(),
+          options: Array.isArray(q.optionsList)
+            ? q.optionsList.map(s => String(s || '').trim()).filter(Boolean)
+            : String(q.options || '').split(',').map(s => s.trim()).filter(Boolean)
+        }))
+        .filter(q => q.label);
+
+      const primaryQuestionLabel = validCustomQuestions[0]
+        ? validCustomQuestions[0].label
+        : '어떤 안내를 가장 먼저 받아보고 싶으신가요?';
+
+      const pdfDocUrl = wizardTrack === 'meta'
+        ? (document.getElementById('setupPdfDocUrl').value.trim() || activeItem.pdfUrl || '')
+        : (document.getElementById('setupInstaPdfUrl').value.trim() || activeItem.pdfUrl || '');
+
+      const cleanActId = adAccountId && adAccountId.startsWith('act_') ? adAccountId : `act_${adAccountId}`;
+      let detectedPixelId = '';
+      if (wizardTrack === 'meta' && token && adAccountId && adAccountId !== 'act_connected') {
+        detectedPixelId = await ensureMetaPixelId(cleanActId, token, adAccountName);
+      }
+
+      const agentName = localStorage.getItem('crm_agent_name') || '';
+      const agentPhone = localStorage.getItem('crm_agent_phone') || '';
+      const agentId = getActiveAgentId();
+      const srcTag = wizardTrack === 'insta' ? 'insta_dm' : 'meta_ad';
+      const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
+const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions));
+      const prLandingUrl = `${curOrigin}/sns_apply.html?utm_source=${srcTag}&camp_id=${encodeURIComponent(recordId)}&camp=${encodeURIComponent(title)}&fields=${encodeURIComponent(selectedFields.join(','))}&q=${encodeURIComponent(primaryQuestionLabel)}&qs=${encodedCustomQs}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}&agent_id=${encodeURIComponent(agentId)}&pixel_id=${encodeURIComponent(detectedPixelId)}&doc=${encodeURIComponent(pdfDocUrl)}`;
+
+      // DB에는 전체 설정이 담긴 prLandingUrl을 저장하고, 메타 광고 소재에는 길이 제한(2061013)에 절대 걸리지 않는 단축 URL 전달
+      const shortPrRedirectUrl = buildCleanShortApplyUrl(recordId);
+      const instantFollowUpUrl = (pdfDocUrl && pdfDocUrl.startsWith('http')) ? pdfDocUrl : shortPrRedirectUrl;
+
+      // DB 저장용 실제 목적지 URL
+      const dbLandingUrl = isCustomUrl
+        ? (customLandingUrl && customLandingUrl.startsWith('http') ? customLandingUrl : prLandingUrl)
+        : (isInstantMode ? instantFollowUpUrl : prLandingUrl);
+
+      // 메타 광고 소재(link)에 등록할 짧은 URL
+      const finalLandingUrl = isCustomUrl
+        ? (customLandingUrl && customLandingUrl.startsWith('http') ? customLandingUrl : shortPrRedirectUrl)
+        : shortPrRedirectUrl;
+   
+      const dmMessage = cleanDmMessageText(rawInstaDmMsg, recordId, Boolean(pdfDocUrl && pdfDocUrl.startsWith('http')));
+
+      let createdMetaCampaignId = '';
+      let createdAdSetId = '';
+      let createdAdId = '';
+      let createdIgMediaId = '';
+      let pageAccessToken = token;
+      let activePageId = pageId;
+      let resolvedIgActorId = igUserId || '';
+      let apiNotice = [];
+      let appliedTargetNames = [];
+      let appliedTargetingModeLabel = '';
+
+      try {
+        if (token) {
+          try {
+            const pRes = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account{id},connected_instagram_account{id}&limit=25&access_token=${token}`);
+            const pData = await pRes.json();
+            if (pData && Array.isArray(pData.data) && pData.data.length > 0) {
+              const matchedPage = pData.data.find(p => p.id === activePageId) || pData.data[0];
+              activePageId = matchedPage.id;
+              if (matchedPage.access_token) pageAccessToken = matchedPage.access_token;
+              const pageIg = matchedPage.instagram_business_account || matchedPage.connected_instagram_account;
+              if (pageIg && pageIg.id) resolvedIgActorId = pageIg.id;
+            }
+          } catch (e) {}
+        }
 
 // [트랙 B] 인스타그램 일반 게시물 업로드 (+인코딩 완료 대기 & 2207027 자동 재시도 완벽 대응)
         if (wizardTrack === 'insta') {
@@ -4771,6 +5465,7 @@ function toggleLeadDestMode() {
                     errorMsg: stData.status || '인스타그램 동영상/이미지 규격(MP4 H.264, 비율 등)을 확인해 주세요.'
                   };
                 }
+                // status_code 필드를 반환하지 않는 단일 이미지 컨테이너는 즉시 통과
                 if (!code && !isVidItem && attempt >= 2) {
                   return { ready: true };
                 }
@@ -4779,7 +5474,7 @@ function toggleLeadDestMode() {
             return { ready: true };
           };
 
-          // 2207027(준비 중) 응답 발생 시 최대 4회 자동 재시도하며 최종 게시하는 헬퍼 함수
+          // 혹시라도 2207027(준비 중) 응답이 오면 최대 4회 자동 재시도하며 최종 게시하는 헬퍼 함수
           const publishIgContainerSafely = async (creationId) => {
             let lastPubData = null;
             for (let pTry = 1; pTry <= 4; pTry++) {

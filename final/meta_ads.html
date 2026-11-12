@@ -1957,93 +1957,70 @@ const DEFAULT_INSURANCE_DISCLAIMER = '※ 계약 체결 전 상품설명서 및 
 
 
 
+function rememberOwnerAliases(newItems) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('weracle_owner_aliases_v6') || '[]');
+        const set = new Set(Array.isArray(saved) ? saved : []);
+        (newItems || []).forEach(v => {
+          const cl = String(v || '').trim().toLowerCase().replace(/^@/, '');
+          if (cl && cl !== 'default' && cl !== 'weracle_user' && cl !== 'act_connected') set.add(cl);
+        });
+        localStorage.setItem('weracle_owner_aliases_v6', JSON.stringify(Array.from(set).slice(-50)));
+      } catch (e) {}
+    }
+
     function getActiveUserKeys() {
-
       const keys = new Set();
-
       const urlParams = new URLSearchParams(window.location.search);
-
       const urlEmail = urlParams.get('user_email') || urlParams.get('email');
-
       if (urlEmail) {
-
         localStorage.setItem('user_email', urlEmail.trim());
-
       }
 
-
-
-      const emailCandidates = [
-
+      const candidates = [
         localStorage.getItem('user_email'),
-
         localStorage.getItem('weracle_user_email'),
-
         localStorage.getItem('crm_user_email'),
-
-        localStorage.getItem('email')
-
+        localStorage.getItem('email'),
+        localStorage.getItem('crm_agent_phone'),
+        localStorage.getItem('crm_agent_name'),
+        localStorage.getItem('weracle_insta_handle_v6'),
+        localStorage.getItem('weracle_agent_id'),
+        localStorage.getItem('weracle_user_id'),
+        localStorage.getItem('crm_user_id')
       ];
-
-      emailCandidates.forEach(em => {
-
-        if (em && String(em).trim()) keys.add(String(em).trim().toLowerCase());
-
+      candidates.forEach(v => {
+        if (v && String(v).trim()) keys.add(String(v).trim().toLowerCase().replace(/^@/, ''));
       });
 
-
-
-      const phone = localStorage.getItem('crm_agent_phone');
-
-      if (phone && String(phone).trim()) keys.add(String(phone).trim().toLowerCase());
-
-
-
       try {
-
         const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-
         if (metaConn) {
-
-          if (metaConn.igUser) keys.add(String(metaConn.igUser).trim().toLowerCase());
-
+          if (metaConn.igUser) keys.add(String(metaConn.igUser).trim().toLowerCase().replace(/^@/, ''));
           if (metaConn.igId) keys.add(String(metaConn.igId).trim().toLowerCase());
-
           if (metaConn.adAcc && metaConn.adAcc !== 'act_connected') keys.add(String(metaConn.adAcc).trim().toLowerCase());
-
           if (metaConn.pageId) keys.add(String(metaConn.pageId).trim().toLowerCase());
-
         }
-
       } catch (e) {}
 
+      try {
+        const savedAliases = JSON.parse(localStorage.getItem('weracle_owner_aliases_v6') || '[]');
+        if (Array.isArray(savedAliases)) {
+          savedAliases.forEach(a => { if (a) keys.add(String(a).trim().toLowerCase()); });
+        }
+      } catch (e) {}
 
-
-      const name = localStorage.getItem('crm_agent_name');
-
-      if (keys.size === 0 && name && String(name).trim()) {
-
-        keys.add(String(name).trim().toLowerCase());
-
-      }
-
-
-
-      return Array.from(keys);
-
+      const arr = Array.from(keys);
+      rememberOwnerAliases(arr);
+      return arr;
     }
-
-
 
     function getActiveAgentId() {
-
+      const email = localStorage.getItem('user_email') || localStorage.getItem('weracle_user_email') || localStorage.getItem('crm_user_email') || localStorage.getItem('email');
+      if (email && String(email).trim()) return String(email).trim().toLowerCase();
       const keys = getActiveUserKeys();
-
       return keys.length > 0 ? keys[0] : 'default';
-
     }
-
-
 
     function openMyPrStudioPopup() {
 
@@ -4036,13 +4013,20 @@ const SUPABASE_DIRECT_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
       }
     }
 
+  function getSafeUserStorageFolder() {
+      const raw = String(getActiveAgentId() || 'shared').trim().toLowerCase();
+      const ascii = raw.replace(/[^a-z0-9._-]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+      return (ascii && ascii.length >= 2) ? ascii : 'agent_shared';
+    }
+
     async function uploadFileDirectToSupabase(file) {
       const extMatch = String(file.name || '').match(/\.([a-zA-Z0-9]+)$/);
       const ext = extMatch ? extMatch[1].toLowerCase() : (file.type.startsWith('video/') ? 'mp4' : 'jpg');
       const prefix = file.type.startsWith('video/') ? 'vid' : 'img';
-      const fileName = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+      const userFolder = getSafeUserStorageFolder();
+      const objectPath = `users/${userFolder}/${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
 
-      const upRes = await fetch(`${SUPABASE_DIRECT_URL}/storage/v1/object/ad_media/${fileName}`, {
+      const upRes = await fetch(`${SUPABASE_DIRECT_URL}/storage/v1/object/ad_media/${objectPath}`, {
         method: 'POST',
         headers: {
           'Content-Type': file.type || 'application/octet-stream',
@@ -4054,7 +4038,11 @@ const SUPABASE_DIRECT_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
       });
 
       if (upRes.ok) {
-        return `${SUPABASE_DIRECT_URL}/storage/v1/object/public/ad_media/${fileName}`;
+        return `${SUPABASE_DIRECT_URL}/storage/v1/object/public/ad_media/${objectPath}`;
+      }
+      const errText = await upRes.text().catch(() => '');
+      if (upRes.status === 413 || /exceeded|maximum allowed size|EntityTooLarge/i.test(errText)) {
+        throw new Error('SUPABASE_LIMIT_EXCEEDED');
       }
       return '';
     }
@@ -4284,9 +4272,16 @@ const SUPABASE_DIRECT_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
       try {
         const isVideo = files[0].type.startsWith('video/');
         if (isVideo) {
-          if (files[0].size > 50 * 1024 * 1024) {
-            alert('동영상 파일은 최대 50MB 이하로 업로드해 주세요.');
+// 수파베이스 유료(Pro) 플랜 기준 최대 500MB까지 허용 (150MB~300MB 릴스 원본 지원)
+          const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
+          if (files[0].size > MAX_VIDEO_BYTES) {
+            alert('동영상 파일은 최대 500MB 이하로 업로드해 주세요.');
             return;
+          }
+
+          const sizeMb = (files[0].size / (1024 * 1024)).toFixed(1);
+          if (uploadBtn) {
+            uploadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 영상 업로드 중 (${sizeMb}MB)...`;
           }
 
           const ratioPromise = new Promise(resolve => {
@@ -4304,13 +4299,22 @@ const SUPABASE_DIRECT_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
             tempVid.src = tempUrl;
           });
 
-          const [vidRatio, publicVidUrl] = await Promise.all([
-            ratioPromise,
-            uploadFileDirectToSupabase(files[0])
-          ]);
+          let vidRatio = '9:16';
+          let publicVidUrl = '';
+          try {
+            [vidRatio, publicVidUrl] = await Promise.all([
+              ratioPromise,
+              uploadFileDirectToSupabase(files[0])
+            ]);
+          } catch (upErr) {
+            if (upErr && upErr.message === 'SUPABASE_LIMIT_EXCEEDED') {
+              alert('⚠️ 수파베이스 대시보드의 스토리지 파일 용량 제한 설정이 아직 기본값(50MB)으로 잠겨 있습니다.\n\n[10초 해제 방법]\n수파베이스 접속 ➔ 좌측 [Storage] ➔ [Settings] ➔ [Global file size limit]을 500MB로 올린 뒤 Save를 눌러주시면 바로 업로드됩니다!');
+              return;
+            }
+          }
 
           if (!publicVidUrl) {
-            alert('동영상 서버 업로드에 실패했습니다. 파일 형식(mp4/mov)이나 용량을 확인해 주세요.');
+            alert('동영상 서버 업로드에 실패했습니다. 파일 형식(mp4/mov)이나 네트워크 상태를 확인해 주세요.');
             return;
           }
 
@@ -6275,75 +6279,56 @@ const targetSummaryValue = wizardTrack === 'meta'
         submitBtn.innerText = originalText;
       }
     }
-    async function loadServerCampaigns(showLoading) {
-
+async function loadServerCampaigns(showLoading) {
       const syncBtn = document.getElementById('btnSyncMeta');
-
       const syncLeadsBtn = document.getElementById('btnSyncLeads');
-
       if (showLoading) {
-
         if (syncBtn) {
-
           syncBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 동기화 중...';
-
           syncBtn.disabled = true;
-
         }
-
         if (syncLeadsBtn) {
-
           syncLeadsBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 새로고침 중...';
-
           syncLeadsBtn.disabled = true;
-
         }
-
       }
 
-
-
       const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-
       const token = metaConn ? metaConn.token : '';
 
-      const userKeys = getActiveUserKeys();
-
-      const userId = getActiveAgentId();
-
-
-
       try {
+        // 내 메타 토큰에 연결된 모든 페이지 및 인스타 계정(weracle_bohwan 등)을 자동 수집해 누락 원천 방지
+        if (token) {
+          try {
+            const pRes = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,instagram_business_account{id,username},connected_instagram_account{id,username}&limit=30&access_token=${token}`);
+            const pData = await pRes.json();
+            if (pData && Array.isArray(pData.data)) {
+              const tokenAliases = [];
+              pData.data.forEach(p => {
+                if (p.id) tokenAliases.push(p.id);
+                const ig = p.instagram_business_account || p.connected_instagram_account;
+                if (ig && ig.id) tokenAliases.push(ig.id);
+                if (ig && ig.username) tokenAliases.push(ig.username);
+              });
+              rememberOwnerAliases(tokenAliases);
+            }
+          } catch (e) {}
+        }
 
-// 새로고침 시 인스타 신규 댓글이 있으면 먼저 서버에 기록
-        try { await scanAndSendInstaCommentDms(false); } catch (e) {}
-
-        // 설계사 고유키(weracle_bohwan 등) + 인스타 연동키 + 내 보유 캠페인 ID를 모두 묶어 전송
-        const activeAgentIdVal = (typeof getActiveAgentId === 'function') ? getActiveAgentId() : '';
-        const _syncMetaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-        const mergedUserKeys = Array.from(new Set([
-          ...(Array.isArray(userKeys) ? userKeys : []),
-          userId,
-          activeAgentIdVal,
-          localStorage.getItem('weracle_agent_id') || '',
-          localStorage.getItem('weracle_user_id') || '',
-          localStorage.getItem('crm_user_id') || '',
-          _syncMetaConn && _syncMetaConn.igUser ? _syncMetaConn.igUser : '',
-          _syncMetaConn && _syncMetaConn.igId ? _syncMetaConn.igId : '',
-          _syncMetaConn && _syncMetaConn.pageId ? _syncMetaConn.pageId : '',
-          _syncMetaConn && _syncMetaConn.adAcc ? _syncMetaConn.adAcc : ''
-        ].map(v => String(v || '').trim()).filter(Boolean)));
-
+        const mergedUserKeys = getActiveUserKeys();
+        const activeAgentIdVal = getActiveAgentId();
         const knownCampIds = Array.isArray(myCampaigns)
           ? myCampaigns.map(c => String(c.id || '')).filter(Boolean)
           : [];
 
-        const res = await fetch('/api/meta-execute', {
+        // ★ 1순위: 수파베이스 최신 캠페인 & 유입 DB(박똥똥 등)부터 0.1초 만에 즉시 조회해 표 갱신!
+        const res = await fetch(`/api/meta-execute?_t=${Date.now()}`, {
           method: 'POST',
+          cache: 'no-store',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'LIST',
-            userId: activeAgentIdVal || userId,
+            userId: activeAgentIdVal,
             userKeys: mergedUserKeys,
             knownCampIds
           })
@@ -6352,19 +6337,8 @@ const targetSummaryValue = wizardTrack === 'meta'
         let rawList = (json.success && Array.isArray(json.data)) ? json.data : [];
 
         if (json.success && Array.isArray(json.leads)) {
-          const serverLeads = json.leads;
-          const serverKeySet = new Set(
-            serverLeads.map(sl => `${sl.campaign_id || ''}|${sl.name || ''}|${String(sl.note || '').slice(0, 18)}`)
-          );
-          const unsyncedLocalInsta = myLeads.filter(ll => {
-            if (!ll.comment_id) return false;
-            const k = `${ll.campaign_id || ''}|${ll.name || ''}|${String(ll.note || '').slice(0, 18)}`;
-            return !serverKeySet.has(k);
-          });
-
-          myLeads = [...unsyncedLocalInsta, ...serverLeads];
+          myLeads = json.leads;
           localStorage.setItem('weracle_leads_v6', JSON.stringify(myLeads));
-          // 서버 DB 수신 즉시 테이블 및 체결률 화면부터 최우선 갱신
           renderMyLeadsTable();
           renderMyAdsDashboard();
         }
@@ -6373,257 +6347,134 @@ const targetSummaryValue = wizardTrack === 'meta'
           try { localStorage.setItem('weracle_custom_v6', JSON.stringify(customContents)); } catch (e) {}
           renderShowroomGrid();
         }
+
         const syncedList = [];
-
         for (const row of rawList) {
-
           let parsedPermalink = row.permalink || '';
-
           let cleanTargetSummary = row.target_summary || '';
-
           if (cleanTargetSummary.startsWith('{')) {
-
             try {
-
               const pObj = JSON.parse(cleanTargetSummary);
-
-            if (pObj.permalink) parsedPermalink = pObj.permalink;
-              cleanTargetSummary = pObj.summary || '인스타 24h 댓글 자동DM 연결됨'; 
-
+              if (pObj.permalink) parsedPermalink = pObj.permalink;
+              cleanTargetSummary = pObj.summary || '인스타 24h 댓글 자동DM 연결됨';
             } catch (e) {}
-
           }
-
-
 
           const item = {
-
             id: row.id,
-
             metaCampaignId: row.meta_campaign_id || '',
-
             adSetId: row.adset_id || '',
-
             adId: row.ad_id || '',
-
             igMediaId: row.ig_media_id || '',
-
             track: row.track || 'meta',
-
             title: row.title || '',
-
             description: row.description || '',
-
             ctaType: row.cta_type || 'LEARN_MORE',
-
             landingUrl: row.landing_url || '',
-
             startDate: row.start_date || '',
-
             endDate: row.end_date || '상시 게재',
-
             ratio: row.ratio || '1:1',
-
             region: row.region || '',
-
             targetSummary: cleanTargetSummary,
-
             budget: Number(row.budget || 0),
-
             keyword: row.keyword || '',
-
             dmMessage: row.dm_message || '',
-
             status: row.status || 'ACTIVE',
-
             effectiveStatus: row.effective_status || row.status || 'ACTIVE',
-
             leadsCount: Number(row.leads_count || 0),
-
             dmSentCount: Number(row.dm_sent_count || 0),
-
             permalink: parsedPermalink,
-
             metrics: { impressions: 0, reach: 0, clicks: 0, ctr: '0.00', cpc: 0, spend: 0, likes: 0, comments: 0 }
-
           };
 
-
-
           if (token && item.track === 'meta' && item.metaCampaignId) {
-
             try {
-
               const metaUrl = `https://graph.facebook.com/v21.0/${item.metaCampaignId}?fields=id,name,status,effective_status,adsets{id,daily_budget,effective_status,end_time},ads{id,effective_status},insights.date_preset(maximum){impressions,reach,clicks,ctr,cpc,spend}&access_token=${token}`;
-
               const mRes = await fetch(metaUrl);
-
               const mData = await mRes.json();
 
-
-
               if (
-
                 mData.effective_status === 'DELETED' ||
-
                 mData.effective_status === 'ARCHIVED' ||
-
                 mData.status === 'DELETED'
-
               ) {
-
                 await fetch('/api/meta-execute', {
-
                   method: 'POST',
-
                   headers: { 'Content-Type': 'application/json' },
-
                   body: JSON.stringify({ action: 'DELETE_CAMPAIGN', id: item.id })
-
                 });
-
                 continue;
-
               }
-
-
 
               if (mData.id) {
-
                 const adsetObj = (mData.adsets && mData.adsets.data && mData.adsets.data[0]) || null;
-
                 const adObj = (mData.ads && mData.ads.data && mData.ads.data[0]) || null;
 
-
-
                 let realEffective = mData.effective_status || mData.status || 'ACTIVE';
-
                 if (adObj && adObj.effective_status) {
-
                   if (['PENDING_REVIEW', 'IN_PROCESS', 'PREAPPROVED', 'DISAPPROVED', 'WITH_ISSUES'].includes(adObj.effective_status)) {
-
                     realEffective = adObj.effective_status;
-
                   } else if (mData.status === 'ACTIVE' && adsetObj && adsetObj.effective_status === 'PAUSED') {
-
                     realEffective = 'ADSET_PAUSED';
-
                   } else if (mData.status === 'ACTIVE' && adObj.effective_status === 'PAUSED') {
-
                     realEffective = 'AD_PAUSED';
-
                   }
-
                 } else if (!adObj) {
-
                   realEffective = 'INCOMPLETE_SETUP';
-
                 }
 
-
-
                 const ins = (mData.insights && mData.insights.data && mData.insights.data[0]) || {};
-
                 item.status = mData.status === 'ACTIVE' ? 'ACTIVE' : 'PAUSED';
-
                 item.effectiveStatus = realEffective;
-
                 if (adsetObj && adsetObj.id && !item.adSetId) item.adSetId = adsetObj.id;
-
                 if (adObj && adObj.id && !item.adId) item.adId = adObj.id;
-
                 if (adsetObj && adsetObj.daily_budget) item.budget = Number(adsetObj.daily_budget);
 
-
-
                 item.metrics = {
-
                   impressions: Number(ins.impressions || 0),
-
                   reach: Number(ins.reach || 0),
-
                   clicks: Number(ins.clicks || 0),
-
                   ctr: Number(ins.ctr || 0).toFixed(2),
-
                   cpc: Math.round(Number(ins.cpc || 0)),
-
                   spend: Math.round(Number(ins.spend || 0))
-
                 };
-
               }
-
             } catch (e) {}
-
           } else if (token && item.track === 'insta' && item.igMediaId) {
-
             try {
-
               const igRes = await fetch(`https://graph.facebook.com/v21.0/${item.igMediaId}?fields=id,like_count,comments_count,permalink&access_token=${token}`);
-
               const igData = await igRes.json();
-
               if (igData && igData.id) {
-
                 item.effectiveStatus = 'IG_PUBLISHED';
-
                 if (igData.permalink) item.permalink = igData.permalink;
-
                 item.metrics = {
-
                   likes: Number(igData.like_count || 0),
-
                   comments: Number(igData.comments_count || 0)
-
                 };
-
               }
-
             } catch (e) {}
-
           }
 
-
-
           syncedList.push(item);
-
         }
 
-
-
         myCampaigns = syncedList;
-
         localStorage.setItem('weracle_campaigns_v6', JSON.stringify(myCampaigns));
 
-
-
-        await scanAndSendInstaCommentDms(false);
-
+        // DB 표 갱신 완료 후 백그라운드로 신규 인스타 댓글 스캔 실행
+        scanAndSendInstaCommentDms(false).catch(() => {});
       } catch (e) {}
 
-
-
       if (syncBtn) {
-
         syncBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> 실시간 상태·성과 동기화';
-
         syncBtn.disabled = false;
-
       }
-
       if (syncLeadsBtn) {
-
         syncLeadsBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> 최신 DB 새로고침';
-
         syncLeadsBtn.disabled = false;
-
       }
-
       renderMyAdsDashboard();
-
       renderMyLeadsTable();
-
     }
 
 

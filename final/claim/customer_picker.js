@@ -2829,11 +2829,11 @@
       const finalDocAddr = contAddress || (insured ? insured.address : '');
       setFieldValue('docAddress', finalDocAddr);
 
-      // 관계 필드 스마트 주입 (롯데/MG: contRelation, 흥국: insRelation, 표준: guideRelation, AIG/생보: beneRelation)
-      setFieldValue('contRelation', contRel);
-      setFieldValue('insRelation', contRel);
-      setFieldValue('guideRelation', contRel);
-      setFieldValue('beneRelation', contRel);
+      // 관계 필드: 다름 모드에서는 변수가 다양하므로(부, 모, 자녀, 배우자 등) 수기 입력을 위해 완전히 비워둠
+      setFieldValue('contRelation', '', true);
+      setFieldValue('insRelation', '', true);
+      setFieldValue('guideRelation', '', true);
+      setFieldValue('beneRelation', '', true);
 
       // 계좌 및 예금주: 계약자 계좌 우선, 없으면 계약에 등록된 은행/계좌 활용
       const finalBank = (contractor && contractor.bankName) || (insured && insured.bankName) || '';
@@ -2844,7 +2844,7 @@
       setFieldValue('bankAccount', finalAccount, true);
       setFieldValue('bankOwner', finalBank ? finalOwner : '', true); // ★ 다를 때는 절대 피보험자 이름이 들어가지 않음!
       setFieldValue('bankOwnerRrn', contRrn);
-      setFieldValue('bankOwnerRel', contRel);
+      setFieldValue('bankOwnerRel', '', true); // 다름 모드 시 예금주 관계는 수기 입력을 위해 비워둠
 
     } else if (insured) {
       // 👤 [동일함 모드] - 본인 수령
@@ -2932,7 +2932,7 @@
     // 관계 설정: 다름 모드이고 계약자 대상이면 '계약자', 동일 모드이거나 피보험자 대상이면 '본인'
     const isDiff = window.crmPickerState.isDifferent;
     const isContractor = isDiff && (target === window.crmPickerState.contractorData);
-    setFieldValue('bankOwnerRel', isContractor ? '계약자' : '본인');
+    setFieldValue('bankOwnerRel', isContractor ? '' : '본인', true);
 
     // 자동이체 수령 라디오버튼이 있는 경우 '아니오 (계좌 직접입력)'으로 명시적 선택하여 필드 노출 보장
     const autoNoRadio = document.querySelector('input[name="autoTransfer"][value="no"]');

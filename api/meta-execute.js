@@ -5,11 +5,9 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ★ consult.js 및 fax-webhook.js와 100% 동일한 수파베이스 URL & Key 폴백 적용 (키 누락으로 인한 빈 배열 반환 원천 차단!)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR';
 
-  // ★ [단축 URL 자동 연결(Redirect) 기능]
   const reqHost = req.headers['x-forwarded-host'] || req.headers['host'] || 'www.weraclelab.com';
   const reqProto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
   const baseSiteUrl = `${reqProto}://${reqHost}`;
@@ -63,7 +61,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // [1] 이미지/투명 PNG 로고 업로드
+    // [1] 이미지 업로드
     if (action === 'UPLOAD_MEDIA') {
       const { mediaBase64 } = body;
       if (!mediaBase64 || !supabaseKey) {
@@ -98,17 +96,108 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: false, mediaUrl: '' });
     }
 
-    // [2] 매거진 PR 설정을 해당 팀원의 고유 키로 독립 저장
+    // [1-1] 나의 광고콘텐츠(사진·동영상) 수파베이스 영구 저장
+    if (action === 'SAVE_CUSTOM_ASSET') {
+      const { userId, asset } = body;
+      if (!supabaseKey || !asset || !asset.id) {
+        return res.status(200).json({ success: false });
+      }
+      const ownerKey = sanitizeAgentKey(userId || 'default');
+      await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(asset.id)}`, {
+        method: 'DELETE',
+        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+      });
+
+      const dbRecord = {
+        id: String(asset.id),
+        user_id: ownerKey,
+        track: 'custom_asset',
+        title: asset.headline || '나의 등록 콘텐츠',
+        description: asset.type || 'carousel',
+        cta_type: 'CUSTOM_ASSET',
+        landing_url: asset.videoUrl || '',
+        start_date: '',
+        end_date: '',
+        ratio: asset.ratio || '1:1',
+        region: '',
+        target_summary: JSON.stringify(asset),
+        budget: 0,
+        keyword: asset.keyword || '궁금',
+        dm_message: '',
+        status: 'ASSET',
+        meta_campaign_id: '',
+        adset_id: '',
+        ad_id: '',
+        ig_media_id: '',
+        leads_count: 0,
+        dm_sent_count: 0,
+        created_at: new Date().toISOString()
+      };
+
+      await fetch(`${supabaseUrl}/rest/v1/meta_campaigns`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(dbRecord)
+      });
+      return res.status(200).json({ success: true, assetId: asset.id });
+    }
+
+    // [1-2] 나의 광고콘텐츠 삭제 (+ ad_media 스토리지 원본 파일 자동 삭제)
+    if (action === 'DELETE_CUSTOM_ASSET') {
+      const { assetId, mediaUrls } = body;
+      if (supabaseKey && assetId) {
+        let urlsToDelete = Array.isArray(mediaUrls) ? [...mediaUrls] : [];
+
+        try {
+          const r = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(assetId)}&select=target_summary,landing_url`, {
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+          });
+          const rows = await r.json();
+          if (Array.isArray(rows) && rows[0]) {
+            if (rows[0].landing_url) urlsToDelete.push(rows[0].landing_url);
+            if (rows[0].target_summary) {
+              const parsed = JSON.parse(rows[0].target_summary);
+              if (parsed.videoUrl) urlsToDelete.push(parsed.videoUrl);
+              if (Array.isArray(parsed.slides)) {
+                parsed.slides.forEach(s => { if (s && s.imgUrl) urlsToDelete.push(s.imgUrl); });
+              }
+            }
+          }
+        } catch (e) {}
+
+        const uniqueUrls = Array.from(new Set(urlsToDelete.filter(u => typeof u === 'string' && u.includes('/ad_media/'))));
+        for (const u of uniqueUrls) {
+          const filePart = u.split('/ad_media/')[1];
+          if (filePart) {
+            const cleanFileName = filePart.split('?')[0];
+            await fetch(`${supabaseUrl}/storage/v1/object/ad_media/${cleanFileName}`, {
+              method: 'DELETE',
+              headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+            }).catch(() => {});
+          }
+        }
+
+        await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(assetId)}`, {
+          method: 'DELETE',
+          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+        });
+      }
+      return res.status(200).json({ success: true });
+    }
+
+    // [2] 매거진 PR 설정 저장
     if (action === 'SAVE_PR_CONFIG') {
       const { agentId, userKeys, config } = body;
       if (!supabaseKey || !config) {
         return res.status(200).json({ success: false, error: 'Missing config or key' });
       }
 
-      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0
-        ? userKeys
-        : [agentId || 'default'];
-
+      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? userKeys : [agentId || 'default'];
       const safeKeys = Array.from(new Set(rawKeyList.map(k => sanitizeAgentKey(k)).filter(Boolean)));
       if (safeKeys.length === 0) safeKeys.push('default');
 
@@ -162,7 +251,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, agentKey: safeKeys[0] });
     }
 
-    // [2-1] 초기광고설정에서 알림 받을 휴대폰 번호 저장 시 PR 설정에도 즉시 반영
+    // [2-1] 알림톡 휴대폰 번호 저장
     if (action === 'SAVE_AGENT_PHONE') {
       const { agentId, userKeys, agentPhone } = body;
       if (!supabaseKey || !agentPhone) return res.status(200).json({ success: false });
@@ -195,16 +284,14 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-    // [3] 해당 설계사(agentId)의 PR 설정 조회
+    // [3] PR 설정 조회
     if (action === 'GET_PR_CONFIG') {
       const { agentId, userKeys } = body;
       if (!supabaseKey) {
         return res.status(200).json({ success: false, config: null });
       }
 
-      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0
-        ? userKeys
-        : [agentId || 'default'];
+      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? userKeys : [agentId || 'default'];
       const safeKeys = Array.from(new Set(rawKeyList.map(k => sanitizeAgentKey(k)).filter(Boolean)));
 
       const r = await fetch(
@@ -234,7 +321,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: false, config: null });
     }
 
-    // [4] 메타 광고/인스타 게시물 정보를 수파베이스 DB에 저장
+    // [4] 캠페인 저장
     if (action === 'SAVE_RECORD') {
       const { record } = body;
       if (supabaseKey && record) {
@@ -252,11 +339,10 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, record });
     }
 
-    // ★ [5] 캠페인 및 유입 DB 조회 (쿼리 에러 방지 + 내 DB 100% 표시 + 타인 DB 완벽 차단)
+    // [5] 캠페인 · 나의 광고콘텐츠 · 유입 DB 통합 조회
     if (action === 'LIST' || action === 'SYNC_LIST') {
       const { userId, userKeys } = body;
 
-      // 내 식별키들을 하이픈 제거 버전, sanitize 버전까지 모두 포함하여 매칭률 100% 보장
       const rawInputKeys = Array.isArray(userKeys) ? [...userKeys, userId] : [userId];
       const validKeySet = new Set();
       rawInputKeys.forEach(k => {
@@ -269,17 +355,36 @@ module.exports = async function handler(req, res) {
         }
       });
 
-      // 1) 전체 캠페인 안전하게 조회 (PostgREST NULL 배제 버그 방지를 위해 order만으로 조회 후 JS에서 필터)
-      let allCampaigns = [];
+      let allRows = [];
       try {
-        const listRes = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?order=created_at.desc&limit=500`, {
+        const listRes = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?order=created_at.desc&limit=600`, {
           headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
         });
         const cData = await listRes.json();
         if (Array.isArray(cData)) {
-          allCampaigns = cData.filter(c => c.track !== 'pr_config' && !String(c.id || '').startsWith('pr_cfg_'));
+          allRows = cData.filter(c => c.track !== 'pr_config' && !String(c.id || '').startsWith('pr_cfg_'));
         }
       } catch (e) {}
+
+      // 나의 광고콘텐츠(custom_asset) 분리 추출
+      const myCustomAssets = [];
+      const allCampaigns = [];
+
+      for (const row of allRows) {
+        if (row.track === 'custom_asset') {
+          const rUser = String(row.user_id || '').trim().toLowerCase();
+          const rSanitized = sanitizeAgentKey(rUser);
+          const isMyAsset = validKeySet.size === 0 || validKeySet.has(rUser) || validKeySet.has(rSanitized) || rUser === 'default';
+          if (isMyAsset && row.target_summary) {
+            try {
+              const parsedAsset = JSON.parse(row.target_summary);
+              if (parsedAsset && parsedAsset.id) myCustomAssets.push(parsedAsset);
+            } catch (e) {}
+          }
+        } else {
+          allCampaigns.push(row);
+        }
+      }
 
       const otherUsersCampIdSet = new Set();
       let myCampaigns = [];
@@ -315,7 +420,6 @@ module.exports = async function handler(req, res) {
 
       const instaCampIdSet = new Set(myCampaigns.filter(c => c.track === 'insta').map(c => String(c.id)));
 
-      // 2) 유입 고객 DB 및 인스타 댓글/DM 내역 전체 조회
       let leads = [];
       try {
         const leadsRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads?order=created_at.desc&limit=500`, {
@@ -328,19 +432,14 @@ module.exports = async function handler(req, res) {
             const cId = String(l.campaign_id || '');
             const noteStr = String(l.note || '');
 
-            // ① 다른 팀원이 만든 캠페인으로 들어온 DB는 확실하게 차단!
-            if (cId && otherUsersCampIdSet.has(cId)) {
-              return false;
-            }
+            if (cId && otherUsersCampIdSet.has(cId)) return false;
 
-            // ② note에 [owner:xxx] 또는 [담당:xxx] 태그가 찍혀 있는 경우 검사
             const ownerMatch = noteStr.match(/\[(?:owner|담당):([^\]]+)\]/i);
             if (ownerMatch && ownerMatch[1]) {
               const taggedOwner = ownerMatch[1].trim().toLowerCase();
               const taggedSanitized = sanitizeAgentKey(taggedOwner);
               const taggedDigits = taggedOwner.replace(/[^0-9]/g, '');
 
-              // 공용/미지정 태그(default, weracle_user)가 아닌 실제 다른 사람의 고유 이메일/아이디가 찍혀 있을 때만 비교
               const isGenericTag = (!taggedOwner || taggedOwner === 'default' || taggedOwner === 'weracle_user' || taggedOwner === '담당설계사');
               if (!isGenericTag && validKeySet.size > 0) {
                 const isTaggedMine =
@@ -348,16 +447,11 @@ module.exports = async function handler(req, res) {
                   validKeySet.has(taggedSanitized) ||
                   (taggedDigits.length >= 9 && validKeySet.has(taggedDigits));
 
-                //もし 태그가 이메일(@) 형식이고 내 키 중에 이메일이 있을 때만 엄격 비교 (전화번호 vs 인스타ID 불일치로 인한 내 DB 실종 방지!)
                 const hasEmailInMyKeys = Array.from(validKeySet).some(k => k.includes('@'));
-                if (taggedOwner.includes('@') && hasEmailInMyKeys) {
-                  return isTaggedMine;
-                }
+                if (taggedOwner.includes('@') && hasEmailInMyKeys) return isTaggedMine;
                 if (isTaggedMine) return true;
               }
             }
-
-            // ③ 그 외 내 캠페인 리드, 인스타 댓글/DM 내역, PR 페이지 테스트 신청(camp_direct)은 100% 모두 표시!
             return true;
           }).map(l => {
             const cleanNote = String(l.note || '').replace(/\s*\[(?:owner|담당):[^\]]+\]/gi, '').trim();
@@ -375,10 +469,10 @@ module.exports = async function handler(req, res) {
         }
       } catch (e) {}
 
-      return res.status(200).json({ success: true, data: myCampaigns, leads });
+      return res.status(200).json({ success: true, data: myCampaigns, leads, customAssets: myCustomAssets });
     }
 
-    // [6] 상태 변경 DB 저장
+    // [6] 캠페인 ON/OFF 변경
     if (action === 'TOGGLE_STATUS') {
       const { id, newStatus } = body;
       if (supabaseKey && id) {
@@ -395,7 +489,38 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, status: newStatus });
     }
 
-    // [7] 예산 및 종료일 DB 수정
+    // [6-1] 유입 고객 DB 진행 상태(신규대기/부재중/상담중/체결완료/거절·종결) 실시간 저장
+    if (action === 'UPDATE_LEAD_STATUS') {
+      const { leadId, createdAt, phone, campaignId, newStatus } = body;
+      if (!supabaseKey || !newStatus) {
+        return res.status(200).json({ success: false });
+      }
+
+      let queryFilter = '';
+      if (leadId !== undefined && leadId !== null && String(leadId) !== '') {
+        queryFilter = `id=eq.${encodeURIComponent(leadId)}`;
+      } else if (createdAt) {
+        queryFilter = `created_at=eq.${encodeURIComponent(createdAt)}`;
+        if (phone) queryFilter += `&phone=eq.${encodeURIComponent(phone)}`;
+      } else if (phone && campaignId) {
+        queryFilter = `phone=eq.${encodeURIComponent(phone)}&campaign_id=eq.${encodeURIComponent(campaignId)}`;
+      }
+
+      if (queryFilter) {
+        await fetch(`${supabaseUrl}/rest/v1/meta_leads?${queryFilter}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+      }
+      return res.status(200).json({ success: true, status: newStatus });
+    }
+
+    // [7] 예산 및 종료일 수정
     if (action === 'UPDATE_CAMPAIGN') {
       const { id, newBudget, newEndDate, adSetId } = body;
       if (supabaseKey && id) {
@@ -417,7 +542,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-    // [8] 캠페인 DB 삭제
+    // [8] 캠페인 삭제
     if (action === 'DELETE_CAMPAIGN') {
       const { id } = body;
       if (supabaseKey && id) {
@@ -429,7 +554,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-    // [9] 인스타 댓글 키워드 감지 시 자동 DM 발송 카운트 업데이트 및 유입 DB(meta_leads) 기록
+    // [9] 인스타 댓글 자동DM 기록
     if (action === 'RECORD_INSTA_DM') {
       const { campaignId, dmSentCount, leadRecord, userId } = body;
       if (supabaseKey) {

@@ -5599,9 +5599,46 @@ const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions))
           }
 
           let imageHash = '';
-          let uploadedVideoId = '';
+let uploadedVideoId = '';
+          let videoThumbUrl = '';
+
+          // 마스터 시트에 두 번째 URL로 썸네일 이미지를 함께 넣어둔 경우 우선 활용
+          if (isRealVideo && Array.isArray(activeItem.slides) && activeItem.slides[0] && activeItem.slides[0].imgUrl && activeItem.slides[0].imgUrl.startsWith('http')) {
+            videoThumbUrl = activeItem.slides[0].imgUrl;
+          }
 
           if (isRealVideo && finalMediaUrl.startsWith('http')) {
+            // 1) 브라우저에서 영상 첫 프레임을 캡처해 썸네일(rawBase64Only) 자동 확보
+            if (!videoThumbUrl && !rawBase64Only) {
+              try {
+                const thumbB64 = await new Promise((resolve) => {
+                  const v = document.createElement('video');
+                  v.crossOrigin = 'anonymous';
+                  v.muted = true;
+                  v.playsInline = true;
+                  v.preload = 'auto';
+                  const timer = setTimeout(() => resolve(''), 4500);
+                  v.onloadeddata = () => { v.currentTime = 0.1; };
+                  v.onseeked = () => {
+                    clearTimeout(timer);
+                    try {
+                      const cv = document.createElement('canvas');
+                      cv.width = v.videoWidth || 720;
+                      cv.height = v.videoHeight || 1280;
+                      cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height);
+                      resolve(cv.toDataURL('image/jpeg', 0.88));
+                    } catch (err) { resolve(''); }
+                  };
+                  v.onerror = () => { clearTimeout(timer); resolve(''); };
+                  v.src = finalMediaUrl;
+                });
+                if (thumbB64) {
+                  rawBase64Only = thumbB64.replace(/^data:image\/\w+;base64,/, '');
+                }
+              } catch (e) {}
+            }
+
+            // 2) 메타 광고계정에 동영상 업로드 후 자동 생성된 썸네일(picture)까지 확인
             try {
               const vidRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/advideos`, {
                 method: 'POST',
@@ -5612,8 +5649,39 @@ const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions))
                 })
               });
               const vidData = await vidRes.json();
-              if (vidData && vidData.id) uploadedVideoId = vidData.id;
+              if (vidData && vidData.id) {
+                uploadedVideoId = vidData.id;
+                if (!videoThumbUrl && !rawBase64Only) {
+                  for (let retry = 0; retry < 4; retry++) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    const thRes = await fetch(`https://graph.facebook.com/v21.0/${uploadedVideoId}?fields=picture,thumbnails{uri}&access_token=${token}`);
+                    const thData = await thRes.json();
+                    const foundUri = (thData && thData.thumbnails && thData.thumbnails.data && thData.thumbnails.data[0] && thData.thumbnails.data[0].uri) || (thData && thData.picture) || '';
+                    if (foundUri) {
+                      videoThumbUrl = foundUri;
+                      break;
+                    }
+                  }
+                }
+              }
             } catch (e) {}
+
+            // 3) 만약 위 두 방법 모두 막혔을 때(CORS 등) 실패 방지를 위한 최후 안전 썸네일 생성
+            if (!videoThumbUrl && !rawBase64Only) {
+              try {
+                const cv = document.createElement('canvas');
+                cv.width = 720;
+                cv.height = 1280;
+                const ctx = cv.getContext('2d');
+                ctx.fillStyle = '#113f67';
+                ctx.fillRect(0, 0, 720, 1280);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 44px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(title.slice(0, 14), 360, 620);
+                rawBase64Only = cv.toDataURL('image/jpeg', 0.9).replace(/^data:image\/\w+;base64,/, '');
+              } catch (e) {}
+            }
           }
 
           if (rawBase64Only) {
@@ -5774,14 +5842,18 @@ const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions))
 
             const storySpec = { page_id: activePageId };
 
-            if (uploadedVideoId) {
+        if (uploadedVideoId) {
               const videoData = {
                 video_id: uploadedVideoId,
                 title: title,
                 message: caption || title,
                 call_to_action: ctaObj
               };
-              if (finalMediaUrl && !isPlayableVideoUrl(finalMediaUrl)) {
+              if (imageHash) {
+                videoData.image_hash = imageHash;
+              } else if (videoThumbUrl) {
+                videoData.image_url = videoThumbUrl;
+              } else if (finalMediaUrl && !isPlayableVideoUrl(finalMediaUrl)) {
                 videoData.image_url = finalMediaUrl;
               }
               storySpec.video_data = videoData;

@@ -5228,11 +5228,13 @@ const complianceVal = wizardTrack === 'meta'
       if (wantAge) selectedFields.push('age');
       if (wantTime) selectedFields.push('time');
 
-      const validCustomQuestions = customQuestionsList
+const validCustomQuestions = customQuestionsList
         .map(q => ({
           type: q.type || 'CHOICE',
           label: String(q.label || '').trim(),
-          options: String(q.options || '').split(',').map(s => s.trim()).filter(Boolean)
+          options: Array.isArray(q.optionsList)
+            ? q.optionsList.map(s => String(s || '').trim()).filter(Boolean)
+            : String(q.options || '').split(',').map(s => s.trim()).filter(Boolean)
         }))
         .filter(q => q.label);
 

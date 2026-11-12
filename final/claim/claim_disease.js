@@ -846,6 +846,66 @@
   };
  
 
+  // [PDF 첨부파일 고해상도(2x) 이미지 자동 렌더링 헬퍼]
+  async function convertPdfToImages(file) {
+    if (typeof window.pdfjsLib === 'undefined') {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('PDF 렌더링 라이브러리를 불러올 수 없습니다.'));
+        document.head.appendChild(s);
+      });
+    }
+    if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const loadingTask = window.pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
+    const pdf = await loadingTask.promise;
+    const pages = [];
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      pages.push({
+        name: `${file.name} (${pageNum}p)`,
+        data: dataUrl.split(',')[1]
+      });
+    }
+    return pages;
+  }
+
+  // 모든 첨부파일(JPG/PNG + PDF 다중페이지)을 jsPDF 완벽 호환 고화질 JPEG 이미지 배열로 정규화
+  async function processAllAttachedFiles(files) {
+    const results = [];
+    for (const file of files) {
+      const isPdf = file.type === 'application/pdf' || (file.name && file.name.toLowerCase().endsWith('.pdf'));
+      if (isPdf) {
+        try {
+          const pdfPages = await convertPdfToImages(file);
+          if (pdfPages && pdfPages.length > 0) {
+            results.push(...pdfPages);
+            continue;
+          }
+        } catch (e) {
+          console.warn('[PDF.js 변환 경고, 일반 이미지 압축으로 폴백]', e);
+        }
+      }
+      const imgObj = await compressImage(file);
+      results.push(imgObj);
+    }
+    return results;
+  }
+
+
     async function finalSubmit() {
     const btn = document.getElementById('nextBtn');
     if (fileArray.length === 0) return alert("청구 서류를 첨부해 주세요.");
@@ -1023,7 +1083,7 @@
               payload.contAddress = payload.beneAddress || '';
           }
 
-          const base64Files = await Promise.all(fileArray.map(file => compressImage(file)));
+          const base64Files = await processAllAttachedFiles(fileArray);
         payload.attachedFiles = base64Files.map(f => 'data:image/jpeg;base64,' + f.data);
         payload.category = selectedCategory;
 

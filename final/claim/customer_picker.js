@@ -511,6 +511,9 @@
     // 4. 주소
     const rawAddress = getVal(['주소', '자택주소', '거주지', '사업장주소', '상세주소', '소재지', 'address', 'addr', 'client_address']);
 
+    // 5. 관계 (가족사항, 가족관계 등)
+    const rawRelation = getVal(['가족관계', '관계', '가족사항', '관계구분', '피보험자관계', 'relation', 'familyRelation']);
+
     const cleanRrn = String(rawRrn).replace(/[^0-9]/g, '');
     let rrnFront = '', rrnBack = '';
     if (cleanRrn.length === 13) {
@@ -743,6 +746,7 @@
     return {
       raw: client,
       name: rawName,
+      relation: rawRelation || '',
       contractorName: contractContName,
       contracts: allContracts,
       phone: cleanPhone,
@@ -914,8 +918,21 @@
     }
   };
 
+  // 피보험자 단독 청구 서식 여부 (계약자란 부재사: 한화손보, 흥국화재, 하나손보)
+  function isInsuredOnlyCompany(compName) {
+    if (!compName) return false;
+    const c = String(compName).replace(/\s+/g, '');
+    return c.includes('한화손') || c.includes('흥국화재') || c.includes('하나손');
+  }
+
   // 모달 열기
   window.openCrmPickerModal = function () {
+    const select = document.getElementById('companySelect');
+    const compName = select ? select.value : '';
+    if (isInsuredOnlyCompany(compName)) {
+      window.crmPickerState.isDifferent = false;
+    }
+
     syncFromGoogleSheetsDirect();
     ensureModalDom();
     injectCustomStyles();
@@ -1049,13 +1066,17 @@
     const scrollEl = document.getElementById('crmSetupScroll');
     if (!scrollEl) return;
 
-    const isDiff = window.crmPickerState.isDifferent;
-    const insured = window.crmPickerState.insuredData;
-    const contractor = window.crmPickerState.contractorData;
-
     // 현재 선택된 보험사 명칭 확인
     const select = document.getElementById('companySelect');
     const compName = select ? select.value : '';
+    const isInsuredOnly = isInsuredOnlyCompany(compName);
+    if (isInsuredOnly) {
+      window.crmPickerState.isDifferent = false;
+    }
+
+    const isDiff = window.crmPickerState.isDifferent;
+    const insured = window.crmPickerState.insuredData;
+    const contractor = window.crmPickerState.contractorData;
 
     let html = '';
 
@@ -1069,36 +1090,38 @@
     }
 
     // ----------------------------------------------------
-    // Q1. 피보험자와 계약자(또는 수익자)가 같나요?
+    // Q1. 피보험자와 계약자(또는 수익자)가 같나요? (한화/흥국/하나손해는 계약자란 부재로 생략)
     // ----------------------------------------------------
-    html += `
-      <div class="crm-wizard-card">
-        <div class="crm-wizard-card-header">
-          <div class="crm-q-badge">Q1</div>
-          <div class="crm-q-title">
-            <h4>피보험자와 계약자(또는 수익자)가 같나요?</h4>
-            <p>환자(치료받은 분)와 보험계약자(돈 받는 분)의 일치 여부를 선택하세요.</p>
+    if (!isInsuredOnly) {
+      html += `
+        <div class="crm-wizard-card">
+          <div class="crm-wizard-card-header">
+            <div class="crm-q-badge">Q1</div>
+            <div class="crm-q-title">
+              <h4>피보험자와 계약자(또는 수익자)가 같나요?</h4>
+              <p>환자(치료받은 분)와 보험계약자(돈 받는 분)의 일치 여부를 선택하세요.</p>
+            </div>
           </div>
-        </div>
 
-        <div class="crm-toggle-grid">
-          <div class="crm-toggle-box ${!isDiff ? 'active' : ''}" onclick="setDiffMode(false)">
-            <div class="crm-toggle-radio"></div>
-            <div class="crm-toggle-content">
-              <div class="crm-toggle-main">👤 예, 동일합니다</div>
-              <div class="crm-toggle-sub">본인 청구 (치료받은 분 = 수령자)</div>
+          <div class="crm-toggle-grid">
+            <div class="crm-toggle-box ${!isDiff ? 'active' : ''}" onclick="setDiffMode(false)">
+              <div class="crm-toggle-radio"></div>
+              <div class="crm-toggle-content">
+                <div class="crm-toggle-main">👤 예, 동일합니다</div>
+                <div class="crm-toggle-sub">본인 청구 (치료받은 분 = 수령자)</div>
+              </div>
             </div>
-          </div>
-          <div class="crm-toggle-box ${isDiff ? 'active' : ''}" onclick="setDiffMode(true)">
-            <div class="crm-toggle-radio"></div>
-            <div class="crm-toggle-content">
-              <div class="crm-toggle-main">👥 아니오, 다릅니다</div>
-              <div class="crm-toggle-sub">가족 / 대리 청구 (자녀·부모 등)</div>
+            <div class="crm-toggle-box ${isDiff ? 'active' : ''}" onclick="setDiffMode(true)">
+              <div class="crm-toggle-radio"></div>
+              <div class="crm-toggle-content">
+                <div class="crm-toggle-main">👥 아니오, 다릅니다</div>
+                <div class="crm-toggle-sub">가족 / 대리 청구 (자녀·부모 등)</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
+    }
 
     // ----------------------------------------------------
     // Q2. 고객 정보 불러오기 (위라클랩 CRM)
@@ -1106,10 +1129,10 @@
     html += `
       <div class="crm-wizard-card">
         <div class="crm-wizard-card-header">
-          <div class="crm-q-badge">Q2</div>
+          <div class="crm-q-badge">${isInsuredOnly ? '✓' : 'Q2'}</div>
           <div class="crm-q-title">
-            <h4>고객 정보 불러오기</h4>
-            <p>위라클랩에 등록된 고객을 검색하여 선택하거나 직접 입력하세요.</p>
+            <h4>${isInsuredOnly ? '피보험자 고객 정보 불러오기' : '고객 정보 불러오기'}</h4>
+            <p>${isInsuredOnly ? '위라클랩에 등록된 피보험자(치료받은 분)를 선택하세요.' : '위라클랩에 등록된 고객을 검색하여 선택하거나 직접 입력하세요.'}</p>
           </div>
         </div>
 
@@ -1401,6 +1424,7 @@
       const contRrnFront = contractor ? contractor.rrnFront : '';
       const contRrnBack = contractor ? contractor.rrnBack : '';
       const contAddress = contractor ? contractor.address : '';
+      const contRel = (contractor && contractor.relation) || (insured && insured.relation) || '계약자';
 
       // 계약자/수익자 필드 채우기
       if (contName) {
@@ -1425,7 +1449,12 @@
         setFieldValue('contAddress', contAddress);
         setFieldValue('beneAddress', contAddress);
       }
-      setFieldValue('guideRelation', '계약자');
+
+      // 관계 필드 스마트 주입 (롯데/MG: contRelation, 흥국: insRelation, 표준: guideRelation, AIG/생보: beneRelation)
+      setFieldValue('contRelation', contRel);
+      setFieldValue('insRelation', contRel);
+      setFieldValue('guideRelation', contRel);
+      setFieldValue('beneRelation', contRel);
 
       // 계좌 및 예금주: 계약자 계좌 우선, 없으면 계약에 등록된 은행/계좌 활용
       const finalBank = (contractor && contractor.bankName) || (insured && insured.bankName) || '';
@@ -1436,13 +1465,32 @@
       setFieldValue('bankAccount', finalAccount, true);
       setFieldValue('bankOwner', finalBank ? finalOwner : '', true); // ★ 다를 때는 절대 피보험자 이름이 들어가지 않음!
       setFieldValue('bankOwnerRrn', contRrn);
-      setFieldValue('bankOwnerRel', '계약자');
+      setFieldValue('bankOwnerRel', contRel);
 
     } else if (insured) {
       // 👤 [동일함 모드] - 본인 수령
       setFieldValue('guideName', insured.name);
       setFieldValue('guidePhone', insured.phone);
       setFieldValue('guideRelation', '본인');
+
+      // 미성년자(자녀) 피보험자 연락처 없을 시 메인 계약자(부모) 연락처 자동 폴백
+      if (!insured.phone && window.familyState && window.familyState[0] && window.familyState[0].data) {
+        const pPhone = window.familyState[0].data['연락처'] || window.familyState[0].data['휴대폰'] || '';
+        const pName = window.familyState[0].data['고객명'] || '';
+        if (pPhone) {
+          setFieldValue('guidePhone', pPhone);
+          if (pName) setFieldValue('guideName', pName);
+        }
+      }
+
+      // AIG손해보험 등 수익자란 상시 노출 서식 및 동일 청구 시 수익자 1:1 자동 복사 주입
+      setFieldValue('beneName', insured.name);
+      setFieldValue('beneRrn', insured.rrn);
+      setFieldValue('beneRrn_front', insured.rrnFront);
+      setFieldValue('beneRrn_back', insured.rrnBack);
+      setFieldValue('benePhone', insured.phone);
+      setFieldValue('beneAddress', insured.address);
+      setFieldValue('beneRelation', '본인');
 
       const finalBank = insured.bankName || '';
       const finalAccount = insured.bankAccount || '';

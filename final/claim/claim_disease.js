@@ -1006,6 +1006,8 @@
               if (selectedCategory === '생명보험') {
                   if (payload.sigBeneficiary && !payload.sigInsured) {
                       payload.sigInsured = payload.sigBeneficiary;
+                  } else if (payload.sigInsured && !payload.sigBeneficiary) {
+                      payload.sigBeneficiary = payload.sigInsured;
                   }
               } else {
                   // 손해보험 기존 로직

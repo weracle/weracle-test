@@ -6315,20 +6315,44 @@ const targetSummaryValue = wizardTrack === 'meta'
 
       try {
 
-// 새로고침 시 인스타 신규 댓글이 있으면 먼저 서버에 기록한 뒤 최신 목록을 가져옴
-        await scanAndSendInstaCommentDms(false);
+// 새로고침 시 인스타 신규 댓글이 있으면 먼저 서버에 기록
+        try { await scanAndSendInstaCommentDms(false); } catch (e) {}
+
+        // 설계사 고유키(weracle_bohwan 등) + 인스타 연동키 + 내 보유 캠페인 ID를 모두 묶어 전송
+        const activeAgentIdVal = (typeof getActiveAgentId === 'function') ? getActiveAgentId() : '';
+        const _syncMetaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
+        const mergedUserKeys = Array.from(new Set([
+          ...(Array.isArray(userKeys) ? userKeys : []),
+          userId,
+          activeAgentIdVal,
+          localStorage.getItem('weracle_agent_id') || '',
+          localStorage.getItem('weracle_user_id') || '',
+          localStorage.getItem('crm_user_id') || '',
+          _syncMetaConn && _syncMetaConn.igUser ? _syncMetaConn.igUser : '',
+          _syncMetaConn && _syncMetaConn.igId ? _syncMetaConn.igId : '',
+          _syncMetaConn && _syncMetaConn.pageId ? _syncMetaConn.pageId : '',
+          _syncMetaConn && _syncMetaConn.adAcc ? _syncMetaConn.adAcc : ''
+        ].map(v => String(v || '').trim()).filter(Boolean)));
+
+        const knownCampIds = Array.isArray(myCampaigns)
+          ? myCampaigns.map(c => String(c.id || '')).filter(Boolean)
+          : [];
 
         const res = await fetch('/api/meta-execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'LIST', userId, userKeys })
+          body: JSON.stringify({
+            action: 'LIST',
+            userId: activeAgentIdVal || userId,
+            userKeys: mergedUserKeys,
+            knownCampIds
+          })
         });
         const json = await res.json();
         let rawList = (json.success && Array.isArray(json.data)) ? json.data : [];
 
         if (json.success && Array.isArray(json.leads)) {
           const serverLeads = json.leads;
-          // 방금 브라우저에서 감지된 인스타 내역이 서버 반영 시차로 누락되지 않도록 안전 병합
           const serverKeySet = new Set(
             serverLeads.map(sl => `${sl.campaign_id || ''}|${sl.name || ''}|${String(sl.note || '').slice(0, 18)}`)
           );
@@ -6340,6 +6364,9 @@ const targetSummaryValue = wizardTrack === 'meta'
 
           myLeads = [...unsyncedLocalInsta, ...serverLeads];
           localStorage.setItem('weracle_leads_v6', JSON.stringify(myLeads));
+          // 서버 DB 수신 즉시 테이블 및 체결률 화면부터 최우선 갱신
+          renderMyLeadsTable();
+          renderMyAdsDashboard();
         }
         if (json.success && Array.isArray(json.customAssets)) {
           customContents = json.customAssets;

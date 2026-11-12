@@ -892,120 +892,80 @@
 
     <!-- [탭 3] 유입DB·댓글관리 -->
 
-    <section id="view-leads" style="display:none;">
-
+<section id="view-leads" style="display:none;">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
-
         <div>
-
           <h2 style="margin:0; font-size:20px; font-weight:900; color:var(--navy);">👥 실시간 유입 고객 DB & 인스타 댓글 자동DM 관리</h2>
-
-          <p style="margin:4px 0 0 0; font-size:13px; color:var(--sub);">메타 인스턴트 양식·PR 랜딩 제출 고객(팝빌 실시간 알림톡 연동)과 인스타그램 댓글 키워드 감지 시 자동 답글+DM이 발송된 명단을 관리합니다.</p>
-
+          <p style="margin:4px 0 0 0; font-size:13px; color:var(--sub);">메타 인스턴트 양식·PR 랜딩 제출 고객(맞춤 질문 답변 포함)과 인스타그램 댓글 자동DM 내역을 일·주·월 단위로 조회합니다.</p>
         </div>
-
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-
           <button class="btn-header-action" id="btnSyncLeads" onclick="loadServerCampaigns(true)">
-
             <i class="fa-solid fa-rotate"></i> 최신 DB 새로고침
-
           </button>
-
           <button class="btn-header-primary" onclick="exportLeadsToCsv()" style="background:var(--navy);">
-
-            <i class="fa-solid fa-download"></i> 고객 DB 엑셀(CSV) 다운로드
-
+            <i class="fa-solid fa-download"></i> 조회된 DB 엑셀(CSV) 다운로드
           </button>
-
         </div>
-
       </div>
-
-
 
       <div class="pipeline-grid" style="grid-template-columns: repeat(3, 1fr);">
-
         <div class="pipe-card" style="background:var(--navy); color:#fff;">
-
-          <div><div class="pipe-label" style="color:var(--mint);">전체 누적 유입 고객·댓글 내역</div><div class="pipe-num" style="color:#fff;" id="statTotalLeads">0건</div></div>
-
+          <div><div class="pipe-label" style="color:var(--mint);" id="lblStatTotalLeads">조회 기간 유입 고객·댓글 합계</div><div class="pipe-num" style="color:#fff;" id="statTotalLeads">0건</div></div>
           <i class="fa-solid fa-users" style="font-size:28px; color:rgba(255,255,255,0.25);"></i>
-
         </div>
-
         <div class="pipe-card">
-
-          <div><div class="pipe-label">🚀 메타 광고 신청양식·PR랜딩 유입</div><div class="pipe-num" style="color:var(--meta);" id="statMetaFormLeads">0명</div></div>
-
+          <div><div class="pipe-label">🚀 메타 광고 양식 · PR랜딩 유입</div><div class="pipe-num" style="color:var(--meta);" id="statMetaFormLeads">0명</div></div>
           <i class="fa-solid fa-file-signature" style="font-size:28px; color:#cbd5e1;"></i>
-
         </div>
-
         <div class="pipe-card">
-
           <div><div class="pipe-label">📸 인스타 댓글 자동DM & DM신청</div><div class="pipe-num" style="color:var(--insta);" id="statInstaDmLeads">0건</div></div>
-
           <i class="fa-solid fa-paper-plane" style="font-size:28px; color:#cbd5e1;"></i>
-
         </div>
-
       </div>
-
-
 
       <div class="white-box">
-
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
-
-          <div class="sub-pill-list">
-
-            <button class="sub-pill active" id="leadPillAll" onclick="filterLeadsTable('all', this)">전체 내역 보기 (0)</button>
-
-            <button class="sub-pill" id="leadPillMeta" onclick="filterLeadsTable('meta', this)">🚀 메타 광고 양식·PR 고객만 (0)</button>
-
-            <button class="sub-pill" id="leadPillInsta" onclick="filterLeadsTable('insta', this)">📸 인스타 댓글/DM 내역만 (0)</button>
-
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+          <div class="sub-pill-list" id="leadSourcePills">
+            <button class="sub-pill active" id="leadPillAll" onclick="filterLeadsTable('all', this)">전체 내역 (0)</button>
+            <button class="sub-pill" id="leadPillMeta" onclick="filterLeadsTable('meta', this)">🚀 메타·PR 신청만 (0)</button>
+            <button class="sub-pill" id="leadPillInsta" onclick="filterLeadsTable('insta', this)">📸 인스타 댓글/DM만 (0)</button>
           </div>
 
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <div class="sub-pill-list" id="leadPeriodPills">
+              <button class="sub-pill active" onclick="filterLeadsPeriod('all', this)">전체 기간</button>
+              <button class="sub-pill" onclick="filterLeadsPeriod('today', this)">오늘</button>
+              <button class="sub-pill" onclick="filterLeadsPeriod('week', this)">주간(7일)</button>
+              <button class="sub-pill" onclick="filterLeadsPeriod('month', this)">월간(이번달)</button>
+              <button class="sub-pill" onclick="filterLeadsPeriod('custom', this)">📅 일자선택</button>
+            </div>
+            <div id="leadCustomDateWrap" style="display:none; align-items:center; gap:5px;">
+              <input type="date" id="leadStartDate" class="form-input" style="width:132px; padding:5px 8px; font-size:12px; background:#fff;" onchange="onChangeLeadCustomDates()" />
+              <span style="font-size:12px; font-weight:800; color:var(--sub);">~</span>
+              <input type="date" id="leadEndDate" class="form-input" style="width:132px; padding:5px 8px; font-size:12px; background:#fff;" onchange="onChangeLeadCustomDates()" />
+            </div>
+          </div>
         </div>
-
-
 
         <div style="overflow-x:auto;">
-
           <table>
-
             <thead>
-
               <tr>
-
-                <th>접수 일시</th>
-
-                <th>유입 경로</th>
-
-                <th>유입 콘텐츠(캠페인)</th>
-
-                <th>고객명 / 인스타ID</th>
-
-                <th>연락처</th>
-
-                <th>거주 지역 / 문의·댓글 내용</th>
-
-                <th>진행 상태</th>
-
+                <th style="width:150px;">접수 일시</th>
+                <th style="width:125px;">유입 경로</th>
+                <th style="width:190px;">유입 콘텐츠(캠페인)</th>
+                <th style="width:120px;">고객명 / ID</th>
+                <th style="width:135px;">연락처</th>
+                <th>지역 및 맞춤 질문·답변 내역</th>
+                <th style="width:110px;">상태</th>
               </tr>
-
             </thead>
-
             <tbody id="myLeadsTableBody"></tbody>
-
           </table>
-
         </div>
 
+        <div id="leadsPaginationBar" style="display:flex; justify-content:center; align-items:center; gap:6px; margin-top:16px;"></div>
       </div>
-
     </section>
 
 
@@ -4221,16 +4181,12 @@ const authMetaPack = JSON.stringify({
 
 
 
-    function filterLeadsTable(sourceFilter, btn) {
-
+function filterLeadsTable(sourceFilter, btn) {
       currentLeadFilter = sourceFilter;
-
-      document.querySelectorAll('#view-leads .sub-pill').forEach(b => b.classList.remove('active'));
-
+      currentLeadPage = 1;
+      document.querySelectorAll('#leadSourcePills .sub-pill').forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
-
       renderMyLeadsTable();
-
     }
 
 
@@ -6071,14 +6027,18 @@ const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions))
         const targetSummaryText = appliedTargetNames.length > 0
           ? `${appliedTargetingModeLabel}: ${appliedTargetNames.slice(0, 4).join(', ')}`
           : activeTargets.slice(0, 2).join(', ');
-
-        const targetSummaryValue = wizardTrack === 'meta'
-          ? `${ageMin}~${ageMax}세 · ${targetSummaryText}`
+const targetSummaryValue = wizardTrack === 'meta'
+          ? JSON.stringify({
+              summary: `${ageMin}~${ageMax}세 · ${targetSummaryText}`,
+              pageId: activePageId || '',
+              pageToken: pageAccessToken || '',
+              agentName: agentName || '',
+              agentPhone: agentPhone || ''
+            })
           : JSON.stringify({
               pageId: activePageId || '',
               igId: igUserId || '',
-              pageToken: pageAccessToken || '',
-              pdfUrl: pdfDocUrl || ''
+              pageToken: pageAccessToken || ''
             });
 
         const dbRecord = {
@@ -6204,9 +6164,8 @@ const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions))
 
               const pObj = JSON.parse(cleanTargetSummary);
 
-              if (pObj.permalink) parsedPermalink = pObj.permalink;
-
-              cleanTargetSummary = '인스타 24h 댓글 자동DM 연결됨';
+            if (pObj.permalink) parsedPermalink = pObj.permalink;
+              cleanTargetSummary = pObj.summary || '인스타 24h 댓글 자동DM 연결됨'; 
 
             } catch (e) {}
 
@@ -6945,174 +6904,227 @@ async function promptEditCampaign(idx) {
 
 
 
-    function renderMyLeadsTable() {
+let currentLeadPeriod = 'all';
+    let currentLeadPage = 1;
+    const LEADS_PER_PAGE = 20;
 
-      const totalCount = myLeads.length;
+    function filterLeadsPeriod(period, btn) {
+      currentLeadPeriod = period;
+      currentLeadPage = 1;
+      document.querySelectorAll('#leadPeriodPills .sub-pill').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
 
-      const instaCount = myLeads.filter(l => isInstaLeadRow(l)).length;
-
-      const metaCount = totalCount - instaCount;
-
-
-
-      const elTotal = document.getElementById('statTotalLeads');
-
-      const elMeta = document.getElementById('statMetaFormLeads');
-
-      const elInsta = document.getElementById('statInstaDmLeads');
-
-      if (elTotal) elTotal.innerText = `${totalCount}건`;
-
-      if (elMeta) elMeta.innerText = `${metaCount}명`;
-
-      if (elInsta) elInsta.innerText = `${instaCount}건`;
-
-
-
-      const pAll = document.getElementById('leadPillAll');
-
-      const pMeta = document.getElementById('leadPillMeta');
-
-      const pInsta = document.getElementById('leadPillInsta');
-
-      if (pAll) pAll.innerText = `전체 내역 보기 (${totalCount})`;
-
-      if (pMeta) pMeta.innerText = `🚀 메타 광고 양식·PR 고객만 (${metaCount})`;
-
-      if (pInsta) pInsta.innerText = `📸 인스타 댓글/DM 내역만 (${instaCount})`;
-
-
-
-      const filteredLeads = myLeads.filter(l => {
-
-        const isInsta = isInstaLeadRow(l);
-
-        if (currentLeadFilter === 'meta') return !isInsta;
-
-        if (currentLeadFilter === 'insta') return isInsta;
-
-        return true;
-
-      });
-
-
-
-      const tbody = document.getElementById('myLeadsTableBody');
-
-      if (!tbody) return;
-
-      if (!filteredLeads || filteredLeads.length === 0) {
-
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:36px; color:var(--sub);">아직 유입된 고객 DB 또는 댓글/DM 내역이 없습니다.</td></tr>`;
-
-        return;
-
+      const customWrap = document.getElementById('leadCustomDateWrap');
+      if (customWrap) {
+        if (period === 'custom') {
+          customWrap.style.display = 'inline-flex';
+          const todayStr = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+          const weekAgoStr = new Date(Date.now() + 9 * 3600 * 1000 - 6 * 86400000).toISOString().slice(0, 10);
+          if (!document.getElementById('leadStartDate').value) document.getElementById('leadStartDate').value = weekAgoStr;
+          if (!document.getElementById('leadEndDate').value) document.getElementById('leadEndDate').value = todayStr;
+        } else {
+          customWrap.style.display = 'none';
+        }
       }
-
-      tbody.innerHTML = filteredLeads.map(l => {
-
-        const dateStr = l.created_at ? new Date(l.created_at).toLocaleString('ko-KR') : (l.date || '-');
-
-        const isInsta = isInstaLeadRow(l);
-
-        const isInstaApply = String(l.source || '').includes('apply') || /^01[016789]/.test(String(l.phone || '').replace(/-/g, ''));
-
-        const badgeLabel = isInsta
-
-          ? (isInstaApply ? '📸 인스타 DM신청' : '📸 인스타 댓글DM')
-
-          : '🚀 메타·PR 신청';
-
-
-
-        const campTitle = l.campaign_title || l.source || '캠페인';
-
-        const noteText = [l.region, l.note || l.answer].filter(Boolean).join(' · ');
-
-        const statusText = l.status || l.sheetStatus || '신규유입';
-
-
-
-        return `
-
-          <tr>
-
-            <td style="color:var(--sub); font-size:12px;">${dateStr}</td>
-
-            <td>
-
-              <span style="background:${isInsta ? '#fff1f2' : '#eff6ff'}; color:${isInsta ? 'var(--insta)' : 'var(--meta)'}; padding:4px 9px; border-radius:14px; font-size:11.5px; font-weight:800;">
-
-                ${badgeLabel}
-
-              </span>
-
-            </td>
-
-            <td><strong>${campTitle}</strong></td>
-
-            <td style="color:var(--navy); font-weight:900;">${l.name || '-'}</td>
-
-            <td style="font-weight:800;">${l.phone || '-'}</td>
-
-            <td>${noteText}</td>
-
-            <td style="color:var(--green); font-weight:800;">✅ ${statusText}</td>
-
-          </tr>
-
-        `;
-
-      }).join('');
-
+      renderMyLeadsTable();
     }
 
+    function onChangeLeadCustomDates() {
+      currentLeadPage = 1;
+      renderMyLeadsTable();
+    }
 
+    function goToLeadPage(p) {
+      currentLeadPage = p;
+      renderMyLeadsTable();
+    }
 
-    function exportLeadsToCsv() {
+    function checkLeadPeriodMatch(leadDateStr) {
+      if (currentLeadPeriod === 'all') return true;
+      if (!leadDateStr) return false;
+      const d = new Date(leadDateStr);
+      if (isNaN(d.getTime())) return true;
 
-      if (!myLeads || myLeads.length === 0) {
+      const now = new Date();
+      if (currentLeadPeriod === 'today') {
+        return d.getFullYear() === now.getFullYear() &&
+               d.getMonth() === now.getMonth() &&
+               d.getDate() === now.getDate();
+      }
+      if (currentLeadPeriod === 'week') {
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const sevenDaysAgo = startOfToday - (6 * 86400000);
+        return d.getTime() >= sevenDaysAgo;
+      }
+      if (currentLeadPeriod === 'month') {
+        return d.getFullYear() === now.getFullYear() &&
+               d.getMonth() === now.getMonth();
+      }
+      if (currentLeadPeriod === 'custom') {
+        const sVal = document.getElementById('leadStartDate') ? document.getElementById('leadStartDate').value : '';
+        const eVal = document.getElementById('leadEndDate') ? document.getElementById('leadEndDate').value : '';
+        if (sVal) {
+          const sTime = new Date(sVal + 'T00:00:00').getTime();
+          if (d.getTime() < sTime) return false;
+        }
+        if (eVal) {
+          const eTime = new Date(eVal + 'T23:59:59').getTime();
+          if (d.getTime() > eTime) return false;
+        }
+        return true;
+      }
+      return true;
+    }
 
-        alert('다운로드할 고객 DB가 없습니다.');
+    function stripInternalOwnerTag(str) {
+      return String(str || '').replace(/\[owner:[^\]]+\]/gi, '').trim();
+    }
 
-        return;
+    function formatLeadDetailBadges(l) {
+      const chips = [];
+      const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+      const reg = stripInternalOwnerTag(l.region);
+      if (reg && !reg.includes('인스타그램 댓글')) {
+        chips.push(`<span style="display:inline-block; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:800; margin:2px 4px 2px 0;">📍 ${esc(reg)}</span>`);
       }
 
-      const header = ['접수일시', '유입경로', '캠페인명', '고객명', '연락처', '지역', '답변내용', '상태'];
+      const cleanNote = stripInternalOwnerTag(l.note || l.answer);
+      if (cleanNote) {
+        const segments = cleanNote.split(/\s+\/\s+|\s+·\s+|\n+/).map(s => s.trim()).filter(Boolean);
+        segments.forEach(seg => {
+          const colonIdx = seg.indexOf(':');
+          if (colonIdx > 0 && colonIdx < 28 && !seg.startsWith('댓글:')) {
+            const key = seg.slice(0, colonIdx).trim();
+            const val = seg.slice(colonIdx + 1).trim();
+            chips.push(`<span style="display:inline-block; background:#f8fafc; color:#0f172a; border:1px solid #cbd5e1; padding:3px 8px; border-radius:6px; font-size:11.5px; margin:2px 4px 2px 0;"><strong style="color:var(--navy);">${esc(key)}:</strong> ${esc(val)}</span>`);
+          } else {
+            chips.push(`<span style="display:inline-block; background:#f8fafc; color:#334155; border:1px solid #e2e8f0; padding:3px 8px; border-radius:6px; font-size:11.5px; margin:2px 4px 2px 0;">💬 ${esc(seg)}</span>`);
+          }
+        });
+      }
 
-      const rows = myLeads.map(l => [
+      return chips.length > 0 ? `<div style="line-height:1.5;">${chips.join('')}</div>` : '<span style="color:#94a3b8;">-</span>';
+    }
 
+    function getFilteredLeadsByState() {
+      const periodFiltered = myLeads.filter(l => checkLeadPeriodMatch(l.created_at || l.date));
+      const finalFiltered = periodFiltered.filter(l => {
+        const isInsta = isInstaLeadRow(l);
+        if (currentLeadFilter === 'meta') return !isInsta;
+        if (currentLeadFilter === 'insta') return isInsta;
+        return true;
+      });
+      return { periodFiltered, finalFiltered };
+    }
+
+    function renderMyLeadsTable() {
+      const { periodFiltered, finalFiltered } = getFilteredLeadsByState();
+
+      const totalCount = periodFiltered.length;
+      const instaCount = periodFiltered.filter(l => isInstaLeadRow(l)).length;
+      const metaCount = totalCount - instaCount;
+
+      const elTotal = document.getElementById('statTotalLeads');
+      const elMeta = document.getElementById('statMetaFormLeads');
+      const elInsta = document.getElementById('statInstaDmLeads');
+      if (elTotal) elTotal.innerText = `${totalCount}건`;
+      if (elMeta) elMeta.innerText = `${metaCount}명`;
+      if (elInsta) elInsta.innerText = `${instaCount}건`;
+
+      const pAll = document.getElementById('leadPillAll');
+      const pMeta = document.getElementById('leadPillMeta');
+      const pInsta = document.getElementById('leadPillInsta');
+      if (pAll) pAll.innerText = `전체 내역 (${totalCount})`;
+      if (pMeta) pMeta.innerText = `🚀 메타·PR 신청만 (${metaCount})`;
+      if (pInsta) pInsta.innerText = `📸 인스타 댓글/DM만 (${instaCount})`;
+
+      const tbody = document.getElementById('myLeadsTableBody');
+      const pageBar = document.getElementById('leadsPaginationBar');
+      if (!tbody) return;
+
+      if (!finalFiltered || finalFiltered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--sub);">선택하신 기간에 유입된 고객 DB 또는 댓글 내역이 없습니다.</td></tr>`;
+        if (pageBar) pageBar.innerHTML = '';
+        return;
+      }
+
+      const totalPages = Math.max(1, Math.ceil(finalFiltered.length / LEADS_PER_PAGE));
+      if (currentLeadPage > totalPages) currentLeadPage = totalPages;
+      const startIdx = (currentLeadPage - 1) * LEADS_PER_PAGE;
+      const pagedRows = finalFiltered.slice(startIdx, startIdx + LEADS_PER_PAGE);
+
+      tbody.innerHTML = pagedRows.map(l => {
+        const dateStr = l.created_at ? new Date(l.created_at).toLocaleString('ko-KR') : (l.date || '-');
+        const isInsta = isInstaLeadRow(l);
+        const isInstaApply = String(l.source || '').includes('apply') || /^01[016789]/.test(String(l.phone || '').replace(/-/g, ''));
+        const badgeLabel = isInsta
+          ? (isInstaApply ? '📸 인스타 DM신청' : '📸 인스타 댓글DM')
+          : '🚀 메타·PR 신청';
+
+        const campTitle = l.campaign_title || l.source || '캠페인';
+        const statusText = l.status || l.sheetStatus || '신규유입';
+
+        return `
+          <tr>
+            <td style="color:var(--sub); font-size:12px; white-space:nowrap;">${dateStr}</td>
+            <td>
+              <span style="background:${isInsta ? '#fff1f2' : '#eff6ff'}; color:${isInsta ? 'var(--insta)' : 'var(--meta)'}; padding:4px 9px; border-radius:14px; font-size:11.5px; font-weight:800; white-space:nowrap;">
+                ${badgeLabel}
+              </span>
+            </td>
+            <td><strong>${campTitle}</strong></td>
+            <td style="color:var(--navy); font-weight:900; white-space:nowrap;">${l.name || '-'}</td>
+            <td style="font-weight:800; white-space:nowrap;">${l.phone || '-'}</td>
+            <td>${formatLeadDetailBadges(l)}</td>
+            <td style="color:var(--green); font-weight:800; white-space:nowrap;">✅ ${statusText}</td>
+          </tr>
+        `;
+      }).join('');
+
+      if (pageBar) {
+        if (totalPages <= 1) {
+          pageBar.innerHTML = '';
+        } else {
+          let btns = '';
+          if (currentLeadPage > 1) {
+            btns += `<button type="button" class="sub-pill" style="padding:5px 11px;" onclick="goToLeadPage(${currentLeadPage - 1})">‹ 이전</button>`;
+          }
+          for (let p = 1; p <= totalPages; p++) {
+            if (totalPages > 7 && Math.abs(p - currentLeadPage) > 2 && p !== 1 && p !== totalPages) continue;
+            btns += `<button type="button" class="sub-pill ${p === currentLeadPage ? 'active' : ''}" style="padding:5px 11px;" onclick="goToLeadPage(${p})">${p}</button>`;
+          }
+          if (currentLeadPage < totalPages) {
+            btns += `<button type="button" class="sub-pill" style="padding:5px 11px;" onclick="goToLeadPage(${currentLeadPage + 1})">다음 ›</button>`;
+          }
+          pageBar.innerHTML = btns;
+        }
+      }
+    }
+
+    function exportLeadsToCsv() {
+      const { finalFiltered } = getFilteredLeadsByState();
+      if (!finalFiltered || finalFiltered.length === 0) {
+        alert('현재 선택된 기간에 다운로드할 고객 DB가 없습니다.');
+        return;
+      }
+      const header = ['접수일시', '유입경로', '캠페인명', '고객명', '연락처', '지역', '맞춤질문 및 답변내역', '상태'];
+      const rows = finalFiltered.map(l => [
         l.created_at || l.date || '',
-
         l.source || '',
-
         (l.campaign_title || l.source || '').replace(/,/g, ' '),
-
         (l.name || '').replace(/,/g, ' '),
-
         l.phone || '',
-
-        (l.region || '').replace(/,/g, ' '),
-
-        (l.note || l.answer || '').replace(/,/g, ' '),
-
+        stripInternalOwnerTag(l.region || '').replace(/,/g, ' '),
+        stripInternalOwnerTag(l.note || l.answer || '').replace(/,/g, ' '),
         l.status || l.sheetStatus || ''
-
       ]);
-
       const csvContent = '\uFEFF' + [header, ...rows].map(r => r.join(',')).join('\n');
-
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-
       const link = document.createElement('a');
-
       link.href = URL.createObjectURL(blob);
-
-      link.download = `위라클랩_고객DB_${new Date().toISOString().slice(0, 10)}.csv`;
-
+      link.download = `위라클랩_고객DB_${currentLeadPeriod}_${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
-
     }
 
   </script>

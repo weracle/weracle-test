@@ -2,6 +2,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -68,21 +69,33 @@ module.exports = async function handler(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   const { action } = body;
 
+  // 한글 성함(박보환 등)도 깨지지 않도록 보존
   function sanitizeAgentKey(rawKey) {
     const str = String(rawKey || 'default').trim().toLowerCase();
-    const cleaned = str.replace(/[^a-z0-9@._-]/g, '_');
+    const cleaned = str.replace(/[^a-z0-9가-힣@._-]/g, '_').replace(/^_+|_+$/g, '');
     return cleaned || 'default';
   }
 
-  // ★ 핵심: meta_leads 저장 실패(RLS 권한/컬럼 충돌) 시 쓰기 권한이 열려있는 meta_campaigns에 100% 우회 영구 저장
+  // 메타/인스타 API 호환을 위한 영문·숫자 스토리지 폴더명 생성
+  function toSafeStorageFolder(rawKey) {
+    const raw = String(rawKey || 'default').trim().toLowerCase();
+    const ascii = raw.replace(/[^a-z0-9._-]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+    if (ascii && ascii.length >= 2) return ascii;
+    const hex = Buffer.from(raw || 'default', 'utf8').toString('hex').slice(0, 16);
+    return `agent_${hex}`;
+  }
+
+  // meta_leads 정식 저장 + 읽기(SELECT) 권한까지 검증 후 필요시 백업 동시 보장
   async function insertLeadGuaranteed(leadData, ownerKey) {
     const cleanOwner = sanitizeAgentKey(ownerKey || 'default');
     const ownerTag = (cleanOwner && cleanOwner !== 'default') ? ` [owner:${cleanOwner}]` : '';
     const baseNote = String(leadData.note || '').replace(/\s*\[(?:owner|담당):[^\]]+\]/gi, '').trim();
     const finalNote = `${baseNote}${ownerTag}`.trim();
     const nowIso = leadData.created_at || new Date().toISOString();
+    const generatedId = `lead_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
     const fullLeadObj = {
+      id: generatedId,
       campaign_id: String(leadData.campaign_id || 'camp_direct'),
       campaign_title: String(leadData.campaign_title || '상담 신청'),
       source: String(leadData.source || 'insta_dm_apply'),
@@ -94,7 +107,8 @@ module.exports = async function handler(req, res) {
       created_at: nowIso
     };
 
-    // 1차 시도: meta_leads 실제 스키마를 자동 감지하여 정식 저장
+    let readableInMetaLeads = false;
+
     try {
       const sampleRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads?limit=1`, {
         headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
@@ -109,52 +123,55 @@ module.exports = async function handler(req, res) {
         Object.keys(payloadToInsert).forEach(k => {
           if (allowedCols.has(k)) filtered[k] = payloadToInsert[k];
         });
+        if (allowedCols.has('id') && typeof sample.id === 'number') {
+          delete filtered.id;
+        }
         if (!allowedCols.has('note') && allowedCols.has('answer')) {
           filtered.answer = finalNote;
         }
         if (allowedCols.has('user_id') && !filtered.user_id) {
           filtered.user_id = cleanOwner;
         }
-        if (allowedCols.has('id') && typeof sample.id === 'string') {
-          filtered.id = `lead_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-        }
         payloadToInsert = filtered;
       }
 
+      // return=representation으로 INSERT와 SELECT(읽기) 가능 여부를 동시에 검증
       let insRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': supabaseKey,
           'Authorization': `Bearer ${supabaseKey}`,
-          'Prefer': 'return=minimal'
+          'Prefer': 'return=representation'
         },
         body: JSON.stringify(payloadToInsert)
       });
 
-      if (!insRes.ok && !payloadToInsert.id) {
-        const errTxt = await insRes.text().catch(() => '');
-        if (errTxt.includes('"id"') || errTxt.includes('23502')) {
-          payloadToInsert.id = `lead_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-          insRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify(payloadToInsert)
-          });
-        }
-      }
-
       if (insRes.ok) {
-        return { success: true, storage: 'meta_leads' };
+        const retRows = await insRes.json().catch(() => []);
+        if (Array.isArray(retRows) && retRows.length > 0) {
+          readableInMetaLeads = true;
+        }
+      } else {
+        // SELECT RLS만 막혀 있는 경우 minimal로 meta_leads에도 넣어두고 아래 백업도 함께 기록
+        await fetch(`${supabaseUrl}/rest/v1/meta_leads`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(payloadToInsert)
+        }).catch(() => {});
       }
     } catch (e) {}
 
-    // 2차 보장: meta_leads 쓰기 권한이 막혀 있을 때 meta_campaigns(lead_backup)에 100% 영구 저장
+    if (readableInMetaLeads) {
+      return { success: true, storage: 'meta_leads', id: generatedId };
+    }
+
+    // meta_leads 읽기(SELECT)나 쓰기가 제한된 상태라도 100% 화면에 뜨도록 백업 저장
     const backupId = `lead_bk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const storedLeadJson = { ...fullLeadObj, id: backupId };
     const backupRecord = {
@@ -198,9 +215,9 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // [1] 이미지 업로드
+    // [1] 이미지 업로드 (사용자별 폴더 users/{userFolder}/ 자동 분리)
     if (action === 'UPLOAD_MEDIA') {
-      const { mediaBase64 } = body;
+      const { mediaBase64, userId } = body;
       if (!mediaBase64 || !supabaseKey) {
         return res.status(200).json({ success: false, mediaUrl: '' });
       }
@@ -213,9 +230,10 @@ module.exports = async function handler(req, res) {
 
       const rawBase64Only = String(mediaBase64).replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
       const buffer = Buffer.from(rawBase64Only, 'base64');
-      const fileName = `insta_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+      const folder = toSafeStorageFolder(userId || 'shared');
+      const objectPath = `users/${folder}/insta_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
 
-      const uploadRes = await fetch(`${supabaseUrl}/storage/v1/object/ad_media/${fileName}`, {
+      const uploadRes = await fetch(`${supabaseUrl}/storage/v1/object/ad_media/${objectPath}`, {
         method: 'POST',
         headers: {
           'Content-Type': mimeType,
@@ -227,7 +245,7 @@ module.exports = async function handler(req, res) {
       });
 
       if (uploadRes.ok) {
-        const publicUrl = `${supabaseUrl}/storage/v1/object/public/ad_media/${fileName}`;
+        const publicUrl = `${supabaseUrl}/storage/v1/object/public/ad_media/${objectPath}`;
         return res.status(200).json({ success: true, mediaUrl: publicUrl });
       }
       return res.status(200).json({ success: false, mediaUrl: '' });
@@ -284,7 +302,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, assetId: asset.id });
     }
 
-    // [1-2] 나의 광고콘텐츠 삭제 (+ 원본 파일 삭제)
+    // [1-2] 나의 광고콘텐츠 삭제 (+ 사용자 폴더 내 원본 파일 자동 삭제)
     if (action === 'DELETE_CUSTOM_ASSET') {
       const { assetId, mediaUrls } = body;
       if (supabaseKey && assetId) {
@@ -311,8 +329,8 @@ module.exports = async function handler(req, res) {
         for (const u of uniqueUrls) {
           const filePart = u.split('/ad_media/')[1];
           if (filePart) {
-            const cleanFileName = filePart.split('?')[0];
-            await fetch(`${supabaseUrl}/storage/v1/object/ad_media/${cleanFileName}`, {
+            const cleanObjectPath = filePart.split('?')[0];
+            await fetch(`${supabaseUrl}/storage/v1/object/ad_media/${cleanObjectPath}`, {
               method: 'DELETE',
               headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
             }).catch(() => {});
@@ -489,7 +507,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, record });
     }
 
-    // ★ [4-1] PR 랜딩페이지(sns_apply.html) 신청 고객 DB 2중 안전 저장
+    // [4-1] PR 랜딩페이지 신청 고객 DB 저장
     if (action === 'SAVE_APPLY_LEAD') {
       const { campaignId, campaignTitle, name, phone, region, note, source, agentId, hasPdf } = body;
       if (!supabaseKey || !name || !phone) {
@@ -558,22 +576,28 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(saveResult);
     }
 
-    // [5] 캠페인 · 나의 광고콘텐츠 · 유입 DB(정식 + 백업 통합) 조회
-if (action === 'LIST' || action === 'SYNC_LIST') {
+    // [5] 캠페인 · 나의 광고콘텐츠 · 유입 DB 통합 조회 (다중 계정 별칭 완벽 연결)
+    if (action === 'LIST' || action === 'SYNC_LIST') {
       const { userId, userKeys, knownCampIds } = body;
       const knownCampIdSet = new Set(Array.isArray(knownCampIds) ? knownCampIds.map(id => String(id)) : []);
 
       const rawInputKeys = Array.isArray(userKeys) ? [...userKeys, userId] : [userId];
       const validKeySet = new Set();
-      rawInputKeys.forEach(k => {
-        const clean = String(k || '').trim().toLowerCase();
-        if (clean && clean !== 'default' && clean !== 'weracle_user') {
-          validKeySet.add(clean);
-          validKeySet.add(sanitizeAgentKey(clean));
-          const digitsOnly = clean.replace(/[^0-9]/g, '');
-          if (digitsOnly.length >= 9) validKeySet.add(digitsOnly);
+
+      const addKeyVariants = (rawVal) => {
+        const clean = String(rawVal || '').trim().toLowerCase().replace(/^@/, '');
+        if (!clean || clean === 'default' || clean === 'weracle_user' || clean === '담당설계사') return;
+        validKeySet.add(clean);
+        validKeySet.add(sanitizeAgentKey(clean));
+        if (clean.includes('@')) {
+          const emailPrefix = clean.split('@')[0].trim();
+          if (emailPrefix.length >= 3) validKeySet.add(emailPrefix);
         }
-      });
+        const digitsOnly = clean.replace(/[^0-9]/g, '');
+        if (digitsOnly.length >= 9) validKeySet.add(digitsOnly);
+      };
+
+      rawInputKeys.forEach(addKeyVariants);
 
       let allRows = [];
       try {
@@ -581,26 +605,31 @@ if (action === 'LIST' || action === 'SYNC_LIST') {
           headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
         });
         const cData = await listRes.json();
-        if (Array.isArray(cData)) {
-          allRows = cData.filter(c => c.track !== 'pr_config' && !String(c.id || '').startsWith('pr_cfg_'));
-        }
+        if (Array.isArray(cData)) allRows = cData;
       } catch (e) {}
 
-      const myCustomAssets = [];
+      // PR 설정 레코드(pr_cfg_*)에 저장된 내 이름/전화번호도 식별키로 자동 연결
+      for (const r of allRows) {
+        if (r.track === 'pr_config' || String(r.id || '').startsWith('pr_cfg_')) {
+          const rUser = String(r.user_id || '').trim().toLowerCase();
+          if (validKeySet.has(rUser) || validKeySet.has(sanitizeAgentKey(rUser))) {
+            try {
+              const cfg = JSON.parse(r.target_summary || '{}');
+              if (cfg.agentNotifyPhone) addKeyVariants(cfg.agentNotifyPhone);
+              if (cfg.texts && cfg.texts.heroAgentName) addKeyVariants(cfg.texts.heroAgentName);
+            } catch (e) {}
+          }
+        }
+      }
+
+      const nonConfigRows = allRows.filter(c => c.track !== 'pr_config' && !String(c.id || '').startsWith('pr_cfg_'));
+      const rawCustomAssetRows = [];
       const backupLeadRows = [];
       const allCampaigns = [];
 
-      for (const row of allRows) {
+      for (const row of nonConfigRows) {
         if (row.track === 'custom_asset') {
-          const rUser = String(row.user_id || '').trim().toLowerCase();
-          const rSanitized = sanitizeAgentKey(rUser);
-          const isMyAsset = validKeySet.size === 0 || validKeySet.has(rUser) || validKeySet.has(rSanitized) || rUser === 'default';
-          if (isMyAsset && row.target_summary) {
-            try {
-              const parsedAsset = JSON.parse(row.target_summary);
-              if (parsedAsset && parsedAsset.id) myCustomAssets.push(parsedAsset);
-            } catch (e) {}
-          }
+          rawCustomAssetRows.push(row);
         } else if (row.track === 'lead_backup' || String(row.id || '').startsWith('lead_bk_')) {
           try {
             const parsedLead = row.target_summary ? JSON.parse(row.target_summary) : {};
@@ -628,21 +657,67 @@ if (action === 'LIST' || action === 'SYNC_LIST') {
         }
       }
 
-      // 1차 연결: 내 브라우저 캠페인 ID 또는 인스타/페이지 ID가 일치하는 캠페인의 user_id(예: weracle_bohwan)를 내 키로 자동 편입
-      for (const c of allCampaigns) {
-        const cUser = String(c.user_id || '').trim().toLowerCase();
-        let matchedByMeta = false;
-        if (knownCampIdSet.has(String(c.id))) matchedByMeta = true;
-        if (!matchedByMeta && c.target_summary && String(c.target_summary).startsWith('{')) {
+      // 캠페인이 내 소유인지 정밀 판별하는 헬퍼 (user_id + target_summary + landing_url 내 담당자명/ID 모두 대조)
+      const checkCampaignBelongsToMe = (c) => {
+        if (knownCampIdSet.has(String(c.id))) return true;
+        const cUser = String(c.user_id || '').trim().toLowerCase().replace(/^@/, '');
+        const cUserSanitized = sanitizeAgentKey(cUser);
+        const cUserDigits = cUser.replace(/[^0-9]/g, '');
+
+        if (cUser && (validKeySet.has(cUser) || validKeySet.has(cUserSanitized) || (cUserDigits.length >= 9 && validKeySet.has(cUserDigits)))) {
+          return true;
+        }
+
+        if (c.target_summary && String(c.target_summary).startsWith('{')) {
           try {
             const pObj = JSON.parse(c.target_summary);
-            if (pObj.igId && validKeySet.has(String(pObj.igId).toLowerCase())) matchedByMeta = true;
-            if (pObj.pageId && validKeySet.has(String(pObj.pageId).toLowerCase())) matchedByMeta = true;
+            const candidates = [pObj.igId, pObj.igUser, pObj.pageId, pObj.agentName, pObj.agentPhone];
+            for (const cand of candidates) {
+              const cl = String(cand || '').trim().toLowerCase().replace(/^@/, '');
+              if (cl && (validKeySet.has(cl) || validKeySet.has(sanitizeAgentKey(cl)))) return true;
+              const dg = cl.replace(/[^0-9]/g, '');
+              if (dg.length >= 9 && validKeySet.has(dg)) return true;
+            }
           } catch (e) {}
         }
-        if (matchedByMeta && cUser && cUser !== 'default' && cUser !== 'weracle_user') {
-          validKeySet.add(cUser);
-          validKeySet.add(sanitizeAgentKey(cUser));
+
+        if (c.landing_url) {
+          try {
+            const uIdx = c.landing_url.indexOf('?');
+            if (uIdx >= 0) {
+              const sp = new URLSearchParams(c.landing_url.slice(uIdx + 1));
+              const urlCands = [sp.get('agent_id'), sp.get('agent'), sp.get('agent_phone')];
+              for (const cand of urlCands) {
+                const cl = String(cand || '').trim().toLowerCase().replace(/^@/, '');
+                if (cl && (validKeySet.has(cl) || validKeySet.has(sanitizeAgentKey(cl)))) return true;
+                const dg = cl.replace(/[^0-9]/g, '');
+                if (dg.length >= 9 && validKeySet.has(dg)) return true;
+              }
+            }
+          } catch (e) {}
+        }
+
+        return false;
+      };
+
+      // 2회 연쇄 브릿지: 내 캠페인(예: agent=박보환)에 적힌 user_id(예: weracle_bohwan)를 내 키 목록에 자동 편입
+      for (let pass = 0; pass < 2; pass++) {
+        for (const c of allCampaigns) {
+          if (checkCampaignBelongsToMe(c)) {
+            if (c.user_id) addKeyVariants(c.user_id);
+          }
+        }
+      }
+
+      const myCustomAssets = [];
+      for (const row of rawCustomAssetRows) {
+        const rUser = String(row.user_id || '').trim().toLowerCase();
+        const isMyAsset = validKeySet.size === 0 || validKeySet.has(rUser) || validKeySet.has(sanitizeAgentKey(rUser)) || rUser === 'default';
+        if (isMyAsset && row.target_summary) {
+          try {
+            const parsedAsset = JSON.parse(row.target_summary);
+            if (parsedAsset && parsedAsset.id) myCustomAssets.push(parsedAsset);
+          } catch (e) {}
         }
       }
 
@@ -652,21 +727,8 @@ if (action === 'LIST' || action === 'SYNC_LIST') {
       if (validKeySet.size > 0 || knownCampIdSet.size > 0) {
         for (const c of allCampaigns) {
           const cUser = String(c.user_id || '').trim().toLowerCase();
-          const cUserSanitized = sanitizeAgentKey(cUser);
-          const cUserDigits = cUser.replace(/[^0-9]/g, '');
-
-          let isMine = knownCampIdSet.has(String(c.id));
           const isUnassignedLegacy = (!cUser || cUser === 'default' || cUser === 'weracle_user');
-
-          if (validKeySet.has(cUser) || validKeySet.has(cUserSanitized) || (cUserDigits.length >= 9 && validKeySet.has(cUserDigits))) {
-            isMine = true;
-          } else if (c.target_summary && String(c.target_summary).startsWith('{')) {
-            try {
-              const pObj = JSON.parse(c.target_summary);
-              if (pObj.igId && validKeySet.has(String(pObj.igId).toLowerCase())) isMine = true;
-              if (pObj.pageId && validKeySet.has(String(pObj.pageId).toLowerCase())) isMine = true;
-            } catch (e) {}
-          }
+          const isMine = checkCampaignBelongsToMe(c);
 
           if (isMine || isUnassignedLegacy) {
             myCampaigns.push(c);
@@ -684,13 +746,17 @@ if (action === 'LIST' || action === 'SYNC_LIST') {
 
       let leads = [];
       try {
-        const leadsRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads?order=created_at.desc&limit=500`, {
+        let leadsRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads?order=created_at.desc&limit=500`, {
           headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
         });
+        if (!leadsRes.ok) {
+          leadsRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads?limit=500`, {
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+          });
+        }
         const lData = await leadsRes.json();
         const combinedRaw = [...backupLeadRows, ...(Array.isArray(lData) ? lData : [])];
 
-        // 최신순 정렬 및 중복 제거
         combinedRaw.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
         const seenSig = new Set();
         const dedupedRaw = [];
@@ -708,12 +774,11 @@ if (action === 'LIST' || action === 'SYNC_LIST') {
           const noteStr = String(l.note || '');
 
           if (cId && myCampIdSet.has(cId)) return true;
-          if (cId && otherUsersCampIdSet.has(cId)) return false;
-          if ((!cId || cId === 'camp_direct') && cTitle && myCampTitleSet.has(cTitle)) return true;
+          if (cTitle && myCampTitleSet.has(cTitle)) return true;
 
           const ownerMatch = noteStr.match(/\[(?:owner|담당):([^\]]+)\]/i);
           if (ownerMatch && ownerMatch[1]) {
-            const taggedOwner = ownerMatch[1].trim().toLowerCase();
+            const taggedOwner = ownerMatch[1].trim().toLowerCase().replace(/^@/, '');
             const taggedSanitized = sanitizeAgentKey(taggedOwner);
             const taggedDigits = taggedOwner.replace(/[^0-9]/g, '');
 
@@ -725,11 +790,10 @@ if (action === 'LIST' || action === 'SYNC_LIST') {
                 (taggedDigits.length >= 9 && validKeySet.has(taggedDigits));
 
               if (isTaggedMine) return true;
-
-              const hasEmailInMyKeys = Array.from(validKeySet).some(k => k.includes('@'));
-              if (taggedOwner.includes('@') && hasEmailInMyKeys) return false;
             }
           }
+
+          if (cId && otherUsersCampIdSet.has(cId)) return false;
           return true;
         }).map(l => {
           const cleanNote = String(l.note || '').replace(/\s*\[(?:owner|담당):[^\]]+\]/gi, '').trim();
@@ -766,7 +830,7 @@ if (action === 'LIST' || action === 'SYNC_LIST') {
       return res.status(200).json({ success: true, status: newStatus });
     }
 
-    // [6-1] 유입 고객 진행상태 변경 (정식 + 백업 모두 대응)
+    // [6-1] 유입 고객 진행상태 변경
     if (action === 'UPDATE_LEAD_STATUS') {
       const { leadId, createdAt, phone, campaignId, newStatus } = body;
       if (!supabaseKey || !newStatus) {
@@ -844,7 +908,7 @@ if (action === 'LIST' || action === 'SYNC_LIST') {
       return res.status(200).json({ success: true });
     }
 
-    // [9] 인스타 댓글 자동DM 기록 (백업 저장 보장 적용)
+    // [9] 인스타 댓글 자동DM 기록
     if (action === 'RECORD_INSTA_DM') {
       const { campaignId, dmSentCount, leadRecord, userId } = body;
       if (supabaseKey) {

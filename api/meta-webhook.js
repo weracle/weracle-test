@@ -415,9 +415,10 @@ module.exports = async function handler(req, res) {
             });
           }
 
-          if (field === 'leadgen' && val.leadgen_id) {
+if (field === 'leadgen' && val.leadgen_id) {
             const leadgenId = String(val.leadgen_id);
             const adId = String(val.ad_id || '');
+            const formId = String(val.form_id || '');
 
             let matchedCamp = null;
             if (adId) {
@@ -433,6 +434,113 @@ module.exports = async function handler(req, res) {
             const campTitle = matchedCamp ? matchedCamp.title : '메타 인스턴트 양식 광고';
             const ownerKey = matchedCamp ? String(matchedCamp.user_id || 'default').toLowerCase() : 'default';
 
+            let pageToken = '';
+            let agentName = '담당 설계사';
+            let notifyAgentPhone = '';
+
+            if (matchedCamp && matchedCamp.target_summary && String(matchedCamp.target_summary).startsWith('{')) {
+              try {
+                const metaObj = JSON.parse(matchedCamp.target_summary);
+                pageToken = metaObj.pageToken || '';
+                if (metaObj.agentName) agentName = metaObj.agentName;
+                if (metaObj.agentPhone) notifyAgentPhone = String(metaObj.agentPhone).replace(/[^0-9]/g, '');
+              } catch (e) {}
+            }
+
+            // 캠페인에 토큰이 없으면 같은 설계사의 다른 연동 레코드에서 토큰 보조 탐색
+            if (!pageToken && ownerKey !== 'default') {
+              try {
+                const tRes = await fetch(
+                  `${supabaseUrl}/rest/v1/meta_campaigns?user_id=eq.${encodeURIComponent(ownerKey)}&order=created_at.desc&limit=10`,
+                  { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+                );
+                const tRows = await tRes.json();
+                if (Array.isArray(tRows)) {
+                  for (const r of tRows) {
+                    if (r.target_summary && String(r.target_summary).startsWith('{')) {
+                      try {
+                        const o = JSON.parse(r.target_summary);
+                        if (o.pageToken) { pageToken = o.pageToken; break; }
+                      } catch (e) {}
+                    }
+                  }
+                }
+              } catch (e) {}
+            }
+
+            // 메타 Graph API에서 실제 고객 이름·연락처·추가 맞춤질문 답변 전부 조회
+            let leadName = '메타 양식 신청고객';
+            let leadPhone = '';
+            let leadRegion = '';
+            const customQaParts = [];
+
+            if (pageToken) {
+              try {
+                const lgRes = await fetch(`https://graph.facebook.com/v21.0/${encodeURIComponent(leadgenId)}?fields=created_time,field_data&access_token=${encodeURIComponent(pageToken)}`);
+                const lgData = await lgRes.json();
+                const fieldData = (lgData && Array.isArray(lgData.field_data)) ? lgData.field_data : [];
+
+                let customQIdx = 1;
+                fieldData.forEach(fd => {
+                  const fKey = String(fd.name || '').toLowerCase();
+                  const fVal = Array.isArray(fd.values) ? fd.values.join(', ').trim() : '';
+                  if (!fVal) return;
+
+                  if (fKey === 'full_name' || fKey === 'name') {
+                    leadName = fVal;
+                  } else if (fKey === 'phone_number' || fKey === 'phone') {
+                    let cleanPh = fVal.replace(/^\+82\s?0?/, '0').replace(/[^0-9]/g, '');
+                    if (cleanPh.length === 11) cleanPh = `${cleanPh.slice(0,3)}-${cleanPh.slice(3,7)}-${cleanPh.slice(7)}`;
+                    leadPhone = cleanPh || fVal;
+                  } else if (fKey === 'city' || fKey === 'state' || fKey === 'region') {
+                    leadRegion = fVal;
+                  } else if (fKey === 'q_age') {
+                    customQaParts.push(`연령: ${fVal}`);
+                  } else if (fKey === 'q_time') {
+                    customQaParts.push(`희망시간: ${fVal}`);
+                  } else if (fKey.startsWith('q_custom_')) {
+                    const num = fKey.replace('q_custom_', '') || customQIdx++;
+                    customQaParts.push(`Q${num}: ${fVal}`);
+                  } else {
+                    customQaParts.push(`${fd.name}: ${fVal}`);
+                  }
+                });
+              } catch (e) {}
+            }
+
+            if (!leadPhone) leadPhone = `리드접수(${leadgenId.slice(-6)})`;
+            const cleanQaNote = customQaParts.length > 0 ? customQaParts.join(' / ') : `인스턴트 양식 접수`;
+
+            // 캠페인 유입 카운트 +1 증가
+            if (matchedCamp && matchedCamp.id) {
+              try {
+                const nextCnt = Number(matchedCamp.leads_count || 0) + 1;
+                await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(matchedCamp.id)}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` },
+                  body: JSON.stringify({ leads_count: nextCnt })
+                });
+              } catch (e) {}
+            }
+
+            // 수파베이스 PR 설정에서 설계사 알림톡 번호 보조 조회
+            if (!notifyAgentPhone && ownerKey && ownerKey !== 'default') {
+              try {
+                const cleanKey = ownerKey.replace(/[^a-z0-9@._-]/g, '_');
+                const prRes = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.pr_cfg_${encodeURIComponent(cleanKey)}&select=target_summary&limit=1`, {
+                  headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+                });
+                const prRows = await prRes.json();
+                if (Array.isArray(prRows) && prRows[0] && prRows[0].target_summary) {
+                  const parsedCfg = JSON.parse(prRows[0].target_summary);
+                  if (parsedCfg && parsedCfg.agentNotifyPhone) {
+                    notifyAgentPhone = String(parsedCfg.agentNotifyPhone).replace(/[^0-9]/g, '');
+                  }
+                }
+              } catch (e) {}
+            }
+
+            // 수파베이스 meta_leads 저장
             await fetch(`${supabaseUrl}/rest/v1/meta_leads`, {
               method: 'POST',
               headers: {
@@ -445,14 +553,30 @@ module.exports = async function handler(req, res) {
                 campaign_id: campId,
                 campaign_title: campTitle,
                 source: 'meta_leadgen',
-                name: '메타 양식 제출 고객',
-                phone: `리드ID: ${leadgenId}`,
-                region: '메타 인스턴트 폼',
-                note: `광고ID: ${adId} [owner:${ownerKey}]`,
+                name: leadName,
+                phone: leadPhone,
+                region: leadRegion || '메타 인스턴트 양식',
+                note: `${cleanQaNote} [owner:${ownerKey}]`,
                 status: '신규유입',
                 created_at: new Date().toISOString()
               })
             });
+
+            // 팝빌 실시간 알림톡 발송 (인스턴트 양식 제출 시에도 즉시 발송)
+            const corpNum = process.env.POPBILL_CORP_NUM || '1168180481';
+            const defaultSender = process.env.POPBILL_SENDER || '0318755188';
+            if (notifyAgentPhone && notifyAgentPhone.length >= 10) {
+              const alimContent = fillTemplate(APPROVED_TEMPLATE.raw, {
+                '담당자명': agentName,
+                '캠페인명': campTitle,
+                '고객명': leadName,
+                '고객연락처': leadPhone,
+                '거주지역': leadRegion || '인스턴트 양식',
+                '요청사항': cleanQaNote,
+                '접수일시': formatDateTimeNow()
+              });
+              await sendAlimtalk(corpNum, APPROVED_TEMPLATE.code, defaultSender, alimContent, notifyAgentPhone, agentName);
+            }
           }
         }
       }
@@ -463,4 +587,4 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     return res.status(200).json({ success: false, error: err.message });
   }
-};
+};     

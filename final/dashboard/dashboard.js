@@ -1614,7 +1614,7 @@ const insData = [
   { name: 'NH농협손해보험', link: 'https://ss.nhfire.co.kr/smartweb_prj/index_t.jsp', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/bf3ad594b4f21.png' },
   { name: '라이나손보', link: 'https://ga.linagi.com/html/gap/GA/GAZ911M0.html', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/935984f4aab4b.png' },
   { name: 'AIG손보', link: 'https://sso.aig.co.kr/gaLogin/gaLogin.jsp', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/da3bebc9fe3e5.png' },
-  { name: '예별손해보험', link: 'https://mganet.mggeneralins.com/jsp/browserGuide.jsp', logoUrl: './logo_yebyeol.svg' },
+  { name: '예별손해보험', link: 'https://mganet.mggeneralins.com', logoUrl: './yb.png' },
   { name: '한화생명', link: 'https://hmp.hanwhalife.com/online/solutions/websquare/websquare.html?w2xPath=/online/ui/uv/gmn/uvgmn010mvw.xml', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/841d2709f8a0f.png' },
   { name: '동양생명', link: 'https://1004.myangel.co.kr/view/cowqvsf005m', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/8a0361a32f8a5.png' },
   { name: '교보생명', link: 'https://v3agent.kyobo.com:5443/wizvera/veraport/install20/install_V3_GA.html', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/26afb87929732.png' },
@@ -1778,7 +1778,7 @@ const INSURER_CONTACTS_DATA = [
   { name: 'NH농협손해보험', type: 'nonlife', phone: '1644-9000', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/bf3ad594b4f21.png' },
   { name: '라이나원(손보)', type: 'nonlife', phone: '1566-5800', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/935984f4aab4b.png' },
   { name: 'AIG손해보험', type: 'nonlife', phone: '1544-2792', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/da3bebc9fe3e5.png' },
-  { name: '예별손해보험', type: 'nonlife', phone: '1588-5959', logoUrl: './logo_yebyeol.svg' },
+  { name: '예별손해보험', type: 'nonlife', phone: '1588-5959', logoUrl: './yb.png' },
 
   // --- 생명보험 (21개) ---
   { name: '한화생명', type: 'life', phone: '1588-6363', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/841d2709f8a0f.png' },

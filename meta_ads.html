@@ -1212,15 +1212,16 @@
 
           <div>
 
-            <label class="target-label">🎁 신청 완료 시 열어줄 꿀팁 PDF 자료 (시트 연동 또는 직접 입력)</label>
-
+  <label class="target-label">🎁 신청 완료 시 제공되는 PDF 링크</label>
             <select id="extIgPresetSelect" class="form-select" onchange="onSelectExtIgPreset(this.value)" style="margin-bottom:6px;">
-
               <option value="">-- 마스터 시트 콘텐츠의 PDF 자료에서 불러오기 --</option>
-
             </select>
-
-            <input type="url" id="extIgPdfUrl" class="form-input" placeholder="구글 드라이브 PDF 링크 (https://drive.google.com/...)" />
+            <div style="display:flex; gap:6px;">
+              <input type="url" id="extIgPdfUrl" class="form-input" placeholder="구글 드라이브 PDF 링크 (https://drive.google.com/...)" style="flex:1;" />
+              <button type="button" class="btn-header-action" onclick="previewPdfUrl('extIgPdfUrl')" style="padding:0 13px; color:var(--insta); border-color:#fecdd3; background:#fff1f2; flex-shrink:0;">
+                <i class="fa-regular fa-file-pdf"></i> 미리보기 ↗
+              </button>
+            </div>
 
           </div>
 
@@ -1790,103 +1791,76 @@
 
                   <div class="form-row-2">
                     <div>
-                      <span style="font-size:11.5px; font-weight:800; color:#475569; display:block; margin-bottom:4px;">🎁 신청 완료 시 열어줄 꿀팁 PDF 링크 (시트 연동)</span>
-                      <input type="url" id="setupPdfDocUrl" class="form-input" placeholder="https://drive.google.com/..." style="background:#fff; padding:8px 11px; font-size:12px;" />
+
+<span style="font-size:11.5px; font-weight:800; color:#475569; display:block; margin-bottom:4px;">🎁 신청 완료 시 제공되는 PDF 링크</span>
+                      <div style="display:flex; gap:6px;">
+                        <input type="url" id="setupPdfDocUrl" class="form-input" placeholder="https://drive.google.com/..." style="flex:1; background:#fff; padding:8px 11px; font-size:12px;" />
+                        <button type="button" class="btn-header-action" onclick="previewPdfUrl('setupPdfDocUrl')" style="padding:0 11px; font-size:11.5px; color:var(--primary); border-color:#93c5fd; background:#eff6ff; flex-shrink:0;" title="제공되는 PDF 자료 새 창으로 확인">
+                          <i class="fa-regular fa-eye"></i> 미리보기
+                        </button>
+                      </div>
                     </div>
                     <div>
-                      <span style="font-size:11.5px; font-weight:800; color:#475569; display:block; margin-bottom:4px;">⚖️ 심의필 번호 (미입력 시 안전 안내문구 자동 삽입)</span>
-                      <input type="text" id="setupMetaCompliance" class="form-input" placeholder="비워두면 필수 유의사항 문구 자동 적용" style="background:#fff; padding:8px 11px; font-size:12px;" oninput="renderModalPhoneMedia()" />
+                      <span style="font-size:11.5px; font-weight:800; color:#475569; display:block; margin-bottom:4px;">⚖️ 심의필 번호 (미입력 시 필수 소비자 안내문구 자동 삽입)</span>
+                      <input type="text" id="setupMetaCompliance" class="form-input" placeholder="비워두면 필수 소비자 안내문구 자동 적용" style="background:#fff; padding:8px 11px; font-size:12px;" oninput="renderModalPhoneMedia(); syncPhonePreview();" />
                     </div>
                   </div>
                 </div>
 
-
-
-
                 <div id="customUrlConfigBox" style="display:none; background:#f0f9ff; border:1px solid #bae6fd; border-radius:14px; padding:14px 16px;">
-
                   <span class="target-label" style="margin-bottom:6px;">🔗 연결할 외부 웹사이트 URL</span>
-
                   <input type="url" id="setupLandingUrl" class="form-input" style="background:#fff;" placeholder="https://" oninput="syncPhonePreview()" />
-
                 </div>
-
               </div>
-
             </div>
-
-
 
             <!-- 인스타그램 일반 게시물 (댓글 자동 DM) -->
-
             <div class="step-pane" id="pane-insta-1">
+              <h3 class="step-heading" style="margin-bottom:14px;">📸 인스타그램 게시 & 24시간 댓글 자동 DM</h3>
 
-              <h3 class="step-heading">📸 인스타그램 게시 & 24시간 댓글 자동 DM</h3>
-
-
-
-              <div style="display:flex; flex-direction:column; gap:15px; flex:1;">
-
-                <div>
-
-                  <span class="target-label">📝 게시물 본문 (댓글 유도 문구 및 해시태그)</span>
-
-                  <textarea id="setupInstaCaption" class="form-textarea" rows="4" oninput="syncPhonePreview()"></textarea>
-
+              <div style="display:flex; flex-direction:column; gap:14px; flex:1;">
+                <div style="display:flex; flex-direction:column; flex:1; min-height:185px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span class="target-label" style="margin:0;">📝 게시물 본문 (댓글 유도 문구 및 해시태그)</span>
+                    <span style="font-size:11.5px; color:var(--sub); font-weight:700;">좌측 휴대폰 화면에서 실제 줄바꿈과 안내문구를 바로 확인하세요</span>
+                  </div>
+                  <textarea id="setupInstaCaption" class="form-textarea" style="flex:1; min-height:160px; line-height:1.65; resize:vertical; background:#fff;" oninput="syncPhonePreview()"></textarea>
                 </div>
 
-
-
                 <div class="form-row-2">
-
                   <div>
-
                     <span class="target-label">💬 감지할 댓글 키워드 (쉼표로 여러 개 가능)</span>
-
-                    <input type="text" id="setupInstaDmKeyword" class="form-input" value="궁금" placeholder="예: 궁금, 환급, 간병" />
-
+                    <input type="text" id="setupInstaDmKeyword" class="form-input" value="궁금" placeholder="예: 궁금, 환급, 간병" style="background:#fff;" />
                   </div>
-
                   <div>
-
-                    <span class="target-label">🎁 신청 완료 시 열어줄 꿀팁 PDF 링크 (시트 연동)</span>
-
-                    <input type="url" id="setupInstaPdfUrl" class="form-input" placeholder="https://drive.google.com/..." />
-
+                    <span class="target-label">🎁 신청 완료 시 제공되는 PDF 링크</span>
+                    <div style="display:flex; gap:6px;">
+                      <input type="url" id="setupInstaPdfUrl" class="form-input" placeholder="https://drive.google.com/..." style="flex:1; background:#fff;" />
+                      <button type="button" class="btn-header-action" onclick="previewPdfUrl('setupInstaPdfUrl')" style="padding:0 13px; font-size:12px; color:var(--insta); border-color:#fecdd3; background:#fff1f2; flex-shrink:0;" title="고객에게 제공될 PDF 자료 미리보기">
+                        <i class="fa-regular fa-file-pdf"></i> 미리보기 ↗
+                      </button>
+                    </div>
                   </div>
-
                 </div>
 
-
-
-                <div class="form-row-2">
-
+                <div style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:10px;">
                   <div>
-
-                    <span class="target-label">💌 댓글 작성자에게 자동 발송할 DM 메시지</span>
-
-                    <input type="text" id="setupInstaDmMessage" class="form-input" value="댓글 감사합니다! 요청하신 핵심 가이드북(PDF) 열람 및 신청 링크입니다 👉 {신청링크}" />
-
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                      <span class="target-label" style="margin:0;">💌 댓글 작성자에게 자동 발송할 DM 메시지</span>
+                      <span style="font-size:11px; color:var(--insta); font-weight:800;">{신청링크} 자리에 내 PR 랜딩 단축주소가 자동 삽입됩니다</span>
+                    </div>
+                    <textarea id="setupInstaDmMessage" class="form-textarea" rows="2" style="background:#fff; padding:8px 12px; font-size:13px;">댓글 감사합니다! 요청하신 핵심 가이드북(PDF) 열람 및 무료 상담 신청 링크입니다 👉 {신청링크}</textarea>
                   </div>
 
                   <div>
-
-                    <span class="target-label">⚖️ 심의필 번호 (선택)</span>
-
-                    <input type="text" id="setupInstaCompliance" class="form-input" placeholder="비워두면 표기 안 함" oninput="renderModalPhoneMedia()" />
-
+                    <span class="target-label" style="margin-bottom:5px;">⚖️ 심의필 번호 (미입력 시 필수 소비자 안내문구 자동 삽입)</span>
+                    <input type="text" id="setupInstaCompliance" class="form-input" placeholder="심의필 번호 입력 (비워두면 본문 하단에 최소 소비자 보호 안내문구가 자동 추가됩니다)" style="background:#fff; padding:8px 12px; font-size:12.5px;" oninput="renderModalPhoneMedia(); syncPhonePreview();" />
                   </div>
-
                 </div>
-
               </div>
-
             </div>
 
-
-
           </div>
-
 
 
           <div class="modal-footer-nav">
@@ -1967,7 +1941,19 @@
 
     };
 
-const DEFAULT_INSURANCE_DISCLAIMER = '※ 가입 연령, 주거 형태 및 보험사 인수 기준에 따라 가입 가능 여부 및 보장 내용이 달라질 수 있습니다.';
+const DEFAULT_INSURANCE_DISCLAIMER = '※ 계약 체결 전 상품설명서 및 약관을 반드시 읽어보시기 바라며, 가입 조건 및 보험사 인수 기준에 따라 가입 가능 여부와 보장 내용이 달라질 수 있습니다.';
+
+    function previewPdfUrl(inputId) {
+      const el = document.getElementById(inputId);
+      const rawUrl = el ? el.value.trim() : '';
+      if (!rawUrl) {
+        alert('현재 연동되거나 입력된 PDF 링크가 없습니다.\n링크를 먼저 입력하거나 콘텐츠를 선택해 주세요.');
+        if (el) el.focus();
+        return;
+      }
+      const finalUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+      window.open(finalUrl, '_blank', 'noopener,noreferrer');
+    }
 
     const TARGET_INTEREST_KEYWORDS = {
       '영유아': {
@@ -4842,13 +4828,11 @@ let customQuestionsList = [
         ? document.getElementById('setupMetaCompliance').value.trim()
         : document.getElementById('setupInstaCompliance').value.trim();
 
-      let displayCaption = rawCaption || '';
-      if (wizardTrack === 'meta') {
-        if (compVal) {
-          if (!displayCaption.includes(compVal)) displayCaption += `\n\n[${compVal}]`;
-        } else if (!displayCaption.includes('가입 가능 여부 및 보장 내용이 달라질 수 있습니다')) {
-          displayCaption += `\n\n${DEFAULT_INSURANCE_DISCLAIMER}`;
-        }
+let displayCaption = rawCaption || '';
+      if (compVal) {
+        if (!displayCaption.includes(compVal)) displayCaption += `\n\n[${compVal}]`;
+      } else if (!displayCaption.includes('상품설명서 및 약관') && !displayCaption.includes('가입 가능 여부')) {
+        displayCaption += `\n\n${DEFAULT_INSURANCE_DISCLAIMER}`;
       }
       document.getElementById('phoneCaptionText').innerText = displayCaption;
 
@@ -5283,16 +5267,16 @@ let customQuestionsList = [
       const rawInputCaption = wizardTrack === 'meta'
         ? document.getElementById('setupAdCaption').value.trim()
         : document.getElementById('setupInstaCaption').value.trim();
-      const metaComplianceVal = document.getElementById('setupMetaCompliance').value.trim();
+const complianceVal = wizardTrack === 'meta'
+        ? document.getElementById('setupMetaCompliance').value.trim()
+        : document.getElementById('setupInstaCompliance').value.trim();
 
-      // 심의필 번호 미입력 시 보험 광고 필수 안전 안내문구 자동 삽입
+      // 메타 광고 및 인스타그램 게시물 모두 심의필 미입력 시 필수 소비자 안내문구 자동 삽입
       let caption = rawInputCaption || title;
-      if (wizardTrack === 'meta') {
-        if (metaComplianceVal) {
-          if (!caption.includes(metaComplianceVal)) caption += `\n\n[${metaComplianceVal}]`;
-        } else if (!caption.includes('가입 가능 여부 및 보장 내용이 달라질 수 있습니다')) {
-          caption += `\n\n${DEFAULT_INSURANCE_DISCLAIMER}`;
-        }
+      if (complianceVal) {
+        if (!caption.includes(complianceVal)) caption += `\n\n[${complianceVal}]`;
+      } else if (!caption.includes('상품설명서 및 약관') && !caption.includes('가입 가능 여부')) {
+        caption += `\n\n${DEFAULT_INSURANCE_DISCLAIMER}`;
       }
 
       const regionStr = wizardTrack === 'meta' ? (selectedRegions.join(', ') || '전국') : '인스타 피드·릴스';

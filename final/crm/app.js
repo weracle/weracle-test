@@ -2246,14 +2246,28 @@ async function saveClientToServer(clientObj, insRows) {
   }
     showLoading(true);
     try {
+        const myCustId = String(clientObj["고객번호"] || clientObj["사업자번호"] || "").trim();
         let curEditMode = Boolean((typeof window.isEditMode !== 'undefined' && window.isEditMode) || (typeof isEditMode !== 'undefined' && isEditMode));
-        let curEditId = (window.editTargetId !== undefined && window.editTargetId !== null) ? window.editTargetId : (typeof editTargetId !== 'undefined' ? editTargetId : null);
+        let curEditId = (window.editTargetId !== undefined && window.editTargetId !== null) ? String(window.editTargetId).trim() : (typeof editTargetId !== 'undefined' && editTargetId ? String(editTargetId).trim() : null);
+
+        // If the submitted customer ID differs from curEditId (e.g. adding family 1-1 while editing 1), NEVER target curEditId!
+        if (myCustId && curEditId && myCustId !== curEditId) {
+            curEditId = myCustId;
+        }
 
         let targetIdx = -1;
-        if (curEditMode) {
-            if (clientObj["UID"]) targetIdx = globalCustomerData.findIndex(c => c["UID"] && c["UID"] === clientObj["UID"]);
-            if (targetIdx === -1 && curEditId) targetIdx = globalCustomerData.findIndex(c => String(c["고객번호"] || c["사업자번호"] || "").trim() === String(curEditId || "").trim());
-            if (targetIdx === -1 && clientObj["고객번호"]) targetIdx = globalCustomerData.findIndex(c => String(c["고객번호"] || c["사업자번호"] || "").trim() === String(clientObj["고객번호"] || "").trim());
+        // Priority 1: Match strictly by the specific customer ID being saved
+        if (myCustId) {
+            targetIdx = globalCustomerData.findIndex(c => String(c["고객번호"] || c["사업자번호"] || "").trim() === myCustId);
+        }
+        // Priority 2: Match by UID ONLY if not conflicting with an existing customer
+        if (targetIdx === -1 && clientObj["UID"]) {
+            targetIdx = globalCustomerData.findIndex(c => c["UID"] && c["UID"] === clientObj["UID"] && (!myCustId || String(c["고객번호"] || c["사업자번호"] || "").trim() === myCustId));
+        }
+
+        // If this customer ID does NOT exist in globalCustomerData, it is a brand-new customer (APPEND), NEVER an overwrite!
+        if (targetIdx === -1) {
+            curEditMode = false;
         }
         const sName = (targetIdx !== -1 && globalCustomerData[targetIdx] && globalCustomerData[targetIdx].sheetName) ? globalCustomerData[targetIdx].sheetName : (window.targetSheetName || "weraclecrm");
         const insSheetName = "보험관리";
@@ -4407,8 +4421,11 @@ async function submitCrmData(event) {
   if (window.isSubmittingCrm) return false;
   window.isSubmittingCrm = true;
 
-  const existingClient = (window.isEditMode && window.editTargetId && Array.isArray(globalCustomerData)) 
-      ? globalCustomerData.find(c => String(c["고객번호"] || c["사업자번호"]) === String(window.editTargetId)) 
+  const submittingCustId = (document.getElementById("base-cust-id") ? document.getElementById("base-cust-id").value.trim() : "") || (formData.get("고객번호") || formData.get("사업자번호") || "");
+
+  // Match existing client strictly by the actual ID in the form (so family member 1-1 never grabs root 1's data)
+  const existingClient = (Array.isArray(globalCustomerData) && submittingCustId)
+      ? globalCustomerData.find(c => String(c["고객번호"] || c["사업자번호"] || "").trim() === String(submittingCustId).trim()) 
       : null;
 
   const currentCustomerUid = (existingClient && existingClient["UID"]) 

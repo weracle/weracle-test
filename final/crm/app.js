@@ -1839,21 +1839,21 @@ function getCrmHeaders(sheetType) {
     if (sheetType === "corporatecrm" || sheetType === "사업자고객") {
         return [
             "고객번호", "상호명", "사업자번호", "업종코드", "상태", "대표자명", "주민번호", "나이", "성별", "생일", "상령일", 
-            "폰번호", "상세업무", "주소", "운전여부", "차량용도", "반려동물", "동물이름", "가족사항", "코드", "터치인사이트", 
-            "특이사항", "가입내역", "등록일", "사업여부", "UID", "동물생일", "동물모색", "동물성별"
+            "폰번호", "상세업무", "주소", "운전여부", "차량용도", "반려동물", "동물이름", "동물생일", "동물모색", "동물성별", 
+            "가족사항", "코드", "터치인사이트", "특이사항", "가입내역", "등록일", "사업여부", "UID"
         ];
     }
-    // 일반고객 기본 헤더 (총 27개 컬럼 - 펫 3종 확장 포함)
+    // 일반고객 기본 헤더 (총 27개 컬럼 - 펫 5종 그룹화 및 UID 마지막)
     return [
         "고객번호", "고객명", "상태", "주민번호", "나이", "성별", "생일", "상령일", "폰번호", "직업", "상세업무", "주소", 
-        "운전여부", "차량용도", "반려동물", "동물이름", "가족사항", "코드", "터치인사이트", "특이사항", "가입내역", "등록일", "사업여부", "UID",
-        "동물생일", "동물모색", "동물성별"
+        "운전여부", "차량용도", "반려동물", "동물이름", "동물생일", "동물모색", "동물성별",
+        "가족사항", "코드", "터치인사이트", "특이사항", "가입내역", "등록일", "사업여부", "UID"
     ];
 }
 
 function getCrmEndCol(sheetType) {
     if (sheetType === "보험관리") return "AC";
-    if (sheetType === "corporatecrm" || sheetType === "사업자고객") return "AA";
+    if (sheetType === "corporatecrm" || sheetType === "사업자고객") return "AC";
     return "AA";
 }
 
@@ -8527,15 +8527,15 @@ window.getCrmHeaders = function(sheetType) {
     if (sheetType === "corporatecrm" || sheetType === "사업자고객") {
         return [
             "고객번호", "상호명", "사업자번호", "업종코드", "상태", "대표자명", "주민번호", "나이", "성별", "생일", "상령일", 
-            "폰번호", "상세업무", "주소", "운전여부", "차량용도", "반려동물", "동물이름", "가족사항", "코드", "터치인사이트", 
-            "특이사항", "가입내역", "등록일", "사업여부", "UID", "동물생일", "동물모색", "동물성별"
+            "폰번호", "상세업무", "주소", "운전여부", "차량용도", "반려동물", "동물이름", "동물생일", "동물모색", "동물성별", 
+            "가족사항", "코드", "터치인사이트", "특이사항", "가입내역", "등록일", "사업여부", "UID"
         ];
     }
     return [
         "고객번호", "고객명", "상태", "주민번호", "나이", "성별", "생일", "상령일", "폰번호",
-        "직업", "상세업무", "주소", "운전여부", "차량용도", "반려동물", "동물이름", "가족사항", 
-        "코드", "터치인사이트", "특이사항", "가입내역", "등록일", "사업여부", "UID",
-        "동물생일", "동물모색", "동물성별"
+        "직업", "상세업무", "주소", "운전여부", "차량용도",
+        "반려동물", "동물이름", "동물생일", "동물모색", "동물성별",
+        "가족사항", "코드", "터치인사이트", "특이사항", "가입내역", "등록일", "사업여부", "UID"
     ];
 };
 function getCrmHeaders(sheetType) { return window.getCrmHeaders(sheetType); }
@@ -11813,12 +11813,20 @@ async function updateMultipleCustomerIdsInSheet(updates, successMsg) {
                     });
 
                     // [UID 철통 가드] UID가 누락된 고객인 경우 UID 자동 발급 및 시트 업데이트
+                    const toColLetter = (idx) => {
+                        let s = '';
+                        while (idx >= 0) {
+                            s = String.fromCharCode((idx % 26) + 65) + s;
+                            idx = Math.floor(idx / 26) - 1;
+                        }
+                        return s;
+                    };
                     if (!targetClient["UID"]) {
                         targetClient["UID"] = "UID_" + new Date().getTime() + "_" + Math.floor(Math.random() * 10000);
                         const allHeaders = getCrmHeaders(sName);
                         const uidColIdx = allHeaders.indexOf("UID");
                         if (uidColIdx !== -1) {
-                            const colLetter = String.fromCharCode(65 + uidColIdx);
+                            const colLetter = toColLetter(uidColIdx);
                             await gapi.client.sheets.spreadsheets.values.update({
                                 spreadsheetId,
                                 range: `${sName}!${colLetter}${rNum}`,
@@ -11833,7 +11841,7 @@ async function updateMultipleCustomerIdsInSheet(updates, successMsg) {
                         const headers = getCrmHeaders(sName);
                         const famColIdx = headers.indexOf("가족사항");
                         if (famColIdx !== -1) {
-                            const colLetter = String.fromCharCode(65 + famColIdx);
+                            const colLetter = toColLetter(famColIdx);
                             await gapi.client.sheets.spreadsheets.values.update({
                                 spreadsheetId,
                                 range: `${sName}!${colLetter}${rNum}`,

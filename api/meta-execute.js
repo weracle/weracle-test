@@ -559,8 +559,9 @@ module.exports = async function handler(req, res) {
     }
 
     // [5] 캠페인 · 나의 광고콘텐츠 · 유입 DB(정식 + 백업 통합) 조회
-    if (action === 'LIST' || action === 'SYNC_LIST') {
-      const { userId, userKeys } = body;
+if (action === 'LIST' || action === 'SYNC_LIST') {
+      const { userId, userKeys, knownCampIds } = body;
+      const knownCampIdSet = new Set(Array.isArray(knownCampIds) ? knownCampIds.map(id => String(id)) : []);
 
       const rawInputKeys = Array.isArray(userKeys) ? [...userKeys, userId] : [userId];
       const validKeySet = new Set();
@@ -627,16 +628,34 @@ module.exports = async function handler(req, res) {
         }
       }
 
+      // 1차 연결: 내 브라우저 캠페인 ID 또는 인스타/페이지 ID가 일치하는 캠페인의 user_id(예: weracle_bohwan)를 내 키로 자동 편입
+      for (const c of allCampaigns) {
+        const cUser = String(c.user_id || '').trim().toLowerCase();
+        let matchedByMeta = false;
+        if (knownCampIdSet.has(String(c.id))) matchedByMeta = true;
+        if (!matchedByMeta && c.target_summary && String(c.target_summary).startsWith('{')) {
+          try {
+            const pObj = JSON.parse(c.target_summary);
+            if (pObj.igId && validKeySet.has(String(pObj.igId).toLowerCase())) matchedByMeta = true;
+            if (pObj.pageId && validKeySet.has(String(pObj.pageId).toLowerCase())) matchedByMeta = true;
+          } catch (e) {}
+        }
+        if (matchedByMeta && cUser && cUser !== 'default' && cUser !== 'weracle_user') {
+          validKeySet.add(cUser);
+          validKeySet.add(sanitizeAgentKey(cUser));
+        }
+      }
+
       const otherUsersCampIdSet = new Set();
       let myCampaigns = [];
 
-      if (validKeySet.size > 0) {
+      if (validKeySet.size > 0 || knownCampIdSet.size > 0) {
         for (const c of allCampaigns) {
           const cUser = String(c.user_id || '').trim().toLowerCase();
           const cUserSanitized = sanitizeAgentKey(cUser);
           const cUserDigits = cUser.replace(/[^0-9]/g, '');
 
-          let isMine = false;
+          let isMine = knownCampIdSet.has(String(c.id));
           const isUnassignedLegacy = (!cUser || cUser === 'default' || cUser === 'weracle_user');
 
           if (validKeySet.has(cUser) || validKeySet.has(cUserSanitized) || (cUserDigits.length >= 9 && validKeySet.has(cUserDigits))) {

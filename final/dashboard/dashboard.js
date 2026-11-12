@@ -408,6 +408,7 @@ function parseClientBirthday(client) {
 function analyzeCrmData() {
   if (!crmData || crmData.length === 0) return;
   crmEventsList = [];
+  const crmEventSeenKeys = new Set();
 
   const thisYear = currentCalDate.getFullYear();
 
@@ -423,15 +424,20 @@ function analyzeCrmData() {
         const y = thisYear + yearOffset;
         const mm = String(bday.month).padStart(2, '0');
         const dd = String(bday.day).padStart(2, '0');
-        crmEventsList.push({
-          type: 'bday',
-          name: name,
-          phone: phone,
-          prod: mainProd,
-          fullDate: `${y}-${mm}-${dd}`,
-          title: `🎂 [생일] ${name}`,
-          note: `${name} 고객님의 생일입니다. 따뜻한 축하 인사와 안부 전화를 건네보세요!`
-        });
+        const dateStr = `${y}-${mm}-${dd}`;
+        const key = `bday_${dateStr}_${name}_${phone}`;
+        if (!crmEventSeenKeys.has(key)) {
+          crmEventSeenKeys.add(key);
+          crmEventsList.push({
+            type: 'bday',
+            name: name,
+            phone: phone,
+            prod: mainProd,
+            fullDate: dateStr,
+            title: `🎂 [생일] ${name}`,
+            note: `${name} 고객님의 생일입니다. 따뜻한 축하 인사와 안부 전화를 건네보세요!`
+          });
+        }
       });
 
       // 2) 상령일 (Insurance Age Increase Date: 생년월일 + 6개월)
@@ -447,51 +453,65 @@ function analyzeCrmData() {
         const safeDay = Math.min(bday.day, lastDay);
         const mm = String(sangMonth).padStart(2, '0');
         const dd = String(safeDay).padStart(2, '0');
-        crmEventsList.push({
-          type: 'sang',
-          name: name,
-          phone: phone,
-          prod: mainProd,
-          fullDate: `${y}-${mm}-${dd}`,
-          title: `📈 [상령일] ${name}`,
-          note: `상령일 도래: 보험나이가 1세 증가하기 직전입니다. 보험료 인상 전 맞춤 보장 리모델링을 제안하세요!`
-        });
+        const dateStr = `${y}-${mm}-${dd}`;
+        const key = `sang_${dateStr}_${name}_${phone}`;
+        if (!crmEventSeenKeys.has(key)) {
+          crmEventSeenKeys.add(key);
+          crmEventsList.push({
+            type: 'sang',
+            name: name,
+            phone: phone,
+            prod: mainProd,
+            fullDate: dateStr,
+            title: `📈 [상령일] ${name}`,
+            note: `상령일 도래: 보험나이가 1세 증가하기 직전입니다. 보험료 인상 전 맞춤 보장 리모델링을 제안하세요!`
+          });
+        }
       });
     }
 
-    // 3) 계약 만기 및 갱신일, 결제일 파싱 (고객 본체 + 가입내역 JSON + 보험관리 연동 리스트)
-    extractContractEvents(client, name, phone, mainProd, thisYear);
-
+    // 3) 계약 만기 및 갱신일, 결제일 파싱 (단일 소스 수집 + 중복 방지)
+    // 보험가입리스트가 존재하면 최우선 단일 소스로 사용하고, 없으면 가입내역 JSON 파싱
     let insList = [];
-    if (Array.isArray(client['보험가입리스트'])) {
-      insList.push(...client['보험가입리스트']);
-    }
-    const rawIns = client['가입내역'] || client['보험가입내역'] || client['insurance'];
-    if (rawIns) {
-      if (Array.isArray(rawIns)) {
-        insList.push(...rawIns);
-      } else if (typeof rawIns === 'string' && (rawIns.trim().startsWith('[') || rawIns.trim().startsWith('{'))) {
-        try {
-          const parsed = JSON.parse(rawIns);
-          if (Array.isArray(parsed)) insList.push(...parsed);
-          else if (typeof parsed === 'object') insList.push(parsed);
-        } catch(e) {}
+    if (Array.isArray(client['보험가입리스트']) && client['보험가입리스트'].length > 0) {
+      insList = client['보험가입리스트'];
+    } else {
+      const rawIns = client['가입내역'] || client['보험가입내역'] || client['insurance'];
+      if (rawIns) {
+        if (Array.isArray(rawIns)) {
+          insList = rawIns;
+        } else if (typeof rawIns === 'string' && (rawIns.trim().startsWith('[') || rawIns.trim().startsWith('{'))) {
+          try {
+            const parsed = JSON.parse(rawIns);
+            if (Array.isArray(parsed)) insList = parsed;
+            else if (typeof parsed === 'object') insList = [parsed];
+          } catch(e) {}
+        }
       }
     }
 
-    insList.forEach(ins => {
-      const prodName = ins['상품명'] || ins['보험사명'] || ins['보험종류'] || mainProd;
-      extractContractEvents(ins, name, phone, prodName, thisYear);
-    });
+    if (insList.length > 0) {
+      insList.forEach(ins => {
+        const prodName = ins['상품명'] || ins['보험사명'] || ins['보험종류'] || mainProd;
+        extractContractEvents(ins, name, phone, prodName, thisYear, crmEventSeenKeys);
+      });
+    } else {
+      // 별도 보험 리스트가 없는 단일 계약일 때만 고객 루트 필드에서 1회 추출
+      extractContractEvents(client, name, phone, mainProd, thisYear, crmEventSeenKeys);
+    }
   });
 
   renderV3Calendar();
 }
 
-function extractContractEvents(item, name, phone, prod, thisYear) {
+function extractContractEvents(item, name, phone, prod, thisYear, crmEventSeenKeys) {
   if (!item) return;
 
-  // 만기일 / 갱신일
+  // 계약자가 명시되어 있고 고객명과 다른 경우(피보험자 보장내역 미러링 뷰 등)
+  const contractor = (item['계약자'] || item['계약자명'] || '').toString().trim();
+  const isDifferentContractor = contractor && contractor !== name;
+
+  // 만기일 / 갱신일 (피보험자와 계약자 모두에게 만기 도래 알림 유효)
   const rDateStr = (item['갱신일'] || item['만기일'] || item['자동차_만기일'] || '').toString().trim();
   if (rDateStr) {
     let rawNums = rDateStr.replace(/[^0-9]/g, '');
@@ -505,31 +525,44 @@ function extractContractEvents(item, name, phone, prod, thisYear) {
     }
 
     if (cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      crmEventsList.push({
-        type: 'expiry',
-        name: name,
-        phone: phone,
-        prod: prod,
-        fullDate: cleanDate,
-        title: `📑 [만기·갱신] ${name}`,
-        note: `${name} 고객님의 계약(${prod}) 만기/갱신일입니다. 사전 연장 및 만기 환급금 상담을 진행하세요.`
-      });
-    } else if (cleanDate.match(/^\d{2}-\d{2}$/)) {
-      [-1, 0, 1].forEach(yearOffset => {
+      const key = `expiry_${cleanDate}_${name}_${prod}`;
+      if (!crmEventSeenKeys || !crmEventSeenKeys.has(key)) {
+        if (crmEventSeenKeys) crmEventSeenKeys.add(key);
         crmEventsList.push({
           type: 'expiry',
           name: name,
           phone: phone,
           prod: prod,
-          fullDate: `${thisYear + yearOffset}-${cleanDate}`,
+          fullDate: cleanDate,
           title: `📑 [만기·갱신] ${name}`,
           note: `${name} 고객님의 계약(${prod}) 만기/갱신일입니다. 사전 연장 및 만기 환급금 상담을 진행하세요.`
         });
+      }
+    } else if (cleanDate.match(/^\d{2}-\d{2}$/)) {
+      [-1, 0, 1].forEach(yearOffset => {
+        const fullDate = `${thisYear + yearOffset}-${cleanDate}`;
+        const key = `expiry_${fullDate}_${name}_${prod}`;
+        if (!crmEventSeenKeys || !crmEventSeenKeys.has(key)) {
+          if (crmEventSeenKeys) crmEventSeenKeys.add(key);
+          crmEventsList.push({
+            type: 'expiry',
+            name: name,
+            phone: phone,
+            prod: prod,
+            fullDate: fullDate,
+            title: `📑 [만기·갱신] ${name}`,
+            note: `${name} 고객님의 계약(${prod}) 만기/갱신일입니다. 사전 연장 및 만기 환급금 상담을 진행하세요.`
+          });
+        }
       });
     }
   }
 
-  // 보험료 결제일 (Payment Day - 앞뒤 2달 매월 자동 생성)
+  // 보험료 결제일 (Payment Day - 계약자 본인 기준 생성, 피보험자에게는 결제 알림 중복 생성 안 함)
+  if (isDifferentContractor) {
+    return;
+  }
+
   const payDayRaw = item['결제일'] || item['납입일'] || '';
   const payDay = parseInt(payDayRaw.toString().replace(/[^0-9]/g, ''), 10);
   if (payDay && payDay >= 1 && payDay <= 31) {
@@ -540,15 +573,20 @@ function extractContractEvents(item, name, phone, prod, thisYear) {
       const lastDayOfMonth = new Date(y, m, 0).getDate();
       const actualDay = Math.min(payDay, lastDayOfMonth);
       const fullDateStr = `${y}-${String(m).padStart(2, '0')}-${String(actualDay).padStart(2, '0')}`;
-      crmEventsList.push({
-        type: 'pay',
-        name: name,
-        phone: phone,
-        prod: prod,
-        fullDate: fullDateStr,
-        title: `💳 [결제] ${name}`,
-        note: `${name} 고객님의 정기 보험료 결제일(${payDay}일)입니다. 통장 잔고 및 정상 출금 여부를 체크하세요.`
-      });
+      
+      const key = `pay_${fullDateStr}_${name}_${prod}_${payDay}`;
+      if (!crmEventSeenKeys || !crmEventSeenKeys.has(key)) {
+        if (crmEventSeenKeys) crmEventSeenKeys.add(key);
+        crmEventsList.push({
+          type: 'pay',
+          name: name,
+          phone: phone,
+          prod: prod,
+          fullDate: fullDateStr,
+          title: `💳 [결제] ${name}`,
+          note: `${name} 고객님의 정기 보험료 결제일(${payDay}일)입니다. 통장 잔고 및 정상 출금 여부를 체크하세요.`
+        });
+      }
     }
   }
 }

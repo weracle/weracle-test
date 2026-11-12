@@ -724,19 +724,50 @@
       finalBankOwner = selAcc.bankOwner || (isValidOwnerName(rawName) ? rawName : '');
     }
 
-    // 6. 반려동물
-    const petBreed = getVal(['반려동물', '품종', '견종', '묘종', 'pet_breed', 'petBreed']);
-    const petName = getVal(['동물이름', '반려동물이름', '반려견이름', 'pet_name', 'petName']);
+    // 6. 반려동물 데이터 정밀 수집 및 규격 정규화
+    function normalizePetBirth(b) {
+      if (!b) return '';
+      const s = String(b).trim();
+      const digits = s.replace(/[^0-9]/g, '');
+      if (digits.length === 8) {
+        return digits.substring(0, 4) + '-' + digits.substring(4, 6) + '-' + digits.substring(6, 8);
+      }
+      if (/^\d{4}[-./]\d{1,2}[-./]\d{1,2}$/.test(s)) {
+        const parts = s.split(/[-./]/);
+        const y = parts[0];
+        const m = parts[1].padStart(2, '0');
+        const d = parts[2].padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+      return s;
+    }
+
+    function normalizePetGender(g) {
+      if (!g) return '';
+      const s = String(g).trim().toLowerCase();
+      if (/수|남|m|male/i.test(s)) return '수컷';
+      if (/암|여|f|female/i.test(s)) return '암컷';
+      return s;
+    }
+
+    const petBreed = getVal(['반려동물', '품종', '견종', '묘종', '동물품종', '반려동물품종', 'pet_breed', 'petBreed']);
+    const petName = getVal(['동물이름', '반려동물이름', '반려견이름', '반려묘이름', '펫이름', '동물명', 'pet_name', 'petName']);
     let pets = [];
     if (Array.isArray(client.pets) && client.pets.length > 0) {
-      pets = client.pets;
+      pets = client.pets.map(p => ({
+        name: p.name || '',
+        breed: p.breed || '',
+        birth: normalizePetBirth(p.birth),
+        gender: normalizePetGender(p.gender),
+        color: p.color || ''
+      }));
     } else if (petBreed || petName) {
       pets.push({
         name: petName,
         breed: petBreed,
-        birth: getVal(['동물생일', '동물생년월일', 'pet_birth']),
-        gender: getVal(['동물성별', 'pet_gender']),
-        color: getVal(['동물모색', 'pet_color'])
+        birth: normalizePetBirth(getVal(['동물생일', '동물생년월일', '반려동물생일', '반려동물생년월일', '펫생일', '펫생년월일', '출생일', 'pet_birth', 'petBirth'])),
+        gender: normalizePetGender(getVal(['동물성별', '반려동물성별', '펫성별', '성별', 'pet_gender', 'petGender'])),
+        color: getVal(['동물모색', '반려동물모색', '펫모색', '모색', '털색', 'pet_color', 'petColor'])
       });
     }
 
@@ -882,6 +913,58 @@
     renderCustomerList();
   };
 
+  // 반려동물 선택 헬퍼
+  window.selectPetForClaim = function (idx) {
+    window.crmPickerState.selectedPetIndex = idx;
+    renderSetupView();
+  };
+
+  // 반려동물 정보 섹션 렌더러
+  function renderPetSection(insured) {
+    const petList = (insured && Array.isArray(insured.pets) && insured.pets.length > 0) ? insured.pets : [];
+    const selPetIdx = window.crmPickerState.selectedPetIndex || 0;
+    let html = `
+      <div class="crm-pet-card-section" style="margin-top:12px; padding:12px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:13px; font-weight:700; color:#166534;">🐾 청구 대상 반려동물 정보</span>
+          ${petList.length > 1 ? `<span style="font-size:11.5px; color:#15803d; font-weight:600;">등록된 반려동물 ${petList.length}마리 중 선택</span>` : ''}
+        </div>
+    `;
+    if (petList.length > 0) {
+      if (petList.length > 1) {
+        html += `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">`;
+        petList.forEach((p, pIdx) => {
+          const isActive = (pIdx === selPetIdx);
+          const activeStyle = isActive ? 'background:#16a34a; color:#fff; font-weight:700; border-color:#16a34a;' : 'background:#fff; color:#374151; border-color:#d1d5db;';
+          html += `
+            <button type="button" onclick="selectPetForClaim(${pIdx})" style="padding:4px 10px; font-size:12px; border-radius:6px; border:1px solid; cursor:pointer; transition:all 0.15s; ${activeStyle}">
+              ${p.name || '반려동물 ' + (pIdx + 1)} (${p.breed || '품종미상'})
+            </button>
+          `;
+        });
+        html += `</div>`;
+      }
+      const curPet = petList[selPetIdx] || petList[0];
+      html += `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(105px, 1fr)); gap:6px; font-size:12px; color:#1e293b; background:#fff; padding:10px 12px; border-radius:8px; border:1px solid #dcfce7;">
+          <div><strong style="color:#166534;">이름:</strong> ${curPet.name || '미등록'}</div>
+          <div><strong style="color:#166534;">품종:</strong> ${curPet.breed || '미등록'}</div>
+          <div><strong style="color:#166534;">생일:</strong> ${curPet.birth || '미등록'}</div>
+          <div><strong style="color:#166534;">성별:</strong> ${curPet.gender || '미등록'}</div>
+          <div><strong style="color:#166534;">모색:</strong> ${curPet.color || '미등록'}</div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div style="font-size:12px; color:#64748b; line-height:1.4;">
+          ⚠️ CRM에 등록된 반려동물 정보가 없습니다. 청구서 1단계에서 직접 입력하실 수 있습니다.
+        </div>
+      `;
+    }
+    html += `</div>`;
+    return html;
+  }
+
   // 뷰 전환 (setup vs search)
   window.switchView = function (viewName) {
     window.crmPickerState.currentView = viewName;
@@ -936,6 +1019,11 @@
     if (!compName) return 'normal';
     const cat = getActiveClaimCategory();
     const norm = String(compName).replace(/\s+/g, '');
+
+    // 0. 펫보험 전용 규칙: 6개 모든 보험사(DB, KB, 메리츠, 삼성, 한화, 현대)가 계약자 없이 피보험자(보호자) 단독 서식
+    if (cat === '펫보험' || cat === '펫') {
+      return 'insuredOnly';
+    }
 
     // 1. 배상책임 전용 규칙
     if (cat === '배상') {
@@ -1257,12 +1345,19 @@
       html += `</div>`; // End contractor slot
     } else {
       // B. 일반 서식 및 피보험자 단독 서식
-      // Person A: 피보험자
+      // Person A: 피보험자 / 보호자
+      const cat = getActiveClaimCategory();
+      const isPetMode = (cat === '펫보험' || cat === '펫');
+      const slotTag = isPetMode ? '보호자 / 견주 (피보험자)' : '치료받은 분 (피보험자)';
+      const slotHint = isPetMode ? '청구 대상 반려동물의 보호자(피보험자)' : '병원 진료 및 치료를 받으신 분';
+      const emptyText = isPetMode ? '아직 선택된 보호자 고객이 없습니다.' : '아직 선택된 피보험자 고객이 없습니다.';
+      const emptyBtn = isPetMode ? '🔍 보호자(피보험자) 고객 찾기' : '🔍 피보험자 고객 찾기';
+
       html += `
         <div class="crm-person-slot">
           <div class="crm-slot-header">
-            <span class="crm-slot-tag insured">치료받은 분 (피보험자)</span>
-            <span class="crm-slot-hint">병원 진료 및 치료를 받으신 분</span>
+            <span class="crm-slot-tag insured">${slotTag}</span>
+            <span class="crm-slot-hint">${slotHint}</span>
           </div>
       `;
 
@@ -1290,17 +1385,18 @@
           <div class="crm-client-account-wrap">
             ${renderAccountSection('insured', insured)}
           </div>
+            ${isPetMode ? renderPetSection(insured) : ''}
         </div>
       `;
     } else {
       html += `
         <div class="crm-empty-slot-card">
           <div class="crm-empty-slot-info">
-            <p class="crm-empty-text">아직 선택된 피보험자 고객이 없습니다.</p>
+            <p class="crm-empty-text">${emptyText}</p>
             <p class="crm-empty-sub">등록 고객을 찾거나, 청구서에서 직접 수기로 작성할 수 있습니다.</p>
           </div>
           <button type="button" class="btn-slot-search" onclick="startCustomerSearch('insured')">
-            🔍 피보험자 고객 찾기
+            ${emptyBtn}
           </button>
         </div>
       `;
@@ -1670,14 +1766,17 @@
       }
     }
 
-    // 펫보험 정보 주입 (피보험자 기준)
+    // 펫보험 정보 주입 (피보험자/보호자 기준 - 선택된 반려동물 주입)
     if (insured && Array.isArray(insured.pets) && insured.pets.length > 0) {
-      const p = insured.pets[0];
-      setFieldValue('petName', p.name);
-      setFieldValue('petBreed', p.breed);
-      setFieldValue('petBirth', p.birth);
-      setFieldValue('petGender', p.gender);
-      setFieldValue('petColor', p.color);
+      const petIdx = window.crmPickerState.selectedPetIndex || 0;
+      const p = insured.pets[petIdx] || insured.pets[0];
+      if (p) {
+        setFieldValue('petName', p.name);
+        setFieldValue('petBreed', p.breed);
+        setFieldValue('petBirth', p.birth);
+        setFieldValue('petGender', p.gender);
+        setFieldValue('petColor', p.color);
+      }
     }
 
     closeCrmPickerModal();
@@ -1717,15 +1816,34 @@
     }
   }
 
-  // 필드 값 안전 주입 (allowEmpty가 true이면 빈 문자열로 리셋 허용)
+  // 필드 값 안전 주입 (allowEmpty가 true이면 빈 문자열로 리셋 허용, 텍스트/라디오 자동 대응)
   function setFieldValue(fieldId, value, allowEmpty) {
-    const el = document.getElementById(fieldId);
-    if (!el) return;
     if (value === undefined || value === null) return;
     if (value === '' && !allowEmpty) return;
-    el.value = value;
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-    el.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // 1. 단일 ID 요소
+    const el = document.getElementById(fieldId);
+    if (el) {
+      el.value = value;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
+
+    // 2. 라디오 버튼 처리 (예: petGender 수컷/암컷)
+    const radios = document.querySelectorAll(`input[type="radio"][name="${fieldId}"]`);
+    if (radios.length > 0) {
+      const valStr = String(value).trim();
+      radios.forEach(r => {
+        const rVal = String(r.value).trim();
+        if (rVal === valStr ||
+            (valStr.includes('수') && rVal.includes('수')) ||
+            (valStr.includes('암') && rVal.includes('암'))) {
+          r.checked = true;
+          r.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+    }
   }
 
   // 건너뛰고 직접 수기 작성

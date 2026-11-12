@@ -1441,11 +1441,13 @@ try {
             // Customer is insured ONLY if their name matches insInsured
             const isInsured = hasInsured && (myName === insInsured);
 
+            const isUidMatch = Boolean(myUid && insUid && (insUid === myUid || insUid.startsWith(myUid + "_") || insUid.includes("_" + myUid)));
+
             if (hasContractor || hasInsured) {
-                isMatch = (isContractor || isInsured);
+                isMatch = (isContractor || isInsured || isUidMatch);
             } else if (!hasContractor && !hasInsured) {
                 // Fallback for legacy rows without contractor/insured
-                if (myUid && insUid && insUid === myUid) isMatch = true;
+                if (isUidMatch) isMatch = true;
                 else if (cid && insCid && cid === insCid) isMatch = true;
                 else if (myName && insOwner && myName === insOwner) isMatch = true;
                 else if (myRrn && myRrn.length >= 7 && insRrn && insRrn.length >= 7 && myRrn === insRrn) isMatch = true;
@@ -1682,11 +1684,13 @@ try {
             // Customer is insured ONLY if their name matches insInsured
             const isInsured = hasInsured && (myName === insInsured);
 
+            const isUidMatch = Boolean(myUid && insUid && (insUid === myUid || insUid.startsWith(myUid + "_") || insUid.includes("_" + myUid)));
+
             if (hasContractor || hasInsured) {
-                isMatch = (isContractor || isInsured);
+                isMatch = (isContractor || isInsured || isUidMatch);
             } else if (!hasContractor && !hasInsured) {
                 // Fallback for legacy rows without contractor/insured
-                if (myUid && insUid && insUid === myUid) isMatch = true;
+                if (isUidMatch) isMatch = true;
                 else if (cid && insCid && cid === insCid) isMatch = true;
                 else if (myName && insOwner && myName === insOwner) isMatch = true;
                 else if (myRrn && myRrn.length >= 7 && insRrn && insRrn.length >= 7 && myRrn === insRrn) isMatch = true;
@@ -2414,15 +2418,17 @@ async function saveClientToServer(clientObj, insRows) {
                     const cClient = ((typeof window.findCustomerByNameOrId === 'function') ? window.findCustomerByNameOrId(cName, cId) : null) || clientObj;
                     const iClient = ((typeof window.findCustomerByNameOrId === 'function') ? window.findCustomerByNameOrId(iName, iId) : null) || cClient;
 
-                    // Calculate accurate composite or single UID
-                    const cUid = cClient["UID"] || insObj["UID"] || clientObj["UID"] || "";
-                    const iUid = iClient["UID"] || insObj["UID"] || cUid;
-                    
+                    // Calculate accurate composite UID: [계약자UID]_[피보험자UID]
+                    const cleanCustName = (n) => String(n || '').replace(/\s*\([^)]*\)/g, '').trim();
+                    const cUid = (cClient && cClient["UID"]) || clientObj["UID"] || "";
+                    const iUid = (iClient && iClient["UID"]) || (cleanCustName(cName) === cleanCustName(iName) ? cUid : ((cClient && cClient["UID"]) || clientObj["UID"] || ""));
+                    const bp = `${cUid}_${iUid}`;
+
                     let finalUid = "";
-                    if (cleanCustName(cName) === cleanCustName(iName) || cUid === iUid || !iUid) {
-                        finalUid = cUid;
+                    if (insObj["UID"] && !insObj["UID"].startsWith("UID_1") && insObj["UID"].includes(cUid)) {
+                        finalUid = insObj["UID"];
                     } else {
-                        finalUid = `${iUid}_${cUid}`;
+                        finalUid = bp;
                     }
                     insObj["UID"] = finalUid;
 
@@ -4405,6 +4411,10 @@ async function submitCrmData(event) {
       ? globalCustomerData.find(c => String(c["고객번호"] || c["사업자번호"]) === String(window.editTargetId)) 
       : null;
 
+  const currentCustomerUid = (existingClient && existingClient["UID"]) 
+      ? existingClient["UID"] 
+      : ("UID_" + new Date().getTime() + "_" + Math.floor(Math.random() * 10000));
+
   const form = document.getElementById("crmRegForm");
     const wiz = document.getElementById("regSetupWizard"); if(wiz) wiz.style.display = "none";
     if(form) form.style.display = "flex";
@@ -4685,12 +4695,12 @@ if (targetAlrilTbody) {
 }
 insData['알릴의무사항'] = alrilRows;
 
-// Calculate composite UID for insurance ([피보험자UID]_[계약자UID])
+// Calculate composite UID for insurance ([계약자UID]_[피보험자UID])
 const cleanCustName = (n) => String(n || '').replace(/\s*\([^)]*\)/g, '').trim();
 let curContractor = (activeType === '자동차보험' ? insData['차_계약자'] : insData['계약자']) || formData.get("고객명") || "";
 let curInsured = (activeType === '자동차보험' ? insData['차_피보험자'] : insData['피보험자']) || formData.get("고객명") || "";
 let myCustName = cleanCustName(formData.get("고객명") || (existingClient ? existingClient["고객명"] : ""));
-let myCustUid = (existingClient && existingClient["UID"]) ? existingClient["UID"] : (document.getElementById("base-cust-id") ? "UID_" + document.getElementById("base-cust-id").value : "");
+let myCustUid = currentCustomerUid;
 
 const findUidByNameOrId = (name, idVal) => {
     let pure = cleanCustName(name);
@@ -4718,11 +4728,10 @@ const findUidByNameOrId = (name, idVal) => {
 let cUid = findUidByNameOrId(curContractor, insData['계약자_id'] || insData['차_계약자_id']) || (cleanCustName(curContractor) === myCustName ? myCustUid : ("UID_" + (cleanCustName(curContractor) || "계약자")));
 let iUid = findUidByNameOrId(curInsured, insData['피보험자_id'] || insData['차_피보험자_id']) || (cleanCustName(curInsured) === myCustName ? myCustUid : ("UID_" + (cleanCustName(curInsured) || "피보험자")));
 
-if (cleanCustName(curContractor) === cleanCustName(curInsured) || cUid === iUid) {
-    insData['UID'] = cUid;
-} else {
-    insData['UID'] = `${iUid}_${cUid}`;
-}
+// Form base composite UID: [계약자UID]_[피보험자UID]
+let basePairUid = `${cUid}_${iUid}`;
+insData['_basePairUid'] = basePairUid;
+insData['UID'] = basePairUid;
 
 insList.push(insData);
 
@@ -4746,6 +4755,24 @@ if (entry.dataset.queueFamily === "true") {
         });
     }
 }
+});
+
+// Apply _1, _2 numbering if multiple policies share the same [contractorUid]_[insuredUid]
+const modalPairCounts = {};
+insList.forEach(item => {
+    const p = item._basePairUid || item['UID'];
+    modalPairCounts[p] = (modalPairCounts[p] || 0) + 1;
+});
+const modalPairIndex = {};
+insList.forEach(item => {
+    const p = item._basePairUid || item['UID'];
+    if (modalPairCounts[p] > 1) {
+        modalPairIndex[p] = (modalPairIndex[p] || 0) + 1;
+        item['UID'] = `${p}_${modalPairIndex[p]}`;
+    } else {
+        item['UID'] = p;
+    }
+    delete item._basePairUid;
 });
 
 if (abortSubmit) {
@@ -4906,7 +4933,7 @@ const clientObj = {
     "가입내역": finalGainHistory,
     "등록일": (existingClient && existingClient["등록일"]) ? existingClient["등록일"] : new Date().toISOString().substring(0, 10),
     "사업여부": formData.get("사업여부") || (existingClient ? existingClient["사업여부"] : "N"),
-    "UID": (existingClient && existingClient["UID"]) ? existingClient["UID"] : "UID_" + new Date().getTime() + "_" + Math.floor(Math.random()*1000),
+    "UID": currentCustomerUid,
 
     // 대표 보험 정보 컬럼 호환
     "피보험자": firstIns.피보험자 || firstIns.차_피보험자 || (existingClient ? existingClient["피보험자"] : ""),
@@ -11985,7 +12012,14 @@ window.forceSyncInsuranceSheet = async function() {
                     if (h === "고객번호") return custIdStr;
                     if (h === "고객명") return custNameStr;
                     if (h === "주민번호") return custJuminStr;
-                    if (h === "UID") return ins["UID"] || custUidStr;
+                    if (h === "UID") {
+                        let curUid = ins["UID"] || "";
+                        if (!curUid || curUid.startsWith("UID_1") || !curUid.includes(custUidStr)) {
+                            curUid = `${custUidStr}_${custUidStr}`;
+                            ins["UID"] = curUid;
+                        }
+                        return curUid;
+                    }
                     let val = "";
                     if (h === "계약자") val = ins["계약자"] || ins["차_계약자"] || custNameStr;
                     else if (h === "피보험자") val = ins["피보험자"] || ins["차_피보험자"] || custNameStr;

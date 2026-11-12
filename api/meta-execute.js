@@ -12,6 +12,7 @@ module.exports = async function handler(req, res) {
   const reqProto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
   const baseSiteUrl = `${reqProto}://${reqHost}`;
 
+  // ★ [GET] 인스타 DM 단축링크 클릭 시 캠페인명·담당설계사·PDF·맞춤질문 100% 보존 리다이렉트
   if (req.method === 'GET') {
     const campId = req.query && (req.query.c || req.query.id);
     if (campId && supabaseKey) {
@@ -20,19 +21,33 @@ module.exports = async function handler(req, res) {
           headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
         });
         const rows = await r.json();
-        if (Array.isArray(rows) && rows[0] && rows[0].landing_url) {
-          let destUrl = rows[0].landing_url;
+        if (Array.isArray(rows) && rows[0]) {
+          let destUrl = String(rows[0].landing_url || '').trim();
           const agentKey = rows[0].user_id || 'default';
           const isInstaTrack = rows[0].track === 'insta' || String(campId).startsWith('camp_ig_');
 
-          if (destUrl.includes('/api/meta-execute')) {
-            let pdfUrl = '';
-            try {
-              const pObj = JSON.parse(rows[0].target_summary || '{}');
+          let pdfUrl = '';
+          let qsJson = '';
+          try {
+            if (rows[0].target_summary && String(rows[0].target_summary).trim().startsWith('{')) {
+              const pObj = JSON.parse(rows[0].target_summary);
               if (pObj.pdfUrl) pdfUrl = pObj.pdfUrl;
-            } catch (e) {}
-            destUrl = `${baseSiteUrl}/sns_apply.html?utm_source=insta_dm&camp_id=${encodeURIComponent(campId)}&camp=${encodeURIComponent(rows[0].title || '')}&agent_id=${encodeURIComponent(agentKey)}&doc=${encodeURIComponent(pdfUrl)}`;
+              if (Array.isArray(pObj.customQuestions) && pObj.customQuestions.length > 0) {
+                qsJson = JSON.stringify(pObj.customQuestions);
+              }
+            }
+          } catch (e) {}
+
+          if (!destUrl || destUrl.includes('/api/meta-execute')) {
+            destUrl = `${baseSiteUrl}/sns_apply.html?utm_source=${isInstaTrack ? 'insta_dm' : 'meta_ad'}&camp_id=${encodeURIComponent(campId)}&camp=${encodeURIComponent(rows[0].title || '')}&agent_id=${encodeURIComponent(agentKey)}&doc=${encodeURIComponent(pdfUrl)}`;
+            if (qsJson) destUrl += `&qs=${encodeURIComponent(qsJson)}`;
           } else {
+            if (!destUrl.includes('camp_id=') && campId) {
+              destUrl += (destUrl.includes('?') ? '&' : '?') + `camp_id=${encodeURIComponent(campId)}`;
+            }
+            if (!destUrl.includes('camp=') && rows[0].title) {
+              destUrl += (destUrl.includes('?') ? '&' : '?') + `camp=${encodeURIComponent(rows[0].title)}`;
+            }
             if (!destUrl.includes('agent_id=') && agentKey) {
               destUrl += (destUrl.includes('?') ? '&' : '?') + `agent_id=${encodeURIComponent(agentKey)}`;
             }
@@ -286,12 +301,26 @@ module.exports = async function handler(req, res) {
 
     // [3] PR 설정 조회
     if (action === 'GET_PR_CONFIG') {
-      const { agentId, userKeys } = body;
+      const { agentId, userKeys, campId } = body;
       if (!supabaseKey) {
         return res.status(200).json({ success: false, config: null });
       }
 
-      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? userKeys : [agentId || 'default'];
+      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? [...userKeys] : [agentId || 'default'];
+
+      // 만약 agentId가 비어있고 campId만 넘어온 경우 캠페인 주인 키를 자동 추적
+      if (campId && campId !== 'camp_direct') {
+        try {
+          const cr = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(campId)}&select=user_id&limit=1`, {
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+          });
+          const crows = await cr.json();
+          if (Array.isArray(crows) && crows[0] && crows[0].user_id) {
+            rawKeyList.unshift(crows[0].user_id);
+          }
+        } catch (e) {}
+      }
+
       const safeKeys = Array.from(new Set(rawKeyList.map(k => sanitizeAgentKey(k)).filter(Boolean)));
 
       const r = await fetch(
@@ -303,6 +332,7 @@ module.exports = async function handler(req, res) {
       if (Array.isArray(rows) && rows.length > 0) {
         let matched = null;
         for (const sKey of safeKeys) {
+          if (sKey === 'default') continue;
           matched = rows.find(row => row.id === `pr_cfg_${sKey}` || sanitizeAgentKey(row.user_id) === sKey);
           if (matched) break;
         }
@@ -339,6 +369,132 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, record });
     }
 
+    // ★ [4-1] PR 랜딩페이지(sns_apply.html) 신청 고객 DB 직접 저장 보장 (인스타 DM 신청 누락 원천 차단!)
+    if (action === 'SAVE_APPLY_LEAD') {
+      const { campaignId, campaignTitle, name, phone, region, note, source, agentId, hasPdf } = body;
+      if (!supabaseKey || !name || !phone) {
+        return res.status(200).json({ success: false, error: 'Missing name or phone' });
+      }
+
+      const cleanCampId = String(campaignId || 'camp_direct').trim();
+      const cleanPhone = String(phone || '').trim();
+      let resolvedOwner = String(agentId || '').trim().toLowerCase();
+      let resolvedTitle = String(campaignTitle || '').trim();
+      let resolvedSource = String(source || 'meta_ad').trim();
+      let currentLeadsCount = 0;
+      let hasMatchedCamp = false;
+
+      // 캠페인 ID로 원소유자(user_id)와 정확한 제목·트랙(insta/meta) 조회
+      if (cleanCampId && cleanCampId !== 'camp_direct') {
+        try {
+          const cr = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(cleanCampId)}&select=user_id,title,track,leads_count&limit=1`, {
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+          });
+          const crows = await cr.json();
+          if (Array.isArray(crows) && crows[0]) {
+            hasMatchedCamp = true;
+            currentLeadsCount = Number(crows[0].leads_count || 0);
+            if (crows[0].user_id && crows[0].user_id !== 'default') {
+              resolvedOwner = String(crows[0].user_id).trim().toLowerCase();
+            }
+            if (crows[0].title && (!resolvedTitle || resolvedTitle.includes('숨은 병원비'))) {
+              resolvedTitle = crows[0].title;
+            }
+            if (crows[0].track === 'insta' || cleanCampId.startsWith('camp_ig_')) {
+              resolvedSource = 'insta_dm_apply';
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (cleanCampId.startsWith('camp_ig_') || resolvedSource.includes('insta')) {
+        resolvedSource = 'insta_dm_apply';
+      }
+
+      const cleanRawNote = String(note || '').replace(/\s*\[(?:owner|담당):[^\]]+\]/gi, '').trim();
+      const ownerTag = (resolvedOwner && resolvedOwner !== 'default') ? ` [owner:${resolvedOwner}]` : '';
+      const finalNote = `${cleanRawNote}${ownerTag}`.trim();
+      const initialStatus = hasPdf ? '자료열람·신청완료' : '신규대기';
+
+      // 최근 2분 이내 동일 연락처로 meta-webhook이 이미 저장했는지 확인 (중복 방지 + 누락 필드 자동 보정)
+      let existingRecentRow = null;
+      try {
+        const dupRes = await fetch(
+          `${supabaseUrl}/rest/v1/meta_leads?phone=eq.${encodeURIComponent(cleanPhone)}&order=created_at.desc&limit=5`,
+          { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+        );
+        const dupRows = await dupRes.json();
+        if (Array.isArray(dupRows) && dupRows.length > 0) {
+          existingRecentRow = dupRows.find(r => {
+            if (!r.created_at) return false;
+            const diffMs = Math.abs(Date.now() - new Date(r.created_at).getTime());
+            return diffMs < 120000;
+          });
+        }
+      } catch (e) {}
+
+      if (existingRecentRow) {
+        // 이미 meta-webhook에서 들어갔다면 캠페인ID·출처·소유자 태그만 정확하게 보정
+        const patchFilter = existingRecentRow.id !== undefined
+          ? `id=eq.${encodeURIComponent(existingRecentRow.id)}`
+          : `created_at=eq.${encodeURIComponent(existingRecentRow.created_at)}&phone=eq.${encodeURIComponent(cleanPhone)}`;
+
+        await fetch(`${supabaseUrl}/rest/v1/meta_leads?${patchFilter}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`
+          },
+          body: JSON.stringify({
+            campaign_id: cleanCampId,
+            campaign_title: resolvedTitle || existingRecentRow.campaign_title || '상담 신청',
+            source: resolvedSource,
+            note: finalNote
+          })
+        });
+        return res.status(200).json({ success: true, mode: 'patched_existing' });
+      }
+
+      // meta-webhook에서 저장되지 않은 경우 수파베이스 meta_leads에 즉시 직접 저장!
+      const newLeadPayload = {
+        campaign_id: cleanCampId,
+        campaign_title: resolvedTitle || '상담 신청',
+        source: resolvedSource,
+        name: String(name).trim(),
+        phone: cleanPhone,
+        region: String(region || '').trim(),
+        note: finalNote,
+        status: initialStatus,
+        created_at: new Date().toISOString()
+      };
+
+      const insRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(newLeadPayload)
+      });
+
+      if (hasMatchedCamp && insRes.ok) {
+        await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(cleanCampId)}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`
+          },
+          body: JSON.stringify({ leads_count: currentLeadsCount + 1 })
+        }).catch(() => {});
+      }
+
+      return res.status(200).json({ success: insRes.ok, mode: 'inserted_direct' });
+    }
+
     // [5] 캠페인 · 나의 광고콘텐츠 · 유입 DB 통합 조회
     if (action === 'LIST' || action === 'SYNC_LIST') {
       const { userId, userKeys } = body;
@@ -366,7 +522,6 @@ module.exports = async function handler(req, res) {
         }
       } catch (e) {}
 
-      // 나의 광고콘텐츠(custom_asset) 분리 추출
       const myCustomAssets = [];
       const allCampaigns = [];
 
@@ -418,6 +573,8 @@ module.exports = async function handler(req, res) {
         myCampaigns = allCampaigns;
       }
 
+      const myCampIdSet = new Set(myCampaigns.map(c => String(c.id)));
+      const myCampTitleSet = new Set(myCampaigns.map(c => String(c.title || '').trim()).filter(Boolean));
       const instaCampIdSet = new Set(myCampaigns.filter(c => c.track === 'insta').map(c => String(c.id)));
 
       let leads = [];
@@ -430,9 +587,17 @@ module.exports = async function handler(req, res) {
         if (Array.isArray(lData)) {
           leads = lData.filter(l => {
             const cId = String(l.campaign_id || '');
+            const cTitle = String(l.campaign_title || '').trim();
             const noteStr = String(l.note || '');
 
+            // ① 내 캠페인/인스타 게시물 ID와 일치하면 조건 없이 100% 내 DB로 표시!
+            if (cId && myCampIdSet.has(cId)) return true;
+
+            // ② 타인 캠페인 ID는 차단
             if (cId && otherUsersCampIdSet.has(cId)) return false;
+
+            // ③ 캠페인 제목이 내 게시물과 정확히 일치하는 경우에도 내 DB로 표시
+            if ((!cId || cId === 'camp_direct') && cTitle && myCampTitleSet.has(cTitle)) return true;
 
             const ownerMatch = noteStr.match(/\[(?:owner|담당):([^\]]+)\]/i);
             if (ownerMatch && ownerMatch[1]) {
@@ -447,9 +612,10 @@ module.exports = async function handler(req, res) {
                   validKeySet.has(taggedSanitized) ||
                   (taggedDigits.length >= 9 && validKeySet.has(taggedDigits));
 
-                const hasEmailInMyKeys = Array.from(validKeySet).some(k => k.includes('@'));
-                if (taggedOwner.includes('@') && hasEmailInMyKeys) return isTaggedMine;
                 if (isTaggedMine) return true;
+
+                const hasEmailInMyKeys = Array.from(validKeySet).some(k => k.includes('@'));
+                if (taggedOwner.includes('@') && hasEmailInMyKeys) return false;
               }
             }
             return true;
@@ -489,7 +655,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, status: newStatus });
     }
 
-    // [6-1] 유입 고객 DB 진행 상태(신규대기/부재중/상담중/체결완료/거절·종결) 실시간 저장
+    // [6-1] 유입 고객 DB 진행 상태 실시간 저장
     if (action === 'UPDATE_LEAD_STATUS') {
       const { leadId, createdAt, phone, campaignId, newStatus } = body;
       if (!supabaseKey || !newStatus) {
@@ -554,7 +720,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-    // [9] 인스타 댓글 자동DM 기록
+    // [9] 인스타 댓글 자동DM 기록 (비표준 필드 제거로 저장 거절 방지 + 중복 방지)
     if (action === 'RECORD_INSTA_DM') {
       const { campaignId, dmSentCount, leadRecord, userId } = body;
       if (supabaseKey) {
@@ -570,22 +736,48 @@ module.exports = async function handler(req, res) {
           });
         }
         if (leadRecord) {
-          const ownerTag = userId ? ` [owner:${String(userId).toLowerCase()}]` : '';
-          const recToSave = {
-            ...leadRecord,
-            source: 'insta_dm',
-            note: `${leadRecord.note || ''}${ownerTag}`.trim()
-          };
-          await fetch(`${supabaseUrl}/rest/v1/meta_leads`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify(recToSave)
-          });
+          const ownerTag = userId ? ` [owner:${String(userId).trim().toLowerCase()}]` : '';
+          const cleanCampaignId = String(leadRecord.campaign_id || campaignId || 'camp_ig_direct');
+          const cleanName = String(leadRecord.name || '인스타 댓글 고객');
+          const rawNote = String(leadRecord.note || '').trim();
+
+          let alreadySaved = false;
+          try {
+            const chkRes = await fetch(
+              `${supabaseUrl}/rest/v1/meta_leads?campaign_id=eq.${encodeURIComponent(cleanCampaignId)}&name=eq.${encodeURIComponent(cleanName)}&order=created_at.desc&limit=5`,
+              { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+            );
+            const chkRows = await chkRes.json();
+            if (Array.isArray(chkRows) && chkRows.length > 0) {
+              const commentCore = rawNote.split('(키워드')[0].trim();
+              alreadySaved = chkRows.some(r => commentCore && String(r.note || '').includes(commentCore));
+            }
+          } catch (e) {}
+
+          if (!alreadySaved) {
+            const safeRecordToSave = {
+              campaign_id: cleanCampaignId,
+              campaign_title: String(leadRecord.campaign_title || '인스타그램 자동DM'),
+              source: String(leadRecord.source || 'insta_dm'),
+              name: cleanName,
+              phone: String(leadRecord.phone || '답글+DM 발송완료'),
+              region: String(leadRecord.region || '인스타그램 댓글'),
+              note: `${rawNote}${ownerTag}`.trim(),
+              status: String(leadRecord.status || '자동DM 발송완료'),
+              created_at: leadRecord.created_at || new Date().toISOString()
+            };
+
+            await fetch(`${supabaseUrl}/rest/v1/meta_leads`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Prefer': 'return=minimal'
+              },
+              body: JSON.stringify(safeRecordToSave)
+            });
+          }
         }
       }
       return res.status(200).json({ success: true });

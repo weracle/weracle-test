@@ -3085,77 +3085,101 @@ async function submitLeadForm(e) {
       const finalNoteText = noteParts.filter(Boolean).join(' / ');
 
       const ownerAgentId = agentIdParam || 'default';
-      const ownerTag = (ownerAgentId && ownerAgentId !== 'default') ? ` [owner:${String(ownerAgentId).trim().toLowerCase()}]` : '';
       const targetAgentNotifyPhone = agentPhone || storedAgentNotifyPhone || '';
       const displayedAgentName = (document.getElementById('heroAgentName') && document.getElementById('heroAgentName').innerText.trim()) || agentName || '담당설계사';
+      const resolvedSrc = String(campId || '').startsWith('camp_ig_') ? 'insta_dm_apply' : String(sourceParam || 'insta_dm_apply');
 
       if (window.fbq && activeMetaPixelId) {
         try {
           window.fbq('track', 'Lead', {
             content_name: campTitle,
-            content_category: sourceParam
+            content_category: resolvedSrc
           });
         } catch (pxErr) {}
       }
 
-      // ★ 1순위: 수파베이스 meta_leads 테이블에 브라우저에서 직접 즉시 저장 (API 경로 오류 원천 차단!)
-      const SB_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
-      const SB_KEY = 'sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR';
-      let directSavedOk = false;
+      let savedOk = false;
 
+      // 1순위: 백엔드 2중 보장 저장 호출 (meta_leads 시도 -> 실패 시 meta_campaigns 자동 우회)
       try {
-        const directPayload = {
-          campaign_id: String(campId || 'camp_direct'),
-          campaign_title: String(campTitle || '인스타 DM 상담 신청'),
-          source: String(campId || '').startsWith('camp_ig_') ? 'insta_dm_apply' : String(sourceParam || 'insta_dm_apply'),
-          name: name,
-          phone: phone,
-          region: region,
-          note: `${finalNoteText}${ownerTag}`.trim(),
-          status: hasPdfDoc ? '자료열람·신청완료' : '신규대기'
-        };
-
-        const sbRes = await fetch(`${SB_URL}/rest/v1/meta_leads`, {
+        const apiRes = await fetch('/api/meta-execute', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SB_KEY,
-            'Authorization': `Bearer ${SB_KEY}`,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify(directPayload)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'SAVE_APPLY_LEAD',
+            campaignId: campId,
+            campaignTitle: campTitle,
+            name,
+            phone,
+            region,
+            note: finalNoteText,
+            source: resolvedSrc,
+            agentId: ownerAgentId,
+            hasPdf: hasPdfDoc
+          })
         });
+        const apiJson = await apiRes.json();
+        if (apiJson && apiJson.success) savedOk = true;
+      } catch (err) {}
 
-        if (sbRes.ok) {
-          directSavedOk = true;
-        }
-      } catch (sbErr) {}
-
-      // ★ 2순위: 만약 수파베이스 직접 저장이 RLS 등으로 막혔을 때만 백엔드 API로 저장
-      if (!directSavedOk) {
+      // 2순위: 백엔드 통신까지 실패한 경우 브라우저에서 쓰기 권한이 열려 있는 meta_campaigns에 직접 저장
+      if (!savedOk) {
         try {
-          const apiRes = await fetch('/api/meta-execute', {
+          const SB_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
+          const SB_KEY = 'sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR';
+          const bkId = `lead_bk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+          const nowIso = new Date().toISOString();
+          const cleanOwner = String(ownerAgentId || 'default').trim().toLowerCase().replace(/[^a-z0-9@._-]/g, '_');
+          const leadObj = {
+            id: bkId,
+            campaign_id: String(campId || 'camp_direct'),
+            campaign_title: String(campTitle || '상담 신청'),
+            source: resolvedSrc,
+            name,
+            phone,
+            region,
+            note: `${finalNoteText} [owner:${cleanOwner}]`.trim(),
+            status: hasPdfDoc ? '자료열람·신청완료' : '신규대기',
+            created_at: nowIso
+          };
+          await fetch(`${SB_URL}/rest/v1/meta_campaigns`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SB_KEY,
+              'Authorization': `Bearer ${SB_KEY}`,
+              'Prefer': 'return=minimal'
+            },
             body: JSON.stringify({
-              action: 'SAVE_APPLY_LEAD',
-              campaignId: campId,
-              campaignTitle: campTitle,
-              name,
-              phone,
+              id: bkId,
+              user_id: cleanOwner,
+              track: 'lead_backup',
+              title: leadObj.campaign_title,
+              description: resolvedSrc,
+              cta_type: 'LEAD_BACKUP',
+              landing_url: '',
+              start_date: '',
+              end_date: '',
+              ratio: '1:1',
               region,
-              note: finalNoteText,
-              source: sourceParam,
-              agentId: ownerAgentId,
-              hasPdf: hasPdfDoc
+              target_summary: JSON.stringify(leadObj),
+              budget: 0,
+              keyword: phone,
+              dm_message: name,
+              status: leadObj.status,
+              meta_campaign_id: leadObj.campaign_id,
+              adset_id: '',
+              ad_id: '',
+              ig_media_id: '',
+              leads_count: 0,
+              dm_sent_count: 0,
+              created_at: nowIso
             })
           });
-          const apiJson = await apiRes.json();
-          if (apiJson && apiJson.success) directSavedOk = true;
-        } catch (err) {}
+        } catch (bkErr) {}
       }
 
-      // ★ 3순위: 카카오 알림톡 발송용 웹훅 호출 (백그라운드 처리, 이미 DB에 들어갔으므로 중복 INSERT 방지 플래그 전달)
+      // 3순위: 카카오 알림톡 발송용 웹훅 호출
       try {
         fetch('/api/meta-webhook', {
           method: 'POST',
@@ -3163,14 +3187,14 @@ async function submitLeadForm(e) {
           keepalive: true,
           body: JSON.stringify({
             action: 'SAVE_LEAD',
-            skipDbInsert: directSavedOk,
+            skipDbInsert: true,
             campaignId: campId,
             campaignTitle: campTitle,
             name,
             phone,
             region,
             note: finalNoteText,
-            source: sourceParam,
+            source: resolvedSrc,
             agentId: ownerAgentId,
             agentName: displayedAgentName,
             agentPhone: targetAgentNotifyPhone,

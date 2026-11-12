@@ -1852,51 +1852,112 @@
     function normalizePetGender(g) {
       if (!g) return '';
       const s = String(g).trim().toLowerCase();
-      if (/수|남|m|male/i.test(s)) return '수컷';
-      if (/암|여|f|female/i.test(s)) return '암컷';
-      return s;
+      if (/수컷|남아|\b수\b|male|^m$/i.test(s)) return '수컷';
+      if (/암컷|여아|\b암\b|female|^f$/i.test(s)) return '암컷';
+      return '';
     }
 
-    const petBreed = getVal(['반려동물', '품종', '견종', '묘종', '동물품종', '반려동물품종', 'pet_breed', 'petBreed']);
-    const petName = getVal(['동물이름', '반려동물이름', '반려견이름', '반려묘이름', '펫이름', '동물명', 'pet_name', 'petName']);
+    function isNoPetText(v) {
+      if (!v) return true;
+      const s = String(v).trim().toLowerCase();
+      return !s || s === '무' || s === '없음' || s === '없 음' || s === '-' || s === 'n' || s === 'none' || s === 'x' || s === '해당없음' || s === '미보유';
+    }
+
+    const rawPetBreed = getVal(['반려동물', '품종', '견종', '묘종', '동물품종', '반려동물품종', 'pet_breed', 'petBreed']);
+    const petBreed = isNoPetText(rawPetBreed) ? '' : rawPetBreed;
+    let petName = getVal(['동물이름', '반려동물이름', '반려견이름', '반려묘이름', '펫이름', '동물명', 'pet_name', 'petName']);
+    if (isNoPetText(petName)) petName = '';
+
     let pets = [];
     if (Array.isArray(client.pets) && client.pets.length > 0) {
-      pets = client.pets.map(p => ({
-        name: p.name || '',
-        breed: p.breed || '',
-        birth: normalizePetBirth(p.birth),
-        gender: normalizePetGender(p.gender),
-        color: p.color || ''
-      }));
+      pets = client.pets
+        .filter(p => p && (p.name || (p.breed && !isNoPetText(p.breed))))
+        .map(p => ({
+          name: p.name || '',
+          breed: isNoPetText(p.breed) ? '' : (p.breed || ''),
+          birth: normalizePetBirth(p.birth),
+          gender: normalizePetGender(p.gender),
+          color: p.color || ''
+        }));
     } else if (petBreed || petName) {
       let bBirth = normalizePetBirth(getVal(['동물생일', '동물생년월일', '반려동물생일', '반려동물생년월일', '펫생일', '펫생년월일', '출생일', 'pet_birth', 'petBirth']));
-      let bGender = normalizePetGender(getVal(['동물성별', '반려동물성별', '펫성별', '성별', 'pet_gender', 'petGender']));
+      // ★ 중요: 사람의 '성별'은 절대 참조하지 않음! 순수 반려동물 성별 키만 탐색
+      let bGender = normalizePetGender(getVal(['동물성별', '반려동물성별', '펫성별', '동물_성별', 'pet_gender', 'petGender']));
       let bColor = getVal(['동물모색', '반려동물모색', '펫모색', '모색', '털색', 'pet_color', 'petColor']);
 
-      // 텍스트 내 복합 정보 자동 추출 (예: "말티즈 (암컷, 2021-05-15, 화이트)")
-      const combinedStr = String(petBreed || '') + ' ' + String(petName || '');
+      // 텍스트 내 복합 정보 정밀 추출 (예: "말티즈 (암컷, 2021-05-15, 화이트)")
+      const combinedStr = [petBreed, petName, getVal(['특이사항', '메모', '비고'])].filter(Boolean).join(' ');
       if (!bBirth) {
-        const dateMatch = combinedStr.match(/\b(20\d{2}[-./]\d{1,2}[-./]\d{1,2})\b/);
+        const dateMatch = combinedStr.match(/\b(20\d{2}[-./]\d{1,2}[-./]\d{1,2})\b/) || combinedStr.match(/\b(19\d{2}[-./]\d{1,2}[-./]\d{1,2})\b/);
         if (dateMatch) bBirth = normalizePetBirth(dateMatch[1]);
       }
       if (!bGender) {
-        if (/수컷|남아|수/i.test(combinedStr)) bGender = '수컷';
-        else if (/암컷|여아|암/i.test(combinedStr)) bGender = '암컷';
+        if (/암컷|여아|\b암\b/i.test(combinedStr)) bGender = '암컷';
+        else if (/수컷|남아|\b수\b/i.test(combinedStr)) bGender = '수컷';
       }
       if (!bColor) {
         const colorMatch = combinedStr.match(/화이트|흰색|백색|갈색|브라운|블랙|검정|블랙탄|치즈|치즈태비|크림|세이블|그레이|회색|삼색/i);
         if (colorMatch) bColor = colorMatch[0];
       }
+      if (!petName) {
+        const nameInParen = combinedStr.match(/\(([^,)\s]+)/);
+        if (nameInParen && !/암컷|수컷|남아|여아|20\d{2}|19\d{2}/.test(nameInParen[1])) {
+          petName = nameInParen[1];
+        }
+      }
 
-      let cleanBreed = String(petBreed || '').replace(/\(.*?\)/g, '').replace(/강아지|고양이/g, '').trim() || petBreed;
+      let cleanBreed = String(petBreed || '').replace(/\(.*?\)/g, '').replace(/강아지|고양이|반려견|반려묘/g, '').trim() || petBreed;
 
       pets.push({
-        name: petName,
-        breed: cleanBreed,
-        birth: bBirth,
-        gender: bGender,
-        color: bColor
+        name: petName || '',
+        breed: cleanBreed || '',
+        birth: bBirth || '',
+        gender: bGender || '',
+        color: bColor || ''
       });
+    } else {
+      // 직접 고객 필드에 펫 정보가 없더라도, 계약내역(allContracts) 중 펫보험 상품이 있으면 가입내역에서 자동 파싱
+      const petContract = allContracts.find(c => {
+        const type = String(c['보험종류'] || c['종류'] || '');
+        const prod = String(c['상품명'] || '');
+        return type.includes('펫') || prod.includes('펫') || prod.includes('반려');
+      });
+      if (petContract) {
+        const detailStr = String(petContract['가입내역'] || petContract['특약내용'] || petContract['비고'] || '');
+        if (detailStr) {
+          let bBirth = '';
+          let bGender = '';
+          let bColor = '';
+          let pName = '';
+          let pBreed = '';
+
+          const dateMatch = detailStr.match(/\b(20\d{2}[-./]\d{1,2}[-./]\d{1,2})\b/);
+          if (dateMatch) bBirth = normalizePetBirth(dateMatch[1]);
+          if (/암컷|여아|\b암\b/i.test(detailStr)) bGender = '암컷';
+          else if (/수컷|남아|\b수\b/i.test(detailStr)) bGender = '수컷';
+          const colorMatch = detailStr.match(/화이트|흰색|백색|갈색|브라운|블랙|검정|블랙탄|치즈|치즈태비|크림|세이블|그레이|회색|삼색/i);
+          if (colorMatch) bColor = colorMatch[0];
+
+          const parenMatch = detailStr.match(/([가-힣a-zA-Z0-9]+)\s*\(([^)]+)\)/);
+          if (parenMatch) {
+            pBreed = parenMatch[1].trim();
+            const inside = parenMatch[2].split(/[,/]/);
+            if (inside[0] && !/암컷|수컷|20\d{2}/.test(inside[0])) {
+              pName = inside[0].trim();
+            }
+          }
+
+          if (pBreed || pName) {
+            pets.push({
+              name: pName,
+              breed: pBreed,
+              birth: bBirth,
+              gender: bGender,
+              color: bColor
+            });
+          }
+        }
+      }
     }
 
     const firstContract = allContracts.length > 0 ? allContracts[0] : null;
@@ -2399,8 +2460,15 @@
     let qSub = '위라클랩에 등록된 고객을 검색하여 선택하거나 직접 입력하세요.';
     let qBadge = 'Q2';
     if (roleMode === 'insuredOnly') {
-      qTitle = '피보험자 고객 정보 불러오기';
-      qSub = '위라클랩에 등록된 피보험자(치료받은 분)를 선택하세요.';
+      const curCat = getActiveClaimCategory();
+      const isPet = (curCat === '펫보험' || curCat === '펫');
+      if (isPet) {
+        qTitle = '보호자(피보험자) 및 반려동물 정보 불러오기';
+        qSub = '위라클랩에 등록된 보호자(견주/묘주) 및 반려동물을 선택하세요.';
+      } else {
+        qTitle = '피보험자 고객 정보 불러오기';
+        qSub = '위라클랩에 등록된 피보험자(치료받은 분)를 선택하세요.';
+      }
       qBadge = '✓';
     } else if (roleMode === 'contractorOnly') {
       qTitle = '계약자 고객 정보 불러오기';
@@ -2659,7 +2727,7 @@
     let html = '';
     filtered.forEach((sanitized, idx) => {
       const petCount = sanitized.pets ? sanitized.pets.length : 0;
-      const petBadge = petCount > 0 ? `<span class="badge-pet">🐾 반려견 ${petCount}마리</span>` : '';
+      const petBadge = petCount > 0 ? `<span class="badge-pet">🐾 반려동물 ${petCount}마리</span>` : '';
       const accCount = (sanitized.accounts && sanitized.accounts.length) || (sanitized.bankName ? 1 : 0);
       let bankBadge = '';
       if (accCount >= 2) {
@@ -2904,6 +2972,14 @@
         setFieldValue('petBirth', p.birth);
         setFieldValue('petGender', p.gender);
         setFieldValue('petColor', p.color);
+      }
+    } else {
+      const curCat = getActiveClaimCategory();
+      if (curCat === '펫보험' || curCat === '펫') {
+        setFieldValue('petName', '', true);
+        setFieldValue('petBreed', '', true);
+        setFieldValue('petBirth', '', true);
+        setFieldValue('petColor', '', true);
       }
     }
 

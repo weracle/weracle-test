@@ -4306,10 +4306,24 @@ function loadCustomerForFamily(task) {
         }
     }
 
-    // 동적으로 보험 입력 카드 생성
+    // 동적으로 보험 입력 카드 생성 (계약자 본인 보험만 편집 폼으로 생성)
     list.forEach(item => {
-        addInsuranceFields(item);
+        if (typeof window.isClientContractorOfInsurance === 'function') {
+            if (window.isClientContractorOfInsurance(item, client)) {
+                addInsuranceFields(item);
+            }
+        } else {
+            addInsuranceFields(item);
+        }
     });
+
+    // 피보험자로 가입된 가족 계약은 조회용 미러링 카드로 추가
+    if (typeof window.appendMirroredInsurances === 'function') {
+        const curTab = window.familyState ? window.familyState.find(f => f.id === String(custId)) : null;
+        if (curTab) {
+            window.appendMirroredInsurances(curTab);
+        }
+    }
 
     currentStep = 1;
     showStep(1);
@@ -4464,7 +4478,7 @@ if (formData.get("차량용도_업무용")) carTypes.push("업무용");
 
 const insList = [];
 let abortSubmit = false; 
-const insEntries = form.querySelectorAll('.insurance-entry');
+const insEntries = form.querySelectorAll('.insurance-entry:not(.mirrored-entry)');
 
 insEntries.forEach((entry, idx) => {
 if(abortSubmit) return; 

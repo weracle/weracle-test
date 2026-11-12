@@ -1609,19 +1609,19 @@ const insData = [
   { name: '현대해상', link: 'https://sp.hi.co.kr/websquare/websquare.html?w2xPath=/common/xml/Login.xml', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/87357d8f3595e.png' },
   { name: '한화손해보험', link: 'https://portal.hwgeneralins.com/3rdParty/loginFormPage_v2.jsp', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/81c5fd45e30c1.png' },
   { name: '롯데손해보험', link: 'https://lottero.lotteins.co.kr/ncrmwebroot/thirdparty/veraport/install20/install.html', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/7d53063ddc47a.png' },
-  { name: '흥국화재', link: 'https://sales.heungkukfire.co.kr/#/login', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/79e0f248909c3.png' },
+  { name: '흥국화재', link: 'https://salesup.heungkukfire.co.kr', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/79e0f248909c3.png' },
   { name: '하나손해보험', link: 'https://sfa.saleshana.com/wq/login', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/3f61372180e41.png' },
   { name: 'NH농협손해보험', link: 'https://ss.nhfire.co.kr/smartweb_prj/index_t.jsp', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/bf3ad594b4f21.png' },
   { name: '라이나손보', link: 'https://ga.linagi.com/html/gap/GA/GAZ911M0.html', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/935984f4aab4b.png' },
   { name: 'AIG손보', link: 'https://sso.aig.co.kr/gaLogin/gaLogin.jsp', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/da3bebc9fe3e5.png' },
-  { name: 'MG손해보험', link: 'https://mganet.mggeneralins.com/jsp/browserGuide.jsp', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/499a6f93744ae.png' },
+  { name: '예별손해보험', link: 'https://mganet.mggeneralins.com/jsp/browserGuide.jsp', logoUrl: './logo_yebyeol.svg' },
   { name: '한화생명', link: 'https://hmp.hanwhalife.com/online/solutions/websquare/websquare.html?w2xPath=/online/ui/uv/gmn/uvgmn010mvw.xml', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/841d2709f8a0f.png' },
   { name: '동양생명', link: 'https://1004.myangel.co.kr/view/cowqvsf005m', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/8a0361a32f8a5.png' },
   { name: '교보생명', link: 'https://v3agent.kyobo.com:5443/wizvera/veraport/install20/install_V3_GA.html', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/26afb87929732.png' },
-  { name: '삼성생명', link: 'https://connectplus.samsunglife.com:10443/gasso/login', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/15a9434e85abb.png' },
+  { name: '삼성생명', link: 'https://ga.samsunglife.com/', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/15a9434e85abb.png' },
   { name: '라이나생명', link: 'https://ga.lina.co.kr/html/gap/GA/GAZ911M0.html', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/9c5fe27cead16.png' },
-  { name: 'KDB생명', link: 'https://kss.kdblife.co.kr/Install/x_installAX.html', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/f7dd46a0d892d.png' },
-  { name: 'iM라이프', link: 'https://fgs.dgbfnlife.com:8443/', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/96ba1710e5a9d.png' },
+  { name: 'KDB생명', link: 'https://sfa.kdblife.co.kr/', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/f7dd46a0d892d.png' },
+  { name: 'iM라이프', link: 'https://fgs.imlifeins.co.kr:8443/', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/96ba1710e5a9d.png' },
   { name: '미래에셋생명', link: 'https://www.loveageplan.com/', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/cec788ecfe510.png' },
   { name: '신한라이프', link: 'https://ga.shinhanlife.co.kr:11043/colomga010m.msv', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/fb6eb26475156.png' },
   { name: 'KB라이프', link: 'https://sfa.kblife.co.kr/scr/m/sfa-login?request=sfaLogin', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/2835121bf7f26.png' },
@@ -1635,7 +1635,7 @@ const insData = [
   { name: '처브라이프', link: 'https://esmart.chubblife.co.kr/index.do', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/64f2c0716807d.png' },
   { name: '푸본현대생명', link: 'https://ez.fubonhyundai.com/browser.html', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/03d4e5f7b698e.png' },
   { name: 'BNP파리바카디프생명', link: 'https://ga.cardif.co.kr/login/loginForm.do', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/e8e7681abe44c.png' },
-  { name: 'AIA생명', link: 'https://imap.aia.co.kr/NBSE/aiaone/', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/fba6e742bc731.png' }
+  { name: 'AIA생명', link: 'https://omni.aia.co.kr/imap/login', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/fba6e742bc731.png' }
 ];
 
 function renderInsWidget() {
@@ -1778,7 +1778,7 @@ const INSURER_CONTACTS_DATA = [
   { name: 'NH농협손해보험', type: 'nonlife', phone: '1644-9000', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/bf3ad594b4f21.png' },
   { name: '라이나원(손보)', type: 'nonlife', phone: '1566-5800', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/935984f4aab4b.png' },
   { name: 'AIG손해보험', type: 'nonlife', phone: '1544-2792', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/da3bebc9fe3e5.png' },
-  { name: 'MG손해보험', type: 'nonlife', phone: '1588-5959', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/499a6f93744ae.png' },
+  { name: '예별손해보험', type: 'nonlife', phone: '1588-5959', logoUrl: './logo_yebyeol.svg' },
 
   // --- 생명보험 (21개) ---
   { name: '한화생명', type: 'life', phone: '1588-6363', logoUrl: 'https://cdn.imweb.me/upload/S202508183b244b34709e6/841d2709f8a0f.png' },

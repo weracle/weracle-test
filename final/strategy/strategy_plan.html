@@ -361,7 +361,7 @@
             <!-- [요청 반영] 중앙: 조금 더 크고 돋보이는 스마트 검색창 -->
             <div class="ss-center-search" style="flex: 1; max-width: 480px; margin: 0 20px 6px 20px; position: relative;">
                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 15px; color: #0284c7;"></i>
-                <input type="text" id="ssMainSearchInput" placeholder="어떤 보험 콘텐츠를 찾으시나요? (예: 암보험, 간병인)" onkeyup="applySsFilters()" style="width: 100%; padding: 9px 18px 9px 42px; border-radius: 25px; border: 1.5px solid #0284c7; font-size: 14px; font-weight: 600; color: #1e293b; outline: none; transition: all 0.2s; background: #ffffff; box-sizing: border-box; box-shadow: 0 2px 8px rgba(2,132,199,0.06);" onfocus="this.style.borderColor='#0284c7'; this.style.boxShadow='0 0 0 4px rgba(2,132,199,0.12)';" onblur="this.style.boxShadow='0 2px 8px rgba(2,132,199,0.06)';">
+                <input type="text" id="ssMainSearchInput" placeholder="보험사명 또는 키워드로 검색 (예: 현대해상, 메리츠, 간병, 암)" onkeyup="applySsFilters()" style="width: 100%; padding: 9px 18px 9px 42px; border-radius: 25px; border: 1.5px solid #0284c7; font-size: 14px; font-weight: 600; color: #1e293b; outline: none; transition: all 0.2s; background: #ffffff; box-sizing: border-box; box-shadow: 0 2px 8px rgba(2,132,199,0.06);" onfocus="this.style.borderColor='#0284c7'; this.style.boxShadow='0 0 0 4px rgba(2,132,199,0.12)';" onblur="this.style.boxShadow='0 2px 8px rgba(2,132,199,0.06)';">
             </div>
 
             <!-- 우측 월 선택 셀렉터 -->
@@ -1110,8 +1110,18 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
               filtered = filtered.filter(item => {
                   const titleMatch = item.title && item.title.toLowerCase().includes(searchKeyword);
                   const scriptMatch = item.script && item.script.toLowerCase().includes(searchKeyword);
-                  const insMatch = item.insurance && item.insurance.toLowerCase().includes(searchKeyword);
-                  return titleMatch || scriptMatch || insMatch;
+                  const propScriptMatch = item.proposalScript && item.proposalScript.toLowerCase().includes(searchKeyword);
+                  const catMatch = (item.subCategory && item.subCategory.toLowerCase().includes(searchKeyword)) ||
+                                   (item.mainCategory && item.mainCategory.toLowerCase().includes(searchKeyword));
+                  const companyMatch = item.companies && item.companies.some(c => {
+                      const comp = c.toLowerCase();
+                      if (comp.includes(searchKeyword)) return true;
+                      if ((searchKeyword === '디비' || searchKeyword === 'db') && (comp.includes('db') || comp.includes('디비'))) return true;
+                      if ((searchKeyword === '케이비' || searchKeyword === 'kb') && (comp.includes('kb') || comp.includes('케이비'))) return true;
+                      if ((searchKeyword === '농협' || searchKeyword === 'nh') && (comp.includes('nh') || comp.includes('농협'))) return true;
+                      return false;
+                  });
+                  return titleMatch || scriptMatch || propScriptMatch || catMatch || companyMatch;
               });
           } else {
               filtered = filtered.filter(item => {
@@ -1139,8 +1149,18 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
               filtered = filtered.filter(item => {
                   const titleMatch = item.title && item.title.toLowerCase().includes(searchKeyword);
                   const scriptMatch = item.script && item.script.toLowerCase().includes(searchKeyword);
-                  const insMatch = item.insurance && item.insurance.toLowerCase().includes(searchKeyword);
-                  return titleMatch || scriptMatch || insMatch;
+                  const propScriptMatch = item.proposalScript && item.proposalScript.toLowerCase().includes(searchKeyword);
+                  const catMatch = (item.subCategory && item.subCategory.toLowerCase().includes(searchKeyword)) ||
+                                   (item.mainCategory && item.mainCategory.toLowerCase().includes(searchKeyword));
+                  const companyMatch = item.companies && item.companies.some(c => {
+                      const comp = c.toLowerCase();
+                      if (comp.includes(searchKeyword)) return true;
+                      if ((searchKeyword === '디비' || searchKeyword === 'db') && (comp.includes('db') || comp.includes('디비'))) return true;
+                      if ((searchKeyword === '케이비' || searchKeyword === 'kb') && (comp.includes('kb') || comp.includes('케이비'))) return true;
+                      if ((searchKeyword === '농협' || searchKeyword === 'nh') && (comp.includes('nh') || comp.includes('농협'))) return true;
+                      return false;
+                  });
+                  return titleMatch || scriptMatch || propScriptMatch || catMatch || companyMatch;
               });
           } else {
               filtered = filtered.filter(item => {

@@ -934,8 +934,13 @@ function renderV3Calendar() {
       cell.title = '클릭하여 이 날의 전체 일정 보기';
       cell.innerHTML = `
         <div class="cal-cell-monthly-head">
-          <span class="cal-monthly-num">${dateNum}</span>
-          ${isToday ? '<span class="cal-today-pill" style="font-size:9px; padding:1px 4px;">오늘</span>' : ''}
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span class="cal-monthly-num">${dateNum}</span>
+            ${isToday ? '<span class="cal-today-pill" style="font-size:9px; padding:1px 4px;">오늘</span>' : ''}
+          </div>
+          <button type="button" class="cal-cell-detail-btn" onclick="event.stopPropagation(); openDayDetailModal('${fullDateStr}')" title="이 날의 전체 일정 보기">
+            <i class="fa-solid fa-plus"></i>
+          </button>
         </div>
         <div class="cal-monthly-events">${eventsHtml}</div>
       `;

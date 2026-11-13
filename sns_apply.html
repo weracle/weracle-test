@@ -49,26 +49,56 @@
     }
 
     /* 좌측 내 PR 랜딩페이지 보관함 & 3종 프리셋 허브 보드 (화면 좌측 완벽 고정) */
-    .pr-hub-panel {
+/* 좌측 보관함 & 스마트 스튜디오 공통: iframe이 3500px로 늘어나도 모니터 크기(최대 760px)로 컴팩트 고정! */
+    .pr-hub-panel,
+    .easy-editor-panel {
       display: none;
       width: 465px;
       max-width: calc(100vw - 28px);
       background: #ffffff;
       border-radius: 22px;
-      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14);
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.16);
       border: 1px solid #cbd5e1;
       position: fixed;
-      top: 18px;
+      top: var(--panel-fixed-top, 18px);
       left: max(14px, calc(50% - (465px + 26px + 480px) / 2));
-      height: calc(100vh - 36px);
-      max-height: calc(100vh - 36px);
+      height: auto;
+      max-height: var(--panel-max-h, 750px);
       flex-direction: column;
       overflow: hidden;
-      z-index: 490;
+      z-index: 500;
     }
     body.can-edit-pr:not(.is-editing) .pr-hub-panel {
       display: flex;
     }
+    body.is-editing .easy-editor-panel {
+      display: flex;
+    }
+
+    /* 오른쪽 요소를 클릭했을 때: 해당 수정 카드 1개만 한 화면에 깔끔하게 단독 표시! */
+    .easy-editor-panel.single-card-mode .eep-card {
+      display: none;
+    }
+    .easy-editor-panel.single-card-mode .eep-card.active-single-card {
+      display: block;
+    }
+    .single-card-AllBtn-bar {
+      display: none;
+      background: #eff6ff;
+      border: 1px dashed #93c5fd;
+      border-radius: 10px;
+      padding: 7px 12px;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #1d4ed8;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .easy-editor-panel.single-card-mode .single-card-AllBtn-bar {
+      display: flex;
+    }
+
     .hub-preset-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -120,28 +150,6 @@
       cursor: pointer; transition: 0.15s;
     }
     .hub-mini-btn:hover { background: var(--theme-main); color: #fff; border-color: var(--theme-main); }
-
-    /* 좌측 스마트 스튜디오 편집창 (화면 좌측 완벽 고정) */
-    .easy-editor-panel {
-      display: none;
-      width: 465px;
-      max-width: calc(100vw - 28px);
-      background: #ffffff;
-      border-radius: 22px;
-      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.16);
-      border: 1px solid #cbd5e1;
-      position: fixed;
-      top: 18px;
-      left: max(14px, calc(50% - (465px + 26px + 480px) / 2));
-      height: calc(100vh - 36px);
-      max-height: calc(100vh - 36px);
-      flex-direction: column;
-      overflow: hidden;
-      z-index: 500;
-    }
-    body.is-editing .easy-editor-panel {
-      display: flex;
-    }
     .eep-header {
       background: #0f172a;
       color: #ffffff;
@@ -890,7 +898,11 @@
         <button type="button" class="eep-tab-btn" onclick="switchEditorTab(5, true)">⑥ 혜택·엔딩</button>
       </div>
 
-      <div class="eep-body" id="eepScrollBody">
+    <div class="eep-body" id="eepScrollBody">
+        <div class="single-card-AllBtn-bar" onclick="exitSingleCardFocusMode()">
+          <span>🎯 선택한 영역의 수정 항목만 깔끔하게 보고 있습니다</span>
+          <span style="background:#fff; padding:3px 8px; border-radius:6px; border:1px solid #bfdbfe;">이 탭 전체 보기 ▾</span>
+        </div>
 
         <div class="eep-tab-pane active" id="eepTab0">
           <div class="eep-card" id="cardColorTheme">
@@ -2051,6 +2063,7 @@
       initFreeDragItems();
       initSmartClickBridge();
       initGoodsTouchSwipe();
+ initParentIframeViewportSync();
 
 const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
 
@@ -2210,26 +2223,87 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
       });
     }
 
-function jumpToLeftEditorCard(tabIdx, cardId, inputId) {
+// 위라클랩 상위 프레임(iframe)이 3500px로 늘어나 있어도 왼쪽 보관함·스튜디오가 항상 현재 모니터 화면을 따라오도록 동기화!
+    function initParentIframeViewportSync() {
+      const syncPanelPosition = () => {
+        if (window.innerWidth <= 960) {
+          document.documentElement.style.setProperty('--panel-fixed-top', '0px');
+          document.documentElement.style.setProperty('--panel-max-h', 'none');
+          return;
+        }
+
+        let topPx = 18;
+        let availH = Math.min(window.innerHeight - 36, 760);
+
+        try {
+          if (window.self !== window.top && window.frameElement) {
+            const pWin = window.parent;
+            const frameRect = window.frameElement.getBoundingClientRect();
+            const pViewH = pWin.innerHeight || 820;
+
+            // 부모 창이 아래로 스크롤되어 iframe 상단이 위로 올라간 만큼 왼쪽 패널을 아래로 내려 항상 눈앞에 고정!
+            if (frameRect.top < 16) {
+              topPx = Math.round(Math.abs(frameRect.top) + 16);
+            } else {
+              topPx = 16;
+            }
+
+            const visibleFrameH = Math.min(pViewH - Math.max(16, frameRect.top) - 20, 760);
+            availH = Math.max(480, visibleFrameH);
+
+            const maxAllowedTop = Math.max(16, document.documentElement.scrollHeight - availH - 24);
+            topPx = Math.min(topPx, maxAllowedTop);
+          } else {
+            availH = Math.max(500, Math.min(window.innerHeight - 36, 760));
+          }
+        } catch (e) {
+          availH = 720;
+        }
+
+        document.documentElement.style.setProperty('--panel-fixed-top', topPx + 'px');
+        document.documentElement.style.setProperty('--panel-max-h', availH + 'px');
+      };
+
+      syncPanelPosition();
+      window.addEventListener('scroll', syncPanelPosition, { passive: true });
+      window.addEventListener('resize', syncPanelPosition, { passive: true });
+
+      try {
+        if (window.self !== window.top && window.parent) {
+          window.parent.addEventListener('scroll', syncPanelPosition, { passive: true });
+          window.parent.addEventListener('resize', syncPanelPosition, { passive: true });
+          // 부모 내부 스크롤 컨테이너(.pb-content-area 등)가 있는 경우도 완벽 감지
+          const pDoc = window.parent.document;
+          ['.pb-content-area', 'main', '.content-wrapper', '#app', '#root'].forEach(sel => {
+            const sc = pDoc.querySelector(sel);
+            if (sc) sc.addEventListener('scroll', syncPanelPosition, { passive: true });
+          });
+        }
+      } catch (e) {}
+    }
+
+    function exitSingleCardFocusMode() {
+      const panel = document.getElementById('easyEditorPanel');
+      if (panel) panel.classList.remove('single-card-mode');
+      document.querySelectorAll('.eep-card.active-single-card').forEach(c => c.classList.remove('active-single-card'));
+    }
+
+    function jumpToLeftEditorCard(tabIdx, cardId, inputId) {
       switchEditorTab(tabIdx, false);
+      const panel = document.getElementById('easyEditorPanel');
       const scrollBody = document.getElementById('eepScrollBody');
       const card = document.getElementById(cardId);
 
-      if (card && scrollBody) {
-        document.querySelectorAll('.eep-card.highlight-focus').forEach(c => c.classList.remove('highlight-focus'));
+      if (card && panel && scrollBody) {
+        // 클릭한 요소의 수정 카드 1개만 단독으로 딱 띄워 한 화면에 쏙 들어오게 처리!
+        document.querySelectorAll('.eep-card').forEach(c => {
+          c.classList.remove('highlight-focus', 'active-single-card');
+        });
+        panel.classList.add('single-card-mode');
+        card.classList.add('active-single-card');
+        scrollBody.scrollTop = 0;
 
-        // 전체 창은 절대 움직이지 않고, 왼쪽 스튜디오 내부 스크롤(#eepScrollBody)만 정확히 카드 중앙으로 이동!
         requestAnimationFrame(() => {
-          const bodyRect = scrollBody.getBoundingClientRect();
-          const cardRect = card.getBoundingClientRect();
-          const currentScroll = scrollBody.scrollTop;
-          const targetTop = currentScroll + (cardRect.top - bodyRect.top) - Math.max(16, (bodyRect.height - cardRect.height) / 3);
-
-          scrollBody.scrollTo({
-            top: Math.max(0, targetTop),
-            behavior: 'smooth'
-          });
-
           void card.offsetWidth;
           card.classList.add('highlight-focus');
         });
@@ -2246,15 +2320,16 @@ function jumpToLeftEditorCard(tabIdx, cardId, inputId) {
             }
             if (inp.select && inp.type === 'text') inp.select();
           }
-        }, 280);
+        }, 120);
       }
     }
 
-function toggleEditStudio() {
+    function toggleEditStudio() {
       isEditMode = !isEditMode;
       document.body.classList.toggle('is-editing', isEditMode);
       document.getElementById('editBtnText').innerText = isEditMode ? '✓ 편집 닫기' : '🎨 이 페이지 꾸미기';
       if (!isEditMode) {
+        exitSingleCardFocusMode();
         document.getElementById('smartHoverBadge').style.display = 'none';
         saveAllPrState(false);
       }
@@ -2272,6 +2347,10 @@ function toggleEditStudio() {
     }
 
     function switchEditorTab(idx, scrollRightPreview) {
+      // 상단 ①~⑥ 탭 버튼을 직접 눌렀을 때는 해당 탭의 전체 카드를 다 보여줌
+      if (scrollRightPreview) {
+        exitSingleCardFocusMode();
+      }
       document.querySelectorAll('.eep-tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
       document.querySelectorAll('.eep-tab-pane').forEach((p, i) => p.classList.toggle('active', i === idx));
 

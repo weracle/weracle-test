@@ -2397,10 +2397,15 @@ function addFamilyRow(rel='', name='', birth='', job='') {
 </div>
 
 
-<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="//t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
 function execDaumPostcode(targetId) {
-    new daum.Postcode({
+    const Postcode = (window.kakao && window.kakao.Postcode) || (window.daum && window.daum.Postcode);
+    if (!Postcode) {
+        alert("우편번호 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+        return;
+    }
+    new Postcode({
         oncomplete: function(data) {
             let addr = data.userSelectedType === "R" ? data.roadAddress : data.jibunAddress;
             document.getElementById(targetId).value = addr;

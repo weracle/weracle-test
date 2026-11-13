@@ -27,7 +27,7 @@
       min-height: 100vh;
     }
 
-    .studio-workspace {
+.studio-workspace {
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -35,9 +35,81 @@
       padding: 0;
       min-height: 100vh;
     }
+    body.can-edit-pr .studio-workspace,
     body.is-editing .studio-workspace {
       padding: 18px 14px;
     }
+
+    /* 좌측 내 PR 랜딩페이지 보관함 & 3종 프리셋 허브 보드 */
+    .pr-hub-panel {
+      display: none;
+      width: 465px;
+      max-width: 100%;
+      background: #ffffff;
+      border-radius: 22px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14);
+      border: 1px solid #cbd5e1;
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 490;
+    }
+    body.can-edit-pr:not(.is-editing) .pr-hub-panel {
+      display: flex;
+    }
+    .hub-preset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .hub-preset-card {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 13px;
+      padding: 11px 9px;
+      cursor: pointer;
+      transition: 0.18s;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .hub-preset-card:hover {
+      border-color: #93c5fd;
+      background: #f0f9ff;
+      transform: translateY(-2px);
+    }
+    .hub-preset-card.active {
+      border-color: var(--theme-main);
+      background: #eff6ff;
+      box-shadow: 0 6px 14px rgba(17, 63, 103, 0.12);
+    }
+    .hub-saved-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 11px 12px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .hub-saved-card:hover { border-color: #93c5fd; background: #f8fafc; }
+    .hub-saved-card.selected { border-color: var(--theme-accent); background: #f0f9ff; }
+    .hub-thumb {
+      width: 48px; height: 56px; border-radius: 10px;
+      background: #0f172a center/cover no-repeat;
+      flex-shrink: 0; border: 1px solid #cbd5e1;
+    }
+    .hub-mini-btn {
+      background: #f8fafc; border: 1px solid #cbd5e1; color: #334155;
+      padding: 4px 8px; border-radius: 7px; font-size: 11px; font-weight: 800;
+      cursor: pointer; transition: 0.15s;
+    }
+    .hub-mini-btn:hover { background: var(--theme-main); color: #fff; border-color: var(--theme-main); }
 
     .easy-editor-panel {
       display: none;
@@ -707,22 +779,94 @@
 
   <div class="smart-hover-badge" id="smartHoverBadge">✏️ 클릭하면 왼쪽 수정창으로 바로 이동합니다</div>
 
-  <div class="studio-workspace">
+<div class="studio-workspace">
 
+    <!-- [좌측 1: 평소 노출] 3종 기본 프리셋 미리보기 & 내 PR 페이지 보관함 허브 -->
+    <aside class="pr-hub-panel" id="prHubPanel">
+      <div class="eep-header" style="background:linear-gradient(90deg, #0f172a, #113f67);">
+        <div class="eep-title">
+          <i class="fa-solid fa-layer-group" style="color:#38bdf8;"></i>
+          <span>내 PR 랜딩페이지 보관함 & 템플릿</span>
+        </div>
+        <span id="hubSavedCountBadge" style="background:rgba(56,189,248,0.2); color:#7dd3fc; font-size:11px; font-weight:800; padding:4px 10px; border-radius:12px;">보관함 0개</span>
+      </div>
+
+      <div style="padding:15px 16px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:9px;">
+          <strong style="font-size:12.5px; color:#0f172a;">✨ 1. 위라클랩 기본 3종 폼 (클릭 시 우측 미리보기)</strong>
+          <span style="font-size:10.5px; color:#0284c7; font-weight:800;">내 프로필 자동연동</span>
+        </div>
+
+        <div class="hub-preset-grid">
+          <div class="hub-preset-card active" id="hubPresetCard_A" onclick="previewPresetTemplate('A')">
+            <span style="font-size:10px; font-weight:900; color:#1d4ed8; background:#dbeafe; padding:2px 6px; border-radius:5px; align-self:flex-start;">타입 A · 기본</span>
+            <strong style="font-size:12px; color:#0f172a; margin-top:2px;">보장점검·브랜딩</strong>
+            <span style="font-size:10.5px; color:#64748b; line-height:1.3;">철학 · 선정기준 · 비교표 굿즈</span>
+          </div>
+          <div class="hub-preset-card" id="hubPresetCard_B" onclick="previewPresetTemplate('B')">
+            <span style="font-size:10px; font-weight:900; color:#c2410c; background:#ffedd5; padding:2px 6px; border-radius:5px; align-self:flex-start;">타입 B · 상품</span>
+            <strong style="font-size:12px; color:#0f172a; margin-top:2px;">핵심상품 집중형</strong>
+            <span style="font-size:10.5px; color:#64748b; line-height:1.3;">핵심장점 요약 · 장표 슬라이드</span>
+          </div>
+          <div class="hub-preset-card" id="hubPresetCard_C" onclick="previewPresetTemplate('C')">
+            <span style="font-size:10px; font-weight:900; color:#047857; background:#d1fae5; padding:2px 6px; border-radius:5px; align-self:flex-start;">타입 C · 채용</span>
+            <strong style="font-size:12px; color:#0f172a; margin-top:2px;">리쿠르팅·비전형</strong>
+            <span style="font-size:10.5px; color:#64748b; line-height:1.3;">DB지원 시스템 · 팀문화 · 입사지원</span>
+          </div>
+        </div>
+
+        <button type="button" id="btnStartNewFromPreset" onclick="startNewPageFromSelectedPreset()" style="margin-top:10px; width:100%; background:var(--theme-main); color:#fff; border:none; padding:11px; border-radius:11px; font-size:12.5px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(17,63,103,0.2);">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="lblStartPresetBtn">[타입 A 보장점검·브랜딩] 폼으로 새 페이지 꾸미기</span>
+        </button>
+      </div>
+
+      <div style="padding:14px 16px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="font-size:12.5px; color:#0f172a;">🗂️ 2. 내가 만든 PR 페이지 보관함 (클릭 시 미리보기)</strong>
+          <button type="button" class="hub-mini-btn" onclick="refreshMyPrPagesHub()">🔄 새로고침</button>
+        </div>
+        <div id="hubSavedPagesList" style="display:flex; flex-direction:column; gap:8px;">
+          <div style="text-align:center; padding:28px 12px; color:#64748b; font-size:12px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
+            저장된 내 PR 페이지를 불러오는 중입니다...
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- [좌측 2: 꾸미기 클릭 시 노출] 스마트 스튜디오 에디터 -->
     <aside class="easy-editor-panel" id="easyEditorPanel">
       <div class="eep-header">
         <div class="eep-title">
-          <i class="fa-solid fa-wand-magic-sparkles" style="color:#38bdf8;"></i>
-          <span>내 PR 페이지 스마트 스튜디오</span>
+          <button type="button" onclick="backToPrHub()" style="background:rgba(255,255,255,0.14); color:#fff; border:none; padding:5px 9px; border-radius:8px; font-size:11px; font-weight:800; cursor:pointer;" title="보관함 목록으로 돌아가기">← 보관함</button>
+          <span>스마트 스튜디오</span>
         </div>
         <button type="button" onclick="saveAndCloseStudio()" style="background:#10b981; color:#fff; border:none; padding:6px 12px; border-radius:16px; font-size:11.5px; font-weight:800; cursor:pointer;">
           ✓ 서버 저장 및 완료
         </button>
       </div>
 
+      <!-- 페이지 관리 제목 & 대표페이지 체크 & 골격 전환 바 -->
+      <div style="background:#f0f9ff; padding:10px 14px; border-bottom:1px solid #bae6fd; display:flex; flex-direction:column; gap:7px;">
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="font-size:11px; font-weight:900; color:#0369a1; white-space:nowrap;">📌 페이지명</span>
+          <input type="text" id="inpPrPageTitle" class="eep-input" style="padding:6px 9px; font-size:12px; font-weight:800; flex:1;" placeholder="예: [상품용] 주택화재 누수 집중안내" value="나의 기본 대표 PR 페이지" />
+          <label style="font-size:11px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:4px; white-space:nowrap; cursor:pointer;">
+            <input type="checkbox" id="chkPrIsDefault" checked /> ⭐ 대표지정
+          </label>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+          <span style="color:#475569; font-weight:700;">구성 폼 전환:</span>
+          <div class="pill-btn-group">
+            <button type="button" class="pill-choice-btn active" id="btnStudioType_A" onclick="switchTemplateLayoutInStudio('A')" style="padding:3px 8px;">🅰️ 브랜딩</button>
+            <button type="button" class="pill-choice-btn" id="btnStudioType_B" onclick="switchTemplateLayoutInStudio('B')" style="padding:3px 8px;">🅱️ 상품집중</button>
+            <button type="button" class="pill-choice-btn" id="btnStudioType_C" onclick="switchTemplateLayoutInStudio('C')" style="padding:3px 8px;">🅲 리쿠르팅</button>
+          </div>
+        </div>
+      </div>
+
       <div class="eep-sub-tip">
         <i class="fa-solid fa-bolt"></i>
-        <span><strong>오른쪽 화면에서 고치고 싶은 글씨나 사진을 클릭</strong>해보세요! 왼쪽 편집창이 해당 위치로 자동 이동합니다.</span>
+        <span><strong>오른쪽 화면에서 고치고 싶은 글씨·제목을 클릭</strong>해보세요! 왼쪽 편집창이 해당 위치로 자동 이동합니다.</span>
       </div>
 
       <div class="eep-tabs">
@@ -969,12 +1113,25 @@
         </div>
 
         <div class="eep-tab-pane" id="eepTab2">
-          <div class="eep-card" id="cardPhilosophy">
-            <div class="eep-card-title">📖 1. 나의 보험 철학 (에세이)</div>
-            <span class="eep-label">철학 메인 타이틀</span>
+<div class="eep-card" id="cardPhilosophy">
+            <div class="eep-card-title">
+              <span>📖 1. 스토리·철학 섹션 (상품형은 숨김 가능)</span>
+              <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="chkShowPhilosophy" checked onchange="toggleSecById('philosophyAnchor', this.checked)" /> 섹션 표시</label>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">
+              <div>
+                <span class="eep-label">상단 영문 라벨</span>
+                <input type="text" class="eep-input" id="inpEssayTag" value="PHILOSOPHY & STORY" oninput="syncSectionHeaders()" />
+              </div>
+              <div>
+                <span class="eep-label">배경 워터마크 영문</span>
+                <input type="text" class="eep-input" id="inpEssayWatermark" value="BODAPHWANI" oninput="syncSectionHeaders()" />
+              </div>
+            </div>
+            <span class="eep-label">스토리 메인 타이틀</span>
             <textarea class="eep-textarea" id="inpPhilTitle" rows="2" oninput="syncPhilosophy()">사람과 사람 사이의 신뢰,
 그것이 제가 일하는 원동력입니다.</textarea>
-            <span class="eep-label">철학 본문 이야기</span>
+            <span class="eep-label">본문 내용</span>
             <textarea class="eep-textarea" id="inpPhilBody" rows="5" oninput="syncPhilosophy()">매달 꼬박꼬박 내는 보험료인데, 정작 병원에 갈 때면 "이게 청구가 될까? 누구한테 물어보지?" 하고 망설였던 적 없으신가요.
 
 저는 무작정 새로운 보험 가입을 권유하지 않습니다.
@@ -985,7 +1142,7 @@
 
           <div class="eep-card" id="cardSlashExpertise">
             <div class="eep-card-title">
-              <span>⚡ 2. 3단 사선 사진 첨부 & 개별 위치·크기 미세조절</span>
+              <span>⚡ 2. 3단 핵심 요약 카드 & 사진 미세조절</span>
               <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="chkShowExpertise" checked onchange="toggleSecById('secExpertise', this.checked)" /> 표시</label>
             </div>
 
@@ -1017,17 +1174,22 @@
               </div>
             </div>
 
-            <span class="eep-label">첫 번째 강점 (지식)</span>
+            <span class="eep-label">첫 번째 카드 (강점 / 상품스펙 1 / 지원무기 1)</span>
             <input type="text" class="eep-input" id="inpExp1T" value="실전 약관·보상 지식" oninput="syncExpertise()" style="margin-bottom:4px;" />
             <input type="text" class="eep-input" id="inpExp1S" value="까다로운 분쟁·약관까지 정확하게 해석합니다" oninput="syncExpertise()" />
 
-            <span class="eep-label">두 번째 강점 (경험)</span>
+            <span class="eep-label">두 번째 카드 (경험 / 상품스펙 2 / 지원무기 2)</span>
             <input type="text" class="eep-input" id="inpExp2T" value="누적 1,200건+ 분석" oninput="syncExpertise()" style="margin-bottom:4px;" />
             <input type="text" class="eep-input" id="inpExp2S" value="풍부한 현장 경험으로 보장 공백을 찾습니다" oninput="syncExpertise()" />
 
-            <span class="eep-label">세 번째 강점 (심사/노하우)</span>
+            <span class="eep-label">세 번째 카드 (노하우 / 상품스펙 3 / 지원무기 3)</span>
             <input type="text" class="eep-input" id="inpExp3T" value="유병자·맞춤 심사" oninput="syncExpertise()" style="margin-bottom:4px;" />
             <input type="text" class="eep-input" id="inpExp3S" value="건강검진 유소견·병력도 최적 조건으로 연결" oninput="syncExpertise()" />
+
+            <span class="eep-label">카드 하단 핵심 요약 문구</span>
+            <textarea class="eep-textarea" id="inpExpSummary" rows="2" oninput="syncSectionHeaders()">보상 실무 지식과 30개 보험사 데이터를 바탕으로,
+우리 가족의 생애주기에 꼭 맞는
+가장 정직한 해답을 함께 찾아갑니다.</textarea>
           </div>
         </div>
 
@@ -1059,6 +1221,8 @@
               </div>
             </div>
 
+           <span class="eep-label">화보 상단 포인트 라벨</span>
+            <input type="text" class="eep-input" id="inpMidTag" value="1:1 PRIVATE CONSULTING" oninput="syncSectionHeaders()" />
             <span class="eep-label">화보 메인 타이틀</span>
             <textarea class="eep-textarea" id="inpMidTitle" rows="2" oninput="syncMidPortrait()">"어려운 보험 용어 대신,
 고객님의 눈높이에서 웃으며 이야기합니다."</textarea>
@@ -1108,10 +1272,23 @@
         </div>
 
         <div class="eep-tab-pane" id="eepTab4">
-          <div class="eep-card" id="cardProductStandard">
+   <div class="eep-card" id="cardProductStandard">
             <div class="eep-card-title">
-              <span>📋 1. 나만의 보험상품 선정 기준</span>
-              <button type="button" class="pill-choice-btn" onclick="addStandardItem()" style="color:#0284c7; border-color:#38bdf8;">+ 기준 추가</button>
+              <span>📋 1. 핵심 체크포인트 / 선정기준 / 지원제도</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="chkShowStdLeft" checked onchange="toggleSecById('edLeftMintBox', this.checked)" /> 표시</label>
+                <button type="button" class="pill-choice-btn" onclick="addStandardItem()" style="color:#0284c7; border-color:#38bdf8;">+ 항목 추가</button>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:140px 1fr; gap:6px; margin-bottom:10px;">
+              <div>
+                <span class="eep-label">섹션 영문 타이틀</span>
+                <input type="text" class="eep-input" id="inpStdHeadingEn" value="PRODUCT STANDARD" oninput="syncSectionHeaders()" />
+              </div>
+              <div>
+                <span class="eep-label">섹션 국문 부제목 (자유 변경)</span>
+                <input type="text" class="eep-input" id="inpStdHeadingKr" value="내가 아닌 '내 가족'이 가입한다는 기준으로 고릅니다" oninput="syncSectionHeaders()" />
+              </div>
             </div>
             <div id="eepStandardFormList" style="display:flex; flex-direction:column; gap:10px;"></div>
           </div>
@@ -1157,12 +1334,37 @@
         </div>
 
         <div class="eep-tab-pane" id="eepTab5">
-          <div class="eep-card" id="cardCareTopics">
+<div class="eep-card" id="cardCareTopics">
             <div class="eep-card-title">
-              <span>🌿 1. 케어 혜택 리스트 (최대 10개)</span>
-              <button type="button" class="pill-choice-btn" onclick="addCareTopicCard()" style="color:#0284c7; border-color:#38bdf8;">+ 혜택 추가</button>
+              <span>🌿 1. 추천대상 · 케어혜택 · 지원자격 리스트</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; cursor:pointer;"><input type="checkbox" id="chkShowCareTopics" checked onchange="toggleSecById('secCareTopics', this.checked)" /> 표시</label>
+                <button type="button" class="pill-choice-btn" onclick="addCareTopicCard()" style="color:#0284c7; border-color:#38bdf8;">+ 항목 추가</button>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:140px 1fr; gap:6px; margin-bottom:10px;">
+              <div>
+                <span class="eep-label">섹션 영문 타이틀</span>
+                <input type="text" class="eep-input" id="inpTopicsEn" value="CARE & BENEFITS" oninput="syncSectionHeaders()" />
+              </div>
+              <div>
+                <span class="eep-label">섹션 국문 부제목 (자유 변경)</span>
+                <input type="text" class="eep-input" id="inpTopicsKr" value="가입 순간보다 가입 이후가 더 든든한 전담 케어 혜택" oninput="syncSectionHeaders()" />
+              </div>
             </div>
             <div id="eepCareFormList" style="display:flex; flex-direction:column; gap:10px;"></div>
+          </div>
+
+          <div class="eep-card" id="cardFormLabels" style="background:#f0f9ff; border-color:#bae6fd;">
+            <div class="eep-card-title">📝 1-2. 하단 신청폼 상단 타이틀 & 버튼 문구</div>
+            <span class="eep-label">신청 카드 상단 배지</span>
+            <input type="text" class="eep-input" id="inpFormBadge" value="1:1 무료 맞춤 상담 신청" oninput="syncSectionHeaders()" />
+            <span class="eep-label">신청 카드 메인 제목 (광고 제목 없을 때 기본 노출)</span>
+            <input type="text" class="eep-input" id="inpFormTitle" value="1:1 무료 맞춤 점검 및 간편 상담 신청" oninput="syncSectionHeaders()" />
+            <span class="eep-label">신청 카드 보조 안내문</span>
+            <input type="text" class="eep-input" id="inpFormSub" value="부담스러운 전화 독촉 없이, 남기신 내용을 확인 후 편안하게 안내드립니다." oninput="syncSectionHeaders()" />
+            <span class="eep-label">제출 버튼 문구</span>
+            <input type="text" class="eep-input" id="inpFormBtnText" value="1:1 맞춤 상담 신청하기" oninput="syncSectionHeaders()" />
           </div>
 
           <div class="eep-card" id="cardEndingSection">
@@ -1330,7 +1532,7 @@
       <!-- [2] PHILOSOPHY 섹션 -->
       <section class="essay-section" id="philosophyAnchor"
                data-edit-link="2|cardPhilosophy|inpPhilTitle|📖 나의 보험 철학 타이틀·본문 수정">
-        <span class="essay-tag">PHILOSOPHY & STORY</span>
+     <span class="essay-tag" id="essayTagEl">PHILOSOPHY & STORY</span>
         <h2 class="essay-title serif-font" id="philTitleEl">사람과 사람 사이의 신뢰,
 그것이 제가 일하는 원동력입니다.</h2>
         <p class="essay-body" id="philBodyEl">매달 꼬박꼬박 내는 보험료인데, 정작 병원에 갈 때면 "이게 청구가 될까? 누구한테 물어보지?" 하고 망설였던 적 없으신가요.
@@ -1339,7 +1541,7 @@
 고객님이 이미 가지고 계신 옛날 보험 속 소중한 보장을 먼저 찾아내어 지켜드리고, 불필요하게 새어 나가는 중복 특약만 정직하게 덜어내는 것.
 
 보험으로 받은 믿음에 평생의 관리로 보답하는 '보답화니'의 첫 번째 약속입니다.</p>
-        <div class="essay-watermark">BODAPHWANI</div>
+     <div class="essay-watermark" id="essayWatermarkEl">BODAPHWANI</div>
       </section>
 
       <!-- [3] EXPERTISE 3단 사선 사진 & 배지 -->
@@ -1404,7 +1606,7 @@
         </div>
 
         <div class="mid-portrait-content" data-edit-link="3|cardMidPortrait|inpMidTitle|😊 상담 화보 타이틀·서브문구 수정">
-          <span class="mid-portrait-tag">1:1 PRIVATE CONSULTING</span>
+     <span class="mid-portrait-tag" id="midTagEl">1:1 PRIVATE CONSULTING</span>
           <h2 class="mid-portrait-title serif-font" id="midTitleEl">"어려운 보험 용어 대신,
 고객님의 눈높이에서 웃으며 이야기합니다."</h2>
           <p class="mid-portrait-sub" id="midSubEl">단 한 번의 만남이라도 부담이 아닌 안심이 될 수 있도록, 가장 편안한 방법으로 소통합니다.</p>
@@ -1413,9 +1615,9 @@
 
       <!-- [5] PRODUCT STANDARD & 03 굿즈 좌우 슬라이더 -->
       <section class="editorial-split-section" id="secProductStandard">
-        <div class="ed-left-mint" data-edit-link="4|cardProductStandard||📋 나만의 보험상품 선정 기준 수정·추가">
-          <div class="ed-heading-en serif-font">PRODUCT STANDARD</div>
-          <div class="ed-heading-kr">내가 아닌 '내 가족'이 가입한다는 기준으로 고릅니다</div>
+       <div class="ed-left-mint" id="edLeftMintBox" data-edit-link="4|cardProductStandard|inpStdHeadingKr|📋 섹션 타이틀 및 항목 수정·추가">
+     <div class="ed-heading-en serif-font" id="stdHeadingEnEl">PRODUCT STANDARD</div>
+     <div class="ed-heading-kr" id="stdHeadingKrEl">내가 아닌 '내 가족'이 가입한다는 기준으로 고릅니다</div>
           <div class="standard-icon-list" id="standardListContainer"></div>
         </div>
 
@@ -1448,8 +1650,8 @@
                data-edit-link="5|cardCareTopics||🌿 케어 혜택 리스트 수정·추가">
         <div class="topics-header">
           <div class="topics-leaf"><i class="fa-solid fa-seedling"></i></div>
-          <div class="topics-en serif-font">CARE & BENEFITS</div>
-          <div class="topics-kr">가입 순간보다 가입 이후가 더 든든한 전담 케어 혜택</div>
+         <div class="topics-en serif-font" id="topicsEnEl">CARE & BENEFITS</div>
+     <div class="topics-kr" id="topicsKrEl">가입 순간보다 가입 이후가 더 든든한 전담 케어 혜택</div>
         </div>
         <div class="care-list-wrap" id="careTopicsGrid"></div>
       </section>
@@ -1704,12 +1906,20 @@
       vertOpacity: 65
     };
 
-    let elementPositions = {};
+ let elementPositions = {};
     let sectionVisibility = {
+      philosophyAnchor: true,
       secExpertise: true,
       secMidPortrait: true,
-      secGoodsShowcase: true
+      edLeftMintBox: true,
+      secGoodsShowcase: true,
+      secCareTopics: true
     };
+
+    let currentPageId = '';
+    let currentPresetType = 'A';
+    let selectedHubPreset = 'A';
+    let hubSavedPages = [];
 
     let selectedSlashId = 'slashPhoto1';
     let selectedSlashNum = 1;
@@ -1726,6 +1936,7 @@
     const agentName = params.get('agent') || '';
     const agentPhone = params.get('agent_phone') || '';
     const agentIdParam = params.get('agent_id') || '';
+    const prIdParam = params.get('pr_id') || '';
     const pixelIdParam = params.get('pixel_id') || '';
     const sheetUrlParam = params.get('sheet') || '';
     const docUrlParam = params.get('doc') || '';
@@ -1762,7 +1973,9 @@
         localStorage.getItem('user_email'),
         localStorage.getItem('weracle_user_email'),
         localStorage.getItem('crm_user_email'),
-        localStorage.getItem('email')
+        localStorage.getItem('email'),
+        localStorage.getItem('crm_agent_name'),
+        localStorage.getItem('weracle_agent_id')
       ];
       emailCandidates.forEach(em => {
         if (em && String(em).trim()) keys.add(String(em).trim().toLowerCase());
@@ -1774,7 +1987,7 @@
       try {
         const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
         if (metaConn) {
-          if (metaConn.igUser) keys.add(String(metaConn.igUser).trim().toLowerCase());
+          if (metaConn.igUser) keys.add(String(metaConn.igUser).trim().toLowerCase().replace(/^@/, ''));
           if (metaConn.igId) keys.add(String(metaConn.igId).trim().toLowerCase());
           if (metaConn.adAcc && metaConn.adAcc !== 'act_connected') keys.add(String(metaConn.adAcc).trim().toLowerCase());
         }
@@ -1786,6 +1999,8 @@
 
     function resolveActiveAgentKey() {
       if (agentIdParam) return agentIdParam;
+      const email = localStorage.getItem('user_email') || localStorage.getItem('weracle_user_email') || localStorage.getItem('crm_user_email') || localStorage.getItem('email');
+      if (email && String(email).trim()) return String(email).trim().toLowerCase();
       const keys = getActiveUserKeys();
       return keys.length > 0 ? keys[0] : 'default';
     }
@@ -1795,8 +2010,7 @@
     window.addEventListener('DOMContentLoaded', async () => {
       const isEditParam = params.get('edit') === 'true';
       const isPreviewParam = params.get('preview') === 'true';
-      const isInsideCrmAdmin = (window.self !== window.top) && !params.get('camp_id') && !params.get('utm_source');
-
+     const isInsideCrmAdmin = (window.self !== window.top) && window.innerWidth >= 650 && !params.has('camp') && !params.get('camp_id') && !params.get('utm_source') && !params.get('pr_id');
       if (isEditParam || isPreviewParam || isInsideCrmAdmin) {
         document.body.classList.add('can-edit-pr');
       }
@@ -1809,6 +2023,9 @@
 
       loadSavedPrState();
       await loadServerPrState();
+      if (document.body.classList.contains('can-edit-pr')) {
+        await refreshMyPrPagesHub();
+      }
 
       renderStandardList();
       renderGoodsSlider();
@@ -2001,19 +2218,25 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
       }
     }
 
-    function toggleEditStudio() {
+function toggleEditStudio() {
       isEditMode = !isEditMode;
       document.body.classList.toggle('is-editing', isEditMode);
-      document.getElementById('editBtnText').innerText = isEditMode ? '✓ 편집 닫기' : '🎨 쉽게 꾸미기 ON';
+      document.getElementById('editBtnText').innerText = isEditMode ? '✓ 편집 닫기' : '🎨 이 페이지 꾸미기';
       if (!isEditMode) {
         document.getElementById('smartHoverBadge').style.display = 'none';
         saveAllPrState(false);
       }
     }
 
+    function backToPrHub() {
+      if (isEditMode) toggleEditStudio();
+      refreshMyPrPagesHub();
+    }
+
     async function saveAndCloseStudio() {
       await saveAllPrState(true);
       if (isEditMode) toggleEditStudio();
+      await refreshMyPrPagesHub();
     }
 
     function switchEditorTab(idx, scrollRightPreview) {
@@ -2505,10 +2728,51 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
       saveAllPrState(false);
     }
 
+function syncSectionHeaders() {
+      const pairs = [
+        ['inpEssayTag', 'essayTagEl'],
+        ['inpEssayWatermark', 'essayWatermarkEl'],
+        ['inpExpSummary', 'expSummaryEl'],
+        ['inpMidTag', 'midTagEl'],
+        ['inpStdHeadingEn', 'stdHeadingEnEl'],
+        ['inpStdHeadingKr', 'stdHeadingKrEl'],
+        ['inpTopicsEn', 'topicsEnEl'],
+        ['inpTopicsKr', 'topicsKrEl'],
+        ['inpFormSub', 'uiSub'],
+        ['inpFormBtnText', 'uiSubmitBtnText']
+      ];
+      pairs.forEach(([inpId, elId]) => {
+        const inp = document.getElementById(inpId);
+        const el = document.getElementById(elId);
+        if (inp && el) el.innerText = inp.value;
+      });
+
+      const fBadge = document.getElementById('inpFormBadge');
+      if (fBadge && document.getElementById('uiEndingBadge')) {
+        document.getElementById('uiEndingBadge').innerHTML = `<i class="fa-regular fa-calendar-check"></i> ${fBadge.value}`;
+      }
+      const fTitle = document.getElementById('inpFormTitle');
+      if (fTitle && document.getElementById('uiTitle') && !params.get('camp') && !params.get('title')) {
+        document.getElementById('uiTitle').innerText = fTitle.value;
+      }
+      saveAllPrState(false);
+    }
+
     function toggleSecById(secId, isShow) {
       sectionVisibility[secId] = isShow;
       const el = document.getElementById(secId);
       if (el) el.style.display = isShow ? '' : 'none';
+      const chkMap = {
+        philosophyAnchor: 'chkShowPhilosophy',
+        secExpertise: 'chkShowExpertise',
+        secMidPortrait: 'chkShowMidPortrait',
+        edLeftMintBox: 'chkShowStdLeft',
+        secGoodsShowcase: 'chkShowGoods',
+        secCareTopics: 'chkShowCareTopics'
+      };
+      if (chkMap[secId] && document.getElementById(chkMap[secId])) {
+        document.getElementById(chkMap[secId]).checked = !!isShow;
+      }
       saveAllPrState(false);
     }
 
@@ -2756,9 +3020,503 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
       reader.readAsDataURL(file);
     });
 
+// 3종 기본 프리셋 정의 (A: 보장점검·브랜딩 / B: 핵심상품 집중형 / C: 리쿠르팅·비전형)
+    function getPresetTemplateData(typeCode) {
+      const t = String(typeCode || 'A').toUpperCase();
+      if (t === 'B') {
+        return {
+          presetType: 'B',
+          pageTitle: '[상품 집중] 핵심 담보 요약 & 견적 안내',
+          sectionVisibility: {
+            philosophyAnchor: false,
+            secExpertise: true,
+            secMidPortrait: false,
+            edLeftMintBox: true,
+            secGoodsShowcase: true,
+            secCareTopics: true
+          },
+          stickerHeroText: '핵심만 3초 요약 · 거품 없는 맞춤 설계',
+          standardItems: [
+            { title: '꼭 필요한 핵심 특약만 압축 구성', sub: '불필요한 적립금이나 끼워팔기 담보 없이 실속 특약만 담았습니다' },
+            { title: '전 보험사 동일 조건 최저가 비교', sub: '보험사별 인수 기준과 보험료를 투명하게 한 장으로 비교해 드립니다' },
+            { title: '면책·감액 기간 및 청구 조건 명확 안내', sub: '가입 전 반드시 알아야 할 약관 핵심 포인트를 정직하게 짚어드립니다' }
+          ],
+          careTopics: [
+            { pill: '추천 대상 01', title: '예전 보험만 있고 최신 핵심 특약이 빠져 있으신 분', sub: '기존 보험은 해지 없이 그대로 지키면서 부족한 핵심 담보만 소액으로 보완합니다.' },
+            { pill: '추천 대상 02', title: '여러 보험사 보험료와 보장 한도를 한눈에 비교하고 싶은 분', sub: '전 보험사 비교표를 카톡으로 먼저 받아보신 뒤 천천히 결정하실 수 있습니다.' },
+            { pill: '추천 대상 03', title: '가입 후 실제 청구까지 꼼꼼하게 챙겨줄 전담자가 필요한 분', sub: '청구 서류 안내부터 보상 접수까지 1:1 전담 파트너가 끝까지 책임집니다.' }
+          ],
+          texts: {
+            heroHeadlineEl: '복잡한 약관 대신,\n꼭 필요한 핵심 보장만\n명쾌하게 정리했습니다.',
+            heroSubLeadEl: '불필요한 특약 거품은 빼고 핵심 보장만 채운\n맞춤 플랜 핵심 요약 리포트',
+            dragVerticalBox: '30개사 비교\n핵심 요약본 제공',
+            essayTagEl: 'KEY SUMMARY',
+            essayWatermarkEl: 'SMART PLAN',
+            philTitleEl: '왜 지금 이 보장을 점검해야 할까요?',
+            philBodyEl: '약관은 시대에 따라 계속 바뀝니다. 옛날 보험의 장점은 살리고 비어 있는 최신 치료·생활 리스크만 합리적으로 채워두세요.',
+            exp1Title: '핵심 보장 한도',
+            exp1Sub: '실제 사고·질병 시 가장 든든한 한도로 설계',
+            exp2Title: '합리적 월 보험료',
+            exp2Sub: '부담 없는 금액으로 평생 유지 가능하게 구성',
+            exp3Title: '간편 비대면 견적',
+            exp3Sub: '전화 독촉 없이 카톡으로 비교안 먼저 확인',
+            expSummaryEl: '아래 슬라이드를 넘겨 실제 보장 비교 포인트와\n청구 사례를 한눈에 확인해 보세요.',
+            midTagEl: 'REAL CASE & POINT',
+            midTitleEl: '"실제 사고·청구 순간에 진짜 도움이 되는 보장만 권합니다."',
+            midSubEl: '가입 조건과 연령대에 따라 가장 유리한 보험사를 객관적으로 찾아드립니다.',
+            stdHeadingEnEl: 'CHECK POINT',
+            stdHeadingKrEl: '가입 전 반드시 확인해야 할 3가지 핵심 기준',
+            goodsBubbleEl: '"슬라이드를 넘겨 핵심 요약 장표를 확인해 보세요!"',
+            goodsTitleEl: '한눈에 보는 [상품 핵심 요약 & 보험사별 비교표]',
+            goodsDescEl: '복잡한 수십 페이지 약관 대신, 꼭 아셔야 할 보장 범위와 예상 보험료 비교표를 깔끔하게 정리해 안내해 드립니다.',
+            topicsEnEl: 'RECOMMENDED FOR',
+            topicsKrEl: '이런 분들께 이번 플랜 점검을 특히 추천드립니다',
+            endingClosingTitleEl: '부담스러운 가입 권유 없이,\n내 조건에 맞는 정확한 비교안부터\n편안하게 받아보세요.',
+            inpFormBadge: '무료 비교견적 · 핵심자료 신청',
+            inpFormTitle: '내 조건 맞춤 보험료 비교 & 무료 안내 신청',
+            inpFormSub: '남겨주신 내용을 바탕으로 전화 독촉 없이 깔끔한 요약 안내를 도와드립니다.',
+            inpFormBtnText: '무료 비교안 · 상담 신청하기'
+          }
+        };
+      }
+
+      if (t === 'C') {
+        return {
+          presetType: 'C',
+          pageTitle: '[리쿠르팅] 함께 성장할 팀 파트너 모집',
+          sectionVisibility: {
+            philosophyAnchor: true,
+            secExpertise: true,
+            secMidPortrait: true,
+            edLeftMintBox: true,
+            secGoodsShowcase: true,
+            secCareTopics: true
+          },
+          stickerHeroText: 'DB·SNS 마케팅 자동화 지원 · 신입·경력 환영',
+          standardItems: [
+            { title: '검증된 SNS 자동화 & 가망고객 DB 시스템 지원', sub: '지인 영업 강요 없이 스스로 고객이 찾아오는 온라인 마케팅 무기를 지원합니다' },
+            { title: '1:1 밀착 실전 교육 & 동행 클로징 멘토링', sub: '보험이 처음인 신입도 3개월 안에 전문가로 자리 잡도록 실전 노하우를 전수합니다' },
+            { title: '투명하고 업계 최고 수준인 수수료·시상 체계', sub: '일한 만큼 정직하게 보상받으며 내 시간과 소득을 주도적으로 설계합니다' }
+          ],
+          careTopics: [
+            { pill: '지원 혜택 01', title: '개인 전용 매거진 PR 페이지 & 메타·인스타 광고 시스템 제공', sub: '위라클랩만의 독보적인 브랜딩·DB 자동화 솔루션을 팀원 전원에게 지원합니다.' },
+            { pill: '지원 혜택 02', title: '약관·보상·비교표 실전 세일즈 툴킷 완벽 공유', sub: '고객이 먼저 감동하는 한장비교표와 청구 관리 노하우를 아낌없이 공유합니다.' },
+            { pill: '지원 혜택 03', title: '자유롭고 존중하는 수평적 팀 문화 & 워라밸', sub: '불필요한 출퇴근 압박이나 실적 강요 없이 서로 돕고 함께 성장하는 조직입니다.' }
+          ],
+          texts: {
+            heroHeadlineEl: '혼자 고민하는 영업에서,\n시스템으로 함께 성장하는\n커리어로 초대합니다.',
+            heroSubLeadEl: '지인 영업의 한계를 넘어 온라인 브랜딩과\n탄탄한 교육 시스템으로 진짜 실력을 만듭니다',
+            dragVerticalBox: '함께 성장할\n파트너를 찾습니다',
+            essayTagEl: 'VISION & CULTURE',
+            essayWatermarkEl: 'TEAM WERACLE',
+            philTitleEl: '열정만 가져오세요.\n영업의 무기와 길은 팀이 만들어 드립니다.',
+            philBodyEl: '막막한 개척 영업과 지인 부탁에 지치셨나요, 아니면 새로운 도전을 앞두고 망설이고 계신가요.\n\n우리 팀은 개인의 역량에만 기대지 않고, 검증된 온라인 DB 유입 시스템과 체계적인 보장분석 솔루션으로 누구나 흔들림 없이 정착할 수 있는 환경을 갖추고 있습니다.',
+            exp1Title: '자동화 DB 시스템',
+            exp1Sub: 'SNS·메타 광고 및 전용 PR 플랫폼 지원',
+            exp2Title: '실전 1:1 멘토링',
+            exp2Sub: '보장분석부터 상담·보상까지 밀착 코칭',
+            exp3Title: '투명한 보상·성장',
+            exp3Sub: '노력한 만큼 정직하게 인정받는 수수료 체계',
+            expSummaryEl: '경력 유무보다 중요한 것은 정직하게 배우고\n오래 함께 걸어갈 마음입니다.',
+            midTagEl: 'TEAM ENVIRONMENT',
+            midTitleEl: '"출근이 즐거워지는 분위기, 서로의 성장을 진심으로 응원합니다."',
+            midSubEl: '워킹맘, 직장인 이직 준비생, 영업 경력자 모두 각자의 속도에 맞춰 전문가로 성장하고 있습니다.',
+            stdHeadingEnEl: 'WHY OUR TEAM',
+            stdHeadingKrEl: '우리 팀이 결과로 증명하는 3가지 핵심 경쟁력',
+            goodsBubbleEl: '"실제 우리 팀의 교육·활동 모습을 확인해 보세요!"',
+            goodsTitleEl: '체계적인 [온·오프라인 영업 지원 & 팀 활동 스케치]',
+            goodsDescEl: '혼자 외롭게 뛰는 영업이 아니라, 최신 마케팅 툴과 전문가 네트워크가 뒤에서 든든하게 받쳐주는 스마트한 영업 환경을 경험해 보세요.',
+            topicsEnEl: 'BENEFITS & SUPPORT',
+            topicsKrEl: '합류 즉시 제공되는 파트너 전담 성장 지원 혜택',
+            endingClosingTitleEl: '이력서 없이도 괜찮습니다.\n가벼운 차 한잔하며 당신의 내일을\n편안하게 이야기해 보세요.',
+            inpFormBadge: '1:1 비공개 커피챗 · 직무 인터뷰 신청',
+            inpFormTitle: '가벼운 티타임 & 직무·정착지원 안내 신청',
+            inpFormSub: '남겨주신 내용은 철저히 비밀이 보장되며, 부담 없는 직무 안내를 도와드립니다.',
+            inpFormBtnText: '편안한 커피챗(인터뷰) 신청하기'
+          }
+        };
+      }
+
+      // 기본 타입 A (보장점검 · 퍼스널 브랜딩형)
+      return {
+        presetType: 'A',
+        pageTitle: '[브랜딩·점검] 나의 대표 PR 페이지',
+        sectionVisibility: {
+          philosophyAnchor: true,
+          secExpertise: true,
+          secMidPortrait: true,
+          edLeftMintBox: true,
+          secGoodsShowcase: true,
+          secCareTopics: true
+        },
+        stickerHeroText: '무리한 권유 ZERO · 숨은 보험금 찾기 전담',
+        standardItems: [
+          { title: '30개 생·손보사 객관적 비교', sub: '특정 회사 상품만 권하지 않고 전 보험사 가성비를 비교합니다' },
+          { title: '보여주기식 자잘한 특약 배제', sub: '큰 병과 수술 시 진짜 목돈이 되는 3대 진단비·수술비·간병비 집중' },
+          { title: '끝까지 유지 가능한 합리적 예산', sub: '중도 해지 없이 평생 가져갈 수 있는 고정지출 다이어트 설계' }
+        ],
+        careTopics: [
+          { pill: '평생 청구관리', title: '숨은 병원비·약제비 1:1 전담 청구 비서', sub: '진료비 영수증·처방전 사진만 카톡으로 보내주시면 소멸시효 3년 내 숨은 보험금까지 누락 없이 청구해 드립니다.' },
+          { pill: '한장비교표 제공', title: '우리 가족 맞춤형 [신호등 한장비교표] 제작', sub: '수십 장의 복잡한 보험 증권을 유지·조정·보완 신호등 표기로 정리해 한눈에 파악할 수 있도록 제작해 드립니다.' },
+          { pill: '전문가 네트워크', title: '손해사정사 · 세무 · 노무 전문가 협업 지원', sub: '까다로운 보험금 지급 분쟁이나 상속·증여·법인 절세 플랜까지 각 분야 전문가와 팀 단위로 해결해 드립니다.' },
+          { pill: '정기 점검케어', title: '연 1회 정기 보장 점검 & 상령일 알림 케어', sub: '가입 후 방치하지 않고 건강검진 시즌, 자녀 성장기, 상령일마다 먼저 연락드려 보장 공백을 챙겨드립니다.' }
+        ],
+        texts: {
+          heroHeadlineEl: '숫자와 약관 너머에,\n당신의 빛나는 내일이\n있습니다.',
+          heroSubLeadEl: '가입 권유보다 숨은 보험금부터 찾아드리는\n성장과 안심의 1:1 전담 파트너',
+          dragVerticalBox: '듣고, 공감하고,\n함께 내일을 지킵니다.',
+          essayTagEl: 'PHILOSOPHY & STORY',
+          essayWatermarkEl: 'BODAPHWANI',
+          philTitleEl: '사람과 사람 사이의 신뢰,\n그것이 제가 일하는 원동력입니다.',
+          philBodyEl: '매달 꼬박꼬박 내는 보험료인데, 정작 병원에 갈 때면 "이게 청구가 될까? 누구한테 물어보지?" 하고 망설였던 적 없으신가요.\n\n저는 무작정 새로운 보험 가입을 권유하지 않습니다.\n고객님이 이미 가지고 계신 옛날 보험 속 소중한 보장을 먼저 찾아내어 지켜드리고, 불필요하게 새어 나가는 중복 특약만 정직하게 덜어내는 것.\n\n보험으로 받은 믿음에 평생의 관리로 보답하는 첫 번째 약속입니다.',
+          exp1Title: '실전 약관·보상 지식',
+          exp1Sub: '까다로운 분쟁·약관까지 정확하게 해석합니다',
+          exp2Title: '누적 1,200건+ 분석',
+          exp2Sub: '풍부한 현장 경험으로 보장 공백을 찾습니다',
+          exp3Title: '유병자·맞춤 심사',
+          exp3Sub: '건강검진 유소견·병력도 최적 조건으로 연결',
+          expSummaryEl: '보상 실무 지식과 30개 보험사 데이터를 바탕으로,\n우리 가족의 생애주기에 꼭 맞는\n가장 정직한 해답을 함께 찾아갑니다.',
+          midTagEl: '1:1 PRIVATE CONSULTING',
+          midTitleEl: '"어려운 보험 용어 대신,\n고객님의 눈높이에서 웃으며 이야기합니다."',
+          midSubEl: '단 한 번의 만남이라도 부담이 아닌 안심이 될 수 있도록, 가장 편안한 방법으로 소통합니다.',
+          stdHeadingEnEl: 'PRODUCT STANDARD',
+          stdHeadingKrEl: "내가 아닌 '내 가족'이 가입한다는 기준으로 고릅니다",
+          goodsBubbleEl: '"가입 후 전달드리는 전용 증권 바인더와 한장비교표!"',
+          goodsTitleEl: '소장하고 싶은 [전용 증권 바인더 & 한장비교표 굿즈]',
+          goodsDescEl: "서랍 속에 방치되던 수십 장의 증권을 한눈에 보이는 '신호등 한장비교표'와 시그니처 증권 바인더·캘린더 패키지로 깔끔하게 정리해 전달해 드립니다.",
+          topicsEnEl: 'CARE & BENEFITS',
+          topicsKrEl: '가입 순간보다 가입 이후가 더 든든한 전담 케어 혜택',
+          endingClosingTitleEl: "수십 년을 함께할 우리 가족 보험,\n아플 때 가장 먼저 떠오르는\n든든한 '내 편'이 되겠습니다.",
+          inpFormBadge: '1:1 무료 맞춤 상담 신청',
+          inpFormTitle: '1:1 무료 맞춤 점검 및 간편 상담 신청',
+          inpFormSub: '부담스러운 전화 독촉 없이, 남기신 내용을 확인 후 편안하게 안내드립니다.',
+          inpFormBtnText: '1:1 맞춤 상담 신청하기'
+        }
+      };
+    }
+
+    // 내 대표 페이지에서 프로필 사진·성함·소속·로고·컬러만 추출해 새 템플릿에 자동 계승
+    function extractMyBaseIdentity() {
+      const defPage = hubSavedPages.find(p => p.isDefault && p.config) || hubSavedPages[0];
+      const baseCfg = (defPage && defPage.config) ? defPage.config : buildPrStatePayload();
+      return {
+        colors: baseCfg.colors ? { ...baseCfg.colors } : null,
+        logoConfig: baseCfg.logoConfig ? { ...baseCfg.logoConfig } : null,
+        heroPhoto: (baseCfg.photos && baseCfg.photos.heroPhotoBox) || '',
+        endingPhoto: (baseCfg.photos && baseCfg.photos.endingPhotoBox) || '',
+        heroPos: (baseCfg.photoPositionMap && baseCfg.photoPositionMap.heroPhotoBox) || null,
+        endPos: (baseCfg.photoPositionMap && baseCfg.photoPositionMap.endingPhotoBox) || null,
+        agentName: (baseCfg.texts && baseCfg.texts.heroAgentName) || document.getElementById('inpAgentName').value,
+        agentNick: (baseCfg.texts && baseCfg.texts.heroNickEl) || document.getElementById('inpAgentNick').value,
+        agentRole: (baseCfg.texts && baseCfg.texts.heroRoleEl) || document.getElementById('inpAgentRole').value,
+        agentTagline: (baseCfg.texts && baseCfg.texts.heroTaglineEl) || document.getElementById('inpAgentTagline').value,
+        endingSign: (baseCfg.texts && baseCfg.texts.endingClosingSignEl) || document.getElementById('inpEndingSign').value
+      };
+    }
+
+    function applyPresetWithIdentity(typeCode, keepCurrentPageId) {
+      const preset = getPresetTemplateData(typeCode);
+      const iden = extractMyBaseIdentity();
+
+      currentPresetType = preset.presetType;
+      if (!keepCurrentPageId) {
+        currentPageId = `pr_page_new_${Date.now()}`;
+        const titleInp = document.getElementById('inpPrPageTitle');
+        if (titleInp) titleInp.value = preset.pageTitle;
+        const defChk = document.getElementById('chkPrIsDefault');
+        if (defChk) defChk.checked = (hubSavedPages.length === 0);
+      }
+
+      ['A', 'B', 'C'].forEach(c => {
+        const b = document.getElementById('btnStudioType_' + c);
+        if (b) b.classList.toggle('active', c === currentPresetType);
+      });
+
+      const mergedState = {
+        presetType: preset.presetType,
+        pageTitle: document.getElementById('inpPrPageTitle') ? document.getElementById('inpPrPageTitle').value : preset.pageTitle,
+        standardItems: JSON.parse(JSON.stringify(preset.standardItems)),
+        careTopics: JSON.parse(JSON.stringify(preset.careTopics)),
+        sectionVisibility: { ...preset.sectionVisibility },
+        colors: iden.colors,
+        logoConfig: iden.logoConfig,
+        stickerMap: {
+          ...stickerMap,
+          hero: { ...stickerMap.hero, text: preset.stickerHeroText }
+        },
+        photos: {},
+        photoPositionMap: {},
+        texts: {
+          ...preset.texts,
+          heroAgentName: iden.agentName,
+          heroNickEl: iden.agentNick,
+          heroRoleEl: iden.agentRole,
+          heroTaglineEl: iden.agentTagline,
+          endingClosingSignEl: iden.endingSign
+        }
+      };
+
+      if (iden.heroPhoto) mergedState.photos.heroPhotoBox = iden.heroPhoto;
+      if (iden.endingPhoto) mergedState.photos.endingPhotoBox = iden.endingPhoto;
+      if (iden.heroPos) mergedState.photoPositionMap.heroPhotoBox = iden.heroPos;
+      if (iden.endPos) mergedState.photoPositionMap.endingPhotoBox = iden.endPos;
+
+// C타입(리쿠르팅) <-> A·B타입 전환 시 하단 기본 질문 폼도 목적에 맞게 즉시 전환
+      if (!params.get('qs')) {
+        const qWrap = document.getElementById('dynamicQuestionsWrap');
+        if (qWrap) {
+          if (preset.presetType === 'C') {
+            qWrap.innerHTML = `
+              <div class="question-box custom-q-item" data-q-type="CHOICE" data-q-idx="0">
+                <div class="q-title">Q. 어떤 부분이 가장 궁금하신가요?</div>
+                <label class="radio-item"><input type="radio" name="qAnswer_0" value="신입 교육·정착 지원 및 DB 시스템 안내" checked /><span>🌱 신입 교육·정착 지원 및 DB 시스템 안내</span></label>
+                <label class="radio-item"><input type="radio" name="qAnswer_0" value="경력직 수수료 조건 및 가벼운 티타임 신청" /><span>☕ 경력직 우대 조건 및 가벼운 커피챗 신청</span></label>
+              </div>
+            `;
+          } else {
+            qWrap.innerHTML = `
+              <div class="question-box custom-q-item" data-q-type="CHOICE" data-q-idx="0">
+                <div class="q-title">Q. 어떤 안내를 가장 먼저 받아보고 싶으신가요?</div>
+                <label class="radio-item"><input type="radio" name="qAnswer_0" value="1:1 비대면 간편 상담 신청하기" checked /><span>💬 1:1 비대면 간편 상담 신청하기</span></label>
+                <label class="radio-item"><input type="radio" name="qAnswer_0" value="내 보험료·보장 내용 점검 먼저 받아보기" /><span>📊 내 보험료·보장 내용 점검 먼저 받아보기</span></label>
+              </div>
+            `;
+          }
+        }
+      }
+      applyStateObjectToDom(mergedState);
+      renderStandardList();
+      renderCareTopics();
+      renderAllStickers();
+      applyLogoDom();
+      Object.keys(photoPositionMap).forEach(id => applyPhotoPosToElement(id));
+      syncAllPhotoSlidersFromState();
+    }
+
+    function previewPresetTemplate(typeCode) {
+      selectedHubPreset = typeCode;
+      ['A', 'B', 'C'].forEach(c => {
+        const card = document.getElementById('hubPresetCard_' + c);
+        if (card) card.classList.toggle('active', c === typeCode);
+      });
+      const labelMap = {
+        A: '[타입 A 보장점검·브랜딩] 폼으로 새 페이지 꾸미기',
+        B: '[타입 B 핵심상품 집중형] 폼으로 새 페이지 꾸미기',
+        C: '[타입 C 리쿠르팅·비전형] 폼으로 새 페이지 꾸미기'
+      };
+      const lbl = document.getElementById('lblStartPresetBtn');
+      if (lbl) lbl.innerText = labelMap[typeCode] || labelMap.A;
+
+      document.querySelectorAll('.hub-saved-card').forEach(el => el.classList.remove('selected'));
+      applyPresetWithIdentity(typeCode, false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function startNewPageFromSelectedPreset() {
+      applyPresetWithIdentity(selectedHubPreset || 'A', false);
+      const defaultNames = {
+        A: `[브랜딩·점검] ${document.getElementById('inpAgentName').value || '나'}의 대표 PR 페이지`,
+        B: `[상품집중] 핵심 보장 요약 안내 (${hubSavedPages.length + 1})`,
+        C: `[리쿠르팅] 함께 성장할 팀 파트너 모집`
+      };
+      const titleInp = document.getElementById('inpPrPageTitle');
+      if (titleInp) titleInp.value = defaultNames[selectedHubPreset] || defaultNames.A;
+      if (!isEditMode) toggleEditStudio();
+    }
+
+    function switchTemplateLayoutInStudio(typeCode) {
+      if (!confirm(`[타입 ${typeCode}] 기본 레이아웃 구성으로 전환하시겠습니까?\n(내 프로필 사진·이름·컬러는 그대로 유지되며 본문 구성만 바뀝니다.)`)) return;
+      applyPresetWithIdentity(typeCode, true);
+    }
+
+    async function refreshMyPrPagesHub() {
+      const listEl = document.getElementById('hubSavedPagesList');
+      const badgeEl = document.getElementById('hubSavedCountBadge');
+      if (!listEl) return;
+
+      try {
+        const res = await fetch('/api/meta-execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'LIST_PR_PAGES',
+            agentId: activeAgentKey,
+            userKeys: getActiveUserKeys()
+          })
+        });
+        const json = await res.json();
+        hubSavedPages = (json && json.success && Array.isArray(json.pages)) ? json.pages : [];
+      } catch (e) {
+        hubSavedPages = [];
+      }
+
+      if (badgeEl) badgeEl.innerText = `보관함 ${hubSavedPages.length}개`;
+
+      if (hubSavedPages.length === 0) {
+        listEl.innerHTML = `
+          <div style="text-align:center; padding:26px 14px; color:#64748b; font-size:12px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1; line-height:1.6;">
+            아직 서버에 저장된 내 PR 페이지가 없습니다.<br/>
+            위 <strong>[A · B · C 기본 폼]</strong> 중 하나를 골라 첫 페이지를 만들어 보세요!
+          </div>
+        `;
+        return;
+      }
+
+      const typeBadgeMap = {
+        A: '<span style="background:#dbeafe; color:#1d4ed8; font-size:10px; font-weight:900; padding:2px 6px; border-radius:5px;">🅰️ 브랜딩</span>',
+        B: '<span style="background:#ffedd5; color:#c2410c; font-size:10px; font-weight:900; padding:2px 6px; border-radius:5px;">🅱️ 상품집중</span>',
+        C: '<span style="background:#d1fae5; color:#047857; font-size:10px; font-weight:900; padding:2px 6px; border-radius:5px;">🅲 리쿠르팅</span>'
+      };
+
+      listEl.innerHTML = hubSavedPages.map((p, idx) => {
+        const isSel = (currentPageId && currentPageId === p.id) || (!currentPageId && idx === 0);
+        const thumbStyle = p.thumbUrl ? `background-image:url('${p.thumbUrl}');` : '';
+        const tBadge = typeBadgeMap[p.presetType] || typeBadgeMap.A;
+        const starBadge = p.isDefault
+          ? `<span style="background:#fef3c7; color:#b45309; font-size:10px; font-weight:900; padding:2px 6px; border-radius:5px;">⭐ 대표</span>`
+          : '';
+        const canDel = String(p.id).startsWith('pr_page_');
+
+        return `
+          <div class="hub-saved-card ${isSel ? 'selected' : ''}" onclick="selectSavedPageFromHub(${idx})">
+            <div class="hub-thumb" style="${thumbStyle}"></div>
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; align-items:center; gap:5px; margin-bottom:3px; flex-wrap:wrap;">
+                ${tBadge} ${starBadge}
+              </div>
+              <div style="font-size:12.5px; font-weight:900; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.title}</div>
+              <div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;" onclick="event.stopPropagation();">
+                <button type="button" class="hub-mini-btn" onclick="editSavedPageFromHub(${idx})">✏️ 수정</button>
+                <button type="button" class="hub-mini-btn" onclick="duplicateSavedPageFromHub(${idx})">📑 복제</button>
+                <button type="button" class="hub-mini-btn" onclick="copySavedPageLink(${idx})">🔗 링크복사</button>
+                ${!p.isDefault ? `<button type="button" class="hub-mini-btn" onclick="setSavedPageAsDefault(${idx})" title="기본 대표 페이지로 지정">⭐ 대표로</button>` : ''}
+                ${canDel ? `<button type="button" class="hub-mini-btn" style="color:#ef4444; border-color:#fecaca;" onclick="deleteSavedPageFromHub(${idx})">🗑️</button>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectSavedPageFromHub(idx) {
+      const item = hubSavedPages[idx];
+      if (!item || !item.config) return;
+      currentPageId = String(item.id).startsWith('pr_page_') ? item.id : `pr_page_${Date.now()}`;
+      currentPresetType = item.presetType || 'A';
+      applyStateObjectToDom(item.config);
+      renderStandardList();
+      renderGoodsSlider();
+      renderCareTopics();
+      renderAllStickers();
+      applyLogoDom();
+      applyHeroTypoDom();
+      Object.keys(photoPositionMap).forEach(id => applyPhotoPosToElement(id));
+      syncAllPhotoSlidersFromState();
+
+      if (document.getElementById('inpPrPageTitle')) document.getElementById('inpPrPageTitle').value = item.title || '나의 PR 페이지';
+      if (document.getElementById('chkPrIsDefault')) document.getElementById('chkPrIsDefault').checked = !!item.isDefault;
+
+      document.querySelectorAll('.hub-preset-card').forEach(c => c.classList.remove('active'));
+      refreshMyPrPagesHub();
+    }
+
+    function editSavedPageFromHub(idx) {
+      selectSavedPageFromHub(idx);
+      if (!isEditMode) toggleEditStudio();
+    }
+
+    async function duplicateSavedPageFromHub(idx) {
+      const item = hubSavedPages[idx];
+      if (!item || !item.config) return;
+      const newTitle = prompt('복제하여 새로 만들 페이지 이름을 입력해 주세요:', `${item.title} (사본)`);
+      if (!newTitle) return;
+
+      const clonedCfg = JSON.parse(JSON.stringify(item.config));
+      clonedCfg.pageTitle = newTitle.trim();
+      clonedCfg.isDefault = false;
+
+      const res = await fetch('/api/meta-execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'SAVE_PR_PAGE',
+          agentId: activeAgentKey,
+          userKeys: getActiveUserKeys(),
+          pageId: '',
+          pageTitle: newTitle.trim(),
+          presetType: item.presetType || 'A',
+          isDefault: false,
+          config: clonedCfg
+        })
+      });
+      const json = await res.json();
+      if (json && json.success) {
+        currentPageId = json.pageId;
+        await refreshMyPrPagesHub();
+        alert(`✅ [${newTitle}] 페이지가 보관함에 복제되었습니다!`);
+      }
+    }
+
+    function copySavedPageLink(idx) {
+      const item = hubSavedPages[idx];
+      if (!item) return;
+      const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
+      let shareUrl = `${curOrigin}/sns_apply.html?agent_id=${encodeURIComponent(activeAgentKey)}`;
+      if (String(item.id).startsWith('pr_page_')) {
+        shareUrl += `&pr_id=${encodeURIComponent(item.id)}`;
+      }
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert(`🔗 [${item.title}] 전용 링크가 복사되었습니다!\n카카오톡 프로필이나 고객 안내 문자에 바로 붙여넣어 사용하세요.\n\n${shareUrl}`);
+      }).catch(() => {
+        prompt('아래 주소를 복사해 사용하세요:', shareUrl);
+      });
+    }
+
+    async function setSavedPageAsDefault(idx) {
+      const item = hubSavedPages[idx];
+      if (!item || !item.config) return;
+      const cfg = { ...item.config, isDefault: true, pageTitle: item.title };
+      await fetch('/api/meta-execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'SAVE_PR_PAGE',
+          agentId: activeAgentKey,
+          userKeys: getActiveUserKeys(),
+          pageId: String(item.id).startsWith('pr_page_') ? item.id : '',
+          pageTitle: item.title,
+          presetType: item.presetType || 'A',
+          isDefault: true,
+          config: cfg
+        })
+      });
+      await refreshMyPrPagesHub();
+      alert(`⭐ [${item.title}] 페이지가 기본 대표 페이지로 지정되었습니다!`);
+    }
+
+    async function deleteSavedPageFromHub(idx) {
+      const item = hubSavedPages[idx];
+      if (!item) return;
+      if (!confirm(`🗑️ [${item.title}] 페이지를 보관함에서 삭제하시겠습니까?`)) return;
+      await fetch('/api/meta-execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'DELETE_PR_PAGE', pageId: item.id })
+      });
+      if (currentPageId === item.id) currentPageId = '';
+      await refreshMyPrPagesHub();
+    }
+
     function buildPrStatePayload() {
       const notifyPh = localStorage.getItem('crm_agent_phone') || storedAgentNotifyPhone || '';
+      const pTitle = document.getElementById('inpPrPageTitle') ? document.getElementById('inpPrPageTitle').value.trim() : '나의 대표 PR 페이지';
+      const pDefault = document.getElementById('chkPrIsDefault') ? document.getElementById('chkPrIsDefault').checked : true;
+
       return {
+        pageId: currentPageId || '',
+        pageTitle: pTitle || '나의 대표 PR 페이지',
+        presetType: currentPresetType || 'A',
+        isDefault: pDefault,
         standardItems,
         goodsSlides,
         careTopics,
@@ -2793,6 +3551,8 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
           heroRoleEl: document.getElementById('heroRoleEl').innerText,
           heroTaglineEl: document.getElementById('heroTaglineEl').innerText,
           dragVerticalBox: document.getElementById('dragVerticalBox').innerText,
+          essayTagEl: document.getElementById('essayTagEl') ? document.getElementById('essayTagEl').innerText : 'PHILOSOPHY & STORY',
+          essayWatermarkEl: document.getElementById('essayWatermarkEl') ? document.getElementById('essayWatermarkEl').innerText : 'BODAPHWANI',
           philTitleEl: document.getElementById('philTitleEl').innerText,
           philBodyEl: document.getElementById('philBodyEl').innerText,
           exp1Title: document.getElementById('exp1Title').innerText,
@@ -2801,13 +3561,23 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
           exp2Sub: document.getElementById('exp2Sub').innerText,
           exp3Title: document.getElementById('exp3Title').innerText,
           exp3Sub: document.getElementById('exp3Sub').innerText,
+          expSummaryEl: document.getElementById('expSummaryEl') ? document.getElementById('expSummaryEl').innerText : '',
+          midTagEl: document.getElementById('midTagEl') ? document.getElementById('midTagEl').innerText : '1:1 PRIVATE CONSULTING',
           midTitleEl: document.getElementById('midTitleEl').innerText,
           midSubEl: document.getElementById('midSubEl').innerText,
+          stdHeadingEnEl: document.getElementById('stdHeadingEnEl') ? document.getElementById('stdHeadingEnEl').innerText : 'PRODUCT STANDARD',
+          stdHeadingKrEl: document.getElementById('stdHeadingKrEl') ? document.getElementById('stdHeadingKrEl').innerText : '',
           goodsBubbleEl: document.getElementById('goodsBubbleEl').innerText,
           goodsTitleEl: document.getElementById('goodsTitleEl').innerText,
           goodsDescEl: document.getElementById('goodsDescEl').innerText,
+          topicsEnEl: document.getElementById('topicsEnEl') ? document.getElementById('topicsEnEl').innerText : 'CARE & BENEFITS',
+          topicsKrEl: document.getElementById('topicsKrEl') ? document.getElementById('topicsKrEl').innerText : '',
           endingClosingTitleEl: document.getElementById('endingClosingTitleEl').innerText,
-          endingClosingSignEl: document.getElementById('endingClosingSignEl').innerText
+          endingClosingSignEl: document.getElementById('endingClosingSignEl').innerText,
+          inpFormBadge: document.getElementById('inpFormBadge') ? document.getElementById('inpFormBadge').value : '',
+          inpFormTitle: document.getElementById('inpFormTitle') ? document.getElementById('inpFormTitle').value : '',
+          inpFormSub: document.getElementById('inpFormSub') ? document.getElementById('inpFormSub').value : '',
+          inpFormBtnText: document.getElementById('inpFormBtnText') ? document.getElementById('inpFormBtnText').value : ''
         }
       };
     }
@@ -2818,7 +3588,7 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
         const origHtml = saveBtn ? saveBtn.innerHTML : '';
         if (saveBtn) {
           saveBtn.disabled = true;
-          saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 이미지 및 설정 서버 저장 중...';
+          saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 이미지 및 페이지 서버 저장 중...';
         }
         try {
           if (logoConfig.src && String(logoConfig.src).startsWith('data:image')) {
@@ -2847,20 +3617,30 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
             }
           } catch (e) {}
 
+          const slotIdToSend = (currentPageId && String(currentPageId).startsWith('pr_page_') && !String(currentPageId).startsWith('pr_page_new_'))
+            ? currentPageId
+            : '';
+
           const userKeys = getActiveUserKeys();
           const res = await fetch('/api/meta-execute', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              action: 'SAVE_PR_CONFIG',
+              action: 'SAVE_PR_PAGE',
               agentId: activeAgentKey,
               userKeys,
+              pageId: slotIdToSend,
+              pageTitle: cleanState.pageTitle,
+              presetType: cleanState.presetType,
+              isDefault: cleanState.isDefault,
               config: cleanState
             })
           });
           const resJson = await res.json();
           if (resJson && resJson.success) {
-            alert('✅ 내 매거진 PR 페이지 설정이 수파베이스 서버에 완벽하게 저장되었습니다!\n이제 인스타 DM 링크나 광고 링크로 접속하면 꾸미신 화면 그대로 나옵니다.');
+            if (resJson.pageId) currentPageId = resJson.pageId;
+            await refreshMyPrPagesHub();
+            alert(`✅ [${cleanState.pageTitle}] 페이지가 내 보관함에 저장되었습니다!\n이제 메타 광고나 인스타그램 자동 DM 세팅창에서 이 페이지를 바로 골라 연결할 수 있습니다.`);
           } else {
             alert('⚠️ 서버 응답 확인 필요: ' + (resJson.error || '다시 한 번 저장을 눌러주세요.'));
           }
@@ -2886,6 +3666,19 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
 
     function applyStateObjectToDom(state) {
       if (!state || typeof state !== 'object') return;
+      if (state.pageId && String(state.pageId).startsWith('pr_page_')) currentPageId = state.pageId;
+      if (state.presetType) currentPresetType = state.presetType;
+      if (state.pageTitle && document.getElementById('inpPrPageTitle')) {
+        document.getElementById('inpPrPageTitle').value = state.pageTitle;
+      }
+      if (state.isDefault !== undefined && document.getElementById('chkPrIsDefault')) {
+        document.getElementById('chkPrIsDefault').checked = !!state.isDefault;
+      }
+      ['A', 'B', 'C'].forEach(c => {
+        const b = document.getElementById('btnStudioType_' + c);
+        if (b) b.classList.toggle('active', c === (currentPresetType || 'A'));
+      });
+
       if (Array.isArray(state.standardItems)) standardItems = state.standardItems;
       if (Array.isArray(state.goodsSlides) && state.goodsSlides.length) goodsSlides = state.goodsSlides;
       if (Array.isArray(state.careTopics)) careTopics = state.careTopics;
@@ -2896,12 +3689,8 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
       if (state.elementPositions) elementPositions = { ...elementPositions, ...state.elementPositions };
       if (state.sectionVisibility) sectionVisibility = { ...sectionVisibility, ...state.sectionVisibility };
 
-      if (state.agentNotifyPhone) {
-        storedAgentNotifyPhone = state.agentNotifyPhone;
-      }
-      if (state.metaPixelId && !activeMetaPixelId) {
-        initDynamicMetaPixel(state.metaPixelId);
-      }
+      if (state.agentNotifyPhone) storedAgentNotifyPhone = state.agentNotifyPhone;
+      if (state.metaPixelId && !activeMetaPixelId) initDynamicMetaPixel(state.metaPixelId);
 
       document.getElementById('rangeLogoSize').value = logoConfig.size;
       document.getElementById('valLogoSize').innerText = logoConfig.size + 'px';
@@ -2943,32 +3732,65 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
 
       if (state.texts) {
         Object.keys(state.texts).forEach(id => {
+          if (id.startsWith('inpForm')) return;
           const el = document.getElementById(id);
           if (el && state.texts[id] !== undefined) el.innerText = state.texts[id];
         });
         const t = state.texts;
-        if (t.heroHeadlineEl !== undefined) document.getElementById('inpHeroHeadline').value = t.heroHeadlineEl;
-        if (t.heroSubLeadEl !== undefined) document.getElementById('inpHeroSubLead').value = t.heroSubLeadEl;
-        if (t.heroAgentName !== undefined) document.getElementById('inpAgentName').value = t.heroAgentName;
-        if (t.heroNickEl !== undefined) document.getElementById('inpAgentNick').value = t.heroNickEl;
-        if (t.heroRoleEl !== undefined) document.getElementById('inpAgentRole').value = t.heroRoleEl;
-        if (t.heroTaglineEl !== undefined) document.getElementById('inpAgentTagline').value = t.heroTaglineEl;
-        if (t.dragVerticalBox !== undefined) document.getElementById('inpVertText').value = t.dragVerticalBox;
-        if (t.philTitleEl !== undefined) document.getElementById('inpPhilTitle').value = t.philTitleEl;
-        if (t.philBodyEl !== undefined) document.getElementById('inpPhilBody').value = t.philBodyEl;
-        if (t.exp1Title !== undefined) document.getElementById('inpExp1T').value = t.exp1Title;
-        if (t.exp1Sub !== undefined) document.getElementById('inpExp1S').value = t.exp1Sub;
-        if (t.exp2Title !== undefined) document.getElementById('inpExp2T').value = t.exp2Title;
-        if (t.exp2Sub !== undefined) document.getElementById('inpExp2S').value = t.exp2Sub;
-        if (t.exp3Title !== undefined) document.getElementById('inpExp3T').value = t.exp3Title;
-        if (t.exp3Sub !== undefined) document.getElementById('inpExp3S').value = t.exp3Sub;
-        if (t.midTitleEl !== undefined) document.getElementById('inpMidTitle').value = t.midTitleEl;
-        if (t.midSubEl !== undefined) document.getElementById('inpMidSub').value = t.midSubEl;
-        if (t.goodsBubbleEl !== undefined) document.getElementById('inpGoodsBubble').value = t.goodsBubbleEl;
-        if (t.goodsTitleEl !== undefined) document.getElementById('inpGoodsTitle').value = t.goodsTitleEl;
-        if (t.goodsDescEl !== undefined) document.getElementById('inpGoodsDesc').value = t.goodsDescEl;
-        if (t.endingClosingTitleEl !== undefined) document.getElementById('inpEndingTitle').value = t.endingClosingTitleEl;
-        if (t.endingClosingSignEl !== undefined) document.getElementById('inpEndingSign').value = t.endingClosingSignEl;
+        const syncInput = (inpId, val) => {
+          const el = document.getElementById(inpId);
+          if (el && val !== undefined) el.value = val;
+        };
+        syncInput('inpHeroHeadline', t.heroHeadlineEl);
+        syncInput('inpHeroSubLead', t.heroSubLeadEl);
+        syncInput('inpAgentName', t.heroAgentName);
+        syncInput('inpAgentNick', t.heroNickEl);
+        syncInput('inpAgentRole', t.heroRoleEl);
+        syncInput('inpAgentTagline', t.heroTaglineEl);
+        syncInput('inpVertText', t.dragVerticalBox);
+        syncInput('inpEssayTag', t.essayTagEl);
+        syncInput('inpEssayWatermark', t.essayWatermarkEl);
+        syncInput('inpPhilTitle', t.philTitleEl);
+        syncInput('inpPhilBody', t.philBodyEl);
+        syncInput('inpExp1T', t.exp1Title);
+        syncInput('inpExp1S', t.exp1Sub);
+        syncInput('inpExp2T', t.exp2Title);
+        syncInput('inpExp2S', t.exp2Sub);
+        syncInput('inpExp3T', t.exp3Title);
+        syncInput('inpExp3S', t.exp3Sub);
+        syncInput('inpExpSummary', t.expSummaryEl);
+        syncInput('inpMidTag', t.midTagEl);
+        syncInput('inpMidTitle', t.midTitleEl);
+        syncInput('inpMidSub', t.midSubEl);
+        syncInput('inpStdHeadingEn', t.stdHeadingEnEl);
+        syncInput('inpStdHeadingKr', t.stdHeadingKrEl);
+        syncInput('inpGoodsBubble', t.goodsBubbleEl);
+        syncInput('inpGoodsTitle', t.goodsTitleEl);
+        syncInput('inpGoodsDesc', t.goodsDescEl);
+        syncInput('inpTopicsEn', t.topicsEnEl);
+        syncInput('inpTopicsKr', t.topicsKrEl);
+        syncInput('inpEndingTitle', t.endingClosingTitleEl);
+        syncInput('inpEndingSign', t.endingClosingSignEl);
+        syncInput('inpFormBadge', t.inpFormBadge);
+        syncInput('inpFormTitle', t.inpFormTitle);
+        syncInput('inpFormSub', t.inpFormSub);
+        syncInput('inpFormBtnText', t.inpFormBtnText);
+
+        const hasDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
+        if (!hasDoc) {
+          if (t.inpFormBadge && document.getElementById('uiEndingBadge')) {
+            document.getElementById('uiEndingBadge').innerHTML = `<i class="fa-regular fa-calendar-check"></i> ${t.inpFormBadge}`;
+          }
+          if (t.inpFormTitle && !params.get('camp') && !params.get('title') && document.getElementById('uiTitle')) {
+            document.getElementById('uiTitle').innerText = t.inpFormTitle;
+          }
+          if (t.inpFormSub && document.getElementById('uiSub')) {
+            document.getElementById('uiSub').innerText = t.inpFormSub;
+          }
+          if (t.inpFormBtnText && document.getElementById('uiSubmitBtnText')) {
+            document.getElementById('uiSubmitBtnText').innerText = t.inpFormBtnText;
+          }
+        }
       }
 
       Object.keys(elementPositions).forEach(elId => {
@@ -2983,14 +3805,25 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
         }
       });
 
-      Object.keys(sectionVisibility).forEach(secId => {
+      const chkMap = {
+        philosophyAnchor: 'chkShowPhilosophy',
+        secExpertise: 'chkShowExpertise',
+        secMidPortrait: 'chkShowMidPortrait',
+        edLeftMintBox: 'chkShowStdLeft',
+        secGoodsShowcase: 'chkShowGoods',
+        secCareTopics: 'chkShowCareTopics'
+      };
+      Object.keys(chkMap).forEach(secId => {
         const isShow = sectionVisibility[secId] !== false;
         const el = document.getElementById(secId);
         if (el) el.style.display = isShow ? '' : 'none';
+        const chk = document.getElementById(chkMap[secId]);
+        if (chk) chk.checked = isShow;
       });
     }
 
     function loadSavedPrState() {
+      if (prIdParam) return;
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return;
@@ -3004,20 +3837,30 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
         const res = await fetch('/api/meta-execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'GET_PR_CONFIG', agentId: activeAgentKey, userKeys })
+          body: JSON.stringify({
+            action: 'GET_PR_CONFIG',
+            agentId: activeAgentKey,
+            userKeys,
+            campId: campId !== 'camp_direct' ? campId : '',
+            prId: prIdParam
+          })
         });
         const json = await res.json();
         if (json && json.success && json.config) {
+          if (json.loadedFrom && String(json.loadedFrom).startsWith('pr_page_')) {
+            currentPageId = json.loadedFrom;
+          }
           applyStateObjectToDom(json.config);
-          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(json.config)); } catch (e) {}
+          if (!prIdParam) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(json.config)); } catch (e) {}
+          }
         }
       } catch (e) {}
     }
 
     function resetAllPrState() {
-      if (!confirm('모든 설정을 초기 샘플 상태로 되돌리시겠습니까?')) return;
-      localStorage.removeItem(STORAGE_KEY);
-      location.reload();
+      if (!confirm('현재 편집 중인 내용을 선택된 타입의 기본 샘플 상태로 되돌리시겠습니까?')) return;
+      applyPresetWithIdentity(currentPresetType || 'A', true);
     }
 
     function autoHyphenPhone(el) {

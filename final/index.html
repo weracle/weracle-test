@@ -4256,8 +4256,15 @@ if (token && mf && mf.contentWindow) {
   mf.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: token }, '*');
 }
 } else if (event.data && event.data.type === 'requestLogo') {
-if (window.currentProfile && window.currentProfile.logo_url && event.source) {
-event.source.postMessage({ type: 'setLogo', data: window.currentProfile.logo_url }, '*');
+let logoData = (window.currentProfile && window.currentProfile.logo_url) || localStorage.getItem('weracle_user_logo');
+if (!logoData) {
+  try {
+    const cp = JSON.parse(localStorage.getItem('cached_profile') || '{}');
+    if (cp && cp.logo_url) logoData = cp.logo_url;
+  } catch(e) {}
+}
+if (logoData && event.source) {
+  event.source.postMessage({ type: 'setLogo', data: logoData }, '*');
 }
 }
 });

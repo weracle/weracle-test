@@ -609,19 +609,62 @@
       let currentTab = 'cardnews';
 
       // ========== 로고 세팅 (시작) ==========
+      const DEFAULT_FALLBACK_LOGO = 'https://cdn.imweb.me/upload/S202512085540897f6f690/560fa4f67c898.png';
       let customLogo = new Image();
       customLogo.crossOrigin = "anonymous";
       customLogo.isLoaded = false;
       customLogo.onload = () => { customLogo.isLoaded = true; };
-      customLogo.src = 'https://cdn.imweb.me/upload/S202512085540897f6f690/560fa4f67c898.png'; 
 
+      // 1. 등록된 개인 로고 우선 탐색 함수 (localStorage -> parent -> fallback)
+      function getSavedPersonalLogo() {
+          try {
+              // A. 직접 등록된 전용 로고 키 확인
+              const directLogo = localStorage.getItem('weracle_user_logo');
+              if (directLogo) return directLogo;
+
+              // B. cached_profile 내 logo_url 확인
+              const rawProfile = localStorage.getItem('cached_profile');
+              if (rawProfile) {
+                  const prof = JSON.parse(rawProfile);
+                  if (prof && prof.logo_url) return prof.logo_url;
+              }
+
+              // C. 부모 창 객체 직접 확인
+              if (window.parent && window.parent !== window) {
+                  if (window.parent.currentProfile && window.parent.currentProfile.logo_url) {
+                      return window.parent.currentProfile.logo_url;
+                  }
+              }
+          } catch(e) {}
+          return '';
+      }
+
+      function applyResolvedLogo(logoSrc) {
+          if (!logoSrc) return;
+          if (customLogo.src === logoSrc && customLogo.isLoaded) return;
+          customLogo = new Image();
+          customLogo.crossOrigin = "anonymous";
+          customLogo.isLoaded = false;
+          customLogo.onload = () => { customLogo.isLoaded = true; };
+          customLogo.src = logoSrc;
+      }
+
+      // 초기 로고 지정: 개인 로고가 있으면 개인 로고 우선 적용, 없으면 기본 로고 적용
+      const initialPersonalLogo = getSavedPersonalLogo();
+      applyResolvedLogo(initialPersonalLogo || DEFAULT_FALLBACK_LOGO);
+
+      // 메시지 수신 핸들러 (부모 창에서 setLogo가 오는 경우 실시간 반영)
       window.addEventListener('message', function(e) {
           if (e.data && e.data.type === 'setLogo' && e.data.data) {
-              customLogo = new Image();
-              customLogo.crossOrigin = "anonymous";
-              customLogo.isLoaded = false;
-              customLogo.onload = () => { customLogo.isLoaded = true; };
-              customLogo.src = e.data.data;
+              applyResolvedLogo(e.data.data);
+          }
+      });
+      window.addEventListener('storage', function(e) {
+          if (e.key === 'weracle_user_logo' || e.key === 'cached_profile') {
+              const newLogo = getSavedPersonalLogo();
+              if (newLogo) {
+                  applyResolvedLogo(newLogo);
+              }
           }
       });
       // ========== 로고 세팅 (끝) ==========
@@ -1224,76 +1267,91 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
 
       function applyWatermark(imageUrl, useLogo, callback) {
           if (!imageUrl) return callback('');
+
+          const latestPersonalLogo = getSavedPersonalLogo();
+          if (latestPersonalLogo && customLogo.src !== latestPersonalLogo) {
+              applyResolvedLogo(latestPersonalLogo);
+          }
+
           const img = new Image();
           img.crossOrigin = "anonymous";
           img.onload = function() {
-              try {
-                  const cvs = document.createElement('canvas'); 
-                  cvs.width = img.width;
-                  cvs.height = img.height;
-                  const ctx = cvs.getContext('2d');
-                  ctx.drawImage(img, 0, 0);
+              const proceed = () => {
+                  try {
+                      const cvs = document.createElement('canvas'); 
+                      cvs.width = img.width;
+                      cvs.height = img.height;
+                      const ctx = cvs.getContext('2d');
+                      ctx.drawImage(img, 0, 0);
 
-                  // [타겟관리 통일 알고리즘] 순수 화이트 외곽 라인 실루엣 스트로크 합성
-                  const isLogoReady = customLogo && customLogo.src && ((customLogo.naturalWidth || customLogo.width) > 0);
-                  if (useLogo && isLogoReady) {
-                      const logoNaturalW = customLogo.naturalWidth || customLogo.width;
-                      const logoNaturalH = customLogo.naturalHeight || customLogo.height;
-                      
-                      // 로고 비율 및 크기 계산 (최소 높이 60px)
-                      const logoH = Math.max(img.height * 0.095, 60); 
-                      let logoW = (logoNaturalW / logoNaturalH) * logoH;
-                      if (logoW > img.width * 0.38) {
-                          logoW = img.width * 0.38;
-                      }
-
-                      const padding = img.width * 0.04;
-                      const posX = img.width - logoW - padding;
-                      const posY = padding;
-
-                      // 글자 및 원형 심볼 모양 그대로 정밀 외곽 라인(스트로크) 생성
-                      const strokeWidth = Math.max(2, Math.round(logoH * 0.04));
-                      const margin = Math.ceil(strokeWidth * 4) + 6;
-                      const offW = Math.ceil(logoW + margin * 2);
-                      const offH = Math.ceil(logoH + margin * 2);
-
-                      const off = document.createElement('canvas');
-                      off.width = offW;
-                      off.height = offH;
-                      const octx = off.getContext('2d');
-                      const ox = margin;
-                      const oy = margin;
-
-                      // 로고 실루엣 마스크 생성 (외곽 라인용)
-                      const mask = document.createElement('canvas');
-                      mask.width = offW;
-                      mask.height = offH;
-                      const mctx = mask.getContext('2d');
-                      mctx.drawImage(customLogo, ox, oy, logoW, logoH);
-                      mctx.globalCompositeOperation = 'source-in';
-                      mctx.fillStyle = '#ffffff';
-                      mctx.fillRect(0, 0, mask.width, mask.height);
-
-                      // 순수 화이트 외곽 라인만 깔끔하게 렌더링
-                      const points = 16;
-                      for (let r = 0.8; r <= strokeWidth; r += 0.6) {
-                          for (let i = 0; i < points; i++) {
-                              const angle = (i * 2 * Math.PI) / points;
-                              octx.drawImage(mask, Math.cos(angle) * r, Math.sin(angle) * r);
+                      // [타겟관리 통일 알고리즘] 순수 화이트 외곽 라인 실루엣 스트로크 합성
+                      const isLogoReady = customLogo && customLogo.src && ((customLogo.naturalWidth || customLogo.width) > 0);
+                      if (useLogo && isLogoReady) {
+                          const logoNaturalW = customLogo.naturalWidth || customLogo.width;
+                          const logoNaturalH = customLogo.naturalHeight || customLogo.height;
+                          
+                          // 로고 비율 및 크기 계산 (최소 높이 60px)
+                          const logoH = Math.max(img.height * 0.095, 60); 
+                          let logoW = (logoNaturalW / logoNaturalH) * logoH;
+                          if (logoW > img.width * 0.38) {
+                              logoW = img.width * 0.38;
                           }
+
+                          const padding = img.width * 0.04;
+                          const posX = img.width - logoW - padding;
+                          const posY = padding;
+
+                          // 글자 및 원형 심볼 모양 그대로 정밀 외곽 라인(스트로크) 생성
+                          const strokeWidth = Math.max(2, Math.round(logoH * 0.04));
+                          const margin = Math.ceil(strokeWidth * 4) + 6;
+                          const offW = Math.ceil(logoW + margin * 2);
+                          const offH = Math.ceil(logoH + margin * 2);
+
+                          const off = document.createElement('canvas');
+                          off.width = offW;
+                          off.height = offH;
+                          const octx = off.getContext('2d');
+                          const ox = margin;
+                          const oy = margin;
+
+                          // 로고 실루엣 마스크 생성 (외곽 라인용)
+                          const mask = document.createElement('canvas');
+                          mask.width = offW;
+                          mask.height = offH;
+                          const mctx = mask.getContext('2d');
+                          mctx.drawImage(customLogo, ox, oy, logoW, logoH);
+                          mctx.globalCompositeOperation = 'source-in';
+                          mctx.fillStyle = '#ffffff';
+                          mctx.fillRect(0, 0, mask.width, mask.height);
+
+                          // 순수 화이트 외곽 라인만 깔끔하게 렌더링
+                          const points = 16;
+                          for (let r = 0.8; r <= strokeWidth; r += 0.6) {
+                              for (let i = 0; i < points; i++) {
+                                  const angle = (i * 2 * Math.PI) / points;
+                                  octx.drawImage(mask, Math.cos(angle) * r, Math.sin(angle) * r);
+                              }
+                          }
+
+                          // 중앙에 원본 로고 합성
+                          octx.drawImage(customLogo, ox, oy, logoW, logoH);
+
+                          // 메인 캔버스에 합성
+                          ctx.drawImage(off, posX - ox, posY - oy);
                       }
-
-                      // 중앙에 원본 로고 합성
-                      octx.drawImage(customLogo, ox, oy, logoW, logoH);
-
-                      // 메인 캔버스에 합성
-                      ctx.drawImage(off, posX - ox, posY - oy);
+                      
+                      callback(cvs.toDataURL('image/jpeg', 0.9));
+                  } catch (e) {
+                      console.warn("로고 합성 차단됨. 원본 이미지 표시", e);
+                      callback(imageUrl);
                   }
-                  
-                  callback(cvs.toDataURL('image/jpeg', 0.9));
-              } catch (e) {
-                  console.warn("로고 합성 차단됨. 원본 이미지 표시", e);
-                  callback(imageUrl);
+              };
+
+              if (useLogo && customLogo && customLogo.src && !customLogo.complete) {
+                  customLogo.onload = () => { customLogo.isLoaded = true; proceed(); };
+                  customLogo.onerror = () => { proceed(); };
+              } else {
+                  proceed();
               }
           };
           img.onerror = function() { 

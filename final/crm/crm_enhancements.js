@@ -73,6 +73,12 @@ function getExpiryDateParts(ed) {
         if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
             return { y, m, d };
         }
+    } else if (parts.length === 2) {
+        let m = parseInt(parts[0], 10) - 1;
+        let d = parseInt(parts[1], 10);
+        if (!isNaN(m) && !isNaN(d)) {
+            return { y: null, m, d };
+        }
     }
     let digits = s.replace(/\D/g, '');
     if (digits.length >= 8) {
@@ -80,6 +86,12 @@ function getExpiryDateParts(ed) {
         let m = parseInt(digits.substring(4, 6), 10) - 1;
         let d = parseInt(digits.substring(6, 8), 10);
         return { y, m, d };
+    } else if (digits.length === 4) {
+        let m = parseInt(digits.substring(0, 2), 10) - 1;
+        let d = parseInt(digits.substring(2, 4), 10);
+        if (m >= 0 && m < 12 && d >= 1 && d <= 31) {
+            return { y: null, m, d };
+        }
     }
     return null;
 }
@@ -89,17 +101,23 @@ window.isExpiringCustomer = function(c) {
     try {
         let gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
         const today = new Date();
-        const curYear = today.getFullYear();
-        const curMonth = today.getMonth(); // 0-indexed
-        const curDate = today.getDate();
+        const cleanToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
         gArr.forEach(i => {
-            let ed = i['갱신일자'] || i['만기일자'] || i['갱신일'] || i['만기일'] || '';
+            let ed = i['갱신일자'] || i['만기일자'] || i['갱신일'] || i['만기일'] || i['expireDate'] || i['renewalDate'] || '';
             if (ed) {
                 let p = getExpiryDateParts(ed);
-                // 해당 만기날 당일(D-Day / 오늘 만기)에만 정확하게 매칭 (지난 날짜 및 미래 날짜 제외)
-                if (p && p.y === curYear && p.m === curMonth && p.d === curDate) {
-                    hasExp = true;
+                if (p) {
+                    let expYear = (p.y !== null && p.y !== undefined) ? p.y : today.getFullYear();
+                    let targetDate = new Date(expYear, p.m, p.d);
+                    targetDate.setHours(0, 0, 0, 0);
+                    if (p.y === null && targetDate < cleanToday) {
+                        targetDate.setFullYear(today.getFullYear() + 1);
+                    }
+                    let diffDays = Math.round((targetDate - cleanToday) / (1000 * 60 * 60 * 24));
+                    if (diffDays >= 0 && diffDays <= 30) {
+                        hasExp = true;
+                    }
                 }
             }
         });
@@ -316,52 +334,17 @@ window.showToastNotice = function(text) {
             else if (s.includes('계약') || s.includes('체결') || s.includes('케어') || s.includes('유지') || s.includes('집중') || s.includes('VIP')) contract++;
             consult = influential; care = contract;
 
-            // 생일
-            let birthSource = String(c['생일'] || c['생년월일'] || c['주민번호'] || "");
-            let bMD = "";
-            if (birthSource.includes('-')) {
-                let p1 = birthSource.split('-')[0];
-                if (p1.length === 6) bMD = p1.substring(2,6);
-                else if (p1.length === 4 && birthSource.split('-').length === 3) bMD = birthSource.split('-')[1] + birthSource.split('-')[2];
-            }
-            if (!bMD) {
-                let b = birthSource.replace(/\D/g, '');
-                if (b.length >= 8) bMD = b.substring(4, 8);
-                else if (b.length >= 6) bMD = b.substring(2, 6);
-                else if (b.length >= 4) bMD = b.substring(0, 4);
-            }
-            if (bMD === currentMD) birth++;
+            // 생일 대상자 (30일 이내)
+            if (typeof window.isBirthCustomer === 'function' && window.isBirthCustomer(c)) birth++;
 
-            // 상령일
-            let sMD = "";
-            const sang = String(c['상령일'] || "").replace(/\D/g, '');
-            if (sang.length >= 8) sMD = sang.substring(4, 8);
-            else if (sang.length >= 6) sMD = sang.substring(2, 6);
-            else if (sang.length >= 4) sMD = sang.substring(0, 4);
-            if (!sMD && bMD && bMD.length === 4) {
-                let m = parseInt(bMD.substring(0,2), 10);
-                let d = bMD.substring(2,4);
-                m = m + 6;
-                if (m > 12) m -= 12;
-                sMD = String(m).padStart(2, '0') + d;
-            }
-            if (sMD && sMD.length === 4) {
-                let sy = today.getFullYear();
-                let sm = parseInt(sMD.substring(0,2), 10) - 1;
-                let sd = parseInt(sMD.substring(2,4), 10);
-                let sDate = new Date(sy, sm, sd);
-                const cleanToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                sDate.setHours(0,0,0,0);
-                if (sDate < cleanToday) sDate.setFullYear(sy + 1);
-                let diffDays = Math.round((sDate - cleanToday) / (1000 * 60 * 60 * 24));
-                if (diffDays >= 0 && diffDays <= 30) sangryung++;
-            }
+            // 상령일 대상자 (30일 이내)
+            if (typeof window.isSangryungCustomer === 'function' && window.isSangryungCustomer(c)) sangryung++;
 
-            // 만기 도래 (Item 9: 당일 매칭)
-            if (window.isExpiringCustomer(c)) expiry++;
+            // 만기일 대상자 (30일 이내)
+            if (typeof window.isExpiringCustomer === 'function' && window.isExpiringCustomer(c)) expiry++;
 
             // 이달의 보험금 청구 (Item 11)
-            if (window.isClaimCustomer(c)) claim++;
+            if (typeof window.isClaimCustomer === 'function' && window.isClaimCustomer(c)) claim++;
         });
 
         // UI 엘리먼트 갱신 (PC 및 모바일 완벽 100% 동기화)
@@ -437,7 +420,7 @@ window.showToastNotice = function(text) {
         // Item 9 & Item 11 전용 필터 적용
         if (fType === 'expiry') {
             filtered = filtered.filter(window.isExpiringCustomer);
-            titleStr = `오늘 만기 도래 고객 (${filtered.length}명)`;
+            titleStr = `만기일 대상자 (30일 이내) (${filtered.length}명)`;
             thHtml += "<th>고객명</th><th>가입내역</th><th>만기일</th><th>폰번호</th><th style='text-align: right;'>상세보기</th>";
         } else if (fType === 'claim') {
             filtered = filtered.filter(window.isClaimCustomer);
@@ -453,7 +436,13 @@ window.showToastNotice = function(text) {
             titleStr = `터치인사이트: ${fVal} (${filtered.length}명)`;
             thHtml += "<th>고객명</th><th>상태</th><th>직업</th><th>태그</th><th>폰번호</th><th style='text-align: right;'>상세보기</th>";
         } else if (fType === 'birth' || fType === 'sang') {
-            titleStr = (fType === 'birth' ? "오늘 생일 고객" : "상령일 도래 고객") + ` (${filtered.length}명)`;
+            if (fType === 'birth') {
+                filtered = filtered.filter(window.isBirthCustomer);
+                titleStr = `생일 대상자 (30일 이내) (${filtered.length}명)`;
+            } else {
+                filtered = filtered.filter(window.isSangryungCustomer);
+                titleStr = `상령일 대상자 (30일 이내) (${filtered.length}명)`;
+            }
             thHtml += "<th>고객명</th><th>" + (fType === 'birth' ? '생일' : '상령일') + "</th><th>상태</th><th>폰번호</th><th style='text-align: right;'>상세보기</th>";
         } else if (fType === 'insurance') {
             titleStr = `가입내역: ${fVal} (${filtered.length}명)`;
@@ -513,22 +502,28 @@ window.showToastNotice = function(text) {
                     tbHtml += `<td><span class='pill' style='background:#f1f5f9; color:#475569; font-weight:700;'>${status}</span></td>`;
                     tbHtml += `<td><span style="color:#0284c7; font-weight:700;">${phone}</span></td>`;
                 }
-                // Item 9: 만기 도래 행 (해당 만기일 당일 매칭)
+                // Item 9: 만기일 대상자 행 (30일 이내 매칭)
                 else if (fType === 'expiry') {
                     let expiringInsName = "-";
-                    let expiringDate = "오늘 만기";
+                    let expiringDate = "만기 예정";
                     try {
                         let gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(r, true) : [];
                         const today = new Date();
-                        const curYear = today.getFullYear();
-                        const curMonth = today.getMonth();
-                        const curDate = today.getDate();
+                        const cleanToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
                         let expItems = gArr.filter(i => {
-                            let ed = i['갱신일자'] || i['만기일자'] || i['갱신일'] || i['만기일'] || '';
+                            let ed = i['갱신일자'] || i['만기일자'] || i['갱신일'] || i['만기일'] || i['expireDate'] || i['renewalDate'] || '';
                             if (!ed) return false;
                             let p = getExpiryDateParts(ed);
-                            return (p && p.y === curYear && p.m === curMonth && p.d === curDate);
+                            if (!p) return false;
+                            let expYear = (p.y !== null && p.y !== undefined) ? p.y : today.getFullYear();
+                            let targetDate = new Date(expYear, p.m, p.d);
+                            targetDate.setHours(0, 0, 0, 0);
+                            if (p.y === null && targetDate < cleanToday) {
+                                targetDate.setFullYear(today.getFullYear() + 1);
+                            }
+                            let diffDays = Math.round((targetDate - cleanToday) / (1000 * 60 * 60 * 24));
+                            return (diffDays >= 0 && diffDays <= 30);
                         });
 
                         if (expItems.length > 0) {
@@ -538,7 +533,7 @@ window.showToastNotice = function(text) {
                                 let comp = expItem['보험사명'] || expItem['차_보험사명'] || expItem['차_보험사'] || expItem['company'] || "-";
                                 let prod = expItem['상품명'] || expItem['차_상품명'] || expItem['product'] || "보험 계약";
                                 names.push(`<span style="font-size:11px; color:#64748b; background:#f1f5f9; padding:2px 6px; border-radius:4px; margin-right:4px;">${comp}</span><br><span style="color:#0f172a; font-weight:700;">${prod}</span>`);
-                                dates.push(expItem['갱신일자'] || expItem['만기일자'] || expItem['갱신일'] || expItem['만기일'] || expItem['expireDate'] || expItem['renewalDate'] || "오늘 만기");
+                                dates.push(expItem['갱신일자'] || expItem['만기일자'] || expItem['갱신일'] || expItem['만기일'] || expItem['expireDate'] || expItem['renewalDate'] || "30일 내 만기");
                             });
                             expiringInsName = names.join('<hr style="margin:8px 0; border:0; border-top:1px dashed #cbd5e1;">');
                             expiringDate = dates.join('<hr style="margin:8px 0; border:0; border-top:1px dashed #cbd5e1;">');

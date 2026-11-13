@@ -9247,69 +9247,16 @@ window.updateQuickFilterCounts = function() {
         else if(s.includes('계약') || s.includes('체결') || s.includes('케어') || s.includes('유지') || s.includes('집중') || s.includes('VIP')) contract++;
         consult = influential; care = contract;
         
-        let birthSource = String(c['생일'] || c['생년월일'] || c['주민번호'] || "");
-        let bMD = "";
-        
-        if (birthSource.includes('-')) {
-            let p1 = birthSource.split('-')[0];
-            if (p1.length === 6) {
-                bMD = p1.substring(2,6); // MMDD
-            } else if (p1.length === 4 && birthSource.split('-').length === 3) {
-                bMD = birthSource.split('-')[1] + birthSource.split('-')[2];
-            }
+        // 생일 / 상령일 / 만기 대상자 (오늘 기준 30일 이내 통합 계산)
+        if (typeof window.isBirthCustomer === 'function' ? window.isBirthCustomer(c) : false) {
+            birth++;
         }
-        
-        if (!bMD) {
-            let b = birthSource.replace(/\D/g, '');
-            if (b.length >= 8) bMD = b.substring(4, 8);
-            else if (b.length >= 6) bMD = b.substring(2, 6);
-            else if (b.length >= 4) bMD = b.substring(0, 4);
+        if (typeof window.isSangryungCustomer === 'function' ? window.isSangryungCustomer(c) : false) {
+            sangryung++;
         }
-        
-        if (bMD === currentMD) birth++;
-        
-        let sMD = "";
-        const sang = String(c['상령일'] || "").replace(/\D/g, '');
-        if (sang.length >= 8) sMD = sang.substring(4, 8);
-        else if (sang.length >= 6) sMD = sang.substring(2, 6);
-        else if (sang.length >= 4) sMD = sang.substring(0, 4);
-        
-        if (!sMD && bMD && bMD.length === 4) {
-            let m = parseInt(bMD.substring(0,2));
-            let d = bMD.substring(2,4);
-            m = m + 6;
-            if (m > 12) m -= 12;
-            sMD = String(m).padStart(2, '0') + d;
+        if (typeof window.isExpiringCustomer === 'function' ? window.isExpiringCustomer(c) : false) {
+            expiry++;
         }
-        if (sMD && sMD.length === 4) {
-            let sy = today.getFullYear();
-            let sm = parseInt(sMD.substring(0,2)) - 1;
-            let sd = parseInt(sMD.substring(2,4));
-            let sDate = new Date(sy, sm, sd);
-            const cleanToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-            sDate.setHours(0,0,0,0);
-            if (sDate < cleanToday) sDate.setFullYear(sy + 1);
-            let diffDays = Math.round((sDate - cleanToday) / (1000 * 60 * 60 * 24));
-            if (diffDays >= 0 && diffDays <= 30) sangryung++;
-        }
-        
-        let hasExp = false;
-        try {
-            let gArr = typeof getGlobalInsuranceList === 'function' ? getGlobalInsuranceList(c, true) : [];
-            gArr.forEach(i => {
-                let ed = i['갱신일자'] || i['만기일자'] || i['갱신일'] || i['만기일'] || '';
-                if(ed) {
-                    let dStr = String(ed).replace(/\D/g, '');
-                    if (dStr.length >= 6) {
-                        let y = parseInt(dStr.substring(0,4));
-                        let m = dStr.substring(4,6);
-                        let cy = new Date().getFullYear();
-                        if (y === cy && m === currentMonthStr) hasExp = true;
-                    }
-                }
-            });
-        } catch(e){}
-        if (hasExp) expiry++;
     });
 
     const insightCounts = {};

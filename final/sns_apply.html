@@ -40,17 +40,27 @@
       padding: 18px 14px;
     }
 
-    /* 좌측 내 PR 랜딩페이지 보관함 & 3종 프리셋 허브 보드 */
+    /* 왼쪽 고정 패널이 떠 있을 때 오른쪽 미리보기가 정중앙 오른쪽 자리를 그대로 유지하도록 공간 확보 */
+    @media (min-width: 961px) {
+      body.can-edit-pr .studio-workspace,
+      body.is-editing .studio-workspace {
+        padding-left: calc(465px + 26px + 14px);
+      }
+    }
+
+    /* 좌측 내 PR 랜딩페이지 보관함 & 3종 프리셋 허브 보드 (화면 좌측 완벽 고정) */
     .pr-hub-panel {
       display: none;
       width: 465px;
-      max-width: 100%;
+      max-width: calc(100vw - 28px);
       background: #ffffff;
       border-radius: 22px;
       box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14);
       border: 1px solid #cbd5e1;
-      position: sticky;
+      position: fixed;
       top: 18px;
+      left: max(14px, calc(50% - (465px + 26px + 480px) / 2));
+      height: calc(100vh - 36px);
       max-height: calc(100vh - 36px);
       flex-direction: column;
       overflow: hidden;
@@ -111,16 +121,19 @@
     }
     .hub-mini-btn:hover { background: var(--theme-main); color: #fff; border-color: var(--theme-main); }
 
+    /* 좌측 스마트 스튜디오 편집창 (화면 좌측 완벽 고정) */
     .easy-editor-panel {
       display: none;
       width: 465px;
-      max-width: 100%;
+      max-width: calc(100vw - 28px);
       background: #ffffff;
       border-radius: 22px;
       box-shadow: 0 20px 50px rgba(15, 23, 42, 0.16);
       border: 1px solid #cbd5e1;
-      position: sticky;
+      position: fixed;
       top: 18px;
+      left: max(14px, calc(50% - (465px + 26px + 480px) / 2));
+      height: calc(100vh - 36px);
       max-height: calc(100vh - 36px);
       flex-direction: column;
       overflow: hidden;
@@ -129,7 +142,6 @@
     body.is-editing .easy-editor-panel {
       display: flex;
     }
-
     .eep-header {
       background: #0f172a;
       color: #ffffff;
@@ -336,9 +348,9 @@
       gap: 8px;
     }
 
-    @media (max-width: 960px) {
-      .studio-workspace { flex-direction: column; align-items: center; }
-      .easy-editor-panel { position: relative; top: 0; width: 480px; max-height: none; margin-bottom: 20px; }
+   @media (max-width: 960px) {
+      .studio-workspace { flex-direction: column; align-items: center; padding-left: 14px !important; }
+      .pr-hub-panel, .easy-editor-panel { position: relative; top: 0; left: 0; width: 480px; height: auto; max-height: none; margin-bottom: 20px; }
     }
 
     .magazine-wrapper {
@@ -1582,7 +1594,7 @@
           </div>
         </div>
 
-        <div class="expertise-summary-copy serif-font">
+       <div class="expertise-summary-copy serif-font" data-edit-link="2|cardSlashExpertise|inpExpSummary|⚡ 하단 핵심 요약 문구 수정">
           <p id="expSummaryEl">보상 실무 지식과 30개 보험사 데이터를 바탕으로,
 우리 가족의 생애주기에 꼭 맞는
 가장 정직한 해답을 함께 찾아갑니다.</p>
@@ -1681,7 +1693,7 @@
           </div>
         </div>
 
-<div class="ending-overlap-card">
+<div class="ending-overlap-card" data-edit-link="5|cardFormLabels|inpFormTitle|📝 신청 카드 제목·안내문구 수정">
           <span class="ending-badge" id="uiEndingBadge"><i class="fa-regular fa-calendar-check"></i> 1:1 무료 맞춤 상담 신청</span>
           <h2 class="ending-title" id="uiTitle">1:1 무료 맞춤 점검 및 간편 상담 신청</h2>
           <p class="ending-sub" id="uiSub">부담스러운 전화 독촉 없이, 남기신 내용을 확인 후 편안하게 안내드립니다.</p>
@@ -1755,7 +1767,7 @@
               </div>
             </div>
 
-            <button type="button" class="btn-submit-pill" id="btnSubmitForm" onclick="submitLeadForm(event)">
+            <button type="button" class="btn-submit-pill" id="btnSubmitForm" data-edit-link="5|cardFormLabels|inpFormBtnText|📝 신청 버튼 문구 수정" onclick="if(isEditMode) return; submitLeadForm(event)">
               <span id="uiSubmitBtnText">1:1 맞춤 상담 신청하기</span>
               <i class="fa-solid fa-arrow-right"></i>
             </button>
@@ -2198,23 +2210,43 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
       });
     }
 
-    function jumpToLeftEditorCard(tabIdx, cardId, inputId) {
+function jumpToLeftEditorCard(tabIdx, cardId, inputId) {
       switchEditorTab(tabIdx, false);
+      const scrollBody = document.getElementById('eepScrollBody');
       const card = document.getElementById(cardId);
-      if (card) {
+
+      if (card && scrollBody) {
         document.querySelectorAll('.eep-card.highlight-focus').forEach(c => c.classList.remove('highlight-focus'));
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        void card.offsetWidth;
-        card.classList.add('highlight-focus');
+
+        // 전체 창은 절대 움직이지 않고, 왼쪽 스튜디오 내부 스크롤(#eepScrollBody)만 정확히 카드 중앙으로 이동!
+        requestAnimationFrame(() => {
+          const bodyRect = scrollBody.getBoundingClientRect();
+          const cardRect = card.getBoundingClientRect();
+          const currentScroll = scrollBody.scrollTop;
+          const targetTop = currentScroll + (cardRect.top - bodyRect.top) - Math.max(16, (bodyRect.height - cardRect.height) / 3);
+
+          scrollBody.scrollTo({
+            top: Math.max(0, targetTop),
+            behavior: 'smooth'
+          });
+
+          void card.offsetWidth;
+          card.classList.add('highlight-focus');
+        });
       }
+
       if (inputId) {
         setTimeout(() => {
           const inp = document.getElementById(inputId);
           if (inp) {
-            inp.focus();
+            try {
+              inp.focus({ preventScroll: true });
+            } catch (e) {
+              inp.focus();
+            }
             if (inp.select && inp.type === 'text') inp.select();
           }
-        }, 260);
+        }, 280);
       }
     }
 
@@ -2628,16 +2660,18 @@ function toggleEditStudio() {
       });
     }
 
-    function initFreeDragItems() {
+function initFreeDragItems() {
       const items = document.querySelectorAll('.free-drag-item');
       items.forEach(el => {
         let dragging = false;
+        let moved = false;
         let sx = 0, sy = 0, ox = 0, oy = 0;
 
         el.addEventListener('pointerdown', e => {
           if (!isEditMode) return;
           e.stopPropagation();
           dragging = true;
+          moved = false;
           el.setPointerCapture(e.pointerId);
           const parentRect = el.parentElement.getBoundingClientRect();
           const elRect = el.getBoundingClientRect();
@@ -2645,29 +2679,41 @@ function toggleEditStudio() {
           sy = e.clientY;
           ox = elRect.left - parentRect.left;
           oy = elRect.top - parentRect.top;
-
-          el.style.right = 'auto';
-          el.style.bottom = 'auto';
-          el.style.left = ox + 'px';
-          el.style.top = oy + 'px';
-          el.style.transform = 'none';
         });
 
         el.addEventListener('pointermove', e => {
           if (!dragging || !isEditMode) return;
           const dx = e.clientX - sx;
           const dy = e.clientY - sy;
+          if (!moved && Math.hypot(dx, dy) < 5) return;
+
+          if (!moved) {
+            moved = true;
+            el.style.right = 'auto';
+            el.style.bottom = 'auto';
+            el.style.left = ox + 'px';
+            el.style.top = oy + 'px';
+            el.style.transform = 'none';
+          }
           el.style.left = Math.max(-10, Math.min(420, ox + dx)) + 'px';
           el.style.top = Math.max(0, Math.min(510, oy + dy)) + 'px';
         });
 
         el.addEventListener('pointerup', () => {
-          if (dragging) {
-            dragging = false;
+          if (!dragging) return;
+          dragging = false;
+          if (moved) {
             if (el.id) {
               elementPositions[el.id] = { left: el.style.left, top: el.style.top };
             }
             saveAllPrState(false);
+          } else if (isEditMode) {
+            // 드래그하지 않고 '클릭'만 했을 때는 즉시 왼쪽 편집창의 해당 카드로 점프!
+            const linkAttr = el.getAttribute('data-edit-link');
+            if (linkAttr) {
+              const [tabIdxStr, cardId, inputId] = linkAttr.split('|');
+              jumpToLeftEditorCard(parseInt(tabIdxStr, 10), cardId, inputId);
+            }
           }
         });
       });

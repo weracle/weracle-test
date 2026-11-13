@@ -2495,6 +2495,15 @@ async function saveClientToServer(clientObj, insRows) {
             renderTable();
         }
         
+        // 프로필 모달이 열려있다면 저장된 최신 정보로 즉시 실시간 갱신
+        const pModal = document.getElementById("profileModal");
+        if (pModal && (pModal.classList.contains("show") || pModal.style.display === "flex")) {
+            const curCId = clientObj['고객번호'] || clientObj['ID'] || clientObj['사업자번호'];
+            if (curCId && typeof window.openProfile === 'function') {
+                window.openProfile(curCId);
+            }
+        }
+        
         // 저장 후 리스트 창 자동으로 다시 열기 (사용자가 헷갈리지 않게 함)
         if (!window.isFamilySubmit) {
             if (typeof window.openTotalCustomers === "function") {
@@ -7062,17 +7071,42 @@ else alert('오류가 발생했습니다: ' + e.message);
 };
 
 window.manualSync = async function() {
-showLoading(true);
-try {
-await loadCRMData();
-if (typeof showCustomAlert === 'function') {
-showCustomAlert('동기화 완료', '최신 시트 정보를 성공적으로 불러왔습니다.');
-} else {
-alert('최신 시트 정보를 성공적으로 불러왔습니다.');
-}
-} catch (e) {
-alert('동기화 실패: ' + e.message);
-} finally { if (!window.isFamilySubmit) { showLoading(false); } }
+    const icon = document.getElementById('icon-realtime-sync');
+    if (icon) icon.classList.add('fa-spin');
+    if (typeof showLoading === 'function') showLoading(true);
+    try {
+        if (typeof lastLoadCRMDataTime !== 'undefined') lastLoadCRMDataTime = 0;
+        if (typeof isLoadingCRMData !== 'undefined') isLoadingCRMData = false;
+        await loadCRMData();
+        if (typeof updateAgentHeaderUI === 'function') updateAgentHeaderUI();
+        if (typeof updateQuickFilterCounts === 'function') updateQuickFilterCounts();
+        if (typeof renderTable === 'function') renderTable();
+        
+        // 부모 창(대시보드/메인)에도 최신 동기화 데이터 즉시 전송
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'syncData', data: globalCustomerData, crmContacts: window.crmContactsData || [] }, '*');
+        }
+
+        // 프로필 창이 열려있는 상태라면 최신 데이터로 실시간 리렌더링
+        const pModal = document.getElementById("profileModal");
+        if (pModal && (pModal.classList.contains("show") || pModal.style.display === "flex")) {
+            const curPId = pModal.getAttribute("data-client-id");
+            if (curPId && typeof window.openProfile === 'function') {
+                window.openProfile(curPId);
+            }
+        }
+
+        if (typeof showCustomAlert === 'function') {
+            showCustomAlert('동기화 완료', '구글 시트의 최신 고객 정보를 성공적으로 불러왔습니다.');
+        } else {
+            alert('구글 시트의 최신 고객 정보를 성공적으로 불러왔습니다.');
+        }
+    } catch (e) {
+        alert('동기화 실패: ' + e.message);
+    } finally { 
+        if (icon) icon.classList.remove('fa-spin');
+        if (!window.isFamilySubmit && typeof showLoading === 'function') { showLoading(false); } 
+    }
 };
 
 
@@ -9167,6 +9201,7 @@ window.generateProfileHtml = function(client) {
     }
     
     if (modal) {
+        modal.setAttribute("data-client-id", targetStr);
         modal.style.zIndex = "100005";
         modal.style.display = "flex";
         setTimeout(() => modal.classList.add("show"), 10);

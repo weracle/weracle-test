@@ -958,24 +958,10 @@ window.addEventListener('error', function(e) {
             
         </div>
         
-        <!-- Right: Insurance 2-Stage Filter + New Client Registration -->
+        <!-- Right: Auth Banner + Data Cleaner + New Client Registration -->
         <div style="display:flex; align-items:center; gap: 10px; flex-shrink: 0; flex-wrap: wrap;">
             <!-- Designated Container for Google Auth Status (Prevents Overlap) -->
             <div id="google-auth-banner-container" style="position: static !important; z-index: 10 !important; margin: 0; display: inline-flex; align-items: center;"></div>
-            <div style="display:flex; align-items:center; gap:6px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:4px 8px; height:38px; box-sizing:border-box;">
-                <i class="fa-solid fa-building-shield" style="color:#2563eb; font-size:14px; margin: 0 2px;"></i>
-                <select class="modern-select" id="dash-ins-type-select" onchange="window.updateDashInsCompanies()" style="height:30px; border-radius:6px; border:1px solid #cbd5e1; font-weight:700; padding:0 8px; font-size:12px; background:white; color:#334155; cursor:pointer;">
-                    <option value="">분류 (생명/손해)</option>
-                    <option value="생명">생명보험</option>
-                    <option value="손해">손해보험</option>
-                </select>
-                <select class="modern-select" id="dash-ins-comp-select" style="height:30px; border-radius:6px; border:1px solid #cbd5e1; font-weight:700; padding:0 8px; font-size:12px; min-width:130px; background:white; color:#334155; cursor:pointer;">
-                    <option value="">회사명 선택</option>
-                </select>
-                <button onclick="window.searchDashInsurance()" style="background:#2563eb; color:white; border:none; padding:0 12px; height:30px; border-radius:6px; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap; transition:0.15s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
-                    조회
-                </button>
-            </div>
 
             <button onclick="window.openDataCleanerModal ? window.openDataCleanerModal() : alert('데이터 정제 도구 로드 중');" 
                     style="background: #ffffff; color: #3b82f6; border: 1.5px solid #bfdbfe; padding: 0 14px; border-radius: 9px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display:flex; align-items:center; gap:6px; transition: 0.2s; white-space: nowrap; height: 38px;" 
@@ -1003,25 +989,68 @@ window.addEventListener('error', function(e) {
     @keyframes crmSpinnerSpin { to { transform: rotate(360deg); } }
     </style>
 
-    <div style="max-width: 800px; margin: 0 auto 28px auto;">
-        <div style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px; text-align: left; padding-left: 2px; letter-spacing: -0.2px;">
-            빠른 고객 검색
+    <!-- Speed Action Row: 빠른 고객 검색 (좌측) + 회사별 필터 & 실시간 동기화 (우측) -->
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin: 0 auto 26px auto; flex-wrap: wrap;">
+        <!-- Left: 빠른 고객 검색 (중앙에서 약간 왼쪽으로 넓고 시원하게 배치) -->
+        <div style="flex: 1 1 440px; min-width: 290px;">
+            <div style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px; text-align: left; padding-left: 2px; letter-spacing: -0.2px;">
+                빠른 고객 검색
+            </div>
+            <div onclick="if(typeof window.openQuickEditModal === 'function') window.openQuickEditModal();" 
+                 style="background: #eff6ff; border: 2px solid #93c5fd; border-radius: 14px; padding: 0 18px; height: 52px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 5px rgba(59,130,246,0.08); transition: all 0.2s; box-sizing: border-box;"
+                 onmouseover="this.style.background='#dbeafe'; this.style.borderColor='#3b82f6'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 5px 12px rgba(59,130,246,0.16)';"
+                 onmouseout="this.style.background='#eff6ff'; this.style.borderColor='#93c5fd'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(59,130,246,0.08)';">
+                
+                <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                    <i class="fa-solid fa-bolt" style="color: #f59e0b; font-size: 18px; flex-shrink: 0;"></i>
+                    <input type="text" id="centerSpeedSearchInput" 
+                           placeholder="원하는 고객의 정보를 빠르게 확인해보세요." 
+                           style="flex: 1; border: none; outline: none; background: transparent; font-size: 14.5px; font-weight: 600; color: #1e293b; cursor: pointer; width: 100%; letter-spacing: -0.2px;" 
+                           onclick="event.stopPropagation(); window.openQuickEditModal();" 
+                           onkeydown="if(event.key==='Enter'){ event.preventDefault(); window.openQuickEditModal(); }">
+                </div>
+
+                <i class="fa-solid fa-magnifying-glass" style="color: #3b82f6; font-size: 15px; margin-left: 10px; flex-shrink: 0;"></i>
+            </div>
         </div>
-        <div onclick="if(typeof window.openQuickEditModal === 'function') window.openQuickEditModal();" 
-             style="background: #eff6ff; border: 2px solid #93c5fd; border-radius: 16px; padding: 0 24px; height: 58px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 3px 6px -1px rgba(59,130,246,0.08); transition: all 0.2s;"
-             onmouseover="this.style.background='#dbeafe'; this.style.borderColor='#3b82f6'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 14px rgba(59,130,246,0.18)';"
-             onmouseout="this.style.background='#eff6ff'; this.style.borderColor='#93c5fd'; this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 6px -1px rgba(59,130,246,0.08)';">
-            
-            <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
-                <i class="fa-solid fa-bolt" style="color: #f59e0b; font-size: 20px; flex-shrink: 0;"></i>
-                <input type="text" id="centerSpeedSearchInput" 
-                       placeholder="원하는 고객의 정보를 빠르게 확인해보세요." 
-                       style="flex: 1; border: none; outline: none; background: transparent; font-size: 15px; font-weight: 600; color: #1e293b; cursor: pointer; width: 100%; letter-spacing: -0.2px;" 
-                       onclick="event.stopPropagation(); window.openQuickEditModal();" 
-                       onkeydown="if(event.key==='Enter'){ event.preventDefault(); window.openQuickEditModal(); }">
+
+        <!-- Right: 보험사별 고객 조회 + 실시간 동기화 버튼 -->
+        <div style="display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; flex-shrink: 0;">
+            <!-- 회사 필터 -->
+            <div>
+                <div style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px; text-align: left; padding-left: 2px; letter-spacing: -0.2px;">
+                    보험사별 고객 조회
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; background:#ffffff; border:1.5px solid #cbd5e1; border-radius:14px; padding:0 10px; height:52px; box-sizing:border-box; box-shadow: 0 2px 5px rgba(0,0,0,0.03);">
+                    <i class="fa-solid fa-building-shield" style="color:#2563eb; font-size:15px; margin: 0 2px;"></i>
+                    <select class="modern-select" id="dash-ins-type-select" onchange="window.updateDashInsCompanies()" style="height:34px; border-radius:8px; border:1px solid #cbd5e1; font-weight:700; padding:0 8px; font-size:12px; background:#f8fafc; color:#334155; cursor:pointer;">
+                        <option value="">분류 (생명/손해)</option>
+                        <option value="생명">생명보험</option>
+                        <option value="손해">손해보험</option>
+                    </select>
+                    <select class="modern-select" id="dash-ins-comp-select" style="height:34px; border-radius:8px; border:1px solid #cbd5e1; font-weight:700; padding:0 8px; font-size:12px; min-width:125px; background:#f8fafc; color:#334155; cursor:pointer;">
+                        <option value="">회사명 선택</option>
+                    </select>
+                    <button type="button" onclick="window.searchDashInsurance()" style="background:#2563eb; color:white; border:none; padding:0 12px; height:34px; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap; transition:0.15s; display:flex; align-items:center; gap:4px;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+                        <i class="fa-solid fa-magnifying-glass" style="font-size:11px;"></i> 조회
+                    </button>
+                </div>
             </div>
 
-            <i class="fa-solid fa-magnifying-glass" style="color: #3b82f6; font-size: 16px; margin-left: 12px; flex-shrink: 0;"></i>
+            <!-- 실시간 동기화 버튼 -->
+            <div>
+                <div style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px; text-align: left; padding-left: 2px; letter-spacing: -0.2px;">
+                    데이터 최신화
+                </div>
+                <button type="button" id="btn-realtime-sync" onclick="window.manualSync()" 
+                        style="background: #ffffff; color: #0284c7; border: 1.5px solid #bae6fd; padding: 0 16px; border-radius: 14px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 2px 6px rgba(2,132,199,0.08); display:flex; align-items:center; gap:7px; transition: all 0.2s; white-space: nowrap; height: 52px; box-sizing: border-box;" 
+                        onmouseover="this.style.background='#f0f9ff'; this.style.borderColor='#0284c7'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 10px rgba(2,132,199,0.18)';" 
+                        onmouseout="this.style.background='#ffffff'; this.style.borderColor='#bae6fd'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 6px rgba(2,132,199,0.08)';"
+                        title="구글 시트의 최신 고객 데이터를 즉시 다시 불러옵니다 (홈으로 나가지 않음)">
+                    <i class="fa-solid fa-rotate" id="icon-realtime-sync" style="font-size: 14px; color: #0284c7;"></i>
+                    <span>실시간 동기화</span>
+                </button>
+            </div>
         </div>
     </div>
 

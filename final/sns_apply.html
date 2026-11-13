@@ -2268,12 +2268,25 @@ function initParentIframeViewportSync() {
         } catch (e) {}
       };
 
+      // 다른 메뉴(광고관리 등)로 탭을 이동할 때 잠가두었던 부모 iframe 높이를 즉시 원상복구!
+      const releaseIframeLock = () => {
+        try {
+          if (window.self !== window.top && window.frameElement) {
+            window.frameElement.style.height = '';
+            window.frameElement.style.minHeight = '';
+            window.frameElement.style.maxHeight = '';
+            window.frameElement.removeAttribute('scrolling');
+          }
+        } catch (e) {}
+      };
+
       lockIframeHeightToScreen();
       setTimeout(lockIframeHeightToScreen, 150);
       setTimeout(lockIframeHeightToScreen, 600);
       window.addEventListener('resize', lockIframeHeightToScreen);
+      window.addEventListener('pagehide', releaseIframeLock);
+      window.addEventListener('beforeunload', releaseIframeLock);
 
-      // 양옆 회색 바탕 위에 마우스를 두고 휠을 굴려도 오른쪽 랜딩페이지만 부드럽게 내려가도록 연결
       window.addEventListener('wheel', e => {
         if (window.innerWidth <= 960) return;
         if (!document.body.classList.contains('can-edit-pr') && !document.body.classList.contains('is-editing')) return;

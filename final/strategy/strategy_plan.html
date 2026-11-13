@@ -380,6 +380,14 @@
             (function() {
                 const selector = document.getElementById('ssMonthSelector');
                 if (!selector) return;
+                
+                // 첫화면 기본: '전체보기 (최신순)'
+                const allOpt = document.createElement('option');
+                allOpt.value = "all";
+                allOpt.text = "전체보기 (최신순)";
+                allOpt.selected = true;
+                selector.appendChild(allOpt);
+
                 const now = new Date();
                 for (let i = 0; i < 12; i++) {
                     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -388,7 +396,6 @@
                     const option = document.createElement('option');
                     option.value = y + "-" + m;
                     option.text = y + "년 " + (d.getMonth() + 1) + "월";
-                    if (i === 0) option.selected = true;
                     selector.appendChild(option);
                 }
             })();
@@ -1054,7 +1061,8 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
           fetchedData.sort((a, b) => {
               const idA = parseInt(a.id) || 0;
               const idB = parseInt(b.id) || 0;
-              return idB - idA; 
+              if (idB !== idA) return idB - idA;
+              return (b.yearMonth || '').localeCompare(a.yearMonth || '');
           });
           
           return fetchedData;
@@ -1124,10 +1132,12 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
                   return titleMatch || scriptMatch || propScriptMatch || catMatch || companyMatch;
               });
           } else {
-              filtered = filtered.filter(item => {
-                  const ym = item.yearMonth || "";
-                  return ym.includes(selectedMonth) || ym === selectedMonth;
-              });
+              if (selectedMonth && selectedMonth !== 'all') {
+                  filtered = filtered.filter(item => {
+                      const ym = item.yearMonth || "";
+                      return ym.includes(selectedMonth) || ym === selectedMonth;
+                  });
+              }
               if (ssCurrentSubCat !== '전체') {
                   filtered = filtered.filter(item => item.subCategory === ssCurrentSubCat);
               }
@@ -1163,10 +1173,12 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
                   return titleMatch || scriptMatch || propScriptMatch || catMatch || companyMatch;
               });
           } else {
-              filtered = filtered.filter(item => {
-                  const ym = item.yearMonth || "";
-                  return ym.includes(selectedMonth) || ym === selectedMonth;
-              });
+              if (selectedMonth && selectedMonth !== 'all') {
+                  filtered = filtered.filter(item => {
+                      const ym = item.yearMonth || "";
+                      return ym.includes(selectedMonth) || ym === selectedMonth;
+                  });
+              }
               if (ssCurrentSubCat !== '전체') {
                   filtered = filtered.filter(item => item.subCategory === ssCurrentSubCat);
               }

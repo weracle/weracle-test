@@ -354,9 +354,18 @@ function navigateToday() {
   fetchGoogleCalendarEvents();
 }
 
+function getFilterKoreanName(type) {
+  if (type === 'google') return '내 일정';
+  if (type === 'bday') return '🎂 생일';
+  if (type === 'sang') return '📈 상령일';
+  if (type === 'expiry') return '📑 만기·갱신';
+  if (type === 'pay') return '💳 결제일';
+  return '전체 일정';
+}
+
 function setCalendarFilter(filterType) {
   activeFilter = filterType;
-  document.querySelectorAll('.cal-filter-chip').forEach(chip => {
+  document.querySelectorAll('.cal-filter-chip, .cal-filter-tab').forEach(chip => {
     if (chip.getAttribute('data-filter') === filterType) {
       chip.classList.add('active');
     } else {
@@ -640,6 +649,28 @@ function renderV3Calendar() {
     // 주간 필터 카운트
     updateFilterCounts(weekDates);
 
+    // 필터 활성화 시 해당 주간 전체에 일정이 없을 때 상단 안내 배너
+    if (activeFilter !== 'all') {
+      let totalFilteredWeek = 0;
+      if (activeFilter === 'google') {
+        totalFilteredWeek = agentEvents.filter(e => weekDates.includes(e.fullDate)).length;
+      } else {
+        totalFilteredWeek = crmEventsList.filter(e => e.type === activeFilter && weekDates.includes(e.fullDate)).length;
+      }
+      if (totalFilteredWeek === 0) {
+        const banner = document.createElement("div");
+        banner.className = "cal-filter-summary-banner";
+        banner.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-circle-info" style="color:#0284c7; font-size:15px;"></i>
+            <span>이번 주에는 <b>${getFilterKoreanName(activeFilter)}</b> 일정이 없습니다.</span>
+          </div>
+          <button type="button" onclick="setCalendarFilter('all')" style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; font-weight:700; font-size:12px; padding:4px 10px; border-radius:6px; cursor:pointer;">전체 일정 보기</button>
+        `;
+        grid.appendChild(banner);
+      }
+    }
+
     for (let i = 0; i < 7; i++) {
       const fullDateStr = weekDates[i];
       const dDate = new Date(startOfWeek);
@@ -730,9 +761,12 @@ function renderV3Calendar() {
           }
         }).join('');
       } else {
+        const emptyMsg = (activeFilter === 'all') 
+          ? '등록된 일정이 없습니다.' 
+          : `선택하신 '${getFilterKoreanName(activeFilter)}' 일정이 없습니다.`;
         eventsHtml = `
           <div class="cal-v-empty-day">
-            <span>등록된 일정이 없습니다.</span>
+            <span>${emptyMsg}</span>
             <button type="button" class="cal-v-quick-add-btn" onclick="openScheduleModalForDate('${fullDateStr}')">
               <i class="fa-solid fa-plus"></i> 이 날에 일정 추가
             </button>
@@ -740,7 +774,15 @@ function renderV3Calendar() {
       }
 
       const dayCard = document.createElement("div");
-      dayCard.className = `cal-timeline-day-card${isToday ? ' is-today' : ''}`;
+      let cardClass = `cal-timeline-day-card${isToday ? ' is-today' : ''}`;
+      if (activeFilter !== 'all') {
+        if (dayEvents.length > 0) {
+          cardClass += ' has-filtered-events';
+        } else {
+          cardClass += ' has-no-filtered-events';
+        }
+      }
+      dayCard.className = cardClass;
       dayCard.innerHTML = `
         <div class="cal-day-left-badge">
           <div class="cal-day-date-number">${dd}</div>
@@ -873,7 +915,15 @@ function renderV3Calendar() {
       }
 
       const cell = document.createElement("div");
-      cell.className = `cal-cell-monthly${isToday ? ' is-today' : ''}${!isCurrentMonth ? ' other-month' : ''}`;
+      let cellClass = `cal-cell-monthly${isToday ? ' is-today' : ''}${!isCurrentMonth ? ' other-month' : ''}`;
+      if (activeFilter !== 'all') {
+        if (displayEvents.length > 0) {
+          cellClass += ' has-filtered-events';
+        } else {
+          cellClass += ' has-no-filtered-events';
+        }
+      }
+      cell.className = cellClass;
       cell.style.cursor = 'pointer';
       cell.title = '클릭하여 이 날의 전체 일정 보기';
       cell.innerHTML = `

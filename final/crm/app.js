@@ -2715,8 +2715,7 @@ const safeJumin = String(formatJumin(member["주민번호"] || member["사업자
                                           <div style="margin-bottom:15px; font-size:16px; font-weight:800; color:#1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; display:flex; justify-content:space-between; align-items:center;">
                           <span> 1차 정보 상세 (${mData.mName})</span>
                           <div style="display:flex; gap:6px;">
-                              <button style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:800; padding:4px 8px; border-radius:6px; cursor:pointer; font-size:12px;" onclick="copyCustomerInfo(this, '${safeName}', '${safeJumin}', '${safePhone}', '${safeAddr}', '${safeJob}', false)">전달용 전체 </button>
-                              <button style="background:#f8fafc; color:#64748b; border:1px solid #cbd5e1; font-weight:800; padding:4px 8px; border-radius:6px; cursor:pointer; font-size:12px;" onclick="copyCustomerInfo(this, '${safeName}', '${safeJumin}', '${safePhone}', '${safeAddr}', '${safeJob}', true)">전달용 마스킹(*) </button>
+                              <button style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:800; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:12px; display:inline-flex; align-items:center; gap:4px; transition:all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'" onclick="openCopyCustomerMenu(event, this, '${safeName}', '${safeJumin}', '${safePhone}', '${safeAddr}', '${safeJob}')">전달용 복사 <i class="fa-solid fa-chevron-down" style="font-size:10px; opacity:0.7;"></i></button>
                           </div>
                       </div>
                     ${info1Html}
@@ -3383,8 +3382,7 @@ accordionRow.innerHTML = `
                      <div class="ins-card-header" style="margin-bottom:10px; padding-bottom:10px; display:flex; justify-content:flex-start; align-items:center; gap:10px;">
                          <h5>고객 1차 정보</h5>
                          <div style="display:flex; gap:6px;">
-                             <button class="detail-btn" style="background:#f1f5f9; color:var(--primary); border:1px solid #dde2e8; font-weight:800; padding:4px 10px; margin:0;" onclick="copyCustomerInfo(this, '${safeName}', '${client["주민번호"] || client["사업자번호"] || "-"}', '${safePhone}', '${safeAddr}', '${safeJob}', false)">전달용 전체 복사 </button>
-                             <button class="detail-btn" style="background:#f8fafc; color:#64748b; border:1px solid #cbd5e1; font-weight:800; padding:4px 10px; margin:0;" onclick="copyCustomerInfo(this, '${safeName}', '${client["주민번호"] || client["사업자번호"] || "-"}', '${safePhone}', '${safeAddr}', '${safeJob}', true)">전달용 마스킹(*) </button>
+                             <button class="detail-btn" style="background:#f1f5f9; color:var(--primary); border:1px solid #dde2e8; font-weight:800; padding:4px 10px; margin:0; display:inline-flex; align-items:center; gap:4px;" onclick="openCopyCustomerMenu(event, this, '${safeName}', '${client["주민번호"] || client["사업자번호"] || "-"}', '${safePhone}', '${safeAddr}', '${safeJob}')">전달용 복사 <i class="fa-solid fa-chevron-down" style="font-size:10px; opacity:0.7;"></i></button>
                          </div>
                      </div>
                      ${info1Html}
@@ -6019,18 +6017,105 @@ console.error('Fallback: Oops, unable to copy', err);
 document.body.removeChild(textArea);
 }
 function copyCustomerInfo(btn, name, jumin, phone, address, job, mask = false) {
-const formattedJumin = formatJumin(jumin, mask) || jumin;
-const text = `고객명: ${name}\n주민번호: ${formattedJumin}\n연락처: ${phone}\n주소: ${address}\n직업: ${job}`;
-if (navigator.clipboard && navigator.clipboard.writeText) {
-navigator.clipboard.writeText(text).then(() => {
-showCustomAlert("복사 완료", mask ? "전달용 정보(마스킹)가 복사되었습니다." : "전달용 정보가 복사되었습니다.");
-}).catch(() => {
-fallbackCopyTextToClipboard(text);
-});
-} else {
-fallbackCopyTextToClipboard(text);
+    const formattedJumin = formatJumin(jumin, mask) || jumin;
+    const text = `고객명: ${name}\n주민번호: ${formattedJumin}\n연락처: ${phone}\n주소: ${address}\n직업: ${job}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            showCustomAlert("복사 완료", mask ? "전달용 정보(마스킹)가 복사되었습니다." : "전달용 정보가 복사되었습니다.");
+        }).catch(() => {
+            fallbackCopyTextToClipboard(text);
+        });
+    } else {
+        fallbackCopyTextToClipboard(text);
+    }
 }
+
+// [신규] 전달용 복사 미니 팝오버 메뉴 열기 (전체 / 마스킹 선택)
+function openCopyCustomerMenu(e, btn, name, jumin, phone, address, job) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    let menu = document.getElementById("crmCopyCustomerMenu");
+    if (!menu) {
+        menu = document.createElement("div");
+        menu.id = "crmCopyCustomerMenu";
+        menu.style.cssText = "position:fixed; z-index:999999; background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; box-shadow:0 10px 25px -5px rgba(15,23,42,0.18), 0 8px 10px -6px rgba(15,23,42,0.1); padding:6px; min-width:230px; display:none; flex-direction:column; gap:2px; font-family:inherit;";
+        document.body.appendChild(menu);
+
+        document.addEventListener("click", function(ev) {
+            const m = document.getElementById("crmCopyCustomerMenu");
+            if (m && m.style.display !== "none" && !m.contains(ev.target)) {
+                m.style.display = "none";
+                m._activeBtn = null;
+            }
+        });
+        window.addEventListener("resize", function() {
+            const m = document.getElementById("crmCopyCustomerMenu");
+            if (m) { m.style.display = "none"; m._activeBtn = null; }
+        });
+        window.addEventListener("scroll", function() {
+            const m = document.getElementById("crmCopyCustomerMenu");
+            if (m) { m.style.display = "none"; m._activeBtn = null; }
+        }, true);
+    }
+
+    if (menu.style.display === "flex" && menu._activeBtn === btn) {
+        menu.style.display = "none";
+        menu._activeBtn = null;
+        return;
+    }
+    menu._activeBtn = btn;
+    menu._copyData = { btn, name, jumin, phone, address, job };
+
+    menu.innerHTML = `
+        <button type="button" onclick="executeCustomerCopy(false)" style="display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; border:none; background:transparent; cursor:pointer; width:100%; text-align:left; transition:background 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+            <div style="width:30px; height:30px; border-radius:8px; background:#eff6ff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <i class="fa-solid fa-id-card" style="color:#2563eb; font-size:14px;"></i>
+            </div>
+            <div style="display:flex; flex-direction:column; line-height:1.35;">
+                <span style="font-weight:700; font-size:13px; color:#1e293b;">전체 복사</span>
+                <span style="font-size:11px; color:#64748b;">주민번호 전체 포함 (13자리)</span>
+            </div>
+        </button>
+        <div style="height:1px; background:#f1f5f9; margin:2px 4px;"></div>
+        <button type="button" onclick="executeCustomerCopy(true)" style="display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; border:none; background:transparent; cursor:pointer; width:100%; text-align:left; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <div style="width:30px; height:30px; border-radius:8px; background:#ecfdf5; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <i class="fa-solid fa-user-shield" style="color:#059669; font-size:14px;"></i>
+            </div>
+            <div style="display:flex; flex-direction:column; line-height:1.35;">
+                <span style="font-weight:700; font-size:13px; color:#1e293b;">마스킹 복사</span>
+                <span style="font-size:11px; color:#64748b;">주민번호 뒷자리 마스킹 (******)</span>
+            </div>
+        </button>
+    `;
+
+    menu.style.display = "flex";
+    const rect = btn.getBoundingClientRect();
+    const menuWidth = 230;
+    let left = rect.right - menuWidth;
+    if (left < 10) left = rect.left;
+    if (left + menuWidth > window.innerWidth - 10) {
+        left = window.innerWidth - menuWidth - 10;
+    }
+    let top = rect.bottom + 6;
+    if (top + 130 > window.innerHeight) {
+        top = Math.max(10, rect.top - 130 - 6);
+    }
+    menu.style.left = Math.round(left) + "px";
+    menu.style.top = Math.round(top) + "px";
 }
+
+function executeCustomerCopy(mask) {
+    const menu = document.getElementById("crmCopyCustomerMenu");
+    if (!menu || !menu._copyData) return;
+    const { btn, name, jumin, phone, address, job } = menu._copyData;
+    copyCustomerInfo(btn, name, jumin, phone, address, job, mask);
+    menu.style.display = "none";
+    menu._activeBtn = null;
+}
+window.openCopyCustomerMenu = openCopyCustomerMenu;
+window.executeCustomerCopy = executeCustomerCopy;
 function copyT(t) { 
 if (navigator.clipboard && navigator.clipboard.writeText) {
 navigator.clipboard.writeText(t).then(() => {
@@ -8950,8 +9035,7 @@ window.generateProfileHtml = function(client) {
                         <div style="display:flex; justify-content:space-between; align-items:center; margin: 0 0 24px 0;">
                             <h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-address-card" style="color: #3b82f6;"></i> 1차 기본 정보</h3>
                             <div style="display:flex; gap:6px;">
-                                <button style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:800; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:13px; transition:0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'" onclick="copyCustomerInfo(this, '${(client['고객명'] || client['대표자명'] || '-').replace(/'/g, "\\'")}', '${(client['주민번호'] || client['사업자번호'] || '-').replace(/'/g, "\\'")}', '${(client['폰번호'] || client['대표자폰번호'] || '-').replace(/'/g, "\\'")}', '${String(client['주소'] || client['대표주소'] || '-').replace(/\n/g, " ").replace(/'/g, "\\'")}', '${(client['직업'] || client['업태'] || '-').replace(/'/g, "\\'")}', false)">전달용 전체 </button>
-                                <button style="background:#f8fafc; color:#64748b; border:1px solid #cbd5e1; font-weight:800; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:13px; transition:0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'" onclick="copyCustomerInfo(this, '${(client['고객명'] || client['대표자명'] || '-').replace(/'/g, "\\'")}', '${(client['주민번호'] || client['사업자번호'] || '-').replace(/'/g, "\\'")}', '${(client['폰번호'] || client['대표자폰번호'] || '-').replace(/'/g, "\\'")}', '${String(client['주소'] || client['대표주소'] || '-').replace(/\n/g, " ").replace(/'/g, "\\'")}', '${(client['직업'] || client['업태'] || '-').replace(/'/g, "\\'")}', true)">전달용 마스킹(*) </button>
+                                <button style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:800; padding:6px 14px; border-radius:8px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'" onclick="openCopyCustomerMenu(event, this, '${(client['고객명'] || client['대표자명'] || '-').replace(/'/g, "\\'")}', '${(client['주민번호'] || client['사업자번호'] || '-').replace(/'/g, "\\'")}', '${(client['폰번호'] || client['대표자폰번호'] || '-').replace(/'/g, "\\'")}', '${String(client['주소'] || client['대표주소'] || '-').replace(/\n/g, " ").replace(/'/g, "\\'")}', '${(client['직업'] || client['업태'] || '-').replace(/'/g, "\\'")}')">전달용 복사 <i class="fa-solid fa-chevron-down" style="font-size:10px; opacity:0.7;"></i></button>
                             </div>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; margin-bottom: 16px;">

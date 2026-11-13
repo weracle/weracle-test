@@ -903,20 +903,20 @@ function renderV3Calendar() {
         eventsHtml = displayEvents.slice(0, maxShow).map(item => {
           if (item.isGoogle) {
             const e = item.raw;
-            return `<div class="cal-event-chip cal-event-google" onclick="openGoogleEventDetail('${e.id}')" title="클릭하여 상세 보기">
+            return `<div class="cal-event-chip cal-event-google" onclick="event.stopPropagation(); openGoogleEventDetail('${e.id}')" title="클릭하여 상세 보기">
               <i class="fa-solid fa-clock" style="font-size:9px;"></i>
               <span>${escapeHtml(item.title)}</span>
             </div>`;
           } else {
             const e = item.raw;
-            return `<div class="cal-event-chip cal-event-${e.type}" onclick="openCrmEventDetail('${e.type}', '${escapeJs(e.name)}', '${escapeJs(e.phone)}', '${escapeJs(e.prod)}', '${escapeJs(e.note)}', '${fullDateStr}')" title="클릭하여 세일즈 가이드 확인">
+            return `<div class="cal-event-chip cal-event-${e.type}" onclick="event.stopPropagation(); openCrmEventDetail('${e.type}', '${escapeJs(e.name)}', '${escapeJs(e.phone)}', '${escapeJs(e.prod)}', '${escapeJs(e.note)}', '${fullDateStr}')" title="클릭하여 세일즈 가이드 확인">
               <span>${escapeHtml(item.title)}</span>
             </div>`;
           }
         }).join('');
 
         if (displayEvents.length > maxShow) {
-          eventsHtml += `<div class="cal-event-more" title="전체 일정 보기">+ ${displayEvents.length - maxShow}개 더보기</div>`;
+          eventsHtml += `<div class="cal-event-more" onclick="event.stopPropagation(); openDayDetailModal('${fullDateStr}')" title="전체 일정 보기">+ ${displayEvents.length - maxShow}개 더보기</div>`;
         }
       }
 

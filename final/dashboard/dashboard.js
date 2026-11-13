@@ -618,7 +618,10 @@ function renderV3Calendar() {
   // [A] 세로 타임라인 뷰 (Vertical Agenda - 주간 7일)
   // ----------------------------------------------------
   if (calViewMode === 'vertical') {
-    if (headerRow) headerRow.style.display = 'none';
+    if (headerRow) {
+      headerRow.style.setProperty('display', 'none', 'important');
+      headerRow.innerHTML = '';
+    }
     grid.className = 'cal-vertical-timeline';
 
     const startOfWeek = getStartOfWeek(currentCalDate);
@@ -799,7 +802,7 @@ function renderV3Calendar() {
   // ----------------------------------------------------
   else {
     if (headerRow) {
-      headerRow.style.display = 'grid';
+      headerRow.style.setProperty('display', 'grid', 'important');
       headerRow.style.gridTemplateColumns = 'repeat(7, minmax(0, 1fr))';
       headerRow.style.gap = '6px';
       headerRow.style.width = '100%';

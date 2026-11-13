@@ -803,13 +803,16 @@ function renderV3Calendar() {
   else {
     if (headerRow) {
       headerRow.style.setProperty('display', 'grid', 'important');
-      headerRow.style.gridTemplateColumns = 'repeat(7, minmax(0, 1fr))';
-      headerRow.style.gap = '6px';
-      headerRow.style.width = '100%';
+      headerRow.style.setProperty('grid-template-columns', 'repeat(7, minmax(0, 1fr))', 'important');
+      headerRow.style.setProperty('gap', '6px', 'important');
+      headerRow.style.setProperty('width', '100%', 'important');
+      headerRow.style.setProperty('padding', '6px 16px 6px 16px', 'important');
+      headerRow.style.setProperty('margin', '0', 'important');
+      headerRow.style.setProperty('box-sizing', 'border-box', 'important');
       const colDays = ["일", "월", "화", "수", "목", "금", "토"];
       headerRow.innerHTML = colDays.map((name, i) => {
         const color = i === 0 ? "var(--danger)" : (i === 6 ? "var(--primary)" : "var(--text-muted)");
-        return `<div style="color:${color}; font-weight:800; font-size:12px; text-align:center; padding:8px 0; background:#f8fafc; border-radius:6px; border:1px solid #cbd5e1;">${name}</div>`;
+        return `<div style="color:${color}; font-weight:800; font-size:12.5px; text-align:center; padding:8px 0; background:#f8fafc; border-radius:6px; border:1px solid #cbd5e1; box-sizing:border-box;">${name}</div>`;
       }).join('');
     }
     grid.className = 'cal-grid-monthly';

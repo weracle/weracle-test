@@ -477,6 +477,47 @@ function analyzeCrmData() {
           });
         }
       });
+    } else if (client['상령일'] || client['상령일자'] || client['상령월']) {
+      // 생년월일이 없으나 시트/CRM에 '상령일' 컬럼이 직접 등록되어 있는 경우
+      const rawSang = (client['상령일'] || client['상령일자'] || client['상령월']).toString().trim();
+      const sangNums = rawSang.replace(/[^0-9]/g, '');
+      let sM = 0, sD = 0;
+      if (sangNums.length >= 8) {
+        sM = parseInt(sangNums.substring(4, 6), 10);
+        sD = parseInt(sangNums.substring(6, 8), 10);
+      } else if (sangNums.length === 4) {
+        sM = parseInt(sangNums.substring(0, 2), 10);
+        sD = parseInt(sangNums.substring(2, 4), 10);
+      } else if (rawSang.includes('-') || rawSang.includes('.') || rawSang.includes('/')) {
+        const parts = rawSang.split(/[-./]/);
+        if (parts.length >= 2) {
+          sM = parseInt(parts[0], 10);
+          sD = parseInt(parts[1], 10);
+        }
+      }
+      if (sM >= 1 && sM <= 12 && sD >= 1 && sD <= 31) {
+        [-1, 0, 1].forEach(yearOffset => {
+          const y = thisYear + yearOffset;
+          const lastDay = new Date(y, sM, 0).getDate();
+          const safeDay = Math.min(sD, lastDay);
+          const mm = String(sM).padStart(2, '0');
+          const dd = String(safeDay).padStart(2, '0');
+          const dateStr = `${y}-${mm}-${dd}`;
+          const key = `sang_${dateStr}_${name}_${phone}`;
+          if (!crmEventSeenKeys.has(key)) {
+            crmEventSeenKeys.add(key);
+            crmEventsList.push({
+              type: 'sang',
+              name: name,
+              phone: phone,
+              prod: mainProd,
+              fullDate: dateStr,
+              title: `📈 [상령일] ${name}`,
+              note: `상령일 도래: 보험나이가 1세 증가하기 직전입니다. 보험료 인상 전 맞춤 보장 리모델링을 제안하세요!`
+            });
+          }
+        });
+      }
     }
 
     // 3) 계약 만기 및 갱신일, 결제일 파싱 (단일 소스 수집 + 중복 방지)
@@ -916,7 +957,7 @@ function renderV3Calendar() {
         }).join('');
 
         if (displayEvents.length > maxShow) {
-          eventsHtml += `<div class="cal-event-more" onclick="event.stopPropagation(); openDayDetailModal('${fullDateStr}')" title="전체 일정 보기">+ ${displayEvents.length - maxShow}개 더보기</div>`;
+          eventsHtml += `<div class="cal-event-more" onclick="event.stopPropagation(); openDayDetailModal('${fullDateStr}', 'filtered')" title="상세 일정 보기">+ ${displayEvents.length - maxShow}개 더보기</div>`;
         }
       }
 
@@ -938,14 +979,14 @@ function renderV3Calendar() {
             <span class="cal-monthly-num">${dateNum}</span>
             ${isToday ? '<span class="cal-today-pill" style="font-size:9px; padding:1px 4px;">오늘</span>' : ''}
           </div>
-          <button type="button" class="cal-cell-detail-btn" onclick="event.stopPropagation(); openDayDetailModal('${fullDateStr}')" title="이 날의 전체 일정 보기">
+          <button type="button" class="cal-cell-detail-btn" onclick="event.stopPropagation(); openDayDetailModal('${fullDateStr}', 'all')" title="이 날의 전체 일정 보기">
             <i class="fa-solid fa-plus"></i>
           </button>
         </div>
         <div class="cal-monthly-events">${eventsHtml}</div>
       `;
       cell.onclick = () => {
-        openDayDetailModal(fullDateStr);
+        openDayDetailModal(fullDateStr, 'filtered');
       };
       grid.appendChild(cell);
     });
@@ -1285,9 +1326,34 @@ function closeCrmEventModal() {
 }
 
 // ==========================================
-// 6-1. 날짜별 일정 및 고객 이벤트 통합 상세 모달 (심플 & 클린)
+// 6-1. 날짜별 일정 및 고객 이벤트 통합 상세 모달 (필터 완벽 연동 & 서브탭 지원)
 // ==========================================
-function openDayDetailModal(fullDateStr) {
+let currentDayModalDate = null;
+let currentDayModalMode = 'filtered'; // 'filtered' (선택 필터만) or 'all' (전체 일정)
+
+function openDayDetailModal(fullDateStr, requestedFilterMode) {
+  if (!fullDateStr) return;
+  currentDayModalDate = fullDateStr;
+
+  if (requestedFilterMode) {
+    currentDayModalMode = requestedFilterMode;
+  } else {
+    currentDayModalMode = (activeFilter !== 'all') ? 'filtered' : 'all';
+  }
+
+  renderDayDetailModalContent();
+
+  const modal = document.getElementById('dayDetailModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function toggleDayDetailFilterMode(mode) {
+  currentDayModalMode = mode;
+  renderDayDetailModalContent();
+}
+
+function renderDayDetailModalContent() {
+  const fullDateStr = currentDayModalDate;
   if (!fullDateStr) return;
   const dParts = fullDateStr.split('-');
   if (dParts.length < 3) return;
@@ -1303,15 +1369,46 @@ function openDayDetailModal(fullDateStr) {
   const bodyEl = document.getElementById('dayDetailModalBody');
   const btnAdd = document.getElementById('btnDayDetailAdd');
 
-  if (titleEl) titleEl.innerText = `${y}년 ${m}월 ${d}일 (${dayOfWeek}) 일정`;
+  const allDayGoogle = (agentEvents || []).filter(e => e.fullDate === fullDateStr);
+  const allDayCrm = (crmEventsList || []).filter(e => e.fullDate === fullDateStr);
+  const totalCount = allDayGoogle.length + allDayCrm.length;
 
-  const dayGoogle = (agentEvents || []).filter(e => e.fullDate === fullDateStr);
-  const dayCrm = (crmEventsList || []).filter(e => e.fullDate === fullDateStr);
-  const totalCount = dayGoogle.length + dayCrm.length;
+  // 활성 필터에 해당하는 서브셋 추출
+  let filteredGoogle = [];
+  let filteredCrm = [];
+  if (activeFilter === 'google') {
+    filteredGoogle = allDayGoogle;
+    filteredCrm = [];
+  } else if (activeFilter !== 'all') {
+    filteredGoogle = [];
+    filteredCrm = allDayCrm.filter(e => e.type === activeFilter);
+  } else {
+    filteredGoogle = allDayGoogle;
+    filteredCrm = allDayCrm;
+  }
+  const filteredCount = filteredGoogle.length + filteredCrm.length;
+
+  const isFiltered = (activeFilter !== 'all') && (currentDayModalMode === 'filtered');
+  const displayGoogle = isFiltered ? filteredGoogle : allDayGoogle;
+  const displayCrm = isFiltered ? filteredCrm : allDayCrm;
+  const currentCount = displayGoogle.length + displayCrm.length;
+
+  if (titleEl) {
+    if (isFiltered) {
+      titleEl.innerText = `${y}년 ${m}월 ${d}일 (${dayOfWeek}) · ${getFilterKoreanName(activeFilter)}`;
+    } else {
+      titleEl.innerText = `${y}년 ${m}월 ${d}일 (${dayOfWeek}) 전체 일정`;
+    }
+  }
 
   if (countEl) {
-    countEl.innerText = `총 ${totalCount}건`;
-    countEl.style.display = totalCount > 0 ? 'inline-block' : 'none';
+    if (isFiltered) {
+      countEl.innerText = `${getFilterKoreanName(activeFilter)} ${currentCount}건`;
+      countEl.style.display = 'inline-block';
+    } else {
+      countEl.innerText = `총 ${totalCount}건`;
+      countEl.style.display = totalCount > 0 ? 'inline-block' : 'none';
+    }
   }
 
   if (btnAdd) {
@@ -1323,18 +1420,53 @@ function openDayDetailModal(fullDateStr) {
 
   if (!bodyEl) return;
 
-  if (totalCount === 0) {
-    bodyEl.innerHTML = `
+  // 필터가 'all'이 아닐 경우 상단에 필터 보기 vs 전체 일정 보기 전환 탭 제공
+  let headerHtml = '';
+  if (activeFilter !== 'all') {
+    headerHtml = `
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 16px; background:#f8fafc; border-bottom:1px solid #e2e8f0; margin-bottom:4px;">
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="modal-subtab-btn ${isFiltered ? 'active' : ''}" onclick="toggleDayDetailFilterMode('filtered')">
+            ${getFilterKoreanName(activeFilter)} (${filteredCount})
+          </button>
+          <button type="button" class="modal-subtab-btn ${!isFiltered ? 'active' : ''}" onclick="toggleDayDetailFilterMode('all')">
+            이 날의 전체 일정 (${totalCount})
+          </button>
+        </div>
+        <span style="font-size:11.5px; color:#64748b; font-weight:600;">
+          ${isFiltered ? '선택 필터만 표시' : '전체 일정 표시'}
+        </span>
+      </div>
+    `;
+  }
+
+  if (currentCount === 0) {
+    let emptyMsg = '등록된 일정이 없습니다.';
+    let emptyActionHtml = '';
+    if (isFiltered) {
+      emptyMsg = `선택하신 '${getFilterKoreanName(activeFilter)}' 일정이 이 날에는 없습니다.`;
+      if (totalCount > 0) {
+        emptyActionHtml = `
+          <div style="margin-top:10px;">
+            <button type="button" onclick="toggleDayDetailFilterMode('all')" style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; font-weight:700; font-size:12px; padding:6px 14px; border-radius:6px; cursor:pointer;">
+              이 날의 다른 일정 보기 (${totalCount}건)
+            </button>
+          </div>
+        `;
+      }
+    }
+    bodyEl.innerHTML = headerHtml + `
       <div style="text-align:center; padding:32px 16px; color:#94a3b8; font-size:13.5px; font-weight:700;">
         <i class="fa-regular fa-calendar-xmark" style="font-size:24px; color:#cbd5e1; margin-bottom:6px; display:block;"></i>
-        등록된 일정이 없습니다.
+        ${emptyMsg}
+        ${emptyActionHtml}
       </div>
     `;
   } else {
     let rowsHtml = '';
 
     // 1. Google Personal Events (1줄 컴팩트)
-    dayGoogle.forEach(e => {
+    displayGoogle.forEach(e => {
       const timeStr = e.isAllDay ? '종일' : (e.timeText || e.timeStr || '');
       const eventTitle = e.name || e.summary || e.title || '구글 일정';
       const descStr = (e.description || e.note) ? ` · ${escapeHtml(e.description || e.note)}` : '';
@@ -1356,7 +1488,7 @@ function openDayDetailModal(fullDateStr) {
     });
 
     // 2. CRM Customer Events (1줄 컴팩트)
-    dayCrm.forEach(e => {
+    displayCrm.forEach(e => {
       let badgeStyle = "background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;";
       let badgeLabel = "고객";
       if (e.type === 'bday') {
@@ -1405,11 +1537,8 @@ function openDayDetailModal(fullDateStr) {
       `;
     });
 
-    bodyEl.innerHTML = rowsHtml;
+    bodyEl.innerHTML = headerHtml + rowsHtml;
   }
-
-  const modal = document.getElementById('dayDetailModal');
-  if (modal) modal.style.display = 'flex';
 }
 
 function closeDayDetailModal() {

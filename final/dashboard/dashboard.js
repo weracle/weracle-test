@@ -809,7 +809,7 @@ function renderV3Calendar() {
       const colDays = ["일", "월", "화", "수", "목", "금", "토"];
       headerRow.innerHTML = colDays.map((name, i) => {
         const color = i === 0 ? "var(--danger)" : (i === 6 ? "var(--primary)" : "var(--text-muted)");
-        return `<div style="color:${color}; font-weight:800; font-size:12px; text-align:center; padding:6px 0; background:#f8fafc; border-radius:6px; border:1px solid #e2e8f0;">${name}</div>`;
+        return `<div style="color:${color}; font-weight:800; font-size:12px; text-align:center; padding:8px 0; background:#f8fafc; border-radius:6px; border:1px solid #cbd5e1;">${name}</div>`;
       }).join('');
     }
     grid.className = 'cal-grid-monthly';

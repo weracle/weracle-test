@@ -26,12 +26,14 @@ module.exports = async function handler(req, res) {
           const agentKey = rows[0].user_id || 'default';
           const isInstaTrack = rows[0].track === 'insta' || String(campId).startsWith('camp_ig_');
 
-          let pdfUrl = '';
+         let pdfUrl = '';
           let qsJson = '';
+          let prId = '';
           try {
             if (rows[0].target_summary && String(rows[0].target_summary).trim().startsWith('{')) {
               const pObj = JSON.parse(rows[0].target_summary);
               if (pObj.pdfUrl) pdfUrl = pObj.pdfUrl;
+              if (pObj.prId) prId = pObj.prId;
               if (Array.isArray(pObj.customQuestions) && pObj.customQuestions.length > 0) {
                 qsJson = JSON.stringify(pObj.customQuestions);
               }
@@ -41,6 +43,7 @@ module.exports = async function handler(req, res) {
           if (!destUrl || destUrl.includes('/api/meta-execute')) {
             destUrl = `${baseSiteUrl}/sns_apply.html?utm_source=${isInstaTrack ? 'insta_dm' : 'meta_ad'}&camp_id=${encodeURIComponent(campId)}&camp=${encodeURIComponent(rows[0].title || '')}&agent_id=${encodeURIComponent(agentKey)}&doc=${encodeURIComponent(pdfUrl)}`;
             if (qsJson) destUrl += `&qs=${encodeURIComponent(qsJson)}`;
+            if (prId) destUrl += `&pr_id=${encodeURIComponent(prId)}`;
           } else {
             if (!destUrl.includes('camp_id=') && campId) {
               destUrl += (destUrl.includes('?') ? '&' : '?') + `camp_id=${encodeURIComponent(campId)}`;
@@ -50,6 +53,9 @@ module.exports = async function handler(req, res) {
             }
             if (!destUrl.includes('agent_id=') && agentKey) {
               destUrl += (destUrl.includes('?') ? '&' : '?') + `agent_id=${encodeURIComponent(agentKey)}`;
+            }
+            if (prId && !destUrl.includes('pr_id=')) {
+              destUrl += (destUrl.includes('?') ? '&' : '?') + `pr_id=${encodeURIComponent(prId)}`;
             }
             if (isInstaTrack && !destUrl.includes('utm_source=')) {
               destUrl += (destUrl.includes('?') ? '&' : '?') + `utm_source=insta_dm`;
@@ -345,9 +351,9 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-    // [2] 매거진 PR 설정 저장
-    if (action === 'SAVE_PR_CONFIG') {
-      const { agentId, userKeys, config } = body;
+// [2] 멀티 PR 랜딩페이지 저장 (개수 무제한 슬롯 + 기존 대표페이지 완벽 호환)
+    if (action === 'SAVE_PR_CONFIG' || action === 'SAVE_PR_PAGE') {
+      const { agentId, userKeys, config, pageId, pageTitle, presetType, isDefault } = body;
       if (!supabaseKey || !config) {
         return res.status(200).json({ success: false, error: 'Missing config or key' });
       }
@@ -355,42 +361,100 @@ module.exports = async function handler(req, res) {
       const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? userKeys : [agentId || 'default'];
       const safeKeys = Array.from(new Set(rawKeyList.map(k => sanitizeAgentKey(k)).filter(Boolean)));
       if (safeKeys.length === 0) safeKeys.push('default');
+      const primaryOwner = safeKeys.find(k => k !== 'default') || safeKeys[0];
 
-      const configJsonStr = JSON.stringify(config);
+      const enrichedConfig = {
+        ...config,
+        pageTitle: String(pageTitle || config.pageTitle || '나의 대표 PR 페이지').trim(),
+        presetType: String(presetType || config.presetType || 'A').toUpperCase(),
+        isDefault: Boolean(isDefault || config.isDefault),
+        updatedAt: new Date().toISOString()
+      };
 
-      for (const sKey of safeKeys) {
-        const recId = `pr_cfg_${sKey}`;
-        await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(recId)}`, {
+      const targetSlotId = (pageId && String(pageId).startsWith('pr_page_'))
+        ? String(pageId)
+        : (action === 'SAVE_PR_PAGE' ? `pr_page_${primaryOwner}_${Date.now()}` : `pr_cfg_${primaryOwner}`);
+
+      enrichedConfig.pageId = targetSlotId;
+      const configJsonStr = JSON.stringify(enrichedConfig);
+
+      // 대표 페이지로 지정한 경우, 기존 기본 슬롯(pr_cfg_*)도 함께 최신화하여 기본 링크 호환성 100% 유지
+      if (enrichedConfig.isDefault || !String(targetSlotId).startsWith('pr_page_')) {
+        for (const sKey of safeKeys) {
+          const defRecId = `pr_cfg_${sKey}`;
+          await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(defRecId)}`, {
+            method: 'DELETE',
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+          });
+          await fetch(`${supabaseUrl}/rest/v1/meta_campaigns`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+              id: defRecId,
+              user_id: sKey,
+              track: 'pr_config',
+              title: enrichedConfig.pageTitle,
+              description: enrichedConfig.presetType,
+              cta_type: 'PR_DEFAULT',
+              landing_url: '',
+              start_date: '',
+              end_date: '',
+              ratio: '1:1',
+              region: '',
+              target_summary: configJsonStr,
+              budget: 0,
+              keyword: '',
+              dm_message: '',
+              status: 'CONFIG',
+              meta_campaign_id: '',
+              adset_id: '',
+              ad_id: '',
+              ig_media_id: '',
+              leads_count: 0,
+              dm_sent_count: 0,
+              created_at: new Date().toISOString()
+            })
+          });
+        }
+
+        // 내 다른 pr_page_* 들의 isDefault 플래그 해제
+        try {
+          const listR = await fetch(
+            `${supabaseUrl}/rest/v1/meta_campaigns?track=eq.pr_config&user_id=eq.${encodeURIComponent(primaryOwner)}&limit=100`,
+            { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+          );
+          const existingPages = await listR.json();
+          if (Array.isArray(existingPages)) {
+            for (const row of existingPages) {
+              if (String(row.id).startsWith('pr_page_') && row.id !== targetSlotId && row.target_summary) {
+                try {
+                  const pCfg = JSON.parse(row.target_summary);
+                  if (pCfg.isDefault) {
+                    pCfg.isDefault = false;
+                    await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(row.id)}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` },
+                      body: JSON.stringify({ cta_type: 'PR_SLOT', target_summary: JSON.stringify(pCfg) })
+                    });
+                  }
+                } catch (e) {}
+              }
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 개별 슬롯(pr_page_*) 저장
+      if (String(targetSlotId).startsWith('pr_page_')) {
+        await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(targetSlotId)}`, {
           method: 'DELETE',
           headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
         });
-
-        const dbRecord = {
-          id: recId,
-          user_id: sKey,
-          track: 'pr_config',
-          title: 'PR_MAGAZINE_CONFIG',
-          description: '',
-          cta_type: 'PR_CONFIG',
-          landing_url: '',
-          start_date: '',
-          end_date: '',
-          ratio: '1:1',
-          region: '',
-          target_summary: configJsonStr,
-          budget: 0,
-          keyword: '',
-          dm_message: '',
-          status: 'CONFIG',
-          meta_campaign_id: '',
-          adset_id: '',
-          ad_id: '',
-          ig_media_id: '',
-          leads_count: 0,
-          dm_sent_count: 0,
-          created_at: new Date().toISOString()
-        };
-
         await fetch(`${supabaseUrl}/rest/v1/meta_campaigns`, {
           method: 'POST',
           headers: {
@@ -399,11 +463,111 @@ module.exports = async function handler(req, res) {
             'Authorization': `Bearer ${supabaseKey}`,
             'Prefer': 'return=minimal'
           },
-          body: JSON.stringify(dbRecord)
+          body: JSON.stringify({
+            id: targetSlotId,
+            user_id: primaryOwner,
+            track: 'pr_config',
+            title: enrichedConfig.pageTitle,
+            description: enrichedConfig.presetType,
+            cta_type: enrichedConfig.isDefault ? 'PR_DEFAULT' : 'PR_SLOT',
+            landing_url: '',
+            start_date: '',
+            end_date: '',
+            ratio: '1:1',
+            region: '',
+            target_summary: configJsonStr,
+            budget: 0,
+            keyword: '',
+            dm_message: '',
+            status: 'CONFIG',
+            meta_campaign_id: '',
+            adset_id: '',
+            ad_id: '',
+            ig_media_id: '',
+            leads_count: 0,
+            dm_sent_count: 0,
+            created_at: new Date().toISOString()
+          })
         });
       }
 
-      return res.status(200).json({ success: true, agentKey: safeKeys[0] });
+      return res.status(200).json({ success: true, agentKey: primaryOwner, pageId: targetSlotId, config: enrichedConfig });
+    }
+
+    // [2-0] 내 PR 랜딩페이지 보관함 전체 목록 조회 (무제한 리스트)
+    if (action === 'LIST_PR_PAGES') {
+      const { agentId, userKeys } = body;
+      if (!supabaseKey) return res.status(200).json({ success: false, pages: [] });
+
+      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? [...userKeys, agentId] : [agentId || 'default'];
+      const safeKeySet = new Set(rawKeyList.map(k => sanitizeAgentKey(k)).filter(k => k && k !== 'default'));
+
+      const r = await fetch(
+        `${supabaseUrl}/rest/v1/meta_campaigns?track=eq.pr_config&order=created_at.desc&limit=300`,
+        { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+      );
+      const rows = await r.json();
+      const myPages = [];
+      let legacyDefaultRow = null;
+
+      if (Array.isArray(rows)) {
+        for (const row of rows) {
+          const rUser = sanitizeAgentKey(row.user_id || '');
+          const isMine = safeKeySet.size === 0
+            ? rUser === 'default'
+            : (safeKeySet.has(rUser) || Array.from(safeKeySet).some(k => row.id === `pr_cfg_${k}`));
+
+          if (!isMine || !row.target_summary) continue;
+
+          try {
+            const parsed = JSON.parse(row.target_summary);
+            if (String(row.id).startsWith('pr_page_')) {
+              myPages.push({
+                id: row.id,
+                title: parsed.pageTitle || row.title || '내 랜딩페이지',
+                presetType: parsed.presetType || row.description || 'A',
+                isDefault: Boolean(parsed.isDefault || row.cta_type === 'PR_DEFAULT'),
+                thumbUrl: (parsed.photos && parsed.photos.heroPhotoBox) || '',
+                agentName: (parsed.texts && parsed.texts.heroAgentName) || '',
+                updatedAt: parsed.updatedAt || row.created_at,
+                config: parsed
+              });
+            } else if (!legacyDefaultRow && String(row.id).startsWith('pr_cfg_')) {
+              legacyDefaultRow = {
+                id: row.id,
+                title: parsed.pageTitle || (row.title !== 'PR_MAGAZINE_CONFIG' ? row.title : '나의 기본 대표 PR 페이지'),
+                presetType: parsed.presetType || 'A',
+                isDefault: true,
+                thumbUrl: (parsed.photos && parsed.photos.heroPhotoBox) || '',
+                agentName: (parsed.texts && parsed.texts.heroAgentName) || '',
+                updatedAt: parsed.updatedAt || row.created_at,
+                config: parsed
+              };
+            }
+          } catch (e) {}
+        }
+      }
+
+      // 만약 기존에 만들어둔 기본 페이지만 있고 신규 슬롯이 아직 없다면 보관함 첫 카드로 자동 표시
+      if (legacyDefaultRow && !myPages.some(p => p.isDefault)) {
+        myPages.unshift(legacyDefaultRow);
+      } else {
+        myPages.sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+      }
+
+      return res.status(200).json({ success: true, pages: myPages });
+    }
+
+    // [2-0-B] 선택한 PR 랜딩페이지 삭제 (공용 프로필 사진 파일은 안전하게 보존)
+    if (action === 'DELETE_PR_PAGE') {
+      const { pageId } = body;
+      if (supabaseKey && pageId && String(pageId).startsWith('pr_page_')) {
+        await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(pageId)}`, {
+          method: 'DELETE',
+          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+        });
+      }
+      return res.status(200).json({ success: true });
     }
 
     // [2-1] 알림톡 휴대폰 번호 저장
@@ -426,11 +590,7 @@ module.exports = async function handler(req, res) {
             cfg.agentNotifyPhone = agentPhone;
             await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(recId)}`, {
               method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`
-              },
+              headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` },
               body: JSON.stringify({ target_summary: JSON.stringify(cfg) })
             });
           } catch (e) {}
@@ -439,30 +599,62 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-    // [3] PR 설정 조회
+    // [3] 특정 PR 페이지(prId) 또는 대표 PR 설정 조회
     if (action === 'GET_PR_CONFIG') {
-      const { agentId, userKeys, campId } = body;
-      if (!supabaseKey) {
-        return res.status(200).json({ success: false, config: null });
+      const { agentId, userKeys, campId, prId } = body;
+      if (!supabaseKey) return res.status(200).json({ success: false, config: null });
+
+      // 1순위: 특정 페이지 버전(prId)이 지정된 경우 해당 페이지 즉시 반환
+      if (prId) {
+        try {
+          const spRes = await fetch(
+            `${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(prId)}&limit=1`,
+            { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+          );
+          const spRows = await spRes.json();
+          if (Array.isArray(spRows) && spRows[0] && spRows[0].target_summary) {
+            return res.status(200).json({
+              success: true,
+              config: JSON.parse(spRows[0].target_summary),
+              loadedFrom: spRows[0].id
+            });
+          }
+        } catch (e) {}
       }
 
       const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? [...userKeys] : [agentId || 'default'];
       if (campId && campId !== 'camp_direct') {
         try {
-          const cr = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(campId)}&select=user_id&limit=1`, {
+          const cr = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(campId)}&select=user_id,target_summary&limit=1`, {
             headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
           });
           const crows = await cr.json();
-          if (Array.isArray(crows) && crows[0] && crows[0].user_id) {
-            rawKeyList.unshift(crows[0].user_id);
+          if (Array.isArray(crows) && crows[0]) {
+            if (crows[0].user_id) rawKeyList.unshift(crows[0].user_id);
+            if (crows[0].target_summary && String(crows[0].target_summary).startsWith('{')) {
+              const cMeta = JSON.parse(crows[0].target_summary);
+              if (cMeta.prId) {
+                const prR = await fetch(
+                  `${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(cMeta.prId)}&limit=1`,
+                  { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+                );
+                const prRows = await prR.json();
+                if (Array.isArray(prRows) && prRows[0] && prRows[0].target_summary) {
+                  return res.status(200).json({
+                    success: true,
+                    config: JSON.parse(prRows[0].target_summary),
+                    loadedFrom: prRows[0].id
+                  });
+                }
+              }
+            }
           }
         } catch (e) {}
       }
 
       const safeKeys = Array.from(new Set(rawKeyList.map(k => sanitizeAgentKey(k)).filter(Boolean)));
-
       const r = await fetch(
-        `${supabaseUrl}/rest/v1/meta_campaigns?track=eq.pr_config&order=created_at.desc&limit=50`,
+        `${supabaseUrl}/rest/v1/meta_campaigns?track=eq.pr_config&order=created_at.desc&limit=150`,
         { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
       );
       const rows = await r.json();
@@ -471,21 +663,19 @@ module.exports = async function handler(req, res) {
         let matched = null;
         for (const sKey of safeKeys) {
           if (sKey === 'default') continue;
-          matched = rows.find(row => row.id === `pr_cfg_${sKey}` || sanitizeAgentKey(row.user_id) === sKey);
+          matched = rows.find(row => row.id === `pr_cfg_${sKey}` || (sanitizeAgentKey(row.user_id) === sKey && row.cta_type === 'PR_DEFAULT'));
+          if (!matched) matched = rows.find(row => sanitizeAgentKey(row.user_id) === sKey);
           if (matched) break;
         }
         if (!matched) {
           matched = rows.find(row => row.id === 'pr_cfg_default') || rows[0];
         }
-
         if (matched && matched.target_summary) {
           try {
-            const parsedConfig = JSON.parse(matched.target_summary);
-            return res.status(200).json({ success: true, config: parsedConfig, loadedFrom: matched.id });
+            return res.status(200).json({ success: true, config: JSON.parse(matched.target_summary), loadedFrom: matched.id });
           } catch (e) {}
         }
       }
-
       return res.status(200).json({ success: false, config: null });
     }
 

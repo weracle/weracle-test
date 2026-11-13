@@ -772,11 +772,7 @@
 
       </div>
 
-      <button class="btn-header-action" onclick="openMyPrStudioPopup()" style="border-color:var(--sky); color:var(--sky); background:#f0f9ff;">
 
-        <i class="fa-solid fa-id-card-clip"></i> 🪪 내 PR페이지 꾸미기
-
-      </button>
 
       <button class="btn-header-action" onclick="openOnboardingModal()">
 
@@ -1213,14 +1209,16 @@
 
         </div>
 
-
+<div>
+          <label class="target-label">🪪 연결할 내 PR 랜딩페이지 버전 선택</label>
+          <select id="extIgPrPageSelect" class="form-select" style="background:#fff; font-weight:800; color:var(--navy);">
+            <option value="">⭐ 나의 기본 대표 PR 페이지 (자동)</option>
+          </select>
+        </div>
 
         <div>
-
           <label class="target-label">💌 댓글 작성자에게 자동 발송할 DM 문구 ({신청링크} 자리에 깔끔한 한 줄 단축 링크가 들어갑니다)</label>
-
           <textarea id="extIgDmMessage" class="form-textarea" rows="2">안녕하세요! 댓글 남겨주셔서 감사합니다 😊 요청하신 핵심 가이드북(PDF) 열람 및 무료 상담 신청 링크입니다 👉 {신청링크}</textarea>
-
         </div>
 
       </div>
@@ -1366,11 +1364,15 @@
                 </div>
               </div>
             </div>
-
+<div id="phoneViewPrIframeBox" style="display:none; flex-direction:column; flex:1; background:#fff; overflow:hidden; position:relative;">
+              <div style="background:#0f172a; color:#38bdf8; font-size:10.5px; font-weight:800; padding:6px 12px; display:flex; justify-content:space-between; align-items:center;">
+                <span>🪪 선택된 내 PR 랜딩 실시간 미리보기</span>
+                <button type="button" onclick="closePrLiveIframePreview()" style="background:rgba(255,255,255,0.15); color:#fff; border:none; border-radius:6px; padding:2px 7px; font-size:10px; font-weight:800; cursor:pointer;">✕ 피드 보기</button>
+              </div>
+              <iframe id="phonePrLiveIframe" src="about:blank" style="width:100%; flex:1; border:none; background:#fff;"></iframe>
+            </div>
 
             <div class="phone-home-indicator"><div class="phone-home-bar"></div></div>
-
-          </div>
 
         </div>
 
@@ -1578,8 +1580,14 @@
                   <div id="instantModeGuideBanner" style="display:block; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:700;">
                     ⚡ 광고 클릭 시 인스타·페북 팝업 양식에서 즉시 접수받으며, 다음 단계에서 맞춤 질문과 제공 PDF를 설정합니다.
                   </div>
-                  <div id="prModeGuideBanner" style="display:none; background:#f0f9ff; border:1px solid #bae6fd; color:#0369a1; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:700;">
-                    🪪 광고 클릭 시 내가 꾸민 PR 랜딩페이지로 이동해 신뢰를 높인 뒤 하단 신청폼으로 접수받습니다.
+                  <div id="prModeGuideBanner" style="display:none; background:#f0f9ff; border:1px solid #bae6fd; color:#0369a1; padding:10px 12px; border-radius:9px; font-size:12px; font-weight:700;">
+                    <div style="margin-bottom:7px;">🪪 광고 클릭 시 이동할 <strong>내 PR 랜딩페이지 버전</strong>을 선택하세요 (선택 시 좌측 폰에서 즉시 미리보기):</div>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                      <select id="setupMetaPrPageSelect" class="form-select" style="flex:1; background:#fff; font-weight:800; color:var(--navy); padding:7px 10px; font-size:12.5px;" onchange="onChangeSelectedPrPage('meta', this.value)">
+                        <option value="">⭐ 나의 기본 대표 PR 페이지 (자동)</option>
+                      </select>
+                      <button type="button" class="btn-header-action" onclick="previewSelectedPrInPhone('meta')" style="padding:7px 11px; font-size:11.5px; color:var(--sky); border-color:#7dd3fc; background:#fff;">📱 좌측 미리보기</button>
+                    </div>
                   </div>
                   <div id="customUrlConfigBox" style="display:none; margin-top:8px;">
                     <input type="url" id="setupLandingUrl" class="form-input" style="background:#fff;" placeholder="연결할 외부 웹사이트 URL 입력 (https://...)" oninput="syncPhonePreview()" />
@@ -1667,7 +1675,18 @@
                   </div>
                 </div>
 
+            
                 <div style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:10px;">
+                  <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                      <span class="target-label" style="margin:0;">🪪 DM 신청링크 클릭 시 열릴 내 PR 랜딩페이지 선택</span>
+                      <button type="button" class="btn-header-action" onclick="previewSelectedPrInPhone('insta')" style="padding:3px 9px; font-size:11px; color:var(--insta); border-color:#fecdd3; background:#fff;">📱 좌측 폰 미리보기</button>
+                    </div>
+                    <select id="setupInstaPrPageSelect" class="form-select" style="background:#fff; font-weight:800; color:var(--navy); padding:7px 10px; font-size:12.5px;" onchange="onChangeSelectedPrPage('insta', this.value)">
+                      <option value="">⭐ 나의 기본 대표 PR 페이지 (자동)</option>
+                    </select>
+                  </div>
+
                   <div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                       <span class="target-label" style="margin:0;">💌 댓글 작성자에게 자동 발송할 DM 메시지</span>
@@ -2022,20 +2041,82 @@ function rememberOwnerAliases(newItems) {
       return keys.length > 0 ? keys[0] : 'default';
     }
 
-    function openMyPrStudioPopup() {
+let mySavedPrPagesList = [];
 
-      const agentId = getActiveAgentId();
+    async function fetchMySavedPrPagesForSelect() {
+      try {
+        const res = await fetch('/api/meta-execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'LIST_PR_PAGES',
+            agentId: getActiveAgentId(),
+            userKeys: getActiveUserKeys()
+          })
+        });
+        const json = await res.json();
+        if (json && json.success && Array.isArray(json.pages)) {
+          mySavedPrPagesList = json.pages;
+        }
+      } catch (e) {}
 
-      const agentName = localStorage.getItem('crm_agent_name') || '';
+      const typeLabelMap = { A: '🅰️ 브랜딩·점검', B: '🅱️ 핵심상품 집중', C: '🅲 리쿠르팅·채용' };
+      const optionsHtml = `<option value="">⭐ 나의 기본 대표 PR 페이지 (자동 적용)</option>` +
+        mySavedPrPagesList.map(p => {
+          const tBadge = typeLabelMap[p.presetType] || '🅰️ 브랜딩';
+          const defStar = p.isDefault ? ' [대표]' : '';
+          return `<option value="${p.id}">[${tBadge}] ${p.title}${defStar}</option>`;
+        }).join('');
 
-      const agentPhone = localStorage.getItem('crm_agent_phone') || '';
-
-      const url = `/sns_apply.html?edit=true&agent_id=${encodeURIComponent(agentId)}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}`;
-
-      window.open(url, '_blank');
-
+      ['setupMetaPrPageSelect', 'setupInstaPrPageSelect', 'extIgPrPageSelect'].forEach(selId => {
+        const el = document.getElementById(selId);
+        if (el) {
+          const prevVal = el.value;
+          el.innerHTML = optionsHtml;
+          if (prevVal && mySavedPrPagesList.some(p => p.id === prevVal)) el.value = prevVal;
+        }
+      });
     }
 
+    function previewSelectedPrInPhone(mode) {
+      const selId = mode === 'insta' ? 'setupInstaPrPageSelect' : 'setupMetaPrPageSelect';
+      const pickedPrId = document.getElementById(selId) ? document.getElementById(selId).value : '';
+      const agentId = getActiveAgentId();
+      const title = document.getElementById('setupHeadline') ? document.getElementById('setupHeadline').value.trim() : '';
+      const pdfUrl = mode === 'insta'
+        ? (document.getElementById('setupInstaPdfUrl') ? document.getElementById('setupInstaPdfUrl').value.trim() : '')
+        : (document.getElementById('setupPdfDocUrl') ? document.getElementById('setupPdfDocUrl').value.trim() : '');
+
+      let previewUrl = `/sns_apply.html?agent_id=${encodeURIComponent(agentId)}&camp=${encodeURIComponent(title)}&doc=${encodeURIComponent(pdfUrl)}`;
+      if (pickedPrId) previewUrl += `&pr_id=${encodeURIComponent(pickedPrId)}`;
+
+      document.getElementById('phoneViewFeed').style.display = 'none';
+      document.getElementById('phoneViewForm').style.display = 'none';
+      const box = document.getElementById('phoneViewPrIframeBox');
+      const ifr = document.getElementById('phonePrLiveIframe');
+      if (box && ifr) {
+        ifr.src = previewUrl;
+        box.style.display = 'flex';
+      }
+    }
+
+    function onChangeSelectedPrPage(mode) {
+      previewSelectedPrInPhone(mode);
+    }
+
+    function closePrLiveIframePreview() {
+      const box = document.getElementById('phoneViewPrIframeBox');
+      if (box) box.style.display = 'none';
+      document.getElementById('phoneViewFeed').style.display = 'flex';
+    }
+
+    function openMyPrStudioPopup() {
+      const agentId = getActiveAgentId();
+      const agentName = localStorage.getItem('crm_agent_name') || '';
+      const agentPhone = localStorage.getItem('crm_agent_phone') || '';
+      const url = `/sns_apply.html?edit=true&agent_id=${encodeURIComponent(agentId)}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}`;
+      window.open(url, '_blank');
+    }
 function buildClientGeoLocations(regionStr) {
   if (!regionStr || regionStr === '전국') {
     return { countries: ['KR'] };
@@ -3034,8 +3115,8 @@ function cleanDmMessageText(rawMsg, recordId, hasPdf) {
 
 
 
-    function openExistingInstaDmModal() {
-
+function openExistingInstaDmModal() {
+      fetchMySavedPrPagesForSelect();
       const presetSel = document.getElementById('extIgPresetSelect');
 
       const allItems = getAllContents();
@@ -3264,28 +3345,23 @@ function cleanDmMessageText(rawMsg, recordId, hasPdf) {
 
 
 
-      const recordId = 'camp_ig_' + Date.now();
-
+const recordId = 'camp_ig_' + Date.now();
       const agentName = localStorage.getItem('crm_agent_name') || '';
-
       const agentPhone = localStorage.getItem('crm_agent_phone') || '';
-
       const agentId = getActiveAgentId();
-
+      const pickedExtPrId = document.getElementById('extIgPrPageSelect') ? document.getElementById('extIgPrPageSelect').value : '';
       const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
+      const fullDestApplyUrl = `${curOrigin}/sns_apply.html?utm_source=insta_dm&camp_id=${encodeURIComponent(recordId)}&camp=${encodeURIComponent(title)}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}&agent_id=${encodeURIComponent(agentId)}&doc=${encodeURIComponent(pdfUrl)}${pickedExtPrId ? '&pr_id=' + encodeURIComponent(pickedExtPrId) : ''}`;
+      const finalDmMessage = cleanDmMessageText(rawDmMsg, recordId, Boolean(pdfUrl && pdfUrl.startsWith('http')));
 
-      const fullDestApplyUrl = `${curOrigin}/sns_apply.html?utm_source=insta_dm&camp_id=${encodeURIComponent(recordId)}&camp=${encodeURIComponent(title)}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}&agent_id=${encodeURIComponent(agentId)}&doc=${encodeURIComponent(pdfUrl)}`;
-
-      const finalDmMessage = cleanDmMessageText(rawDmMsg, recordId);
-
-
-const authMetaPack = JSON.stringify({
+      const authMetaPack = JSON.stringify({
         pageId: pageId || '',
         igId: igId || '',
         pageToken: pageAccessToken || '',
-        permalink: permalink || ''
+        permalink: permalink || '',
+        pdfUrl: pdfUrl || '',
+        prId: pickedExtPrId || ''
       });
-
 
 
 
@@ -4555,9 +4631,12 @@ let customQuestionsList = [
 
 
 
-    function openWizardModal(itemId, track) {
+function openWizardModal(itemId, track) {
       activeItem = getAllContents().find(c => c.id === itemId);
       if (!activeItem) return;
+
+      closePrLiveIframePreview();
+      fetchMySavedPrPagesForSelect();
 
       wizardTrack = track;
       modalSlideIdx = 0;
@@ -4748,8 +4827,10 @@ function toggleLeadDestMode() {
       return (modeEl && modeEl.value === 'custom_url') ? 3 : 4;
     }
 
-    function updateWizardStepView() {
+   function updateWizardStepView() {
       document.querySelectorAll('.step-pane').forEach(p => p.classList.remove('active'));
+      const prBox = document.getElementById('phoneViewPrIframeBox');
+      if (prBox) prBox.style.display = 'none';
       const indicator = document.getElementById('stepIndicatorBar');
 
       if (wizardTrack === 'insta') {
@@ -5391,9 +5472,11 @@ const validCustomQuestions = customQuestionsList
       const agentId = getActiveAgentId();
       const srcTag = wizardTrack === 'insta' ? 'insta_dm' : 'meta_ad';
       const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
-const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions));
-      const prLandingUrl = `${curOrigin}/sns_apply.html?utm_source=${srcTag}&camp_id=${encodeURIComponent(recordId)}&camp=${encodeURIComponent(title)}&fields=${encodeURIComponent(selectedFields.join(','))}&q=${encodeURIComponent(primaryQuestionLabel)}&qs=${encodedCustomQs}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}&agent_id=${encodeURIComponent(agentId)}&pixel_id=${encodeURIComponent(detectedPixelId)}&doc=${encodeURIComponent(pdfDocUrl)}`;
-
+const pickedPrId = wizardTrack === 'insta'
+        ? (document.getElementById('setupInstaPrPageSelect') ? document.getElementById('setupInstaPrPageSelect').value : '')
+        : (document.getElementById('setupMetaPrPageSelect') ? document.getElementById('setupMetaPrPageSelect').value : '');
+      const encodedCustomQs = encodeURIComponent(JSON.stringify(validCustomQuestions));
+      const prLandingUrl = `${curOrigin}/sns_apply.html?utm_source=${srcTag}&camp_id=${encodeURIComponent(recordId)}&camp=${encodeURIComponent(title)}&fields=${encodeURIComponent(selectedFields.join(','))}&q=${encodeURIComponent(primaryQuestionLabel)}&qs=${encodedCustomQs}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}&agent_id=${encodeURIComponent(agentId)}&pixel_id=${encodeURIComponent(detectedPixelId)}&doc=${encodeURIComponent(pdfDocUrl)}${pickedPrId ? '&pr_id=' + encodeURIComponent(pickedPrId) : ''}`;
       // DB에는 전체 설정이 담긴 prLandingUrl을 저장하고, 메타 광고 소재에는 길이 제한(2061013)에 절대 걸리지 않는 단축 URL 전달
       const shortPrRedirectUrl = buildCleanShortApplyUrl(recordId);
       const instantFollowUpUrl = (pdfDocUrl && pdfDocUrl.startsWith('http')) ? pdfDocUrl : shortPrRedirectUrl;
@@ -6228,14 +6311,17 @@ const targetSummaryValue = wizardTrack === 'meta'
               pageId: activePageId || '',
               pageToken: pageAccessToken || '',
               agentName: agentName || '',
-              agentPhone: agentPhone || ''
+              agentPhone: agentPhone || '',
+              pdfUrl: pdfDocUrl || '',
+              prId: pickedPrId || ''
             })
           : JSON.stringify({
               pageId: activePageId || '',
               igId: igUserId || '',
-              pageToken: pageAccessToken || ''
+              pageToken: pageAccessToken || '',
+              pdfUrl: pdfDocUrl || '',
+              prId: pickedPrId || ''
             });
-
         const dbRecord = {
           id: recordId,
           user_id: agentId,

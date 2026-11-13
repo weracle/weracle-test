@@ -762,23 +762,33 @@
         }
 
         async render() {
+            // [로컬 캐시 및 등록 로고 영구 복원]
+            let cachedProf = null;
+            try {
+                const raw = localStorage.getItem('cached_profile');
+                if (raw) cachedProf = JSON.parse(raw);
+            } catch(e) {}
+            const savedLogo = localStorage.getItem('weracle_user_logo') || (cachedProf && cachedProf.logo_url) || '';
+
             if (!sb) {
                 window.currentUser = window.currentUser || { email: 'weracle_pro@partners.com' };
-                window.currentProfile = window.currentProfile || {
+                window.currentProfile = Object.assign({
                     nickname: '위라클 파트너',
                     company: '위라클 파트너스 본부',
                     phone: '010-8765-4321',
                     user_grade: 'vip',
                     point_balance: 5000,
                     fax_count: 12
-                };
+                }, cachedProf || {}, window.currentProfile || {});
+                if (savedLogo) window.currentProfile.logo_url = savedLogo;
                 this.renderDashboard();
                 return;
             }
 
-            const { data: { session } } = await sb.auth.getSession().catch(() => ({ data: { session: null } }));
+            const activeSb = (window.parent && window.parent.sb) || sb;
+            const { data: { session } } = await activeSb.auth.getSession().catch(() => ({ data: { session: null } }));
             window.currentUser = session?.user || (window.parent && window.parent.currentUser) || null;
-            window.currentProfile = window.currentProfile || (window.parent && window.parent.currentProfile) || null;
+            window.currentProfile = window.currentProfile || (window.parent && window.parent.currentProfile) || cachedProf || null;
 
             if (!window.currentUser) {
                 const isPreview = window.location.search.includes('preview=login') || 
@@ -786,7 +796,7 @@
                                   (window.parent && (window.parent.isLoggedIn || window.parent.wIsLoggedIn));
                 if (isPreview) {
                     window.currentUser = (window.parent && window.parent.currentUser) || { id: 'preview-planner-01', email: 'weracle_pro@partners.com' };
-                    window.currentProfile = (window.parent && window.parent.currentProfile) || {
+                    const defaultPreviewProf = {
                         id: 'preview-planner-01',
                         nickname: '위라클 파트너',
                         company: '위라클 파트너스 본부',
@@ -795,6 +805,8 @@
                         point_balance: 5000,
                         fax_count: 12
                     };
+                    window.currentProfile = Object.assign({}, defaultPreviewProf, cachedProf || {}, (window.parent && window.parent.currentProfile) || {});
+                    if (savedLogo) window.currentProfile.logo_url = savedLogo;
                     this.renderDashboard();
                     return;
                 }
@@ -805,7 +817,7 @@
             this.renderLoadingState();
             
             try {
-                const { data: latestProfile, error: profileErr } = await sb
+                const { data: latestProfile, error: profileErr } = await activeSb
                     .from('profiles')
                     .select('*')
                     .eq('id', window.currentUser.id)
@@ -813,11 +825,15 @@
                 if (!profileErr && latestProfile) {
                     window.currentProfile = latestProfile;
                 } else {
-                    window.currentProfile = window.currentProfile || {
+                    window.currentProfile = window.currentProfile || cachedProf || {
                         nickname: window.currentUser.email.split('@')[0],
                         user_grade: 'basic',
                         avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + window.currentUser.id
                     };
+                }
+                // 등록된 로고가 누락되지 않도록 확실하게 바인딩
+                if (savedLogo && !window.currentProfile.logo_url) {
+                    window.currentProfile.logo_url = savedLogo;
                 }
 
                 const isManager = window.currentProfile && window.currentProfile.user_grade === 'manager';
@@ -1291,7 +1307,7 @@
             }
 
             // Logo file input handler
-            const logoInput = this.container.querySelector('#sb-logo-file-input');
+            const logoInput = this.container.querySelector('#sb-logo-file-input') || document.getElementById('sb-logo-file-input');
             if (logoInput) {
                 logoInput.addEventListener('change', (e) => {
                     const file = e.target.files[0];
@@ -1321,9 +1337,19 @@
             try {
                 const updateData = {};
                 updateData[field] = value;
-                if (window.currentUser && window.currentUser.id && !String(window.currentUser.id).startsWith('preview') && sb) {
+
+                // 전용 로고 등록 시 localStorage 영구 보존
+                if (field === 'logo_url') {
                     try {
-                        const { error } = await sb.from('profiles').update(updateData).eq('id', window.currentUser.id);
+                        if (value) localStorage.setItem('weracle_user_logo', value);
+                        else localStorage.removeItem('weracle_user_logo');
+                    } catch(e) {}
+                }
+
+                const activeSb = (window.parent && window.parent.sb) || sb || window.sb;
+                if (window.currentUser && window.currentUser.id && !String(window.currentUser.id).startsWith('preview') && activeSb) {
+                    try {
+                        const { error } = await activeSb.from('profiles').update(updateData).eq('id', window.currentUser.id);
                         if (error) console.warn("Supabase profile update:", error.message);
                     } catch (errDb) {
                         console.warn("Supabase update error:", errDb);
@@ -1333,7 +1359,7 @@
                         try {
                             const metaObj = {};
                             metaObj[field] = value;
-                            await sb.auth.updateUser({ data: metaObj });
+                            await activeSb.auth.updateUser({ data: metaObj });
                         } catch (errMeta) {
                             console.warn("Supabase meta update:", errMeta);
                         }
@@ -1341,7 +1367,8 @@
                 }
                 
                 if (window.currentProfile) window.currentProfile[field] = value;
-                if (window.parent && window.parent.currentProfile) {
+                if (window.parent) {
+                    window.parent.currentProfile = window.parent.currentProfile || {};
                     window.parent.currentProfile[field] = value;
                     if (typeof window.parent.updateProfileUI === 'function') {
                         window.parent.updateProfileUI(window.parent.currentUser, window.parent.currentProfile);

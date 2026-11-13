@@ -27,7 +27,19 @@
       min-height: 100vh;
     }
 
-.studio-workspace {
+/* 관리자(보관함·편집) 모드일 때 전체 창 높이를 모니터 1화면으로 고정 -> 끝없는 하단 여백 원천 차단 */
+    @media (min-width: 961px) {
+      html:has(body.can-edit-pr),
+      html:has(body.is-editing),
+      body.can-edit-pr,
+      body.is-editing {
+        height: 100vh !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
+      }
+    }
+
+    .studio-workspace {
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -35,37 +47,53 @@
       padding: 0;
       min-height: 100vh;
     }
-    body.can-edit-pr .studio-workspace,
-    body.is-editing .studio-workspace {
-      padding: 18px 14px;
-    }
 
-    /* 왼쪽 고정 패널이 떠 있을 때 오른쪽 미리보기가 정중앙 오른쪽 자리를 그대로 유지하도록 공간 확보 */
     @media (min-width: 961px) {
       body.can-edit-pr .studio-workspace,
       body.is-editing .studio-workspace {
-        padding-left: calc(465px + 26px + 14px);
+        height: 100vh !important;
+        min-height: 0 !important;
+        padding: 18px 14px !important;
+        overflow: hidden !important;
+        align-items: stretch;
+      }
+
+      /* 오른쪽 랜딩페이지만 마우스 휠로 부드럽게 단독 스크롤 */
+      body.can-edit-pr .magazine-wrapper,
+      body.is-editing .magazine-wrapper {
+        height: calc(100vh - 36px) !important;
+        min-height: 0 !important;
+        max-height: calc(100vh - 36px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        border-radius: 26px;
+      }
+
+      /* 하단 고정바도 스크롤 시 오른쪽 폰 화면 하단에 딱 붙어 있게 처리 */
+      body.can-edit-pr .bottom-sticky-bar,
+      body.is-editing .bottom-sticky-bar {
+        position: sticky !important;
+        bottom: 0 !important;
       }
     }
 
-    /* 좌측 내 PR 랜딩페이지 보관함 & 3종 프리셋 허브 보드 (화면 좌측 완벽 고정) */
-/* 좌측 보관함 & 스마트 스튜디오 공통: iframe이 3500px로 늘어나도 모니터 크기(최대 760px)로 컴팩트 고정! */
+    /* 좌측 보관함 & 스마트 스튜디오: 따라다니는 계산 없이 제자리에 100% 박제 고정 */
     .pr-hub-panel,
     .easy-editor-panel {
       display: none;
       width: 465px;
-      max-width: calc(100vw - 28px);
+      max-width: 100%;
       background: #ffffff;
       border-radius: 22px;
       box-shadow: 0 20px 50px rgba(15, 23, 42, 0.16);
       border: 1px solid #cbd5e1;
-      position: fixed;
-      top: var(--panel-fixed-top, 18px);
-      left: max(14px, calc(50% - (465px + 26px + 480px) / 2));
-      height: auto;
-      max-height: var(--panel-max-h, 750px);
+      height: calc(100vh - 36px);
+      max-height: calc(100vh - 36px);
       flex-direction: column;
       overflow: hidden;
+      flex-shrink: 0;
       z-index: 500;
     }
     body.can-edit-pr:not(.is-editing) .pr-hub-panel {
@@ -75,7 +103,7 @@
       display: flex;
     }
 
-    /* 오른쪽 요소를 클릭했을 때: 해당 수정 카드 1개만 한 화면에 깔끔하게 단독 표시! */
+    /* 오른쪽 요소를 클릭했을 때: 해당 수정 카드 1개만 한 화면에 깔끔하게 단독 표시 */
     .easy-editor-panel.single-card-mode .eep-card {
       display: none;
     }
@@ -356,9 +384,9 @@
       gap: 8px;
     }
 
-   @media (max-width: 960px) {
-      .studio-workspace { flex-direction: column; align-items: center; padding-left: 14px !important; }
-      .pr-hub-panel, .easy-editor-panel { position: relative; top: 0; left: 0; width: 480px; height: auto; max-height: none; margin-bottom: 20px; }
+  @media (max-width: 960px) {
+      .studio-workspace { flex-direction: column; align-items: center; padding: 14px !important; }
+      .pr-hub-panel, .easy-editor-panel { width: 480px; height: auto; max-height: none; margin-bottom: 20px; }
     }
 
     .magazine-wrapper {
@@ -2224,64 +2252,36 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
     }
 
 // 위라클랩 상위 프레임(iframe)이 3500px로 늘어나 있어도 왼쪽 보관함·스튜디오가 항상 현재 모니터 화면을 따라오도록 동기화!
-    function initParentIframeViewportSync() {
-      const syncPanelPosition = () => {
-        if (window.innerWidth <= 960) {
-          document.documentElement.style.setProperty('--panel-fixed-top', '0px');
-          document.documentElement.style.setProperty('--panel-max-h', 'none');
-          return;
-        }
-
-        let topPx = 18;
-        let availH = Math.min(window.innerHeight - 36, 760);
-
+function initParentIframeViewportSync() {
+      const lockIframeHeightToScreen = () => {
+        if (!document.body.classList.contains('can-edit-pr') && !document.body.classList.contains('is-editing')) return;
         try {
           if (window.self !== window.top && window.frameElement) {
             const pWin = window.parent;
-            const frameRect = window.frameElement.getBoundingClientRect();
-            const pViewH = pWin.innerHeight || 820;
-
-            // 부모 창이 아래로 스크롤되어 iframe 상단이 위로 올라간 만큼 왼쪽 패널을 아래로 내려 항상 눈앞에 고정!
-            if (frameRect.top < 16) {
-              topPx = Math.round(Math.abs(frameRect.top) + 16);
-            } else {
-              topPx = 16;
-            }
-
-            const visibleFrameH = Math.min(pViewH - Math.max(16, frameRect.top) - 20, 760);
-            availH = Math.max(480, visibleFrameH);
-
-            const maxAllowedTop = Math.max(16, document.documentElement.scrollHeight - availH - 24);
-            topPx = Math.min(topPx, maxAllowedTop);
-          } else {
-            availH = Math.max(500, Math.min(window.innerHeight - 36, 760));
+            const rect = window.frameElement.getBoundingClientRect();
+            const fitH = Math.max(660, (pWin.innerHeight || 860) - Math.max(0, rect.top) - 8);
+            window.frameElement.style.height = fitH + 'px';
+            window.frameElement.style.minHeight = fitH + 'px';
+            window.frameElement.style.maxHeight = fitH + 'px';
+            window.frameElement.setAttribute('scrolling', 'no');
           }
-        } catch (e) {
-          availH = 720;
-        }
-
-        document.documentElement.style.setProperty('--panel-fixed-top', topPx + 'px');
-        document.documentElement.style.setProperty('--panel-max-h', availH + 'px');
+        } catch (e) {}
       };
 
-      syncPanelPosition();
-      window.addEventListener('scroll', syncPanelPosition, { passive: true });
-      window.addEventListener('resize', syncPanelPosition, { passive: true });
+      lockIframeHeightToScreen();
+      setTimeout(lockIframeHeightToScreen, 150);
+      setTimeout(lockIframeHeightToScreen, 600);
+      window.addEventListener('resize', lockIframeHeightToScreen);
 
-      try {
-        if (window.self !== window.top && window.parent) {
-          window.parent.addEventListener('scroll', syncPanelPosition, { passive: true });
-          window.parent.addEventListener('resize', syncPanelPosition, { passive: true });
-          // 부모 내부 스크롤 컨테이너(.pb-content-area 등)가 있는 경우도 완벽 감지
-          const pDoc = window.parent.document;
-          ['.pb-content-area', 'main', '.content-wrapper', '#app', '#root'].forEach(sel => {
-            const sc = pDoc.querySelector(sel);
-            if (sc) sc.addEventListener('scroll', syncPanelPosition, { passive: true });
-          });
-        }
-      } catch (e) {}
+      // 양옆 회색 바탕 위에 마우스를 두고 휠을 굴려도 오른쪽 랜딩페이지만 부드럽게 내려가도록 연결
+      window.addEventListener('wheel', e => {
+        if (window.innerWidth <= 960) return;
+        if (!document.body.classList.contains('can-edit-pr') && !document.body.classList.contains('is-editing')) return;
+        if (e.target.closest('.pr-hub-panel') || e.target.closest('.easy-editor-panel') || e.target.closest('.magazine-wrapper')) return;
+        const mag = document.querySelector('.magazine-wrapper');
+        if (mag) mag.scrollTop += e.deltaY;
+      }, { passive: true });
     }
-
     function exitSingleCardFocusMode() {
       const panel = document.getElementById('easyEditorPanel');
       if (panel) panel.classList.remove('single-card-mode');
@@ -2355,9 +2355,14 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
       document.querySelectorAll('.eep-tab-pane').forEach((p, i) => p.classList.toggle('active', i === idx));
 
       if (scrollRightPreview) {
-        const previewAnchors = ['heroStage', 'heroStage', 'philosophyAnchor', 'secMidPortrait', 'secProductStandard', 'secCareTopics'];
-        const targetEl = document.getElementById(previewAnchors[idx]);
-        if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const previewAnchors = ['heroStage', 'heroStage', 'philosophyAnchor', 'secMidPortrait', 'secProductStandard', 'secCareTopics'];
+   const targetEl = document.getElementById(previewAnchors[idx]);
+   const mag = document.querySelector('.magazine-wrapper');
+   if (targetEl && mag && window.innerWidth > 960) {
+     mag.scrollTo({ top: Math.max(0, targetEl.offsetTop - 54), behavior: 'smooth' });
+   } else if (targetEl) {
+     targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+   }
       }
     }
 

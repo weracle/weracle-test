@@ -22,6 +22,40 @@ window.normalizeCustomerStatus = window.normalizeCustomerStatus || function(st) 
 
     return "기본가망";
 };
+// 계약 고객 판정 함수: 보험 가입내역 1건 이상 등록되어 있거나 상태가 체결유지인 고객
+window.isContractCustomer = function(c) {
+    if (!c) return false;
+    const normSt = (typeof window.normalizeCustomerStatus === 'function')
+        ? window.normalizeCustomerStatus(c['상태'] || c['고객상태'])
+        : '';
+    if (normSt === '체결유지') return true;
+
+    try {
+        let gArr = (typeof getGlobalInsuranceList === 'function')
+            ? getGlobalInsuranceList(c, true)
+            : (Array.isArray(c['보험가입리스트']) ? c['보험가입리스트'] : (Array.isArray(c['가입내역']) ? c['가입내역'] : []));
+        if (Array.isArray(gArr) && gArr.length > 0) {
+            const hasValidIns = gArr.some(function(i) {
+                if (!i) return false;
+                const comp = String(i['보험사명'] || i['차_보험사명'] || i['차_보험사'] || i['보험사'] || i['company'] || '').trim();
+                const prod = String(i['상품명'] || i['차_상품명'] || i['product'] || '').trim();
+                return comp !== '' || prod !== '';
+            });
+            if (hasValidIns) return true;
+        }
+    } catch(e) {}
+
+    const rawGain = String(c['가입내역'] || '').trim();
+    if (rawGain && rawGain !== '-' && rawGain !== '[]' && rawGain !== '없음' && rawGain !== '{}' && rawGain.length > 2) {
+        return true;
+    }
+    const rawIns = String(c['보험사'] || c['보험사명'] || '').trim();
+    if (rawIns && rawIns !== '-' && rawIns !== '없음' && rawIns.length > 1) {
+        return true;
+    }
+
+    return false;
+};
 
 const GOOGLE_CLIENT_ID = "281609603311-j6ie378elv518odovep2rjemeaffb40b.apps.googleusercontent.com"; 
 const GOOGLE_API_KEY = "AIzaSyD9XOJBgaaUh6XVAx_az6Ka0IlUUsc2pSw"; // Replace with real if needed
@@ -9270,7 +9304,12 @@ window.updateQuickFilterCounts = function() {
         else if (norm === "보장분석") cntBojang++;
         else if (norm === "설계제안") cntJean++;
         else if (norm === "상담보류") cntBoryu++;
-        else if (norm === "체결유지") cntChegyul++;
+
+        // 체결유지 (계약 고객 케어): 보험 등록 여부 OR 상태가 체결유지
+        const isContract = (typeof window.isContractCustomer === "function")
+            ? window.isContractCustomer(c)
+            : (norm === "체결유지");
+        if (isContract) cntChegyul++;
 
         if (typeof window.isBirthCustomer === "function" && window.isBirthCustomer(c)) birth++;
         if (typeof window.isSangryungCustomer === "function" && window.isSangryungCustomer(c)) sangryung++;
@@ -9516,7 +9555,17 @@ window.renderListModal = function(filtered, fType, fVal) {
     let thHtml = "<tr>";
     
     if (fType === 'status') {
-        titleStr = "영업 파이프라인: " + fVal;
+        if (fVal === '계약전전체') {
+            titleStr = "신규 영업 파이프라인 (계약 전 전체)";
+            filtered = filtered.filter(c => (typeof window.normalizeCustomerStatus === 'function' ? window.normalizeCustomerStatus(c['상태'] || c['고객상태']) : (c['상태'] || '')) !== '체결유지');
+        } else if (fVal === '체결유지') {
+            titleStr = "계약 고객 케어: 체결유지";
+            filtered = filtered.filter(c => (typeof window.isContractCustomer === 'function') ? window.isContractCustomer(c) : ((c['상태'] || '') === '체결유지'));
+        } else {
+            titleStr = "영업 파이프라인: " + fVal;
+            const targetNorm = typeof window.normalizeCustomerStatus === 'function' ? window.normalizeCustomerStatus(fVal) : fVal;
+            filtered = filtered.filter(c => (typeof window.normalizeCustomerStatus === 'function' ? window.normalizeCustomerStatus(c['상태'] || c['고객상태']) : (c['상태'] || '')) === targetNorm);
+        }
         thHtml += "<th>고객명</th><th>상태</th><th>직업</th><th>폰번호</th><th style='text-align: right;'>상세보기</th>";
     } else if (fType === 'insight') {
         titleStr = "터치인사이트: " + fVal;
@@ -9549,9 +9598,14 @@ window.renderListModal = function(filtered, fType, fVal) {
             const job = r["직업"] || "-";
             const id = r["고객번호"] || r["ID"] || "";
             
+            const isContract = (typeof window.isContractCustomer === 'function') && window.isContractCustomer(r);
+            const contractBadge = (isContract && fVal !== '체결유지')
+                ? '<span style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; padding:1px 6px; border-radius:6px; margin-left:6px; font-weight:800; display:inline-block; vertical-align:middle;">계약보유</span>'
+                : '';
+            
             tbHtml += "<tr>";
             if (fType === 'status') {
-                tbHtml += "<td><div class='user-name' style='font-weight:700;'>" + name + "</div></td>";
+                tbHtml += "<td><div class='user-name' style='font-weight:700;'>" + name + contractBadge + "</div></td>";
                 tbHtml += "<td><span class='pill' style='background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;'>" + status + "</span></td>";
                 tbHtml += "<td>" + job + "</td>";
                 tbHtml += "<td>" + phone + "</td>";

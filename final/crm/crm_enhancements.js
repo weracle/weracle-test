@@ -36,6 +36,40 @@ window.normalizeCustomerStatus = function(st) {
 
     return '기본가망';
 };
+// 계약 고객 판정 함수: 보험 가입내역 1건 이상 등록되어 있거나 상태가 체결유지인 고객
+window.isContractCustomer = function(c) {
+    if (!c) return false;
+    const normSt = (typeof window.normalizeCustomerStatus === 'function')
+        ? window.normalizeCustomerStatus(c['상태'] || c['고객상태'])
+        : '';
+    if (normSt === '체결유지') return true;
+
+    try {
+        let gArr = (typeof getGlobalInsuranceList === 'function')
+            ? getGlobalInsuranceList(c, true)
+            : (Array.isArray(c['보험가입리스트']) ? c['보험가입리스트'] : (Array.isArray(c['가입내역']) ? c['가입내역'] : []));
+        if (Array.isArray(gArr) && gArr.length > 0) {
+            const hasValidIns = gArr.some(function(i) {
+                if (!i) return false;
+                const comp = String(i['보험사명'] || i['차_보험사명'] || i['차_보험사'] || i['보험사'] || i['company'] || '').trim();
+                const prod = String(i['상품명'] || i['차_상품명'] || i['product'] || '').trim();
+                return comp !== '' || prod !== '';
+            });
+            if (hasValidIns) return true;
+        }
+    } catch(e) {}
+
+    const rawGain = String(c['가입내역'] || '').trim();
+    if (rawGain && rawGain !== '-' && rawGain !== '[]' && rawGain !== '없음' && rawGain !== '{}' && rawGain.length > 2) {
+        return true;
+    }
+    const rawIns = String(c['보험사'] || c['보험사명'] || '').trim();
+    if (rawIns && rawIns !== '-' && rawIns !== '없음' && rawIns.length > 1) {
+        return true;
+    }
+
+    return false;
+};
 
 (function() {
     window._googleAuthAlertShown = false;
@@ -272,8 +306,41 @@ window.quickChangeCustomerStatus = async function(id, newStatus, selectEl) {
             window.parent.postMessage({ type: 'syncData', data: window.globalCustomerData }, '*');
         }
 
-        // 토스트 알림
-        window.showToastNotice(`✨ [${custName}] 상태가 [${newStatus}](으)로 변경되었습니다!`);
+        // 토스트 알림 & 행 전환
+        const curType = window.currentFilterType || '';
+        const curVal = window.currentFilterValue || '';
+        if (typeof window.showToastNotice === 'function') {
+            if (newStatus === '체결유지') {
+                window.showToastNotice(`🎉 [${custName}] 계약 체결 완료! (계약 고객 케어로 전환되었습니다)`);
+            } else {
+                window.showToastNotice(`✨ [${custName}] 상태가 [${newStatus}](으)로 변경되었습니다!`);
+            }
+        }
+
+        if (curType === 'status' && curVal !== '체결유지') {
+            const isMovedOut = (curVal === '계약전전체' && newStatus === '체결유지') || (curVal !== '계약전전체' && newStatus !== curVal);
+            if (isMovedOut && selectEl) {
+                const rowEl = selectEl.closest('tr') || selectEl.closest('.mc-card') || selectEl.closest('.mobile-card') || selectEl.closest('.user-card');
+                if (rowEl) {
+                    rowEl.style.transition = 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+                    rowEl.style.opacity = '0';
+                    rowEl.style.transform = 'translateX(24px)';
+                    setTimeout(function() {
+                        if (rowEl && rowEl.parentNode) {
+                            rowEl.remove();
+                            const titleEl = document.getElementById('modalTitle');
+                            if (titleEl) {
+                                const match = titleEl.innerText.match(/\((\d+)명\)/);
+                                if (match) {
+                                    const currentNum = Math.max(0, parseInt(match[1], 10) - 1);
+                                    titleEl.innerHTML = titleEl.innerHTML.replace(/\(\d+명\)/, '(' + currentNum + '명)');
+                                }
+                            }
+                        }
+                    }, 350);
+                }
+            }
+        }
     } catch(err) {
         console.error("상태 변경 구글 시트 저장 실패:", err);
         // 실패 시 롤백 안내
@@ -353,7 +420,12 @@ window.showToastNotice = function(text) {
             else if (norm === '보장분석') cntBojang++;
             else if (norm === '설계제안') cntJean++;
             else if (norm === '상담보류') cntBoryu++;
-            else if (norm === '체결유지') cntChegyul++;
+
+            // 체결유지 (계약 고객 케어): 보험 등록 여부 OR 상태가 체결유지
+            const isContract = (typeof window.isContractCustomer === 'function')
+                ? window.isContractCustomer(c)
+                : (norm === '체결유지');
+            if (isContract) cntChegyul++;
 
             // 생일 대상자 (30일 이내)
             if (typeof window.isBirthCustomer === 'function' && window.isBirthCustomer(c)) birth++;
@@ -430,6 +502,8 @@ window.showToastNotice = function(text) {
 
     // 2. 모달 렌더링 함수 오버라이드
     window.renderListModal = function(filtered, fType, fVal) {
+        window.currentFilterType = fType;
+        window.currentFilterValue = fVal;
         const head = document.getElementById("listTableHead");
         const body = document.getElementById("listTableBody");
         const title = document.getElementById("modalTitle");
@@ -448,7 +522,17 @@ window.showToastNotice = function(text) {
             titleStr = `이번 달 보험금 청구 고객 (${filtered.length}명)`;
             thHtml += "<th>고객명</th><th>청구/터치 내역</th><th>상태</th><th>폰번호</th><th style='text-align: right;'>상세보기</th>";
         } else if (fType === 'status') {
-            titleStr = fVal === '계약전전체' ? `신규 영업 파이프라인 (계약 전 전체) (${filtered.length}명)` : (fVal === '체결유지' ? `계약 고객 케어: 체결유지 (${filtered.length}명)` : `영업 파이프라인: ${fVal} (${filtered.length}명)`);
+            if (fVal === '계약전전체') {
+                filtered = filtered.filter(c => (typeof window.normalizeCustomerStatus === 'function' ? window.normalizeCustomerStatus(c['상태'] || c['고객상태']) : (c['상태'] || '')) !== '체결유지');
+                titleStr = `신규 영업 파이프라인 (계약 전 전체) (${filtered.length}명)`;
+            } else if (fVal === '체결유지') {
+                filtered = filtered.filter(c => (typeof window.isContractCustomer === 'function') ? window.isContractCustomer(c) : ((c['상태'] || '') === '체결유지'));
+                titleStr = `계약 고객 케어: 체결유지 (${filtered.length}명)`;
+            } else {
+                const targetNorm = typeof window.normalizeCustomerStatus === 'function' ? window.normalizeCustomerStatus(fVal) : fVal;
+                filtered = filtered.filter(c => (typeof window.normalizeCustomerStatus === 'function' ? window.normalizeCustomerStatus(c['상태'] || c['고객상태']) : (c['상태'] || '')) === targetNorm);
+                titleStr = `영업 파이프라인: ${fVal} (${filtered.length}명)`;
+            }
             thHtml += "<th>고객명</th><th>상태 변경 (1-클릭)</th><th>직업</th><th>폰번호</th><th style='text-align: right;'>상세보기</th>";
         } else if (fType === 'insurance') {
             titleStr = `가입내역: ${fVal} (${filtered.length}명)`;
@@ -487,6 +571,11 @@ window.showToastNotice = function(text) {
                 const job = r["직업"] || r["대표업태"] || "-";
                 const id = r["고객번호"] || r["ID"] || "";
 
+                const isContract = (typeof window.isContractCustomer === 'function') && window.isContractCustomer(r);
+                const contractBadge = (isContract && fVal !== '체결유지')
+                    ? `<span style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; padding:1px 6px; border-radius:6px; margin-left:6px; font-weight:800; display:inline-block; vertical-align:middle;">계약보유</span>`
+                    : '';
+
                 tbHtml += "<tr>";
 
                 // Item 10: 파이프라인 1-클릭 상태 변경 셀렉트 박스 (6단계 규격화)
@@ -495,7 +584,7 @@ window.showToastNotice = function(text) {
                         ? window.buildStatusSelectHtml(status, id)
                         : `<span class="pill" style="background:#eff6ff; color:#0284c7; font-weight:700;">${status}</span>`;
 
-                    tbHtml += `<td><div class='user-name' style='font-weight:800; cursor:pointer; color:#0f172a;' onclick="if(typeof openProfile==='function') openProfile('${id}')">${name}</div></td>`;
+                    tbHtml += `<td><div class='user-name' style='font-weight:800; cursor:pointer; color:#0f172a;' onclick="if(typeof openProfile==='function') openProfile('${id}')">${name}${contractBadge}</div></td>`;
                     tbHtml += `<td>${selectHtml}</td>`;
                     tbHtml += `<td>${job}</td>`;
                     tbHtml += `<td><span style="color:#0284c7; font-weight:700;">${phone}</span></td>`;

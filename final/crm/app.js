@@ -1,3 +1,28 @@
+// ============================================================== 
+// 0. 상태 정규화 함수 (6단계 4글자 표준 규격화)
+// ==============================================================
+window.normalizeCustomerStatus = window.normalizeCustomerStatus || function(st) {
+    if (!st) return "기본가망";
+    st = String(st).trim();
+    if (st === "기본가망") return "기본가망";
+    if (st === "동의완료") return "동의완료";
+    if (st === "보장분석") return "보장분석";
+    if (st === "설계제안") return "설계제안";
+    if (st === "상담보류") return "상담보류";
+    if (st === "체결유지") return "체결유지";
+
+    // Detailed keywords
+    if (st.includes("보류")) return "상담보류";
+    if (st.includes("동의") || st.includes("인증") || st.includes("등록")) return "동의완료";
+    if (st.includes("분석") || st.includes("증권") || st.includes("진단")) return "보장분석";
+    if (st.includes("제안") || st.includes("유력") || st.includes("설계") || st.includes("상담")) return "설계제안";
+    if (st.includes("체결") || st.includes("계약") || st.includes("유지") || st.includes("케어") || st.includes("VIP")) return "체결유지";
+    if (st.includes("관심")) return "동의완료";
+    if (st.includes("잠재") || st.includes("가망") || st.includes("신규") || st.includes("기본") || st.includes("접수")) return "기본가망";
+
+    return "기본가망";
+};
+
 const GOOGLE_CLIENT_ID = "281609603311-j6ie378elv518odovep2rjemeaffb40b.apps.googleusercontent.com"; 
 const GOOGLE_API_KEY = "AIzaSyD9XOJBgaaUh6XVAx_az6Ka0IlUUsc2pSw"; // Replace with real if needed
 const SPREADSHEET_ID = "15UcwX8QpXbA-aL1n2qJ9z5dO2y94hQo-7YJ7H1mYwDk"; 
@@ -4195,12 +4220,10 @@ function loadCustomerForFamily(task) {
     // 상태 매핑 (select 옵션과 완벽 호환)
     const statusSel = form.querySelector('[name="상태"]');
     if (statusSel) {
-        const rawSt = String(client["상태"] || "").trim();
-        if (rawSt.includes("잠재") || rawSt.includes("가망") || rawSt.includes("신규")) statusSel.value = "잠재고객";
-        else if (rawSt.includes("관심")) statusSel.value = "관심고객";
-        else if (rawSt.includes("유력") || rawSt.includes("상담") || rawSt.includes("설계")) statusSel.value = "유력고객";
-        else if (rawSt.includes("계약") || rawSt.includes("체결") || rawSt.includes("케어") || rawSt.includes("유지") || rawSt.includes("집중") || rawSt.includes("VIP")) statusSel.value = "계약고객";
-        else statusSel.value = "잠재고객";
+        const normSt = (typeof window.normalizeCustomerStatus === "function")
+            ? window.normalizeCustomerStatus(client["상태"] || client["고객상태"])
+            : "기본가망";
+        statusSel.value = normSt;
     }
 
     setFormVal("주민번호", formatJumin(client["주민번호"] || ""));
@@ -4810,12 +4833,9 @@ const touchInsightVal = (checkedPillVals.length > 0)
     ? checkedPillVals.join(", ")
     : (formData.get("터치인사이트") || (existingClient ? (existingClient["터치인사이트"] || "") : ""));
 
-let normalizedStatus = formData.get("상태") || (existingClient ? existingClient["상태"] : "잠재고객");
-if (normalizedStatus.includes("잠재") || normalizedStatus.includes("가망") || normalizedStatus.includes("신규")) normalizedStatus = "잠재고객";
-else if (normalizedStatus.includes("관심")) normalizedStatus = "관심고객";
-else if (normalizedStatus.includes("유력") || normalizedStatus.includes("상담") || normalizedStatus.includes("설계")) normalizedStatus = "유력고객";
-else if (normalizedStatus.includes("계약") || normalizedStatus.includes("체결") || normalizedStatus.includes("케어") || normalizedStatus.includes("유지") || normalizedStatus.includes("집중") || normalizedStatus.includes("VIP")) normalizedStatus = "계약고객";
-else normalizedStatus = "잠재고객";
+let normalizedStatus = (typeof window.normalizeCustomerStatus === "function")
+    ? window.normalizeCustomerStatus(formData.get("상태") || (existingClient ? existingClient["상태"] : "기본가망"))
+    : (formData.get("상태") || "기본가망");
 
 let finalGainHistory = "";
 if (insList && insList.length > 0 && (insList[0].보험사명 || insList[0].차_보험사명 || insList[0].상품명 || insList.length > 1)) {
@@ -9222,80 +9242,74 @@ function closeProfile() { return window.closeProfile(); }
 function openProfile(id) { return window.openProfile(id); }
 
 window.updateQuickFilterCounts = function() {
-    let total = globalCustomerData.length;
-    let potential = 0;
-    let interest = 0;
-    let influential = 0;
-    let contract = 0;
-    let consult = 0;
-    let care = 0;
-    
+    const rawData = (window.globalCustomerData && Array.isArray(window.globalCustomerData) && window.globalCustomerData.length > 0)
+        ? window.globalCustomerData
+        : ((typeof globalCustomerData !== "undefined" && Array.isArray(globalCustomerData)) ? globalCustomerData : []);
+
+    if (!rawData || !Array.isArray(rawData)) return;
+
+    let cntGamang = 0;
+    let cntDongi = 0;
+    let cntBojang = 0;
+    let cntJean = 0;
+    let cntBoryu = 0;
+    let cntChegyul = 0;
+
     let birth = 0;
     let sangryung = 0;
     let expiry = 0;
-    
-    const today = new Date();
-    const currentMonthStr = String(today.getMonth() + 1).padStart(2, '0');
-    const currentDayStr = String(today.getDate()).padStart(2, '0');
-    const currentMD = currentMonthStr + currentDayStr;
+    let claim = 0;
 
-    globalCustomerData.forEach(c => {
-        let s = String(c['상태'] || c['고객상태'] || '');
-        if(s.includes('잠재') || s.includes('가망') || s.includes('신규')) potential++;
-        else if(s.includes('관심')) interest++;
-        else if(s.includes('유력') || s.includes('상담') || s.includes('설계')) influential++;
-        else if(s.includes('계약') || s.includes('체결') || s.includes('케어') || s.includes('유지') || s.includes('집중') || s.includes('VIP')) contract++;
-        consult = influential; care = contract;
-        
-        // 생일 / 상령일 / 만기 대상자 (오늘 기준 30일 이내 통합 계산)
-        if (typeof window.isBirthCustomer === 'function' ? window.isBirthCustomer(c) : false) {
-            birth++;
-        }
-        if (typeof window.isSangryungCustomer === 'function' ? window.isSangryungCustomer(c) : false) {
-            sangryung++;
-        }
-        if (typeof window.isExpiringCustomer === 'function' ? window.isExpiringCustomer(c) : false) {
-            expiry++;
-        }
+    rawData.forEach(c => {
+        const norm = (typeof window.normalizeCustomerStatus === "function")
+            ? window.normalizeCustomerStatus(c["상태"] || c["고객상태"])
+            : "기본가망";
+
+        if (norm === "기본가망") cntGamang++;
+        else if (norm === "동의완료") cntDongi++;
+        else if (norm === "보장분석") cntBojang++;
+        else if (norm === "설계제안") cntJean++;
+        else if (norm === "상담보류") cntBoryu++;
+        else if (norm === "체결유지") cntChegyul++;
+
+        if (typeof window.isBirthCustomer === "function" && window.isBirthCustomer(c)) birth++;
+        if (typeof window.isSangryungCustomer === "function" && window.isSangryungCustomer(c)) sangryung++;
+        if (typeof window.isExpiringCustomer === "function" && window.isExpiringCustomer(c)) expiry++;
+        if (typeof window.isClaimCustomer === "function" && window.isClaimCustomer(c)) claim++;
     });
 
-    const insightCounts = {};
-    globalCustomerData.forEach(c => {
-        let tags = String(c['터치인사이트'] || '').split(',').map(t=>t.trim()).filter(t=>t);
-        tags.forEach(t => { 
-            let mappedTag = t.trim();
-            insightCounts[mappedTag] = (insightCounts[mappedTag] || 0) + 1; 
-        });
-    });
-    
-    document.querySelectorAll('[id^="touch-count-"], [id^="m-touch-count-"]').forEach(el => el.innerText = '0');
-    Object.entries(insightCounts).forEach(([tag, count]) => {
-        const el = document.getElementById('touch-count-' + tag);
-        if (el) el.innerText = count;
-        const mEl = document.getElementById('m-touch-count-' + tag);
-        if (mEl) mEl.innerText = count;
-    });
+    const preTotal = cntGamang + cntDongi + cntBojang + cntJean + cntBoryu;
+    const postTotal = cntChegyul;
+    const total = rawData.length;
 
-    const updateEls = (ids, text) => {
-        ids.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerText = text;
-        });
+    const setTxt = (sel, val) => {
+        document.querySelectorAll(sel).forEach(el => el.innerText = val);
     };
 
-    updateEls(['qf-count-total'], total + "명");
-    updateEls(['pipe-count-potential', '.m-sync-potential'], potential);
-    updateEls(['qf-interest', 'qf-count-interest', 'pipe-count-interest', '.m-sync-interest'], interest);
-    updateEls(['pipe-count-influential', 'pipe-count-consult', 'qf-count-consult', '.m-sync-influential', '.m-sync-consult'], influential);
-    updateEls(['pipe-count-contract', 'pipe-count-care', 'qf-contract', 'qf-count-contract', 'qf-count-care', '.m-sync-contract', '.m-sync-care'], contract);
-    
-    updateEls(['mini-badge-birth'], birth + "명");
-    updateEls(['mini-badge-sangryung'], sangryung + "명");
-    updateEls(['mini-badge-expiry'], expiry + "명");
+    setTxt("#qf-count-total, #qf-count-all", total + "명");
+    setTxt(".m-sync-total", total);
 
-    // [대표님 피드백 반영] 데이터가 화면에 출력되는 바로 그 순간 인디케이터 즉시 숨김
-    const ind = document.getElementById('crm-initial-loading-indicator');
-    if (ind) ind.style.display = 'none';
+    setTxt("#pipe-count-pre-total, .m-sync-pre-total", preTotal);
+    setTxt("#pipe-count-gamang, .m-sync-gamang, #pipe-count-potential, .m-sync-potential", cntGamang);
+    setTxt("#pipe-count-dongi, .m-sync-dongi", cntDongi);
+    setTxt("#pipe-count-bojang, .m-sync-bojang, #pipe-count-interest, #qf-count-interest, #qf-interest, .m-sync-interest", cntBojang);
+    setTxt("#pipe-count-jean, .m-sync-jean, #pipe-count-influential, #pipe-count-consult, #qf-count-consult, .m-sync-influential, .m-sync-consult", cntJean);
+    setTxt("#pipe-count-boryu, .m-sync-boryu", cntBoryu);
+
+    setTxt("#pipe-count-post-total, #pipe-count-chegyul, #pipe-count-contract, #pipe-count-care, #qf-contract, #qf-count-contract, #qf-count-care, .m-sync-post-total, .m-sync-chegyul, .m-sync-contract, .m-sync-care", postTotal);
+
+    setTxt("#mini-badge-birth", birth + "명");
+    setTxt("#mini-badge-sangryung", sangryung + "명");
+    setTxt("#mini-badge-expiry", expiry + "명");
+    setTxt("#mini-badge-claim", claim + "명");
+
+    setTxt(".m-sync-birth", birth);
+    setTxt(".m-sync-sang", sangryung);
+    setTxt(".m-sync-expiry", expiry);
+    setTxt(".m-sync-claim", claim);
+
+    const ind = document.getElementById("crm-initial-loading-indicator");
+    if (ind) ind.style.display = "none";
 };
 function updateQuickFilterCounts() { return window.updateQuickFilterCounts(); }
 
@@ -10403,7 +10417,7 @@ window.submitBulkData = async function() {
                 else if (head === "특이사항") rowArr[i] = data.특이사항 || "";
                 else if (head === "가입내역") rowArr[i] = "";
                 else if (head === "등록일") rowArr[i] = todayStr;
-                else if (head === "상태") rowArr[i] = "잠재고객";
+                else if (head === "상태") rowArr[i] = "기본가망";
                 else if (head === "사업여부") rowArr[i] = "N";
                 else if (head === "나이") rowArr[i] = calculatedAge || "";
                 else if (head === "성별") rowArr[i] = calculatedGender || "";
@@ -10835,7 +10849,7 @@ window.submitSmartReg = async function() {
             else if (head === "주소" || head === "대표주소") rowArr[i] = addr;
             else if (head === "직업" || head === "대표업태") rowArr[i] = job;
             else if (head === "특이사항" || head === "메모") rowArr[i] = memo;
-            else if (head === "상태") rowArr[i] = "잠재고객";
+            else if (head === "상태") rowArr[i] = "기본가망";
             else if (head === "나이") rowArr[i] = calculatedAge;
             else if (head === "성별") rowArr[i] = calculatedGender;
             else if (head === "생일") rowArr[i] = calculatedBirth;

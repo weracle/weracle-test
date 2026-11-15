@@ -1770,13 +1770,13 @@
         wedge: {
             id: 'wedge',
             type: 'shape',
-            shapeType: 'triangle_wedge', // 'triangle_wedge', 'right_triangle', 'trapezoid', 'rounded_rect', 'diagonal_split'
+            shapeType: 'triangle_wedge', // 'triangle_wedge', 'right_triangle', 'trapezoid', 'rounded_rect', 'diagonal_split', 'rect_card', 'minimal_frame'
             x: 0,
             y: 500,
             w: 660,
             h: 800,
-            color: '#0f2347',
-            accentColor: '#f59e0b',
+            color: '#334155',
+            accentColor: '#94a3b8',
             borderWidth: 6,
             flipX: false,
             visible: true
@@ -1802,7 +1802,7 @@
             fontSize: 84,
             fontFamily: 'Pretendard',
             fontWeight: '900',
-            color: '#0369a1',
+            color: '#0f172a',
             align: 'left',
             visible: true
         },
@@ -1843,7 +1843,7 @@
             y: 1630,
             w: 1240,
             h: 124,
-            color: '#0f2347',
+            color: '#334155',
             textColor: '#ffffff',
             visible: true
         },
@@ -1878,7 +1878,7 @@
     };
 
     window.coverState = {
-        template: 'bojang_original',
+        template: 'vector_wedge',
         clientName: '김철수',
         clientPhone: '',
         consName: '박보환',
@@ -2924,7 +2924,7 @@
     // ==========================================
     // 10. 좌측 사이드바 간편 제어 연동 함수들
     // ==========================================
-    function selectDesignTemplate(tplId, btn) {
+    function selectDesignTemplate(tplId, btn, silent = false) {
         window.coverState.template = tplId;
         document.querySelectorAll('.btn-shape-card').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.btn-template-select').forEach(b => b.classList.remove('active'));
@@ -2984,7 +2984,7 @@
         }
 
         renderCover();
-        showToast('📐 표지 모양이 변경되었습니다.');
+        if (!silent) showToast('📐 표지 모양이 변경되었습니다.');
     }
 
     function chooseCoverColor(chipEl) {
@@ -2995,12 +2995,12 @@
         setWedgeColor(col, acc);
     }
 
-    function setWedgeColor(col, acc) {
+    function setWedgeColor(col, acc, silent = false) {
         window.coverObjects.wedge.color = col;
         if (acc) window.coverObjects.wedge.accentColor = acc;
         window.coverObjects.footer.color = col;
         renderCover();
-        showToast('🎨 표지 색상이 변경되었습니다.');
+        if (!silent) showToast('🎨 표지 색상이 변경되었습니다.');
     }
 
     function setBuiltinModel(btn) {
@@ -3247,15 +3247,15 @@
         container.innerHTML = html;
     }
 
-    function applyBojangPreset(presetId) {
+    function applyBojangPreset(presetId, silent = false) {
         const p = BOJANG_PRESETS.find(item => item.id === presetId);
         if (!p) return;
 
         currentSelectedPresetId = presetId;
         renderSampleCards();
 
-        selectDesignTemplate(p.template);
-        setWedgeColor(p.wedgeColor, p.wedgeAccent);
+        selectDesignTemplate(p.template, null, silent);
+        setWedgeColor(p.wedgeColor, p.wedgeAccent, silent);
 
         // 색상 칩 활성화 상태 동기화 (기본 모던 그레이)
         document.querySelectorAll('.color-choice-chip').forEach(c => {
@@ -3284,7 +3284,9 @@
         }
 
         renderCover();
-        showToast('✨ [' + p.name + ']이 적용되었습니다! 직접 만들기 탭에서 내용과 색상을 자유롭게 변경할 수 있습니다.');
+        if (!silent) {
+            showToast('✨ [' + p.name + ']이 적용되었습니다! 직접 만들기 탭에서 내용과 색상을 자유롭게 변경할 수 있습니다.');
+        }
     }
 
     // ==========================================
@@ -3364,7 +3366,7 @@
     // 13. 초기화 (DOMContentLoaded)
     // ==========================================
     document.addEventListener('DOMContentLoaded', () => {
-        renderSampleCards();
+        applyBojangPreset('sample_design_1', true);
         initDragAndResize();
 
         // 1. 마이페이지 프로필 자동 연동 (소속, 성명, 연락처)

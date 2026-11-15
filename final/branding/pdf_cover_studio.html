@@ -578,6 +578,212 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+    
+        /* 캔버스 스테이지 래퍼 (캔버스와 인터랙티브 오버레이를 1:1로 감싸는 컨테이너) */
+        .canvas-stage-wrapper {
+            position: relative;
+            display: inline-block;
+            height: 100%;
+            max-height: calc(100vh - 20px);
+            width: auto;
+            max-width: 100%;
+            aspect-ratio: 1240 / 1754;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+            border-radius: 4px;
+        }
+
+        .canvas-stage-wrapper canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 4px;
+            background: #ffffff;
+        }
+
+        /* 캔버스 위 투명 인터랙티브 오버레이 */
+        .canvas-interactive-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* 클릭 가능한 핫스팟 영역 */
+        .overlay-hotspot {
+            position: absolute;
+            border: 2px dashed rgba(2, 132, 199, 0.35);
+            background: rgba(2, 132, 199, 0.04);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            box-sizing: border-box;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+        .overlay-hotspot:hover {
+            border-color: #0284c7;
+            background: rgba(2, 132, 199, 0.15);
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+        }
+        .overlay-hotspot.active {
+            border: 2px solid #0284c7;
+            background: rgba(2, 132, 199, 0.22);
+            box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.35);
+        }
+        .overlay-hotspot .overlay-tag {
+            display: none;
+            position: absolute;
+            top: -12px;
+            left: 6px;
+            background: #0284c7;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .overlay-hotspot:hover .overlay-tag,
+        .overlay-hotspot.active .overlay-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 플로팅 퀵 에디터 (클릭한 요소 근처에 뜨는 미니 그림판/도구창) */
+        .floating-quick-editor {
+            position: absolute;
+            z-index: 50;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            padding: 14px 16px;
+            width: 310px;
+            max-width: 90vw;
+            animation: fadeInScale 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95) translateY(4px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .quick-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 8px;
+        }
+        .quick-title {
+            font-size: 12.5px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .quick-btn-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .quick-btn-close:hover {
+            color: #0f172a;
+            background: #f1f5f9;
+        }
+        .quick-input {
+            width: 100%;
+            padding: 7px 10px;
+            font-size: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            margin-bottom: 8px;
+            font-family: inherit;
+        }
+        .quick-input:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+        }
+        .quick-chip-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .quick-color-chip {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+            transition: transform 0.12s;
+        }
+        .quick-color-chip:hover {
+            transform: scale(1.18);
+        }
+        .quick-theme-btn {
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f8fafc;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.12s;
+        }
+        .quick-theme-btn:hover {
+            border-color: #0284c7;
+            color: #0284c7;
+            background: #f0f9ff;
+        }
+
+        /* 툴바 힌트 및 버튼 */
+        .preview-hint-pill {
+            background: rgba(2, 132, 199, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 11.5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-toolbar-tool {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-toolbar-tool:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
     </style>
 </head>
 <body>
@@ -890,14 +1096,27 @@
         <!-- 플로팅 컨트롤 바 -->
         <div class="preview-floating-bar">
             <span class="preview-spec-badge"><i class="fa-solid fa-file-invoice"></i> A4 (210×297mm) 1:1</span>
+            <span class="preview-hint-pill"><i class="fa-solid fa-arrow-pointer"></i> 캔버스의 글자/카드를 직접 클릭하여 수정</span>
+            <button type="button" class="btn-toolbar-tool" onclick="quickAddSeal()" title="인증 도장/스티커 순환 변경">
+                <i class="fa-solid fa-certificate"></i> 도장/스티커
+            </button>
+            <button type="button" class="btn-toolbar-tool" onclick="quickAddNotice()" title="하단 주의/안내 문구 추가">
+                <i class="fa-solid fa-comment-dots"></i> 하단문구
+            </button>
             <button type="button" class="btn-fit-toggle" id="btnFitToggle" onclick="toggleFitMode()" title="화면 크기에 딱 맞추기 / 원본 확대">
                 <i class="fa-solid fa-expand"></i> 크게 보기
             </button>
         </div>
 
-        <!-- A4 캔버스 (화면 전체 높이에 100% 꽉 참) -->
+        <!-- A4 캔버스 스테이지 (화면 전체 높이에 100% 꽉 참) -->
         <div class="a4-viewport-wrap" id="viewportWrap">
-            <canvas id="coverCanvas" class="a4-canvas-shadow" width="1240" height="1754"></canvas>
+            <div class="canvas-stage-wrapper" id="canvasStageWrapper">
+                <canvas id="coverCanvas" class="a4-canvas-shadow" width="1240" height="1754"></canvas>
+                <!-- 마우스 클릭 & 호버 시 요소 직접 수정할 수 있는 인터랙티브 레이어 -->
+                <div id="interactiveOverlay" class="canvas-interactive-overlay"></div>
+                <!-- 클릭한 요소 바로 위에 뜨는 그림판/광고관리형 플로팅 퀵 에디터 -->
+                <div id="floatingQuickEditor" class="floating-quick-editor" style="display:none;"></div>
+            </div>
         </div>
     </section>
 
@@ -919,7 +1138,7 @@
 </div>
 
 <script>
-    // ==========================================
+// ==========================================
     // 1. 상태 관리 객체 (Cover State)
     // ==========================================
     window.coverState = {
@@ -930,12 +1149,17 @@
         accentLineColor: '#0284c7',
         checkIconColor: '#0284c7',
         contactMode: 'card', 
+        sealStamp: 'none',
+        customNotice: '',
         customLogoImg: null,
         consultantPhotoImg: null,
         qrCodeImg: null,
         originalPdfBytes: null,
         originalPdfFileName: ''
     };
+
+    window.selectedElementKey = null;
+    window.elementBounds = {};
 
     // ==========================================
     // 🌟 보장분석 표지 추천 샘플 20종 프리셋 데이터
@@ -960,7 +1184,8 @@
             chkIconColor: '#0284c7',
             memoTheme: 'soft_slate',
             cardRadius: 12,
-            topBar: 'gradient'
+            topBar: 'gradient',
+            stamp: 'none'
         },
         {
             id: 'preset_02',
@@ -980,7 +1205,8 @@
             chkIconColor: '#d97706',
             memoTheme: 'light_warm',
             cardRadius: 10,
-            topBar: 'gold'
+            topBar: 'gold',
+            stamp: 'vip_gold'
         },
         {
             id: 'preset_03',
@@ -1000,7 +1226,8 @@
             chkIconColor: '#0284c7',
             memoTheme: 'pure_white',
             cardRadius: 8,
-            topBar: 'solid'
+            topBar: 'solid',
+            stamp: 'none'
         },
         {
             id: 'preset_04',
@@ -1020,7 +1247,8 @@
             chkIconColor: '#0284c7',
             memoTheme: 'light_blue',
             cardRadius: 16,
-            topBar: 'gradient'
+            topBar: 'gradient',
+            stamp: 'safe_cyan'
         },
         {
             id: 'preset_05',
@@ -1040,7 +1268,8 @@
             chkIconColor: '#2563eb',
             memoTheme: 'pure_white',
             cardRadius: 14,
-            topBar: 'solid'
+            topBar: 'solid',
+            stamp: 'none'
         },
 
         // --- 2. 고객 맞춤 (5종) ---
@@ -1062,7 +1291,8 @@
             chkIconColor: '#e11d48',
             memoTheme: 'soft_coral',
             cardRadius: 16,
-            topBar: 'solid'
+            topBar: 'solid',
+            stamp: 'safe_cyan'
         },
         {
             id: 'preset_07',
@@ -1082,7 +1312,8 @@
             chkIconColor: '#059669',
             memoTheme: 'light_mint',
             cardRadius: 18,
-            topBar: 'solid'
+            topBar: 'solid',
+            stamp: 'best_emerald'
         },
         {
             id: 'preset_08',
@@ -1102,7 +1333,8 @@
             chkIconColor: '#b45309',
             memoTheme: 'light_warm',
             cardRadius: 12,
-            topBar: 'gold'
+            topBar: 'gold',
+            stamp: 'official_slate'
         },
         {
             id: 'preset_09',
@@ -1122,7 +1354,8 @@
             chkIconColor: '#4f46e5',
             memoTheme: 'light_blue',
             cardRadius: 14,
-            topBar: 'gradient'
+            topBar: 'gradient',
+            stamp: 'none'
         },
         {
             id: 'preset_10',
@@ -1142,7 +1375,8 @@
             chkIconColor: '#0f172a',
             memoTheme: 'soft_slate',
             cardRadius: 6,
-            topBar: 'gold'
+            topBar: 'gold',
+            stamp: 'vip_gold'
         },
 
         // --- 3. 목적별 진단 (5종) ---
@@ -1164,7 +1398,8 @@
             chkIconColor: '#be123c',
             memoTheme: 'soft_coral',
             cardRadius: 12,
-            topBar: 'solid'
+            topBar: 'solid',
+            stamp: 'safe_cyan'
         },
         {
             id: 'preset_12',
@@ -1184,7 +1419,8 @@
             chkIconColor: '#059669',
             memoTheme: 'light_mint',
             cardRadius: 14,
-            topBar: 'solid'
+            topBar: 'solid',
+            stamp: 'best_emerald'
         },
         {
             id: 'preset_13',
@@ -1204,7 +1440,8 @@
             chkIconColor: '#2563eb',
             memoTheme: 'light_blue',
             cardRadius: 12,
-            topBar: 'gradient'
+            topBar: 'gradient',
+            stamp: 'safe_cyan'
         },
         {
             id: 'preset_14',
@@ -1224,7 +1461,8 @@
             chkIconColor: '#0d9488',
             memoTheme: 'light_mint',
             cardRadius: 12,
-            topBar: 'solid'
+            topBar: 'solid',
+            stamp: 'official_slate'
         },
         {
             id: 'preset_15',
@@ -1244,7 +1482,8 @@
             chkIconColor: '#d97706',
             memoTheme: 'light_warm',
             cardRadius: 10,
-            topBar: 'gold'
+            topBar: 'gold',
+            stamp: 'none'
         },
 
         // --- 4. 감성 스타일 & 부티크 (5종) ---
@@ -1266,7 +1505,8 @@
             chkIconColor: '#b45309',
             memoTheme: 'light_warm',
             cardRadius: 16,
-            topBar: 'gold'
+            topBar: 'gold',
+            stamp: 'vip_gold'
         },
         {
             id: 'preset_17',
@@ -1286,7 +1526,8 @@
             chkIconColor: '#9333ea',
             memoTheme: 'soft_lavender',
             cardRadius: 16,
-            topBar: 'solid'
+            topBar: 'solid',
+            stamp: 'none'
         },
         {
             id: 'preset_18',
@@ -1306,7 +1547,8 @@
             chkIconColor: '#4d7c0f',
             memoTheme: 'light_mint',
             cardRadius: 14,
-            topBar: 'solid'
+            topBar: 'solid',
+            stamp: 'best_emerald'
         },
         {
             id: 'preset_19',
@@ -1326,7 +1568,8 @@
             chkIconColor: '#ea580c',
             memoTheme: 'soft_coral',
             cardRadius: 15,
-            topBar: 'solid'
+            topBar: 'solid',
+            stamp: 'safe_cyan'
         },
         {
             id: 'preset_20',
@@ -1346,14 +1589,16 @@
             chkIconColor: '#0f172a',
             memoTheme: 'pure_white',
             cardRadius: 6,
-            topBar: 'solid'
+            topBar: 'solid',
+            stamp: 'vip_gold'
         }
     ];
 
     let currentSelectedPresetId = 'preset_01';
 
     // 20개 프리셋 카드 렌더링
-    function renderPresetCards(filterCat = 'all') {
+        function renderPresetCards(filterCat) {
+        filterCat = filterCat || 'all';
         const container = document.getElementById('presetCardContainer');
         if (!container) return;
 
@@ -1362,24 +1607,22 @@
             if (filterCat !== 'all' && p.cat !== filterCat) return;
 
             const isActive = (p.id === currentSelectedPresetId) ? 'active-preset' : '';
-            html += `
-                <div class="preset-card ${isActive}" id="card_${p.id}" onclick="applyBojangPreset('${p.id}')">
-                    <div class="preset-card-header">
-                        <span class="preset-num-badge">${p.catName}</span>
-                        <div class="preset-palette">
-                            <span class="preset-swatch" style="background:${p.titleColor};" title="타이틀색"></span>
-                            <span class="preset-swatch" style="background:${p.namePointColor};" title="포인트색"></span>
-                            <span class="preset-swatch" style="background:${getThemeSampleBg(p.memoTheme)};" title="카드색"></span>
-                        </div>
-                    </div>
-                    <div class="preset-title">${p.name}</div>
-                    <div class="preset-desc">${p.desc}</div>
-                    <div class="preset-footer-row">
-                        <span style="font-size:10px; color:#0284c7; font-weight:700;">"${p.titleText}"</span>
-                        <span class="preset-check-indicator"><i class="fa-solid fa-circle-check"></i> 선택</span>
-                    </div>
-                </div>
-            `;
+            html += '<div class="preset-card ' + isActive + '" id="card_' + p.id + '" data-preset="' + p.id + '" onclick="applyBojangPreset(this.dataset.preset)">'
+                  + '  <div class="preset-badge-row">'
+                  + '    <span class="preset-category-tag">' + p.badge + '</span>'
+                  + '    <div class="preset-swatches">'
+                  + '      <span class="preset-swatch" style="background:' + p.titleColor + ';" title="타이틀색"></span>'
+                  + '      <span class="preset-swatch" style="background:' + p.namePointColor + ';" title="포인트색"></span>'
+                  + '      <span class="preset-swatch" style="background:' + getThemeSampleBg(p.memoTheme) + ';" title="카드색"></span>'
+                  + '    </div>'
+                  + '  </div>'
+                  + '  <div class="preset-title">' + p.name + '</div>'
+                  + '  <div class="preset-desc">' + p.desc + '</div>'
+                  + '  <div class="preset-footer-row">'
+                  + '    <span style="font-size:10px; color:#0284c7; font-weight:700;">\"' + p.titleText + '\"</span>'
+                  + '    <span class="preset-check-indicator"><i class="fa-solid fa-circle-check"></i> 선택</span>'
+                  + '  </div>'
+                  + '</div>';
         });
         container.innerHTML = html;
     }
@@ -1413,6 +1656,7 @@
         window.coverState.clientNamePointColor = p.namePointColor;
         window.coverState.accentLineColor = p.accentLineColor;
         window.coverState.checkIconColor = p.chkIconColor;
+        if (p.stamp) window.coverState.sealStamp = p.stamp;
 
         // 2. 폼 필드 채우기
         const titleEl = document.getElementById('titleTextInput');
@@ -1445,6 +1689,9 @@
 
         const topBarEl = document.getElementById('topBarStyle');
         if (topBarEl) topBarEl.value = p.topBar;
+
+        const stampSelectEl = document.getElementById('sealStampSelect');
+        if (stampSelectEl) stampSelectEl.value = p.stamp || 'none';
 
         // 3. 프리셋 카드 활성 테두리 갱신
         document.querySelectorAll('.preset-card').forEach(el => el.classList.remove('active-preset'));
@@ -1490,6 +1737,17 @@
 
         // 5. 렌더링
         setTimeout(renderCover, 80);
+
+        // 6. 외부 클릭 시 플로팅 퀵 에디터 닫기 및 ESC 키 지원
+        document.addEventListener('click', (e) => {
+            const qe = document.getElementById('floatingQuickEditor');
+            if (!qe || qe.style.display === 'none') return;
+            if (qe.contains(e.target) || e.target.closest('.overlay-hotspot') || e.target.closest('.btn-toolbar-tool')) return;
+            deselectAll();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') deselectAll();
+        });
     });
 
     // 탭 전환 함수
@@ -1510,23 +1768,61 @@
 
     function selectTitleColor(col, el) {
         window.coverState.titleColor = col;
-        el.parentElement.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
+        if (el && el.parentElement) {
+            el.parentElement.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+        }
         renderCover();
     }
 
     function selectPointColor(col, el) {
         window.coverState.clientNamePointColor = col;
-        el.parentElement.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
+        if (el && el.parentElement) {
+            el.parentElement.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+        }
         renderCover();
     }
 
     function selectContactMode(mode) {
         window.coverState.contactMode = mode;
-        document.getElementById('optClassicContact').classList.toggle('active', mode === 'classic');
-        document.getElementById('optCardContact').classList.toggle('active', mode === 'card');
+        const optClassic = document.getElementById('optClassicContact');
+        const optCard = document.getElementById('optCardContact');
+        if (optClassic) optClassic.classList.toggle('active', mode === 'classic');
+        if (optCard) optCard.classList.toggle('active', mode === 'card');
         renderCover();
+    }
+
+    function selectSealStamp(stamp) {
+        window.coverState.sealStamp = stamp;
+        renderCover();
+        showToast('🏷️ 도장/스티커가 반영되었습니다.');
+    }
+
+    function quickAddSeal() {
+        switchTab('advanced');
+        const select = document.getElementById('sealStampSelect');
+        if (select) {
+            if (select.value === 'none') select.value = 'vip_gold';
+            else if (select.value === 'vip_gold') select.value = 'safe_cyan';
+            else if (select.value === 'safe_cyan') select.value = 'official_slate';
+            else if (select.value === 'official_slate') select.value = 'best_emerald';
+            else select.value = 'none';
+            selectSealStamp(select.value);
+        }
+    }
+
+    function quickAddNotice() {
+        switchTab('advanced');
+        const input = document.getElementById('customNoticeInput');
+        if (input) {
+            if (!input.value) {
+                input.value = '※ 본 리포트는 고객님의 보험증권을 기반으로 정밀 진단한 맞춤형 분석 자료입니다.';
+            }
+            input.focus();
+            renderCover();
+            showToast('📝 하단 안내 문구가 추가되었습니다.');
+        }
     }
 
     function handleLogoUpload(e) {
@@ -1587,7 +1883,7 @@
     }
 
     // ==========================================
-    // 3. 실제 보장분석 리포트 표지 (보장분석1.jpg 기반) Canvas 실시간 렌더링 엔진
+    // 3. 실제 보장분석 리포트 표지 Canvas 실시간 렌더링 엔진 & Bounding Box 계산
     // ==========================================
     function renderCover() {
         const canvas = document.getElementById('coverCanvas');
@@ -1595,7 +1891,10 @@
         const ctx = canvas.getContext('2d');
         const W = canvas.width;  // 1240 px
         const H = canvas.height; // 1754 px
-        const s = W / 1000.0;    // scale factor (기존 pdf_p.html의 s 공식 100% 호환)
+        const s = W / 1000.0;    // scale factor
+
+        // 바운딩 박스 초기화
+        window.elementBounds = {};
 
         ctx.clearRect(0, 0, W, H);
 
@@ -1612,7 +1911,7 @@
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, W, 8 * s);
         } else if (topBarOpt === 'solid') {
-            ctx.fillStyle = window.coverState.titleColor;
+            ctx.fillStyle = window.coverState.titleColor || '#0369a1';
             ctx.fillRect(0, 0, W, 7 * s);
         } else if (topBarOpt === 'gold') {
             const grad = ctx.createLinearGradient(0, 0, W, 0);
@@ -1622,13 +1921,12 @@
             ctx.fillRect(0, 0, W, 8 * s);
         }
 
-        // 전체 카드 여백 (pdf_p.html의 cardW, cardH)
         const cardPadX = 80 * s;
         const cardW = W - (cardPadX * 2);
         const cardH = H * 0.92;
         const cardY = 50 * s;
 
-        // 2. 상단 로고 그리기 (사용자 배율 & 위치 반영)
+        // 2. 상단 로고 그리기
         const logoScale = document.getElementById('logoScale') ? parseInt(document.getElementById('logoScale').value, 10) / 100.0 : 1.0;
         let currentY = cardY + (30 * s);
 
@@ -1644,14 +1942,18 @@
             }
             let logoX = (W - logoW) / 2;
             ctx.drawImage(logoImg, logoX, currentY, logoW, logoH);
+
+            window.elementBounds['logo'] = { x: logoX, y: currentY, w: logoW, h: logoH, name: '로고 (이미지 교체/크기)' };
             currentY += logoH + (55 * s);
         } else {
-            // 기본 위라클 로고 텍스트
             ctx.font = '900 ' + (32 * s * logoScale) + 'px "Pretendard", "Segoe UI", sans-serif';
             ctx.fillStyle = '#0284c7';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             ctx.fillText('WERACLE', W / 2, currentY);
+
+            const tw = ctx.measureText('WERACLE').width;
+            window.elementBounds['logo'] = { x: (W - tw) / 2 - 20, y: currentY - 5, w: tw + 40, h: 45 * s * logoScale, name: '로고 (이미지 등록)' };
             currentY += (45 * s * logoScale) + (55 * s);
         }
 
@@ -1668,7 +1970,16 @@
         ctx.textBaseline = 'top';
         ctx.fillText(mainTitleText, W / 2, currentY);
 
-        // 타이틀 하단 장식선 (너비 60px, 두께 3.5px)
+        const titleMeasureW = ctx.measureText(mainTitleText).width;
+        window.elementBounds['title'] = {
+            x: (W - titleMeasureW) / 2 - 16,
+            y: currentY - 8,
+            w: titleMeasureW + 32,
+            h: titleFontSize + (35 * s),
+            name: '메인 타이틀 ("' + mainTitleText + '")'
+        };
+
+        // 타이틀 하단 장식선
         const underlineY = currentY + titleFontSize + (16 * s);
         ctx.fillStyle = window.coverState.accentLineColor || '#0284c7';
         ctx.fillRect((W / 2) - (35 * s), underlineY, 70 * s, 3.5 * s);
@@ -1682,7 +1993,6 @@
         const clientName = (document.getElementById('clientNameInput') ? document.getElementById('clientNameInput').value.trim() : '') || window.coverState.clientName || '고객';
         const greetingLine2 = document.getElementById('greetingSubInput') ? document.getElementById('greetingSubInput').value.trim() : '꼼꼼하게 준비했습니다.';
 
-        // [고객명] 님을 위해
         const greetSize = 36 * s;
         ctx.font = '800 ' + greetSize + 'px "Pretendard", "Malgun Gothic", sans-serif';
         const namePartW = ctx.measureText(clientName).width;
@@ -1700,16 +2010,26 @@
         ctx.fillStyle = '#0f172a';
         ctx.fillText(' 님을 위해', startGreetX + namePartW, currentY);
 
-        // 2번째 줄: "꼼꼼하게 준비했습니다."
-        currentY += greetSize + (14 * s);
+        // 2번째 줄
+        const greetLine2Y = currentY + greetSize + (14 * s);
         ctx.textAlign = 'center';
         ctx.font = '700 ' + (31 * s) + 'px "Pretendard", "Malgun Gothic", sans-serif';
         ctx.fillStyle = '#334155';
-        ctx.fillText(greetingLine2, W / 2, currentY);
+        ctx.fillText(greetingLine2, W / 2, greetLine2Y);
 
-        currentY += (38 * s) + (45 * s);
+        const line2W = ctx.measureText(greetingLine2).width;
+        const maxGreetBoxW = Math.max(totalGreetW, line2W) + 40;
+        window.elementBounds['greeting'] = {
+            x: (W - maxGreetBoxW) / 2,
+            y: currentY - 6,
+            w: maxGreetBoxW,
+            h: (greetLine2Y - currentY) + (38 * s),
+            name: '고객 인사말 (' + clientName + ' 님)'
+        };
 
-        // 5. 4대 체크리스트 (2x2 그리드) 배치
+        currentY = greetLine2Y + (38 * s) + (45 * s);
+
+        // 5. 4대 체크리스트 (2x2 그리드)
         const chkScale = document.getElementById('checklistScale') ? parseInt(document.getElementById('checklistScale').value, 10) / 100.0 : 1.0;
         const memoW = 410 * s * chkScale;
         const memoH = 92 * s * chkScale;
@@ -1736,9 +2056,12 @@
             let mx = gridStartX + (col * (memoW + gapX));
             let my = gridStartY + (row * (memoH + gapY));
 
-            ctx.save();
+            window.elementBounds['chk' + (i + 1)] = {
+                x: mx, y: my, w: memoW, h: memoH,
+                name: '체크 ' + (i + 1) + '번: ' + checklist[i]
+            };
 
-            // 배경 및 그림자
+            ctx.save();
             if (themeOpt === 'pure_white') {
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
                 ctx.shadowBlur = 16 * s;
@@ -1767,7 +2090,6 @@
                 ctx.strokeStyle = '#e9d5ff';
                 ctx.lineWidth = 1.2 * s;
             } else {
-                // soft_slate (기본)
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.05)';
                 ctx.shadowBlur = 12 * s;
                 ctx.shadowOffsetY = 5 * s;
@@ -1781,7 +2103,6 @@
             if (ctx.strokeStyle) ctx.stroke();
             ctx.restore();
 
-            // 체크 아이콘 & 문구
             const chkIcon = '✓';
             const mainText = checklist[i];
 
@@ -1797,18 +2118,16 @@
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
 
-            // 체크 아이콘 (포인트 컬러)
             ctx.fillStyle = window.coverState.checkIconColor || '#0284c7';
             ctx.font = '900 ' + (27 * s * chkScale) + 'px "Pretendard", "Malgun Gothic"';
             ctx.fillText(chkIcon, startItemX, my + (memoH / 2));
 
-            // 문구 텍스트
             ctx.fillStyle = '#0f172a';
             ctx.font = '800 ' + (25 * s * chkScale) + 'px "Pretendard", "Malgun Gothic"';
             ctx.fillText(mainText, startItemX + iconW + (10 * s), my + (memoH / 2));
         }
 
-        // 6. 하단 담당자 영역 (디지털 명함 결합 vs 클래식 텍스트 바)
+        // 6. 하단 담당자 영역
         const contactOffsetY = document.getElementById('contactOffsetY') ? parseInt(document.getElementById('contactOffsetY').value, 10) * s : 0;
         const consName = (document.getElementById('consNameInput') ? document.getElementById('consNameInput').value.trim() : '') || '위라클';
         const consTitle = (document.getElementById('consTitleInput') ? document.getElementById('consTitleInput').value.trim() : '') || '수석 재무설계사';
@@ -1818,11 +2137,12 @@
         const contactMode = window.coverState.contactMode;
 
         if (contactMode === 'classic') {
-            // 원본 pdf_p.html 스타일: 깔끔한 가로 타원 바
             const cBarW = 760 * s;
             const cBarH = 68 * s;
             const cBarX = (W - cBarW) / 2;
             const cBarY = H - (180 * s) + contactOffsetY;
+
+            window.elementBounds['contact'] = { x: cBarX, y: cBarY, w: cBarW, h: cBarH, name: '담당자 클래식 바' };
 
             ctx.save();
             ctx.fillStyle = '#f8fafc';
@@ -1840,14 +2160,14 @@
             ctx.fillText('담당자 : ' + consName + ' (' + consTitle + ')   |   연락처 : ' + consPhone, W / 2, cBarY + (cBarH / 2));
 
         } else {
-            // 디지털 명함 결합형 (프로필 사진 + 직함 + 소속 + 이름 + 전화번호 + 모바일 스캔 QR코드)
             const cCardW = 820 * s;
             const cCardH = 150 * s;
             const cCardX = (W - cCardW) / 2;
             const cCardY = H - (230 * s) + contactOffsetY;
 
+            window.elementBounds['contact'] = { x: cCardX, y: cCardY, w: cCardW, h: cCardH, name: '디지털 명함 / 담당자 카드' };
+
             ctx.save();
-            // 카드 배경 & 부드러운 그림자
             ctx.shadowColor = 'rgba(15, 23, 42, 0.08)';
             ctx.shadowBlur = 20 * s;
             ctx.shadowOffsetY = 8 * s;
@@ -1859,7 +2179,7 @@
             ctx.stroke();
             ctx.restore();
 
-            // 프로필 사진 (좌측 원형 아바타)
+            // 프로필 사진
             const avatarR = 48 * s;
             const avatarCX = cCardX + (70 * s);
             const avatarCY = cCardY + (cCardH / 2);
@@ -1873,7 +2193,6 @@
             if (photoImg && photoImg.complete && photoImg.naturalWidth > 0) {
                 ctx.drawImage(photoImg, avatarCX - avatarR, avatarCY - avatarR, avatarR * 2, avatarR * 2);
             } else {
-                // 기본 프로필 그래픽 (멋진 그라데이션)
                 const grad = ctx.createLinearGradient(avatarCX - avatarR, avatarCY - avatarR, avatarCX + avatarR, avatarCY + avatarR);
                 grad.addColorStop(0, '#0284c7');
                 grad.addColorStop(1, '#0369a1');
@@ -1888,7 +2207,6 @@
             }
             ctx.restore();
 
-            // 프로필 사진 외곽 테두리
             ctx.save();
             ctx.beginPath();
             ctx.arc(avatarCX, avatarCY, avatarR, 0, Math.PI * 2);
@@ -1897,18 +2215,15 @@
             ctx.stroke();
             ctx.restore();
 
-            // 텍스트 정보 (소속, 이름, 직함, 연락처)
+            // 텍스트 정보
             const textStartX = avatarCX + avatarR + (28 * s);
-
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
 
-            // 1) 소속 지점 / 회사명
             ctx.font = '700 ' + (18 * s) + 'px "Pretendard", "Malgun Gothic"';
             ctx.fillStyle = '#64748b';
             ctx.fillText(consCompany, textStartX, cCardY + (30 * s));
 
-            // 2) 성명 + 직함
             ctx.font = '900 ' + (28 * s) + 'px "Pretendard", "Malgun Gothic"';
             ctx.fillStyle = '#0f172a';
             ctx.fillText(consName, textStartX, cCardY + (56 * s));
@@ -1918,12 +2233,11 @@
             ctx.fillStyle = '#0284c7';
             ctx.fillText(' ' + consTitle, textStartX + nameWidth, cCardY + (64 * s));
 
-            // 3) 연락처 (휴대폰)
             ctx.font = '800 ' + (21 * s) + 'px "Pretendard", "Segoe UI"';
             ctx.fillStyle = '#334155';
             ctx.fillText('TEL. ' + consPhone, textStartX, cCardY + (96 * s));
 
-            // 우측: 디지털 명함 모바일 스캔 QR코드
+            // 우측: 디지털 명함 QR코드
             let qrImg = window.coverState.qrCodeImg;
             if (qrImg && qrImg.complete && qrImg.naturalWidth > 0) {
                 const qrSize = 100 * s;
@@ -1941,6 +2255,322 @@
                 ctx.fillText('모바일 명함 스캔', qrX + (qrSize / 2), qrY + qrSize + (5 * s));
             }
         }
+
+        // 7. VIP 인증 도장 & 스티커 (우측 상단 엠블럼)
+        const stampType = window.coverState.sealStamp || 'none';
+        if (stampType !== 'none') {
+            const stampR = 48 * s;
+            const stampCX = W - cardPadX - (55 * s);
+            const stampCY = cardY + (65 * s);
+
+            ctx.save();
+            ctx.translate(stampCX, stampCY);
+            ctx.rotate(-8 * Math.PI / 180);
+
+            if (stampType === 'vip_gold') {
+                ctx.beginPath();
+                ctx.arc(0, 0, stampR, 0, Math.PI * 2);
+                ctx.fillStyle = '#fffbeb';
+                ctx.fill();
+                ctx.strokeStyle = '#d97706';
+                ctx.lineWidth = 3 * s;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, stampR - (5 * s), 0, Math.PI * 2);
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1 * s;
+                ctx.stroke();
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '900 ' + (13 * s) + 'px "Pretendard"';
+                ctx.fillStyle = '#b45309';
+                ctx.fillText('★ VIP ★', 0, -14 * s);
+                ctx.font = '900 ' + (15 * s) + 'px "Pretendard"';
+                ctx.fillText('정밀진단', 0, 4 * s);
+                ctx.font = '800 ' + (10 * s) + 'px "Pretendard"';
+                ctx.fillText('VERIFIED', 0, 20 * s);
+
+            } else if (stampType === 'safe_cyan') {
+                ctx.beginPath();
+                ctx.arc(0, 0, stampR, 0, Math.PI * 2);
+                ctx.fillStyle = '#f0f9ff';
+                ctx.fill();
+                ctx.strokeStyle = '#0284c7';
+                ctx.lineWidth = 3 * s;
+                ctx.stroke();
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '900 ' + (13 * s) + 'px "Pretendard"';
+                ctx.fillStyle = '#0369a1';
+                ctx.fillText('🛡️ 안심보장', 0, -12 * s);
+                ctx.font = '900 ' + (14 * s) + 'px "Pretendard"';
+                ctx.fillText('케어인증', 0, 6 * s);
+
+            } else if (stampType === 'official_slate') {
+                drawRoundedBox(ctx, -stampR, -26 * s, stampR * 2, 52 * s, 8 * s);
+                ctx.fillStyle = '#f8fafc';
+                ctx.fill();
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 2.5 * s;
+                ctx.stroke();
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '900 ' + (14 * s) + 'px "Pretendard"';
+                ctx.fillStyle = '#1e293b';
+                ctx.fillText('⚖️ 심의필 완료', 0, 0);
+
+            } else if (stampType === 'best_emerald') {
+                ctx.beginPath();
+                ctx.arc(0, 0, stampR, 0, Math.PI * 2);
+                ctx.fillStyle = '#ecfdf5';
+                ctx.fill();
+                ctx.strokeStyle = '#059669';
+                ctx.lineWidth = 3 * s;
+                ctx.stroke();
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '900 ' + (13 * s) + 'px "Pretendard"';
+                ctx.fillStyle = '#047857';
+                ctx.fillText('⭐ BEST', 0, -12 * s);
+                ctx.font = '900 ' + (14 * s) + 'px "Pretendard"';
+                ctx.fillText('케어솔루션', 0, 6 * s);
+            }
+            ctx.restore();
+
+            window.elementBounds['stamp'] = {
+                x: stampCX - stampR,
+                y: stampCY - stampR,
+                w: stampR * 2,
+                h: stampR * 2,
+                name: '인증 도장/스티커'
+            };
+        }
+
+        // 8. 하단 추가 안내문구 (선택)
+        const customNotice = (document.getElementById('customNoticeInput') ? document.getElementById('customNoticeInput').value.trim() : '') || window.coverState.customNotice;
+        if (customNotice) {
+            const noticeY = H - (45 * s);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '700 ' + (14 * s) + 'px "Pretendard"';
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText(customNotice, W / 2, noticeY);
+
+            const nw = ctx.measureText(customNotice).width;
+            window.elementBounds['notice'] = {
+                x: (W - nw) / 2 - 10,
+                y: noticeY - 14,
+                w: nw + 20,
+                h: 28,
+                name: '하단 추가 안내문구'
+            };
+        }
+
+        // 9. 인터랙티브 오버레이 핫스팟 업데이트!
+        updateOverlayHotspots();
+    }
+
+    // ==========================================
+    // 🌟 4. 그림판/캔바 스타일 인터랙티브 핫스팟 & 플로팅 퀵 에디터 엔진
+    // ==========================================
+        function updateOverlayHotspots() {
+        const overlay = document.getElementById('interactiveOverlay');
+        if (!overlay || !window.elementBounds) return;
+
+        let html = '';
+        for (const [key, b] of Object.entries(window.elementBounds)) {
+            const leftPct = ((b.x / 1240) * 100).toFixed(2);
+            const topPct = ((b.y / 1754) * 100).toFixed(2);
+            const widthPct = ((b.w / 1240) * 100).toFixed(2);
+            const heightPct = ((b.h / 1754) * 100).toFixed(2);
+
+            const isActive = (key === activeHotspotKey) ? 'active' : '';
+
+            html += '<div class="overlay-hotspot ' + isActive + '" '
+                  + '  id="hotspot_' + key + '" '
+                  + '  style="left:' + leftPct + '%; top:' + topPct + '%; width:' + widthPct + '%; height:' + heightPct + '%;" '
+                  + '  data-key="' + key + '" '
+                  + '  onclick="selectCanvasElement(this.dataset.key, event)" '
+                  + '  title="클릭하여 ' + b.name + ' 직접 수정">'
+                  + '  <span class="overlay-tag"><i class="fa-solid fa-pen"></i> ' + b.name + '</span>'
+                  + '</div>';
+        }
+        overlay.innerHTML = html;
+    }
+
+    function selectCanvasElement(key, evt) {
+        if (evt) evt.stopPropagation();
+        window.selectedElementKey = key;
+
+        // 1. 핫스팟 활성화 표시
+        document.querySelectorAll('.overlay-hotspot').forEach(el => el.classList.remove('active'));
+        const targetHotspot = document.getElementById('hotspot_' + key);
+        if (targetHotspot) targetHotspot.classList.add('active');
+
+        // 2. 캔버스 위에 플로팅 퀵 에디터 팝오버 열기!
+        openFloatingQuickEditor(key, targetHotspot);
+
+        // 3. 좌측 사이드바 탭도 자동으로 동기화!
+        if (key === 'title' || key === 'greeting' || key.startsWith('chk') || key === 'logo') {
+            switchTab('text');
+        } else if (key === 'contact') {
+            switchTab('profile');
+        } else if (key === 'stamp' || key === 'notice') {
+            switchTab('advanced');
+        }
+    }
+
+    function deselectAll(evt) {
+        window.selectedElementKey = null;
+        document.querySelectorAll('.overlay-hotspot').forEach(el => el.classList.remove('active'));
+        const qe = document.getElementById('floatingQuickEditor');
+        if (qe) qe.style.display = 'none';
+    }
+
+    // 플로팅 퀵 에디터 생성 & 위치 지정
+        function openFloatingQuickEditor(key, hotspotEl) {
+        const qe = document.getElementById('floatingQuickEditor');
+        if (!qe || !hotspotEl) return;
+
+        let contentHtml = '';
+
+        if (key === 'title') {
+            const curVal = document.getElementById('titleTextInput') ? document.getElementById('titleTextInput').value : '보장분석 보고서';
+            contentHtml = '<div class="quick-header">'
+                        + '  <div class="quick-title"><i class="fa-solid fa-font" style="color:#0284c7;"></i> 메인 타이틀 직접 수정</div>'
+                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
+                        + '</div>'
+                        + '<input type="text" class="quick-input" value="' + escapeHtml(curVal) + '" data-target="titleTextInput" oninput="syncDirectInput(this.dataset.target, this.value)">'
+                        + '<div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px;">타이틀 색상 선택:</div>'
+                        + '<div class="quick-chip-row">'
+                        + '  <div class="quick-color-chip" style="background:#0369a1;" data-color="#0369a1" onclick="selectTitleColor(this.dataset.color)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#0f172a;" data-color="#0f172a" onclick="selectTitleColor(this.dataset.color)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#1e3a8a;" data-color="#1e3a8a" onclick="selectTitleColor(this.dataset.color)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#065f46;" data-color="#065f46" onclick="selectTitleColor(this.dataset.color)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#701a75;" data-color="#701a75" onclick="selectTitleColor(this.dataset.color)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#991b1b;" data-color="#991b1b" onclick="selectTitleColor(this.dataset.color)"></div>'
+                        + '</div>';
+
+        } else if (key === 'greeting') {
+            const curName = document.getElementById('clientNameInput') ? document.getElementById('clientNameInput').value : '김철수';
+            const curSub = document.getElementById('greetingSubInput') ? document.getElementById('greetingSubInput').value : '꼼꼼하게 준비했습니다.';
+            contentHtml = '<div class="quick-header">'
+                        + '  <div class="quick-title"><i class="fa-solid fa-user-tag" style="color:#0284c7;"></i> 고객명 & 인사말 직접 수정</div>'
+                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
+                        + '</div>'
+                        + '<div style="display:flex; gap:6px; margin-bottom:6px;">'
+                        + '  <input type="text" placeholder="고객명" class="quick-input" style="flex:1;" value="' + escapeHtml(curName) + '" data-target="clientNameInput" oninput="syncDirectInput(this.dataset.target, this.value)">'
+                        + '  <input type="text" placeholder="인사말" class="quick-input" style="flex:2;" value="' + escapeHtml(curSub) + '" data-target="greetingSubInput" oninput="syncDirectInput(this.dataset.target, this.value)">'
+                        + '</div>'
+                        + '<div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px;">고객명 포인트 색상:</div>'
+                        + '<div class="quick-chip-row">'
+                        + '  <div class="quick-color-chip" style="background:#0284c7;" data-color="#0284c7" onclick="selectPointColor(this.dataset.color)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#0ea5e9;" data-color="#0ea5e9" onclick="selectPointColor(this.dataset.color)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#2563eb;" data-color="#2563eb" onclick="selectPointColor(this.dataset.color)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#10b981;" data-color="#10b981" onclick="selectPointColor(this.dataset.color)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#f59e0b;" data-color="#f59e0b" onclick="selectPointColor(this.dataset.color)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#ef4444;" data-color="#ef4444" onclick="selectPointColor(this.dataset.color)"></div>'
+                        + '</div>';
+
+        } else if (key.startsWith('chk')) {
+            const chkNum = key.replace('chk', '');
+            const inputId = 'chk' + chkNum + 'Input';
+            const curVal = document.getElementById(inputId) ? document.getElementById(inputId).value : '';
+            contentHtml = '<div class="quick-header">'
+                        + '  <div class="quick-title"><i class="fa-solid fa-list-check" style="color:#0284c7;"></i> 체크 ' + chkNum + '번 항목 직접 수정</div>'
+                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
+                        + '</div>'
+                        + '<input type="text" class="quick-input" value="' + escapeHtml(curVal) + '" data-target="' + inputId + '" oninput="syncDirectInput(this.dataset.target, this.value)">'
+                        + '<div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px;">카드 배경 테마:</div>'
+                        + '<div style="display:flex; flex-wrap:wrap; gap:4px;">'
+                        + '  <button class="quick-theme-btn" data-theme="pure_white" onclick="quickSetTheme(this.dataset.theme)">화이트</button>'
+                        + '  <button class="quick-theme-btn" data-theme="light_blue" onclick="quickSetTheme(this.dataset.theme)">블루</button>'
+                        + '  <button class="quick-theme-btn" data-theme="light_mint" onclick="quickSetTheme(this.dataset.theme)">민트</button>'
+                        + '  <button class="quick-theme-btn" data-theme="light_warm" onclick="quickSetTheme(this.dataset.theme)">아이보리</button>'
+                        + '  <button class="quick-theme-btn" data-theme="soft_coral" onclick="quickSetTheme(this.dataset.theme)">코랄</button>'
+                        + '</div>';
+
+        } else if (key === 'logo') {
+            contentHtml = '<div class="quick-header">'
+                        + '  <div class="quick-title"><i class="fa-solid fa-image" style="color:#0284c7;"></i> 로고 이미지 빠른 변경</div>'
+                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
+                        + '</div>'
+                        + '<label class="btn-action primary" style="width:100%; cursor:pointer; font-size:11.5px; padding:7px;">'
+                        + '  <i class="fa-solid fa-upload"></i> 내 컴퓨터에서 로고 파일 선택'
+                        + '  <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)">'
+                        + '</label>';
+
+        } else if (key === 'contact') {
+            const consName = document.getElementById('consNameInput') ? document.getElementById('consNameInput').value : '위라클';
+            const consPhone = document.getElementById('consPhoneInput') ? document.getElementById('consPhoneInput').value : '010-1234-5678';
+            contentHtml = '<div class="quick-header">'
+                        + '  <div class="quick-title"><i class="fa-solid fa-id-card" style="color:#0284c7;"></i> 담당자 / 명함 정보 직접 수정</div>'
+                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
+                        + '</div>'
+                        + '<div style="display:flex; gap:6px; margin-bottom:6px;">'
+                        + '  <input type="text" placeholder="성명" class="quick-input" style="flex:1;" value="' + escapeHtml(consName) + '" data-target="consNameInput" oninput="syncDirectInput(this.dataset.target, this.value)">'
+                        + '  <input type="text" placeholder="연락처" class="quick-input" style="flex:1.5;" value="' + escapeHtml(consPhone) + '" data-target="consPhoneInput" oninput="syncDirectInput(this.dataset.target, this.value)">'
+                        + '</div>'
+                        + '<label class="btn-action secondary" style="width:100%; cursor:pointer; font-size:11px; padding:6px; margin-top:4px;">'
+                        + '  <i class="fa-solid fa-camera"></i> 프로필 사진 업로드'
+                        + '  <input type="file" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">'
+                        + '</label>';
+
+        } else if (key === 'stamp') {
+            contentHtml = '<div class="quick-header">'
+                        + '  <div class="quick-title"><i class="fa-solid fa-certificate" style="color:#0284c7;"></i> 인증 도장/스티커 선택</div>'
+                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
+                        + '</div>'
+                        + '<div style="display:flex; flex-direction:column; gap:5px;">'
+                        + '  <button class="quick-theme-btn" data-stamp="vip_gold" onclick="selectSealStamp(this.dataset.stamp)">★ VIP 정밀진단 (골드)</button>'
+                        + '  <button class="quick-theme-btn" data-stamp="safe_cyan" onclick="selectSealStamp(this.dataset.stamp)">🛡️ 안심보장 케어 (블루)</button>'
+                        + '  <button class="quick-theme-btn" data-stamp="official_slate" onclick="selectSealStamp(this.dataset.stamp)">⚖️ 심의필 완료 (공식)</button>'
+                        + '  <button class="quick-theme-btn" data-stamp="best_emerald" onclick="selectSealStamp(this.dataset.stamp)">⭐ BEST 케어솔루션</button>'
+                        + '  <button class="quick-theme-btn" style="color:#ef4444;" data-stamp="none" onclick="selectSealStamp(this.dataset.stamp)">도장 제거</button>'
+                        + '</div>';
+        }
+
+        qe.innerHTML = contentHtml;
+
+        const hsTop = parseFloat(hotspotEl.style.top);
+        const hsLeft = parseFloat(hotspotEl.style.left);
+        const hsHeight = parseFloat(hotspotEl.style.height);
+
+        let qeTop = hsTop + hsHeight + 1.5;
+        if (qeTop > 75) {
+            qeTop = Math.max(2, hsTop - 25);
+        }
+        let qeLeft = Math.min(65, Math.max(5, hsLeft));
+
+        qe.style.top = qeTop + '%';
+        qe.style.left = qeLeft + '%';
+        qe.style.display = 'block';
+    }
+
+    function syncDirectInput(targetInputId, val) {
+        const el = document.getElementById(targetInputId);
+        if (el) el.value = val;
+        renderCover();
+    }
+
+    function quickSetTheme(theme) {
+        const select = document.getElementById('memoStyleTheme');
+        if (select) select.value = theme;
+        renderCover();
+        showToast('🎨 카드 테마가 변경되었습니다.');
+    }
+
+    function setCanvasTool(tool) {
+        showToast('👆 요소를 마우스로 클릭하면 즉시 수정할 수 있습니다.');
+    }
+
+    function escapeHtml(str) {
+        return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     // 둥근 사각형 헬퍼 함수
@@ -1966,11 +2596,11 @@
         const btn = document.getElementById('btnFitToggle');
         if (isZoomMode) {
             wrap.classList.add('zoom-mode');
-            btn.innerHTML = '<i class="fa-solid fa-compress"></i> 화면 맞춤';
+            btn.innerHTML = '<i class="fa-solid fa-compress"></i> <span>화면 맞춤</span>';
             showToast('100% 원본 확대 모드입니다. 마우스로 스크롤 가능합니다.');
         } else {
             wrap.classList.remove('zoom-mode');
-            btn.innerHTML = '<i class="fa-solid fa-expand"></i> 크게 보기';
+            btn.innerHTML = '<i class="fa-solid fa-expand"></i> <span>크게 보기</span>';
             showToast('화면에 꽉 찬 100% 맞춤 모드입니다.');
         }
     }
@@ -1984,14 +2614,12 @@
         clearTimeout(window.__toastTimer);
         window.__toastTimer = setTimeout(() => {
             toast.style.display = 'none';
-        }, 2400);
+        }, 2200);
     }
 
     // ==========================================
-    // 4. 표지 내보내기 & PDF 합성 & CRM 저장
+    // 5. 표지 내보내기 & PDF 합성 & CRM 저장
     // ==========================================
-
-    // 표지만 PNG 고화질 저장
     function downloadCoverImage() {
         const canvas = document.getElementById('coverCanvas');
         if (!canvas) return;
@@ -2003,31 +2631,23 @@
         showToast('🖼️ 고화질 표지 이미지가 다운로드되었습니다.');
     }
 
-    // 표지만 A4 PDF 저장
     function downloadCoverPdfOnly() {
         const canvas = document.getElementById('coverCanvas');
         if (!canvas) return;
         const clientName = (document.getElementById('clientNameInput') ? document.getElementById('clientNameInput').value.trim() : '') || '고객';
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4'
-        });
-
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
         doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
         doc.save('보장분석_VIP표지_' + clientName + '.pdf');
         showToast('📄 표지 A4 PDF가 다운로드되었습니다.');
     }
 
-    // 원본 보장분석 리포트 PDF 파일 선택 핸들러
     function handleOriginalPdfSelected(e) {
         const file = e.target.files[0];
         if (!file) return;
         window.coverState.originalPdfFileName = file.name;
-
         const reader = new FileReader();
         reader.onload = function(evt) {
             window.coverState.originalPdfBytes = evt.target.result;
@@ -2036,7 +2656,6 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // 표지 + 본문 합성 완성본 PDF 생성
     async function generateMergedReportPdf() {
         const canvas = document.getElementById('coverCanvas');
         if (!canvas) return;
@@ -2048,41 +2667,25 @@
 
         try {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            });
-
-            // 1페이지: 커스텀 표지
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
             const coverImgData = canvas.toDataURL('image/jpeg', 0.95);
             doc.addImage(coverImgData, 'JPEG', 0, 0, 210, 297);
 
-            // 첨부된 원본 PDF가 있을 경우 pdf.js로 각 페이지 렌더링 후 jsPDF에 추가
             if (window.coverState.originalPdfBytes && window.pdfjsLib) {
                 if (loadingText) loadingText.innerText = '원본 PDF 페이지들을 고화질로 병합하고 있습니다...';
-
                 const pdfData = new Uint8Array(window.coverState.originalPdfBytes);
                 const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
-                const numPages = pdfDoc.numPages;
-
-                for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
                     const page = await pdfDoc.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 2.0 }); // 2x 고화질
-
+                    const viewport = page.getViewport({ scale: 2.0 });
                     const tempCanvas = document.createElement('canvas');
                     tempCanvas.width = viewport.width;
                     tempCanvas.height = viewport.height;
-                    const tempCtx = tempCanvas.getContext('2d');
-
-                    await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
-
-                    const pageImgData = tempCanvas.toDataURL('image/jpeg', 0.92);
+                    await page.render({ canvasContext: tempCanvas.getContext('2d'), viewport }).promise;
                     doc.addPage('a4', 'portrait');
-                    doc.addImage(pageImgData, 'JPEG', 0, 0, 210, 297);
+                    doc.addImage(tempCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
                 }
             }
-
             doc.save('보장분석_완성본리포트_' + clientName + '.pdf');
             showToast('🎉 VIP 완성본 보장분석 리포트가 다운로드되었습니다!');
         } catch (err) {
@@ -2093,13 +2696,9 @@
         }
     }
 
-    // ==========================================
-    // 5. CRM 고객관리 IndexedDB 저장 연동
-    // ==========================================
     async function saveReportToCrm() {
         const canvas = document.getElementById('coverCanvas');
         if (!canvas) return;
-
         const clientName = (document.getElementById('clientNameInput') ? document.getElementById('clientNameInput').value.trim() : '') || '김철수';
         const clientPhone = window.coverState.clientPhone || '010-0000-0000';
         const mainTitle = (document.getElementById('titleTextInput') ? document.getElementById('titleTextInput').value.trim() : '') || '보장분석 보고서';
@@ -2110,7 +2709,6 @@
         if (loadingText) loadingText.innerText = "'" + clientName + "' 고객님의 CRM 데이터베이스에 저장 중...";
 
         try {
-            // PDF Blob 생성
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
             const coverImgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -2132,8 +2730,6 @@
             }
 
             const pdfBlob = doc.output('blob');
-
-            // IndexedDB에 저장
             const reportId = 'bojang_' + Date.now();
             const reportRecord = {
                 id: reportId,
@@ -2148,7 +2744,6 @@
 
             await saveToIndexedDB(reportRecord);
 
-            // 로컬스토리지에도 메타데이터 백업
             const metaList = JSON.parse(localStorage.getItem('weracle_bojang_reports_meta') || '[]');
             metaList.unshift({
                 id: reportId,

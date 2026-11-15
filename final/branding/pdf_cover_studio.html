@@ -1316,22 +1316,14 @@
                         </div>
                     </div>
                     <div class="image-subrow" style="margin-top:8px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span class="sublabel"><i class="fa-solid fa-building"></i> 브랜드 로고:</span>
-                            <span id="myPageLogoBadge" style="display:none; font-size:10px; font-weight:800; color:#0284c7; background:#e0f2fe; padding:2px 7px; border-radius:4px; border:1px solid #bae6fd;">
-                                <i class="fa-solid fa-circle-check"></i> 마이페이지 로고 연동
-                            </span>
-                        </div>
+                        <span class="sublabel"><i class="fa-solid fa-building"></i> 브랜드 로고:</span>
                         <div class="img-btn-row">
-                            <button type="button" class="btn-subtool active" id="btnMyPageLogo" onclick="loadMyPageLogoManual()" title="마이페이지에 등록된 내 로고 자동 적용">
-                                <i class="fa-solid fa-circle-user"></i> 마이페이지 로고
-                            </button>
                             <label class="btn-subtool upload" style="flex:1;">
-                                <i class="fa-solid fa-upload"></i> 새 로고 올리기
+                                <i class="fa-solid fa-upload"></i> 로고 파일 올리기
                                 <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)">
                             </label>
                             <button type="button" class="btn-subtool" onclick="resetCoverLogo()" title="기본 로고 복원">
-                                <i class="fa-solid fa-rotate-left"></i> 기본
+                                <i class="fa-solid fa-rotate-left"></i> 기본 로고
                             </button>
                         </div>
                     </div>
@@ -2700,23 +2692,9 @@
         img.crossOrigin = 'anonymous';
         img.onload = () => {
             window.coverState.customLogoImg = img;
-            const badge = document.getElementById('myPageLogoBadge');
-            if (badge) badge.style.display = 'inline-flex';
-            const btn = document.getElementById('btnMyPageLogo');
-            if (btn) btn.classList.add('active');
             renderCover();
-            showToast('🏢 마이페이지에 등록된 전용 로고가 자동 적용되었습니다!');
         };
         img.src = logoSrc;
-    }
-
-    function loadMyPageLogoManual() {
-        const myLogo = getSavedPersonalLogo();
-        if (myLogo) {
-            applyUserLogo(myLogo);
-        } else {
-            showToast('ℹ️ 마이페이지에 등록된 로고가 없습니다. [새 로고 올리기]로 등록해 주세요.');
-        }
     }
 
     function autoPopulateMyPageProfile() {

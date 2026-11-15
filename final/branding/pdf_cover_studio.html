@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP 보장분석 표지 제작기 & 브랜딩 스튜디오 | WERACLE</title>
+    <!-- 프리텐다드 폰트 적용 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <!-- 폰트어썸 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PDF & QR 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        :root {
+            --weracle-navy: #0284c7; 
+            --weracle-dark: #0369a1;
+            --weracle-cyan: #00e6f6;
+            --weracle-hover: #f0f9ff; 
+            --bg-color: #f8fafc;
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --gold: #d97706;
+        }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; 
+            min-height: 100vh;
+            padding: 20px 24px 60px;
+        }
+
+        .studio-container {
+            max-width: 1480px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* 1. 상단 히어로 배너 */
+        .top-hero-banner {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0369a1 100%);
+            border-radius: 18px;
+            padding: 24px 30px;
+            color: #ffffff;
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.15);
+            margin-bottom: 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-left h1 {
+            margin: 0 0 6px 0;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .hero-desc {
+            margin: 0;
+            font-size: 13.5px;
+            color: #93c5fd;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #38bdf8;
+            margin-bottom: 6px;
+        }
+        .hero-right-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 2;
+        }
+        .btn-top-nav {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            padding: 9px 16px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-top-nav:hover {
+            background: #ffffff;
+            color: #0f172a;
+        }
+
+        /* 2. 메인 스튜디오 2단 레이아웃 */
+        .studio-main-grid {
+            display: grid;
+            grid-template-columns: 480px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+        @media (max-width: 1200px) {
+            .studio-main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 좌측: 컨트롤 패널 */
+        .control-panel {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+        }
+        .panel-nav-tabs {
+            display: flex;
+            background: #f1f5f9;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .panel-tab-btn {
+            flex: 1;
+            padding: 13px 8px;
+            background: none;
+            border: none;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .panel-tab-btn i { font-size: 15px; }
+        .panel-tab-btn.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 -2px 0 0 var(--primary) inset;
+        }
+
+        .panel-content {
+            padding: 22px;
+            max-height: calc(100vh - 230px);
+            overflow-y: auto;
+        }
+
+        /* 폼 그룹 공통 */
+        .form-section-title {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .form-row {
+            margin-bottom: 14px;
+        }
+        .form-row label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 13px;
+            font-family: inherit;
+            color: #0f172a;
+            outline: none;
+            transition: border 0.15s;
+            background: #fff;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 54px;
+        }
+
+        /* 배경 템플릿 그리드 */
+        .bg-preset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .bg-preset-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            background: #f8fafc;
+            text-align: center;
+            padding: 8px 4px;
+        }
+        .bg-preset-card:hover {
+            border-color: #93c5fd;
+            transform: translateY(-2px);
+        }
+        .bg-preset-card.active {
+            border-color: var(--primary);
+            background: #eff6ff;
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+        .bg-preset-thumb {
+            width: 100%;
+            height: 52px;
+            border-radius: 6px;
+            object-fit: cover;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .bg-preset-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        /* 슬라이더 컨트롤 */
+        .range-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .range-control input[type="range"] {
+            flex: 1;
+            accent-color: var(--primary);
+        }
+        .range-val {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #475569;
+            width: 38px;
+            text-align: right;
+        }
+
+        /* 테마 컬러 팔레트 */
+        .color-palette {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .color-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px #cbd5e1;
+            transition: all 0.15s;
+        }
+        .color-dot.active {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 2.5px var(--primary);
+        }
+
+        /* 우측: 프리뷰 및 생성 액션 영역 */
+        .preview-panel {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .preview-header-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .preview-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .preview-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .zoom-btn {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* A4 프리뷰 뷰포트 */
+        .a4-viewport-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 30px;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            overflow: auto;
+            max-height: 680px;
+        }
+        .a4-canvas-shadow {
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            background: #fff;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* 하단 메인 액션 바 */
+        .studio-bottom-actions {
+            margin-top: 22px;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .action-group-left, .action-group-right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .btn-action {
+            padding: 10px 18px;
+            border-radius: 9px;
+            font-size: 13.5px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            border: none;
+        }
+        .btn-action.primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+        .btn-action.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+        }
+        .btn-action.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+        .btn-action.success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+        }
+        .btn-action.secondary {
+            background: #ffffff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-action.secondary:hover {
+            background: #f1f5f9;
+        }
+
+        /* 토스트 알림 */
+        .toast-popup {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+        .toast-popup.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 로딩 오버레이 */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #ffffff;
+            z-index: 10000;
+        }
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 14px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="studio-container">
+
+    <!-- 상단 히어로 배너 -->
+    <div class="top-hero-banner">
+        <div class="hero-left">
+            <span class="hero-tag"><i class="fa-solid fa-crown"></i> WERACLE VIP COVER STUDIO</span>
+            <h1>보장분석 VIP 표지 자유 제작기 & 리포트 스튜디오</h1>
+            <p class="hero-desc">디지털 명함 프로필과 감성 광고 랜딩의 강력한 비주얼을 결합하여, 고객의 첫인상을 사로잡는 프리미엄 1페이지 표지를 실시간으로 제작합니다.</p>
+        </div>
+        <div class="hero-right-actions">
+            <a href="../crm/crm_test.html" class="btn-top-nav"><i class="fa-solid fa-users"></i> 고객관리(CRM) 바로가기</a>
+            <a href="pdf_p.html" class="btn-top-nav"><i class="fa-solid fa-file-pdf"></i> 기존 보장브랜딩</a>
+        </div>
+    </div>
+
+    <!-- 2단 메인 그리드 -->
+    <div class="studio-main-grid">
+
+        <!-- 좌측: 컨트롤러 패널 -->
+        <div class="control-panel">
+            <div class="panel-nav-tabs">
+                <button type="button" class="panel-tab-btn active" onclick="switchControlTab('bg')">
+                    <i class="fa-solid fa-image"></i>
+                    <span>배경 & 비주얼</span>
+                </button>
+                <button type="button" class="panel-tab-btn" onclick="switchControlTab('text')">
+                    <i class="fa-solid fa-heading"></i>
+                    <span>고객 & 타이틀</span>
+                </button>
+                <button type="button" class="panel-tab-btn" onclick="switchControlTab('profile')">
+                    <i class="fa-solid fa-id-card"></i>
+                    <span>명함 프로필</span>
+                </button>
+                <button type="button" class="panel-tab-btn" onclick="switchControlTab('badge')">
+                    <i class="fa-solid fa-certificate"></i>
+                    <span>배지 & 옵션</span>
+                </button>
+            </div>
+
+            <div class="panel-content">
+                <!-- 탭 1: 배경 & 비주얼 -->
+                <div id="tab-bg" class="tab-pane">
+                    <div class="form-section-title"><i class="fa-solid fa-palette" style="color:var(--primary);"></i> 추천 프리셋 비주얼 테마</div>
+                    <div class="bg-preset-grid">
+                        <div class="bg-preset-card active" onclick="selectBgPreset(0)">
+                            <img src="images/브랜딩1.jpg" onerror="this.src='images/브랜딩_하이브리드_branded.jpg'" class="bg-preset-thumb">
+                            <span class="bg-preset-name">프리미엄 네이비</span>
+                        </div>
+                        <div class="bg-preset-card" onclick="selectBgPreset(1)">
+                            <img src="images/브랜딩2.jpg" onerror="this.src='images/브랜딩_와이드_branded.jpg'" class="bg-preset-thumb">
+                            <span class="bg-preset-name">로열 골드</span>
+                        </div>
+                        <div class="bg-preset-card" onclick="selectBgPreset(2)">
+                            <img src="images/브랜딩11.jpg" onerror="this.src='images/보장분석1.jpg'" class="bg-preset-thumb">
+                            <span class="bg-preset-name">따뜻한 가족</span>
+                        </div>
+                        <div class="bg-preset-card" onclick="selectBgPreset(3)">
+                            <img src="images/브랜딩12.jpg" onerror="this.src='images/보장분석2.png'" class="bg-preset-thumb">
+                            <span class="bg-preset-name">스마트 메디컬</span>
+                        </div>
+                        <div class="bg-preset-card" onclick="selectBgPreset(4)">
+                            <img src="images/브랜딩4.jpg" onerror="this.src='images/브랜딩_파스텔_branded.jpg'" class="bg-preset-thumb">
+                            <span class="bg-preset-name">소프트 파스텔</span>
+                        </div>
+                        <div class="bg-preset-card" onclick="selectBgPreset(5)">
+                            <img src="images/브랜딩6.jpg" onerror="this.src='images/보장분석3.png'" class="bg-preset-thumb">
+                            <span class="bg-preset-name">모던 어반</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>📁 나만의 표지 이미지 직접 업로드</label>
+                        <input type="file" id="customBgUpload" accept="image/*" class="form-input" onchange="handleCustomBgUpload(event)">
+                    </div>
+
+                    <div class="form-section-title" style="margin-top:20px;"><i class="fa-solid fa-sliders" style="color:var(--primary);"></i> 비주얼 정밀 컨트롤 (광고 랜딩 감성)</div>
+                    
+                    <div class="form-row">
+                        <label>어두운 오버레이 농도 (가독성 조절)</label>
+                        <div class="range-control">
+                            <input type="range" id="overlayOpacity" min="10" max="90" value="45" oninput="updateRangeLabel('overlayVal', this.value+'%'); renderCover();">
+                            <span class="range-val" id="overlayVal">45%</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>이미지 확대/축소 배율 (Scale)</label>
+                        <div class="range-control">
+                            <input type="range" id="bgScale" min="80" max="200" value="105" oninput="updateRangeLabel('scaleVal', this.value+'%'); renderCover();">
+                            <span class="range-val" id="scaleVal">105%</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>상하 위치 조정 (Y Position)</label>
+                        <div class="range-control">
+                            <input type="range" id="bgPosY" min="-200" max="200" value="0" oninput="updateRangeLabel('posYVal', this.value+'px'); renderCover();">
+                            <span class="range-val" id="posYVal">0px</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>배경 은은한 블러 (Blur)</label>
+                        <div class="range-control">
+                            <input type="range" id="bgBlur" min="0" max="10" value="0" oninput="updateRangeLabel('blurVal', this.value+'px'); renderCover();">
+                            <span class="range-val" id="blurVal">0px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 탭 2: 고객 & 타이틀 -->
+                <div id="tab-text" class="tab-pane" style="display:none;">
+                    <div class="form-section-title"><i class="fa-solid fa-user-check" style="color:var(--primary);"></i> 고객 정보 연동</div>
+                    <div class="form-row">
+                        <label>고객명 (필수)</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="clientNameInput" class="form-input" placeholder="예: 김철수" value="김철수" oninput="handleClientNameChange(this.value)">
+                            <button type="button" class="btn-action secondary" style="padding:0 12px; font-size:12px; white-space:nowrap;" onclick="openCrmClientSelector()">
+                                <i class="fa-solid fa-search"></i> 고객불러오기
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>표지 상단 카테고리 칩 (배지)</label>
+                        <input type="text" id="categoryBadgeInput" class="form-input" value="✨ 1:1 맞춤 정밀 보장 진단 솔루션" oninput="renderCover()">
+                    </div>
+
+                    <div class="form-row">
+                        <label>메인 헤드라인 타이틀</label>
+                        <textarea id="mainTitleInput" class="form-textarea" oninput="renderCover()">김철수 고객님만을 위한
+든든한 평생 안심 보장 분석 리포트</textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <label>서브 설명 문구</label>
+                        <textarea id="subTitleInput" class="form-textarea" oninput="renderCover()">현재 가입된 모든 보험의 보장 공백을 정밀 진단하고, 
+불필요한 지출은 줄이며 꼭 필요한 보장만을 채운 맞춤 플랜입니다.</textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <label>분석 및 발행 일자</label>
+                        <input type="text" id="issueDateInput" class="form-input" value="" oninput="renderCover()">
+                    </div>
+                </div>
+
+                <!-- 탭 3: 설계사 명함 프로필 -->
+                <div id="tab-profile" class="tab-pane" style="display:none;">
+                    <div class="form-section-title"><i class="fa-solid fa-address-card" style="color:var(--primary);"></i> 디지털 명함 프로필 카드</div>
+                    
+                    <div class="form-row">
+                        <label>설계사 프로필 사진 업로드</label>
+                        <input type="file" id="consultantPhotoInput" accept="image/*" class="form-input" onchange="handleConsultantPhotoUpload(event)">
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div class="form-row">
+                            <label>설계사 성명</label>
+                            <input type="text" id="consultantNameInput" class="form-input" value="위라클" oninput="renderCover()">
+                        </div>
+                        <div class="form-row">
+                            <label>직함 / 전문분야</label>
+                            <input type="text" id="consultantTitleInput" class="form-input" value="수석 재무설계사" oninput="renderCover()">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>소속 지사 / 회사명</label>
+                        <input type="text" id="consultantCompanyInput" class="form-input" value="WERACLE 금융센터 / 마스터 사업단" oninput="renderCover()">
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div class="form-row">
+                            <label>연락처 (휴대폰)</label>
+                            <input type="text" id="consultantPhoneInput" class="form-input" value="010-1234-5678" oninput="renderCover()">
+                        </div>
+                        <div class="form-row">
+                            <label>이메일</label>
+                            <input type="text" id="consultantEmailInput" class="form-input" value="weracle@insurance.com" oninput="renderCover()">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>나만의 슬로건 (명함 한 줄 소개)</label>
+                        <input type="text" id="consultantSloganInput" class="form-input" value="가장 정직한 분석으로 고객님의 평생 든든한 동반자가 되겠습니다." oninput="renderCover()">
+                    </div>
+
+                    <div class="form-row">
+                        <label>디지털 명함 / 카카오톡 QR 연결 URL</label>
+                        <input type="text" id="consultantQrUrlInput" class="form-input" value="https://weracle.me/card" oninput="generateQrCode(); renderCover();">
+                        <span style="font-size:11px; color:#64748b; margin-top:3px; display:block;">입력된 주소로 모바일 스캔 QR코드가 표지 우하단에 자동 생성됩니다.</span>
+                    </div>
+                </div>
+
+                <!-- 탭 4: 배지 & 옵션 -->
+                <div id="tab-badge" class="tab-pane" style="display:none;">
+                    <div class="form-section-title"><i class="fa-solid fa-ribbon" style="color:var(--primary);"></i> 표지 배지 & 신뢰 인증 요소</div>
+                    
+                    <div class="form-row">
+                        <label>표지 핵심 강점 3대 태그</label>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <input type="text" id="tag1Input" class="form-input" value="🛡️ 중복·과다 담보 완벽 최적화" oninput="renderCover()">
+                            <input type="text" id="tag2Input" class="form-input" value="💡 암·뇌·심장 3대 질환 집중 보강" oninput="renderCover()">
+                            <input type="text" id="tag3Input" class="form-input" value="🤝 청구부터 유지까지 평생 1:1 전담 케어" oninput="renderCover()">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>위라클 공인 분석관 인증 직인(스탬프)</label>
+                        <select id="stampOptionSelect" class="form-select" onchange="renderCover()">
+                            <option value="gold_seal">🎖️ 로열 골드 프리미엄 공식 인증 실</option>
+                            <option value="red_stamp">🔴 클래식 공인 직인 스탬프</option>
+                            <option value="none">배치 안 함</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label>표지 테마 포인트 컬러</label>
+                        <div class="color-palette">
+                            <div class="color-dot active" style="background:#2563eb;" onclick="selectThemeColor('#2563eb', this)"></div>
+                            <div class="color-dot" style="background:#0284c7;" onclick="selectThemeColor('#0284c7', this)"></div>
+                            <div class="color-dot" style="background:#d97706;" onclick="selectThemeColor('#d97706', this)"></div>
+                            <div class="color-dot" style="background:#059669;" onclick="selectThemeColor('#059669', this)"></div>
+                            <div class="color-dot" style="background:#7c3aed;" onclick="selectThemeColor('#7c3aed', this)"></div>
+                            <div class="color-dot" style="background:#0f172a;" onclick="selectThemeColor('#0f172a', this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 우측: A4 실시간 프리뷰 & 합성 엔진 -->
+        <div class="preview-panel">
+            <div class="preview-header-bar">
+                <div class="preview-title">
+                    <i class="fa-solid fa-desktop" style="color:var(--primary);"></i>
+                    <span>A4 프리뷰 실시간 화면 (표지 1페이지)</span>
+                </div>
+                <div class="preview-controls">
+                    <button type="button" class="zoom-btn" onclick="zoomPreview(0.8)"><i class="fa-solid fa-minus"></i> 축소</button>
+                    <span id="zoomLevelText" style="font-size:12px; font-weight:700; color:#475569;">100%</span>
+                    <button type="button" class="zoom-btn" onclick="zoomPreview(1.2)"><i class="fa-solid fa-plus"></i> 확대</button>
+                    <button type="button" class="zoom-btn" onclick="zoomPreview(1.0)">리셋</button>
+                </div>
+            </div>
+
+            <!-- A4 캔버스 뷰포트 -->
+            <div class="a4-viewport-wrap" id="viewportWrap">
+                <canvas id="coverCanvas" class="a4-canvas-shadow" width="1240" height="1754"></canvas>
+            </div>
+
+            <!-- 하단 액션 바 -->
+            <div class="studio-bottom-actions">
+                <div class="action-group-left">
+                    <button type="button" class="btn-action secondary" onclick="downloadCoverImage()">
+                        <i class="fa-solid fa-image"></i> 표지만 이미지(PNG) 저장
+                    </button>
+                    <button type="button" class="btn-action secondary" onclick="downloadCoverPdfOnly()">
+                        <i class="fa-solid fa-file-pdf"></i> 표지만 PDF 다운로드
+                    </button>
+                </div>
+
+                <div class="action-group-right">
+                    <label class="btn-action secondary" style="cursor:pointer; margin:0;">
+                        <i class="fa-solid fa-paperclip"></i> 원본 보장분석 PDF 첨부
+                        <input type="file" id="originalPdfInput" accept="application/pdf" style="display:none;" onchange="handleOriginalPdfSelected(event)">
+                    </label>
+                    <button type="button" class="btn-action primary" onclick="generateMergedReportPdf()">
+                        <i class="fa-solid fa-file-circle-check"></i> 표지 + 본문 PDF 완성본 생성
+                    </button>
+                    <button type="button" class="btn-action success" onclick="saveReportToCrm()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> CRM 고객관리에 저장
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- 보이지 않는 QR코드 생성 컨테이너 -->
+<div id="hiddenQrContainer" style="display:none;"></div>
+
+<!-- 로딩 오버레이 -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div id="loadingText" style="font-size:16px; font-weight:800;">VIP 보장분석 리포트를 합성하고 있습니다...</div>
+    <div style="font-size:13px; color:#cbd5e1; margin-top:6px;">고화질 표지와 원본 보장내역을 정밀 병합 중입니다.</div>
+</div>
+
+<!-- 토스트 팝업 -->
+<div id="toastPopup" class="toast-popup">
+    <i class="fa-solid fa-circle-check" style="color:#38bdf8; font-size:16px;"></i>
+    <span id="toastMessage">작업이 완료되었습니다.</span>
+</div>
+
+<script>
+    // ==========================================
+    // 1. 전역 상태 및 기본값
+    // ==========================================
+    window.coverState = {
+        themeColor: '#2563eb',
+        bgPresetIdx: 0,
+        customBgImg: null,
+        consultantPhotoImg: null,
+        qrCodeImg: null,
+        zoom: 1.0,
+        currentClient: {
+            name: '김철수',
+            phone: '010-1234-5678'
+        },
+        originalPdfFile: null,
+        mergedPdfBlob: null
+    };
+
+    const PRESET_BG_PATHS = [
+        'images/브랜딩1.jpg',
+        'images/브랜딩2.jpg',
+        'images/브랜딩11.jpg',
+        'images/브랜딩12.jpg',
+        'images/브랜딩4.jpg',
+        'images/브랜딩6.jpg'
+    ];
+
+    let loadedPresetImages = [];
+
+    // ==========================================
+    // 2. 초기화 및 이벤트 리스너
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', async () => {
+        // 오늘 날짜 세팅
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, '0');
+        const d = String(today.getDate()).padStart(2, '0');
+        const dateInput = document.getElementById('issueDateInput');
+        if (dateInput) dateInput.value = `${y}년 ${m}월 ${d}일`;
+
+        // URL 파라미터에서 고객명 파싱 (CRM에서 넘어왔을 경우)
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('clientName')) {
+            const cName = params.get('clientName');
+            document.getElementById('clientNameInput').value = cName;
+            handleClientNameChange(cName);
+        }
+        if (params.get('clientPhone')) {
+            window.coverState.currentClient.phone = params.get('clientPhone');
+        }
+
+        // 프리셋 이미지 사전 로딩
+        await preloadPresetImages();
+
+        // QR코드 생성
+        generateQrCode();
+
+        // 최초 표지 렌더링
+        setTimeout(renderCover, 100);
+    });
+
+    // 탭 전환
+    function switchControlTab(tabName) {
+        document.querySelectorAll('.panel-tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+        
+        event.currentTarget.classList.add('active');
+        const target = document.getElementById('tab-' + tabName);
+        if (target) target.style.display = 'block';
+    }
+
+    // 슬라이더 라벨 업데이트
+    function updateRangeLabel(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val;
+    }
+
+    // 테마 컬러 선택
+    function selectThemeColor(color, el) {
+        window.coverState.themeColor = color;
+        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+        el.classList.add('active');
+        renderCover();
+    }
+
+    // 고객명 변경 시 타이틀 자동 반영
+    function handleClientNameChange(name) {
+        window.coverState.currentClient.name = name || '고객';
+        const titleEl = document.getElementById('mainTitleInput');
+        if (titleEl) {
+            titleEl.value = `${name || '고객'} 고객님만을 위한\n든든한 평생 안심 보장 분석 리포트`;
+        }
+        renderCover();
+    }
+
+    // 프리셋 이미지 사전 로딩
+    async function preloadPresetImages() {
+        loadedPresetImages = [];
+        for (let path of PRESET_BG_PATHS) {
+            const img = new Image();
+            img.src = path;
+            await new Promise(r => {
+                img.onload = () => { loadedPresetImages.push(img); r(); };
+                img.onerror = () => { loadedPresetImages.push(null); r(); };
+            });
+        }
+    }
+
+    function selectBgPreset(idx) {
+        window.coverState.bgPresetIdx = idx;
+        window.coverState.customBgImg = null;
+        document.querySelectorAll('.bg-preset-card').forEach((c, i) => {
+            if (i === idx) c.classList.add('active');
+            else c.classList.remove('active');
+        });
+        renderCover();
+    }
+
+    // 커스텀 배경 업로드
+    function handleCustomBgUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const img = new Image();
+            img.onload = function() {
+                window.coverState.customBgImg = img;
+                document.querySelectorAll('.bg-preset-card').forEach(c => c.classList.remove('active'));
+                renderCover();
+            };
+            img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 설계사 사진 업로드
+    function handleConsultantPhotoUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const img = new Image();
+            img.onload = function() {
+                window.coverState.consultantPhotoImg = img;
+                renderCover();
+            };
+            img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // QR코드 생성
+    function generateQrCode() {
+        const urlInput = document.getElementById('consultantQrUrlInput');
+        const url = (urlInput && urlInput.value) ? urlInput.value.trim() : 'https://weracle.me';
+        const container = document.getElementById('hiddenQrContainer');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (typeof QRCode !== 'undefined') {
+            new QRCode(container, {
+                text: url,
+                width: 140,
+                height: 140,
+                colorDark: '#0f172a',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+
+            setTimeout(() => {
+                const qrImg = container.querySelector('img');
+                if (qrImg) {
+                    window.coverState.qrCodeImg = qrImg;
+                    renderCover();
+                }
+            }, 80);
+        }
+    }
+
+    // ==========================================
+    // 3. A4 초고화질 표지 Canvas 실시간 렌더링 엔진
+    // ==========================================
+    function renderCover() {
+        const canvas = document.getElementById('coverCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;  // 1240 px
+        const H = canvas.height; // 1754 px (A4 ratio)
+
+        ctx.clearRect(0, 0, W, H);
+
+        // A. 배경 이미지 그리기
+        const scaleVal = parseInt(document.getElementById('bgScale').value, 10) / 100.0;
+        const posYVal = parseInt(document.getElementById('bgPosY').value, 10);
+        const blurVal = parseInt(document.getElementById('bgBlur').value, 10);
+        const opacityVal = parseInt(document.getElementById('overlayOpacity').value, 10) / 100.0;
+
+        let activeBgImg = window.coverState.customBgImg || loadedPresetImages[window.coverState.bgPresetIdx];
+
+        ctx.save();
+        if (blurVal > 0) {
+            ctx.filter = `blur(${blurVal * 2}px)`;
+        }
+
+        if (activeBgImg && activeBgImg.complete && activeBgImg.naturalWidth > 0) {
+            const imgAspect = activeBgImg.naturalWidth / activeBgImg.naturalHeight;
+            const canvasAspect = W / H;
+            let drawW, drawH, drawX, drawY;
+
+            if (imgAspect > canvasAspect) {
+                drawH = H * scaleVal;
+                drawW = drawH * imgAspect;
+            } else {
+                drawW = W * scaleVal;
+                drawH = drawW / imgAspect;
+            }
+            drawX = (W - drawW) / 2;
+            drawY = ((H - drawH) / 2) + (posYVal * 2);
+
+            ctx.drawImage(activeBgImg, drawX, drawY, drawW, drawH);
+        } else {
+            // 이미지 없을 때 기본 그라디언트
+            const defGrad = ctx.createLinearGradient(0, 0, W, H);
+            defGrad.addColorStop(0, '#0f172a');
+            defGrad.addColorStop(0.5, '#1e293b');
+            defGrad.addColorStop(1, '#0369a1');
+            ctx.fillStyle = defGrad;
+            ctx.fillRect(0, 0, W, H);
+        }
+        ctx.restore();
+
+        // B. 어두운 오버레이 그라디언트 (가독성 보장)
+        const overlay = ctx.createLinearGradient(0, 0, 0, H);
+        overlay.addColorStop(0, `rgba(15, 23, 42, ${Math.min(0.9, opacityVal + 0.15)})`);
+        overlay.addColorStop(0.45, `rgba(15, 23, 42, ${opacityVal})`);
+        overlay.addColorStop(0.75, `rgba(15, 23, 42, ${Math.min(0.95, opacityVal + 0.2)})`);
+        overlay.addColorStop(1, `rgba(15, 23, 42, ${Math.min(0.98, opacityVal + 0.3)})`);
+        ctx.fillStyle = overlay;
+        ctx.fillRect(0, 0, W, H);
+
+        // 테마 컬러
+        const themeCol = window.coverState.themeColor || '#2563eb';
+
+        // C. 상단 브랜드 헤더 (로고 & 배지)
+        const padX = 80;
+        let curY = 80;
+
+        // 상단 미니 로고 & 워드마크
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 24px "Pretendard"';
+        ctx.textAlign = 'left';
+        ctx.fillText('WERACLE', padX, curY);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.font = '700 13px "Pretendard"';
+        ctx.fillText('PREMIER CONSULTING', padX + 120, curY - 2);
+
+        // 상단 카테고리 칩 배지
+        const categoryBadge = document.getElementById('categoryBadgeInput').value.trim();
+        if (categoryBadge) {
+            curY += 60;
+            ctx.save();
+            ctx.font = '800 14px "Pretendard"';
+            const badgeW = ctx.measureText(categoryBadge).width + 32;
+            const badgeH = 34;
+
+            ctx.fillStyle = themeCol;
+            roundRect(ctx, padX, curY, badgeW, badgeH, 17);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(categoryBadge, padX + 16, curY + (badgeH / 2));
+            ctx.restore();
+            curY += 45;
+        } else {
+            curY += 70;
+        }
+
+        // D. 메인 헤드라인 타이틀 (볼드 타이포그래피)
+        curY += 40;
+        const mainTitle = document.getElementById('mainTitleInput').value;
+        const titleLines = mainTitle.split('\n');
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 52px "Pretendard"';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+
+        titleLines.forEach(line => {
+            // 강조 단어(고객명) 하이라이트
+            ctx.fillText(line, padX, curY);
+            curY += 68;
+        });
+
+        // 서브 타이틀
+        curY += 15;
+        const subTitle = document.getElementById('subTitleInput').value;
+        const subLines = subTitle.split('\n');
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '500 20px "Pretendard"';
+        subLines.forEach(line => {
+            ctx.fillText(line, padX, curY);
+            curY += 32;
+        });
+
+        // 포인트 라인
+        curY += 25;
+        const lineGrad = ctx.createLinearGradient(padX, curY, padX + 400, curY);
+        lineGrad.addColorStop(0, themeCol);
+        lineGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = lineGrad;
+        ctx.fillRect(padX, curY, 350, 4);
+
+        // E. 핵심 강점 3대 태그 박스 (배지 영역)
+        curY += 45;
+        const tag1 = document.getElementById('tag1Input').value.trim();
+        const tag2 = document.getElementById('tag2Input').value.trim();
+        const tag3 = document.getElementById('tag3Input').value.trim();
+        const tags = [tag1, tag2, tag3].filter(Boolean);
+
+        tags.forEach(t => {
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+            ctx.lineWidth = 1;
+            roundRect(ctx, padX, curY, 480, 42, 8);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '700 15px "Pretendard"';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(t, padX + 16, curY + 21);
+            ctx.restore();
+            curY += 52;
+        });
+
+        // F. 하단 명함 프로필 카드 (글래스모피즘 디지털 명함)
+        const cardY = H - 360;
+        const cardW = W - (padX * 2);
+        const cardH = 260;
+
+        ctx.save();
+        // 글래스모피즘 배경
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        roundRect(ctx, padX, cardY, cardW, cardH, 20);
+        ctx.fill();
+        ctx.stroke();
+
+        // 상단 포인트 바
+        ctx.fillStyle = themeCol;
+        roundRect(ctx, padX, cardY, cardW, 8, { tl: 20, tr: 20, bl: 0, br: 0 });
+        ctx.fill();
+
+        // 1. 프로필 아바타 / 사진
+        const avatarSize = 120;
+        const avatarX = padX + 35;
+        const avatarY = cardY + 45;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(avatarX + (avatarSize / 2), avatarY + (avatarSize / 2), avatarSize / 2, 0, Math.PI * 2);
+        ctx.clip();
+
+        if (window.coverState.consultantPhotoImg && window.coverState.consultantPhotoImg.complete) {
+            ctx.drawImage(window.coverState.consultantPhotoImg, avatarX, avatarY, avatarSize, avatarSize);
+        } else {
+            // 기본 세련된 아바타 배경
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(avatarX, avatarY, avatarSize, avatarSize);
+            ctx.fillStyle = '#64748b';
+            ctx.font = '900 48px "Pretendard"';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const nameInitial = (document.getElementById('consultantNameInput').value || '설')[0];
+            ctx.fillText(nameInitial, avatarX + (avatarSize / 2), avatarY + (avatarSize / 2));
+        }
+        ctx.restore();
+
+        // 2. 프로필 텍스트 정보
+        const infoX = avatarX + avatarSize + 30;
+        const consName = document.getElementById('consultantNameInput').value || '위라클';
+        const consTitle = document.getElementById('consultantTitleInput').value || '수석 재무설계사';
+        const consCompany = document.getElementById('consultantCompanyInput').value || 'WERACLE 금융센터';
+        const consPhone = document.getElementById('consultantPhoneInput').value || '010-1234-5678';
+        const consEmail = document.getElementById('consultantEmailInput').value || '';
+        const consSlogan = document.getElementById('consultantSloganInput').value || '';
+
+        // 이름 + 직함
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '900 32px "Pretendard"';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText(consName, infoX, avatarY);
+
+        const nameWidth = ctx.measureText(consName).width;
+        ctx.fillStyle = themeCol;
+        ctx.font = '800 17px "Pretendard"';
+        ctx.fillText(consTitle, infoX + nameWidth + 14, avatarY + 11);
+
+        // 소속 회사
+        ctx.fillStyle = '#475569';
+        ctx.font = '700 16px "Pretendard"';
+        ctx.fillText(consCompany, infoX, avatarY + 44);
+
+        // 연락처 & 이메일
+        ctx.fillStyle = '#334155';
+        ctx.font = '600 15.5px "Pretendard"';
+        let contactTxt = `📞 ${consPhone}`;
+        if (consEmail) contactTxt += `   ✉️ ${consEmail}`;
+        ctx.fillText(contactTxt, infoX, avatarY + 76);
+
+        // 슬로건
+        if (consSlogan) {
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'italic 500 14px "Pretendard"';
+            ctx.fillText(`"${consSlogan}"`, infoX, avatarY + 106);
+        }
+
+        // 3. 우측 QR 코드 & 발행일자
+        const qrSize = 100;
+        const qrX = padX + cardW - qrSize - 35;
+        const qrY = cardY + 50;
+
+        if (window.coverState.qrCodeImg) {
+            ctx.drawImage(window.coverState.qrCodeImg, qrX, qrY, qrSize, qrSize);
+            ctx.fillStyle = '#64748b';
+            ctx.font = '700 10.5px "Pretendard"';
+            ctx.textAlign = 'center';
+            ctx.fillText('디지털명함 스캔', qrX + (qrSize / 2), qrY + qrSize + 14);
+        }
+
+        // 인증 직인 스탬프
+        const stampOpt = document.getElementById('stampOptionSelect').value;
+        if (stampOpt === 'gold_seal') {
+            drawSealBadge(ctx, padX + cardW - 240, cardY + 65, themeCol);
+        } else if (stampOpt === 'red_stamp') {
+            drawRedStamp(ctx, padX + cardW - 230, cardY + 65);
+        }
+
+        // 4. 하단 발행일자 & 워터마크
+        const issueDate = document.getElementById('issueDateInput').value;
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '600 12.5px "Pretendard"';
+        ctx.textAlign = 'left';
+        ctx.fillText(`발행일자: ${issueDate}  |  문서보안코드: WR-${Date.now().toString().slice(-6)}`, padX + 35, cardY + cardH - 26);
+
+        ctx.textAlign = 'right';
+        ctx.fillText('CONFIDENTIAL & PRIVILEGED REPORT', padX + cardW - 35, cardY + cardH - 26);
+
+        ctx.restore();
+    }
+
+    // 둥근 사각형 헬퍼
+    function roundRect(ctx, x, y, width, height, radius) {
+        if (typeof radius === 'number') {
+            radius = { tl: radius, tr: radius, br: radius, bl: radius };
+        } else {
+            radius = Object.assign({ tl: 0, tr: 0, br: 0, bl: 0 }, radius);
+        }
+        ctx.beginPath();
+        ctx.moveTo(x + radius.tl, y);
+        ctx.lineTo(x + width - radius.tr, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+        ctx.lineTo(x + width, y + height - radius.br);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+        ctx.lineTo(x + radius.bl, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+        ctx.lineTo(x, y + radius.tl);
+        ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+        ctx.closePath();
+    }
+
+    // 로열 골드 실 그리기
+    function drawSealBadge(ctx, x, y, themeCol) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.beginPath();
+        ctx.arc(40, 40, 36, 0, Math.PI * 2);
+        ctx.fillStyle = '#fef3c7';
+        ctx.fill();
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(40, 40, 30, 0, Math.PI * 2);
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.fillStyle = '#b45309';
+        ctx.font = '900 10.5px "Pretendard"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('WERACLE', 40, 30);
+        ctx.fillText('VIP CERTIFIED', 40, 43);
+        ctx.font = '800 8.5px "Pretendard"';
+        ctx.fillText('공인 분석관', 40, 55);
+        ctx.restore();
+    }
+
+    // 빨간 직인 스탬프
+    function drawRedStamp(ctx, x, y) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(10, 10, 60, 60);
+
+        ctx.fillStyle = '#dc2626';
+        ctx.font = '900 13px "Batang", serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('위라클', 40, 30);
+        ctx.fillText('공인인', 40, 50);
+        ctx.restore();
+    }
+
+    // 프리뷰 확대/축소
+    function zoomPreview(val) {
+        if (val === 1.0) window.coverState.zoom = 1.0;
+        else window.coverState.zoom = Math.max(0.5, Math.min(2.0, window.coverState.zoom * val));
+        
+        const canvas = document.getElementById('coverCanvas');
+        if (canvas) {
+            canvas.style.transform = `scale(${window.coverState.zoom})`;
+            canvas.style.transformOrigin = 'top center';
+        }
+        document.getElementById('zoomLevelText').innerText = Math.round(window.coverState.zoom * 100) + '%';
+    }
+
+    // ==========================================
+    // 4. PDF 다운로드 & 원본 PDF 합성 엔진
+    // ==========================================
+
+    // 표지만 이미지(PNG) 다운로드
+    function downloadCoverImage() {
+        const canvas = document.getElementById('coverCanvas');
+        const clientName = window.coverState.currentClient.name || '고객';
+        const a = document.createElement('a');
+        a.download = `[VIP표지]_${clientName}_보장분석리포트.png`;
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+        showToast('🖼️ 표지 이미지가 저장되었습니다.');
+    }
+
+    // 표지만 단독 PDF 다운로드
+    function downloadCoverPdfOnly() {
+        const { jsPDF } = window.jspdf;
+        const canvas = document.getElementById('coverCanvas');
+        const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+
+        const clientName = window.coverState.currentClient.name || '고객';
+        pdf.save(`[VIP표지]_${clientName}_보장분석리포트.pdf`);
+        showToast('📑 표지 PDF가 저장되었습니다.');
+    }
+
+    // 원본 보장분석 PDF 파일 첨부 핸들러
+    function handleOriginalPdfSelected(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        window.coverState.originalPdfFile = file;
+        showToast(`📎 원본 PDF [${file.name}] 첨부 완료! 이제 합성 버튼을 누르세요.`);
+    }
+
+    // 표지 1페이지 + 본문 병합 리포트 생성
+    async function generateMergedReportPdf() {
+        showLoading('VIP 커스텀 표지와 본문 보장내역을 정밀 합성 중입니다...');
+        const { jsPDF } = window.jspdf;
+
+        try {
+            const coverCanvas = document.getElementById('coverCanvas');
+            const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+            // 1. 표지 (Page 1) 추가
+            const coverImgData = coverCanvas.toDataURL('image/jpeg', 0.95);
+            pdf.addImage(coverImgData, 'JPEG', 0, 0, 210, 297);
+
+            // 2. 만약 원본 PDF가 첨부되어 있으면 페이지들을 읽어서 합성
+            if (window.coverState.originalPdfFile) {
+                const arrayBuffer = await window.coverState.originalPdfFile.arrayBuffer();
+                const pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
+
+                for (let i = 1; i <= pdfDoc.numPages; i++) {
+                    const page = await pdfDoc.getPage(i);
+                    const viewport = page.getViewport({ scale: 2.0 });
+                    
+                    const pCanvas = document.createElement('canvas');
+                    pCanvas.width = viewport.width;
+                    pCanvas.height = viewport.height;
+                    const pCtx = pCanvas.getContext('2d');
+
+                    await page.render({ canvasContext: pCtx, viewport: viewport }).promise;
+
+                    // A4 페이지 추가 후 렌더링
+                    pdf.addPage([210, 297], viewport.width > viewport.height ? 'l' : 'p');
+                    const pImg = pCanvas.toDataURL('image/jpeg', 0.9);
+                    
+                    if (viewport.width > viewport.height) {
+                        pdf.addImage(pImg, 'JPEG', 0, 0, 297, 210);
+                    } else {
+                        pdf.addImage(pImg, 'JPEG', 0, 0, 210, 297);
+                    }
+                }
+            }
+
+            const clientName = window.coverState.currentClient.name || '고객';
+            const fileName = `[VIP보장분석]_${clientName}_리포트.pdf`;
+            
+            // PDF Blob 생성 (CRM 보관용)
+            const pdfBlob = pdf.output('blob');
+            window.coverState.mergedPdfBlob = pdfBlob;
+
+            // 다운로드 실행
+            pdf.save(fileName);
+
+            hideLoading();
+            showToast('🎉 VIP 표지가 결합된 완성본 PDF가 생성되었습니다!');
+        } catch (err) {
+            console.error('PDF Merge Error:', err);
+            hideLoading();
+            alert('PDF 합성 중 오류가 발생했습니다: ' + err.message);
+        }
+    }
+
+    // ==========================================
+    // 5. CRM 고객 연동 & IndexedDB 저장소
+    // ==========================================
+    const DB_NAME = 'WeracleBojangDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'bojangReports';
+
+    function openIndexedDb() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open(DB_NAME, DB_VERSION);
+            req.onupgradeneeded = function(e) {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    }
+
+    async function saveReportToCrm() {
+        showLoading('CRM 고객 데이터베이스에 리포트를 저장하고 있습니다...');
+
+        const clientName = window.coverState.currentClient.name || '고객';
+        const clientPhone = window.coverState.currentClient.phone || '';
+        const issueDate = document.getElementById('issueDateInput').value;
+        const mainTitle = document.getElementById('mainTitleInput').value.split('\n')[0];
+
+        // 썸네일 캡처
+        const coverCanvas = document.getElementById('coverCanvas');
+        const thumbDataUrl = coverCanvas.toDataURL('image/jpeg', 0.6);
+
+        // PDF DataUrl 생성
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+        const coverImgData = coverCanvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(coverImgData, 'JPEG', 0, 0, 210, 297);
+
+        const pdfDataUri = pdf.output('datauristring');
+
+        const reportRecord = {
+            id: 'rep_' + Date.now(),
+            clientName: clientName,
+            clientPhone: clientPhone,
+            title: mainTitle,
+            date: issueDate,
+            createdAt: new Date().toISOString(),
+            thumb: thumbDataUrl,
+            pdfData: pdfDataUri
+        };
+
+        try {
+            const db = await openIndexedDb();
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).put(reportRecord);
+            await new Promise(r => tx.oncomplete = r);
+
+            // 로컬스토리지에도 인덱스 메타데이터 동기화 (CRM 연동용)
+            let metadataList = [];
+            try {
+                metadataList = JSON.parse(localStorage.getItem('weracle_crm_bojang_meta') || '[]');
+            } catch(e) {}
+            metadataList.unshift({
+                id: reportRecord.id,
+                clientName: clientName,
+                clientPhone: clientPhone,
+                title: mainTitle,
+                date: issueDate,
+                createdAt: reportRecord.createdAt,
+                thumb: thumbDataUrl
+            });
+            localStorage.setItem('weracle_crm_bojang_meta', JSON.stringify(metadataList));
+
+            hideLoading();
+            showToast(`✨ [${clientName}] 고객님의 고객관리에 보장분석 리포트가 성공적으로 저장되었습니다!`);
+        } catch (err) {
+            console.error('CRM Save Error:', err);
+            hideLoading();
+            alert('저장 중 오류가 발생했습니다: ' + err.message);
+        }
+    }
+
+    // CRM 고객 불러오기 팝업 시뮬레이터 (추후 연동)
+    function openCrmClientSelector() {
+        const inputName = prompt('검색할 고객명을 입력해주세요:', '김철수');
+        if (inputName) {
+            document.getElementById('clientNameInput').value = inputName.trim();
+            handleClientNameChange(inputName.trim());
+            showToast(`👤 [${inputName.trim()}] 고객 정보가 반영되었습니다.`);
+        }
+    }
+
+    // UI 알림 헬퍼
+    function showToast(msg) {
+        const toast = document.getElementById('toastPopup');
+        const text = document.getElementById('toastMessage');
+        if (!toast || !text) return;
+        text.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3800);
+    }
+
+    function showLoading(msg) {
+        const ov = document.getElementById('loadingOverlay');
+        const txt = document.getElementById('loadingText');
+        if (txt && msg) txt.innerText = msg;
+        if (ov) ov.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        const ov = document.getElementById('loadingOverlay');
+        if (ov) ov.style.display = 'none';
+    }
+</script>
+
+</body>
+</html>

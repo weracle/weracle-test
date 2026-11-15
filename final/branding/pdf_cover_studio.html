@@ -97,10 +97,10 @@
             color: #0369a1;
         }
 
-        /* 2. 메인 2단 스튜디오 그리드 (좌측: 프리뷰, 우측: 컨트롤) */
+        /* 2. 메인 2단 스튜디오 그리드 (좌측: 순수 A4 프리뷰 뷰포트, 우측: 컨트롤 & 액션) */
         .studio-main-grid {
             display: grid;
-            grid-template-columns: minmax(480px, 1.25fr) minmax(420px, 1fr);
+            grid-template-columns: minmax(540px, 1.35fr) minmax(420px, 1fr);
             gap: 24px;
             align-items: start;
         }
@@ -150,7 +150,7 @@
 
         .panel-content {
             padding: 20px;
-            max-height: calc(100vh - 180px);
+            max-height: calc(100vh - 280px);
             overflow-y: auto;
         }
 
@@ -257,12 +257,12 @@
             font-weight: 800;
         }
 
-        /* 좌측: 실제 A4 표지 실시간 프리뷰 패널 (화면에 고정 & 짤림 없이 핏) */
+        /* 좌측: 순수 A4 표지 실시간 프리뷰 패널 (버튼 없이 오직 깔끔한 A4 뷰포트) */
         .preview-panel {
             background: #ffffff;
             border: 1px solid var(--border-color);
             border-radius: 16px;
-            padding: 18px 20px;
+            padding: 16px 18px 18px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
             display: flex;
             flex-direction: column;
@@ -308,7 +308,7 @@
         .btn-fit-toggle {
             background: #f1f5f9;
             border: 1px solid #cbd5e1;
-            padding: 4px 9px;
+            padding: 4px 10px;
             border-radius: 6px;
             font-size: 11.5px;
             font-weight: 700;
@@ -324,19 +324,19 @@
             color: #0f172a;
         }
 
-        /* A4 프리뷰 뷰포트 - 상하좌우 잘림 없이 한눈에 딱 보이게 세팅 */
+        /* A4 프리뷰 뷰포트 - 버튼 없이 전체 높이를 활용하여 A4 용지 100% 쏙 들어맞게 세팅 */
         .a4-viewport-wrap {
             width: 100%;
-            height: calc(100vh - 250px);
-            min-height: 520px;
-            max-height: 750px;
+            height: calc(100vh - 165px);
+            min-height: 580px;
+            max-height: 860px;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #f1f5f9;
-            padding: 14px;
+            background: #eaf0f6;
+            padding: 20px;
             border-radius: 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #d9e2ec;
             overflow: hidden;
             position: relative;
             box-sizing: border-box;
@@ -346,37 +346,37 @@
             align-items: flex-start;
         }
         .a4-canvas-shadow {
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.13);
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16), 0 3px 10px rgba(15, 23, 42, 0.08);
             border-radius: 4px;
-            background: #fff;
+            background: #ffffff;
             display: block;
-            /* 핵심: 잘림 없이 뷰포트 안에 100% 쏙 들어맞도록 contain 처리 */
+            /* A4 비율(1240:1754 = 1:1.414) 완벽 보존 & 화면 높이에 맞춰 단 1픽셀도 잘림 없음 */
             max-height: 100%;
             max-width: 100%;
             width: auto;
             height: auto;
             object-fit: contain;
             aspect-ratio: 1240 / 1754;
+            border: 1px solid rgba(0, 0, 0, 0.07);
             transition: transform 0.2s ease;
         }
         .a4-viewport-wrap.zoom-mode .a4-canvas-shadow {
             max-height: none;
             max-width: none;
-            width: 950px;
+            width: 960px;
             height: auto;
         }
 
-        /* 하단 액션 버튼 바 */
-        .studio-bottom-actions {
-            margin-top: 12px;
-            width: 100%;
+        /* 우측 컨트롤 패널 하단: 액션 버튼 전용 고정 푸터 */
+        .panel-action-footer {
+            background: #f8fafc;
+            border-top: 1px solid var(--border-color);
+            padding: 14px 18px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            background: #f8fafc;
-            padding: 12px 14px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
+            gap: 9px;
+            flex-shrink: 0;
+            border-radius: 0 0 16px 16px;
         }
         .action-row {
             display: flex;
@@ -492,7 +492,7 @@
     <!-- 2단 메인 그리드 -->
     <div class="studio-main-grid">
 
-        <!-- 좌측: 실제 A4 표지 실시간 프리뷰 영역 (잘림 없이 한눈에 완벽 핏) -->
+        <!-- 좌측: 순수 A4 표지 실시간 프리뷰 영역 (하단 버튼 일절 없이 깔끔한 A4 뷰포트) -->
         <div class="preview-panel">
             <div class="preview-header-bar">
                 <div class="preview-title">
@@ -508,34 +508,9 @@
                 </div>
             </div>
 
-            <!-- A4 캔버스 뷰포트 (상하좌우 잘림 없이 100% 쏙 들어옴) -->
+            <!-- A4 캔버스 뷰포트 (하단 버튼 없이 넓은 화면에 A4 용지 전체가 완벽하게 쏙 들어옴) -->
             <div class="a4-viewport-wrap" id="viewportWrap">
                 <canvas id="coverCanvas" class="a4-canvas-shadow" width="1240" height="1754"></canvas>
-            </div>
-
-            <!-- 하단 액션 바 -->
-            <div class="studio-bottom-actions">
-                <div class="action-row">
-                    <button type="button" class="btn-action secondary" onclick="downloadCoverImage()">
-                        <i class="fa-solid fa-image"></i> 표지만 PNG 저장
-                    </button>
-                    <button type="button" class="btn-action secondary" onclick="downloadCoverPdfOnly()">
-                        <i class="fa-solid fa-file-pdf"></i> 표지만 PDF 저장
-                    </button>
-                    <label class="btn-action secondary" style="cursor:pointer; margin:0;">
-                        <i class="fa-solid fa-paperclip"></i> 원본 PDF 첨부
-                        <input type="file" id="originalPdfInput" accept="application/pdf" style="display:none;" onchange="handleOriginalPdfSelected(event)">
-                    </label>
-                </div>
-
-                <div class="action-row">
-                    <button type="button" class="btn-action primary" onclick="generateMergedReportPdf()">
-                        <i class="fa-solid fa-file-circle-check"></i> 표지 + 본문 PDF 완성본 생성
-                    </button>
-                    <button type="button" class="btn-action success" onclick="saveReportToCrm()">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> CRM 고객관리에 저장
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -773,6 +748,31 @@
                     </div>
                 </div>
 
+            </div>
+
+            <!-- 우측 컨트롤 패널 하단: 액션 버튼 고정 푸터 -->
+            <div class="panel-action-footer">
+                <div class="action-row">
+                    <button type="button" class="btn-action secondary" onclick="downloadCoverImage()">
+                        <i class="fa-solid fa-image"></i> 표지 PNG 저장
+                    </button>
+                    <button type="button" class="btn-action secondary" onclick="downloadCoverPdfOnly()">
+                        <i class="fa-solid fa-file-pdf"></i> 표지 PDF 저장
+                    </button>
+                    <label class="btn-action secondary" style="cursor:pointer; margin:0;" title="기존 보장분석 리포트 원본 PDF 선택">
+                        <i class="fa-solid fa-paperclip"></i> 원본 PDF 첨부
+                        <input type="file" id="originalPdfInput" accept="application/pdf" style="display:none;" onchange="handleOriginalPdfSelected(event)">
+                    </label>
+                </div>
+
+                <div class="action-row">
+                    <button type="button" class="btn-action primary" onclick="generateMergedReportPdf()">
+                        <i class="fa-solid fa-file-circle-check"></i> 표지 + 본문 완성본 PDF
+                    </button>
+                    <button type="button" class="btn-action success" onclick="saveReportToCrm()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> CRM 고객관리에 저장
+                    </button>
+                </div>
             </div>
         </div>
 

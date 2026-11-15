@@ -1947,10 +1947,56 @@
       return !s || s === '무' || s === '없음' || s === '없 음' || s === '-' || s === 'n' || s === 'none' || s === 'x' || s === '해당없음' || s === '미보유';
     }
 
+    function extractColorFromText(txt) {
+      if (!txt) return '';
+      const colorMatch = String(txt).match(/화이트|흰색|백색|갈색|브라운|블랙|검정|블랙탄|치즈태비|치즈|크림|세이블|그레이|회색|삼색|골드|골든|실버|미색|레드/i);
+      return colorMatch ? colorMatch[0] : '';
+    }
+
+    // 괄호 안의 콤마(예: "말티즈(초코, 암컷)")는 보존하고, 최상위 콤마(예: "초코, 보리")만 정확히 분리하는 정밀 파서
+    function splitTopLevelComma(str) {
+      if (!str) return [];
+      const s = String(str).trim();
+      if (isNoPetText(s)) return [];
+
+      const results = [];
+      let depth = 0;
+      let current = '';
+      for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+        if (ch === '(' || ch === '[' || ch === '{') {
+          depth++;
+          current += ch;
+        } else if (ch === ')' || ch === ']' || ch === '}') {
+          if (depth > 0) depth--;
+          current += ch;
+        } else if (ch === ',' && depth === 0) {
+          if (current.trim()) results.push(current.trim());
+          current = '';
+        } else {
+          current += ch;
+        }
+      }
+      if (current.trim()) results.push(current.trim());
+
+      if (results.length > 1) return results;
+
+      // 공백이 포함된 슬래시 (예: "초코 / 보리") 분리 (단, 날짜 2021/05/15 형태는 제외)
+      if (/\s+\/\s+/.test(s) && !/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(s)) {
+        return s.split(/\s+\/\s+/).map(item => item.trim()).filter(Boolean);
+      }
+
+      return results.length > 0 ? results : [s];
+    }
+
     const rawPetBreed = getVal(['반려동물', '품종', '견종', '묘종', '동물품종', '반려동물품종', 'pet_breed', 'petBreed']);
+    const rawPetName = getVal(['동물이름', '반려동물이름', '반려견이름', '반려묘이름', '펫이름', '동물명', 'pet_name', 'petName']);
+    const rawPetBirth = getVal(['동물생일', '동물생년월일', '반려동물생일', '반려동물생년월일', '펫생일', '펫생년월일', '출생일', 'pet_birth', 'petBirth']);
+    const rawPetGender = getVal(['동물성별', '반려동물성별', '펫성별', '동물_성별', 'pet_gender', 'petGender']);
+    const rawPetColor = getVal(['동물모색', '반려동물모색', '펫모색', '모색', '털색', 'pet_color', 'petColor']);
+
     const petBreed = isNoPetText(rawPetBreed) ? '' : rawPetBreed;
-    let petName = getVal(['동물이름', '반려동물이름', '반려견이름', '반려묘이름', '펫이름', '동물명', 'pet_name', 'petName']);
-    if (isNoPetText(petName)) petName = '';
+    let petName = isNoPetText(rawPetName) ? '' : rawPetName;
 
     let pets = [];
     if (Array.isArray(client.pets) && client.pets.length > 0) {
@@ -1961,43 +2007,88 @@
           breed: isNoPetText(p.breed) ? '' : (p.breed || ''),
           birth: normalizePetBirth(p.birth),
           gender: normalizePetGender(p.gender),
-          color: p.color || ''
+          color: normalizePetColor(p.color)
         }));
-    } else if (petBreed || petName) {
-      let bBirth = normalizePetBirth(getVal(['동물생일', '동물생년월일', '반려동물생일', '반려동물생년월일', '펫생일', '펫생년월일', '출생일', 'pet_birth', 'petBirth']));
-      // ★ 중요: 사람의 '성별'은 절대 참조하지 않음! 순수 반려동물 성별 키만 탐색
-      let bGender = normalizePetGender(getVal(['동물성별', '반려동물성별', '펫성별', '동물_성별', 'pet_gender', 'petGender']));
-      let bColor = normalizePetColor(getVal(['동물모색', '반려동물모색', '펫모색', '모색', '털색', 'pet_color', 'petColor']));
+    } else if (petBreed || petName || rawPetBirth || rawPetGender || rawPetColor) {
+      const sList = splitTopLevelComma(rawPetBreed);
+      const nList = splitTopLevelComma(rawPetName);
+      const bList = splitTopLevelComma(rawPetBirth);
+      const gList = splitTopLevelComma(rawPetGender);
+      const colList = splitTopLevelComma(rawPetColor);
+      const maxCount = Math.max(sList.length, nList.length, bList.length, gList.length, colList.length);
 
-      // 텍스트 내 복합 정보 정밀 추출 (예: "말티즈 (암컷, 2021-05-15, 화이트)")
-      const combinedStr = [petBreed, petName, getVal(['특이사항', '메모', '비고'])].filter(Boolean).join(' ');
-      if (!bBirth) {
-        const dateMatch = combinedStr.match(/\b(20\d{2}[-./]\d{1,2}[-./]\d{1,2})\b/) || combinedStr.match(/\b(19\d{2}[-./]\d{1,2}[-./]\d{1,2})\b/);
-        if (dateMatch) bBirth = normalizePetBirth(dateMatch[1]);
-      }
-      if (!bGender) {
-        if (/암컷|여아|\b암\b/i.test(combinedStr)) bGender = '암컷';
-        else if (/수컷|남아|\b수\b/i.test(combinedStr)) bGender = '수컷';
-      }
-      if (!bColor) {
-        bColor = normalizePetColor(combinedStr);
-      }
-      if (!petName) {
-        const nameInParen = combinedStr.match(/\(([^,)\s]+)/);
-        if (nameInParen && !/암컷|수컷|남아|여아|20\d{2}|19\d{2}/.test(nameInParen[1])) {
-          petName = nameInParen[1];
+      for (let i = 0; i < maxCount; i++) {
+        let s = sList[i] || '';
+        let n = nList[i] || '';
+        let b = bList[i] || '';
+        let g = gList[i] || '';
+        let col = colList[i] || '';
+
+        if (isNoPetText(s)) s = '';
+        if (isNoPetText(n)) n = '';
+        if (isNoPetText(b)) b = '';
+        if (isNoPetText(g)) g = '';
+        if (isNoPetText(col)) col = '';
+
+        let breed = s;
+        let name = n;
+        const m = s.match(/^(강아지|고양이|기타)\s*(?:\((.*)\))?$/);
+        if (m) {
+          breed = m[2] || m[1] || '';
+        } else {
+          breed = s.replace(/^(강아지|고양이|반려견|반려묘)\s*[-:/]?\s*/, '').trim() || s;
+        }
+
+        // 품종에 괄호로 이름이나 부가정보가 들어간 경우 (예: "말티즈(초코)")
+        if (!name && breed.includes('(')) {
+          const parenMatch = breed.match(/^([^(]+)\(([^)]+)\)$/);
+          if (parenMatch) {
+            const mainPart = parenMatch[1].trim();
+            const insidePart = parenMatch[2].trim();
+            if (!/암컷|수컷|남아|여아|\d{4}/.test(insidePart)) {
+              breed = mainPart;
+              name = insidePart;
+            }
+          }
+        }
+
+        const combinedWithoutName = [s, (maxCount === 1 ? getVal(['특이사항', '메모', '비고']) : '')].filter(Boolean).join(' ');
+        let cleanBirth = normalizePetBirth(b);
+        if (!cleanBirth) {
+          const dateMatch = combinedWithoutName.match(/\b(20\d{2}[-./]\d{1,2}[-./]\d{1,2})\b/) || combinedWithoutName.match(/\b(19\d{2}[-./]\d{1,2}[-./]\d{1,2})\b/);
+          if (dateMatch) cleanBirth = normalizePetBirth(dateMatch[1]);
+        }
+
+        let cleanGender = normalizePetGender(g);
+        if (!cleanGender) {
+          if (/암컷|여아|\b암\b/i.test(combinedWithoutName)) cleanGender = '암컷';
+          else if (/수컷|남아|\b수\b/i.test(combinedWithoutName)) cleanGender = '수컷';
+        }
+
+        let cleanColor = normalizePetColor(col);
+        if (!cleanColor) {
+          cleanColor = extractColorFromText(combinedWithoutName);
+        }
+
+        if (!name && maxCount === 1) {
+          const nameInParen = combinedWithoutName.match(/\(([^,)\s]+)/);
+          if (nameInParen && !/암컷|수컷|남아|여아|20\d{2}|19\d{2}/.test(nameInParen[1])) {
+            name = nameInParen[1];
+          }
+        }
+
+        let cleanBreed = String(breed || '').replace(/\(.*?\)/g, '').replace(/강아지|고양이|반려견|반려묘/g, '').trim() || breed;
+
+        if (name || cleanBreed || cleanBirth || cleanGender || cleanColor) {
+          pets.push({
+            name: name || '',
+            breed: cleanBreed || '',
+            birth: cleanBirth || '',
+            gender: cleanGender || '',
+            color: cleanColor || ''
+          });
         }
       }
-
-      let cleanBreed = String(petBreed || '').replace(/\(.*?\)/g, '').replace(/강아지|고양이|반려견|반려묘/g, '').trim() || petBreed;
-
-      pets.push({
-        name: petName || '',
-        breed: cleanBreed || '',
-        birth: bBirth || '',
-        gender: bGender || '',
-        color: bColor || ''
-      });
     } else {
       // 직접 고객 필드에 펫 정보가 없더라도, 계약내역(allContracts) 중 펫보험 상품이 있으면 가입내역에서 자동 파싱
       const petContract = allContracts.find(c => {
@@ -2856,6 +2947,7 @@
     if (role === 'insured') {
       window.crmPickerState.insuredCustomer = sanitized.raw;
       window.crmPickerState.insuredData = sanitized;
+      window.crmPickerState.selectedPetIndex = 0;
     } else {
       window.crmPickerState.contractorCustomer = sanitized.raw;
       window.crmPickerState.contractorData = sanitized;

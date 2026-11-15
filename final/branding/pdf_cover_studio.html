@@ -383,6 +383,150 @@
             gap: 8px;
             width: 100%;
         }
+        /* 추천 샘플 20종 그리드 & 필터 */
+        .preset-intro-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .preset-intro-icon {
+            font-size: 24px;
+            color: #0284c7;
+        }
+        .preset-intro-text {
+            font-size: 12px;
+            color: #0369a1;
+            line-height: 1.45;
+            font-weight: 600;
+        }
+        .preset-filter-bar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .filter-btn {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 700;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .filter-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        .filter-btn.active {
+            background: #0284c7;
+            color: #ffffff;
+            border-color: #0284c7;
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+        }
+        .preset-card-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .preset-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            background: #ffffff;
+            cursor: pointer;
+            transition: all 0.16s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            text-align: left;
+            position: relative;
+        }
+        .preset-card:hover {
+            border-color: #93c5fd;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(2, 132, 199, 0.1);
+        }
+        .preset-card.active-preset {
+            border-color: #0284c7;
+            background: #f0f9ff;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+        }
+        .preset-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .preset-num-badge {
+            font-size: 10px;
+            font-weight: 800;
+            color: #0284c7;
+            background: #e0f2fe;
+            padding: 2px 7px;
+            border-radius: 5px;
+        }
+        .preset-cat-tag {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #64748b;
+        }
+        .preset-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.35;
+        }
+        .preset-desc {
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.35;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .preset-footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+            padding-top: 6px;
+            border-top: 1px dashed #f1f5f9;
+        }
+        .preset-palette {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .preset-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .preset-check-indicator {
+            font-size: 11px;
+            font-weight: 800;
+            color: #0284c7;
+            display: none;
+        }
+        .preset-card.active-preset .preset-check-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
         .btn-action {
             padding: 10px 18px;
             border-radius: 9px;
@@ -517,28 +661,53 @@
         <!-- 우측: 컨트롤 패널 -->
         <div class="control-panel">
             <div class="panel-nav-tabs">
-                <button type="button" class="panel-tab-btn active" onclick="switchTab('text')">
-                    <i class="fa-solid fa-font"></i>
-                    <span>문구 & 고객</span>
+                <button type="button" class="panel-tab-btn active" id="tabBtn_presets" onclick="switchTab('presets', this)">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>추천 샘플 20종</span>
                 </button>
-                <button type="button" class="panel-tab-btn" onclick="switchTab('color')">
-                    <i class="fa-solid fa-palette"></i>
-                    <span>색상 & 모양</span>
+                <button type="button" class="panel-tab-btn" id="tabBtn_text" onclick="switchTab('text', this)">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>텍스트 간편 수정</span>
                 </button>
-                <button type="button" class="panel-tab-btn" onclick="switchTab('pos')">
-                    <i class="fa-solid fa-arrows-up-down"></i>
-                    <span>위치 & 크기</span>
-                </button>
-                <button type="button" class="panel-tab-btn" onclick="switchTab('profile')">
+                <button type="button" class="panel-tab-btn" id="tabBtn_profile" onclick="switchTab('profile', this)">
                     <i class="fa-solid fa-id-card"></i>
                     <span>디지털 명함</span>
+                </button>
+                <button type="button" class="panel-tab-btn" id="tabBtn_advanced" onclick="switchTab('advanced', this)">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>상세 조절</span>
                 </button>
             </div>
 
             <div class="panel-content">
                 
-                <!-- 탭 1: 문구 & 고객 정보 -->
-                <div id="tab-text" class="tab-pane">
+                                <!-- 탭 1: 추천 샘플 20종 (원클릭 완성!) -->
+                <div id="tab-presets" class="tab-pane">
+                    <div class="preset-intro-box">
+                        <i class="fa-solid fa-wand-magic-sparkles preset-intro-icon"></i>
+                        <div class="preset-intro-text">
+                            <strong>복잡한 설정 없이 원클릭으로 완성하세요!</strong><br>
+                            원하는 스타일의 샘플을 클릭하면 표지가 즉시 세팅됩니다. 텍스트만 필요시 간편 수정하시면 됩니다.
+                        </div>
+                    </div>
+
+                    <!-- 카테고리 필터 -->
+                    <div class="preset-filter-bar">
+                        <button type="button" class="filter-btn active" onclick="filterPresets('all', this)">전체 20종</button>
+                        <button type="button" class="filter-btn" onclick="filterPresets('classic', this)">신뢰·클래식 (5)</button>
+                        <button type="button" class="filter-btn" onclick="filterPresets('target', this)">고객 맞춤 (5)</button>
+                        <button type="button" class="filter-btn" onclick="filterPresets('purpose', this)">목적별 진단 (5)</button>
+                        <button type="button" class="filter-btn" onclick="filterPresets('style', this)">감성 스타일 (5)</button>
+                    </div>
+
+                    <!-- 20개 프리셋 카드 컨테이너 -->
+                    <div class="preset-card-list" id="presetCardContainer">
+                        <!-- JS에서 20개 프리셋 카드가 자동 생성됩니다 -->
+                    </div>
+                </div>
+
+<!-- 탭 2: 텍스트 간편 수정 -->
+                <div id="tab-text" class="tab-pane" style="display:none;">
                     <div class="form-section-title"><i class="fa-solid fa-user-tag" style="color:var(--primary);"></i> 고객 정보 & 타이틀</div>
                     
                     <div class="form-row">
@@ -845,11 +1014,12 @@
         setTimeout(renderCover, 80);
     });
 
-    function switchTab(tabId) {
+    function switchTab(tabId, el) {
         document.querySelectorAll('.panel-tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
 
-        event.currentTarget.classList.add('active');
+        const activeBtn = el || (window.event ? window.event.currentTarget : null) || document.getElementById('tabBtn_' + tabId);
+        if (activeBtn) activeBtn.classList.add('active');
         const target = document.getElementById('tab-' + tabId);
         if (target) target.style.display = 'block';
     }
@@ -863,6 +1033,7 @@
         window.coverState.titleColor = col;
         el.parentElement.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
+        renderPresetCards();
         renderCover();
     }
 
@@ -1125,6 +1296,14 @@
                 ctx.fillStyle = '#fefce8';
                 ctx.strokeStyle = '#fef08a';
                 ctx.lineWidth = 1 * s;
+            } else if (themeOpt === 'soft_coral') {
+                ctx.fillStyle = '#fff1f2';
+                ctx.strokeStyle = '#fecdd3';
+                ctx.lineWidth = 1.2 * s;
+            } else if (themeOpt === 'soft_lavender') {
+                ctx.fillStyle = '#faf5ff';
+                ctx.strokeStyle = '#e9d5ff';
+                ctx.lineWidth = 1.2 * s;
             } else {
                 // soft_slate (기본)
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.05)';

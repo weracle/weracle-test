@@ -1316,14 +1316,22 @@
                         </div>
                     </div>
                     <div class="image-subrow" style="margin-top:8px;">
-                        <span class="sublabel"><i class="fa-solid fa-building"></i> 브랜드 로고:</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="sublabel"><i class="fa-solid fa-building"></i> 브랜드 로고:</span>
+                            <span id="myPageLogoBadge" style="display:none; font-size:10px; font-weight:800; color:#0284c7; background:#e0f2fe; padding:2px 7px; border-radius:4px; border:1px solid #bae6fd;">
+                                <i class="fa-solid fa-circle-check"></i> 마이페이지 로고 연동
+                            </span>
+                        </div>
                         <div class="img-btn-row">
+                            <button type="button" class="btn-subtool active" id="btnMyPageLogo" onclick="loadMyPageLogoManual()" title="마이페이지에 등록된 내 로고 자동 적용">
+                                <i class="fa-solid fa-circle-user"></i> 마이페이지 로고
+                            </button>
                             <label class="btn-subtool upload" style="flex:1;">
-                                <i class="fa-solid fa-upload"></i> 로고 파일 올리기
+                                <i class="fa-solid fa-upload"></i> 새 로고 올리기
                                 <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)">
                             </label>
-                            <button type="button" class="btn-subtool" onclick="resetCoverLogo()">
-                                <i class="fa-solid fa-rotate-left"></i> 기본 로고
+                            <button type="button" class="btn-subtool" onclick="resetCoverLogo()" title="기본 로고 복원">
+                                <i class="fa-solid fa-rotate-left"></i> 기본
                             </button>
                         </div>
                     </div>
@@ -2659,6 +2667,86 @@
         showToast(window.coverState.showPhoto ? '📷 인물 사진이 켜졌습니다.' : '❌ 인물 사진이 숨겨졌습니다.');
     }
 
+    
+    // ==========================================
+    // 마이페이지 연동 로고 및 프로필 자동 복원
+    // ==========================================
+    function getSavedPersonalLogo() {
+        try {
+            // A. 직접 등록된 전용 로고 키 확인 (mypage.html에서 저장)
+            const directLogo = localStorage.getItem('weracle_user_logo');
+            if (directLogo) return directLogo;
+
+            // B. cached_profile 내 logo_url 확인
+            const rawProfile = localStorage.getItem('cached_profile');
+            if (rawProfile) {
+                const prof = JSON.parse(rawProfile);
+                if (prof && prof.logo_url) return prof.logo_url;
+            }
+
+            // C. 부모 창 객체 직접 확인 (WERACLE 메인 프레임워크)
+            if (window.parent && window.parent !== window) {
+                if (window.parent.currentProfile && window.parent.currentProfile.logo_url) {
+                    return window.parent.currentProfile.logo_url;
+                }
+            }
+        } catch(e) {}
+        return '';
+    }
+
+    function applyUserLogo(logoSrc) {
+        if (!logoSrc) return;
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            window.coverState.customLogoImg = img;
+            const badge = document.getElementById('myPageLogoBadge');
+            if (badge) badge.style.display = 'inline-flex';
+            const btn = document.getElementById('btnMyPageLogo');
+            if (btn) btn.classList.add('active');
+            renderCover();
+            showToast('🏢 마이페이지에 등록된 전용 로고가 자동 적용되었습니다!');
+        };
+        img.src = logoSrc;
+    }
+
+    function loadMyPageLogoManual() {
+        const myLogo = getSavedPersonalLogo();
+        if (myLogo) {
+            applyUserLogo(myLogo);
+        } else {
+            showToast('ℹ️ 마이페이지에 등록된 로고가 없습니다. [새 로고 올리기]로 등록해 주세요.');
+        }
+    }
+
+    function autoPopulateMyPageProfile() {
+        try {
+            const rawProfile = localStorage.getItem('cached_profile');
+            let prof = null;
+            if (rawProfile) prof = JSON.parse(rawProfile);
+            else if (window.parent && window.parent.currentProfile) prof = window.parent.currentProfile;
+
+            if (prof) {
+                if (prof.company && window.coverState.consAffil === '위라클랩') {
+                    window.coverState.consAffil = prof.company;
+                    const el = document.getElementById('consAffilInput');
+                    if (el) el.value = prof.company;
+                }
+                const pName = prof.nickname || prof.name;
+                if (pName && window.coverState.consName === '박보환') {
+                    window.coverState.consName = pName;
+                    const el = document.getElementById('consNameInput');
+                    if (el) el.value = pName;
+                }
+                if (prof.phone && window.coverState.consPhone === '010-1234-5678') {
+                    window.coverState.consPhone = prof.phone;
+                    const el = document.getElementById('consPhoneInput');
+                    if (el) el.value = prof.phone;
+                }
+            }
+        } catch(e) {}
+    }
+
     function resetCoverLogo() {
         const defaultLogo = new Image();
         defaultLogo.src = 'images/보답화니_로고.png';
@@ -2842,12 +2930,32 @@
         renderPresetCards('all');
         initDragAndResize();
 
-        const defaultLogo = new Image();
-        defaultLogo.src = 'images/보답화니_로고.png';
-        defaultLogo.onload = () => {
-            window.coverState.customLogoImg = defaultLogo;
-            renderCover();
-        };
+        // 1. 마이페이지 프로필 자동 연동 (소속, 성명, 연락처)
+        autoPopulateMyPageProfile();
+
+        // 2. 마이페이지에 등록한 로고 자동 로드 (최우선 적용)
+        const myPageLogo = getSavedPersonalLogo();
+        if (myPageLogo) {
+            applyUserLogo(myPageLogo);
+        } else {
+            // 마이페이지 로고가 없는 경우 기본 로고 로드
+            const defaultLogo = new Image();
+            defaultLogo.src = 'images/보답화니_로고.png';
+            defaultLogo.onload = () => {
+                window.coverState.customLogoImg = defaultLogo;
+                renderCover();
+            };
+        }
+
+        // 3. 부모 프레임워크(index.html)와 실시간 로고 동기화
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'requestLogo' }, '*');
+        }
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'setLogo' && e.data.data) {
+                applyUserLogo(e.data.data);
+            }
+        });
 
         setTimeout(renderCover, 80);
 

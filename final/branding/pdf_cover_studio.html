@@ -611,11 +611,11 @@
             z-index: 10;
         }
 
-        /* 클릭 가능한 핫스팟 영역 */
+        /* 클릭 가능한 핫스팟 영역 (기본 상태는 완전 투명하여 캔버스가 깔끔하게 표시됨) */
         .overlay-hotspot {
             position: absolute;
-            border: 2px dashed rgba(2, 132, 199, 0.35);
-            background: rgba(2, 132, 199, 0.04);
+            border: 1.5px dashed transparent;
+            background: transparent;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.15s ease-in-out;
@@ -625,14 +625,12 @@
             justify-content: flex-start;
         }
         .overlay-hotspot:hover {
-            border-color: #0284c7;
-            background: rgba(2, 132, 199, 0.15);
-            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+            border-color: rgba(2, 132, 199, 0.6);
+            background: rgba(2, 132, 199, 0.04);
         }
         .overlay-hotspot.active {
-            border: 2px solid #0284c7;
-            background: rgba(2, 132, 199, 0.22);
-            box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.35);
+            border: 1.5px dashed transparent;
+            background: transparent;
         }
         .overlay-hotspot .overlay-tag {
             display: none;
@@ -1918,10 +1916,10 @@
         logo: {
             id: 'logo',
             type: 'logo',
-            x: 920,
-            y: 35,
-            w: 270,
-            h: 85,
+            x: 930,
+            y: 55,
+            w: 250,
+            h: 75,
             visible: true
         },
         sns: {
@@ -1931,7 +1929,7 @@
             y: 1340,
             w: 320,
             h: 140,
-            visible: true
+            visible: false
         },
         stamp: {
             id: 'stamp',
@@ -2080,22 +2078,20 @@
 
         const tpl = window.coverState.template || 'bojang_original';
 
-        // 템플릿별 기본 배경 처리
+        // 템플릿별 기본 배경 처리 (노이즈 없이 깔끔하고 선명한 화이트/슬레이트 배경)
         if (tpl === 'bojang_original') {
             if (window.imgBojang1 && window.imgBojang1.complete && window.imgBojang1.naturalWidth !== 0) {
                 ctx.drawImage(window.imgBojang1, 0, 0, w, h);
             } else {
-                ctx.fillStyle = '#f8fafc';
+                ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, w, h);
             }
-        } else if (tpl === 'geometric_hex') {
+        } else if (tpl === 'diagonal_duo') {
             ctx.fillStyle = '#f8fafc';
             ctx.fillRect(0, 0, w, h);
-            drawGeometricBackgroundPattern(ctx, w, h);
         } else {
-            ctx.fillStyle = '#f8fafc';
+            ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, w, h);
-            drawGeometricBackgroundPattern(ctx, w, h);
         }
 
         // 1. 도형 렌더링 (Wedge / Shape)
@@ -2369,34 +2365,88 @@
             return;
         } else if (obj.shapeType === 'rect_card') {
             // 4. 모던 스퀘어 카드 그리드 (베이스 밴드 + 4대 핵심 보장 카드 블록)
-            ctx.roundRect(x, y, w, h, 16);
+            ctx.roundRect(x, y, w, h, 18);
             ctx.closePath();
             ctx.fill();
             ctx.save();
+
+            // 상단 헤더 라벨
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 22px Pretendard';
+            ctx.textAlign = 'left';
+            ctx.fillText('4대 핵심 보장 정밀 진단 현황', x + 32, y + 48);
+
+            ctx.font = '500 15px Pretendard';
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('데이터 기반 체계적 포트폴리오 분석 결과', x + 32, y + 78);
+
+            // 우측 상태 뱃지
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.beginPath();
+            ctx.roundRect(x + w - 160, y + 26, 128, 36, 18);
+            ctx.fill();
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 14px Pretendard';
+            ctx.textAlign = 'center';
+            ctx.fillText('● 실시간 정밀진단', x + w - 96, y + 50);
+
+            // 4대 보장 카드 그리드
             const cardW = (w - 72) / 4;
-            const cardH = 130;
-            const cardY = y + h - cardH - 24;
+            const cardH = 220;
+            const cardY = y + 110;
             const titles = ['사망 보장', '3대 암진단', '뇌·심장질환', '실손의료비'];
-            const badges = ['체계적 분석', '정밀 진단', '집중 케어', '실손 확인'];
+            const badges = ['체계적 분석', '정밀 집중진단', '혈관 집중케어', '자기부담 완화'];
+            const metrics = ['자산 안전망', '진단·치료비', '2대 주요질환', '실제 병원비'];
+            const dotColors = ['#0284c7', '#10b981', '#f59e0b', '#8b5cf6'];
+
             for (let i = 0; i < 4; i++) {
                 const cx = x + 18 + (i * (cardW + 12));
+                // 카드 배경 (화이트 카드 + 부드러운 그림자)
                 ctx.fillStyle = '#ffffff';
-                ctx.shadowColor = 'rgba(0,0,0,0.08)';
-                ctx.shadowBlur = 8;
+                ctx.shadowColor = 'rgba(0,0,0,0.1)';
+                ctx.shadowBlur = 10;
                 ctx.beginPath();
-                ctx.roundRect(cx, cardY, cardW, cardH, 10);
+                ctx.roundRect(cx, cardY, cardW, cardH, 12);
                 ctx.fill();
-                ctx.fillStyle = '#0f172a';
-                ctx.font = 'bold 20px Pretendard';
-                ctx.textAlign = 'center';
-                ctx.fillText(titles[i], cx + (cardW / 2), cardY + 52);
-                ctx.fillStyle = '#64748b';
+
+                // 카드 번호 태그
+                ctx.fillStyle = '#f1f5f9';
+                ctx.beginPath();
+                ctx.roundRect(cx + 16, cardY + 16, 28, 28, 6);
+                ctx.fill();
+                ctx.fillStyle = '#334155';
                 ctx.font = 'bold 14px Pretendard';
-                ctx.fillText(badges[i], cx + (cardW / 2), cardY + 84);
-                ctx.fillStyle = obj.color || '#334155';
+                ctx.textAlign = 'center';
+                ctx.fillText('0' + (i + 1), cx + 30, cardY + 36);
+
+                // 카드 타이틀
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'bold 22px Pretendard';
+                ctx.textAlign = 'left';
+                ctx.fillText(titles[i], cx + 18, cardY + 84);
+
+                // 보조 태그
+                ctx.fillStyle = '#64748b';
+                ctx.font = '500 14px Pretendard';
+                ctx.fillText(badges[i], cx + 18, cardY + 116);
+
+                // 구분선
+                ctx.strokeStyle = '#f1f5f9';
+                ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.arc(cx + (cardW / 2), cardY + 108, 5, 0, Math.PI * 2);
+                ctx.moveTo(cx + 18, cardY + 138);
+                ctx.lineTo(cx + cardW - 18, cardY + 138);
+                ctx.stroke();
+
+                // 하단 설명 및 상태 점
+                ctx.fillStyle = dotColors[i];
+                ctx.beginPath();
+                ctx.arc(cx + 24, cardY + 172, 6, 0, Math.PI * 2);
                 ctx.fill();
+
+                ctx.fillStyle = '#334155';
+                ctx.font = 'bold 15px Pretendard';
+                ctx.fillText(metrics[i], cx + 40, cardY + 177);
             }
             ctx.restore();
             ctx.restore();
@@ -3060,7 +3110,7 @@
             window.coverObjects.wedge.x = 70; window.coverObjects.wedge.y = 820; window.coverObjects.wedge.w = 1100; window.coverObjects.wedge.h = 390;
             window.coverObjects.photo.visible = true;
             window.coverObjects.photo.shape = 'rounded';
-            window.coverObjects.photo.x = 720; window.coverObjects.photo.y = 220; window.coverObjects.photo.w = 440; window.coverObjects.photo.h = 520;
+            window.coverObjects.photo.x = 740; window.coverObjects.photo.y = 160; window.coverObjects.photo.w = 420; window.coverObjects.photo.h = 500;
             window.coverObjects.title.align = 'left'; window.coverObjects.title.x = 80; window.coverObjects.title.y = 280; window.coverObjects.title.color = '#0f172a';
             window.coverObjects.subtitle.align = 'left'; window.coverObjects.subtitle.x = 80; window.coverObjects.subtitle.y = 190; window.coverObjects.subtitle.color = '#475569';
             window.coverObjects.slogan.align = 'left'; window.coverObjects.slogan.x = 80; window.coverObjects.slogan.y = 480; window.coverObjects.slogan.w = 600; window.coverObjects.slogan.color = '#334155';

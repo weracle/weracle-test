@@ -1690,12 +1690,9 @@
                 ctx.fillRect(0, 0, w, h);
             }
         } else if (tpl === 'geometric_hex') {
-            if (window.imgBranding11 && window.imgBranding11.complete && window.imgBranding11.naturalWidth !== 0) {
-                ctx.drawImage(window.imgBranding11, 0, 0, w, h);
-            } else {
-                ctx.fillStyle = '#f8fafc';
-                ctx.fillRect(0, 0, w, h);
-            }
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, 0, w, h);
+            drawGeometricBackgroundPattern(ctx, w, h);
         } else {
             ctx.fillStyle = '#f8fafc';
             ctx.fillRect(0, 0, w, h);
@@ -1704,7 +1701,7 @@
 
         // 1. 도형 렌더링 (Wedge / Shape)
         const wedge = window.coverObjects.wedge;
-        if (wedge && wedge.visible && tpl !== 'bojang_original' && tpl !== 'geometric_hex') {
+        if (wedge && wedge.visible && tpl !== 'bojang_original') {
             drawShapeObject(ctx, wedge);
         }
 
@@ -1793,6 +1790,97 @@
     // ==========================================
 
     // [도형 드로잉: 세모 웨지, 직각 세모, 사선 분할, 사다리꼴, 둥근 네모]
+    
+    // [헥사곤 단독 패스 생성]
+    function drawHexagonPath(ctx, cx, cy, r, rot = 0) {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const angle = rot + (i * Math.PI / 3);
+            const x = cx + r * Math.cos(angle);
+            const y = cy + r * Math.sin(angle);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+    }
+
+    // [기하학 헥사곤 클러스터 드로잉 (육각·세모·네모 네트워크)]
+    function drawHexagonCluster(ctx, x, y, w, h, baseColor, accentColor, borderWidth) {
+        ctx.save();
+        const cx = x + (w / 2);
+        const cy = y + (h / 2);
+        const r = Math.min(w, h) * 0.28;
+
+        const sqrt3 = Math.sqrt(3);
+
+        // 7개 헥사곤 중심 좌표 정의 (중앙 1개 + 주변 6개)
+        const hexCenters = [
+            { dx: 0, dy: 0, scale: 1.0, fillAlpha: 0.15, stroke: true, lineW: 3 },
+            { dx: 0, dy: -r * sqrt3, scale: 0.85, fillAlpha: 0.08, stroke: true, lineW: 2 },
+            { dx: 0, dy: r * sqrt3, scale: 0.85, fillAlpha: 0.12, stroke: true, lineW: 2 },
+            { dx: r * 1.5, dy: -r * sqrt3 * 0.5, scale: 0.9, fillAlpha: 0.22, stroke: true, lineW: 3 },
+            { dx: r * 1.5, dy: r * sqrt3 * 0.5, scale: 0.8, fillAlpha: 0.05, stroke: true, lineW: 2 },
+            { dx: -r * 1.5, dy: -r * sqrt3 * 0.5, scale: 0.8, fillAlpha: 0.08, stroke: true, lineW: 2 },
+            { dx: -r * 1.5, dy: r * sqrt3 * 0.5, scale: 0.9, fillAlpha: 0.18, stroke: true, lineW: 3 }
+        ];
+
+        // 1) 헥사곤 간 연결 선 (네트워크 노드)
+        ctx.strokeStyle = accentColor || '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        hexCenters.forEach(hc => {
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + hc.dx, cy + hc.dy);
+        });
+        ctx.stroke();
+
+        // 2) 노드 점들 (작은 원형 모형)
+        ctx.fillStyle = accentColor || '#38bdf8';
+        hexCenters.forEach(hc => {
+            ctx.beginPath();
+            ctx.arc(cx + hc.dx, cy + hc.dy, 4, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // 3) 헥사곤들 드로잉
+        hexCenters.forEach((hc, idx) => {
+            const hx = cx + hc.dx;
+            const hy = cy + hc.dy;
+            const hr = r * hc.scale;
+
+            drawHexagonPath(ctx, hx, hy, hr);
+
+            // 면 채우기
+            ctx.fillStyle = baseColor || '#0284c7';
+            ctx.globalAlpha = hc.fillAlpha;
+            ctx.fill();
+
+            // 테두리
+            if (hc.stroke) {
+                ctx.globalAlpha = 0.85;
+                ctx.strokeStyle = (idx % 2 === 0) ? (accentColor || '#38bdf8') : (baseColor || '#0284c7');
+                ctx.lineWidth = hc.lineW || borderWidth || 2;
+                ctx.stroke();
+            }
+        });
+
+        // 4) 장식용 미니 세모 도형들
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = accentColor || '#38bdf8';
+        for (let i = 0; i < 4; i++) {
+            const tx = x + (w * 0.15) + (i * w * 0.25);
+            const ty = y + h - 20;
+            ctx.beginPath();
+            ctx.moveTo(tx, ty);
+            ctx.lineTo(tx + 12, ty - 18);
+            ctx.lineTo(tx + 24, ty);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        ctx.restore();
+    }
+
     function drawShapeObject(ctx, obj) {
         ctx.save();
         ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
@@ -1808,7 +1896,18 @@
         const w = obj.w;
         const h = obj.h;
 
-        if (obj.shapeType === 'triangle_wedge') {
+        if (obj.shapeType === 'hexagon_grid') {
+            // 기하학 헥사곤 클러스터 (육각·세모·네모 네트워크)
+            drawHexagonCluster(ctx, x, y, w, h, obj.color, obj.accentColor, obj.borderWidth);
+            ctx.restore();
+            return;
+        } else if (obj.shapeType === 'hexagon') {
+            // 단독 정육각형
+            const cx = x + (w / 2);
+            const cy = y + (h / 2);
+            const r = Math.min(w, h) / 2;
+            drawHexagonPath(ctx, cx, cy, r);
+        } else if (obj.shapeType === 'triangle_wedge') {
             // 사선 세모 웨지
             if (!obj.flipX) {
                 ctx.moveTo(x, y);
@@ -2170,6 +2269,8 @@
                  + '  <span style="font-size:10px; font-weight:800; color:#0284c7;"><i class="fa-solid fa-shapes"></i> 도형모양:</span>'
                  + '  <select class="prop-select" onchange="changeObjShapeType(this.value)">'
                  + '    <option value="triangle_wedge"' + (obj.shapeType === 'triangle_wedge' ? ' selected' : '') + '>사선 세모 웨지</option>'
+                 + '    <option value="hexagon_grid"' + (obj.shapeType === 'hexagon_grid' ? ' selected' : '') + '>기하학 헥사곤 네트워크</option>'
+                 + '    <option value="hexagon"' + (obj.shapeType === 'hexagon' ? ' selected' : '') + '>단독 정육각형</option>'
                  + '    <option value="right_triangle"' + (obj.shapeType === 'right_triangle' ? ' selected' : '') + '>직각 세모</option>'
                  + '    <option value="trapezoid"' + (obj.shapeType === 'trapezoid' ? ' selected' : '') + '>사다리꼴</option>'
                  + '    <option value="rounded_rect"' + (obj.shapeType === 'rounded_rect' ? ' selected' : '') + '>둥근 네모</option>'
@@ -2441,6 +2542,7 @@
     function selectDesignTemplate(tplId, btn) {
         window.coverState.template = tplId;
         document.querySelectorAll('.btn-shape-card').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.btn-template-select').forEach(b => b.classList.remove('active'));
         const targetBtn = btn || document.getElementById('shape_' + tplId);
         if (targetBtn) targetBtn.classList.add('active');
 
@@ -2453,6 +2555,35 @@
             window.coverObjects.wedge.visible = true;
             window.coverObjects.wedge.shapeType = 'triangle_wedge';
             window.coverObjects.wedge.x = 0; window.coverObjects.wedge.y = 500; window.coverObjects.wedge.w = 660; window.coverObjects.wedge.h = 800;
+        } else if (tplId === 'geometric_hex') {
+            window.coverObjects.wedge.visible = true;
+            window.coverObjects.wedge.shapeType = 'hexagon_grid';
+            window.coverObjects.wedge.x = 640;
+            window.coverObjects.wedge.y = 340;
+            window.coverObjects.wedge.w = 560;
+            window.coverObjects.wedge.h = 840;
+            window.coverObjects.wedge.color = window.coverObjects.wedge.color || '#0284c7';
+            window.coverObjects.wedge.accentColor = '#38bdf8';
+            window.coverObjects.photo.visible = true;
+            window.coverObjects.photo.x = 80;
+            window.coverObjects.photo.y = 380;
+            window.coverObjects.photo.w = 500;
+            window.coverObjects.photo.h = 700;
+            window.coverObjects.photo.shape = 'rounded';
+        } else if (tplId === 'geometric_hex') {
+            window.coverObjects.wedge.visible = true;
+            window.coverObjects.wedge.shapeType = 'hexagon_grid';
+            window.coverObjects.wedge.x = 640;
+            window.coverObjects.wedge.y = 360;
+            window.coverObjects.wedge.w = 560;
+            window.coverObjects.wedge.h = 820;
+            window.coverObjects.wedge.color = window.coverObjects.wedge.color || '#0284c7';
+            window.coverObjects.wedge.accentColor = '#38bdf8';
+            window.coverObjects.photo.x = 80;
+            window.coverObjects.photo.y = 380;
+            window.coverObjects.photo.w = 500;
+            window.coverObjects.photo.h = 700;
+            window.coverObjects.photo.shape = 'rounded';
         } else if (tplId === 'diagonal_duo') {
             window.coverObjects.wedge.visible = true;
             window.coverObjects.wedge.shapeType = 'diagonal_split';

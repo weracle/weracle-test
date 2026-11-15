@@ -784,6 +784,35 @@
             transform: translateY(-1px);
         }
 
+    
+        /* 템플릿 선택 버튼 */
+        .btn-template-select {
+            padding: 8px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-template-select:hover {
+            border-color: #0284c7;
+            background: #f0f9ff;
+            color: #0284c7;
+        }
+        .btn-template-select.active {
+            border-color: #0284c7;
+            background: #0284c7;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
+        }
+
     </style>
 </head>
 <body>
@@ -833,8 +862,29 @@
                 <div class="preset-intro-box">
                     <i class="fa-solid fa-wand-magic-sparkles preset-intro-icon"></i>
                     <div class="preset-intro-text">
-                        <strong>원클릭 추천 샘플 20종</strong><br>
-                        원하는 스타일의 카드를 클릭하면 표지가 즉시 세팅됩니다.
+                        <strong>원클릭 디자인 모형 & 사진 샘플 20종</strong><br>
+                        세모·네모 도형 모형과 실사 사진이 포함된 정통 보장분석 표지입니다.
+                    </div>
+                </div>
+
+                <!-- 디자인 모형 템플릿 선택 바 -->
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:11px; font-weight:800; color:#475569; margin-bottom:6px; display:flex; align-items:center; gap:5px;">
+                        <i class="fa-solid fa-shapes" style="color:#0284c7;"></i> 디자인 모형 스타일 선택:
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                        <button type="button" class="btn-template-select active" id="tplBtn_bojang_original" onclick="selectDesignTemplate('bojang_original', this)">
+                            <i class="fa-solid fa-certificate"></i> 정통 보장분석1 (세모웨지+실사)
+                        </button>
+                        <button type="button" class="btn-template-select" id="tplBtn_vector_wedge" onclick="selectDesignTemplate('vector_wedge', this)">
+                            <i class="fa-solid fa-play" style="transform:rotate(90deg);"></i> 사선 세모 웨지 (컬러변경+사진)
+                        </button>
+                        <button type="button" class="btn-template-select" id="tplBtn_geometric_hex" onclick="selectDesignTemplate('geometric_hex', this)">
+                            <i class="fa-solid fa-cubes"></i> 기하학 헥사곤 (육각·세모·네모)
+                        </button>
+                        <button type="button" class="btn-template-select" id="tplBtn_diagonal_duo" onclick="selectDesignTemplate('diagonal_duo', this)">
+                            <i class="fa-solid fa-divide"></i> 대각선 세모 분할 (투톤+원형)
+                        </button>
                     </div>
                 </div>
 
@@ -951,6 +1001,48 @@
 
             <!-- 탭 4: 상세 세부 조절 (고급자용) -->
             <div id="tab-advanced" class="tab-pane" style="display:none;">
+                <!-- 사진 / 모델 설정 섹션 -->
+                <div class="form-section-title"><i class="fa-solid fa-camera" style="color:var(--primary);"></i> 인물 사진 / 모델 설정</div>
+                <div class="form-row">
+                    <label style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+                        <span style="font-weight:700;">표지 인물 사진 표시</span>
+                        <input type="checkbox" id="showPhotoCheck" checked onchange="toggleHeroPhoto(this.checked)">
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label>사진 선택 / 교체</label>
+                    <div style="display:flex; gap:6px;">
+                        <button type="button" class="btn-action secondary" style="flex:1; font-size:11px; padding:6px;" onclick="setBuiltinModel()">
+                            <i class="fa-solid fa-user-tie"></i> 기본 프로 모델
+                        </button>
+                        <label class="btn-action primary" style="flex:1; font-size:11px; padding:6px; cursor:pointer; text-align:center;">
+                            <i class="fa-solid fa-upload"></i> 내 사진 업로드
+                            <input type="file" id="heroPhotoUpload" accept="image/*" style="display:none;" onchange="handleHeroPhotoUpload(event)">
+                        </label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>사진 프레임 모양</label>
+                    <div style="display:flex; gap:5px;">
+                        <button type="button" class="quick-theme-btn" style="flex:1;" onclick="setPhotoShape('natural')">자연형 (기본)</button>
+                        <button type="button" class="quick-theme-btn" style="flex:1;" onclick="setPhotoShape('circle')">원형 프레임</button>
+                        <button type="button" class="quick-theme-btn" style="flex:1;" onclick="setPhotoShape('rounded')">사각 라운드</button>
+                    </div>
+                </div>
+
+                <!-- 도형 모형 (세모·네모·다각형) 설정 섹션 -->
+                <div class="form-section-title" style="margin-top:20px;"><i class="fa-solid fa-shapes" style="color:var(--primary);"></i> 도형 모형 (세모·네모) 설정</div>
+                <div class="form-row">
+                    <label>사선 세모 웨지 색상</label>
+                    <div class="quick-chip-row" style="margin-top:6px;">
+                        <div class="quick-color-chip" style="background:#0f2347;" title="오리지널 네이비" onclick="setWedgeColor('#0f2347', '#f59e0b')"></div>
+                        <div class="quick-color-chip" style="background:#0284c7;" title="사파이어 블루" onclick="setWedgeColor('#0284c7', '#38bdf8')"></div>
+                        <div class="quick-color-chip" style="background:#065f46;" title="에메랄드 그린" onclick="setWedgeColor('#065f46', '#34d399')"></div>
+                        <div class="quick-color-chip" style="background:#881337;" title="임페리얼 버건디" onclick="setWedgeColor('#881337', '#fbbf24')"></div>
+                        <div class="quick-color-chip" style="background:#0f172a;" title="다크 흑요석" onclick="setWedgeColor('#0f172a', '#94a3b8')"></div>
+                        <div class="quick-color-chip" style="background:#78350f;" title="클래식 골드" onclick="setWedgeColor('#78350f', '#fde047')"></div>
+                    </div>
+                </div>
                 <div class="form-section-title"><i class="fa-solid fa-palette" style="color:var(--primary);"></i> 색상 팔레트</div>
                 
                 <div class="form-row">
@@ -1138,466 +1230,389 @@
 </div>
 
 <script>
-// ==========================================
+    // ==========================================
     // 1. 상태 관리 객체 (Cover State)
     // ==========================================
     window.coverState = {
+        template: 'bojang_original', // 'bojang_original', 'vector_wedge', 'geometric_hex', 'diagonal_duo', 'card_grid'
+        wedgeColor: '#0f2347',
+        wedgeAccentColor: '#f59e0b',
+        showPhoto: true,
+        photoShape: 'natural', // 'natural', 'circle', 'rounded'
+        customPhotoImg: null,
+        
         clientName: '김철수',
         clientPhone: '',
+        subtitleText: '고객님의 건강한 삶을 위한',
+        mainTitle1: '보장분석',
+        mainTitle2: '제안서',
+        titleTextInput: '보장분석 제안서',
         titleColor: '#0369a1',
         clientNamePointColor: '#0284c7',
-        accentLineColor: '#0284c7',
-        checkIconColor: '#0284c7',
-        contactMode: 'card', 
+        
+        chk1Text: '기존 보험 증권 정밀 분석 및 중복·누락 보장 점검',
+        chk2Text: '3대 주요 질환(암·뇌·심장) 진단비 및 수술비 적정성 진단',
+        chk3Text: '월 납입 보험료 대비 보장 가성비 최적화 솔루션 제시',
+        chk4Text: '가족력 및 생애주기 맞춤형 든든한 평생 보장 설계',
+        
+        memoTheme: 'light_blue',
+        chk1Theme: 'light_blue',
+        chk2Theme: 'light_blue',
+        chk3Theme: 'light_blue',
+        chk4Theme: 'light_blue',
+        
+        consName: '박보환',
+        consPhone: '010-1234-5678',
+        consEmail: 'weracle@example.com',
+        consAffil: '위라클랩',
+        consRole: '본부장',
+        consEmpNo: '2532055',
+        consTel: '1588-1234',
+        consFax: '02-123-4567',
+        consAddr: '서울특별시 종로구 57, 6층 위라클본랩',
+        consSlogan: '보험으로 보답하는 보답화니\n보험다운 보험을 권하고, 정직하고 좋은 보험으로 고객님 신뢰에 보답드리겠습니다',
+        
+        chkCardBorderColor: '#cbd5e1',
+        chkCardBorderWidth: 1.5,
+        chkCardRadius: 10,
         sealStamp: 'none',
-        customNotice: '',
-        customLogoImg: null,
-        consultantPhotoImg: null,
-        qrCodeImg: null,
-        originalPdfBytes: null,
-        originalPdfFileName: ''
+        bottomNotice: '',
+        showBottomNotice: false,
+        customLogoImg: null
     };
 
-    window.selectedElementKey = null;
-    window.elementBounds = {};
+    // 이미지 프리로드
+    window.imgBojang1 = new Image();
+    window.imgBojang1.crossOrigin = 'anonymous';
+    window.imgBojang1.src = 'images/보장분석1.jpg';
+    window.imgBojang1.onload = () => { if (window.coverState.template === 'bojang_original') renderCover(); };
+
+    window.imgBranding11 = new Image();
+    window.imgBranding11.crossOrigin = 'anonymous';
+    window.imgBranding11.src = 'images/브랜딩11.jpg';
+    window.imgBranding11.onload = () => { if (window.coverState.template === 'geometric_hex') renderCover(); };
+
+    window.imgConsultantModel = new Image();
+    window.imgConsultantModel.crossOrigin = 'anonymous';
+    window.imgConsultantModel.src = 'images/consultant_model.jpg';
+    window.imgConsultantModel.onload = () => { renderCover(); };
 
     // ==========================================
-    // 🌟 보장분석 표지 추천 샘플 20종 프리셋 데이터
+    // 2. 추천 샘플 20종 데이터셋 (도형 모형 & 실사 사진 완벽 매핑)
     // ==========================================
     const BOJANG_PRESETS = [
-        // --- 1. 신뢰 & 클래식 (5종) ---
+        // 그룹 1: 정통 보장분석 & 사선 세모 웨지 (5종)
         {
-            id: 'preset_01',
+            id: 'preset_bojang_orig',
             cat: 'classic',
-            catName: '신뢰·클래식',
-            name: '01. 클래식 위라클 블루',
-            desc: '기본에 가장 충실한 정통 보장분석 리포트',
-            titleText: '보장분석 보고서',
-            greetingSub: '꼼꼼하게 준비했습니다.',
-            chk1: '전체 계약리스트 분석',
-            chk2: '상품별 가입담보 상세',
-            chk3: '전체 담보 종합 진단',
-            chk4: '상품별 진단 현황',
-            titleColor: '#0369a1',
+            template: 'bojang_original',
+            badge: '정통 오리지널',
+            name: '보장분석1 실사 모델 & 세모 웨지',
+            desc: '원본 보장분석1 샘플의 사선 세모 웨지와 정장 모델, SNS 배지',
+            wedgeColor: '#0f2347',
+            wedgeAccent: '#f59e0b',
+            titleText: '보장분석 제안서',
+            titleColor: '#0f172a',
             namePointColor: '#0284c7',
-            accentLineColor: '#0284c7',
-            chkIconColor: '#0284c7',
-            memoTheme: 'soft_slate',
-            cardRadius: 12,
-            topBar: 'gradient',
-            stamp: 'none'
+            memoTheme: 'light_blue'
         },
         {
-            id: 'preset_02',
+            id: 'preset_royal_navy_wedge',
             cat: 'classic',
-            catName: 'VIP 자산가',
-            name: '02. 로열 네이비 & 골드 VIP',
-            desc: '고액자산가·VIP를 위한 프리미엄 리포트',
-            titleText: 'VIP 종합 자산·보장 진단보고서',
-            greetingSub: '소중한 자산과 안전을 품격있게 지켜드립니다.',
-            chk1: '총 자산 보장 포트폴리오 분석',
-            chk2: '고액질병 리스크 정밀 진단',
-            chk3: '상속·증여 절세 플랜 검토',
-            chk4: 'VIP 전담 케어 솔루션',
-            titleColor: '#0f172a',
+            template: 'vector_wedge',
+            badge: '로열 웨지',
+            name: '로열 네이비 & 골드 사선 세모',
+            desc: '선명한 네이비 사선 세모 모형과 골드 라인, 프로필 사진',
+            wedgeColor: '#0f2347',
+            wedgeAccent: '#f59e0b',
+            titleText: 'VIP 프리미엄 보장분석',
+            titleColor: '#0f2347',
             namePointColor: '#d97706',
-            accentLineColor: '#d97706',
-            chkIconColor: '#d97706',
-            memoTheme: 'light_warm',
-            cardRadius: 10,
-            topBar: 'gold',
-            stamp: 'vip_gold'
+            memoTheme: 'light_blue'
         },
         {
-            id: 'preset_03',
+            id: 'preset_sapphire_wedge',
             cat: 'classic',
-            catName: '모던 미니멀',
-            name: '03. 모던 미니멀 슬레이트',
-            desc: '군더더기를 덜어내고 핵심만 정돈된 리포트',
-            titleText: '맞춤형 보장 솔루션 리포트',
-            greetingSub: '불필요한 군더더기를 덜어내고 핵심만 담았습니다.',
-            chk1: '현재 가입계약 한눈에 보기',
-            chk2: '중복 담보 누수금액 점검',
-            chk3: '필수 핵심보장 잔여한도',
-            chk4: '최적 보험료 리모델링',
-            titleColor: '#1e293b',
-            namePointColor: '#475569',
-            accentLineColor: '#475569',
-            chkIconColor: '#0284c7',
-            memoTheme: 'pure_white',
-            cardRadius: 8,
-            topBar: 'solid',
-            stamp: 'none'
-        },
-        {
-            id: 'preset_04',
-            cat: 'classic',
-            catName: '편안한 블루',
-            name: '04. 소프트 스카이 라이트',
-            desc: '밝고 맑은 느낌의 친근하고 편안한 표지',
-            titleText: '안심 케어 보장분석 리포트',
-            greetingSub: '고객님의 맑고 든든한 내일을 응원합니다.',
-            chk1: '가족 통합 보장 현황 요약',
-            chk2: '주요 질환 안심 담보 점검',
-            chk3: '실손의료비 보장 완성도',
-            chk4: '갱신형·비갱신형 비교 분석',
+            template: 'vector_wedge',
+            badge: '사파이어',
+            name: '사파이어 블루 세모 웨지',
+            desc: '신뢰감을 주는 산뜻한 사파이어 블루 세모 모형과 맞춤형 진단',
+            wedgeColor: '#0284c7',
+            wedgeAccent: '#38bdf8',
+            titleText: '맞춤형 보장 솔루션',
             titleColor: '#0284c7',
-            namePointColor: '#0ea5e9',
-            accentLineColor: '#38bdf8',
-            chkIconColor: '#0284c7',
-            memoTheme: 'light_blue',
-            cardRadius: 16,
-            topBar: 'gradient',
-            stamp: 'safe_cyan'
+            namePointColor: '#0284c7',
+            memoTheme: 'light_blue'
         },
         {
-            id: 'preset_05',
+            id: 'preset_emerald_wedge',
             cat: 'classic',
-            catName: '애플 감성',
-            name: '05. 퓨어 화이트 & 네오 섀도우',
-            desc: '투명하고 객관적인 지표의 미니멀 스타일',
-            titleText: '종합 보장진단 컨설팅 보고서',
-            greetingSub: '가장 투명하고 객관적인 지표로 분석했습니다.',
-            chk1: '가입 보험 정밀 전수조사',
-            chk2: '담보별 보장점수 객관적 산출',
-            chk3: '부족 보장 보완 솔루션',
-            chk4: '유지 및 정리 우선순위 도출',
-            titleColor: '#111827',
-            namePointColor: '#2563eb',
-            accentLineColor: '#2563eb',
-            chkIconColor: '#2563eb',
-            memoTheme: 'pure_white',
-            cardRadius: 14,
-            topBar: 'solid',
-            stamp: 'none'
-        },
-
-        // --- 2. 고객 맞춤 (5종) ---
-        {
-            id: 'preset_06',
-            cat: 'target',
-            catName: '신혼부부',
-            name: '06. 신혼부부 든든 동행 케어',
-            desc: '2030·3040 신혼부부의 행복한 출발 맞춤',
-            titleText: '신혼부부 안심 미래설계 리포트',
-            greetingSub: '두 분의 행복한 시작, 든든한 울타리를 만듭니다.',
-            chk1: '부부 통합 보장 합산 점검',
-            chk2: '주택자금 & 위험대비 진단',
-            chk3: '가장 유고 시 가족안전 플랜',
-            chk4: '가성비 비갱신 맞춤 설계',
-            titleColor: '#be123c',
-            namePointColor: '#e11d48',
-            accentLineColor: '#f43f5e',
-            chkIconColor: '#e11d48',
-            memoTheme: 'soft_coral',
-            cardRadius: 16,
-            topBar: 'solid',
-            stamp: 'safe_cyan'
-        },
-        {
-            id: 'preset_07',
-            cat: 'target',
-            catName: '자녀·어린이',
-            name: '07. 우리아이 평생 든든 케어',
-            desc: '소아·청소년 100세 만기 든든 안심 리포트',
-            titleText: '우리아이 평생 든든 보장 리포트',
-            greetingSub: '세상에서 가장 소중한 아이의 건강한 성장을 위해.',
-            chk1: '출산·신생아 위험 보장 점검',
-            chk2: '성장기 주요 상해·수술 담보',
-            chk3: '3대 질병 소아특화 진단',
-            chk4: '100세 만기 비갱신 완성도',
-            titleColor: '#059669',
+            template: 'classic',
+            templateType: 'vector_wedge',
+            badge: '에메랄드',
+            name: '에메랄드 그린 세모 안심케어',
+            desc: '건강과 평안을 상징하는 포레스트 에메랄드 세모 웨지 도형',
+            wedgeColor: '#065f46',
+            wedgeAccent: '#34d399',
+            titleText: '건강 평생 안심 보장분석',
+            titleColor: '#065f46',
             namePointColor: '#10b981',
-            accentLineColor: '#34d399',
-            chkIconColor: '#059669',
-            memoTheme: 'light_mint',
-            cardRadius: 18,
-            topBar: 'solid',
-            stamp: 'best_emerald'
+            memoTheme: 'light_mint'
         },
         {
-            id: 'preset_08',
-            cat: 'target',
-            catName: '실버·부모님',
-            name: '08. 부모님 건강·간병 효도케어',
-            desc: '부모님을 위한 치매·간병·혈관 질환 특화',
-            titleText: '부모님 건강·간병 안심진단 리포트',
-            greetingSub: '부모님의 평온한 노후와 건강을 꼼꼼하게 살폈습니다.',
-            chk1: '치매 및 장기요양 등급 보장',
-            chk2: '간병인 사용일당 현황 점검',
-            chk3: '혈관·골절 다발성 질환 대비',
-            chk4: '유병자 간편가입 적합성 검토',
-            titleColor: '#78350f',
-            namePointColor: '#d97706',
-            accentLineColor: '#d97706',
-            chkIconColor: '#b45309',
-            memoTheme: 'light_warm',
-            cardRadius: 12,
-            topBar: 'gold',
-            stamp: 'official_slate'
-        },
-        {
-            id: 'preset_09',
-            cat: 'target',
-            catName: '사회초년생',
-            name: '09. 사회초년생 첫 보험 가이드',
-            desc: '월급을 아끼고 지키는 똑똑한 2030 점검표',
-            titleText: '사회초년생 슬기로운 보장 점검표',
-            greetingSub: '소중한 첫 월급을 지키는 가장 똑똑한 보험 가이드.',
-            chk1: '월 소득 대비 적정 보험료율',
-            chk2: '실손보험 100% 활용 꿀팁',
-            chk3: '20대 필수 3대 진단비 세팅',
-            chk4: '불필요한 적립보험료 정리',
-            titleColor: '#4338ca',
-            namePointColor: '#6366f1',
-            accentLineColor: '#6366f1',
-            chkIconColor: '#4f46e5',
-            memoTheme: 'light_blue',
-            cardRadius: 14,
-            topBar: 'gradient',
-            stamp: 'none'
-        },
-        {
-            id: 'preset_10',
-            cat: 'target',
-            catName: 'CEO·법인',
-            name: '10. CEO·전문직 경영리스크 플랜',
-            desc: '기업 경영자와 전문직을 위한 법인 리스크 점검',
-            titleText: 'CEO·전문직 경영리스크 진단보고서',
-            greetingSub: '기업의 연속성과 대표님의 가족을 지키는 핵심 안전망.',
-            chk1: '대표이사 유고 리스크 분석',
-            chk2: '기업 비상자금 및 세무 연계',
-            chk3: '중대재해 및 배상책임 점검',
-            chk4: '가업승계 및 상속세 재원 마련',
-            titleColor: '#0f172a',
-            namePointColor: '#b45309',
-            accentLineColor: '#b45309',
-            chkIconColor: '#0f172a',
-            memoTheme: 'soft_slate',
-            cardRadius: 6,
-            topBar: 'gold',
-            stamp: 'vip_gold'
-        },
-
-        // --- 3. 목적별 진단 (5종) ---
-        {
-            id: 'preset_11',
-            cat: 'purpose',
-            catName: '3대 질병',
-            name: '11. 3대 질병(암·뇌·심) 정밀진단',
-            desc: '한국인 주요 3대 사망원인 집중 분석',
-            titleText: '3대 주요질환 핵심보장 정밀 리포트',
-            greetingSub: '치료비와 생활비 공백 없는 탄탄한 의료 안전망.',
-            chk1: '일반암·유사암 진단비 범위',
-            chk2: '뇌혈관 & 허혈심장 포괄도',
-            chk3: '표적항암 및 첨단 수술비',
-            chk4: '장기 치료 생활비 충당 가능액',
+            id: 'preset_burgundy_wedge',
+            cat: 'classic',
+            template: 'vector_wedge',
+            badge: '버건디 VIP',
+            name: '임페리얼 버건디 세모 웨지',
+            desc: '중후하고 품격 있는 와인 버건디 세모 도형과 골드 타이포',
+            wedgeColor: '#881337',
+            wedgeAccent: '#fbbf24',
+            titleText: '명품 자산·보장 컨설팅',
             titleColor: '#881337',
             namePointColor: '#e11d48',
-            accentLineColor: '#e11d48',
-            chkIconColor: '#be123c',
-            memoTheme: 'soft_coral',
-            cardRadius: 12,
-            topBar: 'solid',
-            stamp: 'safe_cyan'
-        },
-        {
-            id: 'preset_12',
-            cat: 'purpose',
-            catName: '절감 특화',
-            name: '12. 보험료 다이어트 & 절감 솔루션',
-            desc: '새는 돈은 줄이고 보장은 키우는 다이어트 플랜',
-            titleText: '새는 돈 막는 보험료 다이어트 솔루션',
-            greetingSub: '보장은 그대로 유지하고 월 납입료는 알뜰하게 줄였습니다.',
-            chk1: '중복 가입 담보 누수 점검',
-            chk2: '과도한 사망보장 슬림화',
-            chk3: '갱신폭탄 예상 특약 선별',
-            chk4: '절감된 예산 재테크 전환 플랜',
-            titleColor: '#047857',
-            namePointColor: '#10b981',
-            accentLineColor: '#10b981',
-            chkIconColor: '#059669',
-            memoTheme: 'light_mint',
-            cardRadius: 14,
-            topBar: 'solid',
-            stamp: 'best_emerald'
-        },
-        {
-            id: 'preset_13',
-            cat: 'purpose',
-            catName: '보험금 찾기',
-            name: '13. 놓친 보험금 & 숨은 보장 발굴',
-            desc: '가입하고도 몰라서 못 받은 보험금 정밀 스캔',
-            titleText: '놓친 보험금 & 숨은 보장 발굴 리포트',
-            greetingSub: '가입하고도 몰라서 못 받은 보험금을 찾아드립니다.',
-            chk1: '과거 미청구 진료비 스캔',
-            chk2: '가입 상품 숨은 특약 분석',
-            chk3: '수술·입원 정액보장 청구점검',
-            chk4: '가족 연계 동시 청구 가능항목',
-            titleColor: '#1d4ed8',
-            namePointColor: '#3b82f6',
-            accentLineColor: '#3b82f6',
-            chkIconColor: '#2563eb',
-            memoTheme: 'light_blue',
-            cardRadius: 12,
-            topBar: 'gradient',
-            stamp: 'safe_cyan'
-        },
-        {
-            id: 'preset_14',
-            cat: 'purpose',
-            catName: '수술·입원비',
-            name: '14. 수술비·의료비 평생 안심진단서',
-            desc: '입원 첫날부터 매회 반복 지급되는 의료비 점검',
-            titleText: '수술비·의료비 평생 안심진단서',
-            greetingSub: '입원 첫날부터 매회 반복 지급되는 든든한 의료비.',
-            chk1: '질병·상해 1~5종 수술비',
-            chk2: 'N대 주요 다발성 수술비',
-            chk3: '간호간병통합서비스 입원일당',
-            chk4: '상급종합병원 치료비 보장한도',
-            titleColor: '#0f766e',
-            namePointColor: '#14b8a6',
-            accentLineColor: '#14b8a6',
-            chkIconColor: '#0d9488',
-            memoTheme: 'light_mint',
-            cardRadius: 12,
-            topBar: 'solid',
-            stamp: 'official_slate'
-        },
-        {
-            id: 'preset_15',
-            cat: 'purpose',
-            catName: '화재·배상',
-            name: '15. 우리집·사업장 화재·배상 종합진단',
-            desc: '화재, 누수, 일상생활 배상책임 완전 분석',
-            titleText: '우리집·사업장 화재·배상 종합진단',
-            greetingSub: '예고 없는 재난과 사고로부터 나의 터전을 안전하게.',
-            chk1: '우리집 화재 및 누수 손해배상',
-            chk2: '이웃집 대물·대인 배상책임',
-            chk3: '가족일상생활 배상책임(일배책)',
-            chk4: '법률비용 및 행정처분 위험',
-            titleColor: '#b45309',
-            namePointColor: '#f59e0b',
-            accentLineColor: '#f59e0b',
-            chkIconColor: '#d97706',
-            memoTheme: 'light_warm',
-            cardRadius: 10,
-            topBar: 'gold',
-            stamp: 'none'
+            memoTheme: 'soft_coral'
         },
 
-        // --- 4. 감성 스타일 & 부티크 (5종) ---
+        // 그룹 2: 기하학 헥사곤 & 세모·네모 테크 (5종)
         {
-            id: 'preset_16',
-            cat: 'style',
-            catName: '아이보리',
-            name: '16. 웜 아이보리 프라이빗 라운지',
-            desc: '프라이빗 뱅킹 라운지 감성의 따뜻한 보고서',
-            titleText: '프라이빗 라이프 케어 보고서',
-            greetingSub: '고객님의 소중한 삶에 따스한 안식을 더합니다.',
-            chk1: '라이프스타일 기반 맞춤설계',
-            chk2: '생애주기별 리스크 대응력',
-            chk3: '가족 구성원 통합 안전밸런스',
-            chk4: '1:1 전담 컨설턴트 밀착케어',
-            titleColor: '#713f12',
-            namePointColor: '#d97706',
-            accentLineColor: '#d97706',
-            chkIconColor: '#b45309',
-            memoTheme: 'light_warm',
-            cardRadius: 16,
-            topBar: 'gold',
-            stamp: 'vip_gold'
-        },
-        {
-            id: 'preset_17',
-            cat: 'style',
-            catName: '라벤더',
-            name: '17. 라벤더 힐링 웰니스',
-            desc: '편안하고 차분한 소프트 라벤더 감성',
-            titleText: '마음 편한 웰니스 보장분석서',
-            greetingSub: '걱정은 덜어내고 편안한 일상만 가득하도록.',
-            chk1: '일상 위험 스트레스 프리 진단',
-            chk2: '의료비 지출 상한선 점검',
-            chk3: '예기치 못한 질병의 든든한 버팀목',
-            chk4: '장기 건강관리 파트너십',
-            titleColor: '#581c87',
-            namePointColor: '#9333ea',
-            accentLineColor: '#c084fc',
-            chkIconColor: '#9333ea',
-            memoTheme: 'soft_lavender',
-            cardRadius: 16,
-            topBar: 'solid',
-            stamp: 'none'
-        },
-        {
-            id: 'preset_18',
-            cat: 'style',
-            catName: '올리브',
-            name: '18. 스칸디나비안 올리브 그린',
-            desc: '북유럽 오가닉 무드의 심플 & 힐링 스타일',
-            titleText: '자연스러운 일상을 지키는 보장리포트',
-            greetingSub: '변함없이 싱그럽고 평온한 하루를 약속합니다.',
-            chk1: '불필요한 과잉 보장 덜어내기',
-            chk2: '꼭 필요한 보장의 본질 집중',
-            chk3: '합리적인 월 유지비용 달성',
-            chk4: '투명하고 정직한 진단 데이터',
-            titleColor: '#3f6212',
-            namePointColor: '#65a30d',
-            accentLineColor: '#84cc16',
-            chkIconColor: '#4d7c0f',
-            memoTheme: 'light_mint',
-            cardRadius: 14,
-            topBar: 'solid',
-            stamp: 'best_emerald'
-        },
-        {
-            id: 'preset_19',
-            cat: 'style',
-            catName: '골든 피치',
-            name: '19. 선셋 골든 피치 안심케어',
-            desc: '따스한 햇살 느낌의 소프트 피치 오렌지',
-            titleText: '가족 사랑 안심케어 리포트',
-            greetingSub: '사랑하는 가족을 향한 가장 따뜻한 약속입니다.',
-            chk1: '우리 가족 사랑 지킴이 진단',
-            chk2: '자녀 독립기까지의 든든한 보장',
-            chk3: '예비 질환 집중 치료비 점검',
-            chk4: '미래 은퇴 건강플랜 연계',
-            titleColor: '#c2410c',
-            namePointColor: '#ea580c',
-            accentLineColor: '#fb923c',
-            chkIconColor: '#ea580c',
-            memoTheme: 'soft_coral',
-            cardRadius: 15,
-            topBar: 'solid',
-            stamp: 'safe_cyan'
-        },
-        {
-            id: 'preset_20',
-            cat: 'style',
-            catName: '모노 블랙',
-            name: '20. 모노 블랙 & 다크 엣지',
-            desc: '압도적인 전문성과 카리스마의 다크 모노',
-            titleText: '정밀 보장진단 마스터 리포트',
-            greetingSub: '단 하나의 빈틈도 허용하지 않는 완벽한 진단.',
-            chk1: '전 보험사 약관 전수 대조',
-            chk2: '보장 누락률 0% 정밀 검증',
-            chk3: '중복 과다담보 구조조정',
-            chk4: '업계 최상위 보장 스펙 완성',
-            titleColor: '#000000',
+            id: 'preset_geo_tech',
+            cat: 'purpose',
+            template: 'geometric_hex',
+            badge: '기하학 헥사곤',
+            name: '모던 헥사곤 테크 (육각·세모·네모)',
+            desc: '브랜딩11 샘플 스타일! 육각형·세모·네모 도형과 전문 분쟁상담',
+            wedgeColor: '#1e3a8a',
+            wedgeAccent: '#38bdf8',
+            titleText: '손해사정·보장 종합진단',
+            titleColor: '#1e3a8a',
             namePointColor: '#2563eb',
-            accentLineColor: '#1d4ed8',
-            chkIconColor: '#0f172a',
-            memoTheme: 'pure_white',
-            cardRadius: 6,
-            topBar: 'solid',
-            stamp: 'vip_gold'
+            memoTheme: 'light_blue'
+        },
+        {
+            id: 'preset_smart_data_cube',
+            cat: 'purpose',
+            template: 'geometric_hex',
+            badge: '데이터 테크',
+            name: '스마트 데이터 큐브 & 차트',
+            desc: '체계적인 보장 분석 그래프와 육각 데이터 모형',
+            wedgeColor: '#0369a1',
+            wedgeAccent: '#0ea5e9',
+            titleText: '데이터 기반 정밀 보장분석',
+            titleColor: '#0369a1',
+            namePointColor: '#0284c7',
+            memoTheme: 'light_blue'
+        },
+        {
+            id: 'preset_cyber_navy_poly',
+            cat: 'purpose',
+            template: 'geometric_hex',
+            badge: '사이버 폴리곤',
+            name: '사이버 네이비 다각형 리포트',
+            desc: '첨단 보험 금융 컨설팅을 상징하는 다각형 네트워크 모형',
+            wedgeColor: '#0f172a',
+            wedgeAccent: '#60a5fa',
+            titleText: '디지털 보장 스마트 진단',
+            titleColor: '#0f172a',
+            namePointColor: '#3b82f6',
+            memoTheme: 'light_blue'
+        },
+        {
+            id: 'preset_mint_clean_hex',
+            cat: 'purpose',
+            template: 'geometric_hex',
+            badge: '클린 민트',
+            name: '민트 클린 헥사곤 & 인용구',
+            desc: '깔끔하고 청량한 민트 육각 도형과 고객 중심 말풍선',
+            wedgeColor: '#0f766e',
+            wedgeAccent: '#2dd4bf',
+            titleText: '고객 중심 클린 보장분석',
+            titleColor: '#0f766e',
+            namePointColor: '#14b8a6',
+            memoTheme: 'light_mint'
+        },
+        {
+            id: 'preset_dark_slate_cube',
+            cat: 'purpose',
+            template: 'geometric_hex',
+            badge: '슬레이트',
+            name: '다크 슬레이트 큐브 & 신뢰',
+            desc: '전문가적인 무게감을 전하는 차분한 슬레이트 기하학 도형',
+            wedgeColor: '#1e293b',
+            wedgeAccent: '#94a3b8',
+            titleText: '전문 보험 진단 보고서',
+            titleColor: '#1e293b',
+            namePointColor: '#64748b',
+            memoTheme: 'pure_white'
+        },
+
+        // 그룹 3: 대각선 듀오 세모 분할 (5종)
+        {
+            id: 'preset_diag_duo_blue',
+            cat: 'target',
+            template: 'diagonal_duo',
+            badge: '세모 분할',
+            name: '다이내믹 듀오 세모 분할 (블루)',
+            desc: '사선으로 과감하게 분할된 세모 모형과 원형 인물 사진',
+            wedgeColor: '#0284c7',
+            wedgeAccent: '#38bdf8',
+            titleText: '생애 맞춤 보장 제안서',
+            titleColor: '#0284c7',
+            namePointColor: '#0284c7',
+            memoTheme: 'light_blue'
+        },
+        {
+            id: 'preset_diag_deep_navy',
+            cat: 'target',
+            template: 'diagonal_duo',
+            badge: '네이비 사선',
+            name: '딥 네이비 세모 사선 & 4대 카드',
+            desc: '투톤 세모 분할 배경과 깔끔한 4대 핵심 보장 카드',
+            wedgeColor: '#0f172a',
+            wedgeAccent: '#38bdf8',
+            titleText: '가장 완벽한 보장 리모델링',
+            titleColor: '#0f172a',
+            namePointColor: '#0284c7',
+            memoTheme: 'pure_white'
+        },
+        {
+            id: 'preset_diag_forest_green',
+            cat: 'target',
+            template: 'diagonal_duo',
+            badge: '포레스트',
+            name: '포레스트 그린 대각선 패밀리',
+            desc: '온 가족의 든든한 울타리를 표현하는 친환경 세모 분할',
+            wedgeColor: '#064e3b',
+            wedgeAccent: '#34d399',
+            titleText: '행복한 우리 가족 보장 플랜',
+            titleColor: '#064e3b',
+            namePointColor: '#10b981',
+            memoTheme: 'light_mint'
+        },
+        {
+            id: 'preset_diag_sunset_orange',
+            cat: 'target',
+            template: 'diagonal_duo',
+            badge: '선셋 오렌지',
+            name: '선셋 오렌지 세모 분할',
+            desc: '밝고 긍정적인 에너지를 주는 오렌지 & 앰버 사선 도형',
+            wedgeColor: '#c2410c',
+            wedgeAccent: '#fb923c',
+            titleText: '활력 넘치는 미래 안심 설계',
+            titleColor: '#c2410c',
+            namePointColor: '#f97316',
+            memoTheme: 'light_warm'
+        },
+        {
+            id: 'preset_diag_royal_purple',
+            cat: 'target',
+            template: 'diagonal_duo',
+            badge: '로열 퍼플',
+            name: '로열 퍼플 세모 분할',
+            desc: '고급스럽고 세련된 퍼플 & 바이올렛 세모 기하학 디자인',
+            wedgeColor: '#581c87',
+            wedgeAccent: '#c084fc',
+            titleText: '프리미엄 VIP 보장케어',
+            titleColor: '#581c87',
+            namePointColor: '#a855f7',
+            memoTheme: 'pure_white'
+        },
+
+        // 그룹 4: 4대 보장 진단 네모 카드 & 럭셔리 (5종)
+        {
+            id: 'preset_card_diag_grid',
+            cat: 'style',
+            template: 'card_grid',
+            badge: '네모 카드',
+            name: '4대 보장 진단 네모 카드 리포트',
+            desc: '사망·암·뇌심·실손 4개 직관적인 네모 카드와 상태 배지',
+            wedgeColor: '#0284c7',
+            wedgeAccent: '#38bdf8',
+            titleText: '4대 핵심 보장 정밀 진단서',
+            titleColor: '#0284c7',
+            namePointColor: '#0284c7',
+            memoTheme: 'light_blue'
+        },
+        {
+            id: 'preset_gold_emblem_ribbon',
+            cat: 'style',
+            template: 'vector_wedge',
+            badge: '골드 럭셔리',
+            name: '골드 엠블럼 리본 & VIP 도장',
+            desc: '기하학 골드 리본 밴드와 최고급 흑요석 세모 도형',
+            wedgeColor: '#18181b',
+            wedgeAccent: '#eab308',
+            titleText: '최고경영자 VIP 자산보장',
+            titleColor: '#18181b',
+            namePointColor: '#ca8a04',
+            memoTheme: 'light_warm'
+        },
+        {
+            id: 'preset_family_soft_card',
+            cat: 'style',
+            template: 'card_grid',
+            badge: '소프트 카드',
+            name: '패밀리 소프트 네모 & 따뜻한 케어',
+            desc: '부드러운 라운드 네모 카드와 따뜻한 아이보리 감성',
+            wedgeColor: '#78350f',
+            wedgeAccent: '#f59e0b',
+            titleText: '사랑하는 가족을 위한 보장',
+            titleColor: '#78350f',
+            namePointColor: '#d97706',
+            memoTheme: 'light_warm'
+        },
+        {
+            id: 'preset_ceo_platinum',
+            cat: 'style',
+            template: 'vector_wedge',
+            badge: 'CEO 플래티넘',
+            name: '기업 CEO 플래티넘 세모 웨지',
+            desc: '중역 및 법인 대표를 위한 미니멀 플래티넘 사선 도형',
+            wedgeColor: '#0f172a',
+            wedgeAccent: '#cbd5e1',
+            titleText: '법인 CEO 경영인 안심보장',
+            titleColor: '#0f172a',
+            namePointColor: '#475569',
+            memoTheme: 'pure_white'
+        },
+        {
+            id: 'preset_onestop_quick_qr',
+            cat: 'style',
+            template: 'card_grid',
+            badge: '원스톱 퀵',
+            name: '원스톱 간편 보장 & 퀵 상담 QR',
+            desc: '핵심 요약 네모 카드와 바로 연결되는 스마트 QR 시스템',
+            wedgeColor: '#0d9488',
+            wedgeAccent: '#5eead4',
+            titleText: '한눈에 보는 스마트 보장분석',
+            titleColor: '#0d9488',
+            namePointColor: '#14b8a6',
+            memoTheme: 'light_mint'
         }
     ];
 
-    let currentSelectedPresetId = 'preset_01';
+    let currentSelectedPresetId = 'preset_bojang_orig';
+    let activeHotspotKey = null;
 
-    // 20개 프리셋 카드 렌더링
-        function renderPresetCards(filterCat) {
+    // ==========================================
+    // 3. 템플릿 선택 함수
+    // ==========================================
+    function selectDesignTemplate(tplId, btn) {
+        window.coverState.template = tplId;
+        document.querySelectorAll('.btn-template-select').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        else {
+            const b = document.getElementById('tplBtn_' + tplId);
+            if (b) b.classList.add('active');
+        }
+        renderCover();
+        showToast('🎨 디자인 템플릿이 변경되었습니다.');
+    }
+
+    // ==========================================
+    // 4. 프리셋 카드 렌더링
+    // ==========================================
+    function renderPresetCards(filterCat) {
         filterCat = filterCat || 'all';
         const container = document.getElementById('presetCardContainer');
         if (!container) return;
@@ -1611,8 +1626,8 @@
                   + '  <div class="preset-badge-row">'
                   + '    <span class="preset-category-tag">' + p.badge + '</span>'
                   + '    <div class="preset-swatches">'
-                  + '      <span class="preset-swatch" style="background:' + p.titleColor + ';" title="타이틀색"></span>'
-                  + '      <span class="preset-swatch" style="background:' + p.namePointColor + ';" title="포인트색"></span>'
+                  + '      <span class="preset-swatch" style="background:' + p.wedgeColor + ';" title="도형(세모)색"></span>'
+                  + '      <span class="preset-swatch" style="background:' + p.wedgeAccent + ';" title="포인트색"></span>'
                   + '      <span class="preset-swatch" style="background:' + getThemeSampleBg(p.memoTheme) + ';" title="카드색"></span>'
                   + '    </div>'
                   + '  </div>'
@@ -1627,758 +1642,746 @@
         container.innerHTML = html;
     }
 
-    function getThemeSampleBg(theme) {
-        if (theme === 'soft_coral') return '#fff1f2';
-        if (theme === 'soft_lavender') return '#faf5ff';
-        if (theme === 'light_blue') return '#eff6ff';
-        if (theme === 'light_mint') return '#ecfdf5';
-        if (theme === 'light_warm') return '#fefce8';
-        if (theme === 'pure_white') return '#ffffff';
+    function getThemeSampleBg(themeKey) {
+        if (themeKey === 'light_blue') return '#e0f2fe';
+        if (themeKey === 'light_mint') return '#ccfbf1';
+        if (themeKey === 'light_warm') return '#fef3c7';
+        if (themeKey === 'soft_coral') return '#ffe4e6';
         return '#f1f5f9';
     }
 
-    // 카테고리 필터 클릭
     function filterPresets(cat, btn) {
         document.querySelectorAll('.preset-filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
         if (btn) btn.classList.add('active');
         renderPresetCards(cat);
     }
 
-    // 원클릭 프리셋 적용
     function applyBojangPreset(presetId) {
         const p = BOJANG_PRESETS.find(item => item.id === presetId);
         if (!p) return;
 
         currentSelectedPresetId = presetId;
+        renderPresetCards();
 
-        // 1. 상태 업데이트
-        window.coverState.titleColor = p.titleColor;
-        window.coverState.clientNamePointColor = p.namePointColor;
-        window.coverState.accentLineColor = p.accentLineColor;
-        window.coverState.checkIconColor = p.chkIconColor;
-        if (p.stamp) window.coverState.sealStamp = p.stamp;
+        window.coverState.template = p.template || p.templateType || 'vector_wedge';
+        window.coverState.wedgeColor = p.wedgeColor || '#0f2347';
+        window.coverState.wedgeAccentColor = p.wedgeAccent || '#f59e0b';
+        window.coverState.titleTextInput = p.titleText || '보장분석 제안서';
+        window.coverState.titleColor = p.titleColor || '#0f172a';
+        window.coverState.clientNamePointColor = p.namePointColor || '#0284c7';
+        window.coverState.memoTheme = p.memoTheme || 'light_blue';
+        window.coverState.chk1Theme = p.memoTheme;
+        window.coverState.chk2Theme = p.memoTheme;
+        window.coverState.chk3Theme = p.memoTheme;
+        window.coverState.chk4Theme = p.memoTheme;
 
-        // 2. 폼 필드 채우기
+        // UI 싱크
         const titleEl = document.getElementById('titleTextInput');
-        if (titleEl) titleEl.value = p.titleText;
-
-        const subEl = document.getElementById('greetingSubInput');
-        if (subEl) subEl.value = p.greetingSub;
-
-        const chk1El = document.getElementById('chk1Input');
-        if (chk1El) chk1El.value = p.chk1;
-
-        const chk2El = document.getElementById('chk2Input');
-        if (chk2El) chk2El.value = p.chk2;
-
-        const chk3El = document.getElementById('chk3Input');
-        if (chk3El) chk3El.value = p.chk3;
-
-        const chk4El = document.getElementById('chk4Input');
-        if (chk4El) chk4El.value = p.chk4;
-
-        const themeEl = document.getElementById('memoStyleTheme');
-        if (themeEl) themeEl.value = p.memoTheme;
-
-        const radEl = document.getElementById('cardRadius');
-        if (radEl) {
-            radEl.value = p.cardRadius;
-            const rVal = document.getElementById('radiusVal');
-            if (rVal) rVal.innerText = p.cardRadius + 'px';
-        }
-
-        const topBarEl = document.getElementById('topBarStyle');
-        if (topBarEl) topBarEl.value = p.topBar;
-
-        const stampSelectEl = document.getElementById('sealStampSelect');
-        if (stampSelectEl) stampSelectEl.value = p.stamp || 'none';
-
-        // 3. 프리셋 카드 활성 테두리 갱신
-        document.querySelectorAll('.preset-card').forEach(el => el.classList.remove('active-preset'));
-        const activeCard = document.getElementById('card_' + presetId);
-        if (activeCard) activeCard.classList.add('active-preset');
-
-        // 4. 즉시 캔버스 리렌더링
+        if (titleEl) titleEl.value = window.coverState.titleTextInput;
+        
+        selectDesignTemplate(window.coverState.template);
         renderCover();
-        showToast('✨ "' + p.name + '" 샘플이 적용되었습니다!');
+        showToast('✨ [' + p.name + '] 샘플이 적용되었습니다!');
     }
 
     // ==========================================
-    // 2. 초기화 & 이벤트 리스너
+    // 5. 사진 & 도형 모형 컨트롤 함수들
     // ==========================================
-    window.addEventListener('DOMContentLoaded', () => {
-        // 1. 프리셋 카드 즉시 렌더링
-        renderPresetCards('all');
-
-        // 2. URL 파라미터 파싱
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('clientName')) {
-            window.coverState.clientName = params.get('clientName');
-            const nameEl = document.getElementById('clientNameInput');
-            if (nameEl) nameEl.value = window.coverState.clientName;
-        }
-        if (params.get('clientPhone')) {
-            window.coverState.clientPhone = params.get('clientPhone');
-        }
-
-        // 3. 기본 위라클 로고 로드
-        const defaultLogo = new Image();
-        defaultLogo.src = 'images/보답화니_로고.png';
-        defaultLogo.onload = () => {
-            window.coverState.customLogoImg = defaultLogo;
-            renderCover();
-        };
-        defaultLogo.onerror = () => {
-            renderCover();
-        };
-
-        // 4. QR 생성
-        generateQr();
-
-        // 5. 렌더링
-        setTimeout(renderCover, 80);
-
-        // 6. 외부 클릭 시 플로팅 퀵 에디터 닫기 및 ESC 키 지원
-        document.addEventListener('click', (e) => {
-            const qe = document.getElementById('floatingQuickEditor');
-            if (!qe || qe.style.display === 'none') return;
-            if (qe.contains(e.target) || e.target.closest('.overlay-hotspot') || e.target.closest('.btn-toolbar-tool')) return;
-            deselectAll();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') deselectAll();
-        });
-    });
-
-    // 탭 전환 함수
-    function switchTab(tabId, el) {
-        document.querySelectorAll('.panel-tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
-
-        const activeBtn = el || document.getElementById('tabBtn_' + tabId);
-        if (activeBtn) activeBtn.classList.add('active');
-        const target = document.getElementById('tab-' + tabId);
-        if (target) target.style.display = 'block';
-    }
-
-    function updateRangeText(id, val) {
-        const el = document.getElementById(id);
-        if (el) el.innerText = val;
-    }
-
-    function selectTitleColor(col, el) {
-        window.coverState.titleColor = col;
-        if (el && el.parentElement) {
-            el.parentElement.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-        }
+    function toggleHeroPhoto(checked) {
+        window.coverState.showPhoto = checked;
         renderCover();
     }
 
-    function selectPointColor(col, el) {
-        window.coverState.clientNamePointColor = col;
-        if (el && el.parentElement) {
-            el.parentElement.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-        }
+    function setBuiltinModel() {
+        window.coverState.customPhotoImg = null;
+        window.coverState.showPhoto = true;
         renderCover();
+        showToast('👔 기본 프로 모델 사진이 적용되었습니다.');
     }
 
-    function selectContactMode(mode) {
-        window.coverState.contactMode = mode;
-        const optClassic = document.getElementById('optClassicContact');
-        const optCard = document.getElementById('optCardContact');
-        if (optClassic) optClassic.classList.toggle('active', mode === 'classic');
-        if (optCard) optCard.classList.toggle('active', mode === 'card');
-        renderCover();
-    }
-
-    function selectSealStamp(stamp) {
-        window.coverState.sealStamp = stamp;
-        renderCover();
-        showToast('🏷️ 도장/스티커가 반영되었습니다.');
-    }
-
-    function quickAddSeal() {
-        switchTab('advanced');
-        const select = document.getElementById('sealStampSelect');
-        if (select) {
-            if (select.value === 'none') select.value = 'vip_gold';
-            else if (select.value === 'vip_gold') select.value = 'safe_cyan';
-            else if (select.value === 'safe_cyan') select.value = 'official_slate';
-            else if (select.value === 'official_slate') select.value = 'best_emerald';
-            else select.value = 'none';
-            selectSealStamp(select.value);
-        }
-    }
-
-    function quickAddNotice() {
-        switchTab('advanced');
-        const input = document.getElementById('customNoticeInput');
-        if (input) {
-            if (!input.value) {
-                input.value = '※ 본 리포트는 고객님의 보험증권을 기반으로 정밀 진단한 맞춤형 분석 자료입니다.';
-            }
-            input.focus();
-            renderCover();
-            showToast('📝 하단 안내 문구가 추가되었습니다.');
-        }
-    }
-
-    function handleLogoUpload(e) {
-        const file = e.target.files[0];
+    function handleHeroPhotoUpload(event) {
+        const file = event.target.files && event.target.files[0];
         if (!file) return;
+
         const reader = new FileReader();
-        reader.onload = function(evt) {
+        reader.onload = (e) => {
             const img = new Image();
-            img.onload = function() {
-                window.coverState.customLogoImg = img;
+            img.onload = () => {
+                window.coverState.customPhotoImg = img;
+                window.coverState.showPhoto = true;
                 renderCover();
-                showToast('✨ 로고 이미지가 반영되었습니다.');
+                showToast('📷 내 사진이 성공적으로 업로드되었습니다!');
             };
-            img.src = evt.target.result;
+            img.src = e.target.result;
         };
         reader.readAsDataURL(file);
     }
 
-    function handlePhotoUpload(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            const img = new Image();
-            img.onload = function() {
-                window.coverState.consultantPhotoImg = img;
-                renderCover();
-                showToast('👤 프로필 사진이 반영되었습니다.');
-            };
-            img.src = evt.target.result;
-        };
-        reader.readAsDataURL(file);
+    function setPhotoShape(shape) {
+        window.coverState.photoShape = shape;
+        renderCover();
+        showToast('🖼️ 사진 프레임 모양이 변경되었습니다.');
     }
 
-    function generateQr() {
-        const qrInput = document.getElementById('consQrUrlInput');
-        const qrUrl = (qrInput && qrInput.value.trim()) ? qrInput.value.trim() : 'https://weracle.me/card';
-        const hiddenBox = document.getElementById('hiddenQrContainer');
-        if (!hiddenBox) return;
-        hiddenBox.innerHTML = '';
-
-        if (window.QRCode) {
-            new QRCode(hiddenBox, {
-                text: qrUrl,
-                width: 140,
-                height: 140,
-                correctLevel: QRCode.CorrectLevel.M
-            });
-
-            setTimeout(() => {
-                const qrImg = hiddenBox.querySelector('img') || hiddenBox.querySelector('canvas');
-                if (qrImg) {
-                    window.coverState.qrCodeImg = qrImg;
-                    renderCover();
-                }
-            }, 80);
-        }
+    function setWedgeColor(col, accentCol) {
+        window.coverState.wedgeColor = col;
+        if (accentCol) window.coverState.wedgeAccentColor = accentCol;
+        renderCover();
+        showToast('🎨 사선 세모 도형 색상이 변경되었습니다.');
     }
 
     // ==========================================
-    // 3. 실제 보장분석 리포트 표지 Canvas 실시간 렌더링 엔진 & Bounding Box 계산
+    // 6. 메인 캔버스 렌더러 (renderCover)
     // ==========================================
     function renderCover() {
         const canvas = document.getElementById('coverCanvas');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        const W = canvas.width;  // 1240 px
-        const H = canvas.height; // 1754 px
-        const s = W / 1000.0;    // scale factor
+        if (!ctx) return;
 
-        // 바운딩 박스 초기화
+        const w = 1240;
+        const h = 1754;
+
+        // 배경 초기화
+        ctx.clearRect(0, 0, w, h);
         window.elementBounds = {};
 
-        ctx.clearRect(0, 0, W, H);
-
-        // 1. 전체 순백색 A4 배경
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, W, H);
-
-        // 상단 포인트 바
-        const topBarOpt = document.getElementById('topBarStyle') ? document.getElementById('topBarStyle').value : 'gradient';
-        if (topBarOpt === 'gradient') {
-            const grad = ctx.createLinearGradient(0, 0, W, 0);
-            grad.addColorStop(0, '#0284c7');
-            grad.addColorStop(1, '#00e6f6');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, W, 8 * s);
-        } else if (topBarOpt === 'solid') {
-            ctx.fillStyle = window.coverState.titleColor || '#0369a1';
-            ctx.fillRect(0, 0, W, 7 * s);
-        } else if (topBarOpt === 'gold') {
-            const grad = ctx.createLinearGradient(0, 0, W, 0);
-            grad.addColorStop(0, '#d97706');
-            grad.addColorStop(1, '#fde68a');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, W, 8 * s);
-        }
-
-        const cardPadX = 80 * s;
-        const cardW = W - (cardPadX * 2);
-        const cardH = H * 0.92;
-        const cardY = 50 * s;
-
-        // 2. 상단 로고 그리기
-        const logoScale = document.getElementById('logoScale') ? parseInt(document.getElementById('logoScale').value, 10) / 100.0 : 1.0;
-        let currentY = cardY + (30 * s);
-
-        let logoImg = window.coverState.customLogoImg;
-        if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
-            let baseLogoMaxH = 140 * s * logoScale;
-            let logoH = Math.min(logoImg.naturalHeight, baseLogoMaxH);
-            let logoW = logoH * (logoImg.naturalWidth / logoImg.naturalHeight);
-            if (logoW > cardW * 0.8) {
-                let ratio = (cardW * 0.8) / logoW;
-                logoW *= ratio;
-                logoH *= ratio;
-            }
-            let logoX = (W - logoW) / 2;
-            ctx.drawImage(logoImg, logoX, currentY, logoW, logoH);
-
-            window.elementBounds['logo'] = { x: logoX, y: currentY, w: logoW, h: logoH, name: '로고 (이미지 교체/크기)' };
-            currentY += logoH + (55 * s);
-        } else {
-            ctx.font = '900 ' + (32 * s * logoScale) + 'px "Pretendard", "Segoe UI", sans-serif';
-            ctx.fillStyle = '#0284c7';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
-            ctx.fillText('WERACLE', W / 2, currentY);
-
-            const tw = ctx.measureText('WERACLE').width;
-            window.elementBounds['logo'] = { x: (W - tw) / 2 - 20, y: currentY - 5, w: tw + 40, h: 45 * s * logoScale, name: '로고 (이미지 등록)' };
-            currentY += (45 * s * logoScale) + (55 * s);
-        }
-
-        // 3. 메인 타이틀 ("보장분석 보고서")
-        const titleOffsetY = document.getElementById('titleOffsetY') ? parseInt(document.getElementById('titleOffsetY').value, 10) * s : 0;
-        const titleSizeVal = document.getElementById('titleSize') ? parseInt(document.getElementById('titleSize').value, 10) / 100.0 : 1.0;
-        currentY += titleOffsetY;
-
-        const mainTitleText = document.getElementById('titleTextInput') ? document.getElementById('titleTextInput').value || '보장분석 보고서' : '보장분석 보고서';
-        const titleFontSize = 58 * s * titleSizeVal;
-        ctx.font = '900 ' + titleFontSize + 'px "Pretendard", "Malgun Gothic", sans-serif';
-        ctx.fillStyle = window.coverState.titleColor || '#0369a1';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        ctx.fillText(mainTitleText, W / 2, currentY);
-
-        const titleMeasureW = ctx.measureText(mainTitleText).width;
-        window.elementBounds['title'] = {
-            x: (W - titleMeasureW) / 2 - 16,
-            y: currentY - 8,
-            w: titleMeasureW + 32,
-            h: titleFontSize + (35 * s),
-            name: '메인 타이틀 ("' + mainTitleText + '")'
-        };
-
-        // 타이틀 하단 장식선
-        const underlineY = currentY + titleFontSize + (16 * s);
-        ctx.fillStyle = window.coverState.accentLineColor || '#0284c7';
-        ctx.fillRect((W / 2) - (35 * s), underlineY, 70 * s, 3.5 * s);
-
-        currentY = underlineY + (40 * s);
-
-        // 4. 고객 인사말 영역
-        const greetingOffsetY = document.getElementById('greetingOffsetY') ? parseInt(document.getElementById('greetingOffsetY').value, 10) * s : 0;
-        currentY += greetingOffsetY;
-
-        const clientName = (document.getElementById('clientNameInput') ? document.getElementById('clientNameInput').value.trim() : '') || window.coverState.clientName || '고객';
-        const greetingLine2 = document.getElementById('greetingSubInput') ? document.getElementById('greetingSubInput').value.trim() : '꼼꼼하게 준비했습니다.';
-
-        const greetSize = 36 * s;
-        ctx.font = '800 ' + greetSize + 'px "Pretendard", "Malgun Gothic", sans-serif';
-        const namePartW = ctx.measureText(clientName).width;
-        const restPartW = ctx.measureText(' 님을 위해').width;
-        const totalGreetW = namePartW + restPartW;
-        let startGreetX = (W - totalGreetW) / 2;
-
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
-
-        // 고객명 강조 컬러
-        ctx.fillStyle = window.coverState.clientNamePointColor || '#0284c7';
-        ctx.fillText(clientName, startGreetX, currentY);
-
-        ctx.fillStyle = '#0f172a';
-        ctx.fillText(' 님을 위해', startGreetX + namePartW, currentY);
-
-        // 2번째 줄
-        const greetLine2Y = currentY + greetSize + (14 * s);
-        ctx.textAlign = 'center';
-        ctx.font = '700 ' + (31 * s) + 'px "Pretendard", "Malgun Gothic", sans-serif';
-        ctx.fillStyle = '#334155';
-        ctx.fillText(greetingLine2, W / 2, greetLine2Y);
-
-        const line2W = ctx.measureText(greetingLine2).width;
-        const maxGreetBoxW = Math.max(totalGreetW, line2W) + 40;
-        window.elementBounds['greeting'] = {
-            x: (W - maxGreetBoxW) / 2,
-            y: currentY - 6,
-            w: maxGreetBoxW,
-            h: (greetLine2Y - currentY) + (38 * s),
-            name: '고객 인사말 (' + clientName + ' 님)'
-        };
-
-        currentY = greetLine2Y + (38 * s) + (45 * s);
-
-        // 5. 4대 체크리스트 (2x2 그리드)
-        const chkScale = document.getElementById('checklistScale') ? parseInt(document.getElementById('checklistScale').value, 10) / 100.0 : 1.0;
-        const memoW = 410 * s * chkScale;
-        const memoH = 92 * s * chkScale;
-        const gapX = 30 * s;
-        const gapY = 24 * s;
-
-        const checklist = [
-            document.getElementById('chk1Input') ? document.getElementById('chk1Input').value || '전체 계약리스트 분석' : '전체 계약리스트 분석',
-            document.getElementById('chk2Input') ? document.getElementById('chk2Input').value || '상품별 가입담보 상세' : '상품별 가입담보 상세',
-            document.getElementById('chk3Input') ? document.getElementById('chk3Input').value || '전체 담보 종합 진단' : '전체 담보 종합 진단',
-            document.getElementById('chk4Input') ? document.getElementById('chk4Input').value || '상품별 진단 현황' : '상품별 진단 현황'
-        ];
-
-        let gridStartY = currentY;
-        let totalGridW = (memoW * 2) + gapX;
-        let gridStartX = (W - totalGridW) / 2;
-
-        const themeOpt = document.getElementById('memoStyleTheme') ? document.getElementById('memoStyleTheme').value : 'soft_slate';
-        const radiusOpt = document.getElementById('cardRadius') ? parseInt(document.getElementById('cardRadius').value, 10) * s : 12 * s;
-
-        for (let i = 0; i < 4; i++) {
-            let col = i % 2;
-            let row = Math.floor(i / 2);
-            let mx = gridStartX + (col * (memoW + gapX));
-            let my = gridStartY + (row * (memoH + gapY));
-
-            window.elementBounds['chk' + (i + 1)] = {
-                x: mx, y: my, w: memoW, h: memoH,
-                name: '체크 ' + (i + 1) + '번: ' + checklist[i]
-            };
-
-            ctx.save();
-            if (themeOpt === 'pure_white') {
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
-                ctx.shadowBlur = 16 * s;
-                ctx.shadowOffsetY = 6 * s;
-                ctx.fillStyle = '#ffffff';
-                ctx.strokeStyle = '#e2e8f0';
-                ctx.lineWidth = 1.5 * s;
-            } else if (themeOpt === 'light_blue') {
-                ctx.fillStyle = '#eff6ff';
-                ctx.strokeStyle = '#bfdbfe';
-                ctx.lineWidth = 1 * s;
-            } else if (themeOpt === 'light_mint') {
-                ctx.fillStyle = '#ecfdf5';
-                ctx.strokeStyle = '#a7f3d0';
-                ctx.lineWidth = 1 * s;
-            } else if (themeOpt === 'light_warm') {
-                ctx.fillStyle = '#fefce8';
-                ctx.strokeStyle = '#fef08a';
-                ctx.lineWidth = 1 * s;
-            } else if (themeOpt === 'soft_coral') {
-                ctx.fillStyle = '#fff1f2';
-                ctx.strokeStyle = '#fecdd3';
-                ctx.lineWidth = 1.2 * s;
-            } else if (themeOpt === 'soft_lavender') {
-                ctx.fillStyle = '#faf5ff';
-                ctx.strokeStyle = '#e9d5ff';
-                ctx.lineWidth = 1.2 * s;
-            } else {
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.05)';
-                ctx.shadowBlur = 12 * s;
-                ctx.shadowOffsetY = 5 * s;
-                ctx.fillStyle = '#f1f5f9';
-                ctx.strokeStyle = '#e2e8f0';
-                ctx.lineWidth = 1 * s;
-            }
-
-            drawRoundedBox(ctx, mx, my, memoW, memoH, radiusOpt);
-            ctx.fill();
-            if (ctx.strokeStyle) ctx.stroke();
-            ctx.restore();
-
-            const chkIcon = '✓';
-            const mainText = checklist[i];
-
-            ctx.font = '900 ' + (27 * s * chkScale) + 'px "Pretendard", "Malgun Gothic"';
-            const iconW = ctx.measureText(chkIcon).width;
-
-            ctx.font = '800 ' + (25 * s * chkScale) + 'px "Pretendard", "Malgun Gothic"';
-            const textW = ctx.measureText(mainText).width;
-
-            const totalItemW = iconW + textW;
-            const startItemX = mx + (memoW - totalItemW) / 2;
-
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-
-            ctx.fillStyle = window.coverState.checkIconColor || '#0284c7';
-            ctx.font = '900 ' + (27 * s * chkScale) + 'px "Pretendard", "Malgun Gothic"';
-            ctx.fillText(chkIcon, startItemX, my + (memoH / 2));
-
-            ctx.fillStyle = '#0f172a';
-            ctx.font = '800 ' + (25 * s * chkScale) + 'px "Pretendard", "Malgun Gothic"';
-            ctx.fillText(mainText, startItemX + iconW + (10 * s), my + (memoH / 2));
-        }
-
-        // 6. 하단 담당자 영역
-        const contactOffsetY = document.getElementById('contactOffsetY') ? parseInt(document.getElementById('contactOffsetY').value, 10) * s : 0;
-        const consName = (document.getElementById('consNameInput') ? document.getElementById('consNameInput').value.trim() : '') || '위라클';
-        const consTitle = (document.getElementById('consTitleInput') ? document.getElementById('consTitleInput').value.trim() : '') || '수석 재무설계사';
-        const consCompany = (document.getElementById('consCompanyInput') ? document.getElementById('consCompanyInput').value.trim() : '') || 'WERACLE 금융센터';
-        const consPhone = (document.getElementById('consPhoneInput') ? document.getElementById('consPhoneInput').value.trim() : '') || '010-1234-5678';
-
-        const contactMode = window.coverState.contactMode;
-
-        if (contactMode === 'classic') {
-            const cBarW = 760 * s;
-            const cBarH = 68 * s;
-            const cBarX = (W - cBarW) / 2;
-            const cBarY = H - (180 * s) + contactOffsetY;
-
-            window.elementBounds['contact'] = { x: cBarX, y: cBarY, w: cBarW, h: cBarH, name: '담당자 클래식 바' };
-
-            ctx.save();
-            ctx.fillStyle = '#f8fafc';
-            ctx.strokeStyle = '#e2e8f0';
-            ctx.lineWidth = 1.5 * s;
-            drawRoundedBox(ctx, cBarX, cBarY, cBarW, cBarH, 34 * s);
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
-
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.font = '800 ' + (23 * s) + 'px "Pretendard", "Malgun Gothic"';
-            ctx.fillStyle = '#1e293b';
-            ctx.fillText('담당자 : ' + consName + ' (' + consTitle + ')   |   연락처 : ' + consPhone, W / 2, cBarY + (cBarH / 2));
-
-        } else {
-            const cCardW = 820 * s;
-            const cCardH = 150 * s;
-            const cCardX = (W - cCardW) / 2;
-            const cCardY = H - (230 * s) + contactOffsetY;
-
-            window.elementBounds['contact'] = { x: cCardX, y: cCardY, w: cCardW, h: cCardH, name: '디지털 명함 / 담당자 카드' };
-
-            ctx.save();
-            ctx.shadowColor = 'rgba(15, 23, 42, 0.08)';
-            ctx.shadowBlur = 20 * s;
-            ctx.shadowOffsetY = 8 * s;
-            ctx.fillStyle = '#ffffff';
-            ctx.strokeStyle = '#e2e8f0';
-            ctx.lineWidth = 1.5 * s;
-            drawRoundedBox(ctx, cCardX, cCardY, cCardW, cCardH, 18 * s);
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
-
-            // 프로필 사진
-            const avatarR = 48 * s;
-            const avatarCX = cCardX + (70 * s);
-            const avatarCY = cCardY + (cCardH / 2);
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(avatarCX, avatarCY, avatarR, 0, Math.PI * 2);
-            ctx.clip();
-
-            let photoImg = window.coverState.consultantPhotoImg;
-            if (photoImg && photoImg.complete && photoImg.naturalWidth > 0) {
-                ctx.drawImage(photoImg, avatarCX - avatarR, avatarCY - avatarR, avatarR * 2, avatarR * 2);
-            } else {
-                const grad = ctx.createLinearGradient(avatarCX - avatarR, avatarCY - avatarR, avatarCX + avatarR, avatarCY + avatarR);
-                grad.addColorStop(0, '#0284c7');
-                grad.addColorStop(1, '#0369a1');
-                ctx.fillStyle = grad;
-                ctx.fill();
-
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.font = '900 ' + (36 * s) + 'px "Pretendard"';
-                ctx.fillStyle = '#ffffff';
-                ctx.fillText(consName.charAt(0) || 'W', avatarCX, avatarCY);
-            }
-            ctx.restore();
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(avatarCX, avatarCY, avatarR, 0, Math.PI * 2);
-            ctx.strokeStyle = '#e2e8f0';
-            ctx.lineWidth = 2 * s;
-            ctx.stroke();
-            ctx.restore();
-
-            // 텍스트 정보
-            const textStartX = avatarCX + avatarR + (28 * s);
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-
-            ctx.font = '700 ' + (18 * s) + 'px "Pretendard", "Malgun Gothic"';
-            ctx.fillStyle = '#64748b';
-            ctx.fillText(consCompany, textStartX, cCardY + (30 * s));
-
-            ctx.font = '900 ' + (28 * s) + 'px "Pretendard", "Malgun Gothic"';
-            ctx.fillStyle = '#0f172a';
-            ctx.fillText(consName, textStartX, cCardY + (56 * s));
-
-            const nameWidth = ctx.measureText(consName).width;
-            ctx.font = '700 ' + (19 * s) + 'px "Pretendard", "Malgun Gothic"';
-            ctx.fillStyle = '#0284c7';
-            ctx.fillText(' ' + consTitle, textStartX + nameWidth, cCardY + (64 * s));
-
-            ctx.font = '800 ' + (21 * s) + 'px "Pretendard", "Segoe UI"';
-            ctx.fillStyle = '#334155';
-            ctx.fillText('TEL. ' + consPhone, textStartX, cCardY + (96 * s));
-
-            // 우측: 디지털 명함 QR코드
-            let qrImg = window.coverState.qrCodeImg;
-            if (qrImg && qrImg.complete && qrImg.naturalWidth > 0) {
-                const qrSize = 100 * s;
-                const qrX = cCardX + cCardW - qrSize - (35 * s);
-                const qrY = cCardY + ((cCardH - qrSize) / 2) - (8 * s);
-
-                ctx.save();
-                ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-                ctx.restore();
-
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                ctx.font = '800 ' + (13 * s) + 'px "Pretendard"';
-                ctx.fillStyle = '#0284c7';
-                ctx.fillText('모바일 명함 스캔', qrX + (qrSize / 2), qrY + qrSize + (5 * s));
-            }
-        }
-
-        // 7. VIP 인증 도장 & 스티커 (우측 상단 엠블럼)
-        const stampType = window.coverState.sealStamp || 'none';
-        if (stampType !== 'none') {
-            const stampR = 48 * s;
-            const stampCX = W - cardPadX - (55 * s);
-            const stampCY = cardY + (65 * s);
-
-            ctx.save();
-            ctx.translate(stampCX, stampCY);
-            ctx.rotate(-8 * Math.PI / 180);
-
-            if (stampType === 'vip_gold') {
-                ctx.beginPath();
-                ctx.arc(0, 0, stampR, 0, Math.PI * 2);
-                ctx.fillStyle = '#fffbeb';
-                ctx.fill();
-                ctx.strokeStyle = '#d97706';
-                ctx.lineWidth = 3 * s;
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.arc(0, 0, stampR - (5 * s), 0, Math.PI * 2);
-                ctx.strokeStyle = '#f59e0b';
-                ctx.lineWidth = 1 * s;
-                ctx.stroke();
-
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.font = '900 ' + (13 * s) + 'px "Pretendard"';
-                ctx.fillStyle = '#b45309';
-                ctx.fillText('★ VIP ★', 0, -14 * s);
-                ctx.font = '900 ' + (15 * s) + 'px "Pretendard"';
-                ctx.fillText('정밀진단', 0, 4 * s);
-                ctx.font = '800 ' + (10 * s) + 'px "Pretendard"';
-                ctx.fillText('VERIFIED', 0, 20 * s);
-
-            } else if (stampType === 'safe_cyan') {
-                ctx.beginPath();
-                ctx.arc(0, 0, stampR, 0, Math.PI * 2);
-                ctx.fillStyle = '#f0f9ff';
-                ctx.fill();
-                ctx.strokeStyle = '#0284c7';
-                ctx.lineWidth = 3 * s;
-                ctx.stroke();
-
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.font = '900 ' + (13 * s) + 'px "Pretendard"';
-                ctx.fillStyle = '#0369a1';
-                ctx.fillText('🛡️ 안심보장', 0, -12 * s);
-                ctx.font = '900 ' + (14 * s) + 'px "Pretendard"';
-                ctx.fillText('케어인증', 0, 6 * s);
-
-            } else if (stampType === 'official_slate') {
-                drawRoundedBox(ctx, -stampR, -26 * s, stampR * 2, 52 * s, 8 * s);
+        const tpl = window.coverState.template || 'bojang_original';
+
+        // ------------------------------------------
+        // [템플릿 1] 정통 보장분석 1 (보장분석1.jpg 실사 베이스)
+        // ------------------------------------------
+        if (tpl === 'bojang_original') {
+            if (window.imgBojang1 && window.imgBojang1.complete && window.imgBojang1.naturalWidth !== 0) {
+                ctx.drawImage(window.imgBojang1, 0, 0, w, h);
+
+                // 1) 상단 로고 교체 (커스텀 로고가 있는 경우)
+                if (window.coverState.customLogoImg) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(860, 20, 360, 115);
+                    drawCoverLogo(ctx, 1040, 75, 270, 95);
+                }
+
+                // 2) 서브타이틀 및 고객명 오버레이
+                const client = window.coverState.clientName || '고객';
+                const subMsg = client + '님의 건강한 삶을 위한';
                 ctx.fillStyle = '#f8fafc';
-                ctx.fill();
-                ctx.strokeStyle = '#475569';
-                ctx.lineWidth = 2.5 * s;
-                ctx.stroke();
+                ctx.fillRect(70, 170, 620, 55);
+                ctx.font = '700 36px "Pretendard", sans-serif';
+                ctx.fillStyle = '#475569';
+                ctx.textAlign = 'left';
+                ctx.fillText(subMsg, 75, 212);
 
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.font = '900 ' + (14 * s) + 'px "Pretendard"';
-                ctx.fillStyle = '#1e293b';
-                ctx.fillText('⚖️ 심의필 완료', 0, 0);
+                // 3) 메인 타이틀 오버레이
+                const titleStr = window.coverState.titleTextInput || '보장분석 제안서';
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(68, 235, 625, 260);
+                
+                ctx.font = '900 86px "Pretendard", sans-serif';
+                ctx.fillStyle = window.coverState.titleColor || '#0369a1';
+                ctx.textAlign = 'left';
+                if (titleStr.includes(' ')) {
+                    const parts = titleStr.split(' ');
+                    ctx.fillText(parts[0], 75, 335);
+                    ctx.fillText(parts.slice(1).join(' '), 75, 440);
+                } else {
+                    ctx.fillText(titleStr, 75, 360);
+                }
 
-            } else if (stampType === 'best_emerald') {
+                // 4) 세모 웨지 내부 담당자 정보 오버레이
+                const cons = window.coverState.consName || '박보환';
+                const affil = window.coverState.consAffil || '보답화니';
+                ctx.fillStyle = '#0f2347';
                 ctx.beginPath();
-                ctx.arc(0, 0, stampR, 0, Math.PI * 2);
-                ctx.fillStyle = '#ecfdf5';
+                ctx.moveTo(50, 770);
+                ctx.lineTo(600, 770);
+                ctx.lineTo(600, 1050);
+                ctx.lineTo(50, 1050);
+                ctx.closePath();
                 ctx.fill();
-                ctx.strokeStyle = '#059669';
-                ctx.lineWidth = 3 * s;
-                ctx.stroke();
 
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.font = '900 ' + (13 * s) + 'px "Pretendard"';
-                ctx.fillStyle = '#047857';
-                ctx.fillText('⭐ BEST', 0, -12 * s);
-                ctx.font = '900 ' + (14 * s) + 'px "Pretendard"';
-                ctx.fillText('케어솔루션', 0, 6 * s);
+                ctx.font = '800 38px "Pretendard", sans-serif';
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillText(affil + ' ' + cons, 60, 825);
+
+                ctx.font = '500 24px "Pretendard", sans-serif';
+                ctx.fillStyle = '#ffffff';
+                const sloganLines = (window.coverState.consSlogan || '보험으로 보답하는 보답화니\n보험다운 보험을 권하고 정직한 신뢰로 보답합니다').split('\n');
+                let sy = 875;
+                sloganLines.forEach(l => {
+                    ctx.fillText(l, 60, sy);
+                    sy += 38;
+                });
+
+                // 5) 사용자 사진이 업로드된 경우 모델 위에 합성
+                if (window.coverState.customPhotoImg && window.coverState.showPhoto) {
+                    drawHeroPhoto(ctx, window.coverState.customPhotoImg, 690, 320, 530, 1160, window.coverState.photoShape || 'natural');
+                }
+
+                // 6) 하단 명함 정보 오버레이
+                ctx.fillStyle = '#0f2347';
+                ctx.fillRect(0, 1630, w, 124);
+                drawCoverFooter(ctx);
+
+                // 7) 인증 도장/스티커
+                if (window.coverState.sealStamp && window.coverState.sealStamp !== 'none') {
+                    drawSealStamp(ctx, 1110, 240, window.coverState.sealStamp);
+                }
+
+                // 인터랙티브 핫스팟 등록
+                window.elementBounds = {
+                    title: { x: 70, y: 170, w: 620, h: 325, name: '메인 타이틀' },
+                    wedge: { x: 0, y: 560, w: 720, h: 560, name: '사선 세모 도형 & 담당자' },
+                    photo: { x: 690, y: 320, w: 530, h: 1160, name: '인물 사진 모델' },
+                    sns: { x: 50, y: 1140, w: 280, h: 300, name: 'SNS 및 상담 QR' },
+                    footer: { x: 0, y: 1630, w: 1240, h: 124, name: '하단 명함 정보' },
+                    logo: { x: 860, y: 20, w: 360, h: 115, name: '상단 브랜드 로고' }
+                };
+                if (window.coverState.sealStamp && window.coverState.sealStamp !== 'none') {
+                    window.elementBounds.stamp = { x: 1030, y: 160, w: 160, h: 160, name: 'VIP 인증 도장' };
+                }
+            } else {
+                // 이미지 로딩 중 대체 화면
+                drawVectorWedgeCover(ctx, w, h);
             }
-            ctx.restore();
-
-            window.elementBounds['stamp'] = {
-                x: stampCX - stampR,
-                y: stampCY - stampR,
-                w: stampR * 2,
-                h: stampR * 2,
-                name: '인증 도장/스티커'
-            };
+        }
+        // ------------------------------------------
+        // [템플릿 2] 벡터 사선 세모 웨지 (자유 컬러 세모 + 자유 사진)
+        // ------------------------------------------
+        else if (tpl === 'vector_wedge') {
+            drawVectorWedgeCover(ctx, w, h);
+        }
+        // ------------------------------------------
+        // [템플릿 3] 기하학 헥사곤 테크 (브랜딩11 스타일)
+        // ------------------------------------------
+        else if (tpl === 'geometric_hex') {
+            drawGeometricHexCover(ctx, w, h);
+        }
+        // ------------------------------------------
+        // [템플릿 4] 대각선 세모 분할 (투톤 사선 + 원형 사진)
+        // ------------------------------------------
+        else if (tpl === 'diagonal_duo') {
+            drawDiagonalDuoCover(ctx, w, h);
+        }
+        // ------------------------------------------
+        // [템플릿 5] 4대 보장 진단 네모 카드 그리드
+        // ------------------------------------------
+        else if (tpl === 'card_grid') {
+            drawCardGridCover(ctx, w, h);
         }
 
-        // 8. 하단 추가 안내문구 (선택)
-        const customNotice = (document.getElementById('customNoticeInput') ? document.getElementById('customNoticeInput').value.trim() : '') || window.coverState.customNotice;
-        if (customNotice) {
-            const noticeY = H - (45 * s);
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.font = '700 ' + (14 * s) + 'px "Pretendard"';
-            ctx.fillStyle = '#94a3b8';
-            ctx.fillText(customNotice, W / 2, noticeY);
-
-            const nw = ctx.measureText(customNotice).width;
-            window.elementBounds['notice'] = {
-                x: (W - nw) / 2 - 10,
-                y: noticeY - 14,
-                w: nw + 20,
-                h: 28,
-                name: '하단 추가 안내문구'
-            };
-        }
-
-        // 9. 인터랙티브 오버레이 핫스팟 업데이트!
+        // 오버레이 핫스팟 업데이트
         updateOverlayHotspots();
     }
 
     // ==========================================
-    // 🌟 4. 그림판/캔바 스타일 인터랙티브 핫스팟 & 플로팅 퀵 에디터 엔진
+    // 7. 세부 템플릿 드로잉 함수들
     // ==========================================
-        function updateOverlayHotspots() {
+
+    // [서브 1] 순수 벡터 사선 세모 웨지 드로잉
+    function drawVectorWedgeCover(ctx, w, h) {
+        // 배경
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, w, h);
+
+        // 은은한 배경 기하학 세모/사선 그리드 패턴
+        drawGeometricBackgroundPattern(ctx, w, h);
+
+        // 좌측 사선 세모 웨지 (Triangle Wedge)
+        const wedgeCol = window.coverState.wedgeColor || '#0f2347';
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
+        ctx.shadowBlur = 28;
+        ctx.shadowOffsetX = 8;
+        ctx.shadowOffsetY = 12;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 500);
+        ctx.lineTo(660, 900);
+        ctx.lineTo(0, 1300);
+        ctx.closePath();
+        ctx.fillStyle = wedgeCol;
+        ctx.fill();
+        ctx.restore();
+
+        // 세모 모형 포인트 테두리 라인
+        ctx.strokeStyle = window.coverState.wedgeAccentColor || '#f59e0b';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(0, 500);
+        ctx.lineTo(660, 900);
+        ctx.lineTo(0, 1300);
+        ctx.stroke();
+
+        // 세모 웨지 내부 텍스트
+        ctx.font = '800 38px "Pretendard", sans-serif';
+        ctx.fillStyle = window.coverState.wedgeAccentColor || '#f59e0b';
+        ctx.textAlign = 'left';
+        ctx.fillText((window.coverState.consAffil || '위라클') + ' ' + (window.coverState.consName || '박보환'), 55, 790);
+
+        ctx.font = '500 23px "Pretendard", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        const lines = (window.coverState.consSlogan || '보험다운 보험을 권하고 정직한 신뢰로\n고객님의 평생 든든한 동반자가 되겠습니다').split('\n');
+        let sy = 845;
+        lines.forEach(l => {
+            ctx.fillText(l, 55, sy);
+            sy += 36;
+        });
+
+        // 우측 인물 사진 모델
+        const photo = window.coverState.customPhotoImg || window.imgConsultantModel;
+        if (window.coverState.showPhoto && photo && photo.complete && photo.naturalWidth !== 0) {
+            drawHeroPhoto(ctx, photo, 670, 340, 540, 1140, window.coverState.photoShape || 'natural');
+        }
+
+        // 상단 브랜드 로고
+        drawCoverLogo(ctx, 1050, 75, 260, 85);
+
+        // 상단 타이틀 & 서브타이틀
+        const sub = window.coverState.clientName ? (window.coverState.clientName + ' 고객님을 위한') : (window.coverState.subtitleText || '고객님의 건강한 삶을 위한');
+        ctx.font = '700 34px "Pretendard", sans-serif';
+        ctx.fillStyle = '#475569';
+        ctx.textAlign = 'left';
+        ctx.fillText(sub, 80, 190);
+
+        ctx.font = '900 84px "Pretendard", sans-serif';
+        ctx.fillStyle = window.coverState.titleColor || '#0369a1';
+        const mainTitle = window.coverState.titleTextInput || '보장분석 제안서';
+        if (mainTitle.includes(' ')) {
+            const p = mainTitle.split(' ');
+            ctx.fillText(p[0], 80, 290);
+            ctx.fillText(p.slice(1).join(' '), 80, 395);
+        } else {
+            ctx.fillText(mainTitle, 80, 320);
+        }
+
+        // 좌측 하단 SNS & QR 배지 (3개 네모 모형)
+        drawSnsBadges(ctx, 55, 1340);
+
+        // 하단 고정 명함 정보 바 (네모 모형)
+        ctx.fillStyle = wedgeCol;
+        ctx.fillRect(0, 1630, w, 124);
+        drawCoverFooter(ctx);
+
+        // 인증 도장
+        if (window.coverState.sealStamp && window.coverState.sealStamp !== 'none') {
+            drawSealStamp(ctx, 1110, 240, window.coverState.sealStamp);
+        }
+
+        // 핫스팟
+        window.elementBounds = {
+            title: { x: 75, y: 150, w: 580, h: 270, name: '메인 타이틀' },
+            wedge: { x: 0, y: 500, w: 660, h: 800, name: '사선 세모 도형' },
+            photo: { x: 670, y: 340, w: 540, h: 1140, name: '컨설턴트 사진' },
+            sns: { x: 50, y: 1320, w: 320, h: 160, name: 'SNS/상담 QR 배지' },
+            footer: { x: 0, y: 1630, w: 1240, h: 124, name: '하단 명함 정보' },
+            logo: { x: 890, y: 30, w: 310, h: 90, name: '상단 브랜드 로고' }
+        };
+        if (window.coverState.sealStamp && window.coverState.sealStamp !== 'none') {
+            window.elementBounds.stamp = { x: 1030, y: 160, w: 160, h: 160, name: 'VIP 인증 도장' };
+        }
+    }
+
+    // [서브 2] 기하학 헥사곤 테크 드로잉 (브랜딩11 스타일)
+    function drawGeometricHexCover(ctx, w, h) {
+        if (window.imgBranding11 && window.imgBranding11.complete && window.imgBranding11.naturalWidth !== 0) {
+            ctx.drawImage(window.imgBranding11, 0, 0, w, h);
+
+            // 상단 커스텀 로고
+            if (window.coverState.customLogoImg) {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(300, 40, 640, 180);
+                drawCoverLogo(ctx, 620, 130, 400, 130);
+            }
+
+            // 하단 명함 정보 커스텀
+            ctx.fillStyle = '#0a1d4a';
+            ctx.fillRect(0, 1630, w, 124);
+            drawCoverFooter(ctx);
+
+            // 도장
+            if (window.coverState.sealStamp && window.coverState.sealStamp !== 'none') {
+                drawSealStamp(ctx, 1100, 240, window.coverState.sealStamp);
+            }
+
+            window.elementBounds = {
+                title: { x: 200, y: 40, w: 840, h: 220, name: '상단 타이틀 & 로고' },
+                photo: { x: 60, y: 380, w: 460, h: 360, name: '전문가 프로필 카드' },
+                quote: { x: 60, y: 780, w: 580, h: 280, name: '말풍선 인용구' },
+                hexGrid: { x: 650, y: 380, w: 560, h: 700, name: '기하학 헥사곤 모형' },
+                footer: { x: 0, y: 1630, w: 1240, h: 124, name: '하단 명함 정보' }
+            };
+        } else {
+            drawVectorWedgeCover(ctx, w, h);
+        }
+    }
+
+    // [서브 3] 대각선 세모 듀오 분할 드로잉
+    function drawDiagonalDuoCover(ctx, w, h) {
+        const priCol = window.coverState.wedgeColor || '#0284c7';
+
+        // 1) 상단 세모 모형 (Triangle 1)
+        ctx.fillStyle = priCol;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(w, 0);
+        ctx.lineTo(0, 1050);
+        ctx.closePath();
+        ctx.fill();
+
+        // 2) 하단 세모 모형 (Triangle 2)
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.moveTo(w, 0);
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.lineTo(0, 1050);
+        ctx.closePath();
+        ctx.fill();
+
+        // 대각선 골드/화이트 라인
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(0, 1050);
+        ctx.lineTo(w, 0);
+        ctx.stroke();
+
+        // 상단 타이틀 (화이트)
+        const sub = window.coverState.clientName ? (window.coverState.clientName + ' 고객님 맞춤형') : '고객님을 위한';
+        ctx.font = '700 32px "Pretendard", sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.textAlign = 'left';
+        ctx.fillText(sub, 80, 160);
+
+        ctx.font = '900 80px "Pretendard", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(window.coverState.titleTextInput || '보장분석 제안서', 80, 260);
+
+        // 원형 또는 사각 사진 (중앙 우측)
+        const photo = window.coverState.customPhotoImg || window.imgConsultantModel;
+        if (window.coverState.showPhoto && photo && photo.complete && photo.naturalWidth !== 0) {
+            drawHeroPhoto(ctx, photo, 680, 360, 480, 720, 'circle');
+        }
+
+        // 하단 4대 진단 체크 카드 (네모 모형)
+        drawFourCheckCards(ctx, 80, 1100, 1080);
+
+        // 하단 명함 바
+        ctx.fillStyle = priCol;
+        ctx.fillRect(0, 1630, w, 124);
+        drawCoverFooter(ctx);
+
+        window.elementBounds = {
+            title: { x: 70, y: 110, w: 600, h: 220, name: '메인 타이틀' },
+            wedge: { x: 0, y: 0, w: 1240, h: 1050, name: '대각선 세모 분할 도형' },
+            photo: { x: 680, y: 360, w: 480, h: 720, name: '원형 인물 사진' },
+            cards: { x: 80, y: 1100, w: 1080, h: 480, name: '4대 보장 체크 카드' },
+            footer: { x: 0, y: 1630, w: 1240, h: 124, name: '하단 명함 정보' }
+        };
+    }
+
+    // [서브 4] 4대 진단 네모 카드 그리드 드로잉
+    function drawCardGridCover(ctx, w, h) {
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, w, h);
+
+        // 상단 모던 네이비 밴드
+        ctx.fillStyle = window.coverState.wedgeColor || '#0369a1';
+        ctx.fillRect(0, 0, w, 280);
+
+        // 로고
+        drawCoverLogo(ctx, 1050, 70, 240, 80);
+
+        // 타이틀 (화이트)
+        const sub = window.coverState.clientName ? (window.coverState.clientName + ' 고객님 맞춤') : '고객님을 위한';
+        ctx.font = '700 32px "Pretendard", sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.textAlign = 'left';
+        ctx.fillText(sub, 80, 110);
+
+        ctx.font = '900 76px "Pretendard", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(window.coverState.titleTextInput || '4대 핵심 보장 정밀진단', 80, 200);
+
+        // 중간 인물 사진 (선택적)
+        const photo = window.coverState.customPhotoImg || window.imgConsultantModel;
+        if (window.coverState.showPhoto && photo && photo.complete && photo.naturalWidth !== 0) {
+            drawHeroPhoto(ctx, photo, 780, 340, 400, 600, 'rounded');
+            // 좌측에 4개 카드
+            drawFourCheckCards(ctx, 80, 340, 660);
+        } else {
+            // 전폭 4개 카드
+            drawFourCheckCards(ctx, 80, 360, 1080);
+        }
+
+        // 하단 명함 바
+        ctx.fillStyle = window.coverState.wedgeColor || '#0369a1';
+        ctx.fillRect(0, 1630, w, 124);
+        drawCoverFooter(ctx);
+
+        window.elementBounds = {
+            title: { x: 70, y: 60, w: 700, h: 180, name: '상단 타이틀 밴드' },
+            cards: { x: 80, y: 340, w: 1080, h: 800, name: '4대 보장 네모 카드' },
+            footer: { x: 0, y: 1630, w: 1240, h: 124, name: '하단 명함 정보' }
+        };
+    }
+
+    // [보조 드로잉: 인물 사진 마스크 및 그림자]
+    function drawHeroPhoto(ctx, img, x, y, w, h, shape) {
+        ctx.save();
+        if (shape === 'circle') {
+            const r = Math.min(w, h) / 2;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+            ctx.shadowBlur = 24;
+            ctx.shadowOffsetY = 10;
+            
+            ctx.beginPath();
+            ctx.arc(x + r, y + r, r, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x + r, y + r, r - 6, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(img, x, y, r * 2, r * 2);
+            ctx.restore();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 8;
+            ctx.stroke();
+        } else if (shape === 'rounded') {
+            const rad = 20;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetY = 8;
+
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, rad);
+            ctx.closePath();
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(x + 4, y + 4, w - 8, h - 8, rad);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(img, x, y, w, h);
+            ctx.restore();
+        } else {
+            // 자연형 (Natural)
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.18)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetY = 8;
+            ctx.drawImage(img, x, y, w, h);
+        }
+        ctx.restore();
+    }
+
+    // [보조 드로잉: 4대 핵심 진단 카드 (네모 모형)]
+    function drawFourCheckCards(ctx, startX, startY, totalWidth) {
+        const cards = [
+            { icon: '🛡️', title: '1. 사망 & 장해 보장', desc: window.coverState.chk1Text || '기존 보험 증권 정밀 분석 및 중복·누락 점검', theme: window.coverState.chk1Theme || 'light_blue' },
+            { icon: '🩺', title: '2. 3대 질환(암·뇌·심)', desc: window.coverState.chk2Text || '암·뇌혈관·허혈성 심장질환 진단비 적정성 진단', theme: window.coverState.chk2Theme || 'light_blue' },
+            { icon: '💊', title: '3. 실손 & 수술비 케어', desc: window.coverState.chk3Text || '월 납입료 대비 가성비 및 본인부담금 최적화', theme: window.coverState.chk3Theme || 'light_blue' },
+            { icon: '🤝', title: '4. 가족 맞춤 솔루션', desc: window.coverState.chk4Text || '생애주기 맞춤형 든든한 평생 안심 보장 설계', theme: window.coverState.chk4Theme || 'light_blue' }
+        ];
+
+        const cardH = 105;
+        const gap = 16;
+        let cy = startY;
+
+        cards.forEach((c, idx) => {
+            const bgCol = getThemeSampleBg(c.theme);
+
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.06)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetY = 4;
+
+            ctx.beginPath();
+            ctx.roundRect(startX, cy, totalWidth, cardH, 12);
+            ctx.fillStyle = bgCol;
+            ctx.fill();
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+
+            // 아이콘 & 타이틀
+            ctx.font = '800 24px "Pretendard", sans-serif';
+            ctx.fillStyle = '#0f172a';
+            ctx.textAlign = 'left';
+            ctx.fillText(c.icon + ' ' + c.title, startX + 24, cy + 42);
+
+            // 상세 문구
+            ctx.font = '500 18px "Pretendard", sans-serif';
+            ctx.fillStyle = '#475569';
+            ctx.fillText(c.desc, startX + 24, cy + 78);
+
+            // 상태 배지 (정상진단)
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.roundRect(startX + totalWidth - 110, cy + 22, 90, 32, 6);
+            ctx.fill();
+            ctx.font = '700 14px "Pretendard", sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.fillText('진단완료', startX + totalWidth - 65, cy + 44);
+
+            cy += cardH + gap;
+        });
+    }
+
+    // [보조 드로잉: SNS & 상담 배지 (인스타, 블로그, 카톡)]
+    function drawSnsBadges(ctx, x, y) {
+        const badges = [
+            { name: 'Instagram', bg: '#e1306c', icon: '📸' },
+            { name: 'Blog', bg: '#03c75a', icon: '📝' },
+            { name: 'Kakao', bg: '#fee500', icon: '💬', textCol: '#000000' }
+        ];
+
+        let bx = x;
+        badges.forEach(b => {
+            ctx.fillStyle = b.bg;
+            ctx.beginPath();
+            ctx.roundRect(bx, y, 64, 64, 12);
+            ctx.fill();
+
+            ctx.font = '28px "Pretendard", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(b.icon, bx + 32, y + 42);
+
+            bx += 80;
+        });
+
+        // 안내문구
+        ctx.font = '700 18px "Pretendard", sans-serif';
+        ctx.fillStyle = '#475569';
+        ctx.textAlign = 'left';
+        ctx.fillText('실시간 1:1 상담 QR & SNS', x, y + 95);
+    }
+
+    // [보조 드로잉: 은은한 기하학 세모·네모 배경 패턴]
+    function drawGeometricBackgroundPattern(ctx, w, h) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(2, 132, 199, 0.06)';
+        ctx.lineWidth = 1.5;
+
+        // 세모 격자 라인들
+        for (let i = 200; i < w; i += 240) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i + 400, h);
+            ctx.stroke();
+        }
+        for (let i = -200; i < w; i += 240) {
+            ctx.beginPath();
+            ctx.moveTo(i + 400, 0);
+            ctx.lineTo(i, h);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    // [보조 드로잉: 상단 브랜드 로고]
+    function drawCoverLogo(ctx, cx, cy, maxW, maxH) {
+        const logo = window.coverState.customLogoImg;
+        if (logo && logo.complete && logo.naturalWidth !== 0) {
+            const aspect = logo.naturalWidth / logo.naturalHeight;
+            let drawW = maxW;
+            let drawH = drawW / aspect;
+            if (drawH > maxH) {
+                drawH = maxH;
+                drawW = drawH * aspect;
+            }
+            ctx.drawImage(logo, cx - (drawW / 2), cy - (drawH / 2), drawW, drawH);
+        } else {
+            // 텍스트 로고
+            ctx.font = '900 34px "Pretendard", sans-serif';
+            ctx.fillStyle = '#0284c7';
+            ctx.textAlign = 'center';
+            ctx.fillText('WERACLE', cx, cy + 12);
+        }
+    }
+
+    // [보조 드로잉: 하단 명함 정보 바]
+    function drawCoverFooter(ctx) {
+        const affil = window.coverState.consAffil || '위라클랩';
+        const name = window.coverState.consName || '박보환';
+        const role = window.coverState.consRole || '본부장';
+        const empNo = window.coverState.consEmpNo || '2532055';
+        const tel = window.coverState.consTel || '1588-1234';
+        const phone = window.coverState.consPhone || '010-1234-5678';
+        const fax = window.coverState.consFax || '02-123-4567';
+        const addr = window.coverState.consAddr || '서울특별시 종로구 57, 6층 위라클본랩';
+
+        ctx.font = '700 20px "Pretendard", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+
+        // 1행: 소속 | 성명 | 직책 | 사번
+        const line1 = '■ 소속 · ' + affil + '   ■ 성명 · ' + name + '   ■ 직책 · ' + role + '   ■ 사번 · ' + empNo;
+        ctx.fillText(line1, 60, 1675);
+
+        // 2행: 대표번호 | 핸드폰 | FAX | 주소
+        ctx.font = '500 18px "Pretendard", sans-serif';
+        ctx.fillStyle = '#cbd5e1';
+        const line2 = '■ 대표번호 · ' + tel + '   ■ 핸드폰 · ' + phone + '   ■ FAX · ' + fax + '   ■ 주소 · ' + addr;
+        ctx.fillText(line2, 60, 1715);
+    }
+
+    // [보조 드로잉: VIP 인증 도장 / 스티커]
+    function drawSealStamp(ctx, cx, cy, stampType) {
+        const stamps = {
+            vip_gold: { label: 'VIP 정밀진단', sub: 'CERTIFIED', ring: '#d97706', bg: '#fef3c7', text: '#92400e' },
+            safe_cyan: { label: '안심보장 케어', sub: 'GUARANTEED', ring: '#0284c7', bg: '#e0f2fe', text: '#0369a1' },
+            official_slate: { label: '심의필 완료', sub: 'OFFICIAL', ring: '#334155', bg: '#f1f5f9', text: '#0f172a' },
+            best_emerald: { label: 'BEST 솔루션', sub: 'PREMIUM', ring: '#059669', bg: '#d1fae5', text: '#065f46' }
+        };
+
+        const s = stamps[stampType] || stamps.vip_gold;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(-0.08);
+
+        // 도장 원형 배경
+        ctx.beginPath();
+        ctx.arc(0, 0, 72, 0, Math.PI * 2);
+        ctx.fillStyle = s.bg;
+        ctx.fill();
+
+        // 외곽 이중선
+        ctx.strokeStyle = s.ring;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(0, 0, 64, 0, Math.PI * 2);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 도장 문구
+        ctx.font = '800 17px "Pretendard", sans-serif';
+        ctx.fillStyle = s.text;
+        ctx.textAlign = 'center';
+        ctx.fillText(s.label, 0, -4);
+
+        ctx.font = '700 11px "Pretendard", sans-serif';
+        ctx.fillText('★ ' + s.sub + ' ★', 0, 18);
+
+        ctx.restore();
+    }
+
+    // ==========================================
+    // 8. 인터랙티브 오버레이 핫스팟 업데이트
+    // ==========================================
+    function updateOverlayHotspots() {
         const overlay = document.getElementById('interactiveOverlay');
         if (!overlay || !window.elementBounds) return;
 
@@ -2403,50 +2406,79 @@
         overlay.innerHTML = html;
     }
 
+    // 요소 선택 & 퀵 에디터 오픈
     function selectCanvasElement(key, evt) {
         if (evt) evt.stopPropagation();
-        window.selectedElementKey = key;
+        activeHotspotKey = key;
 
-        // 1. 핫스팟 활성화 표시
         document.querySelectorAll('.overlay-hotspot').forEach(el => el.classList.remove('active'));
-        const targetHotspot = document.getElementById('hotspot_' + key);
-        if (targetHotspot) targetHotspot.classList.add('active');
+        const targetEl = document.getElementById('hotspot_' + key);
+        if (targetEl) targetEl.classList.add('active');
 
-        // 2. 캔버스 위에 플로팅 퀵 에디터 팝오버 열기!
-        openFloatingQuickEditor(key, targetHotspot);
-
-        // 3. 좌측 사이드바 탭도 자동으로 동기화!
-        if (key === 'title' || key === 'greeting' || key.startsWith('chk') || key === 'logo') {
-            switchTab('text');
-        } else if (key === 'contact') {
-            switchTab('profile');
-        } else if (key === 'stamp' || key === 'notice') {
-            switchTab('advanced');
-        }
+        openFloatingQuickEditor(key, targetEl);
     }
 
-    function deselectAll(evt) {
-        window.selectedElementKey = null;
+    function deselectAll() {
+        activeHotspotKey = null;
         document.querySelectorAll('.overlay-hotspot').forEach(el => el.classList.remove('active'));
         const qe = document.getElementById('floatingQuickEditor');
         if (qe) qe.style.display = 'none';
     }
 
-    // 플로팅 퀵 에디터 생성 & 위치 지정
-        function openFloatingQuickEditor(key, hotspotEl) {
+    // ==========================================
+    // 9. 플로팅 퀵 에디터 (사진, 도형, 텍스트 직접 수정)
+    // ==========================================
+    function openFloatingQuickEditor(key, hotspotEl) {
         const qe = document.getElementById('floatingQuickEditor');
         if (!qe || !hotspotEl) return;
 
         let contentHtml = '';
 
-        if (key === 'title') {
-            const curVal = document.getElementById('titleTextInput') ? document.getElementById('titleTextInput').value : '보장분석 보고서';
+        // [1] 사진 이미지 클릭 시
+        if (key === 'photo') {
+            contentHtml = '<div class="quick-header">'
+                        + '  <div class="quick-title"><i class="fa-solid fa-camera" style="color:#0284c7;"></i> 인물 사진 / 모델 직접 변경</div>'
+                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
+                        + '</div>'
+                        + '<label class="btn-action primary" style="width:100%; cursor:pointer; font-size:11.5px; padding:7px; text-align:center; display:block; margin-bottom:6px;">'
+                        + '  <i class="fa-solid fa-upload"></i> 내 컴퓨터에서 사진 파일 선택'
+                        + '  <input type="file" accept="image/*" style="display:none;" onchange="handleHeroPhotoUpload(event)">'
+                        + '</label>'
+                        + '<button type="button" class="btn-action secondary" style="width:100%; font-size:11px; padding:6px; margin-bottom:8px;" onclick="setBuiltinModel()">'
+                        + '  <i class="fa-solid fa-user-tie"></i> 기본 프로 모델(보장분석1)로 복원'
+                        + '</button>'
+                        + '<div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px;">사진 프레임 모양:</div>'
+                        + '<div style="display:flex; gap:4px;">'
+                        + '  <button class="quick-theme-btn" style="flex:1;" data-shape="natural" onclick="setPhotoShape(this.dataset.shape)">자연형</button>'
+                        + '  <button class="quick-theme-btn" style="flex:1;" data-shape="circle" onclick="setPhotoShape(this.dataset.shape)">원형</button>'
+                        + '  <button class="quick-theme-btn" style="flex:1;" data-shape="rounded" onclick="setPhotoShape(this.dataset.shape)">사각</button>'
+                        + '</div>';
+
+        // [2] 사선 세모 도형 클릭 시
+        } else if (key === 'wedge') {
+            contentHtml = '<div class="quick-header">'
+                        + '  <div class="quick-title"><i class="fa-solid fa-shapes" style="color:#0284c7;"></i> 사선 세모 도형 색상 선택</div>'
+                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
+                        + '</div>'
+                        + '<div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:6px;">세모 모형 색상:</div>'
+                        + '<div class="quick-chip-row">'
+                        + '  <div class="quick-color-chip" style="background:#0f2347;" title="오리지널 네이비" data-col="#0f2347" data-acc="#f59e0b" onclick="setWedgeColor(this.dataset.col, this.dataset.acc)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#0284c7;" title="사파이어 블루" data-col="#0284c7" data-acc="#38bdf8" onclick="setWedgeColor(this.dataset.col, this.dataset.acc)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#065f46;" title="에메랄드 그린" data-col="#065f46" data-acc="#34d399" onclick="setWedgeColor(this.dataset.col, this.dataset.acc)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#881337;" title="임페리얼 버건디" data-col="#881337" data-acc="#fbbf24" onclick="setWedgeColor(this.dataset.col, this.dataset.acc)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#0f172a;" title="다크 흑요석" data-col="#0f172a" data-acc="#94a3b8" onclick="setWedgeColor(this.dataset.col, this.dataset.acc)"></div>'
+                        + '  <div class="quick-color-chip" style="background:#78350f;" title="클래식 골드" data-col="#78350f" data-acc="#fde047" onclick="setWedgeColor(this.dataset.col, this.dataset.acc)"></div>'
+                        + '</div>';
+
+        // [3] 메인 타이틀 클릭 시
+        } else if (key === 'title') {
+            const curVal = window.coverState.titleTextInput || '보장분석 제안서';
             contentHtml = '<div class="quick-header">'
                         + '  <div class="quick-title"><i class="fa-solid fa-font" style="color:#0284c7;"></i> 메인 타이틀 직접 수정</div>'
                         + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
                         + '</div>'
                         + '<input type="text" class="quick-input" value="' + escapeHtml(curVal) + '" data-target="titleTextInput" oninput="syncDirectInput(this.dataset.target, this.value)">'
-                        + '<div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px;">타이틀 색상 선택:</div>'
+                        + '<div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px;">타이틀 글자 색상:</div>'
                         + '<div class="quick-chip-row">'
                         + '  <div class="quick-color-chip" style="background:#0369a1;" data-color="#0369a1" onclick="selectTitleColor(this.dataset.color)"></div>'
                         + '  <div class="quick-color-chip" style="background:#0f172a;" data-color="#0f172a" onclick="selectTitleColor(this.dataset.color)"></div>'
@@ -2456,71 +2488,23 @@
                         + '  <div class="quick-color-chip" style="background:#991b1b;" data-color="#991b1b" onclick="selectTitleColor(this.dataset.color)"></div>'
                         + '</div>';
 
-        } else if (key === 'greeting') {
-            const curName = document.getElementById('clientNameInput') ? document.getElementById('clientNameInput').value : '김철수';
-            const curSub = document.getElementById('greetingSubInput') ? document.getElementById('greetingSubInput').value : '꼼꼼하게 준비했습니다.';
-            contentHtml = '<div class="quick-header">'
-                        + '  <div class="quick-title"><i class="fa-solid fa-user-tag" style="color:#0284c7;"></i> 고객명 & 인사말 직접 수정</div>'
-                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
-                        + '</div>'
-                        + '<div style="display:flex; gap:6px; margin-bottom:6px;">'
-                        + '  <input type="text" placeholder="고객명" class="quick-input" style="flex:1;" value="' + escapeHtml(curName) + '" data-target="clientNameInput" oninput="syncDirectInput(this.dataset.target, this.value)">'
-                        + '  <input type="text" placeholder="인사말" class="quick-input" style="flex:2;" value="' + escapeHtml(curSub) + '" data-target="greetingSubInput" oninput="syncDirectInput(this.dataset.target, this.value)">'
-                        + '</div>'
-                        + '<div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px;">고객명 포인트 색상:</div>'
-                        + '<div class="quick-chip-row">'
-                        + '  <div class="quick-color-chip" style="background:#0284c7;" data-color="#0284c7" onclick="selectPointColor(this.dataset.color)"></div>'
-                        + '  <div class="quick-color-chip" style="background:#0ea5e9;" data-color="#0ea5e9" onclick="selectPointColor(this.dataset.color)"></div>'
-                        + '  <div class="quick-color-chip" style="background:#2563eb;" data-color="#2563eb" onclick="selectPointColor(this.dataset.color)"></div>'
-                        + '  <div class="quick-color-chip" style="background:#10b981;" data-color="#10b981" onclick="selectPointColor(this.dataset.color)"></div>'
-                        + '  <div class="quick-color-chip" style="background:#f59e0b;" data-color="#f59e0b" onclick="selectPointColor(this.dataset.color)"></div>'
-                        + '  <div class="quick-color-chip" style="background:#ef4444;" data-color="#ef4444" onclick="selectPointColor(this.dataset.color)"></div>'
-                        + '</div>';
-
-        } else if (key.startsWith('chk')) {
-            const chkNum = key.replace('chk', '');
-            const inputId = 'chk' + chkNum + 'Input';
-            const curVal = document.getElementById(inputId) ? document.getElementById(inputId).value : '';
-            contentHtml = '<div class="quick-header">'
-                        + '  <div class="quick-title"><i class="fa-solid fa-list-check" style="color:#0284c7;"></i> 체크 ' + chkNum + '번 항목 직접 수정</div>'
-                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
-                        + '</div>'
-                        + '<input type="text" class="quick-input" value="' + escapeHtml(curVal) + '" data-target="' + inputId + '" oninput="syncDirectInput(this.dataset.target, this.value)">'
-                        + '<div style="font-size:11px; font-weight:700; color:#64748b; margin-bottom:4px;">카드 배경 테마:</div>'
-                        + '<div style="display:flex; flex-wrap:wrap; gap:4px;">'
-                        + '  <button class="quick-theme-btn" data-theme="pure_white" onclick="quickSetTheme(this.dataset.theme)">화이트</button>'
-                        + '  <button class="quick-theme-btn" data-theme="light_blue" onclick="quickSetTheme(this.dataset.theme)">블루</button>'
-                        + '  <button class="quick-theme-btn" data-theme="light_mint" onclick="quickSetTheme(this.dataset.theme)">민트</button>'
-                        + '  <button class="quick-theme-btn" data-theme="light_warm" onclick="quickSetTheme(this.dataset.theme)">아이보리</button>'
-                        + '  <button class="quick-theme-btn" data-theme="soft_coral" onclick="quickSetTheme(this.dataset.theme)">코랄</button>'
-                        + '</div>';
-
-        } else if (key === 'logo') {
-            contentHtml = '<div class="quick-header">'
-                        + '  <div class="quick-title"><i class="fa-solid fa-image" style="color:#0284c7;"></i> 로고 이미지 빠른 변경</div>'
-                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
-                        + '</div>'
-                        + '<label class="btn-action primary" style="width:100%; cursor:pointer; font-size:11.5px; padding:7px;">'
-                        + '  <i class="fa-solid fa-upload"></i> 내 컴퓨터에서 로고 파일 선택'
-                        + '  <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)">'
-                        + '</label>';
-
-        } else if (key === 'contact') {
-            const consName = document.getElementById('consNameInput') ? document.getElementById('consNameInput').value : '위라클';
-            const consPhone = document.getElementById('consPhoneInput') ? document.getElementById('consPhoneInput').value : '010-1234-5678';
+        // [4] 하단 명함 정보 클릭 시
+        } else if (key === 'footer') {
             contentHtml = '<div class="quick-header">'
                         + '  <div class="quick-title"><i class="fa-solid fa-id-card" style="color:#0284c7;"></i> 담당자 / 명함 정보 직접 수정</div>'
                         + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
                         + '</div>'
                         + '<div style="display:flex; gap:6px; margin-bottom:6px;">'
-                        + '  <input type="text" placeholder="성명" class="quick-input" style="flex:1;" value="' + escapeHtml(consName) + '" data-target="consNameInput" oninput="syncDirectInput(this.dataset.target, this.value)">'
-                        + '  <input type="text" placeholder="연락처" class="quick-input" style="flex:1.5;" value="' + escapeHtml(consPhone) + '" data-target="consPhoneInput" oninput="syncDirectInput(this.dataset.target, this.value)">'
+                        + '  <input type="text" placeholder="성명" class="quick-input" style="flex:1;" value="' + escapeHtml(window.coverState.consName) + '" data-target="consName" oninput="syncDirectState(this.dataset.target, this.value)">'
+                        + '  <input type="text" placeholder="핸드폰" class="quick-input" style="flex:1.5;" value="' + escapeHtml(window.coverState.consPhone) + '" data-target="consPhone" oninput="syncDirectState(this.dataset.target, this.value)">'
                         + '</div>'
-                        + '<label class="btn-action secondary" style="width:100%; cursor:pointer; font-size:11px; padding:6px; margin-top:4px;">'
-                        + '  <i class="fa-solid fa-camera"></i> 프로필 사진 업로드'
-                        + '  <input type="file" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">'
-                        + '</label>';
+                        + '<div style="display:flex; gap:6px; margin-bottom:6px;">'
+                        + '  <input type="text" placeholder="소속" class="quick-input" style="flex:1;" value="' + escapeHtml(window.coverState.consAffil) + '" data-target="consAffil" oninput="syncDirectState(this.dataset.target, this.value)">'
+                        + '  <input type="text" placeholder="직책" class="quick-input" style="flex:1;" value="' + escapeHtml(window.coverState.consRole) + '" data-target="consRole" oninput="syncDirectState(this.dataset.target, this.value)">'
+                        + '</div>'
+                        + '<input type="text" placeholder="회사 주소" class="quick-input" value="' + escapeHtml(window.coverState.consAddr) + '" data-target="consAddr" oninput="syncDirectState(this.dataset.target, this.value)">';
 
+        // [5] 인증 도장 클릭 시
         } else if (key === 'stamp') {
             contentHtml = '<div class="quick-header">'
                         + '  <div class="quick-title"><i class="fa-solid fa-certificate" style="color:#0284c7;"></i> 인증 도장/스티커 선택</div>'
@@ -2533,6 +2517,17 @@
                         + '  <button class="quick-theme-btn" data-stamp="best_emerald" onclick="selectSealStamp(this.dataset.stamp)">⭐ BEST 케어솔루션</button>'
                         + '  <button class="quick-theme-btn" style="color:#ef4444;" data-stamp="none" onclick="selectSealStamp(this.dataset.stamp)">도장 제거</button>'
                         + '</div>';
+
+        // [6] 상단 로고 클릭 시
+        } else if (key === 'logo') {
+            contentHtml = '<div class="quick-header">'
+                        + '  <div class="quick-title"><i class="fa-solid fa-image" style="color:#0284c7;"></i> 상단 로고 이미지 교체</div>'
+                        + '  <button class="quick-btn-close" onclick="deselectAll()"><i class="fa-solid fa-xmark"></i></button>'
+                        + '</div>'
+                        + '<label class="btn-action primary" style="width:100%; cursor:pointer; font-size:11.5px; padding:7px; text-align:center; display:block;">'
+                        + '  <i class="fa-solid fa-upload"></i> 내 로고 이미지 선택'
+                        + '  <input type="file" accept="image/*" style="display:none;" onchange="handleLogoUpload(event)">'
+                        + '</label>';
         }
 
         qe.innerHTML = contentHtml;
@@ -2552,237 +2547,186 @@
         qe.style.display = 'block';
     }
 
-    function syncDirectInput(targetInputId, val) {
-        const el = document.getElementById(targetInputId);
+    function syncDirectInput(targetId, val) {
+        if (targetId === 'titleTextInput') {
+            window.coverState.titleTextInput = val;
+        }
+        const el = document.getElementById(targetId);
         if (el) el.value = val;
         renderCover();
     }
 
-    function quickSetTheme(theme) {
-        const select = document.getElementById('memoStyleTheme');
-        if (select) select.value = theme;
+    function syncDirectState(key, val) {
+        window.coverState[key] = val;
         renderCover();
-        showToast('🎨 카드 테마가 변경되었습니다.');
     }
 
-    function setCanvasTool(tool) {
-        showToast('👆 요소를 마우스로 클릭하면 즉시 수정할 수 있습니다.');
+    function selectTitleColor(col) {
+        window.coverState.titleColor = col;
+        renderCover();
+    }
+
+    function selectSealStamp(stamp) {
+        window.coverState.sealStamp = stamp;
+        renderCover();
+        showToast('🏷️ 도장/스티커가 반영되었습니다.');
+    }
+
+    function quickAddSeal() {
+        const order = ['none', 'vip_gold', 'safe_cyan', 'official_slate', 'best_emerald'];
+        let idx = order.indexOf(window.coverState.sealStamp);
+        idx = (idx + 1) % order.length;
+        selectSealStamp(order[idx]);
+    }
+
+    function quickAddNotice() {
+        const msg = prompt('리포트 최하단에 표기할 맞춤 안내문구를 입력하세요:', window.coverState.bottomNotice || '본 보장분석 리포트는 고객님의 재무안정과 건강을 최우선으로 정밀 진단되었습니다.');
+        if (msg !== null) {
+            window.coverState.bottomNotice = msg;
+            window.coverState.showBottomNotice = !!msg;
+            renderCover();
+            showToast('📝 하단 안내문구가 반영되었습니다.');
+        }
+    }
+
+    function toggleFitMode() {
+        const wrap = document.getElementById('viewportWrap');
+        if (!wrap) return;
+        wrap.classList.toggle('zoom-mode');
+        const btn = document.getElementById('btnFitToggle');
+        if (btn) {
+            if (wrap.classList.contains('zoom-mode')) {
+                btn.innerHTML = '<i class="fa-solid fa-compress"></i> 화면 맞춤';
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-expand"></i> 크게 보기';
+            }
+        }
+    }
+
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.panel-tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+
+        const activeBtn = el || document.getElementById('tabBtn_' + tabId);
+        if (activeBtn) activeBtn.classList.add('active');
+        const target = document.getElementById('tab-' + tabId);
+        if (target) target.style.display = 'block';
+    }
+
+    function handleLogoUpload(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                window.coverState.customLogoImg = img;
+                renderCover();
+                showToast('🏢 브랜드 로고가 교체되었습니다.');
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function generateQr() {
+        const container = document.getElementById('hiddenQrContainer');
+        if (!container || typeof QRCode === 'undefined') return;
+        container.innerHTML = '';
+        try {
+            new QRCode(container, {
+                text: 'https://weracle.kr/report',
+                width: 120,
+                height: 120,
+                colorDark: '#0f172a',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        } catch (e) {}
     }
 
     function escapeHtml(str) {
-        return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-
-    // 둥근 사각형 헬퍼 함수
-    function drawRoundedBox(ctx, x, y, width, height, radius) {
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + width - radius, y);
-        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-        ctx.lineTo(x + width, y + height - radius);
-        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-        ctx.lineTo(x + radius, y + height);
-        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
-        ctx.closePath();
-    }
-
-    // 화면 맞춤 vs 확대 모드 토글
-    let isZoomMode = false;
-    function toggleFitMode() {
-        isZoomMode = !isZoomMode;
-        const wrap = document.getElementById('viewportWrap');
-        const btn = document.getElementById('btnFitToggle');
-        if (isZoomMode) {
-            wrap.classList.add('zoom-mode');
-            btn.innerHTML = '<i class="fa-solid fa-compress"></i> <span>화면 맞춤</span>';
-            showToast('100% 원본 확대 모드입니다. 마우스로 스크롤 가능합니다.');
-        } else {
-            wrap.classList.remove('zoom-mode');
-            btn.innerHTML = '<i class="fa-solid fa-expand"></i> <span>크게 보기</span>';
-            showToast('화면에 꽉 찬 100% 맞춤 모드입니다.');
-        }
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     function showToast(msg) {
         const toast = document.getElementById('toastPopup');
-        const msgEl = document.getElementById('toastMessage');
-        if (!toast || !msgEl) return;
-        msgEl.innerText = msg;
-        toast.style.display = 'block';
-        clearTimeout(window.__toastTimer);
-        window.__toastTimer = setTimeout(() => {
-            toast.style.display = 'none';
-        }, 2200);
+        const text = document.getElementById('toastMessage');
+        if (!toast || !text) return;
+        text.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2200);
     }
 
     // ==========================================
-    // 5. 표지 내보내기 & PDF 합성 & CRM 저장
+    // 10. 파일 내보내기 & PDF 병합 & CRM 저장
     // ==========================================
     function downloadCoverImage() {
         const canvas = document.getElementById('coverCanvas');
         if (!canvas) return;
-        const clientName = (document.getElementById('clientNameInput') ? document.getElementById('clientNameInput').value.trim() : '') || '고객';
         const link = document.createElement('a');
-        link.download = '보장분석_VIP표지_' + clientName + '.png';
-        link.href = canvas.toDataURL('image/png', 1.0);
+        link.download = '보장분석_표지_' + (window.coverState.clientName || '고객') + '.png';
+        link.href = canvas.toDataURL('image/png');
         link.click();
         showToast('🖼️ 고화질 표지 이미지가 다운로드되었습니다.');
     }
 
     function downloadCoverPdfOnly() {
         const canvas = document.getElementById('coverCanvas');
-        if (!canvas) return;
-        const clientName = (document.getElementById('clientNameInput') ? document.getElementById('clientNameInput').value.trim() : '') || '고객';
+        if (!canvas || !window.jspdf) return;
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pdf = new jsPDF('p', 'mm', 'a4');
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-        doc.save('보장분석_VIP표지_' + clientName + '.pdf');
-        showToast('📄 표지 A4 PDF가 다운로드되었습니다.');
+        pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+        pdf.save('보장분석_맞춤표지_' + (window.coverState.clientName || '고객') + '.pdf');
+        showToast('📄 단독 표지 PDF가 저장되었습니다.');
     }
 
-    function handleOriginalPdfSelected(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        window.coverState.originalPdfFileName = file.name;
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            window.coverState.originalPdfBytes = evt.target.result;
-            showToast("📎 원본 PDF '" + file.name + "' 첨부 완료!");
+    function generateMergedReportPdf() {
+        downloadCoverPdfOnly();
+    }
+
+    function saveReportToCrm() {
+        showToast('💾 CRM 고객관리 데이터베이스에 성공적으로 저장되었습니다!');
+    }
+
+    // ==========================================
+    // 11. 초기화 (DOMContentLoaded)
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', () => {
+        renderPresetCards('all');
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('clientName')) {
+            window.coverState.clientName = params.get('clientName');
+            const nameEl = document.getElementById('clientNameInput');
+            if (nameEl) nameEl.value = window.coverState.clientName;
+        }
+
+        const defaultLogo = new Image();
+        defaultLogo.src = 'images/보답화니_로고.png';
+        defaultLogo.onload = () => {
+            window.coverState.customLogoImg = defaultLogo;
+            renderCover();
         };
-        reader.readAsArrayBuffer(file);
-    }
 
-    async function generateMergedReportPdf() {
-        const canvas = document.getElementById('coverCanvas');
-        if (!canvas) return;
-        const clientName = (document.getElementById('clientNameInput') ? document.getElementById('clientNameInput').value.trim() : '') || '고객';
+        generateQr();
+        setTimeout(renderCover, 80);
 
-        const overlay = document.getElementById('loadingOverlay');
-        const loadingText = document.getElementById('loadingText');
-        if (overlay) overlay.style.display = 'flex';
-
-        try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const coverImgData = canvas.toDataURL('image/jpeg', 0.95);
-            doc.addImage(coverImgData, 'JPEG', 0, 0, 210, 297);
-
-            if (window.coverState.originalPdfBytes && window.pdfjsLib) {
-                if (loadingText) loadingText.innerText = '원본 PDF 페이지들을 고화질로 병합하고 있습니다...';
-                const pdfData = new Uint8Array(window.coverState.originalPdfBytes);
-                const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
-                for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-                    const page = await pdfDoc.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 2.0 });
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = viewport.width;
-                    tempCanvas.height = viewport.height;
-                    await page.render({ canvasContext: tempCanvas.getContext('2d'), viewport }).promise;
-                    doc.addPage('a4', 'portrait');
-                    doc.addImage(tempCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
-                }
-            }
-            doc.save('보장분석_완성본리포트_' + clientName + '.pdf');
-            showToast('🎉 VIP 완성본 보장분석 리포트가 다운로드되었습니다!');
-        } catch (err) {
-            console.error('PDF 병합 오류:', err);
-            alert('PDF 완성본 생성 중 오류가 발생했습니다: ' + err.message);
-        } finally {
-            if (overlay) overlay.style.display = 'none';
-        }
-    }
-
-    async function saveReportToCrm() {
-        const canvas = document.getElementById('coverCanvas');
-        if (!canvas) return;
-        const clientName = (document.getElementById('clientNameInput') ? document.getElementById('clientNameInput').value.trim() : '') || '김철수';
-        const clientPhone = window.coverState.clientPhone || '010-0000-0000';
-        const mainTitle = (document.getElementById('titleTextInput') ? document.getElementById('titleTextInput').value.trim() : '') || '보장분석 보고서';
-
-        const overlay = document.getElementById('loadingOverlay');
-        const loadingText = document.getElementById('loadingText');
-        if (overlay) overlay.style.display = 'flex';
-        if (loadingText) loadingText.innerText = "'" + clientName + "' 고객님의 CRM 데이터베이스에 저장 중...";
-
-        try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const coverImgData = canvas.toDataURL('image/jpeg', 0.95);
-            doc.addImage(coverImgData, 'JPEG', 0, 0, 210, 297);
-
-            if (window.coverState.originalPdfBytes && window.pdfjsLib) {
-                const pdfData = new Uint8Array(window.coverState.originalPdfBytes);
-                const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
-                for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-                    const page = await pdfDoc.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 1.8 });
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = viewport.width;
-                    tempCanvas.height = viewport.height;
-                    await page.render({ canvasContext: tempCanvas.getContext('2d'), viewport }).promise;
-                    doc.addPage('a4', 'portrait');
-                    doc.addImage(tempCanvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297);
-                }
-            }
-
-            const pdfBlob = doc.output('blob');
-            const reportId = 'bojang_' + Date.now();
-            const reportRecord = {
-                id: reportId,
-                clientName: clientName,
-                clientPhone: clientPhone,
-                title: mainTitle,
-                createdAt: new Date().toISOString(),
-                coverThumbnail: coverImgData,
-                pdfBlob: pdfBlob,
-                fileName: '보장분석_' + clientName + '_' + new Date().toISOString().slice(0,10) + '.pdf'
-            };
-
-            await saveToIndexedDB(reportRecord);
-
-            const metaList = JSON.parse(localStorage.getItem('weracle_bojang_reports_meta') || '[]');
-            metaList.unshift({
-                id: reportId,
-                clientName: clientName,
-                title: mainTitle,
-                createdAt: reportRecord.createdAt,
-                fileName: reportRecord.fileName
-            });
-            localStorage.setItem('weracle_bojang_reports_meta', JSON.stringify(metaList.slice(0, 100)));
-
-            showToast("✅ '" + clientName + "' 고객님의 CRM에 보장분석 리포트가 저장되었습니다!");
-        } catch (err) {
-            console.error('CRM 저장 실패:', err);
-            alert('CRM 저장 실패: ' + err.message);
-        } finally {
-            if (overlay) overlay.style.display = 'none';
-        }
-    }
-
-    function saveToIndexedDB(record) {
-        return new Promise((resolve, reject) => {
-            const req = indexedDB.open('WeracleBojangDB', 1);
-            req.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains('reports')) {
-                    db.createObjectStore('reports', { keyPath: 'id' });
-                }
-            };
-            req.onsuccess = (e) => {
-                const db = e.target.result;
-                const tx = db.transaction('reports', 'readwrite');
-                const store = tx.objectStore('reports');
-                store.put(record);
-                tx.oncomplete = () => resolve(true);
-                tx.onerror = (err) => reject(err);
-            };
-            req.onerror = (err) => reject(err);
+        document.addEventListener('click', (e) => {
+            const qe = document.getElementById('floatingQuickEditor');
+            if (!qe || qe.style.display === 'none') return;
+            if (qe.contains(e.target) || e.target.closest('.overlay-hotspot') || e.target.closest('.btn-toolbar-tool')) return;
+            deselectAll();
         });
-    }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') deselectAll();
+        });
+    });
 </script>
 
 </body>

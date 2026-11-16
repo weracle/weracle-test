@@ -2253,6 +2253,10 @@ const hasPdfDoc = Boolean(docUrlParam && docUrlParam.trim().startsWith('http'));
 
 // 위라클랩 상위 프레임(iframe)이 3500px로 늘어나 있어도 왼쪽 보관함·스튜디오가 항상 현재 모니터 화면을 따라오도록 동기화!
 function initParentIframeViewportSync() {
+      // 광고 세팅창의 휴대폰 미니 미리보기 안에서는 액자 높이를 절대 건드리지 않도록 즉시 종료!
+      if (!document.body.classList.contains('can-edit-pr') && !document.body.classList.contains('is-editing')) return;
+      if (window.frameElement && window.frameElement.id === 'phonePrLiveIframe') return;
+
       const lockIframeHeightToScreen = () => {
         if (!document.body.classList.contains('can-edit-pr') && !document.body.classList.contains('is-editing')) return;
         try {

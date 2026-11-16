@@ -976,7 +976,7 @@ function renderV3Calendar() {
         displayEvents.push(...dayGoogleEvents.map(e => ({
           isGoogle: true,
           id: e.id,
-          title: (e.timeText ? `[${e.timeText}] ` : '') + (e.isShared ? `[위라클] ${e.name}` : e.name),
+          title: (e.timeText ? `[${e.timeText}] ` : '') + e.name,
           raw: e,
           isShared: e.isShared
         })));
@@ -994,7 +994,7 @@ function renderV3Calendar() {
         displayEvents.push(...weracleOnly.map(e => ({
           isGoogle: true,
           id: e.id,
-          title: (e.timeText ? `[${e.timeText}] ` : '') + `[위라클] ${e.name}`,
+          title: (e.timeText ? `[${e.timeText}] ` : '') + e.name,
           raw: e,
           isShared: true
         })));

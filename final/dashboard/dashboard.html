@@ -132,18 +132,19 @@
         font-size: 11.5px !important;
     }
 
-    /* 필터 탭 바 모바일 가로 스크롤 */
-    .cal-filter-bar {
+    /* 필터 칩 바 (가로 스크롤 가능하게 처리) */
+    .cal-filter-container {
         overflow-x: auto !important;
         white-space: nowrap !important;
         scrollbar-width: none !important;
-        display: flex !important;
+        padding-bottom: 4px !important;
+        gap: 5px !important;
     }
-    .cal-filter-bar::-webkit-scrollbar { display: none !important; }
-    .cal-filter-tab, .cal-filter-chip {
-        flex: 0 0 auto !important;
-        font-size: 12.5px !important;
-        padding: 10px 14px !important;
+    .cal-filter-container::-webkit-scrollbar { display: none !important; }
+    .cal-filter-btn {
+        flex-shrink: 0 !important;
+        font-size: 11.5px !important;
+        padding: 4px 9px !important;
     }
 
     /* 타임라인 카드 모바일 최적화 */
@@ -198,17 +199,17 @@
             <span id="cal-period-text" class="cal-period-badge">2026. 10</span>
           </h2>
           <div class="cal-nav-buttons">
-            <button type="button" class="cal-nav-btn" onclick="navigateWeek(-1)" title="이전 주"><i class="fa-solid fa-chevron-left"></i></button>
+            <button type="button" class="cal-nav-btn" onclick="navigateWeek(-1)" title="이전 달"><i class="fa-solid fa-chevron-left"></i></button>
             <button type="button" class="cal-nav-btn today-btn" onclick="navigateToday()">오늘</button>
-            <button type="button" class="cal-nav-btn" onclick="navigateWeek(1)" title="다음 주"><i class="fa-solid fa-chevron-right"></i></button>
+            <button type="button" class="cal-nav-btn" onclick="navigateWeek(1)" title="다음 달"><i class="fa-solid fa-chevron-right"></i></button>
           </div>
           <!-- 뷰 전환 토글 (세로형 / 가로형) -->
           <div class="cal-view-switcher">
-            <button type="button" class="cal-view-btn active" id="btnViewVertical" onclick="switchCalendarView('vertical')" title="세로 타임라인 아젠다 뷰">
+            <button type="button" class="cal-view-btn" id="btnViewVertical" onclick="switchCalendarView('vertical')" title="세로 타임라인 아젠다 뷰">
               <i class="fa-solid fa-list-ul"></i> 세로형
             </button>
-            <button type="button" class="cal-view-btn" id="btnViewHorizontal" onclick="switchCalendarView('horizontal')" title="가로 7열 달력 뷰">
-              <i class="fa-solid fa-table-cells"></i> 가로형
+            <button type="button" class="cal-view-btn active" id="btnViewHorizontal" onclick="switchCalendarView('horizontal')" title="가로 7열 달력 뷰 (월간 전체)">
+              <i class="fa-solid fa-table-cells"></i> 가로형 (월간)
             </button>
           </div>
         </div>
@@ -226,37 +227,26 @@
         </div>
       </div>
 
-      <!-- 캘린더 일체형 필터 테이블 헤더 바 -->
-      <div class="cal-filter-bar" role="tablist">
-        <button type="button" class="cal-filter-tab cal-filter-chip active" data-filter="all" onclick="setCalendarFilter('all')">
-          <span class="filter-tab-icon"><i class="fa-solid fa-layer-group" style="color:#0284c7;"></i></span>
-          <span class="filter-tab-name">전체 일정</span>
-          <span class="filter-count" id="count-all">0</span>
+      <!-- 캘린더 이벤트 필터 토글 바 -->
+      <div class="cal-filter-bar">
+        <span class="filter-label"><i class="fa-solid fa-filter"></i> 필터:</span>
+        <button type="button" class="cal-filter-chip active" data-filter="all" onclick="setCalendarFilter('all')">
+          전체 <span class="filter-count" id="count-all">0</span>
         </button>
-        <button type="button" class="cal-filter-tab cal-filter-chip" data-filter="google" onclick="setCalendarFilter('google')">
-          <span class="filter-tab-icon google"><i class="fa-solid fa-calendar-check" style="color:#10b981;"></i></span>
-          <span class="filter-tab-name">내 일정</span>
-          <span class="filter-count" id="count-google">0</span>
+        <button type="button" class="cal-filter-chip" data-filter="google" onclick="setCalendarFilter('google')">
+          <span class="dot-indicator google"></span>내 일정 <span class="filter-count" id="count-google">0</span>
         </button>
-        <button type="button" class="cal-filter-tab cal-filter-chip" data-filter="bday" onclick="setCalendarFilter('bday')">
-          <span class="filter-tab-icon bday">🎂</span>
-          <span class="filter-tab-name">고객 생일</span>
-          <span class="filter-count" id="count-bday">0</span>
+        <button type="button" class="cal-filter-chip" data-filter="bday" onclick="setCalendarFilter('bday')">
+          <span class="dot-indicator bday"></span>🎂 생일 <span class="filter-count" id="count-bday">0</span>
         </button>
-        <button type="button" class="cal-filter-tab cal-filter-chip" data-filter="sang" onclick="setCalendarFilter('sang')">
-          <span class="filter-tab-icon sang">📈</span>
-          <span class="filter-tab-name">상령일</span>
-          <span class="filter-count" id="count-sang">0</span>
+        <button type="button" class="cal-filter-chip" data-filter="sang" onclick="setCalendarFilter('sang')">
+          <span class="dot-indicator sang"></span>📈 상령일 <span class="filter-count" id="count-sang">0</span>
         </button>
-        <button type="button" class="cal-filter-tab cal-filter-chip" data-filter="expiry" onclick="setCalendarFilter('expiry')">
-          <span class="filter-tab-icon expiry">📑</span>
-          <span class="filter-tab-name">만기·갱신</span>
-          <span class="filter-count" id="count-expiry">0</span>
+        <button type="button" class="cal-filter-chip" data-filter="expiry" onclick="setCalendarFilter('expiry')">
+          <span class="dot-indicator expiry"></span>📑 만기·갱신 <span class="filter-count" id="count-expiry">0</span>
         </button>
-        <button type="button" class="cal-filter-tab cal-filter-chip" data-filter="pay" onclick="setCalendarFilter('pay')">
-          <span class="filter-tab-icon pay">💳</span>
-          <span class="filter-tab-name">보험 결제일</span>
-          <span class="filter-count" id="count-pay">0</span>
+        <button type="button" class="cal-filter-chip" data-filter="pay" onclick="setCalendarFilter('pay')">
+          <span class="dot-indicator pay"></span>💳 결제일 <span class="filter-count" id="count-pay">0</span>
         </button>
       </div>
 
@@ -540,6 +530,6 @@
 </div>
 
 <!-- 모듈화된 대시보드 스크립트 -->
-<script src="dashboard.js?v=20261113_2205"></script>
+<script src="dashboard.js?v=20261116_1405"></script>
 </body>
 </html>

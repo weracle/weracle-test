@@ -1,3 +1,28 @@
+
+// ==========================================
+// [위라클 파트너스 권한 판별 및 위라클 일정 탭 제어]
+// ==========================================
+function checkIsPartnerUser() {
+  let profile = getParentProp('currentProfile') || window.currentProfile;
+  if (!profile) {
+    try {
+      const cached = JSON.parse(localStorage.getItem('cached_profile') || '{}');
+      if (cached && (cached.user_grade || cached.grade)) profile = cached;
+    } catch(e) {}
+  }
+  if (!profile) return false;
+  const g = String(profile.user_grade || profile.grade || '').toLowerCase();
+  return g === 'family' || g === 'manager' || g === 'admin' || g === 'svip';
+}
+
+function updatePartnersTabVisibility() {
+  const isPartner = checkIsPartnerUser();
+  const tabEl = document.getElementById('tabWeracleSchedule');
+  if (tabEl) {
+    tabEl.style.display = isPartner ? 'flex' : 'none';
+  }
+}
+
 // ==========================================
 // 위라클 대시보드 - 스마트 캘린더 & 핵심 비즈니스 로직 (dashboard.js)
 // ==========================================
@@ -360,6 +385,7 @@ function navigateToday() {
 
 function getFilterKoreanName(type) {
   if (type === 'google') return '내 일정';
+  if (type === 'weracle') return '위라클 일정';
   if (type === 'bday') return '🎂 생일';
   if (type === 'sang') return '📈 상령일';
   if (type === 'expiry') return '📑 만기·갱신';
@@ -733,18 +759,16 @@ function renderV3Calendar() {
 
       let dayEvents = [];
 
-      if (activeFilter === 'all' || activeFilter === 'google') {
+      if (activeFilter === 'all') {
         dayEvents.push(...dayGoogleEvents.map(e => ({
           isGoogle: true,
           id: e.id,
-          badge: e.timeText || (e.isAllDay ? '종일' : '구글'),
+          badge: e.timeText || (e.isAllDay ? '종일' : (e.isShared ? '위라클' : '구글')),
           title: e.name,
           sub: e.description || '',
-          raw: e
+          raw: e,
+          isShared: e.isShared
         })));
-      }
-
-      if (activeFilter === 'all') {
         dayEvents.push(...dayCrmEvents.map(e => ({
           isGoogle: false,
           type: e.type,
@@ -753,7 +777,28 @@ function renderV3Calendar() {
           sub: e.prod ? `(${e.prod})` : '',
           raw: e
         })));
-      } else if (activeFilter !== 'google') {
+      } else if (activeFilter === 'google') {
+        const personalOnly = dayGoogleEvents.filter(e => !e.isShared);
+        dayEvents.push(...personalOnly.map(e => ({
+          isGoogle: true,
+          id: e.id,
+          badge: e.timeText || (e.isAllDay ? '종일' : '구글'),
+          title: e.name,
+          sub: e.description || '',
+          raw: e
+        })));
+      } else if (activeFilter === 'weracle') {
+        const weracleOnly = dayGoogleEvents.filter(e => e.isShared);
+        dayEvents.push(...weracleOnly.map(e => ({
+          isGoogle: true,
+          id: e.id,
+          badge: e.timeText || (e.isAllDay ? '종일' : '위라클'),
+          title: e.name,
+          sub: e.description || '',
+          raw: e,
+          isShared: true
+        })));
+      } else {
         const filteredCrm = dayCrmEvents.filter(e => e.type === activeFilter);
         dayEvents.push(...filteredCrm.map(e => ({
           isGoogle: false,
@@ -927,17 +972,33 @@ function renderV3Calendar() {
       const dayCrmEvents = crmEventsList.filter(e => e.fullDate === fullDateStr);
 
       let displayEvents = [];
-      if (activeFilter === 'all' || activeFilter === 'google') {
+      if (activeFilter === 'all') {
         displayEvents.push(...dayGoogleEvents.map(e => ({
+          isGoogle: true,
+          id: e.id,
+          title: (e.timeText ? `[${e.timeText}] ` : '') + (e.isShared ? `[위라클] ${e.name}` : e.name),
+          raw: e,
+          isShared: e.isShared
+        })));
+        displayEvents.push(...dayCrmEvents.map(e => ({ isGoogle: false, type: e.type, title: e.title, raw: e })));
+      } else if (activeFilter === 'google') {
+        const personalOnly = dayGoogleEvents.filter(e => !e.isShared);
+        displayEvents.push(...personalOnly.map(e => ({
           isGoogle: true,
           id: e.id,
           title: (e.timeText ? `[${e.timeText}] ` : '') + e.name,
           raw: e
         })));
-      }
-      if (activeFilter === 'all') {
-        displayEvents.push(...dayCrmEvents.map(e => ({ isGoogle: false, type: e.type, title: e.title, raw: e })));
-      } else if (activeFilter !== 'google') {
+      } else if (activeFilter === 'weracle') {
+        const weracleOnly = dayGoogleEvents.filter(e => e.isShared);
+        displayEvents.push(...weracleOnly.map(e => ({
+          isGoogle: true,
+          id: e.id,
+          title: (e.timeText ? `[${e.timeText}] ` : '') + `[위라클] ${e.name}`,
+          raw: e,
+          isShared: true
+        })));
+      } else {
         const filteredCrm = dayCrmEvents.filter(e => e.type === activeFilter);
         displayEvents.push(...filteredCrm.map(e => ({ isGoogle: false, type: e.type, title: e.title, raw: e })));
       }
@@ -948,10 +1009,15 @@ function renderV3Calendar() {
         eventsHtml = displayEvents.slice(0, maxShow).map(item => {
           if (item.isGoogle) {
             const e = item.raw;
-            return `<div class="cal-event-chip cal-event-google" onclick="event.stopPropagation(); openGoogleEventDetail('${e.id}')" title="클릭하여 상세 보기">
+            return `${item.isShared ? `
+            <div class="cal-event-chip cal-event-weracle" onclick="event.stopPropagation(); openGoogleEventDetail('${e.id}')" title="위라클 공식 일정">
+              <i class="fa-solid fa-building" style="font-size:9px; color:#6366f1;"></i>
+              <span>${escapeHtml(item.title)}</span>
+            </div>` : `
+            <div class="cal-event-chip cal-event-google" onclick="event.stopPropagation(); openGoogleEventDetail('${e.id}')" title="개인 일정">
               <i class="fa-solid fa-clock" style="font-size:9px;"></i>
               <span>${escapeHtml(item.title)}</span>
-            </div>`;
+            </div>`}`;
           } else {
             const e = item.raw;
             return `<div class="cal-event-chip cal-event-${e.type}" onclick="event.stopPropagation(); openCrmEventDetail('${e.type}', '${escapeJs(e.name)}', '${escapeJs(e.phone)}', '${escapeJs(e.prod)}', '${escapeJs(e.note)}', '${fullDateStr}')" title="클릭하여 세일즈 가이드 확인">
@@ -1005,10 +1071,14 @@ function formatYMD(d) {
 }
 
 function updateFilterCounts(dateList) {
-  const counts = { all: 0, google: 0, bday: 0, sang: 0, expiry: 0, pay: 0 };
+  const counts = { all: 0, google: 0, weracle: 0, bday: 0, sang: 0, expiry: 0, pay: 0 };
   agentEvents.forEach(e => {
     if (dateList.includes(e.fullDate)) {
-      counts.google++;
+      if (e.isShared) {
+        counts.weracle++;
+      } else {
+        counts.google++;
+      }
       counts.all++;
     }
   });
@@ -1021,6 +1091,7 @@ function updateFilterCounts(dateList) {
 
   const countAllEl = document.getElementById('count-all'); if (countAllEl) countAllEl.innerText = counts.all;
   const countGoogleEl = document.getElementById('count-google'); if (countGoogleEl) countGoogleEl.innerText = counts.google;
+  const countWeracleEl = document.getElementById('count-weracle'); if (countWeracleEl) countWeracleEl.innerText = counts.weracle;
   const countBdayEl = document.getElementById('count-bday'); if (countBdayEl) countBdayEl.innerText = counts.bday;
   const countSangEl = document.getElementById('count-sang'); if (countSangEl) countSangEl.innerText = counts.sang;
   const countExpiryEl = document.getElementById('count-expiry'); if (countExpiryEl) countExpiryEl.innerText = counts.expiry;
@@ -1060,14 +1131,19 @@ async function fetchGoogleCalendarEvents() {
     const timeMin = new Date(curYear, curMonth - 1, 20).toISOString();
     const timeMax = new Date(curYear, curMonth + 2, 10).toISOString();
 
-    // 기본(primary) 캘린더 + 보험답다 공유 캘린더(boheomdapda@gmail.com 및 추가 설정)
-    const targetCals = ['primary', 'boheomdapda@gmail.com'];
-    try {
-      const gcs = JSON.parse(localStorage.getItem('weracle_google_cal_settings') || '{}');
-      if (gcs && gcs.calId && !targetCals.includes(gcs.calId)) {
-        targetCals.push(gcs.calId);
-      }
-    } catch(e) {}
+    updatePartnersTabVisibility();
+    const isPartner = checkIsPartnerUser();
+    // 기본(primary) 캘린더 + 파트너스 권한일 때만 보험답다 공유 캘린더(boheomdapda@gmail.com) 조회
+    const targetCals = ['primary'];
+    if (isPartner) {
+      targetCals.push('boheomdapda@gmail.com');
+      try {
+        const gcs = JSON.parse(localStorage.getItem('weracle_google_cal_settings') || '{}');
+        if (gcs && gcs.calId && !targetCals.includes(gcs.calId)) {
+          targetCals.push(gcs.calId);
+        }
+      } catch(e) {}
+    }
 
     let allItems = [];
     const seenEventIds = new Set();

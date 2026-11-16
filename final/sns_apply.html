@@ -3017,20 +3017,104 @@ function syncSectionHeaders() {
       saveAllPrState(false);
     }
 
-    async function uploadBase64ToSupabaseStorage(dataUrl) {
-      if (!dataUrl || !String(dataUrl).startsWith('data:image')) return dataUrl;
+const SB_DIRECT_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
+    const SB_DIRECT_KEY = 'sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR';
+
+    function getSafePrStorageFolder() {
+      const raw = String(activeAgentKey || 'shared').trim().toLowerCase();
+      const ascii = raw.replace(/[^a-z0-9._-]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+      return (ascii && ascii.length >= 2) ? ascii : 'agent_shared';
+    }
+
+    // 고화질 사진도 깨짐 없이 용량만 가볍게 최적화(최대 가로 1600px)하여 즉시 로딩되도록 변환
+    function optimizeImageFileToBlob(fileOrDataUrl, isPngLogo) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const maxDim = isPngLogo ? 800 : 1600;
+            let w = img.naturalWidth || img.width;
+            let h = img.naturalHeight || img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w >= h) {
+                h = Math.round((h * maxDim) / w);
+                w = maxDim;
+              } else {
+                w = Math.round((w * maxDim) / h);
+                h = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            const outMime = isPngLogo ? 'image/png' : 'image/jpeg';
+            canvas.toBlob(blob => resolve(blob), outMime, isPngLogo ? 0.95 : 0.88);
+          } catch (e) {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        if (typeof fileOrDataUrl === 'string') {
+          img.src = fileOrDataUrl;
+        } else {
+          img.src = URL.createObjectURL(fileOrDataUrl);
+        }
+      });
+    }
+
+    // Vercel 4.5MB 제한을 아예 거치지 않고 수파베이스 Storage로 직통 업로드!
+    async function uploadFileOrBase64DirectToSupabase(fileOrDataUrl, forcePng) {
+      if (typeof fileOrDataUrl === 'string' && fileOrDataUrl.startsWith('http')) {
+        return fileOrDataUrl;
+      }
+
+      const isPng = Boolean(
+        forcePng ||
+        (typeof fileOrDataUrl === 'string' && fileOrDataUrl.startsWith('data:image/png')) ||
+        (fileOrDataUrl && fileOrDataUrl.type === 'image/png')
+      );
+
+      let uploadBody = await optimizeImageFileToBlob(fileOrDataUrl, isPng);
+      if (!uploadBody && fileOrDataUrl instanceof Blob) {
+        uploadBody = fileOrDataUrl;
+      }
+      if (!uploadBody && typeof fileOrDataUrl === 'string' && fileOrDataUrl.startsWith('data:')) {
+        const res = await fetch(fileOrDataUrl);
+        uploadBody = await res.blob();
+      }
+      if (!uploadBody) return '';
+
+      const ext = isPng ? 'png' : 'jpg';
+      const mime = isPng ? 'image/png' : 'image/jpeg';
+      const folder = getSafePrStorageFolder();
+      const objectPath = `users/${folder}/pr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+
       try {
-        const res = await fetch('/api/meta-execute', {
+        const upRes = await fetch(`${SB_DIRECT_URL}/storage/v1/object/ad_media/${objectPath}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'UPLOAD_MEDIA', mediaBase64: dataUrl })
+          headers: {
+            'Content-Type': mime,
+            'apikey': SB_DIRECT_KEY,
+            'Authorization': `Bearer ${SB_DIRECT_KEY}`,
+            'x-upsert': 'true'
+          },
+          body: uploadBody
         });
-        const json = await res.json();
-        if (json && json.success && json.mediaUrl) {
-          return json.mediaUrl;
+        if (upRes.ok) {
+          return `${SB_DIRECT_URL}/storage/v1/object/public/ad_media/${objectPath}`;
         }
       } catch (e) {}
-      return dataUrl;
+      return '';
+    }
+
+    async function uploadBase64ToSupabaseStorage(dataUrl) {
+      if (!dataUrl || !String(dataUrl).startsWith('data:image')) return dataUrl;
+      const isPng = String(dataUrl).startsWith('data:image/png');
+      const directUrl = await uploadFileOrBase64DirectToSupabase(dataUrl, isPng);
+      return directUrl || dataUrl;
     }
 
     function renderGoodsSlider() {
@@ -3073,25 +3157,25 @@ function syncSectionHeaders() {
       saveAllPrState(false);
     }
 
-    document.getElementById('goodsMultiPicker').addEventListener('change', async e => {
+document.getElementById('goodsMultiPicker').addEventListener('change', async e => {
       const files = Array.from(e.target.files || []);
+      e.target.value = '';
       if (!files.length) return;
-      const rawDataUrls = await Promise.all(files.map(file => new Promise(res => {
-        const r = new FileReader();
-        r.onload = ev => res(ev.target.result);
-        r.readAsDataURL(file);
-      })));
 
       const uploadedSlides = [];
-      for (const dUrl of rawDataUrls) {
-        const finalUrl = await uploadBase64ToSupabaseStorage(dUrl);
-        uploadedSlides.push({ url: finalUrl, posX: 50, posY: 50, zoom: 100 });
+      for (const file of files) {
+        const finalUrl = await uploadFileOrBase64DirectToSupabase(file, false);
+        if (finalUrl) {
+          uploadedSlides.push({ url: finalUrl, posX: 50, posY: 50, zoom: 100 });
+        }
       }
 
-      goodsSlides.push(...uploadedSlides);
-      currentGoodsSlideIdx = goodsSlides.length - uploadedSlides.length;
-      renderGoodsSlider();
-      saveAllPrState(false);
+      if (uploadedSlides.length > 0) {
+        goodsSlides.push(...uploadedSlides);
+        currentGoodsSlideIdx = goodsSlides.length - uploadedSlides.length;
+        renderGoodsSlider();
+        saveAllPrState(false);
+      }
     });
 
     function initGoodsTouchSwipe() {
@@ -3133,34 +3217,36 @@ function syncSectionHeaders() {
       input.click();
     }
 
-    document.getElementById('globalImagePicker').addEventListener('change', e => {
+document.getElementById('globalImagePicker').addEventListener('change', async e => {
       const file = e.target.files && e.target.files[0];
+      e.target.value = '';
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async ev => {
-        const rawDataUrl = ev.target.result;
-        const uploadedUrl = await uploadBase64ToSupabaseStorage(rawDataUrl);
 
-        if (currentUploadTarget === 'LOGO_PNG') {
-          logoConfig.src = uploadedUrl;
-          logoConfig.visible = true;
-          applyLogoDom();
-        } else if (currentUploadTarget === 'HERO_MAIN') {
-          document.getElementById('img_heroPhotoBox').src = uploadedUrl;
-        } else if (currentUploadTarget === 'SLASH_1') {
-          document.getElementById('img_slashPhoto1').src = uploadedUrl;
-        } else if (currentUploadTarget === 'SLASH_2') {
-          document.getElementById('img_slashPhoto2').src = uploadedUrl;
-        } else if (currentUploadTarget === 'SLASH_3') {
-          document.getElementById('img_slashPhoto3').src = uploadedUrl;
-        } else if (currentUploadTarget === 'MID_PORTRAIT') {
-          document.getElementById('img_secMidPortrait').src = uploadedUrl;
-        } else if (currentUploadTarget === 'ENDING_PHOTO') {
-          document.getElementById('img_endingPhotoBox').src = uploadedUrl;
-        }
-        saveAllPrState(false);
-      };
-      reader.readAsDataURL(file);
+      const isLogoPng = currentUploadTarget === 'LOGO_PNG';
+      const uploadedUrl = await uploadFileOrBase64DirectToSupabase(file, isLogoPng);
+      if (!uploadedUrl) {
+        alert('이미지 업로드에 실패했습니다. 네트워크 상태를 확인 후 다시 시도해 주세요.');
+        return;
+      }
+
+      if (currentUploadTarget === 'LOGO_PNG') {
+        logoConfig.src = uploadedUrl;
+        logoConfig.visible = true;
+        applyLogoDom();
+      } else if (currentUploadTarget === 'HERO_MAIN') {
+        document.getElementById('img_heroPhotoBox').src = uploadedUrl;
+      } else if (currentUploadTarget === 'SLASH_1') {
+        document.getElementById('img_slashPhoto1').src = uploadedUrl;
+      } else if (currentUploadTarget === 'SLASH_2') {
+        document.getElementById('img_slashPhoto2').src = uploadedUrl;
+      } else if (currentUploadTarget === 'SLASH_3') {
+        document.getElementById('img_slashPhoto3').src = uploadedUrl;
+      } else if (currentUploadTarget === 'MID_PORTRAIT') {
+        document.getElementById('img_secMidPortrait').src = uploadedUrl;
+      } else if (currentUploadTarget === 'ENDING_PHOTO') {
+        document.getElementById('img_endingPhotoBox').src = uploadedUrl;
+      }
+      saveAllPrState(false);
     });
 
 // 3종 기본 프리셋 정의 (A: 보장점검·브랜딩 / B: 핵심상품 집중형 / C: 리쿠르팅·비전형)

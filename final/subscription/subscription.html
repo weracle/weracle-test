@@ -1431,7 +1431,7 @@
           <div class="services-bottom-cta">
             <div class="cta-text-wrap">
               <h4>위라클 올인원 멤버십으로 지금 바로 영업의 격차를 만드세요</h4>
-              <p>무약정 자유 해지 가능 &middot; 1개월부터 12개월(최대 20% 할인)까지 자유로운 플랜</p>
+              <p>1개월부터 12개월(최대 20% 할인)까지 자유로운 플랜</p>
             </div>
             <button type="button" class="btn-cta-pricing" onclick="switchFramePane('pane-pricing')">
               <span>멤버십 구독 신청하기</span>
@@ -1450,7 +1450,7 @@
           <div class="period-selector-wrap">
             <div class="period-selector">
               <button type="button" class="btn-period active" onclick="selectPeriod('monthly', this)">
-                1개월 (월간 정기결제)
+                1개월 결제
               </button>
               <button type="button" class="btn-period" onclick="selectPeriod('half', this)">
                 6개월 결제 <span class="badge-discount">10% 할인</span>
@@ -1470,7 +1470,7 @@
                 <span class="plan-price" id="planPriceDisplay">29,900</span>
                 <span class="plan-cycle" id="planCycleDisplay">원 / 월 (VAT 포함)</span>
               </div>
-              <div class="plan-discount-sub" id="planDiscountNote">정기결제 무약정 자유 해지 가능</div>
+              <div class="plan-discount-sub" id="planDiscountNote" style="display: none;"></div>
 
               <ul class="plan-benefits">
                 <li><i class="fa-solid fa-circle-check"></i> 위라클 CRM 고객/가족 통합 관리 무제한</li>
@@ -1562,7 +1562,7 @@
                 <span>결제 주기별 갱신 및 할인 정책</span>
               </div>
               <div class="guide-card-body">
-                <strong>월간 결제:</strong> 매월 신청하신 일자에 자동 갱신되며 위약금 없이 언제든 자유 해지 가능합니다.<br>
+                <strong>1개월 결제:</strong> 1개월 단위 이용 플랜으로, 필요할 때마다 결제하여 자유롭게 이용하실 수 있습니다.<br>
                 <strong>6개월 / 1년 결제:</strong> 일괄 선결제 시 각각 10%, 20%의 기간 할인 혜택이 적용되며 만료 전 연장 안내가 제공됩니다.
               </div>
             </div>
@@ -1658,7 +1658,7 @@
                 <i class="fa-solid fa-chevron-down faq-toggle-icon"></i>
               </div>
               <div class="faq-answer">
-                월간 정기결제는 약정이나 위약금이 전혀 없어 언제든지 마이페이지에서 자유롭게 해지할 수 있습니다. 결제일로부터 7일 이내에 유료 서비스를 전혀 이용하지 않은 경우 전액 환불이 가능하며, 이용 이력이 있는 경우에는 다음 결제일부터 청구가 중단됩니다.
+                구독 서비스는 정기결제가 아니니 필요할 때마다 결제하시고 이용하시면 됩니다. 결제일로부터 7일 이내에 유료 서비스를 전혀 이용하지 않은 경우 전액 환불이 가능합니다.
               </div>
             </div>
 
@@ -1698,7 +1698,7 @@
         <button class="modal-close-btn" onclick="closeModal('termsModal')">&times;</button>
       </div>
       <div class="modal-body">
-        본 서비스는 위크레잇이 제공하는 위라클 CRM 및 세일즈 지원 솔루션입니다. 정기결제 신청 시 매월 등록된 결제수단으로 자동 갱신 청구되며, 회원은 마이페이지 또는 고객센터를 통해 언제든지 해지를 요청하실 수 있습니다.
+        본 서비스는 위크레잇이 제공하는 위라클 CRM 및 세일즈 지원 솔루션입니다. 이용 신청 시 매월(또는 결제 주기별로) 등록된 결제수단으로 갱신 청구되며, 회원은 마이페이지 또는 고객센터를 통해 언제든지 문의 및 지원을 요청하실 수 있습니다.
       </div>
     </div>
   </div>
@@ -1781,7 +1781,7 @@
       baseMonthly: 29900,
       addonCardMonthly: 4900,
       periods: {
-        monthly: { months: 1, discountRate: 0, label: '1개월 (월간)', badge: 'ALL-IN-ONE VIP', note: '정기결제 무약정 자유 해지 가능' },
+        monthly: { months: 1, discountRate: 0, label: '1개월 결제', badge: 'ALL-IN-ONE VIP', note: '' },
         half: { months: 6, discountRate: 0.10, label: '6개월 결제', badge: '6개월 패키지 (10% 할인)', note: '6개월 일괄 결제 시 10% 기간 할인 적용' },
         yearly: { months: 12, discountRate: 0.20, label: '1년 결제', badge: '1년 패키지 (20% 할인)', note: '12개월 일괄 결제 시 20% 파격 할인 적용' }
       }
@@ -1830,7 +1830,14 @@
       document.getElementById('planBadgeText').innerText = cfg.badge;
       document.getElementById('planPriceDisplay').innerText = (cfg.months === 1 ? baseFinal : Math.round(currentTotalAmount / cfg.months)).toLocaleString();
       document.getElementById('planCycleDisplay').innerText = cfg.months === 1 ? '원 / 월 (VAT 포함)' : `원 / 월 환산 (총 ${currentTotalAmount.toLocaleString()}원)`;
-      document.getElementById('planDiscountNote').innerText = cfg.note;
+      const noteEl = document.getElementById('planDiscountNote');
+      if (cfg.note) {
+        noteEl.innerText = cfg.note;
+        noteEl.style.display = 'block';
+      } else {
+        noteEl.innerText = '';
+        noteEl.style.display = 'none';
+      }
 
       document.getElementById('receiptBaseName').innerText = `위라클 멤버십 (${cfg.months}개월)`;
       document.getElementById('receiptBasePrice').innerText = `${baseOriginal.toLocaleString()}원`;

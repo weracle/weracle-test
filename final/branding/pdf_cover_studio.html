@@ -755,7 +755,138 @@
       background: #f1f5f9;
     }
 
-    /* ================= RIGHT PREVIEW WORKSPACE ================= */
+    /* ================= ON-CANVAS DIRECT QUICK TOOLBARS ================= */
+  .element-quick-toolbar {
+    position: absolute;
+    z-index: 120;
+    background: rgba(15, 23, 42, 0.96);
+    backdrop-filter: blur(14px);
+    border: 1.5px solid #38bdf8;
+    border-radius: 14px;
+    padding: 12px 14px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 24px rgba(56, 189, 248, 0.3);
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 250px;
+    animation: quickToolbarPop 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    color: #ffffff;
+    user-select: none;
+  }
+  @keyframes quickToolbarPop {
+    from { opacity: 0; transform: scale(0.95) translateY(4px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .element-quick-toolbar.open {
+    display: flex !important;
+  }
+  .tb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+  }
+  .tb-title {
+    font-size: 12px;
+    font-weight: 850;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tb-close-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .tb-close-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .tb-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .tb-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #cbd5e1;
+    white-space: nowrap;
+  }
+  .tb-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tb-btn {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #f1f5f9;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .tb-btn:hover {
+    background: #38bdf8;
+    color: #0f172a;
+    border-color: #38bdf8;
+  }
+  .tb-btn.primary {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+    font-weight: 800;
+  }
+  .tb-btn.primary:hover {
+    background: #38bdf8;
+    color: #0f172a;
+  }
+  .tb-btn.danger:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #ffffff;
+  }
+  .tb-val {
+    font-size: 11px;
+    font-weight: 850;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    min-width: 38px;
+    text-align: center;
+  }
+  .tb-actions-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    padding-top: 6px;
+  }
+  .tb-actions-row .tb-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  /* ================= RIGHT PREVIEW WORKSPACE ================= */
     .right-preview-workspace {
       background: #0f172a;
       height: 100vh;
@@ -2479,7 +2610,7 @@
           </div>
 
           <!-- Logo Management & Precision Sizing -->
-          <div class="form-card" style="border: 1px solid #e2e8f0; background: #ffffff;">
+          <div class="form-card" id="logoControlCard" style="border: 1px solid #e2e8f0; background: #ffffff;">
             <div class="form-section-title">
               <span><i class="fa-solid fa-stamp"></i> 로고 크기 및 표시 설정</span>
               <label class="field-toggle-label">
@@ -2569,11 +2700,34 @@
               
   <div class="a4-page">
     <!-- Top Header: Logo on Left, Enterprise Verification Badges on Right -->
-    <div class="top-header">
-      <div class="header-logo-box clickable-slot-active" id="sheetLogoBox" onclick="document.getElementById('logoUploadInput').click()" title="클릭하여 로고 변경 (크기 조절 가능)">
+    <div class="top-header" style="position: relative;">
+      <div class="header-logo-box clickable-slot-active" id="sheetLogoBox" onclick="openLogoQuickToolbar(event)" title="클릭하여 로고 크기 조절 및 변경">
         <img src="images/보답화니_로고.png" id="sheetLogoImg" style="height: 58px; max-height: 160px; object-fit: contain; display: block;" data-slot="logo" alt="설계사 로고">
-        <div class="logo-hover-badge"><i class="fa-solid fa-camera"></i> 로고 변경/크기조절</div>
+        <div class="logo-hover-badge"><i class="fa-solid fa-sliders"></i> 로고 크기/수정 (클릭)</div>
       </div>
+
+      <!-- Quick Logo Toolbar directly on Sheet -->
+      <div class="element-quick-toolbar" id="logoQuickToolbar" data-html2canvas-ignore="true" style="top: 65px; left: 0;">
+        <div class="tb-header">
+          <span class="tb-title"><i class="fa-solid fa-stamp"></i> 로고 즉시 조절 & 변경</span>
+          <button type="button" class="tb-close-btn" onclick="closeQuickToolbars(event)">✕</button>
+        </div>
+        <div class="tb-row">
+          <span class="tb-label">로고 크기</span>
+          <div class="tb-btn-group">
+            <button type="button" class="tb-btn" onclick="adjustLogoSize(-5, event)"><i class="fa-solid fa-minus"></i> 축소</button>
+            <span class="tb-val" id="tbLogoSizeVal">58px</span>
+            <button type="button" class="tb-btn" onclick="adjustLogoSize(5, event)"><i class="fa-solid fa-plus"></i> 확대</button>
+          </div>
+        </div>
+        <div class="tb-actions-row">
+          <button type="button" class="tb-btn primary" onclick="document.getElementById('logoUploadInput').click()"><i class="fa-solid fa-upload"></i> 로고 교체</button>
+          <button type="button" class="tb-btn" onclick="resetLogoToDefault()"><i class="fa-solid fa-rotate-left"></i> 기본</button>
+          <button type="button" class="tb-btn danger" onclick="toggleLogo(false)"><i class="fa-solid fa-eye-slash"></i> 숨김</button>
+          <button type="button" class="tb-btn" onclick="openLogoSidebar(event)"><i class="fa-solid fa-sliders"></i> 상세</button>
+        </div>
+      </div>
+
       <div class="header-right-meta">
         <span class="corp-badge" data-slot="docTag">OFFICIAL ENTERPRISE AUDIT</span>
       </div>
@@ -2598,12 +2752,57 @@
       <div class="card-col-left">
         
         <!-- VISUAL SLOT: Photo Mode vs Pledge Mode -->
-        <div class="card-visual-slot">
+        <div class="card-visual-slot" id="cardVisualSlot" style="position: relative;">
           <!-- 1. Photo View (Default) -->
-          <div class="card-photo" id="photoView" onclick="document.getElementById('photoUploadInput').click()" title="클릭하여 내 사진으로 직접 변경">
-            <img src="images/consultant_model.jpg" data-slot="image" alt="담당 컨설턴트 사진">
+          <div class="card-photo" id="photoView" onclick="openPhotoQuickToolbar(event)" title="클릭하여 사진 크기/배율/위치 조절 및 변경">
+            <img src="images/consultant_model.jpg" id="sheetPhotoImg" data-slot="image" alt="담당 컨설턴트 사진">
             <div class="photo-hover-badge">
-              <i class="fa-solid fa-camera"></i> 사진 변경하기 (클릭)
+              <i class="fa-solid fa-sliders"></i> 사진 크기 / 확대 / 위치 조절 (클릭)
+            </div>
+          </div>
+
+          <!-- Quick Photo Toolbar directly on Sheet -->
+          <div class="element-quick-toolbar" id="photoQuickToolbar" data-html2canvas-ignore="true" style="top: 20px; left: 16px; width: 310px;">
+            <div class="tb-header">
+              <span class="tb-title"><i class="fa-solid fa-camera"></i> 사진 즉시 조절 & 변경</span>
+              <button type="button" class="tb-close-btn" onclick="closeQuickToolbars(event)">✕</button>
+            </div>
+            
+            <!-- Zoom row -->
+            <div class="tb-row">
+              <span class="tb-label">사진 확대/축소</span>
+              <div class="tb-btn-group">
+                <button type="button" class="tb-btn" onclick="adjustPhotoZoom(-10, event)"><i class="fa-solid fa-magnifying-glass-minus"></i> 축소</button>
+                <span class="tb-val" id="tbPhotoZoomVal">100%</span>
+                <button type="button" class="tb-btn" onclick="adjustPhotoZoom(10, event)"><i class="fa-solid fa-magnifying-glass-plus"></i> 확대</button>
+              </div>
+            </div>
+
+            <!-- Height row -->
+            <div class="tb-row">
+              <span class="tb-label">프레임 세로 높이</span>
+              <div class="tb-btn-group">
+                <button type="button" class="tb-btn" onclick="adjustPhotoHeight(-30, event)"><i class="fa-solid fa-minus"></i> 낮춤</button>
+                <span class="tb-val" id="tbPhotoHeightVal">570px</span>
+                <button type="button" class="tb-btn" onclick="adjustPhotoHeight(30, event)"><i class="fa-solid fa-plus"></i> 높임</button>
+              </div>
+            </div>
+
+            <!-- Position Y row -->
+            <div class="tb-row">
+              <span class="tb-label">얼굴 상하 위치</span>
+              <div class="tb-btn-group">
+                <button type="button" class="tb-btn" onclick="updatePhotoPosY(10, event)">▲ 상단</button>
+                <button type="button" class="tb-btn" onclick="updatePhotoPosY(50, event)">● 중앙</button>
+                <button type="button" class="tb-btn" onclick="updatePhotoPosY(80, event)">▼ 하단</button>
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="tb-actions-row">
+              <button type="button" class="tb-btn primary" onclick="document.getElementById('photoUploadInput').click()"><i class="fa-solid fa-upload"></i> 내 사진 올리기</button>
+              <button type="button" class="tb-btn" onclick="resetPhotoToDefault()"><i class="fa-solid fa-rotate-left"></i> 기본 사진</button>
+              <button type="button" class="tb-btn" onclick="openPhotoSidebar(event)" title="좌측 상세 조절 패널 열기"><i class="fa-solid fa-sliders"></i> 상세</button>
             </div>
           </div>
 
@@ -3076,11 +3275,90 @@
     let currentTitleSize = 78;
     let currentGreetingSize = 44;
 
+    // --- DIRECT ON-SCREEN QUICK TOOLBAR CONTROLS ---
+    function openLogoQuickToolbar(e) {
+      if (e) e.stopPropagation();
+      const photoTb = document.getElementById('photoQuickToolbar');
+      if (photoTb) photoTb.classList.remove('open');
+      const logoTb = document.getElementById('logoQuickToolbar');
+      if (logoTb) logoTb.classList.toggle('open');
+      openLogoSidebar();
+    }
+
+    function openPhotoQuickToolbar(e) {
+      if (e) e.stopPropagation();
+      const logoTb = document.getElementById('logoQuickToolbar');
+      if (logoTb) logoTb.classList.remove('open');
+      const photoTb = document.getElementById('photoQuickToolbar');
+      if (photoTb) photoTb.classList.toggle('open');
+      openPhotoSidebar();
+    }
+
+    function closeQuickToolbars(e) {
+      if (e) e.stopPropagation();
+      document.querySelectorAll('.element-quick-toolbar').forEach(el => el.classList.remove('open'));
+    }
+
+    function openLogoSidebar(e) {
+      if (e) e.stopPropagation();
+      switchSidebarTab('contentTab', document.getElementById('tabBtn_content'));
+      const card = document.getElementById('logoControlCard');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.style.boxShadow = '0 0 0 2px #0284c7';
+        setTimeout(() => { card.style.boxShadow = 'none'; }, 1500);
+      }
+    }
+
+    function openPhotoSidebar(e) {
+      if (e) e.stopPropagation();
+      switchSidebarTab('profileTab', document.getElementById('tabBtn_profile'));
+      const card = document.getElementById('photoControlGroup');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.style.boxShadow = '0 0 0 2px #0284c7';
+        setTimeout(() => { card.style.boxShadow = 'none'; }, 1500);
+      }
+    }
+
+    function adjustLogoSize(delta, e) {
+      if (e) e.stopPropagation();
+      let newSize = Math.max(30, Math.min(150, currentLogoSize + delta));
+      updateLogoSize(newSize);
+      const tbVal = document.getElementById('tbLogoSizeVal');
+      if (tbVal) tbVal.textContent = newSize + 'px';
+    }
+
+    function adjustPhotoZoom(delta, e) {
+      if (e) e.stopPropagation();
+      let newZoom = Math.max(70, Math.min(180, currentPhotoZoom + delta));
+      updatePhotoZoom(newZoom);
+      const tbVal = document.getElementById('tbPhotoZoomVal');
+      if (tbVal) tbVal.textContent = newZoom + '%';
+    }
+
+    function adjustPhotoHeight(delta, e) {
+      if (e) e.stopPropagation();
+      let newH = Math.max(380, Math.min(680, currentPhotoHeight + delta));
+      updatePhotoHeight(newH);
+      const tbVal = document.getElementById('tbPhotoHeightVal');
+      if (tbVal) tbVal.textContent = newH + 'px';
+    }
+
+    // Close quick toolbars when clicking anywhere on workspace
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.element-quick-toolbar') && !e.target.closest('#sheetLogoBox') && !e.target.closest('#photoView')) {
+        closeQuickToolbars();
+      }
+    });
+
     // --- LOGO SIZING & CONTROLS ---
     function updateLogoSize(size) {
       currentLogoSize = parseInt(size, 10) || 58;
       const valEl = document.getElementById('logoSizeVal');
       if (valEl) valEl.textContent = currentLogoSize + 'px';
+      const tbVal = document.getElementById('tbLogoSizeVal');
+      if (tbVal) tbVal.textContent = currentLogoSize + 'px';
       const rangeEl = document.getElementById('logoSizeRange');
       if (rangeEl && rangeEl.value != currentLogoSize) rangeEl.value = currentLogoSize;
 
@@ -3146,6 +3424,8 @@
       currentPhotoHeight = parseInt(h, 10) || 570;
       const valEl = document.getElementById('photoHeightVal');
       if (valEl) valEl.textContent = currentPhotoHeight + 'px';
+      const tbVal = document.getElementById('tbPhotoHeightVal');
+      if (tbVal) tbVal.textContent = currentPhotoHeight + 'px';
       const rangeEl = document.getElementById('photoHeightRange');
       if (rangeEl && rangeEl.value != currentPhotoHeight) rangeEl.value = currentPhotoHeight;
 
@@ -3159,6 +3439,8 @@
       currentPhotoZoom = parseInt(z, 10) || 100;
       const valEl = document.getElementById('photoZoomVal');
       if (valEl) valEl.textContent = currentPhotoZoom + '%';
+      const tbVal = document.getElementById('tbPhotoZoomVal');
+      if (tbVal) tbVal.textContent = currentPhotoZoom + '%';
       const rangeEl = document.getElementById('photoZoomRange');
       if (rangeEl && rangeEl.value != currentPhotoZoom) rangeEl.value = currentPhotoZoom;
 

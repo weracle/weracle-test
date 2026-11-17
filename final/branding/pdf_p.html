@@ -1514,10 +1514,75 @@
             margin: 0 0 12px 30px;
         }
 
+    
+        /* ===================================================
+           [WERACLE VIP 맞춤 표지 스튜디오 모달 스타일]
+           =================================================== */
+        .studio-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeInModal 0.2s ease;
+        }
+        .studio-modal-backdrop.active {
+            display: flex;
+        }
+        @keyframes fadeInModal {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .studio-modal-box {
+            background: #0f172a;
+            width: 100%;
+            max-width: 1600px;
+            height: 94vh;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #334155;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+        }
+        .studio-modal-top {
+            background: #1e293b;
+            color: #ffffff;
+            padding: 12px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+        .studio-modal-title {
+            font-size: 15px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+        .studio-modal-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 26px;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.15s;
+        }
+        .studio-modal-close:hover {
+            color: #ffffff;
+        }
+
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -1570,8 +1635,22 @@
                 <div class="preview-viewport">
                     
                     <!-- [탭 1: 표지] 단독 1장 표지 (보장분석1.jpg) -->
-                    <div class="real-doc-sheet preview-img-sheet" id="tabCoverDoc" style="display: flex;">
-                        <img src="images/보장분석1.jpg" alt="맞춤 표지" class="sample-report-img">
+                    <!-- [탭 1: 표지] 실시간 저장된 첫값 뷰어 및 맞춤 설정 버튼 -->
+                    <div id="tabCoverDoc" style="display: flex; flex-direction: column; width: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 11px; font-weight: 800; background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 5px;">
+                                    <i class="fa-solid fa-sparkles"></i> 저장된 맞춤 표지
+                                </span>
+                                <span id="previewCoverBadge" style="font-size: 12px; font-weight: 700; color: #334155;">코퍼레이트 다크차콜 (정통 공식문서)</span>
+                            </div>
+                            <button type="button" onclick="openCoverStudioModal()" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; border: none; padding: 7px 14px; border-radius: 7px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(2,132,199,0.3); transition: transform 0.1s;">
+                                <i class="fa-solid fa-sliders"></i> ⚙️ 표지 맞춤 설정
+                            </button>
+                        </div>
+                        <div class="real-doc-sheet preview-img-sheet" style="padding: 0; overflow: hidden; background: #0f172a; border-radius: 12px; height: 580px; position: relative; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                            <iframe id="bojangCoverPreviewFrame" src="pdf_cover_studio.html?mode=preview" style="width: 100%; height: 100%; border: none;"></iframe>
+                        </div>
                     </div>
 
                     <!-- [탭 2: 내용] 가로 슬라이더 3장 (1P 표지 제외, 2P~4P 내용만) -->
@@ -2055,15 +2134,96 @@
         });
     }
 
-    function renderAllPages() {
+    async function renderAllPages() {
         if (window.pdfPagesData.length === 0) return;
         let s = window.SCALE_ADJUST;
         
-        window.pdfPagesData.forEach(data => {
+        for (const data of window.pdfPagesData) {
             let ctx = data.context;
             let canvas = data.canvas;
             
             if (data.isCoverPage) {
+                // [WERACLE VIP 맞춤 표지 엔진] 사용자가 설정/저장한 표지를 1페이지에 우선 렌더링
+                let customCoverRendered = false;
+                try {
+                    const previewFrame = document.getElementById('bojangCoverPreviewFrame');
+                    if (previewFrame && previewFrame.contentWindow && previewFrame.contentWindow.getCoverCanvas) {
+                        // [실제 업로드 데이터 동적 추출 엔진]
+                        // 업로드된 전산 원본 PDF의 실제 데이터(고객명, 계약건수, 합계보험료, 충분/부족/미가입 진단수치)를 완벽 집계
+                        let dynamicSummary = {
+                            clientName: "",
+                            contracts: null,
+                            premium: null,
+                            stOk: null,
+                            stWarn: null,
+                            stMiss: null
+                        };
+
+                        // 1) 전체 분석 페이지의 실제 진단 현황(충분, 부족, 미가입) 합산
+                        let totalOk = 0, totalWarn = 0, totalMiss = 0;
+                        let foundStatuses = false;
+                        for (let pageData of (window.pdfPagesData || [])) {
+                            if (pageData.targetStatuses && pageData.targetStatuses.length > 0) {
+                                foundStatuses = true;
+                                for (let st of pageData.targetStatuses) {
+                                    if (st.text === '충분') totalOk++;
+                                    else if (st.text === '부족') totalWarn++;
+                                    else if (st.text === '미가입') totalMiss++;
+                                }
+                            }
+                        }
+                        if (foundStatuses && (totalOk + totalWarn + totalMiss > 0)) {
+                            dynamicSummary.stOk = totalOk;
+                            dynamicSummary.stWarn = totalWarn;
+                            dynamicSummary.stMiss = totalMiss;
+                        }
+
+                        // 2) 전체 텍스트에서 실제 고객명, 계약건수, 합계보험료 정밀 파싱
+                        for (let pageData of (window.pdfPagesData || [])) {
+                            if (!pageData.sortedItems) continue;
+                            let fullTxt = pageData.sortedItems.map(it => (it.originalItem && it.originalItem.str) ? it.originalItem.str : "").join(" ");
+                            
+                            // 고객명 추출
+                            if (!dynamicSummary.clientName) {
+                                let m = fullTxt.match(/([가-힣a-zA-Z]{2,10})\s*님/);
+                                if (m && !m[1].includes("고객") && !m[1].includes("담당")) dynamicSummary.clientName = m[1];
+                                else {
+                                    let mCust = fullTxt.match(/([가-힣a-zA-Z]{2,10})\s*고객/);
+                                    if (mCust && !mCust[1].includes("담당")) dynamicSummary.clientName = mCust[1];
+                                }
+                            }
+
+                            // 정상 계약건수 추출 (예: 정상계약 15건, 보유계약 12건, 총 18건 등)
+                            if (!dynamicSummary.contracts) {
+                                let mCnt = fullTxt.match(/(?:정상계약|보유계약|정상|계약건수|총계약)\s*[:：]?\s*(\d{1,3})\s*건/);
+                                if (mCnt) dynamicSummary.contracts = mCnt[1];
+                                else {
+                                    let mCntSimple = fullTxt.match(/총\s*(\d{1,3})\s*건/);
+                                    if (mCntSimple) dynamicSummary.contracts = mCntSimple[1];
+                                }
+                            }
+
+                            // 총 월 납입보험료 추출 (예: 합계보험료 420,548원, 월납입보험료 350,000원, 합계 420,548원 등)
+                            if (!dynamicSummary.premium) {
+                                let mPrem = fullTxt.match(/(?:합계보험료|월납입보험료|총보험료|납입보험료|합계)\s*[:：]?\s*([\d,]{4,12})\s*원/);
+                                if (mPrem) dynamicSummary.premium = mPrem[1];
+                            }
+                        }
+
+                        console.log('[WERACLE 표지 데이터 추출 결과]:', dynamicSummary);
+                        const coverCanvas = await previewFrame.contentWindow.getCoverCanvas(dynamicSummary);
+                        if (coverCanvas) {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(coverCanvas, 0, 0, canvas.width, canvas.height);
+                            customCoverRendered = true;
+                        }
+                    }
+                } catch(coverErr) {
+                    console.warn('[VIP 표지 연동] 커스텀 렌더링 예외 발생, 기본 전산 드로잉으로 안전 전환:', coverErr);
+                }
+
+                if (!customCoverRendered) {
+
                 // V71: 사용자 요청 디자인 완전 반영 (메시지형 레이아웃)
                 
                 // 1. 캔버스 완전 초기화 
@@ -2422,6 +2582,7 @@
                         ctx.fillText(disclaimers[i].text, canvas.width / 2, discStartY + (i * discLineHeight));
                     }
                 }
+                            }
             }
             
             if (data.isTargetPage) {
@@ -2432,7 +2593,7 @@
                 applyDesignElements(ctx, canvas, data.sortedItems, data.viewport);
                 drawStatuses(ctx, data.targetStatuses, data.baseImageData, data.barYSet, canvas, data.readyStateCenters);
             }
-        });
+        }
     }
 
     async function generateAndDownloadPDF() {
@@ -2656,7 +2817,7 @@
                     });
                 }
                 
-                renderAllPages();
+                await renderAllPages();
                 await generateAndDownloadPDF();
                 
             } catch (err) {
@@ -2738,5 +2899,70 @@
         }
     }
 </script>
+
+<!-- ==========================================
+     [WERACLE VIP 맞춤 표지 스튜디오 모달]
+     ========================================== -->
+<div id="coverStudioModal" class="studio-modal-backdrop" onclick="if(event.target===this) closeCoverStudioModal();">
+    <div class="studio-modal-box">
+        <div class="studio-modal-top">
+            <div class="studio-modal-title">
+                <i class="fa-solid fa-sliders" style="color:#38bdf8;"></i>
+                <span>WERACLE VIP 보장분석 표지 스튜디오 설정</span>
+                <span style="font-size:11.5px; font-weight:700; background:rgba(56,189,248,0.15); color:#38bdf8; padding:2px 8px; border-radius:4px; margin-left:6px;">실시간 연동</span>
+            </div>
+            <button type="button" class="studio-modal-close" onclick="closeCoverStudioModal()">&times;</button>
+        </div>
+        <iframe id="coverStudioModalFrame" src="pdf_cover_studio.html" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// VIP 맞춤 표지 스튜디오 모달 & 연동 제어
+// ==========================================
+function openCoverStudioModal() {
+    const modal = document.getElementById('coverStudioModal');
+    if (modal) modal.classList.add('active');
+    const iframe = document.getElementById('coverStudioModalFrame');
+    if (iframe && iframe.contentWindow && iframe.contentWindow.loadCoverConfig) {
+        iframe.contentWindow.loadCoverConfig();
+    }
+}
+
+function closeCoverStudioModal() {
+    const modal = document.getElementById('coverStudioModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function updatePreviewCoverBadge() {
+    try {
+        const raw = localStorage.getItem('weracle_bojang_cover_config');
+        if (raw) {
+            const cfg = JSON.parse(raw);
+            const badge = document.getElementById('previewCoverBadge');
+            if (badge && cfg.themeName) {
+                badge.innerText = cfg.themeName + (cfg.visualMode === 'pledge' ? ' (서약형)' : ' (사진형)');
+            }
+        }
+    } catch(e) {}
+}
+
+window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'WERACLE_COVER_SAVED') {
+        closeCoverStudioModal();
+        updatePreviewCoverBadge();
+        const previewFrame = document.getElementById('bojangCoverPreviewFrame');
+        if (previewFrame) {
+            previewFrame.src = 'pdf_cover_studio.html?mode=preview&t=' + Date.now();
+        }
+    }
+});
+
+window.addEventListener('DOMContentLoaded', function() {
+    updatePreviewCoverBadge();
+});
+</script>
+
 </body>
 </html>

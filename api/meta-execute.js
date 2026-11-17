@@ -23,10 +23,10 @@ module.exports = async function handler(req, res) {
         const rows = await r.json();
         if (Array.isArray(rows) && rows[0]) {
           let destUrl = String(rows[0].landing_url || '').trim();
-          const agentKey = rows[0].user_id || 'default';
+          const agentKey = rows[0].user_id || '';
           const isInstaTrack = rows[0].track === 'insta' || String(campId).startsWith('camp_ig_');
 
-         let pdfUrl = '';
+          let pdfUrl = '';
           let qsJson = '';
           let prId = '';
           try {
@@ -51,7 +51,7 @@ module.exports = async function handler(req, res) {
             if (!destUrl.includes('camp=') && rows[0].title) {
               destUrl += (destUrl.includes('?') ? '&' : '?') + `camp=${encodeURIComponent(rows[0].title)}`;
             }
-            if (!destUrl.includes('agent_id=') && agentKey) {
+            if (agentKey && !destUrl.includes('agent_id=')) {
               destUrl += (destUrl.includes('?') ? '&' : '?') + `agent_id=${encodeURIComponent(agentKey)}`;
             }
             if (prId && !destUrl.includes('pr_id=')) {
@@ -75,26 +75,23 @@ module.exports = async function handler(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   const { action } = body;
 
-  // 한글 성함(박보환 등)도 깨지지 않도록 보존
   function sanitizeAgentKey(rawKey) {
-    const str = String(rawKey || 'default').trim().toLowerCase();
-    const cleaned = str.replace(/[^a-z0-9가-힣@._-]/g, '_').replace(/^_+|_+$/g, '');
-    return cleaned || 'default';
+    const str = String(rawKey || '').trim().toLowerCase();
+    if (!str || str === 'default' || str === 'shared' || str === 'weracle_user' || str === '담당설계사') return '';
+    return str.replace(/[^a-z0-9가-힣@._-]/g, '_').replace(/^_+|_+$/g, '');
   }
 
-  // 메타/인스타 API 호환을 위한 영문·숫자 스토리지 폴더명 생성
   function toSafeStorageFolder(rawKey) {
-    const raw = String(rawKey || 'default').trim().toLowerCase();
+    const raw = String(rawKey || 'agent').trim().toLowerCase();
     const ascii = raw.replace(/[^a-z0-9._-]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
     if (ascii && ascii.length >= 2) return ascii;
-    const hex = Buffer.from(raw || 'default', 'utf8').toString('hex').slice(0, 16);
+    const hex = Buffer.from(raw || 'agent', 'utf8').toString('hex').slice(0, 16);
     return `agent_${hex}`;
   }
 
-  // meta_leads 정식 저장 + 읽기(SELECT) 권한까지 검증 후 필요시 백업 동시 보장
   async function insertLeadGuaranteed(leadData, ownerKey) {
-    const cleanOwner = sanitizeAgentKey(ownerKey || 'default');
-    const ownerTag = (cleanOwner && cleanOwner !== 'default') ? ` [owner:${cleanOwner}]` : '';
+    const cleanOwner = sanitizeAgentKey(ownerKey) || 'unassigned';
+    const ownerTag = cleanOwner !== 'unassigned' ? ` [owner:${cleanOwner}]` : '';
     const baseNote = String(leadData.note || '').replace(/\s*\[(?:owner|담당):[^\]]+\]/gi, '').trim();
     const finalNote = `${baseNote}${ownerTag}`.trim();
     const nowIso = leadData.created_at || new Date().toISOString();
@@ -141,8 +138,7 @@ module.exports = async function handler(req, res) {
         payloadToInsert = filtered;
       }
 
-      // return=representation으로 INSERT와 SELECT(읽기) 가능 여부를 동시에 검증
-      let insRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads`, {
+      const insRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -159,7 +155,6 @@ module.exports = async function handler(req, res) {
           readableInMetaLeads = true;
         }
       } else {
-        // SELECT RLS만 막혀 있는 경우 minimal로 meta_leads에도 넣어두고 아래 백업도 함께 기록
         await fetch(`${supabaseUrl}/rest/v1/meta_leads`, {
           method: 'POST',
           headers: {
@@ -177,7 +172,6 @@ module.exports = async function handler(req, res) {
       return { success: true, storage: 'meta_leads', id: generatedId };
     }
 
-    // meta_leads 읽기(SELECT)나 쓰기가 제한된 상태라도 100% 화면에 뜨도록 백업 저장
     const backupId = `lead_bk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const storedLeadJson = { ...fullLeadObj, id: backupId };
     const backupRecord = {
@@ -221,7 +215,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // [1] 이미지 업로드 (사용자별 폴더 users/{userFolder}/ 자동 분리)
+    // [1] 이미지 업로드
     if (action === 'UPLOAD_MEDIA') {
       const { mediaBase64, userId } = body;
       if (!mediaBase64 || !supabaseKey) {
@@ -236,7 +230,7 @@ module.exports = async function handler(req, res) {
 
       const rawBase64Only = String(mediaBase64).replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
       const buffer = Buffer.from(rawBase64Only, 'base64');
-      const folder = toSafeStorageFolder(userId || 'shared');
+      const folder = toSafeStorageFolder(userId || 'user');
       const objectPath = `users/${folder}/insta_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
 
       const uploadRes = await fetch(`${supabaseUrl}/storage/v1/object/ad_media/${objectPath}`, {
@@ -260,11 +254,12 @@ module.exports = async function handler(req, res) {
     // [1-1] 나의 광고콘텐츠 저장
     if (action === 'SAVE_CUSTOM_ASSET') {
       const { userId, asset } = body;
-      if (!supabaseKey || !asset || !asset.id) {
-        return res.status(200).json({ success: false });
+      const ownerKey = sanitizeAgentKey(userId);
+      if (!supabaseKey || !asset || !asset.id || !ownerKey) {
+        return res.status(200).json({ success: false, error: '로그인 계정을 확인해 주세요.' });
       }
-      const ownerKey = sanitizeAgentKey(userId || 'default');
-      await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(asset.id)}`, {
+
+      await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(asset.id)}&user_id=eq.${encodeURIComponent(ownerKey)}`, {
         method: 'DELETE',
         headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
       });
@@ -308,7 +303,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, assetId: asset.id });
     }
 
-    // [1-2] 나의 광고콘텐츠 삭제 (+ 사용자 폴더 내 원본 파일 자동 삭제)
+    // [1-2] 나의 광고콘텐츠 삭제
     if (action === 'DELETE_CUSTOM_ASSET') {
       const { assetId, mediaUrls } = body;
       if (supabaseKey && assetId) {
@@ -351,20 +346,17 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-// [2] 멀티 PR 랜딩페이지 저장 (개수 무제한 슬롯 + 기존 대표페이지 완벽 호환)
+    // [2] 멀티 PR 랜딩페이지 저장 (로그인 계정 단독 소유 고정)
     if (action === 'SAVE_PR_CONFIG' || action === 'SAVE_PR_PAGE') {
-      const { agentId, userKeys, config, pageId, pageTitle, presetType, isDefault } = body;
-      if (!supabaseKey || !config) {
-        return res.status(200).json({ success: false, error: 'Missing config or key' });
+      const { agentId, config, pageId, pageTitle, presetType, isDefault } = body;
+      const primaryOwner = sanitizeAgentKey(agentId);
+      if (!supabaseKey || !config || !primaryOwner) {
+        return res.status(200).json({ success: false, error: '위라클랩 로그인 세션을 확인한 뒤 다시 저장해 주세요.' });
       }
-
-      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? userKeys : [agentId || 'default'];
-      const safeKeys = Array.from(new Set(rawKeyList.map(k => sanitizeAgentKey(k)).filter(Boolean)));
-      if (safeKeys.length === 0) safeKeys.push('default');
-      const primaryOwner = safeKeys.find(k => k !== 'default') || safeKeys[0];
 
       const enrichedConfig = {
         ...config,
+        ownerAgentId: primaryOwner,
         pageTitle: String(pageTitle || config.pageTitle || '나의 대표 PR 페이지').trim(),
         presetType: String(presetType || config.presetType || 'A').toUpperCase(),
         isDefault: Boolean(isDefault || config.isDefault),
@@ -378,51 +370,47 @@ module.exports = async function handler(req, res) {
       enrichedConfig.pageId = targetSlotId;
       const configJsonStr = JSON.stringify(enrichedConfig);
 
-      // 대표 페이지로 지정한 경우, 기존 기본 슬롯(pr_cfg_*)도 함께 최신화하여 기본 링크 호환성 100% 유지
       if (enrichedConfig.isDefault || !String(targetSlotId).startsWith('pr_page_')) {
-        for (const sKey of safeKeys) {
-          const defRecId = `pr_cfg_${sKey}`;
-          await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(defRecId)}`, {
-            method: 'DELETE',
-            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-          });
-          await fetch(`${supabaseUrl}/rest/v1/meta_campaigns`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({
-              id: defRecId,
-              user_id: sKey,
-              track: 'pr_config',
-              title: enrichedConfig.pageTitle,
-              description: enrichedConfig.presetType,
-              cta_type: 'PR_DEFAULT',
-              landing_url: '',
-              start_date: '',
-              end_date: '',
-              ratio: '1:1',
-              region: '',
-              target_summary: configJsonStr,
-              budget: 0,
-              keyword: '',
-              dm_message: '',
-              status: 'CONFIG',
-              meta_campaign_id: '',
-              adset_id: '',
-              ad_id: '',
-              ig_media_id: '',
-              leads_count: 0,
-              dm_sent_count: 0,
-              created_at: new Date().toISOString()
-            })
-          });
-        }
+        const defRecId = `pr_cfg_${primaryOwner}`;
+        await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(defRecId)}`, {
+          method: 'DELETE',
+          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+        });
+        await fetch(`${supabaseUrl}/rest/v1/meta_campaigns`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            id: defRecId,
+            user_id: primaryOwner,
+            track: 'pr_config',
+            title: enrichedConfig.pageTitle,
+            description: enrichedConfig.presetType,
+            cta_type: 'PR_DEFAULT',
+            landing_url: '',
+            start_date: '',
+            end_date: '',
+            ratio: '1:1',
+            region: '',
+            target_summary: configJsonStr,
+            budget: 0,
+            keyword: '',
+            dm_message: '',
+            status: 'CONFIG',
+            meta_campaign_id: '',
+            adset_id: '',
+            ad_id: '',
+            ig_media_id: '',
+            leads_count: 0,
+            dm_sent_count: 0,
+            created_at: new Date().toISOString()
+          })
+        });
 
-        // 내 다른 pr_page_* 들의 isDefault 플래그 해제
         try {
           const listR = await fetch(
             `${supabaseUrl}/rest/v1/meta_campaigns?track=eq.pr_config&user_id=eq.${encodeURIComponent(primaryOwner)}&limit=100`,
@@ -449,7 +437,6 @@ module.exports = async function handler(req, res) {
         } catch (e) {}
       }
 
-      // 개별 슬롯(pr_page_*) 저장
       if (String(targetSlotId).startsWith('pr_page_')) {
         await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(targetSlotId)}`, {
           method: 'DELETE',
@@ -494,16 +481,19 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, agentKey: primaryOwner, pageId: targetSlotId, config: enrichedConfig });
     }
 
-    // [2-0] 내 PR 랜딩페이지 보관함 전체 목록 조회 (무제한 리스트)
+    // [2-0] 내 PR 랜딩페이지 보관함 조회 (내 아이디 일치 항목만)
     if (action === 'LIST_PR_PAGES') {
       const { agentId, userKeys } = body;
       if (!supabaseKey) return res.status(200).json({ success: false, pages: [] });
 
-      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? [...userKeys, agentId] : [agentId || 'default'];
-      const safeKeySet = new Set(rawKeyList.map(k => sanitizeAgentKey(k)).filter(k => k && k !== 'default'));
+      const rawKeyList = Array.isArray(userKeys) ? [agentId, ...userKeys] : [agentId];
+      const safeKeySet = new Set(rawKeyList.map(k => sanitizeAgentKey(k)).filter(Boolean));
+      if (safeKeySet.size === 0) {
+        return res.status(200).json({ success: true, pages: [] });
+      }
 
       const r = await fetch(
-        `${supabaseUrl}/rest/v1/meta_campaigns?track=eq.pr_config&order=created_at.desc&limit=300`,
+        `${supabaseUrl}/rest/v1/meta_campaigns?track=eq.pr_config&order=created_at.desc&limit=400`,
         { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
       );
       const rows = await r.json();
@@ -513,10 +503,8 @@ module.exports = async function handler(req, res) {
       if (Array.isArray(rows)) {
         for (const row of rows) {
           const rUser = sanitizeAgentKey(row.user_id || '');
-          const isMine = safeKeySet.size === 0
-            ? rUser === 'default'
-            : (safeKeySet.has(rUser) || Array.from(safeKeySet).some(k => row.id === `pr_cfg_${k}`));
-
+          if (!rUser) continue;
+          const isMine = safeKeySet.has(rUser) || Array.from(safeKeySet).some(k => row.id === `pr_cfg_${k}`);
           if (!isMine || !row.target_summary) continue;
 
           try {
@@ -548,7 +536,6 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // 만약 기존에 만들어둔 기본 페이지만 있고 신규 슬롯이 아직 없다면 보관함 첫 카드로 자동 표시
       if (legacyDefaultRow && !myPages.some(p => p.isDefault)) {
         myPages.unshift(legacyDefaultRow);
       } else {
@@ -558,7 +545,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, pages: myPages });
     }
 
-    // [2-0-B] 선택한 PR 랜딩페이지 삭제 (공용 프로필 사진 파일은 안전하게 보존)
+    // [2-0-B] 선택한 PR 랜딩페이지 삭제
     if (action === 'DELETE_PR_PAGE') {
       const { pageId } = body;
       if (supabaseKey && pageId && String(pageId).startsWith('pr_page_')) {
@@ -570,41 +557,71 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true });
     }
 
-    // [2-1] 알림톡 휴대폰 번호 저장
+    // [2-1] 알림톡 휴대폰 번호 저장 (설정 슬롯이 아직 없어도 즉시 생성해 번호 보관)
     if (action === 'SAVE_AGENT_PHONE') {
-      const { agentId, userKeys, agentPhone } = body;
-      if (!supabaseKey || !agentPhone) return res.status(200).json({ success: false });
+      const { agentId, agentPhone } = body;
+      const primaryKey = sanitizeAgentKey(agentId);
+      if (!supabaseKey || !agentPhone || !primaryKey) return res.status(200).json({ success: false });
 
-      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? userKeys : [agentId || 'default'];
-      const safeKeys = Array.from(new Set(rawKeyList.map(k => sanitizeAgentKey(k)).filter(Boolean)));
-
-      for (const sKey of safeKeys) {
-        const recId = `pr_cfg_${sKey}`;
-        const r = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(recId)}&limit=1`, {
-          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+      const recId = `pr_cfg_${primaryKey}`;
+      const r = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(recId)}&limit=1`, {
+        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+      });
+      const rows = await r.json();
+      if (Array.isArray(rows) && rows[0] && rows[0].target_summary) {
+        try {
+          const cfg = JSON.parse(rows[0].target_summary);
+          cfg.agentNotifyPhone = agentPhone;
+          await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(recId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` },
+            body: JSON.stringify({ target_summary: JSON.stringify(cfg) })
+          });
+        } catch (e) {}
+      } else {
+        await fetch(`${supabaseUrl}/rest/v1/meta_campaigns`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            id: recId,
+            user_id: primaryKey,
+            track: 'pr_config',
+            title: '알림톡 수신 설정',
+            description: 'A',
+            cta_type: 'NOTIFY_ONLY',
+            landing_url: '',
+            start_date: '',
+            end_date: '',
+            ratio: '1:1',
+            region: '',
+            target_summary: JSON.stringify({ agentNotifyPhone: agentPhone }),
+            budget: 0,
+            keyword: '',
+            dm_message: '',
+            status: 'CONFIG',
+            meta_campaign_id: '',
+            adset_id: '',
+            ad_id: '',
+            ig_media_id: '',
+            leads_count: 0,
+            dm_sent_count: 0,
+            created_at: new Date().toISOString()
+          })
         });
-        const rows = await r.json();
-        if (Array.isArray(rows) && rows[0] && rows[0].target_summary) {
-          try {
-            const cfg = JSON.parse(rows[0].target_summary);
-            cfg.agentNotifyPhone = agentPhone;
-            await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(recId)}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` },
-              body: JSON.stringify({ target_summary: JSON.stringify(cfg) })
-            });
-          } catch (e) {}
-        }
       }
       return res.status(200).json({ success: true });
     }
 
-    // [3] 특정 PR 페이지(prId) 또는 대표 PR 설정 조회
+    // [3] 특정 PR 페이지(prId) 또는 내 대표 PR 설정 조회 (타인 페이지 폴백 완전 제거!)
     if (action === 'GET_PR_CONFIG') {
       const { agentId, userKeys, campId, prId } = body;
       if (!supabaseKey) return res.status(200).json({ success: false, config: null });
 
-      // 1순위: 특정 페이지 버전(prId)이 지정된 경우 해당 페이지 즉시 반환
       if (prId) {
         try {
           const spRes = await fetch(
@@ -622,7 +639,7 @@ module.exports = async function handler(req, res) {
         } catch (e) {}
       }
 
-      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? [...userKeys] : [agentId || 'default'];
+      const rawKeyList = Array.isArray(userKeys) && userKeys.length > 0 ? [agentId, ...userKeys] : [agentId];
       if (campId && campId !== 'camp_direct') {
         try {
           const cr = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(campId)}&select=user_id,target_summary&limit=1`, {
@@ -653,8 +670,12 @@ module.exports = async function handler(req, res) {
       }
 
       const safeKeys = Array.from(new Set(rawKeyList.map(k => sanitizeAgentKey(k)).filter(Boolean)));
+      if (safeKeys.length === 0) {
+        return res.status(200).json({ success: false, config: null });
+      }
+
       const r = await fetch(
-        `${supabaseUrl}/rest/v1/meta_campaigns?track=eq.pr_config&order=created_at.desc&limit=150`,
+        `${supabaseUrl}/rest/v1/meta_campaigns?track=eq.pr_config&order=created_at.desc&limit=300`,
         { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
       );
       const rows = await r.json();
@@ -662,13 +683,14 @@ module.exports = async function handler(req, res) {
       if (Array.isArray(rows) && rows.length > 0) {
         let matched = null;
         for (const sKey of safeKeys) {
-          if (sKey === 'default') continue;
-          matched = rows.find(row => row.id === `pr_cfg_${sKey}` || (sanitizeAgentKey(row.user_id) === sKey && row.cta_type === 'PR_DEFAULT'));
-          if (!matched) matched = rows.find(row => sanitizeAgentKey(row.user_id) === sKey);
+          matched = rows.find(row =>
+            (row.id === `pr_cfg_${sKey}` && row.cta_type !== 'NOTIFY_ONLY') ||
+            (sanitizeAgentKey(row.user_id) === sKey && row.cta_type === 'PR_DEFAULT')
+          );
+          if (!matched) {
+            matched = rows.find(row => sanitizeAgentKey(row.user_id) === sKey && row.cta_type !== 'NOTIFY_ONLY');
+          }
           if (matched) break;
-        }
-        if (!matched) {
-          matched = rows.find(row => row.id === 'pr_cfg_default') || rows[0];
         }
         if (matched && matched.target_summary) {
           try {
@@ -683,6 +705,11 @@ module.exports = async function handler(req, res) {
     if (action === 'SAVE_RECORD') {
       const { record } = body;
       if (supabaseKey && record) {
+        const cleanUser = sanitizeAgentKey(record.user_id);
+        if (!cleanUser) {
+          return res.status(200).json({ success: false, error: '로그인 계정을 확인해 주세요.' });
+        }
+        record.user_id = String(record.user_id).trim().toLowerCase();
         await fetch(`${supabaseUrl}/rest/v1/meta_campaigns`, {
           method: 'POST',
           headers: {
@@ -699,14 +726,14 @@ module.exports = async function handler(req, res) {
 
     // [4-1] PR 랜딩페이지 신청 고객 DB 저장
     if (action === 'SAVE_APPLY_LEAD') {
-      const { campaignId, campaignTitle, name, phone, region, note, source, agentId, hasPdf } = body;
+      const { campaignId, campaignTitle, name, phone, region, note, source, agentId, prId, hasPdf } = body;
       if (!supabaseKey || !name || !phone) {
         return res.status(200).json({ success: false, error: 'Missing name or phone' });
       }
 
       const cleanCampId = String(campaignId || 'camp_direct').trim();
       const cleanPhone = String(phone || '').trim();
-      let resolvedOwner = String(agentId || '').trim().toLowerCase();
+      let resolvedOwner = sanitizeAgentKey(agentId);
       let resolvedTitle = String(campaignTitle || '').trim();
       let resolvedSource = String(source || 'meta_ad').trim();
       let currentLeadsCount = 0;
@@ -721,15 +748,27 @@ module.exports = async function handler(req, res) {
           if (Array.isArray(crows) && crows[0]) {
             hasMatchedCamp = true;
             currentLeadsCount = Number(crows[0].leads_count || 0);
-            if (crows[0].user_id && crows[0].user_id !== 'default') {
-              resolvedOwner = String(crows[0].user_id).trim().toLowerCase();
-            }
+            const campOwner = sanitizeAgentKey(crows[0].user_id);
+            if (campOwner) resolvedOwner = campOwner;
             if (crows[0].title && (!resolvedTitle || resolvedTitle.includes('숨은 병원비'))) {
               resolvedTitle = crows[0].title;
             }
             if (crows[0].track === 'insta' || cleanCampId.startsWith('camp_ig_')) {
               resolvedSource = 'insta_dm_apply';
             }
+          }
+        } catch (e) {}
+      }
+
+      // PR 페이지 직접 공유 링크(pr_id)로 들어온 경우 PR 페이지 소유자 확인
+      if (!resolvedOwner && prId) {
+        try {
+          const prR = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(prId)}&select=user_id&limit=1`, {
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+          });
+          const prRows = await prR.json();
+          if (Array.isArray(prRows) && prRows[0] && prRows[0].user_id) {
+            resolvedOwner = sanitizeAgentKey(prRows[0].user_id);
           }
         } catch (e) {}
       }
@@ -763,56 +802,41 @@ module.exports = async function handler(req, res) {
         }).catch(() => {});
       }
 
-      return res.status(200).json(saveResult);
+      return res.status(200).json({ ...saveResult, ownerUserId: resolvedOwner });
     }
 
-    // [5] 캠페인 · 나의 광고콘텐츠 · 유입 DB 통합 조회 (다중 계정 별칭 완벽 연결)
+    // [5] ★ 캠페인 · 나의 광고콘텐츠 · 유입 DB 엄격 격리 조회 (타인 데이터 0% 차단)
     if (action === 'LIST' || action === 'SYNC_LIST') {
-      const { userId, userKeys, knownCampIds } = body;
-      const knownCampIdSet = new Set(Array.isArray(knownCampIds) ? knownCampIds.map(id => String(id)) : []);
+      const { userId, userKeys } = body;
 
-      const rawInputKeys = Array.isArray(userKeys) ? [...userKeys, userId] : [userId];
-      const validKeySet = new Set();
+      const rawInputKeys = Array.isArray(userKeys) ? [userId, ...userKeys] : [userId];
+      const strictKeySet = new Set();
 
-      const addKeyVariants = (rawVal) => {
-        const clean = String(rawVal || '').trim().toLowerCase().replace(/^@/, '');
-        if (!clean || clean === 'default' || clean === 'weracle_user' || clean === '담당설계사') return;
-        validKeySet.add(clean);
-        validKeySet.add(sanitizeAgentKey(clean));
-        if (clean.includes('@')) {
-          const emailPrefix = clean.split('@')[0].trim();
-          if (emailPrefix.length >= 3) validKeySet.add(emailPrefix);
-        }
-        const digitsOnly = clean.replace(/[^0-9]/g, '');
-        if (digitsOnly.length >= 9) validKeySet.add(digitsOnly);
+      const addStrictKey = (val) => {
+        const raw = String(val || '').trim().toLowerCase().replace(/^@/, '');
+        if (!raw || raw === 'default' || raw === 'shared' || raw === 'weracle_user' || raw === 'act_connected' || raw === 'unassigned') return;
+        strictKeySet.add(raw);
+        const san = sanitizeAgentKey(raw);
+        if (san) strictKeySet.add(san);
       };
 
-      rawInputKeys.forEach(addKeyVariants);
+      rawInputKeys.forEach(addStrictKey);
+
+      // 로그인 식별키가 하나도 없으면 절대 전체 목록을 내려주지 않고 즉시 빈 결과 반환!
+      if (strictKeySet.size === 0) {
+        return res.status(200).json({ success: true, data: [], leads: [], customAssets: [] });
+      }
 
       let allRows = [];
       try {
-        const listRes = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?order=created_at.desc&limit=800`, {
+        const listRes = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?order=created_at.desc&limit=1000`, {
           headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
         });
         const cData = await listRes.json();
         if (Array.isArray(cData)) allRows = cData;
       } catch (e) {}
 
-      // PR 설정 레코드(pr_cfg_*)에 저장된 내 이름/전화번호도 식별키로 자동 연결
-      for (const r of allRows) {
-        if (r.track === 'pr_config' || String(r.id || '').startsWith('pr_cfg_')) {
-          const rUser = String(r.user_id || '').trim().toLowerCase();
-          if (validKeySet.has(rUser) || validKeySet.has(sanitizeAgentKey(rUser))) {
-            try {
-              const cfg = JSON.parse(r.target_summary || '{}');
-              if (cfg.agentNotifyPhone) addKeyVariants(cfg.agentNotifyPhone);
-              if (cfg.texts && cfg.texts.heroAgentName) addKeyVariants(cfg.texts.heroAgentName);
-            } catch (e) {}
-          }
-        }
-      }
-
-      const nonConfigRows = allRows.filter(c => c.track !== 'pr_config' && !String(c.id || '').startsWith('pr_cfg_'));
+      const nonConfigRows = allRows.filter(c => c.track !== 'pr_config' && !String(c.id || '').startsWith('pr_cfg_') && !String(c.id || '').startsWith('pr_page_'));
       const rawCustomAssetRows = [];
       const backupLeadRows = [];
       const allCampaigns = [];
@@ -823,14 +847,15 @@ module.exports = async function handler(req, res) {
         } else if (row.track === 'lead_backup' || String(row.id || '').startsWith('lead_bk_')) {
           try {
             const parsedLead = row.target_summary ? JSON.parse(row.target_summary) : {};
-            const rowOwner = String(row.user_id || '').trim().toLowerCase();
+            const rowOwner = sanitizeAgentKey(row.user_id || '');
             const baseNt = String(parsedLead.note || '');
-            const taggedNt = (rowOwner && rowOwner !== 'default' && !baseNt.includes('[owner:'))
+            const taggedNt = (rowOwner && !baseNt.includes('[owner:'))
               ? `${baseNt} [owner:${rowOwner}]`.trim()
               : baseNt;
 
             backupLeadRows.push({
               id: row.id,
+              user_id: rowOwner,
               campaign_id: parsedLead.campaign_id || row.meta_campaign_id || 'camp_direct',
               campaign_title: parsedLead.campaign_title || row.title || '상담 신청',
               source: parsedLead.source || row.description || 'insta_dm_apply',
@@ -847,27 +872,26 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // 캠페인이 내 소유인지 정밀 판별하는 헬퍼 (user_id + target_summary + landing_url 내 담당자명/ID 모두 대조)
-      const checkCampaignBelongsToMe = (c) => {
-        if (knownCampIdSet.has(String(c.id))) return true;
-        const cUser = String(c.user_id || '').trim().toLowerCase().replace(/^@/, '');
-        const cUserSanitized = sanitizeAgentKey(cUser);
-        const cUserDigits = cUser.replace(/[^0-9]/g, '');
+      const matchesMyStrictKey = (val) => {
+        const cl = String(val || '').trim().toLowerCase().replace(/^@/, '');
+        if (!cl || cl === 'default' || cl === 'weracle_user' || cl === 'unassigned') return false;
+        const san = sanitizeAgentKey(cl);
+        return strictKeySet.has(cl) || (san && strictKeySet.has(san));
+      };
 
-        if (cUser && (validKeySet.has(cUser) || validKeySet.has(cUserSanitized) || (cUserDigits.length >= 9 && validKeySet.has(cUserDigits)))) {
-          return true;
+      const checkCampaignStrictlyMine = (c) => {
+        // 1) 캠페인에 고유 user_id(이메일 등)가 적혀 있으면 오직 그 소유자와 일치할 때만 허용
+        const cUserRaw = String(c.user_id || '').trim().toLowerCase();
+        if (cUserRaw && cUserRaw !== 'default' && cUserRaw !== 'weracle_user') {
+          if (matchesMyStrictKey(cUserRaw)) return true;
         }
 
+        // 2) 과거 테스트 중 user_id가 'default'로 저장된 레코드라도 내 고유 pageId / igId와 정확히 일치할 때만 내 것으로 매칭
         if (c.target_summary && String(c.target_summary).startsWith('{')) {
           try {
             const pObj = JSON.parse(c.target_summary);
-            const candidates = [pObj.igId, pObj.igUser, pObj.pageId, pObj.agentName, pObj.agentPhone];
-            for (const cand of candidates) {
-              const cl = String(cand || '').trim().toLowerCase().replace(/^@/, '');
-              if (cl && (validKeySet.has(cl) || validKeySet.has(sanitizeAgentKey(cl)))) return true;
-              const dg = cl.replace(/[^0-9]/g, '');
-              if (dg.length >= 9 && validKeySet.has(dg)) return true;
-            }
+            if (pObj.igId && matchesMyStrictKey(pObj.igId)) return true;
+            if (pObj.pageId && matchesMyStrictKey(pObj.pageId)) return true;
           } catch (e) {}
         }
 
@@ -876,13 +900,8 @@ module.exports = async function handler(req, res) {
             const uIdx = c.landing_url.indexOf('?');
             if (uIdx >= 0) {
               const sp = new URLSearchParams(c.landing_url.slice(uIdx + 1));
-              const urlCands = [sp.get('agent_id'), sp.get('agent'), sp.get('agent_phone')];
-              for (const cand of urlCands) {
-                const cl = String(cand || '').trim().toLowerCase().replace(/^@/, '');
-                if (cl && (validKeySet.has(cl) || validKeySet.has(sanitizeAgentKey(cl)))) return true;
-                const dg = cl.replace(/[^0-9]/g, '');
-                if (dg.length >= 9 && validKeySet.has(dg)) return true;
-              }
+              const urlAgentId = sp.get('agent_id');
+              if (urlAgentId && matchesMyStrictKey(urlAgentId)) return true;
             }
           } catch (e) {}
         }
@@ -890,20 +909,10 @@ module.exports = async function handler(req, res) {
         return false;
       };
 
-      // 2회 연쇄 브릿지: 내 캠페인(예: agent=박보환)에 적힌 user_id(예: weracle_bohwan)를 내 키 목록에 자동 편입
-      for (let pass = 0; pass < 2; pass++) {
-        for (const c of allCampaigns) {
-          if (checkCampaignBelongsToMe(c)) {
-            if (c.user_id) addKeyVariants(c.user_id);
-          }
-        }
-      }
-
+      // 나의 광고콘텐츠도 오직 내 키와 일치하는 것만 반환 ('default' 공유 제거)
       const myCustomAssets = [];
       for (const row of rawCustomAssetRows) {
-        const rUser = String(row.user_id || '').trim().toLowerCase();
-        const isMyAsset = validKeySet.size === 0 || validKeySet.has(rUser) || validKeySet.has(sanitizeAgentKey(rUser)) || rUser === 'default';
-        if (isMyAsset && row.target_summary) {
+        if (matchesMyStrictKey(row.user_id) && row.target_summary) {
           try {
             const parsedAsset = JSON.parse(row.target_summary);
             if (parsedAsset && parsedAsset.id) myCustomAssets.push(parsedAsset);
@@ -911,36 +920,17 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      const otherUsersCampIdSet = new Set();
-      let myCampaigns = [];
-
-      if (validKeySet.size > 0 || knownCampIdSet.size > 0) {
-        for (const c of allCampaigns) {
-          const cUser = String(c.user_id || '').trim().toLowerCase();
-          const isUnassignedLegacy = (!cUser || cUser === 'default' || cUser === 'weracle_user');
-          const isMine = checkCampaignBelongsToMe(c);
-
-          if (isMine || isUnassignedLegacy) {
-            myCampaigns.push(c);
-          } else {
-            otherUsersCampIdSet.add(String(c.id));
-          }
-        }
-      } else {
-        myCampaigns = allCampaigns;
-      }
-
+      const myCampaigns = allCampaigns.filter(c => checkCampaignStrictlyMine(c));
       const myCampIdSet = new Set(myCampaigns.map(c => String(c.id)));
-      const myCampTitleSet = new Set(myCampaigns.map(c => String(c.title || '').trim()).filter(Boolean));
       const instaCampIdSet = new Set(myCampaigns.filter(c => c.track === 'insta').map(c => String(c.id)));
 
       let leads = [];
       try {
-        let leadsRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads?order=created_at.desc&limit=500`, {
+        let leadsRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads?order=created_at.desc&limit=800`, {
           headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
         });
         if (!leadsRes.ok) {
-          leadsRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads?limit=500`, {
+          leadsRes = await fetch(`${supabaseUrl}/rest/v1/meta_leads?limit=800`, {
             headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
           });
         }
@@ -958,33 +948,25 @@ module.exports = async function handler(req, res) {
           dedupedRaw.push(item);
         }
 
+        // ★ 유입 DB 엄격 필터: 내 캠페인 고유 ID이거나 내 고유 owner 태그/user_id일 때만 통과, 나머지는 100% 차단(return false)
         leads = dedupedRaw.filter(l => {
-          const cId = String(l.campaign_id || '');
-          const cTitle = String(l.campaign_title || '').trim();
-          const noteStr = String(l.note || '');
-
-          if (cId && myCampIdSet.has(cId)) return true;
-          if (cTitle && myCampTitleSet.has(cTitle)) return true;
-
-          const ownerMatch = noteStr.match(/\[(?:owner|담당):([^\]]+)\]/i);
-          if (ownerMatch && ownerMatch[1]) {
-            const taggedOwner = ownerMatch[1].trim().toLowerCase().replace(/^@/, '');
-            const taggedSanitized = sanitizeAgentKey(taggedOwner);
-            const taggedDigits = taggedOwner.replace(/[^0-9]/g, '');
-
-            const isGenericTag = (!taggedOwner || taggedOwner === 'default' || taggedOwner === 'weracle_user' || taggedOwner === '담당설계사');
-            if (!isGenericTag && validKeySet.size > 0) {
-              const isTaggedMine =
-                validKeySet.has(taggedOwner) ||
-                validKeySet.has(taggedSanitized) ||
-                (taggedDigits.length >= 9 && validKeySet.has(taggedDigits));
-
-              if (isTaggedMine) return true;
-            }
+          const cId = String(l.campaign_id || '').trim();
+          if (cId && cId !== 'camp_direct' && cId !== 'meta_instant' && myCampIdSet.has(cId)) {
+            return true;
           }
 
-          if (cId && otherUsersCampIdSet.has(cId)) return false;
-          return true;
+          if (l.user_id && matchesMyStrictKey(l.user_id)) {
+            return true;
+          }
+
+          const noteStr = String(l.note || l.answer || '');
+          const ownerMatch = noteStr.match(/\[(?:owner|담당):([^\]]+)\]/i);
+          if (ownerMatch && ownerMatch[1]) {
+            if (matchesMyStrictKey(ownerMatch[1])) return true;
+            return false;
+          }
+
+          return false;
         }).map(l => {
           const cleanNote = String(l.note || '').replace(/\s*\[(?:owner|담당):[^\]]+\]/gi, '').trim();
           let cleanSource = l.source || 'meta_ad';
@@ -1128,7 +1110,7 @@ module.exports = async function handler(req, res) {
             note: rawNote,
             status: String(leadRecord.status || '자동DM 발송완료'),
             created_at: leadRecord.created_at || new Date().toISOString()
-          }, userId || 'default');
+          }, userId);
         }
       }
       return res.status(200).json({ success: true });

@@ -1,11 +1,21 @@
 module.exports = async function handler(req, res) {
-  const { code, error, error_description } = req.query;
+  const { code, state, error, error_description } = req.query;
+
+  // state에 실려온 설계사 이메일 복원
+  let stateEmail = '';
+  if (state && String(state).startsWith('u_')) {
+    try {
+      stateEmail = Buffer.from(String(state).slice(2), 'base64').toString('utf8').trim().toLowerCase();
+    } catch (e) {}
+  }
+
+  const errExtra = stateEmail ? `&user_email=${encodeURIComponent(stateEmail)}` : '';
 
   if (error) {
-    return res.redirect(`/meta_ads.html?error=${encodeURIComponent(error_description || error)}`);
+    return res.redirect(`/meta_ads.html?error=${encodeURIComponent(error_description || error)}${errExtra}`);
   }
   if (!code) {
-    return res.redirect(`/meta_ads.html?error=${encodeURIComponent('인증 코드가 전달되지 않았습니다.')}`);
+    return res.redirect(`/meta_ads.html?error=${encodeURIComponent('인증 코드가 전달되지 않았습니다.')}${errExtra}`);
   }
 
   const APP_ID = process.env.META_APP_ID || '872047289263262';
@@ -15,7 +25,7 @@ module.exports = async function handler(req, res) {
   const REDIRECT_URI = `${reqProto}://${reqHost}/api/meta-callback`;
 
   try {
-    // 1. 단기 액세스 토큰 발급
+    // 1. 단기 액세스 토큰 발급 및 60일 장기 토큰 교환
     let accessToken = '';
     if (APP_SECRET) {
       const tokenRes = await fetch(
@@ -26,10 +36,9 @@ module.exports = async function handler(req, res) {
         accessToken = tokenData.access_token;
       } else {
         const errMsg = (tokenData.error && tokenData.error.message) || '토큰 발급 실패';
-        return res.redirect(`/meta_ads.html?error=${encodeURIComponent(errMsg)}`);
+        return res.redirect(`/meta_ads.html?error=${encodeURIComponent(errMsg)}${errExtra}`);
       }
 
-      // ★ [핵심 업그레이드 1] 단기 토큰을 60일 장기 토큰(Long-Lived Token)으로 자동 교환!
       try {
         const longRes = await fetch(
           `https://graph.facebook.com/v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${APP_ID}&client_secret=${APP_SECRET}&fb_exchange_token=${encodeURIComponent(accessToken)}`
@@ -40,8 +49,16 @@ module.exports = async function handler(req, res) {
         }
       } catch (e) {}
     } else {
-      return res.redirect(`/meta_ads.html?error=${encodeURIComponent('서버 환경변수 META_APP_SECRET을 확인해 주세요.')}`);
+      return res.redirect(`/meta_ads.html?error=${encodeURIComponent('서버 환경변수 META_APP_SECRET을 확인해 주세요.')}${errExtra}`);
     }
+
+    // 1-2. 연동한 메타 사용자 고유 ID 확인 (이메일 미전달 시에도 계정 혼선 원천 차단)
+    let fbUid = '';
+    try {
+      const meRes = await fetch(`https://graph.facebook.com/v21.0/me?fields=id,name&access_token=${encodeURIComponent(accessToken)}`);
+      const meData = await meRes.json();
+      if (meData && meData.id) fbUid = String(meData.id);
+    } catch (e) {}
 
     // 2. 사용자 광고계정 목록 조회
     let adAccId = 'act_connected';
@@ -56,7 +73,7 @@ module.exports = async function handler(req, res) {
       }
     } catch (e) {}
 
-    // 3. 페이스북 페이지 및 인스타그램 비즈니스 계정 조회 + ★ 24시간 무인 웹훅 자동 구독!
+    // 3. 페이스북 페이지 및 인스타그램 비즈니스 계정 조회 + 24시간 무인 웹훅 자동 구독
     let pageId = '';
     let igId = '';
     let igUser = '';
@@ -75,7 +92,6 @@ module.exports = async function handler(req, res) {
           igUser = igObj.username || '';
         }
 
-        // ★ [핵심 업그레이드 2] 모든 연결된 페이지를 우리 웹훅 서버에 자동 구독 (PC 꺼도 24시간 무인 댓글 DM & 리드 수집 작동)
         for (const p of pageData.data) {
           if (p.id && p.access_token) {
             try {
@@ -99,11 +115,13 @@ module.exports = async function handler(req, res) {
       page_id: pageId,
       ig_id: igId,
       ig_user: igUser,
+      fb_uid: fbUid,
       m_token: accessToken
     });
+    if (stateEmail) redirectParams.set('user_email', stateEmail);
 
     return res.redirect(`/meta_ads.html?${redirectParams.toString()}`);
   } catch (err) {
-    return res.redirect(`/meta_ads.html?error=${encodeURIComponent(err.message)}`);
+    return res.redirect(`/meta_ads.html?error=${encodeURIComponent(err.message)}${errExtra}`);
   }
 };

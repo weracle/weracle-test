@@ -1642,8 +1642,8 @@
                     
                     <!-- [탭 1: 표지] 단독 1장 표지 (보장분석1.jpg) -->
                     <!-- [탭 1: 표지] 실시간 저장된 첫값 뷰어 및 맞춤 설정 버튼 -->
-                    <div id="tabCoverDoc" style="display: flex; flex-direction: column; width: 100%;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+                    <div id="tabCoverDoc" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); width: 100%; max-width: 500px; box-sizing: border-box;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span style="font-size: 11px; font-weight: 800; background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 5px;">
                                     <i class="fa-solid fa-sparkles"></i> 저장된 맞춤 표지
@@ -1654,8 +1654,8 @@
                                 <i class="fa-solid fa-sliders"></i> ⚙️ 표지 맞춤 설정
                             </button>
                         </div>
-                        <div class="real-doc-sheet preview-img-sheet" style="padding: 0; overflow: hidden; background: #0f172a; border-radius: 12px; height: 580px; position: relative; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
-                            <iframe id="bojangCoverPreviewFrame" src="pdf_cover_studio.html?mode=preview" style="width: 100%; height: 100%; border: none;"></iframe>
+                        <div class="real-doc-sheet preview-img-sheet" style="padding: 0; overflow: hidden; background: #0f172a; border-radius: 12px; width: 100%; max-width: 500px; aspect-ratio: 1 / 1.414; min-height: 580px; position: relative; border: 1px solid #cbd5e1; box-shadow: 0 15px 40px rgba(0,0,0,0.35); margin: 0 auto; display: flex; justify-content: center; align-items: center;">
+                            <iframe id="bojangCoverPreviewFrame" src="pdf_cover_studio.html?mode=preview" style="width: 100%; height: 100%; border: none; display: block;"></iframe>
                         </div>
                     </div>
 
@@ -1721,22 +1721,16 @@
                 </div>
 
                 <div class="upload-body">
-                    <!-- 단계 1: 마이페이지 전용 로고 자동 연동 (수동 업로드 불필요) -->
-                    <div class="step-group" style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:12px; padding:15px 18px; margin-bottom:20px; box-shadow:0 2px 5px rgba(0,0,0,0.03);">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <div style="width:30px; height:30px; border-radius:50%; background:#dbeafe; color:#0284c7; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800;">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                </div>
-                                <div>
-                                    <div style="font-size:14px; font-weight:800; color:#0f172a;">마이페이지 전용 로고 자동 연동</div>
-                                    <div style="font-size:12px; color:#64748b; margin-top:2px;">마이페이지에 등록된 본인 로고가 표지와 리포트 전체에 자동 반영됩니다.</div>
-                                </div>
-                            </div>
-                            <div id="mypageLogoStatusBox" style="display:flex; align-items:center; gap:10px;">
-                                <img id="mypageLogoPreviewImg" src="" style="height:36px; max-width:110px; object-fit:contain; display:none; border:1px solid #cbd5e1; border-radius:6px; padding:3px; background:white; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-                                <span id="mypageLogoBadge" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#e0f2fe; padding:4px 10px; border-radius:6px; border:1px solid #bae6fd;">자동 연동 활성화</span>
-                            </div>
+                    <!-- 연동 로고 표시 영역 -->
+                    <div class="step-group" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px 18px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.04); display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="font-size:12px; font-weight:800; color:#0369a1; background:#e0f2fe; padding:4px 9px; border-radius:6px; border:1px solid #bae6fd;">
+                                <i class="fa-solid fa-circle-check"></i> 연동 로고
+                            </span>
+                            <span id="mypageLogoBadge" style="font-size:12.5px; font-weight:700; color:#334155;">등록된 전용 로고 자동 반영</span>
+                        </div>
+                        <div id="mypageLogoStatusBox" style="display:flex; align-items:center;">
+                            <img id="mypageLogoPreviewImg" src="" alt="연동 로고" style="height:40px; max-width:140px; object-fit:contain; display:none; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:3px 8px; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
                         </div>
                         <input type="file" id="logoInput" accept="image/*" style="display:none;">
                     </div>
@@ -2970,8 +2964,12 @@ function openCoverStudioModal() {
     const modal = document.getElementById('coverStudioModal');
     if (modal) modal.classList.add('active');
     const iframe = document.getElementById('coverStudioModalFrame');
-    if (iframe && iframe.contentWindow && iframe.contentWindow.loadCoverConfig) {
-        iframe.contentWindow.loadCoverConfig();
+    if (iframe) {
+        if (iframe.contentWindow && iframe.contentWindow.loadCoverConfig) {
+            iframe.contentWindow.loadCoverConfig();
+        } else {
+            iframe.src = 'pdf_cover_studio.html?t=' + Date.now();
+        }
     }
 }
 
@@ -2999,6 +2997,11 @@ window.addEventListener('message', function(e) {
         updatePreviewCoverBadge();
         const previewFrame = document.getElementById('bojangCoverPreviewFrame');
         if (previewFrame) {
+            try {
+                if (previewFrame.contentWindow && previewFrame.contentWindow.loadCoverConfig) {
+                    previewFrame.contentWindow.loadCoverConfig();
+                }
+            } catch(err) {}
             previewFrame.src = 'pdf_cover_studio.html?mode=preview&t=' + Date.now();
         }
     }

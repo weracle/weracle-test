@@ -2185,30 +2185,46 @@
       }
     }
 
+    // ==========================================
+    // [WERACLE VIP COVER STUDIO CORE ENGINE]
+    // ==========================================
+    function applyTemplate(idx) {
+      if (idx === undefined || idx === null || !TEMPLATES[idx]) return;
+      currentTemplateIndex = idx;
+      const tpl = TEMPLATES[idx];
+      const dynCss = document.getElementById('dynamicCss');
+      if (dynCss) dynCss.innerHTML = tpl.css;
+
+      document.querySelectorAll('.theme-card').forEach((c, i) => {
+        c.classList.toggle('active', i === idx);
+      });
+
+      const themeMeta = themeSwatches[idx] || themeSwatches.find(th => th.file === tpl.file) || themeSwatches[0];
+      const currThemeDisplay = document.getElementById('currThemeDisplay');
+      if (currThemeDisplay && themeMeta) {
+        currThemeDisplay.textContent = themeMeta.name;
+      }
+
+      if (currentVisualMode === 'pledge' && currentPledgeColorTone === 'auto') {
+        applyPledgeColorScheme('auto');
+      }
+
+      if (customLogoSrc) {
+        canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(img => {
+          img.src = customLogoSrc;
+          img.style.display = 'block';
+        });
+      }
+      if (customPhotoSrc) {
+        canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = customPhotoSrc);
+      }
+    }
+
     // Theme Switcher
     function selectThemeByFile(filename, cardEl) {
       const idx = TEMPLATES.findIndex(t => t.file === filename);
       if (idx !== -1) {
-        currentTemplateIndex = idx;
-        const tpl = TEMPLATES[idx];
-        document.getElementById('dynamicCss').innerHTML = tpl.css;
-
-        document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
-        if (cardEl) cardEl.classList.add('active');
-
-        const themeMeta = themeSwatches.find(th => th.file === filename) || themeSwatches[0];
-        document.getElementById('currThemeDisplay').textContent = themeMeta.name;
-
-        if (currentVisualMode === 'pledge' && currentPledgeColorTone === 'auto') {
-          applyPledgeColorScheme('auto');
-        }
-
-        if (customLogoSrc) {
-          canvasPage.querySelectorAll('img[src*="보답화니_로고"], [data-slot="logo"]').forEach(img => img.src = customLogoSrc);
-        }
-        if (customPhotoSrc) {
-          canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = customPhotoSrc);
-        }
+        applyTemplate(idx);
       }
     }
 
@@ -2439,7 +2455,6 @@
           img.style.display = 'block';
         });
       } else {
-        // Hide logo if not registered in MyPage yet
         canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(img => {
           if (!img.src || img.src.includes('보답화니') || img.src === window.location.href || img.getAttribute('src') === '') {
             img.style.display = 'none';
@@ -2457,11 +2472,20 @@
         if (myProfile.phone && document.getElementById('inputAdvisorPhone')) {
           document.getElementById('inputAdvisorPhone').value = myProfile.phone;
         }
-        if (myProfile.company && document.getElementById('inputBranchName')) {
-          document.getElementById('inputBranchName').value = myProfile.company;
+        if (myProfile.company && document.getElementById('inputAdvisorBranch')) {
+          document.getElementById('inputAdvisorBranch').value = myProfile.company;
         }
         updateAllValues();
       }
+    }
+
+    // Unified Master Updater for all values across DOM
+    function updateAllValues() {
+      updateClientGreeting();
+      updateOfficialInfo();
+      updateBojangMetrics();
+      const sloganEl = document.getElementById('inputAdvisorSlogan');
+      if (sloganEl) updateSloganText(sloganEl.value);
     }
 
     // Listen to parent message for logo updates
@@ -2487,16 +2511,12 @@
         const raw = localStorage.getItem('weracle_bojang_cover_config');
         if (!raw) return;
         const cfg = JSON.parse(raw);
+        
         if (cfg.themeIdx !== undefined && TEMPLATES[cfg.themeIdx]) {
-          currentTemplateIndex = cfg.themeIdx;
           applyTemplate(cfg.themeIdx);
-          document.querySelectorAll('.theme-card').forEach((tc, idx) => {
-            if (idx === cfg.themeIdx) tc.classList.add('active');
-            else tc.classList.remove('active');
-          });
         }
         if (cfg.visualMode) {
-          switchVisualMode(cfg.visualMode);
+          setVisualMode(cfg.visualMode);
         }
         if (cfg.photoSrc) {
           customPhotoSrc = cfg.photoSrc;
@@ -2510,7 +2530,6 @@
           });
         }
         if (document.getElementById('inputClientName')) {
-          // If legacy '조진주' was saved, reset to default '고객'
           const clientVal = (cfg.client && cfg.client !== '조진주') ? cfg.client : '고객';
           document.getElementById('inputClientName').value = clientVal;
         }
@@ -2520,26 +2539,26 @@
         if (cfg.phone && document.getElementById('inputAdvisorPhone')) {
           document.getElementById('inputAdvisorPhone').value = cfg.phone;
         }
-        if (cfg.company && document.getElementById('inputBranchName')) {
-          document.getElementById('inputBranchName').value = cfg.company;
+        if (cfg.company && document.getElementById('inputAdvisorBranch')) {
+          document.getElementById('inputAdvisorBranch').value = cfg.company;
         }
-        if (cfg.slogan && document.getElementById('inputSloganText')) {
-          document.getElementById('inputSloganText').value = cfg.slogan;
+        if (cfg.slogan && document.getElementById('inputAdvisorSlogan')) {
+          document.getElementById('inputAdvisorSlogan').value = cfg.slogan;
         }
-        if (cfg.contracts && document.getElementById('inputContractsCount')) {
-          document.getElementById('inputContractsCount').value = cfg.contracts;
+        if (cfg.contracts && document.getElementById('inputContracts')) {
+          document.getElementById('inputContracts').value = cfg.contracts;
         }
-        if (cfg.premium && document.getElementById('inputMonthlyPremium')) {
-          document.getElementById('inputMonthlyPremium').value = cfg.premium;
+        if (cfg.premium && document.getElementById('inputPremium')) {
+          document.getElementById('inputPremium').value = cfg.premium;
         }
-        if (cfg.stOk && document.getElementById('inputStatusOk')) {
-          document.getElementById('inputStatusOk').value = cfg.stOk;
+        if (cfg.stOk && document.getElementById('inputDiagOk')) {
+          document.getElementById('inputDiagOk').value = cfg.stOk;
         }
-        if (cfg.stWarn && document.getElementById('inputStatusWarn')) {
-          document.getElementById('inputStatusWarn').value = cfg.stWarn;
+        if (cfg.stWarn && document.getElementById('inputDiagWarn')) {
+          document.getElementById('inputDiagWarn').value = cfg.stWarn;
         }
-        if (cfg.stMiss && document.getElementById('inputStatusMiss')) {
-          document.getElementById('inputStatusMiss').value = cfg.stMiss;
+        if (cfg.stMiss && document.getElementById('inputDiagMiss')) {
+          document.getElementById('inputDiagMiss').value = cfg.stMiss;
         }
         updateAllValues();
       } catch(e) {
@@ -2558,13 +2577,13 @@
         client: document.getElementById('inputClientName') ? document.getElementById('inputClientName').value.trim() : '고객',
         advisor: document.getElementById('inputAdvisorName') ? document.getElementById('inputAdvisorName').value.trim() : '박보환 본부장',
         phone: document.getElementById('inputAdvisorPhone') ? document.getElementById('inputAdvisorPhone').value.trim() : '010-1234-5678',
-        company: document.getElementById('inputBranchName') ? document.getElementById('inputBranchName').value.trim() : '위라클랩',
-        slogan: document.getElementById('inputSloganText') ? document.getElementById('inputSloganText').value.trim() : '',
-        contracts: document.getElementById('inputContractsCount') ? document.getElementById('inputContractsCount').value.trim() : '18',
-        premium: document.getElementById('inputMonthlyPremium') ? document.getElementById('inputMonthlyPremium').value.trim() : '420,548',
-        stOk: document.getElementById('inputStatusOk') ? document.getElementById('inputStatusOk').value.trim() : '23',
-        stWarn: document.getElementById('inputStatusWarn') ? document.getElementById('inputStatusWarn').value.trim() : '8',
-        stMiss: document.getElementById('inputStatusMiss') ? document.getElementById('inputStatusMiss').value.trim() : '6',
+        company: document.getElementById('inputAdvisorBranch') ? document.getElementById('inputAdvisorBranch').value.trim() : '위라클랩',
+        slogan: document.getElementById('inputAdvisorSlogan') ? document.getElementById('inputAdvisorSlogan').value.trim() : '',
+        contracts: document.getElementById('inputContracts') ? document.getElementById('inputContracts').value.trim() : '18건',
+        premium: document.getElementById('inputPremium') ? document.getElementById('inputPremium').value.trim() : '420,548원',
+        stOk: document.getElementById('inputDiagOk') ? document.getElementById('inputDiagOk').value.trim() : '23',
+        stWarn: document.getElementById('inputDiagWarn') ? document.getElementById('inputDiagWarn').value.trim() : '8',
+        stMiss: document.getElementById('inputDiagMiss') ? document.getElementById('inputDiagMiss').value.trim() : '6',
         savedAt: new Date().toISOString()
       };
       

@@ -2161,9 +2161,24 @@
             if (data.isCoverPage) {
                 // [WERACLE VIP 맞춤 표지 엔진] 사용자가 설정/저장한 표지를 1페이지에 우선 렌더링
                 let customCoverRendered = false;
+                let wasCoverHidden = false;
+                const docCoverEl = document.getElementById('tabCoverDoc');
                 try {
                     const previewFrame = document.getElementById('bojangCoverPreviewFrame');
+                    
+                    // 최대 2초간 iframe 준비 대기
+                    let attempts = 0;
+                    while ((!previewFrame || !previewFrame.contentWindow || !previewFrame.contentWindow.getCoverCanvas) && attempts < 20) {
+                        await new Promise(r => setTimeout(r, 100));
+                        attempts++;
+                    }
+
                     if (previewFrame && previewFrame.contentWindow && previewFrame.contentWindow.getCoverCanvas) {
+                        // 최신 저장된 설정 및 프로필 즉시 갱신
+                        if (previewFrame.contentWindow.loadCoverConfig) {
+                            previewFrame.contentWindow.loadCoverConfig();
+                        }
+
                         // [실제 업로드 데이터 동적 추출 엔진]
                         // 업로드된 전산 원본 PDF의 실제 데이터(고객명, 계약건수, 합계보험료, 충분/부족/미가입 진단수치)를 완벽 집계
                         let dynamicSummary = {
@@ -2226,6 +2241,14 @@
                             }
                         }
 
+                        // 탭이 숨겨져 있어도 캡처 가능하도록 임시 가시화
+                        if (docCoverEl && (docCoverEl.style.display === 'none')) {
+                            wasCoverHidden = true;
+                            docCoverEl.style.visibility = 'hidden';
+                            docCoverEl.style.display = 'flex';
+                            docCoverEl.style.position = 'absolute';
+                        }
+
                         console.log('[WERACLE 표지 데이터 추출 결과]:', dynamicSummary);
                         const coverCanvas = await previewFrame.contentWindow.getCoverCanvas(dynamicSummary);
                         if (coverCanvas) {
@@ -2236,6 +2259,12 @@
                     }
                 } catch(coverErr) {
                     console.warn('[VIP 표지 연동] 커스텀 렌더링 예외 발생, 기본 전산 드로잉으로 안전 전환:', coverErr);
+                } finally {
+                    if (wasCoverHidden && docCoverEl) {
+                        docCoverEl.style.display = 'none';
+                        docCoverEl.style.visibility = '';
+                        docCoverEl.style.position = '';
+                    }
                 }
 
                 if (!customCoverRendered) {
@@ -3021,6 +3050,17 @@ function initMyPageLogo() {
 window.addEventListener('DOMContentLoaded', function() {
     updatePreviewCoverBadge();
     initMyPageLogo();
+    const pFrame = document.getElementById('bojangCoverPreviewFrame');
+    if (pFrame) {
+        pFrame.addEventListener('load', function() {
+            try {
+                if (pFrame.contentWindow && pFrame.contentWindow.loadCoverConfig) {
+                    pFrame.contentWindow.loadCoverConfig();
+                }
+                updatePreviewCoverBadge();
+            } catch(e) {}
+        });
+    }
     if (window.parent !== window) {
         try { window.parent.postMessage({ type: 'requestLogo' }, '*'); } catch(e) {}
     }

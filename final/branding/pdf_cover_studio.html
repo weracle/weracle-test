@@ -978,15 +978,16 @@
   /* Visual Slot: Photo or Pledge */
   .card-visual-slot {
     width: 100%;
-    height: 570px !important; /* Full, majestic portrait/certificate height */
+    height: var(--photo-slot-height, 570px) !important;
     flex-shrink: 0 !important;
+    transition: height 0.15s ease;
   }
 
   /* Photo View */
   .card-photo {
     width: 100%;
     height: 100% !important;
-    border-radius: 16px !important;
+    border-radius: var(--photo-radius, 16px) !important;
     overflow: hidden !important;
     box-shadow: 0 8px 24px rgba(0,0,0,0.25) !important;
     position: relative !important;
@@ -996,8 +997,45 @@
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
-    object-position: center top !important;
+    object-position: center var(--photo-pos-y, 10%) !important;
+    transform: scale(var(--photo-zoom, 1)) !important;
+    transform-origin: center center !important;
+    transition: transform 0.15s ease, object-position 0.15s ease;
     display: block !important;
+  }
+  .header-logo-box img {
+    height: var(--logo-height, 58px) !important;
+    max-height: 160px !important;
+    object-fit: contain !important;
+    transition: height 0.12s ease;
+  }
+  .logo-hover-badge {
+    position: absolute;
+    bottom: -22px;
+    left: 0;
+    background: rgba(15, 23, 42, 0.85);
+    color: #38bdf8;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .header-logo-box:hover .logo-hover-badge {
+    opacity: 1;
+  }
+  .hero-title {
+    font-size: var(--title-font-size, 78px) !important;
+    font-weight: 900 !important;
+    letter-spacing: -2px !important;
+    line-height: 1.15 !important;
+  }
+  .greeting-client {
+    font-size: var(--greeting-font-size, 44px) !important;
+    font-weight: 800 !important;
   }
 
   /* ================= PLEDGE & CURSIVE SIGNATURE BOX ================= */
@@ -2215,16 +2253,69 @@
               </div>
             </div>
 
-            <!-- Direct Photo Upload Box -->
-            <div id="photoControlGroup" style="margin-top: 12px; background: #ffffff; border: 1.5px dashed #0284c7; border-radius: 12px; padding: 14px 16px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-size: 13.5px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-camera" style="color: #0284c7;"></i> 본인 프로필 사진 등록
+            <!-- Photo Fine-Tuning & Size Controls -->
+            <div id="photoControlGroup" style="margin-top: 14px; background: #ffffff; border: 1.5px solid #bae6fd; border-radius: 14px; padding: 16px 18px; box-shadow: 0 2px 8px rgba(2,132,199,0.06);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 13.5px; font-weight: 850; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-sliders" style="color: #0284c7;"></i> 사진 크기 / 확대 / 위치 정밀 조절
                 </span>
-                <span style="font-size: 11px; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 2px 7px; border-radius: 4px;">JPG / PNG 지원</span>
+                <span style="font-size: 11px; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 2px 7px; border-radius: 4px;">실시간 반영</span>
               </div>
-              <p style="font-size: 12px; color: #64748b; margin: 0 0 12px 0; line-height: 1.4;">기본 세팅된 모델 사진 대신 <b>본인의 프로필 사진(또는 지점 단체사진)</b>을 직접 등록할 수 있습니다.</p>
-              <div style="display: flex; gap: 8px;">
+              <p style="font-size: 12px; color: #64748b; margin: 0 0 14px 0; line-height: 1.4;">사진 프레임 높이, 인물 확대 배율, 얼굴 상하 위치를 자유롭게 조절하여 완벽한 구도를 잡을 수 있습니다.</p>
+
+              <!-- Photo Height Slider -->
+              <div class="form-row" style="margin-bottom: 12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                  <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">사진 프레임 세로 높이</label>
+                  <span id="photoHeightVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">570px</span>
+                </div>
+                <input type="range" min="380" max="680" value="570" id="photoHeightRange" oninput="updatePhotoHeight(this.value)" style="accent-color:#0284c7; width:100%;">
+                <div style="display:flex; gap:6px; margin-top:4px;">
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoHeight(450)">컴팩트 (450px)</button>
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoHeight(570)">표준 (570px)</button>
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoHeight(650)">와이드롱 (650px)</button>
+                </div>
+              </div>
+
+              <!-- Photo Zoom (Scale) Slider -->
+              <div class="form-row" style="margin-bottom: 12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                  <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">사진 확대 / 축소 (Zoom)</label>
+                  <span id="photoZoomVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">100%</span>
+                </div>
+                <input type="range" min="70" max="180" value="100" id="photoZoomRange" oninput="updatePhotoZoom(this.value)" style="accent-color:#0284c7; width:100%;">
+                <div style="display:flex; gap:6px; margin-top:4px;">
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoZoom(85)">85% 축소</button>
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoZoom(100)">100% 표준</button>
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoZoom(120)">120% 확대</button>
+                </div>
+              </div>
+
+              <!-- Photo Position Y (Face alignment) -->
+              <div class="form-row" style="margin-bottom: 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                  <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">얼굴 상하 위치 맞춤 (얼굴 잘림 방지)</label>
+                  <span id="photoPosYVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">10%</span>
+                </div>
+                <input type="range" min="0" max="100" value="10" id="photoPosYRange" oninput="updatePhotoPosY(this.value)" style="accent-color:#0284c7; width:100%;">
+                <div style="display:flex; gap:6px; margin-top:4px;">
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoPosY(10)">▲ 상단(얼굴)</button>
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoPosY(50)">● 중앙 맞춤</button>
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoPosY(80)">▼ 하단(전신)</button>
+                </div>
+              </div>
+
+              <!-- Photo Border Radius -->
+              <div class="form-row" style="margin-bottom: 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                  <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">모서리 곡률 (라운딩)</label>
+                  <span id="photoRadiusVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">16px</span>
+                </div>
+                <input type="range" min="0" max="32" value="16" id="photoRadiusRange" oninput="updatePhotoRadius(this.value)" style="accent-color:#0284c7; width:100%;">
+              </div>
+
+              <!-- Upload & Reset Buttons -->
+              <div style="display: flex; gap: 8px; margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
                 <button type="button" onclick="document.getElementById('photoUploadInput').click()" style="flex: 1.3; height: 38px; background: #0284c7; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(2,132,199,0.3);">
                   <i class="fa-solid fa-upload"></i> 내 사진 직접 올리기
                 </button>
@@ -2358,31 +2449,71 @@
             </div>
           </div>
 
-          <!-- Logo & Photo Management -->
-          <div class="form-card">
+          <!-- Typography & Element Sizing -->
+          <div class="form-card" style="border: 1px solid #e2e8f0; background: #ffffff;">
             <div class="form-section-title">
-              <span><i class="fa-solid fa-image"></i> 로고 및 프로필 사진 관리</span>
+              <span><i class="fa-solid fa-text-height"></i> 주요 텍스트 크기 조절 (실시간)</span>
+            </div>
+            <!-- Title Size Slider -->
+            <div class="form-row" style="margin-bottom: 12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">메인 타이틀 ("보장분석 보고서") 크기</label>
+                <span id="titleSizeVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">78px</span>
+              </div>
+              <input type="range" min="54" max="96" value="78" id="titleSizeRange" oninput="updateTitleSize(this.value)" style="accent-color:#0284c7; width:100%;">
+              <div style="display:flex; gap:6px; margin-top:4px;">
+                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateTitleSize(68)">68px 작게</button>
+                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateTitleSize(78)">78px 기본</button>
+                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateTitleSize(88)">88px 웅장하게</button>
+              </div>
+            </div>
+
+            <!-- Greeting Size Slider -->
+            <div class="form-row" style="margin-bottom: 10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">고객 인사말 ("OO님을 위해...") 크기</label>
+                <span id="greetingSizeVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">44px</span>
+              </div>
+              <input type="range" min="30" max="56" value="44" id="greetingSizeRange" oninput="updateGreetingSize(this.value)" style="accent-color:#0284c7; width:100%;">
+            </div>
+          </div>
+
+          <!-- Logo Management & Precision Sizing -->
+          <div class="form-card" style="border: 1px solid #e2e8f0; background: #ffffff;">
+            <div class="form-section-title">
+              <span><i class="fa-solid fa-stamp"></i> 로고 크기 및 표시 설정</span>
+              <label class="field-toggle-label">
+                <input type="checkbox" id="chkShowLogo" checked onchange="toggleLogo(this.checked)">
+                <span>표시</span>
+              </label>
             </div>
             
             <div class="form-row">
-              <label class="form-label">회사 / 브랜드 로고 이미지 업로드</label>
-              <input type="file" class="form-input" id="logoUploadInput" accept="image/*" onchange="handleLogoUpload(this)">
-            </div>
-            <div class="form-row">
-              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                <label class="form-label" style="margin:0;">로고 크기 조절</label>
-                <span id="logoSizeVal" style="font-size:11px; font-weight:800; color:#0284c7;">58px</span>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">로고 높이 크기 조절</label>
+                <span id="logoSizeVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">58px</span>
               </div>
-              <input type="range" min="30" max="110" value="58" id="logoSizeRange" oninput="updateLogoSize(this.value)" style="accent-color:#0284c7; width:100%;">
+              <input type="range" min="30" max="150" value="58" id="logoSizeRange" oninput="updateLogoSize(this.value)" style="accent-color:#0284c7; width:100%;">
+              <div style="display:flex; gap:6px; margin-top:4px;">
+                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateLogoSize(45)">45px</button>
+                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateLogoSize(58)">58px 기본</button>
+                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateLogoSize(75)">75px 중간</button>
+                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateLogoSize(100)">100px 대형</button>
+              </div>
             </div>
 
             <div class="form-row" style="margin-top:12px;">
-              <label class="form-label">컨설턴트 프로필 사진 파일 업로드</label>
-              <input type="file" class="form-input" id="photoUploadInput" accept="image/*" onchange="handlePhotoUpload(this)">
+              <label class="form-label" style="font-size:12px; font-weight:700; color:#334155;">내 로고 이미지 직접 등록</label>
+              <input type="file" class="form-input" id="logoUploadInput" accept="image/*" onchange="handleLogoUpload(this)">
             </div>
-            <button class="btn-action secondary" style="width:100%; font-size:11.5px; padding:7px 10px;" onclick="resetPhotoToDefault()">
-              <i class="fa-solid fa-rotate-left"></i> 기본 프로필 사진으로 복원
-            </button>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <button type="button" class="btn-action primary" style="flex:1.2; font-size:12px; padding:8px 10px;" onclick="document.getElementById('logoUploadInput').click()">
+                <i class="fa-solid fa-upload"></i> 로고 파일 선택
+              </button>
+              <button type="button" class="btn-action secondary" style="flex:1; font-size:12px; padding:8px 10px;" onclick="resetLogoToDefault()">
+                기본 로고 복원
+              </button>
+            </div>
           </div>
 
         </div>
@@ -2415,6 +2546,10 @@
           <i class="fa-solid fa-file-lines" style="color:#38bdf8;"></i> 실시간 A4 규격 (210×297mm)
         </span>
         <span style="color:rgba(255,255,255,0.25);">|</span>
+        <span class="preview-spec-badge" style="background: rgba(2, 132, 199, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4);">
+          <i class="fa-solid fa-i-cursor"></i> 화면 클릭 즉시 편집 지원
+        </span>
+        <span style="color:rgba(255,255,255,0.25);">|</span>
         <span id="currentViewModeLabel" style="font-size:11.5px; font-weight:700; color:#38bdf8;">좌우 여백없이 맞춤 (100%)</span>
         <div style="display:flex; gap:6px; margin-left:4px;">
           <button type="button" class="filter-btn active" id="btnFitWidth" onclick="setViewMode('fitWidth')">
@@ -2426,11 +2561,8 @@
         </div>
       </div>
 
-      <!-- Canvas Area: Scrollable in fitWidth mode, exactly centered -->
+      <!-- Canvas Area: Scrollable in fitWidth mode, exactly centered (NO navy gap above sheet) -->
       <div class="preview-canvas-area" id="previewCanvasArea">
-        <div class="canvas-edit-hint">
-          <i class="fa-solid fa-i-cursor"></i> 💡 화면의 로고, 텍스트, 숫자를 직접 클릭하여 바로 수정할 수 있습니다
-        </div>
         <div id="a4Container">
           <div id="a4Sheet">
             <div id="canvasInner">
@@ -2438,11 +2570,12 @@
   <div class="a4-page">
     <!-- Top Header: Logo on Left, Enterprise Verification Badges on Right -->
     <div class="top-header">
-      <div class="header-logo-box clickable-slot-active" onclick="document.getElementById('logoUploadInput').click()" title="클릭하여 내 로고로 직접 변경">
-        <img src="" style="height: 58px; object-fit: contain; display: none;" style="height: 58px; object-fit: contain; display: block;" data-slot="logo" alt="설계사 로고">
+      <div class="header-logo-box clickable-slot-active" id="sheetLogoBox" onclick="document.getElementById('logoUploadInput').click()" title="클릭하여 로고 변경 (크기 조절 가능)">
+        <img src="images/보답화니_로고.png" id="sheetLogoImg" style="height: 58px; max-height: 160px; object-fit: contain; display: block;" data-slot="logo" alt="설계사 로고">
+        <div class="logo-hover-badge"><i class="fa-solid fa-camera"></i> 로고 변경/크기조절</div>
       </div>
       <div class="header-right-meta">
-        
+        <span class="corp-badge" data-slot="docTag">OFFICIAL ENTERPRISE AUDIT</span>
       </div>
     </div>
 
@@ -2840,6 +2973,14 @@
       if (customPhotoSrc) {
         canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = customPhotoSrc);
       }
+      updateLogoSize(currentLogoSize);
+      toggleLogo(isLogoVisible);
+      updatePhotoHeight(currentPhotoHeight);
+      updatePhotoZoom(currentPhotoZoom);
+      updatePhotoPosY(currentPhotoPosY);
+      updatePhotoRadius(currentPhotoRadius);
+      updateTitleSize(currentTitleSize);
+      updateGreetingSize(currentGreetingSize);
     }
 
     // Theme Switcher
@@ -2925,11 +3066,48 @@
     }
 
     // Logo & Photo Management
+    // Sizing & Precision Adjustment State
+    let currentLogoSize = 58;
+    let isLogoVisible = true;
+    let currentPhotoHeight = 570;
+    let currentPhotoZoom = 100;
+    let currentPhotoPosY = 10;
+    let currentPhotoRadius = 16;
+    let currentTitleSize = 78;
+    let currentGreetingSize = 44;
+
+    // --- LOGO SIZING & CONTROLS ---
     function updateLogoSize(size) {
-      document.getElementById('logoSizeVal').textContent = size + 'px';
-      canvasPage.querySelectorAll('img[src*="보답화니_로고"], [data-slot="logo"]').forEach(img => {
-        img.style.height = size + 'px';
-        img.style.maxHeight = size + 'px';
+      currentLogoSize = parseInt(size, 10) || 58;
+      const valEl = document.getElementById('logoSizeVal');
+      if (valEl) valEl.textContent = currentLogoSize + 'px';
+      const rangeEl = document.getElementById('logoSizeRange');
+      if (rangeEl && rangeEl.value != currentLogoSize) rangeEl.value = currentLogoSize;
+
+      canvasPage.querySelectorAll('img[src*="보답화니_로고"], [data-slot="logo"], #sheetLogoImg').forEach(img => {
+        img.style.setProperty('height', currentLogoSize + 'px', 'important');
+        img.style.setProperty('max-height', '160px', 'important');
+      });
+      document.documentElement.style.setProperty('--logo-height', currentLogoSize + 'px');
+    }
+
+    function toggleLogo(show) {
+      isLogoVisible = (show !== undefined) ? show : !isLogoVisible;
+      const chk = document.getElementById('chkShowLogo');
+      if (chk) chk.checked = isLogoVisible;
+      canvasPage.querySelectorAll('#sheetLogoBox, .header-logo-box').forEach(box => {
+        box.style.display = isLogoVisible ? 'flex' : 'none';
+      });
+    }
+
+    function resetLogoToDefault() {
+      customLogoSrc = null;
+      currentLogoSize = 58;
+      updateLogoSize(58);
+      toggleLogo(true);
+      canvasPage.querySelectorAll('img[data-slot="logo"], #sheetLogoImg').forEach(img => {
+        img.src = 'images/보답화니_로고.png';
+        img.style.display = 'block';
       });
     }
 
@@ -2940,7 +3118,7 @@
         reader.onload = function(e) {
           const img = new Image();
           img.onload = function() {
-            const maxDim = 500;
+            const maxDim = 600;
             let w = img.width, h = img.height;
             if (w > maxDim || h > maxDim) {
               if (w > h) { h = Math.round(h * (maxDim / w)); w = maxDim; }
@@ -2951,7 +3129,8 @@
             const ctx = cv.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
             customLogoSrc = cv.toDataURL('image/png');
-            canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(imgEl => {
+            toggleLogo(true);
+            canvasPage.querySelectorAll('img[data-slot="logo"], #sheetLogoImg').forEach(imgEl => {
               imgEl.src = customLogoSrc;
               imgEl.style.display = 'block';
             });
@@ -2962,6 +3141,62 @@
       }
     }
 
+    // --- PHOTO SIZING & FINE-TUNING CONTROLS ---
+    function updatePhotoHeight(h) {
+      currentPhotoHeight = parseInt(h, 10) || 570;
+      const valEl = document.getElementById('photoHeightVal');
+      if (valEl) valEl.textContent = currentPhotoHeight + 'px';
+      const rangeEl = document.getElementById('photoHeightRange');
+      if (rangeEl && rangeEl.value != currentPhotoHeight) rangeEl.value = currentPhotoHeight;
+
+      canvasPage.querySelectorAll('#cardVisualSlot, .card-visual-slot').forEach(slot => {
+        slot.style.setProperty('height', currentPhotoHeight + 'px', 'important');
+      });
+      document.documentElement.style.setProperty('--photo-slot-height', currentPhotoHeight + 'px');
+    }
+
+    function updatePhotoZoom(z) {
+      currentPhotoZoom = parseInt(z, 10) || 100;
+      const valEl = document.getElementById('photoZoomVal');
+      if (valEl) valEl.textContent = currentPhotoZoom + '%';
+      const rangeEl = document.getElementById('photoZoomRange');
+      if (rangeEl && rangeEl.value != currentPhotoZoom) rangeEl.value = currentPhotoZoom;
+
+      const scale = currentPhotoZoom / 100;
+      canvasPage.querySelectorAll('#photoView img, .card-photo img').forEach(img => {
+        img.style.setProperty('transform', 'scale(' + scale + ')', 'important');
+      });
+      document.documentElement.style.setProperty('--photo-zoom', scale);
+    }
+
+    function updatePhotoPosY(pos) {
+      currentPhotoPosY = parseInt(pos, 10);
+      if (isNaN(currentPhotoPosY)) currentPhotoPosY = 10;
+      const valEl = document.getElementById('photoPosYVal');
+      if (valEl) valEl.textContent = currentPhotoPosY + '%';
+      const rangeEl = document.getElementById('photoPosYRange');
+      if (rangeEl && rangeEl.value != currentPhotoPosY) rangeEl.value = currentPhotoPosY;
+
+      canvasPage.querySelectorAll('#photoView img, .card-photo img').forEach(img => {
+        img.style.setProperty('object-position', 'center ' + currentPhotoPosY + '%', 'important');
+      });
+      document.documentElement.style.setProperty('--photo-pos-y', currentPhotoPosY + '%');
+    }
+
+    function updatePhotoRadius(r) {
+      currentPhotoRadius = parseInt(r, 10);
+      if (isNaN(currentPhotoRadius)) currentPhotoRadius = 16;
+      const valEl = document.getElementById('photoRadiusVal');
+      if (valEl) valEl.textContent = currentPhotoRadius + 'px';
+      const rangeEl = document.getElementById('photoRadiusRange');
+      if (rangeEl && rangeEl.value != currentPhotoRadius) rangeEl.value = currentPhotoRadius;
+
+      canvasPage.querySelectorAll('#photoView, .card-photo').forEach(box => {
+        box.style.setProperty('border-radius', currentPhotoRadius + 'px', 'important');
+      });
+      document.documentElement.style.setProperty('--photo-radius', currentPhotoRadius + 'px');
+    }
+
     function handlePhotoUpload(input) {
       if (input.files && input.files[0]) {
         const file = input.files[0];
@@ -2969,7 +3204,7 @@
         reader.onload = function(e) {
           const img = new Image();
           img.onload = function() {
-            const maxDim = 800;
+            const maxDim = 1200;
             let w = img.width, h = img.height;
             if (w > maxDim || h > maxDim) {
               if (w > h) { h = Math.round(h * (maxDim / w)); w = maxDim; }
@@ -2979,7 +3214,7 @@
             cv.width = w; cv.height = h;
             const ctx = cv.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
-            customPhotoSrc = cv.toDataURL('image/jpeg', 0.88);
+            customPhotoSrc = cv.toDataURL('image/jpeg', 0.9);
             canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(imgEl => {
               imgEl.src = customPhotoSrc;
             });
@@ -2992,7 +3227,44 @@
 
     function resetPhotoToDefault() {
       customPhotoSrc = null;
-      canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = 'images/consultant_model.jpg');
+      currentPhotoHeight = 570;
+      currentPhotoZoom = 100;
+      currentPhotoPosY = 10;
+      currentPhotoRadius = 16;
+      updatePhotoHeight(570);
+      updatePhotoZoom(100);
+      updatePhotoPosY(10);
+      updatePhotoRadius(16);
+      canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => {
+        img.src = 'images/consultant_model.jpg';
+      });
+    }
+
+    // --- TYPOGRAPHY & ELEMENT SIZING ---
+    function updateTitleSize(size) {
+      currentTitleSize = parseInt(size, 10) || 78;
+      const valEl = document.getElementById('titleSizeVal');
+      if (valEl) valEl.textContent = currentTitleSize + 'px';
+      const rangeEl = document.getElementById('titleSizeRange');
+      if (rangeEl && rangeEl.value != currentTitleSize) rangeEl.value = currentTitleSize;
+
+      canvasPage.querySelectorAll('.hero-title').forEach(el => {
+        el.style.setProperty('font-size', currentTitleSize + 'px', 'important');
+      });
+      document.documentElement.style.setProperty('--title-font-size', currentTitleSize + 'px');
+    }
+
+    function updateGreetingSize(size) {
+      currentGreetingSize = parseInt(size, 10) || 44;
+      const valEl = document.getElementById('greetingSizeVal');
+      if (valEl) valEl.textContent = currentGreetingSize + 'px';
+      const rangeEl = document.getElementById('greetingSizeRange');
+      if (rangeEl && rangeEl.value != currentGreetingSize) rangeEl.value = currentGreetingSize;
+
+      canvasPage.querySelectorAll('.greeting-client').forEach(el => {
+        el.style.setProperty('font-size', currentGreetingSize + 'px', 'important');
+      });
+      document.documentElement.style.setProperty('--greeting-font-size', currentGreetingSize + 'px');
     }
 
     // Custom Color Adjustments for Page
@@ -3424,6 +3696,27 @@
         photoEl.classList.add('clickable-slot-active');
         photoEl.setAttribute('title', '클릭하여 내 사진 직접 변경/업로드');
       }
+
+      // 15. Hero Title Direct Edit
+      canvasPage.querySelectorAll('.hero-title').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 표지 메인 타이틀 문구 직접 수정');
+      });
+
+      // 16. Customer Greeting Direct Edit
+      canvasPage.querySelectorAll('.greeting-sub, .greeting-client').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 인사말 문구 직접 수정');
+      });
+
+      // 17. Section Titles Direct Edit
+      canvasPage.querySelectorAll('.sec-title-text, .data-chip-tag, .corp-badge').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 섹션 배지/타이틀 문구 직접 수정');
+      });
     }
 
     // Unified Master Updater for all values across DOM
@@ -3579,6 +3872,14 @@
         stOk: document.getElementById('inputDiagOk') ? document.getElementById('inputDiagOk').value.trim() : '23',
         stWarn: document.getElementById('inputDiagWarn') ? document.getElementById('inputDiagWarn').value.trim() : '8',
         stMiss: document.getElementById('inputDiagMiss') ? document.getElementById('inputDiagMiss').value.trim() : '6',
+        logoSize: currentLogoSize,
+        logoVisible: isLogoVisible,
+        photoHeight: currentPhotoHeight,
+        photoZoom: currentPhotoZoom,
+        photoPosY: currentPhotoPosY,
+        photoRadius: currentPhotoRadius,
+        titleSize: currentTitleSize,
+        greetingSize: currentGreetingSize,
         savedAt: new Date().toISOString()
       };
       

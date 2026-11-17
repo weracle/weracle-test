@@ -755,7 +755,113 @@
       background: #f1f5f9;
     }
 
-    /* ================= ON-CANVAS DIRECT QUICK TOOLBARS ================= */
+    
+  /* ================= DIRECT DRAG RESIZE HANDLES ================= */
+  .photo-drag-handle {
+    position: absolute;
+    z-index: 60;
+    transition: opacity 0.15s ease, background 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  /* Bottom edge handle (위아래로 늘리기) */
+  .photo-drag-handle.handle-bottom {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 32px;
+    cursor: ns-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.8) 0%, transparent 100%);
+    opacity: 0.8;
+  }
+  .card-photo:hover .photo-drag-handle.handle-bottom,
+  .photo-drag-handle.handle-bottom:hover {
+    opacity: 1;
+    background: linear-gradient(to top, rgba(2, 132, 199, 0.88) 0%, transparent 100%);
+  }
+  .handle-bar-pill {
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 850;
+    padding: 3px 14px;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.45);
+    border: 1.5px solid rgba(255,255,255,0.85);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+    transition: transform 0.12s;
+  }
+  .photo-drag-handle.handle-bottom:hover .handle-bar-pill {
+    transform: scale(1.08);
+    background: #38bdf8;
+    color: #0f172a;
+  }
+
+  /* Diagonal corner handle (대각선으로 늘리기) */
+  .photo-drag-handle.handle-diagonal {
+    bottom: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    background: #0284c7;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    cursor: nwse-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.55);
+    opacity: 0.88;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-photo:hover .photo-drag-handle.handle-diagonal,
+  .photo-drag-handle.handle-diagonal:hover {
+    opacity: 1;
+    transform: scale(1.18);
+    background: #38bdf8;
+    color: #0f172a;
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.9);
+  }
+
+  /* Logo Diagonal Handle */
+  .logo-drag-handle {
+    position: absolute;
+    bottom: -6px;
+    right: -6px;
+    width: 24px;
+    height: 24px;
+    background: #0284c7;
+    color: #ffffff;
+    border: 1.5px solid #ffffff;
+    border-radius: 50%;
+    cursor: nwse-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    opacity: 0;
+    transition: opacity 0.15s, transform 0.15s;
+    z-index: 50;
+  }
+  .header-logo-box:hover .logo-drag-handle {
+    opacity: 1;
+  }
+  .logo-drag-handle:hover {
+    transform: scale(1.2);
+    background: #38bdf8;
+    color: #0f172a;
+  }
+
+  /* ================= ON-CANVAS DIRECT QUICK TOOLBARS ================= */
   .element-quick-toolbar {
     position: absolute;
     z-index: 120;
@@ -1027,12 +1133,18 @@
     flex-shrink: 0 !important;
   }
   .header-logo-box {
-    display: flex;
-    align-items: center;
+    display: inline-flex !important;
+    align-items: center !important;
+    position: relative !important;
   }
   .header-logo-box img {
-    max-height: 60px !important;
+    height: var(--logo-height, 58px) !important;
+    max-height: 180px !important;
+    width: auto !important;
+    max-width: 380px !important;
     object-fit: contain !important;
+    display: block !important;
+    transition: height 0.1s ease !important;
   }
   .header-right-meta {
     display: flex;
@@ -2701,9 +2813,13 @@
   <div class="a4-page">
     <!-- Top Header: Logo on Left, Enterprise Verification Badges on Right -->
     <div class="top-header" style="position: relative;">
-      <div class="header-logo-box clickable-slot-active" id="sheetLogoBox" onclick="openLogoQuickToolbar(event)" title="클릭하여 로고 크기 조절 및 변경">
-        <img src="images/보답화니_로고.png" id="sheetLogoImg" style="height: 58px; max-height: 160px; object-fit: contain; display: block;" data-slot="logo" alt="설계사 로고">
-        <div class="logo-hover-badge"><i class="fa-solid fa-sliders"></i> 로고 크기/수정 (클릭)</div>
+      <div class="header-logo-box clickable-slot-active" id="sheetLogoBox" onclick="openLogoQuickToolbar(event)" title="클릭하여 로고 크기 조절 및 변경 (모서리 드래그로 조절 가능)">
+        <img src="images/보답화니_로고.png" id="sheetLogoImg" style="height: 58px; max-height: 180px; width: auto; object-fit: contain; display: block;" data-slot="logo" alt="설계사 로고">
+        <div class="logo-hover-badge"><i class="fa-solid fa-sliders"></i> 로고 크기/수정 (클릭 또는 모서리 드래그)</div>
+        <!-- Diagonal Drag Handle for Logo -->
+        <div class="logo-drag-handle" id="logoDragDiagonal" title="모서리를 드래그하여 로고 크기 조절" data-html2canvas-ignore="true">
+          <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+        </div>
       </div>
 
       <!-- Quick Logo Toolbar directly on Sheet -->
@@ -2754,10 +2870,23 @@
         <!-- VISUAL SLOT: Photo Mode vs Pledge Mode -->
         <div class="card-visual-slot" id="cardVisualSlot" style="position: relative;">
           <!-- 1. Photo View (Default) -->
-          <div class="card-photo" id="photoView" onclick="openPhotoQuickToolbar(event)" title="클릭하여 사진 크기/배율/위치 조절 및 변경">
+          <div class="card-photo" id="photoView" onclick="openPhotoQuickToolbar(event)" title="클릭하여 사진 조절 (하단/모서리를 드래그하여 늘리기 가능)">
             <img src="images/consultant_model.jpg" id="sheetPhotoImg" data-slot="image" alt="담당 컨설턴트 사진">
             <div class="photo-hover-badge">
-              <i class="fa-solid fa-sliders"></i> 사진 크기 / 확대 / 위치 조절 (클릭)
+              <i class="fa-solid fa-sliders"></i> 사진 조절 (클릭) · 아래/대각선 드래그하여 늘리기
+            </div>
+
+            <!-- Direct Drag Handles -->
+            <!-- 1) Bottom Edge Handle (위아래로 늘리기) -->
+            <div class="photo-drag-handle handle-bottom" id="photoDragBottom" title="마우스로 드래그하여 위아래로 늘리기/줄이기" data-html2canvas-ignore="true">
+              <div class="handle-bar-pill">
+                <i class="fa-solid fa-arrows-up-down"></i> <span>위아래로 늘리기</span>
+              </div>
+            </div>
+
+            <!-- 2) Bottom-Right Diagonal Handle (대각선으로 늘리기) -->
+            <div class="photo-drag-handle handle-diagonal" id="photoDragDiagonal" title="마우스로 드래그하여 대각선으로 크기 및 배율 늘리기" data-html2canvas-ignore="true">
+              <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
             </div>
           </div>
 
@@ -2778,13 +2907,22 @@
               </div>
             </div>
 
-            <!-- Height row -->
+            <!-- Height row (위아래 늘리기) -->
             <div class="tb-row">
-              <span class="tb-label">프레임 세로 높이</span>
+              <span class="tb-label">위아래 늘리기/줄이기</span>
               <div class="tb-btn-group">
-                <button type="button" class="tb-btn" onclick="adjustPhotoHeight(-30, event)"><i class="fa-solid fa-minus"></i> 낮춤</button>
+                <button type="button" class="tb-btn" onclick="adjustPhotoHeight(-30, event)" title="위아래 줄이기"><i class="fa-solid fa-arrows-up-down"></i> -30px</button>
                 <span class="tb-val" id="tbPhotoHeightVal">570px</span>
-                <button type="button" class="tb-btn" onclick="adjustPhotoHeight(30, event)"><i class="fa-solid fa-plus"></i> 높임</button>
+                <button type="button" class="tb-btn" onclick="adjustPhotoHeight(30, event)" title="위아래 늘리기"><i class="fa-solid fa-arrows-up-down"></i> +30px</button>
+              </div>
+            </div>
+
+            <!-- Diagonal Stretch Row (대각선 늘리기) -->
+            <div class="tb-row">
+              <span class="tb-label">대각선으로 늘리기</span>
+              <div class="tb-btn-group">
+                <button type="button" class="tb-btn" onclick="adjustDiagonal(-25, event)" title="대각선 축소"><i class="fa-solid fa-down-left-and-up-right-to-center"></i> 대각선 축소</button>
+                <button type="button" class="tb-btn" onclick="adjustDiagonal(25, event)" title="대각선 확대"><i class="fa-solid fa-up-right-and-down-left-from-center"></i> 대각선 늘리기</button>
               </div>
             </div>
 
@@ -3353,6 +3491,12 @@
     });
 
     // --- LOGO SIZING & CONTROLS ---
+    function getCanvasScale() {
+      if (!a4Sheet) return 1;
+      const match = a4Sheet.style.transform ? a4Sheet.style.transform.match(/scale(([^)]+))/) : null;
+      return match ? parseFloat(match[1]) : 1;
+    }
+
     function updateLogoSize(size) {
       currentLogoSize = parseInt(size, 10) || 58;
       const valEl = document.getElementById('logoSizeVal');
@@ -3362,11 +3506,108 @@
       const rangeEl = document.getElementById('logoSizeRange');
       if (rangeEl && rangeEl.value != currentLogoSize) rangeEl.value = currentLogoSize;
 
-      canvasPage.querySelectorAll('img[src*="보답화니_로고"], [data-slot="logo"], #sheetLogoImg').forEach(img => {
-        img.style.setProperty('height', currentLogoSize + 'px', 'important');
-        img.style.setProperty('max-height', '160px', 'important');
-      });
       document.documentElement.style.setProperty('--logo-height', currentLogoSize + 'px');
+      if (a4Sheet) a4Sheet.style.setProperty('--logo-height', currentLogoSize + 'px');
+
+      document.querySelectorAll('#sheetLogoImg, img[data-slot="logo"], .header-logo-box img').forEach(img => {
+        img.style.setProperty('height', currentLogoSize + 'px', 'important');
+        img.style.setProperty('max-height', '200px', 'important');
+        img.style.setProperty('width', 'auto', 'important');
+      });
+    }
+
+    function adjustDiagonal(delta, e) {
+      if (e) e.stopPropagation();
+      adjustPhotoHeight(delta, e);
+      adjustPhotoZoom(Math.round(delta / 3), e);
+    }
+
+    function initDirectDragResize() {
+      // 1. Photo Vertical Drag (위아래로 늘리기)
+      const photoBottomHandle = document.getElementById('photoDragBottom');
+      if (photoBottomHandle) {
+        photoBottomHandle.onmousedown = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const startY = e.clientY;
+          const startH = currentPhotoHeight;
+          const scale = getCanvasScale();
+
+          function onMouseMove(moveEvent) {
+            const deltaY = (moveEvent.clientY - startY) / scale;
+            const newH = Math.round(Math.max(360, Math.min(750, startH + deltaY)));
+            updatePhotoHeight(newH);
+          }
+
+          function onMouseUp() {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+          }
+
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        };
+      }
+
+      // 2. Photo Diagonal Drag (대각선으로 늘리기)
+      const photoDiagHandle = document.getElementById('photoDragDiagonal');
+      if (photoDiagHandle) {
+        photoDiagHandle.onmousedown = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const startH = currentPhotoHeight;
+          const startZ = currentPhotoZoom;
+          const scale = getCanvasScale();
+
+          function onMouseMove(moveEvent) {
+            const deltaY = (moveEvent.clientY - startY) / scale;
+            const deltaX = (moveEvent.clientX - startX) / scale;
+            const avgDelta = (deltaY + deltaX) / 2;
+
+            const newH = Math.round(Math.max(360, Math.min(750, startH + deltaY)));
+            const newZ = Math.round(Math.max(70, Math.min(180, startZ + (avgDelta / 3))));
+
+            updatePhotoHeight(newH);
+            updatePhotoZoom(newZ);
+          }
+
+          function onMouseUp() {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+          }
+
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        };
+      }
+
+      // 3. Logo Diagonal Drag (로고 대각선으로 늘리기)
+      const logoDiagHandle = document.getElementById('logoDragDiagonal');
+      if (logoDiagHandle) {
+        logoDiagHandle.onmousedown = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const startY = e.clientY;
+          const startSize = currentLogoSize;
+          const scale = getCanvasScale();
+
+          function onMouseMove(moveEvent) {
+            const delta = (moveEvent.clientY - startY) / scale;
+            const newSize = Math.round(Math.max(30, Math.min(180, startSize + delta)));
+            updateLogoSize(newSize);
+          }
+
+          function onMouseUp() {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+          }
+
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        };
+      }
     }
 
     function toggleLogo(show) {
@@ -4256,6 +4497,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       loadCoverConfig();
       fitA4ToScreen();
+      initDirectDragResize();
       setTimeout(fitA4ToScreen, 80);
 
       if (window.ResizeObserver) {

@@ -2992,6 +2992,15 @@ function updatePreviewCoverBadge() {
 }
 
 window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'setProfile' && e.data.data) {
+        const pf = document.getElementById('bojangCoverPreviewFrame');
+        if (pf && pf.contentWindow) pf.contentWindow.postMessage(e.data, '*');
+        const mf = document.getElementById('coverStudioModalFrame');
+        if (mf && mf.contentWindow) mf.contentWindow.postMessage(e.data, '*');
+    }
+    if (e.data && e.data.type === 'setLogo' && e.data.data) {
+        initMyPageLogo();
+    }
     if (e.data && e.data.type === 'WERACLE_COVER_SAVED') {
         closeCoverStudioModal();
         updatePreviewCoverBadge();
@@ -3010,15 +3019,23 @@ window.addEventListener('message', function(e) {
 // Auto-load MyPage Logo & Profile on page start
 function initMyPageLogo() {
     let logoUrl = null;
+    let myProfile = null;
     try {
-        if (window.parent && window.parent.currentProfile && window.parent.currentProfile.logo_url) {
-            logoUrl = window.parent.currentProfile.logo_url;
+        if (window.parent && window.parent.currentProfile) {
+            myProfile = window.parent.currentProfile;
+            if (myProfile.logo_url) logoUrl = myProfile.logo_url;
         }
     } catch(e) {}
-    if (!logoUrl) {
+    if (!myProfile) {
         try {
-            const cached = JSON.parse(localStorage.getItem('cached_profile') || '{}');
-            if (cached.logo_url) logoUrl = cached.logo_url;
+            myProfile = JSON.parse(localStorage.getItem('cached_profile') || 'null');
+            if (myProfile && myProfile.logo_url) logoUrl = myProfile.logo_url;
+        } catch(e) {}
+    }
+    if (!myProfile) {
+        try {
+            myProfile = JSON.parse(localStorage.getItem('user_profile') || 'null');
+            if (myProfile && myProfile.logo_url) logoUrl = myProfile.logo_url;
         } catch(e) {}
     }
     if (!logoUrl) {
@@ -3041,12 +3058,18 @@ function initMyPageLogo() {
             badge.style.background = '#dcfce7';
             badge.style.borderColor = '#bbf7d0';
         }
-        
-        // Forward logo to studio preview iframe
-        const pf = document.getElementById('bojangCoverPreviewFrame');
+    }
+    
+    // Forward logo & profile to studio preview iframe & modal iframe
+    const pf = document.getElementById('bojangCoverPreviewFrame');
+    const mf = document.getElementById('coverStudioModalFrame');
+    if (logoUrl) {
         if (pf && pf.contentWindow) pf.contentWindow.postMessage({ type: 'setLogo', data: logoUrl }, '*');
-        const mf = document.getElementById('coverStudioModalFrame');
         if (mf && mf.contentWindow) mf.contentWindow.postMessage({ type: 'setLogo', data: logoUrl }, '*');
+    }
+    if (myProfile) {
+        if (pf && pf.contentWindow) pf.contentWindow.postMessage({ type: 'setProfile', data: myProfile }, '*');
+        if (mf && mf.contentWindow) mf.contentWindow.postMessage({ type: 'setProfile', data: myProfile }, '*');
     }
 }
 
@@ -3062,10 +3085,14 @@ window.addEventListener('DOMContentLoaded', function() {
                 }
                 updatePreviewCoverBadge();
             } catch(e) {}
+            initMyPageLogo();
         });
     }
     if (window.parent !== window) {
-        try { window.parent.postMessage({ type: 'requestLogo' }, '*'); } catch(e) {}
+        try {
+            window.parent.postMessage({ type: 'requestLogo' }, '*');
+            window.parent.postMessage({ type: 'requestProfile' }, '*');
+        } catch(e) {}
     }
 });
 </script>

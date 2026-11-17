@@ -57,9 +57,11 @@
     .studio-app-container {
       display: grid;
       grid-template-columns: 460px 1fr;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
       overflow: hidden;
+      box-sizing: border-box;
     }
     @media (max-width: 1100px) {
       .studio-app-container {
@@ -70,13 +72,15 @@
     /* ================= LEFT CONTROL SIDEBAR ================= */
     .left-control-sidebar {
       background: #ffffff;
-      height: 100vh;
+      height: 100%;
+      max-height: 100%;
       display: flex;
       flex-direction: column;
       border-right: 1px solid #cbd5e1;
       box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
       z-index: 20;
       overflow: hidden;
+      box-sizing: border-box;
     }
 
     /* WERACLE Sidebar Header */
@@ -180,10 +184,13 @@
 
     /* Scrollable Sidebar Content */
     .sidebar-scroll-content {
-      flex: 1;
-      padding: 16px 18px;
+      flex: 1 1 0;
+      min-height: 0;
+      padding: 16px 18px 20px 18px;
       overflow-y: auto;
+      overflow-x: hidden;
       background: #f8fafc;
+      box-sizing: border-box;
     }
     .sidebar-scroll-content::-webkit-scrollbar { width: 5px; }
     .sidebar-scroll-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
@@ -467,11 +474,14 @@
     .sidebar-action-footer {
       background: #ffffff;
       border-top: 1px solid var(--border-color);
-      padding: 12px 16px;
+      padding: 12px 16px 14px 16px;
       display: flex;
       flex-direction: column;
       gap: 8px;
       flex-shrink: 0;
+      z-index: 50;
+      box-sizing: border-box;
+      box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.06);
     }
     .action-row {
       display: flex;
@@ -2287,23 +2297,58 @@
 
     function handleLogoUpload(input) {
       if (input.files && input.files[0]) {
+        const file = input.files[0];
         const reader = new FileReader();
         reader.onload = function(e) {
-          customLogoSrc = e.target.result;
-          canvasPage.querySelectorAll('img[src*="보답화니_로고"], [data-slot="logo"]').forEach(img => img.src = customLogoSrc);
+          const img = new Image();
+          img.onload = function() {
+            const maxDim = 500;
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) { h = Math.round(h * (maxDim / w)); w = maxDim; }
+              else { w = Math.round(w * (maxDim / h)); h = maxDim; }
+            }
+            const cv = document.createElement('canvas');
+            cv.width = w; cv.height = h;
+            const ctx = cv.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            customLogoSrc = cv.toDataURL('image/png');
+            canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(imgEl => {
+              imgEl.src = customLogoSrc;
+              imgEl.style.display = 'block';
+            });
+          };
+          img.src = e.target.result;
         };
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
       }
     }
 
     function handlePhotoUpload(input) {
       if (input.files && input.files[0]) {
+        const file = input.files[0];
         const reader = new FileReader();
         reader.onload = function(e) {
-          customPhotoSrc = e.target.result;
-          canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = customPhotoSrc);
+          const img = new Image();
+          img.onload = function() {
+            const maxDim = 800;
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) { h = Math.round(h * (maxDim / w)); w = maxDim; }
+              else { w = Math.round(w * (maxDim / h)); h = maxDim; }
+            }
+            const cv = document.createElement('canvas');
+            cv.width = w; cv.height = h;
+            const ctx = cv.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            customPhotoSrc = cv.toDataURL('image/jpeg', 0.88);
+            canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(imgEl => {
+              imgEl.src = customPhotoSrc;
+            });
+          };
+          img.src = e.target.result;
         };
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
       }
     }
 
@@ -2453,6 +2498,17 @@
         if (cfg.visualMode) {
           switchVisualMode(cfg.visualMode);
         }
+        if (cfg.photoSrc) {
+          customPhotoSrc = cfg.photoSrc;
+          canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = customPhotoSrc);
+        }
+        if (cfg.logoSrc) {
+          customLogoSrc = cfg.logoSrc;
+          canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(img => {
+            img.src = customLogoSrc;
+            img.style.display = 'block';
+          });
+        }
         if (document.getElementById('inputClientName')) {
           // If legacy '조진주' was saved, reset to default '고객'
           const clientVal = (cfg.client && cfg.client !== '조진주') ? cfg.client : '고객';
@@ -2497,6 +2553,8 @@
         themeIdx: currentTemplateIndex,
         themeName: TEMPLATES[currentTemplateIndex] ? TEMPLATES[currentTemplateIndex].name : '코퍼레이트 다크차콜',
         visualMode: currentVisualMode,
+        photoSrc: customPhotoSrc,
+        logoSrc: customLogoSrc,
         client: document.getElementById('inputClientName') ? document.getElementById('inputClientName').value.trim() : '고객',
         advisor: document.getElementById('inputAdvisorName') ? document.getElementById('inputAdvisorName').value.trim() : '박보환 본부장',
         phone: document.getElementById('inputAdvisorPhone') ? document.getElementById('inputAdvisorPhone').value.trim() : '010-1234-5678',
@@ -2510,12 +2568,16 @@
         savedAt: new Date().toISOString()
       };
       
-      localStorage.setItem('weracle_bojang_cover_config', JSON.stringify(cfg));
+      try {
+        localStorage.setItem('weracle_bojang_cover_config', JSON.stringify(cfg));
+      } catch(e) {
+        console.warn('localStorage save warning:', e);
+      }
 
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({ type: 'WERACLE_COVER_SAVED', config: cfg }, '*');
       }
-      alert('✨ 맞춤 표지 설정이 저장되었습니다!\n보장분석 페이지에 즉시 적용됩니다.');
+      alert('✨ 맞춤 표지 설정과 이미지가 안전하게 저장되었습니다!\n보장분석 페이지에 즉시 적용됩니다.');
     };
 
     // Export cover canvas for Bojang PDF integration

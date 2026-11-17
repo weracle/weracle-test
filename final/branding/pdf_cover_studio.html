@@ -1834,6 +1834,199 @@
     }
 
   
+  
+  /* ========================================================
+     [CANVA/PPT STYLE INTUITIVE RESIZE & FLOATING DOCK ENGINE]
+     ======================================================== */
+  
+  /* Selected Box State */
+  .card-photo.is-selected,
+  .header-logo-box.is-selected {
+    outline: 2.5px solid #0284c7 !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 5px rgba(2, 132, 199, 0.25) !important;
+  }
+
+  /* Photo Interactive Bottom Resize Bar */
+  .photo-resize-control-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 42px;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.8) 70%, transparent 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    z-index: 70;
+    user-select: none;
+    cursor: ns-resize;
+  }
+  .photo-resize-control-bar:hover {
+    background: linear-gradient(to top, rgba(2, 132, 199, 0.95) 0%, rgba(15, 23, 42, 0.88) 70%, transparent 100%);
+  }
+
+  /* Grip Center Pill */
+  .resize-drag-grip {
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 850;
+    padding: 5px 14px;
+    border-radius: 20px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+    border: 1.5px solid rgba(255,255,255,0.85);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: ns-resize;
+    transition: transform 0.12s, background 0.12s;
+  }
+  .photo-resize-control-bar:hover .resize-drag-grip {
+    transform: scale(1.05);
+    background: #38bdf8;
+    color: #0f172a;
+    border-color: #ffffff;
+  }
+
+  /* Quick Step Buttons on Bottom Bar */
+  .resize-quick-btn {
+    background: rgba(30, 41, 59, 0.95);
+    color: #ffffff;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    border-radius: 18px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    transition: all 0.12s ease;
+  }
+  .resize-quick-btn:hover {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+  .resize-quick-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* 4 Corner Resize Handles (Canva/PPT Style) */
+  .corner-handle {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: #ffffff;
+    border: 2.5px solid #0284c7;
+    border-radius: 50%;
+    z-index: 75;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    transition: transform 0.12s ease, background 0.12s ease;
+  }
+  .corner-handle:hover {
+    transform: scale(1.4);
+    background: #38bdf8;
+    border-color: #0f172a;
+  }
+  .corner-tl { top: -6px; left: -6px; cursor: nwse-resize; }
+  .corner-tr { top: -6px; right: -6px; cursor: nesw-resize; }
+  .corner-bl { bottom: -6px; left: -6px; cursor: nesw-resize; }
+  .corner-br { bottom: -6px; right: -6px; cursor: nwse-resize; }
+
+  /* Floating Control Docks (Top Dock for Photo & Logo) */
+  .element-floating-dock {
+    position: absolute;
+    z-index: 130;
+    background: rgba(15, 23, 42, 0.96);
+    backdrop-filter: blur(14px);
+    border: 1.5px solid #38bdf8;
+    border-radius: 14px;
+    padding: 6px 10px;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.5), 0 0 20px rgba(56, 189, 248, 0.25);
+    display: none;
+    align-items: center;
+    gap: 8px;
+    color: #ffffff;
+    user-select: none;
+    animation: dockSlideDown 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes dockSlideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .element-floating-dock.open {
+    display: flex !important;
+  }
+
+  .dock-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .dock-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #94a3b8;
+    margin-right: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .dock-btn {
+    background: #1e293b;
+    color: #f1f5f9;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 750;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.12s ease;
+  }
+  .dock-btn:hover {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+  }
+  .dock-btn:active {
+    transform: scale(0.95);
+  }
+  .dock-btn.primary {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+    font-weight: 850;
+  }
+  .dock-btn.primary:hover {
+    background: #38bdf8;
+    color: #0f172a;
+  }
+  .dock-val {
+    font-size: 11.5px;
+    font-weight: 850;
+    color: #38bdf8;
+    min-width: 44px;
+    text-align: center;
+    background: rgba(2, 132, 199, 0.15);
+    padding: 3px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+  .dock-divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 0 2px;
+  }
+
   /* Direct Editable WYSIWYG Styling */
   .editable-active {
     cursor: text !important;
@@ -2887,28 +3080,32 @@
         <div class="logo-drag-handle" id="logoDragDiagonal" onmousedown="startLogoDiagonalDrag(event)" onclick="adjustLogoSize(8, event)" title="모서리를 드래그하여 로고 크기 조절 (클릭 시 확대)" data-html2canvas-ignore="true">
           <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
         </div>
+      
+        <div class="corner-handle corner-br" id="logoDragDiagonal" onmousedown="startLogoDiagonalDrag(event)" onclick="adjustLogoSize(8, event)" title="모서리를 드래그하여 로고 크기 조절 (클릭 시 확대)" data-html2canvas-ignore="true"></div>
       </div>
 
-      <!-- Quick Logo Toolbar directly on Sheet -->
-      <div class="element-quick-toolbar" id="logoQuickToolbar" data-html2canvas-ignore="true" style="top: 65px; left: 0;">
-        <div class="tb-header">
-          <span class="tb-title"><i class="fa-solid fa-stamp"></i> 로고 즉시 조절 & 변경</span>
-          <button type="button" class="tb-close-btn" onclick="closeQuickToolbars(event)">✕</button>
+      <!-- Top Floating Dock for Logo -->
+      <div class="element-floating-dock" id="logoQuickToolbar" data-html2canvas-ignore="true" style="top: -44px; left: 0; min-width: 320px;">
+        <div class="dock-group">
+          <span class="dock-label"><i class="fa-solid fa-stamp" style="color:#38bdf8;"></i> 로고 크기</span>
+          <button type="button" class="dock-btn" onclick="adjustLogoSize(-5, event)">◀ 작게</button>
+          <span class="dock-val" id="tbLogoSizeVal">58px</span>
+          <button type="button" class="dock-btn" onclick="adjustLogoSize(5, event)">크게 ▶</button>
         </div>
-        <div class="tb-row">
-          <span class="tb-label">로고 크기</span>
-          <div class="tb-btn-group">
-            <button type="button" class="tb-btn" onclick="adjustLogoSize(-5, event)"><i class="fa-solid fa-minus"></i> 축소</button>
-            <span class="tb-val" id="tbLogoSizeVal">58px</span>
-            <button type="button" class="tb-btn" onclick="adjustLogoSize(5, event)"><i class="fa-solid fa-plus"></i> 확대</button>
-          </div>
+
+        <div class="dock-divider"></div>
+
+        <div class="dock-group">
+          <button type="button" class="dock-btn" onclick="updateLogoSize(42)">미니(42)</button>
+          <button type="button" class="dock-btn" onclick="updateLogoSize(58)">표준(58)</button>
+          <button type="button" class="dock-btn" onclick="updateLogoSize(85)">크게(85)</button>
         </div>
-        <div class="tb-actions-row">
-          <button type="button" class="tb-btn primary" onclick="document.getElementById('logoUploadInput').click()"><i class="fa-solid fa-upload"></i> 로고 교체</button>
-          <button type="button" class="tb-btn" onclick="resetLogoToDefault()"><i class="fa-solid fa-rotate-left"></i> 기본</button>
-          <button type="button" class="tb-btn danger" onclick="toggleLogo(false)"><i class="fa-solid fa-eye-slash"></i> 숨김</button>
-          <button type="button" class="tb-btn" onclick="openLogoSidebar(event)"><i class="fa-solid fa-sliders"></i> 상세</button>
-        </div>
+
+        <div class="dock-divider"></div>
+
+        <button type="button" class="dock-btn primary" onclick="document.getElementById('logoUploadInput').click()">
+          <i class="fa-solid fa-upload"></i> 로고 교체
+        </button>
       </div>
 
       <div class="header-right-meta">
@@ -2936,80 +3133,60 @@
         
         <!-- VISUAL SLOT: Photo Mode vs Pledge Mode -->
         <div class="card-visual-slot" id="cardVisualSlot" style="position: relative;">
-          <!-- 1. Photo View (Default) -->
-          <div class="card-photo" id="photoView" onclick="onPhotoViewClick(event)" title="클릭하여 사진 조절 (하단/모서리를 드래그하여 늘리기 가능)">
+          <!-- 1. Photo View (Canva/PPT Style Interactive Frame) -->
+          <div class="card-photo clickable-slot-active is-selected" id="photoView" onclick="onPhotoViewClick(event)" title="클릭하여 크기 조절 및 사진 변경">
             <img src="images/consultant_model.jpg" id="sheetPhotoImg" data-slot="image" alt="담당 컨설턴트 사진">
-            <div class="photo-hover-badge">
-              <i class="fa-solid fa-sliders"></i> 사진 조절 · 아래/대각선 드래그 또는 버튼으로 늘리기
-            </div>
 
-            <!-- Direct Drag & Click Controls: Bottom Edge (위아래로 늘리기) -->
-            <div class="photo-drag-handle handle-bottom" id="photoDragBottom" onmousedown="startPhotoBottomDrag(event)" title="마우스로 드래그하거나 +/- 버튼으로 위아래 높이 조절" data-html2canvas-ignore="true">
-              <button type="button" class="handle-step-btn" onclick="adjustPhotoHeight(-30, event)" title="위아래 줄이기 (-30px)"><i class="fa-solid fa-minus"></i></button>
-              <div class="handle-bar-pill" onclick="adjustPhotoHeight(30, event)" title="클릭 시 30px 늘리기 (위아래 드래그 가능)">
-                <i class="fa-solid fa-arrows-up-down"></i> <span>위아래로 늘리기 (드래그/클릭)</span>
+            <!-- Canva/PPT Style 4 Corner Handles -->
+            <div class="corner-handle corner-tl" data-html2canvas-ignore="true"></div>
+            <div class="corner-handle corner-tr" data-html2canvas-ignore="true"></div>
+            <div class="corner-handle corner-bl" data-html2canvas-ignore="true"></div>
+            <div class="corner-handle corner-br" id="photoDragDiagonal" onmousedown="startPhotoDiagonalDrag(event)" onclick="adjustDiagonal(30, event)" title="대각선으로 끌어당겨 크기 늘리기 (클릭 시 확대)" data-html2canvas-ignore="true"></div>
+
+            <!-- Highly Obvious Bottom Grab Bar with -30px / +30px and Drag Handle -->
+            <div class="photo-resize-control-bar" id="photoDragBottom" onmousedown="startPhotoBottomDrag(event)" title="마우스로 잡고 아래로 끌어당기거나 버튼을 눌러 높이를 조절하세요" data-html2canvas-ignore="true">
+              <button type="button" class="resize-quick-btn" onclick="adjustPhotoHeight(-30, event)" title="사진 길이 30px 줄이기">
+                <i class="fa-solid fa-minus"></i> 짧게 (-30)
+              </button>
+              
+              <div class="resize-drag-grip" onclick="adjustPhotoHeight(30, event)" title="클릭 시 30px 늘어나며, 마우스로 위아래로 끌어당길 수도 있습니다">
+                <i class="fa-solid fa-arrows-up-down"></i>
+                <span>↕ 마우스로 당겨서 위아래 늘리기</span>
               </div>
-              <button type="button" class="handle-step-btn" onclick="adjustPhotoHeight(30, event)" title="위아래 늘리기 (+30px)"><i class="fa-solid fa-plus"></i></button>
-            </div>
 
-            <!-- Direct Drag & Click Controls: Bottom-Right Corner (대각선으로 늘리기) -->
-            <div class="photo-drag-handle handle-diagonal" id="photoDragDiagonal" onmousedown="startPhotoDiagonalDrag(event)" onclick="adjustDiagonal(30, event)" title="대각선으로 드래그하거나 클릭하여 크기 및 배율 늘리기" data-html2canvas-ignore="true">
-              <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
-              <span class="handle-diag-tip">대각선 늘리기 (+30px & 줌)</span>
+              <button type="button" class="resize-quick-btn" onclick="adjustPhotoHeight(30, event)" title="사진 길이 30px 늘리기">
+                <i class="fa-solid fa-plus"></i> 길게 (+30)
+              </button>
             </div>
           </div>
 
-          <!-- Quick Photo Toolbar directly on Sheet -->
-          <div class="element-quick-toolbar" id="photoQuickToolbar" data-html2canvas-ignore="true" style="top: 20px; left: 16px; width: 310px;">
-            <div class="tb-header">
-              <span class="tb-title"><i class="fa-solid fa-camera"></i> 사진 즉시 조절 & 변경</span>
-              <button type="button" class="tb-close-btn" onclick="closeQuickToolbars(event)">✕</button>
+          <!-- Top Floating Dock for Photo: Always clear and obvious -->
+          <div class="element-floating-dock open" id="photoQuickToolbar" data-html2canvas-ignore="true" style="top: -46px; left: 0; min-width: 460px;">
+            <div class="dock-group">
+              <span class="dock-label"><i class="fa-solid fa-arrows-up-down" style="color:#38bdf8;"></i> 세로길이</span>
+              <button type="button" class="dock-btn" onclick="adjustPhotoHeight(-30, event)">◀ 짧게</button>
+              <span class="dock-val" id="tbPhotoHeightVal">570px</span>
+              <button type="button" class="dock-btn" onclick="adjustPhotoHeight(30, event)">길게 ▶</button>
             </div>
             
-            <!-- Zoom row -->
-            <div class="tb-row">
-              <span class="tb-label">사진 확대/축소</span>
-              <div class="tb-btn-group">
-                <button type="button" class="tb-btn" onclick="adjustPhotoZoom(-10, event)"><i class="fa-solid fa-magnifying-glass-minus"></i> 축소</button>
-                <span class="tb-val" id="tbPhotoZoomVal">100%</span>
-                <button type="button" class="tb-btn" onclick="adjustPhotoZoom(10, event)"><i class="fa-solid fa-magnifying-glass-plus"></i> 확대</button>
-              </div>
+            <div class="dock-divider"></div>
+
+            <div class="dock-group">
+              <span class="dock-label"><i class="fa-solid fa-magnifying-glass" style="color:#38bdf8;"></i> 확대</span>
+              <button type="button" class="dock-btn" onclick="adjustPhotoZoom(-10, event)">축소</button>
+              <span class="dock-val" id="tbPhotoZoomVal">100%</span>
+              <button type="button" class="dock-btn" onclick="adjustPhotoZoom(10, event)">확대</button>
             </div>
 
-            <!-- Height row (위아래 늘리기) -->
-            <div class="tb-row">
-              <span class="tb-label">위아래 늘리기/줄이기</span>
-              <div class="tb-btn-group">
-                <button type="button" class="tb-btn" onclick="adjustPhotoHeight(-30, event)" title="위아래 줄이기"><i class="fa-solid fa-arrows-up-down"></i> -30px</button>
-                <span class="tb-val" id="tbPhotoHeightVal">570px</span>
-                <button type="button" class="tb-btn" onclick="adjustPhotoHeight(30, event)" title="위아래 늘리기"><i class="fa-solid fa-arrows-up-down"></i> +30px</button>
-              </div>
-            </div>
+            <div class="dock-divider"></div>
 
-            <!-- Diagonal Stretch Row (대각선 늘리기) -->
-            <div class="tb-row">
-              <span class="tb-label">대각선으로 늘리기</span>
-              <div class="tb-btn-group">
-                <button type="button" class="tb-btn" onclick="adjustDiagonal(-25, event)" title="대각선 축소"><i class="fa-solid fa-down-left-and-up-right-to-center"></i> 대각선 축소</button>
-                <button type="button" class="tb-btn" onclick="adjustDiagonal(25, event)" title="대각선 확대"><i class="fa-solid fa-up-right-and-down-left-from-center"></i> 대각선 늘리기</button>
-              </div>
-            </div>
-
-            <!-- Position Y row -->
-            <div class="tb-row">
-              <span class="tb-label">얼굴 상하 위치</span>
-              <div class="tb-btn-group">
-                <button type="button" class="tb-btn" onclick="updatePhotoPosY(10, event)">▲ 상단</button>
-                <button type="button" class="tb-btn" onclick="updatePhotoPosY(50, event)">● 중앙</button>
-                <button type="button" class="tb-btn" onclick="updatePhotoPosY(80, event)">▼ 하단</button>
-              </div>
-            </div>
-
-            <!-- Action buttons -->
-            <div class="tb-actions-row">
-              <button type="button" class="tb-btn primary" onclick="document.getElementById('photoUploadInput').click()"><i class="fa-solid fa-upload"></i> 내 사진 올리기</button>
-              <button type="button" class="tb-btn" onclick="resetPhotoToDefault()"><i class="fa-solid fa-rotate-left"></i> 기본 사진</button>
-              <button type="button" class="tb-btn" onclick="openPhotoSidebar(event)" title="좌측 상세 조절 패널 열기"><i class="fa-solid fa-sliders"></i> 상세</button>
+            <div class="dock-group">
+              <button type="button" class="dock-btn primary" onclick="document.getElementById('photoUploadInput').click()">
+                <i class="fa-solid fa-upload"></i> 사진 교체
+              </button>
+              <button type="button" class="dock-btn" onclick="resetPhotoToDefault()" title="기본 사진으로 복원">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
             </div>
           </div>
 
@@ -3489,33 +3666,64 @@
       const photoTb = document.getElementById('photoQuickToolbar');
       if (photoTb) photoTb.classList.remove('open');
       const logoTb = document.getElementById('logoQuickToolbar');
-      if (logoTb) logoTb.classList.toggle('open');
+      if (logoTb) logoTb.classList.add('open');
       openLogoSidebar();
     }
 
     function openPhotoQuickToolbar(e) {
       if (e) e.stopPropagation();
+      const logoBox = document.getElementById('sheetLogoBox');
+      if (logoBox) logoBox.classList.remove('is-selected');
       const logoTb = document.getElementById('logoQuickToolbar');
       if (logoTb) logoTb.classList.remove('open');
+
+      const photoView = document.getElementById('photoView');
+      if (photoView) photoView.classList.add('is-selected');
       const photoTb = document.getElementById('photoQuickToolbar');
-      if (photoTb) photoTb.classList.toggle('open');
+      if (photoTb) photoTb.classList.add('open');
       openPhotoSidebar();
+    }
+
+    function openLogoQuickToolbar(e) {
+      if (e) e.stopPropagation();
+      const photoView = document.getElementById('photoView');
+      if (photoView) photoView.classList.remove('is-selected');
+      const photoTb = document.getElementById('photoQuickToolbar');
+      if (photoTb) photoTb.classList.remove('open');
+
+      const logoBox = document.getElementById('sheetLogoBox');
+      if (logoBox) logoBox.classList.add('is-selected');
+      const logoTb = document.getElementById('logoQuickToolbar');
+      if (logoTb) logoTb.classList.toggle('open');
+      openLogoSidebar();
+    }
+
+    
+    function openLogoSidebar(e) {
+      if (e) e.stopPropagation();
+      if (typeof switchSidebarTab === 'function') {
+        switchSidebarTab('contentTab', document.getElementById('tabBtn_content'));
+      }
+      const card = document.getElementById('logoControlCard');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function openPhotoSidebar(e) {
+      if (e) e.stopPropagation();
+      if (typeof switchSidebarTab === 'function') {
+        switchSidebarTab('profileTab', document.getElementById('tabBtn_profile'));
+      }
+      const card = document.getElementById('photoControlGroup');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
 
     function closeQuickToolbars(e) {
       if (e) e.stopPropagation();
-      document.querySelectorAll('.element-quick-toolbar').forEach(el => el.classList.remove('open'));
-    }
-
-    function openLogoSidebar(e) {
-      if (e) e.stopPropagation();
-      switchSidebarTab('contentTab', document.getElementById('tabBtn_content'));
-      const card = document.getElementById('logoControlCard');
-      if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        card.style.boxShadow = '0 0 0 2px #0284c7';
-        setTimeout(() => { card.style.boxShadow = 'none'; }, 1500);
-      }
+      document.querySelectorAll('.element-quick-toolbar, .element-floating-dock').forEach(el => el.classList.remove('open'));
     }
 
     function openPhotoSidebar(e) {
@@ -3555,8 +3763,9 @@
 
     // Close quick toolbars when clicking anywhere on workspace
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.element-quick-toolbar') && !e.target.closest('#sheetLogoBox') && !e.target.closest('#photoView')) {
+      if (!e.target.closest('.element-quick-toolbar') && !e.target.closest('.element-floating-dock') && !e.target.closest('#sheetLogoBox') && !e.target.closest('#photoView') && !e.target.closest('#cardVisualSlot')) {
         closeQuickToolbars();
+        document.getElementById('sheetLogoBox')?.classList.remove('is-selected');
       }
     });
 
@@ -4309,22 +4518,25 @@
         el.setAttribute('title', '클릭하여 인사말 서브텍스트 직접 수정');
       });
 
-      // 13. Logo Slot Click to Upload
+      // 13. Logo Slot Click to Open Toolbar
       canvasPage.querySelectorAll('.header-logo-box, img[data-slot="logo"]').forEach(el => {
         el.classList.add('clickable-slot-active');
-        el.setAttribute('title', '클릭하여 내 로고 직접 변경/업로드');
+        el.setAttribute('title', '클릭하여 로고 크기 조절 및 변경 (모서리 드래그 가능)');
         el.onclick = (e) => {
-          e.stopPropagation();
-          const input = document.getElementById('logoUploadInput');
-          if (input) input.click();
+          if (window.__justFinishedDrag) return;
+          openLogoQuickToolbar(e);
         };
       });
 
-      // 14. Photo Slot Click to Upload
+      // 14. Photo Slot Click to Open Toolbar
       const photoEl = canvasPage.querySelector('#photoView');
       if (photoEl) {
         photoEl.classList.add('clickable-slot-active');
-        photoEl.setAttribute('title', '클릭하여 내 사진 직접 변경/업로드');
+        photoEl.setAttribute('title', '클릭하여 사진 크기 조절 및 변경 (하단/모서리 드래그 가능)');
+        photoEl.onclick = (e) => {
+          if (window.__justFinishedDrag) return;
+          openPhotoQuickToolbar(e);
+        };
       }
 
       // 15. Hero Title Direct Edit

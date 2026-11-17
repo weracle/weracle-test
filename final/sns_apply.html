@@ -2016,62 +2016,104 @@
       window.fbq('track', 'ViewContent', { content_name: campTitle });
     }
 
-    function getActiveUserKeys() {
-      const keys = new Set();
-      if (agentIdParam) keys.add(String(agentIdParam).trim().toLowerCase());
-      if (agentPhone) keys.add(String(agentPhone).trim().toLowerCase());
+let syncedParentProfile = null;
 
-      const emailCandidates = [
-        localStorage.getItem('user_email'),
-        localStorage.getItem('weracle_user_email'),
-        localStorage.getItem('crm_user_email'),
-        localStorage.getItem('email'),
-        localStorage.getItem('crm_agent_name'),
-        localStorage.getItem('weracle_agent_id')
-      ];
-      emailCandidates.forEach(em => {
-        if (em && String(em).trim()) keys.add(String(em).trim().toLowerCase());
-      });
+  function extractParentOrSupabaseEmail() {
+    try {
+      if (window.top && window.top !== window && window.top.currentUser && window.top.currentUser.email) {
+        if (window.top.currentProfile) syncedParentProfile = window.top.currentProfile;
+        return String(window.top.currentUser.email).trim().toLowerCase();
+      }
+    } catch (e) {}
 
-      const storedPhone = localStorage.getItem('crm_agent_phone');
-      if (storedPhone && String(storedPhone).trim()) keys.add(String(storedPhone).trim().toLowerCase());
-
-      try {
-        const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-        if (metaConn) {
-          if (metaConn.igUser) keys.add(String(metaConn.igUser).trim().toLowerCase().replace(/^@/, ''));
-          if (metaConn.igId) keys.add(String(metaConn.igId).trim().toLowerCase());
-          if (metaConn.adAcc && metaConn.adAcc !== 'act_connected') keys.add(String(metaConn.adAcc).trim().toLowerCase());
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+          const parsed = JSON.parse(localStorage.getItem(k) || '{}');
+          const userObj = parsed.user || (parsed.currentSession && parsed.currentSession.user);
+          if (userObj && userObj.email) {
+            if (!syncedParentProfile && userObj.user_metadata) {
+              syncedParentProfile = userObj.user_metadata;
+            }
+            return String(userObj.email).trim().toLowerCase();
+          }
         }
-      } catch (e) {}
+      }
+    } catch (e) {}
 
-      if (keys.size === 0 && agentName) keys.add(String(agentName).trim().toLowerCase());
-      return Array.from(keys);
+    return '';
+  }
+
+  function resolveActiveAgentKey() {
+    if (agentIdParam && agentIdParam !== 'default' && agentIdParam !== 'guest_unauthenticated') {
+      return String(agentIdParam).trim().toLowerCase();
+    }
+    const sbEmail = extractParentOrSupabaseEmail();
+    if (sbEmail) return sbEmail;
+    return 'guest_unauthenticated';
+  }
+
+  let activeAgentKey = resolveActiveAgentKey();
+
+  function getIsolatedPrStorageKey() {
+    return `${STORAGE_KEY}__${activeAgentKey}`;
+  }
+
+  function getActiveUserKeys() {
+    const keys = new Set();
+    const resolved = resolveActiveAgentKey();
+    if (resolved && resolved !== 'guest_unauthenticated') {
+      keys.add(resolved);
+    }
+    return Array.from(keys);
+  }
+
+  function applyFreshUserDefaultIdentity() {
+    const prof = syncedParentProfile || {};
+    const myName = prof.name || prof.full_name || prof.nickname || agentName || '담당 컨설턴트';
+    const myCompany = prof.company || '위라클 파트너스';
+    const myPos = prof.position || '전담 컨설턴트';
+    const myNick = prof.nickname ? `(${prof.nickname})` : '';
+
+    document.getElementById('heroAgentName').innerText = myName;
+    document.getElementById('inpAgentName').value = myName;
+    document.getElementById('heroNickEl').innerText = myNick;
+    document.getElementById('inpAgentNick').value = myNick;
+    document.getElementById('heroRoleEl').innerText = `${myCompany} ${myPos}`.trim();
+    document.getElementById('inpAgentRole').value = `${myCompany} ${myPos}`.trim();
+    document.getElementById('endingClosingSignEl').innerText = `— ${myCompany} ${myName} 드림`;
+    document.getElementById('inpEndingSign').value = `— ${myCompany} ${myName} 드림`;
+    document.getElementById('essayWatermarkEl').innerText = 'WERACLE PARTNERS';
+    document.getElementById('inpEssayWatermark').value = 'WERACLE PARTNERS';
+  }
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    try {
+      localStorage.removeItem('weracle_owner_aliases_v6');
+      localStorage.removeItem('weracle_campaigns_v6');
+      localStorage.removeItem('weracle_leads_v6');
+    } catch (e) {}
+
+    activeAgentKey = resolveActiveAgentKey();
+
+    const isEditParam = params.get('edit') === 'true';
+    const isPreviewParam = params.get('preview') === 'true';
+    const isInsideCrmAdmin = (window.self !== window.top) && window.innerWidth >= 650 && !params.has('camp') && !params.get('camp_id') && !params.get('utm_source') && !params.get('pr_id');
+    if (isEditParam || isPreviewParam || isInsideCrmAdmin) {
+      document.body.classList.add('can-edit-pr');
     }
 
-    function resolveActiveAgentKey() {
-      if (agentIdParam) return agentIdParam;
-      const email = localStorage.getItem('user_email') || localStorage.getItem('weracle_user_email') || localStorage.getItem('crm_user_email') || localStorage.getItem('email');
-      if (email && String(email).trim()) return String(email).trim().toLowerCase();
-      const keys = getActiveUserKeys();
-      return keys.length > 0 ? keys[0] : 'default';
+    if (pixelIdParam) {
+      initDynamicMetaPixel(pixelIdParam);
     }
 
-    const activeAgentKey = resolveActiveAgentKey();
+    const myPhoneKey = `crm_agent_phone__${activeAgentKey}`;
+    storedAgentNotifyPhone = agentPhone || localStorage.getItem(myPhoneKey) || (syncedParentProfile && syncedParentProfile.phone) || '';
 
-    window.addEventListener('DOMContentLoaded', async () => {
-      const isEditParam = params.get('edit') === 'true';
-      const isPreviewParam = params.get('preview') === 'true';
-     const isInsideCrmAdmin = (window.self !== window.top) && window.innerWidth >= 650 && !params.has('camp') && !params.get('camp_id') && !params.get('utm_source') && !params.get('pr_id');
-      if (isEditParam || isPreviewParam || isInsideCrmAdmin) {
-        document.body.classList.add('can-edit-pr');
-      }
-
-      if (pixelIdParam) {
-        initDynamicMetaPixel(pixelIdParam);
-      }
-
-      storedAgentNotifyPhone = agentPhone || localStorage.getItem('crm_agent_phone') || '';
+    if (document.body.classList.contains('can-edit-pr')) {
+      applyFreshUserDefaultIdentity();
+    }
 
       loadSavedPrState();
       await loadServerPrState();
@@ -3741,7 +3783,8 @@ document.getElementById('globalImagePicker').addEventListener('change', async e 
     }
 
     function buildPrStatePayload() {
-      const notifyPh = localStorage.getItem('crm_agent_phone') || storedAgentNotifyPhone || '';
+      const notifyPh = localStorage.getItem(`crm_agent_phone__${activeAgentKey}`) || storedAgentNotifyPhone || '';
+    const ownerAgentId = activeAgentKey;
       const pTitle = document.getElementById('inpPrPageTitle') ? document.getElementById('inpPrPageTitle').value.trim() : '나의 대표 PR 페이지';
       const pDefault = document.getElementById('chkPrIsDefault') ? document.getElementById('chkPrIsDefault').checked : true;
 
@@ -3842,60 +3885,60 @@ document.getElementById('globalImagePicker').addEventListener('change', async e 
           }
           renderGoodsSlider();
 
-          const cleanState = buildPrStatePayload();
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanState));
-            if (cleanState.texts && cleanState.texts.heroAgentName) {
-              localStorage.setItem('crm_agent_name', cleanState.texts.heroAgentName);
-            }
-          } catch (e) {}
-
-          const slotIdToSend = (currentPageId && String(currentPageId).startsWith('pr_page_') && !String(currentPageId).startsWith('pr_page_new_'))
-            ? currentPageId
-            : '';
-
-          const userKeys = getActiveUserKeys();
-          const res = await fetch('/api/meta-execute', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'SAVE_PR_PAGE',
-              agentId: activeAgentKey,
-              userKeys,
-              pageId: slotIdToSend,
-              pageTitle: cleanState.pageTitle,
-              presetType: cleanState.presetType,
-              isDefault: cleanState.isDefault,
-              config: cleanState
-            })
-          });
-          const resJson = await res.json();
-          if (resJson && resJson.success) {
-            if (resJson.pageId) currentPageId = resJson.pageId;
-            await refreshMyPrPagesHub();
-            alert(`✅ [${cleanState.pageTitle}] 페이지가 내 보관함에 저장되었습니다!\n이제 메타 광고나 인스타그램 자동 DM 세팅창에서 이 페이지를 바로 골라 연결할 수 있습니다.`);
-          } else {
-            alert('⚠️ 서버 응답 확인 필요: ' + (resJson.error || '다시 한 번 저장을 눌러주세요.'));
+const cleanState = buildPrStatePayload();
+        try {
+          localStorage.setItem(getIsolatedPrStorageKey(), JSON.stringify(cleanState));
+          if (cleanState.texts && cleanState.texts.heroAgentName) {
+            localStorage.setItem(`crm_agent_name__${activeAgentKey}`, cleanState.texts.heroAgentName);
           }
-        } catch (err) {
-          alert('⚠️ 서버 통신 오류: ' + err.message);
-        } finally {
-          if (saveBtn) {
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = origHtml;
-          }
+        } catch (e) {}
+
+        const slotIdToSend = (currentPageId && String(currentPageId).startsWith('pr_page_') && !String(currentPageId).startsWith('pr_page_new_'))
+          ? currentPageId
+          : '';
+
+        const userKeys = getActiveUserKeys();
+        const res = await fetch('/api/meta-execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'SAVE_PR_PAGE',
+            agentId: activeAgentKey,
+            userKeys,
+            pageId: slotIdToSend,
+            pageTitle: cleanState.pageTitle,
+            presetType: cleanState.presetType,
+            isDefault: cleanState.isDefault,
+            config: cleanState
+          })
+        });
+        const resJson = await res.json();
+        if (resJson && resJson.success) {
+          if (resJson.pageId) currentPageId = resJson.pageId;
+          await refreshMyPrPagesHub();
+          alert(`✅ [${cleanState.pageTitle}] 페이지가 내 보관함에 저장되었습니다!\n이제 메타 광고나 인스타그램 자동 DM 세팅창에서 이 페이지를 바로 골라 연결할 수 있습니다.`);
+        } else {
+          alert('⚠️ 서버 응답 확인 필요: ' + (resJson.error || '다시 한 번 저장을 눌러주세요.'));
         }
-        return;
+      } catch (err) {
+        alert('⚠️ 서버 통신 오류: ' + err.message);
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origHtml;
+        }
       }
-
-      const state = buildPrStatePayload();
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        if (state.texts && state.texts.heroAgentName) {
-          localStorage.setItem('crm_agent_name', state.texts.heroAgentName);
-        }
-      } catch (e) {}
+      return;
     }
+
+    const state = buildPrStatePayload();
+    try {
+      localStorage.setItem(getIsolatedPrStorageKey(), JSON.stringify(state));
+      if (state.texts && state.texts.heroAgentName) {
+        localStorage.setItem(`crm_agent_name__${activeAgentKey}`, state.texts.heroAgentName);
+      }
+    } catch (e) {}
+  }
 
     function applyStateObjectToDom(state) {
       if (!state || typeof state !== 'object') return;
@@ -4055,41 +4098,45 @@ document.getElementById('globalImagePicker').addEventListener('change', async e 
       });
     }
 
-    function loadSavedPrState() {
-      if (prIdParam) return;
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return;
-        applyStateObjectToDom(JSON.parse(raw));
-      } catch (e) {}
-    }
+function loadSavedPrState() {
+    if (prIdParam || campId !== 'camp_direct') return;
+    if (activeAgentKey === 'guest_unauthenticated') return;
+    try {
+      const raw = localStorage.getItem(getIsolatedPrStorageKey());
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && (!parsed.ownerAgentId || parsed.ownerAgentId === activeAgentKey)) {
+        applyStateObjectToDom(parsed);
+      }
+    } catch (e) {}
+  }
 
-    async function loadServerPrState() {
-      try {
-        const userKeys = getActiveUserKeys();
-        const res = await fetch('/api/meta-execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'GET_PR_CONFIG',
-            agentId: activeAgentKey,
-            userKeys,
-            campId: campId !== 'camp_direct' ? campId : '',
-            prId: prIdParam
-          })
-        });
-        const json = await res.json();
-        if (json && json.success && json.config) {
-          if (json.loadedFrom && String(json.loadedFrom).startsWith('pr_page_')) {
-            currentPageId = json.loadedFrom;
-          }
-          applyStateObjectToDom(json.config);
-          if (!prIdParam) {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(json.config)); } catch (e) {}
-          }
+  async function loadServerPrState() {
+    try {
+      const userKeys = getActiveUserKeys();
+      const res = await fetch('/api/meta-execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'GET_PR_CONFIG',
+          agentId: activeAgentKey,
+          userKeys,
+          campId: campId !== 'camp_direct' ? campId : '',
+          prId: prIdParam
+        })
+      });
+      const json = await res.json();
+      if (json && json.success && json.config) {
+        if (json.loadedFrom && String(json.loadedFrom).startsWith('pr_page_')) {
+          currentPageId = json.loadedFrom;
         }
-      } catch (e) {}
-    }
+        applyStateObjectToDom(json.config);
+        if (!prIdParam && campId === 'camp_direct' && activeAgentKey !== 'guest_unauthenticated') {
+          try { localStorage.setItem(getIsolatedPrStorageKey(), JSON.stringify(json.config)); } catch (e) {}
+        }
+      }
+    } catch (e) {}
+  }
 
     function resetAllPrState() {
       if (!confirm('현재 편집 중인 내용을 선택된 타입의 기본 샘플 상태로 되돌리시겠습니까?')) return;
@@ -4191,6 +4238,7 @@ async function submitLeadForm(e) {
             note: finalNoteText,
             source: resolvedSrc,
             agentId: ownerAgentId,
+            prId: prIdParam,
             hasPdf: hasPdfDoc
           })
         });

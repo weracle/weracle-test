@@ -1367,13 +1367,27 @@
                 </div>
               </div>
             </div>
-<div id="phoneViewPrIframeBox" style="display:none; flex-direction:column; flex:1; background:#ffffff; overflow:hidden; position:relative;">
+<style>
+              #phonePrLiveIframe {
+                width: 430px !important;
+                height: 153.6% !important;
+                min-height: 865px !important;
+                border: none !important;
+                background: #ffffff !important;
+                transform: scale(0.65116) !important;
+                transform-origin: top left !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+              }
+            </style>
+            <div id="phoneViewPrIframeBox" style="display:none; flex-direction:column; flex:1; background:#ffffff; overflow:hidden; position:relative;">
               <div style="background:#0f172a; color:#38bdf8; font-size:10.5px; font-weight:800; padding:6px 12px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; z-index:5;">
                 <span>🪪 실제 모바일 비율 미리보기</span>
                 <button type="button" onclick="closePrLiveIframePreview()" style="background:rgba(255,255,255,0.15); color:#fff; border:none; border-radius:6px; padding:2px 7px; font-size:10px; font-weight:800; cursor:pointer;">✕ 피드 보기</button>
               </div>
               <div style="flex:1; width:280px; position:relative; overflow:hidden; background:#ffffff;">
-                <iframe id="phonePrLiveIframe" src="about:blank" style="width:430px; height:153.6%; border:none; background:#fff; transform:scale(0.65116); transform-origin:top left; position:absolute; top:0; left:0;"></iframe>
+                <iframe id="phonePrLiveIframe" src="about:blank"></iframe>
               </div>
             </div>
 
@@ -1975,71 +1989,125 @@ const DEFAULT_INSURANCE_DISCLAIMER = '※ 계약 체결 전 상품설명서 및 
     }
 
 
+// ★ [계정 완벽 격리] index.html 건드리지 않고 부모창 & 수파베이스 토큰에서 현재 로그인 구글 이메일 실시간 추출
+    let syncedParentEmail = '';
+    let syncedParentName = '';
+    let syncedParentPhone = '';
 
-function rememberOwnerAliases(newItems) {
+    function extractSupabaseSessionEmail() {
       try {
-        const saved = JSON.parse(localStorage.getItem('weracle_owner_aliases_v6') || '[]');
-        const set = new Set(Array.isArray(saved) ? saved : []);
-        (newItems || []).forEach(v => {
-          const cl = String(v || '').trim().toLowerCase().replace(/^@/, '');
-          if (cl && cl !== 'default' && cl !== 'weracle_user' && cl !== 'act_connected') set.add(cl);
-        });
-        localStorage.setItem('weracle_owner_aliases_v6', JSON.stringify(Array.from(set).slice(-50)));
+        if (window.top && window.top !== window && window.top.currentUser && window.top.currentUser.email) {
+          const pProf = window.top.currentProfile || {};
+          syncedParentName = pProf.name || pProf.full_name || pProf.nickname || syncedParentName;
+          syncedParentPhone = pProf.phone || syncedParentPhone;
+          return String(window.top.currentUser.email).trim().toLowerCase();
+        }
       } catch (e) {}
+
+      if (syncedParentEmail) return syncedParentEmail;
+
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+            const parsed = JSON.parse(localStorage.getItem(k) || '{}');
+            const userObj = parsed.user || (parsed.currentSession && parsed.currentSession.user);
+            if (userObj && userObj.email) {
+              const meta = userObj.user_metadata || {};
+              if (!syncedParentName) syncedParentName = meta.name || meta.full_name || meta.nickname || '';
+              if (!syncedParentPhone) syncedParentPhone = meta.phone || '';
+              return String(userObj.email).trim().toLowerCase();
+            }
+          }
+        }
+      } catch (e) {}
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlEmail = urlParams.get('user_email') || urlParams.get('email');
+      if (urlEmail && String(urlEmail).trim()) {
+        const cleanUrlEm = String(urlEmail).trim().toLowerCase();
+        sessionStorage.setItem('weracle_active_email', cleanUrlEm);
+        return cleanUrlEm;
+      }
+
+      const sessEm = sessionStorage.getItem('weracle_active_email');
+      if (sessEm) return sessEm;
+
+      return '';
+    }
+
+    function getActiveAgentId() {
+      const sbEmail = extractSupabaseSessionEmail();
+      if (sbEmail) return sbEmail;
+      return 'guest_unauthenticated';
+    }
+
+    // 사용자 이메일별로 완전히 분리된 localStorage 키 생성 (한 PC 다중 계정 로그인 시에도 혼선 0%)
+    function uKey(baseKey) {
+      const uid = getActiveAgentId();
+      return `${baseKey}__${uid}`;
+    }
+
+    function getMyMetaConn() {
+      try {
+        const raw = localStorage.getItem(uKey('weracle_meta_conn_v7'));
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return null;
+    }
+
+    function setMyMetaConn(connObj) {
+      try {
+        if (!connObj) localStorage.removeItem(uKey('weracle_meta_conn_v7'));
+        else localStorage.setItem(uKey('weracle_meta_conn_v7'), JSON.stringify(connObj));
+      } catch (e) {}
+    }
+
+    function getMyAgentName() {
+      return localStorage.getItem(uKey('crm_agent_name')) || syncedParentName || '';
+    }
+
+    function getMyAgentPhone() {
+      return localStorage.getItem(uKey('crm_agent_phone')) || syncedParentPhone || '';
+    }
+
+    function rememberOwnerAliases() {
+      // 공용 페이지/타 계정 별칭 합산으로 인한 DB 섞임 원천 차단을 위해 비활성화
     }
 
     function getActiveUserKeys() {
       const keys = new Set();
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlEmail = urlParams.get('user_email') || urlParams.get('email');
-      if (urlEmail) {
-        localStorage.setItem('user_email', urlEmail.trim());
+      const agentId = getActiveAgentId();
+      if (agentId && agentId !== 'guest_unauthenticated') {
+        keys.add(agentId);
       }
-
-      const candidates = [
-        localStorage.getItem('user_email'),
-        localStorage.getItem('weracle_user_email'),
-        localStorage.getItem('crm_user_email'),
-        localStorage.getItem('email'),
-        localStorage.getItem('crm_agent_phone'),
-        localStorage.getItem('crm_agent_name'),
-        localStorage.getItem('weracle_insta_handle_v6'),
-        localStorage.getItem('weracle_agent_id'),
-        localStorage.getItem('weracle_user_id'),
-        localStorage.getItem('crm_user_id')
-      ];
-      candidates.forEach(v => {
-        if (v && String(v).trim()) keys.add(String(v).trim().toLowerCase().replace(/^@/, ''));
-      });
-
-      try {
-        const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-        if (metaConn) {
-          if (metaConn.igUser) keys.add(String(metaConn.igUser).trim().toLowerCase().replace(/^@/, ''));
-          if (metaConn.igId) keys.add(String(metaConn.igId).trim().toLowerCase());
-          if (metaConn.adAcc && metaConn.adAcc !== 'act_connected') keys.add(String(metaConn.adAcc).trim().toLowerCase());
-          if (metaConn.pageId) keys.add(String(metaConn.pageId).trim().toLowerCase());
-        }
-      } catch (e) {}
-
-      try {
-        const savedAliases = JSON.parse(localStorage.getItem('weracle_owner_aliases_v6') || '[]');
-        if (Array.isArray(savedAliases)) {
-          savedAliases.forEach(a => { if (a) keys.add(String(a).trim().toLowerCase()); });
-        }
-      } catch (e) {}
-
-      const arr = Array.from(keys);
-      rememberOwnerAliases(arr);
-      return arr;
+      const metaConn = getMyMetaConn();
+      if (metaConn) {
+        if (metaConn.igId) keys.add(String(metaConn.igId).trim().toLowerCase());
+        if (metaConn.pageId) keys.add(String(metaConn.pageId).trim().toLowerCase());
+        if (metaConn.fbUid) keys.add(String(metaConn.fbUid).trim().toLowerCase());
+      }
+      return Array.from(keys);
     }
 
-    function getActiveAgentId() {
-      const email = localStorage.getItem('user_email') || localStorage.getItem('weracle_user_email') || localStorage.getItem('crm_user_email') || localStorage.getItem('email');
-      if (email && String(email).trim()) return String(email).trim().toLowerCase();
-      const keys = getActiveUserKeys();
-      return keys.length > 0 ? keys[0] : 'default';
-    }
+    // 부모 창(index.html)의 기존 SB_SESSION_SYNC 신호 자동 수신
+    window.addEventListener('message', (ev) => {
+      if (ev.data && ev.data.type === 'SB_SESSION_SYNC' && ev.data.user && ev.data.user.email) {
+        const incomingEmail = String(ev.data.user.email).trim().toLowerCase();
+        const prevEmail = syncedParentEmail;
+        syncedParentEmail = incomingEmail;
+        sessionStorage.setItem('weracle_active_email', incomingEmail);
+        if (ev.data.profile) {
+          syncedParentName = ev.data.profile.name || ev.data.profile.full_name || ev.data.profile.nickname || '';
+          syncedParentPhone = ev.data.profile.phone || '';
+        }
+        if (prevEmail !== incomingEmail) {
+          reloadUserIsolatedStorage();
+          updateHeaderBadges();
+          loadServerCampaigns(false);
+        }
+      }
+    });
 
 let mySavedPrPagesList = [];
 
@@ -2123,13 +2191,13 @@ function closePrLiveIframePreview() {
       window.open(url, 'PrMobilePreviewPopup', `width=${w},height=${h},top=${top},left=${left},scrollbars=yes`);
     }
 
-    function openMyPrStudioPopup() {
+ function openMyPrStudioPopup() {
       const agentId = getActiveAgentId();
-      const agentName = localStorage.getItem('crm_agent_name') || '';
-      const agentPhone = localStorage.getItem('crm_agent_phone') || '';
+      const agentName = getMyAgentName();
+      const agentPhone = getMyAgentPhone();
       const url = `/sns_apply.html?edit=true&agent_id=${encodeURIComponent(agentId)}&agent=${encodeURIComponent(agentName)}&agent_phone=${encodeURIComponent(agentPhone)}`;
       window.open(url, '_blank');
-    }
+    }  
 function buildClientGeoLocations(regionStr) {
   if (!regionStr || regionStr === '전국') {
     return { countries: ['KR'] };
@@ -2280,46 +2348,34 @@ function cleanDmMessageText(rawMsg, recordId, hasPdf) {
 
     let sheetLoadError = false;
 
-    let customContents = JSON.parse(localStorage.getItem('weracle_custom_v6') || '[]');
+let customContents = [];
+    let myCampaigns = [];
+    let myLeads = [];
 
-    let myCampaigns = JSON.parse(localStorage.getItem('weracle_campaigns_v6') || '[]');
-
-    let myLeads = JSON.parse(localStorage.getItem('weracle_leads_v6') || '[]');
+    function reloadUserIsolatedStorage() {
+      try { customContents = JSON.parse(localStorage.getItem(uKey('weracle_custom_v7')) || '[]'); } catch (e) { customContents = []; }
+      try { myCampaigns = JSON.parse(localStorage.getItem(uKey('weracle_campaigns_v7')) || '[]'); } catch (e) { myCampaigns = []; }
+      try { myLeads = JSON.parse(localStorage.getItem(uKey('weracle_leads_v7')) || '[]'); } catch (e) { myLeads = []; }
+    }
 
     let currentFilter = 'all';
-
     let currentManageFilter = 'all';
-
     let currentLeadFilter = 'all';
-
     let slideIndexes = {};
 
-
-
     let fetchedAdAccounts = [];
-
     let fetchedPages = [];
-
     let recentIgMediaList = [];
-
     let selectedExtIgMediaId = '';
 
-
-
     let activeItem = null;
-
     let modalSlideIdx = 0;
-
     let wizardTrack = 'meta';
-
     let currentStep = 1;
-
     let selectedRegions = ['경기도 의정부시 전체 (반경 10km)'];
-
     let isScanningInstaComments = false;
 
-
-function unlockSharedParentIframe() {
+    function unlockSharedParentIframe() {
       try {
         if (window.self !== window.top && window.frameElement) {
           window.frameElement.style.maxHeight = '';
@@ -2332,34 +2388,29 @@ function unlockSharedParentIframe() {
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'REQUEST_SESSION' }, '*');
+        }
+      } catch (e) {}
+
+      reloadUserIsolatedStorage();
       unlockSharedParentIframe();
       setTimeout(unlockSharedParentIframe, 400);
       setTimeout(unlockSharedParentIframe, 1200);
       initConnectionState();
- 
 
       renderShowroomGrid();
-
       loadMasterSheetContents();
-
       renderMyAdsDashboard();
-
       renderMyLeadsTable();
 
-
-
       setInterval(() => {
-
         const hasInstaRules = myCampaigns.some(c => c.track === 'insta' && c.status === 'ACTIVE');
-
         if (hasInstaRules && !isScanningInstaComments) {
-
           scanAndSendInstaCommentDms(false);
-
         }
-
       }, 30000);
-
     });
 
 
@@ -2706,8 +2757,7 @@ function unlockSharedParentIframe() {
 
       try {
 
-        const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-
+     const metaConn = getMyMetaConn();
         if (!metaConn || !metaConn.token || !metaConn.igId) {
 
           isScanningInstaComments = false;
@@ -2778,7 +2828,7 @@ function unlockSharedParentIframe() {
 
 
 
-        const sentCache = JSON.parse(localStorage.getItem('weracle_sent_comment_ids_v6') || '[]');
+        const sentCache = JSON.parse(localStorage.getItem(uKey('weracle_sent_comment_ids_v7')) || '[]');
 
         const sentSet = new Set(sentCache);
 
@@ -3108,12 +3158,9 @@ function unlockSharedParentIframe() {
 
 
 
-        localStorage.setItem('weracle_sent_comment_ids_v6', JSON.stringify(Array.from(sentSet).slice(-500)));
-
-        localStorage.setItem('weracle_campaigns_v6', JSON.stringify(myCampaigns));
-
-        localStorage.setItem('weracle_leads_v6', JSON.stringify(myLeads));
-
+       localStorage.setItem(uKey('weracle_sent_comment_ids_v7'), JSON.stringify(Array.from(sentSet).slice(-500)));
+        localStorage.setItem(uKey('weracle_campaigns_v7'), JSON.stringify(myCampaigns));
+        localStorage.setItem(uKey('weracle_leads_v7'), JSON.stringify(myLeads));
 
 
         if (sentCount > 0) {
@@ -3216,11 +3263,9 @@ function openExistingInstaDmModal() {
 
 
 
-    async function fetchRecentInstagramPosts() {
-
+async function fetchRecentInstagramPosts() {
       const grid = document.getElementById('recentIgPostsGrid');
-
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
+      const metaConn = getMyMetaConn();
 
       if (!metaConn || !metaConn.token || !metaConn.igId) {
 
@@ -3326,8 +3371,7 @@ function openExistingInstaDmModal() {
 
     async function saveExistingInstaDmRule() {
 
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-
+     const metaConn = getMyMetaConn();
       const token = metaConn ? metaConn.token : '';
 
       const pageId = metaConn ? metaConn.pageId : '';
@@ -3373,8 +3417,8 @@ function openExistingInstaDmModal() {
 
 
 const recordId = 'camp_ig_' + Date.now();
-      const agentName = localStorage.getItem('crm_agent_name') || '';
-      const agentPhone = localStorage.getItem('crm_agent_phone') || '';
+      const agentName = getMyAgentName();
+      const agentPhone = getMyAgentPhone();
       const agentId = getActiveAgentId();
       const pickedExtPrId = document.getElementById('extIgPrPageSelect') ? document.getElementById('extIgPrPageSelect').value : '';
       const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
@@ -3468,532 +3512,286 @@ const recordId = 'camp_ig_' + Date.now();
 
 
 
-    function initConnectionState() {
-
+function initConnectionState() {
       const params = new URLSearchParams(window.location.search);
-
       if (params.get('user_email') || params.get('email')) {
-
-        localStorage.setItem('user_email', (params.get('user_email') || params.get('email')).trim());
-
+        const em = (params.get('user_email') || params.get('email')).trim().toLowerCase();
+        syncedParentEmail = em;
+        sessionStorage.setItem('weracle_active_email', em);
       }
+      reloadUserIsolatedStorage();
 
       if (params.get('error')) {
-
         alert('⚠️ 메타 연동 안내: ' + params.get('error'));
-
       }
-
       if (params.get('meta_connected') === 'true') {
-
         const conn = {
-
           adAcc: params.get('ad_acc') || 'act_connected',
-
           adName: params.get('ad_name') || '내 광고계정',
-
           igId: params.get('ig_id') || '',
-
           igUser: params.get('ig_user') || '',
-
           pageId: params.get('page_id') || '',
-
+          fbUid: params.get('fb_uid') || '',
           token: params.get('m_token') || ''
-
         };
-
-        localStorage.setItem('weracle_meta_conn_v6', JSON.stringify(conn));
-
-        localStorage.setItem('weracle_insta_connected_v6', 'true');
-
-        localStorage.setItem('weracle_onboard_done_v6', 'true');
-
+        setMyMetaConn(conn);
+        localStorage.setItem(uKey('weracle_onboard_done_v7'), 'true');
         window.history.replaceState({}, document.title, window.location.pathname);
 
-
-
+        // 단독 창으로 리다이렉트된 경우 위라클랩 메인 화면으로 깔끔하게 복귀 안내 또는 즉시 모달 오픈
         openOnboardingModal();
-
       }
 
-
-
-      const savedPh = localStorage.getItem('crm_agent_phone') || '';
-
+      const savedPh = getMyAgentPhone();
       if (savedPh && document.getElementById('obAgentPhoneInput')) {
-
         document.getElementById('obAgentPhoneInput').value = savedPh;
-
       }
-
-
 
       updateHeaderBadges();
-
       loadServerCampaigns(false);
 
-
-
-      const isOnboardDone = localStorage.getItem('weracle_onboard_done_v6') === 'true';
-
-      if (!isOnboardDone) {
-
+      const isOnboardDone = localStorage.getItem(uKey('weracle_onboard_done_v7')) === 'true' || Boolean(getMyMetaConn());
+      if (!isOnboardDone && getActiveAgentId() !== 'guest_unauthenticated') {
         openOnboardingModal();
-
       }
-
     }
-
-
 
     async function fetchUserMetaAssets() {
-
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-
+      const metaConn = getMyMetaConn();
       const pickerSec = document.getElementById('accountPickerSection');
-
       if (!metaConn || !metaConn.token) {
-
         if (pickerSec) pickerSec.style.display = 'none';
-
         return;
-
       }
-
-
 
       if (pickerSec) pickerSec.style.display = 'flex';
-
       const adSelect = document.getElementById('selectMetaAdAccount');
-
       const pageSelect = document.getElementById('selectMetaPageIg');
-
       if (adSelect) adSelect.innerHTML = '<option>⏳ 광고계정 불러오는 중...</option>';
-
       if (pageSelect) pageSelect.innerHTML = '<option>⏳ 페이지·인스타 불러오는 중...</option>';
 
-
-
       try {
-
         const adRes = await fetch(`https://graph.facebook.com/v21.0/me/adaccounts?fields=id,account_id,name,account_status&limit=50&access_token=${metaConn.token}`);
-
         const adData = await adRes.json();
-
         fetchedAdAccounts = (adData && Array.isArray(adData.data)) ? adData.data : [];
 
-
-
         if (adSelect) {
-
           if (fetchedAdAccounts.length > 0) {
-
             adSelect.innerHTML = fetchedAdAccounts.map(acc => {
-
               const cleanId = acc.id || `act_${acc.account_id}`;
-
               const isSelected = (metaConn.adAcc === cleanId || metaConn.adAcc === acc.account_id) ? 'selected' : '';
-
               const statusText = acc.account_status === 1 ? '🟢 정상' : '⚠️ 확인필요';
-
               return `<option value="${cleanId}" data-name="${acc.name || cleanId}" ${isSelected}>${acc.name || '광고계정'} (${acc.account_id}) - ${statusText}</option>`;
-
             }).join('');
-
           } else {
-
             adSelect.innerHTML = `<option value="${metaConn.adAcc}" data-name="${metaConn.adName}">${metaConn.adName} (${metaConn.adAcc})</option>`;
-
           }
-
         }
-
-
 
         const pRes = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username},connected_instagram_account{id,username}&limit=50&access_token=${metaConn.token}`);
-
         const pData = await pRes.json();
-
         fetchedPages = (pData && Array.isArray(pData.data)) ? pData.data : [];
 
-
-
         if (pageSelect) {
-
           if (fetchedPages.length > 0) {
-
             pageSelect.innerHTML = fetchedPages.map(p => {
-
               const igObj = p.instagram_business_account || p.connected_instagram_account || null;
-
               const igId = igObj ? igObj.id : '';
-
               const igUser = igObj ? (igObj.username || '인스타연결됨') : '';
-
               const isSelected = (metaConn.pageId === p.id) ? 'selected' : '';
-
               const label = igId ? `${p.name} (📸 @${igUser})` : `${p.name}`;
-
               return `<option value="${p.id}" data-igid="${igId}" data-iguser="${igUser}" data-ptoken="${p.access_token || ''}" ${isSelected}>${label}</option>`;
-
             }).join('');
-
           } else {
-
             pageSelect.innerHTML = `<option value="${metaConn.pageId}" data-igid="${metaConn.igId}" data-iguser="${metaConn.igUser}">페이지 (${metaConn.igUser ? '@' + metaConn.igUser : '기본'})</option>`;
-
           }
-
         }
-
-
 
         applySelectedMetaAssets(true);
-
       } catch (e) {}
-
     }
-
-
 
     function applySelectedMetaAssets(silent) {
-
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-
+      const metaConn = getMyMetaConn();
       if (!metaConn) return;
 
-
-
       const adSelect = document.getElementById('selectMetaAdAccount');
-
       const pageSelect = document.getElementById('selectMetaPageIg');
 
-
-
       if (adSelect && adSelect.selectedIndex >= 0) {
-
         const adOpt = adSelect.options[adSelect.selectedIndex];
-
         if (adOpt && adOpt.value && !adOpt.value.includes('⏳')) {
-
           metaConn.adAcc = adOpt.value;
-
           metaConn.adName = adOpt.getAttribute('data-name') || adOpt.value;
-
         }
-
       }
-
-
 
       if (pageSelect && pageSelect.selectedIndex >= 0) {
-
         const pOpt = pageSelect.options[pageSelect.selectedIndex];
-
         if (pOpt && pOpt.value && !pOpt.value.includes('⏳')) {
-
           metaConn.pageId = pOpt.value;
-
           const pickedIgId = pOpt.getAttribute('data-igid') || '';
-
           const pickedIgUser = pOpt.getAttribute('data-iguser') || '';
-
           const pickedPToken = pOpt.getAttribute('data-ptoken') || '';
-
-          if (pickedIgId) {
-
-            metaConn.igId = pickedIgId;
-
-            metaConn.igUser = pickedIgUser;
-
-          }
-
+          metaConn.igId = pickedIgId;
+          metaConn.igUser = pickedIgUser;
           if (pickedPToken) {
-
             metaConn.pageToken = pickedPToken;
-
             fetch(`https://graph.facebook.com/v21.0/${metaConn.pageId}/subscribed_fields`, {
-
               method: 'POST',
-
               body: new URLSearchParams({
-
                 subscribed_fields: 'feed,messages,messaging_postbacks,leadgen',
-
                 access_token: pickedPToken
-
               })
-
             }).catch(() => {});
-
           }
-
         }
-
       }
 
-
-
-      localStorage.setItem('weracle_meta_conn_v6', JSON.stringify(metaConn));
-
+      setMyMetaConn(metaConn);
       updateHeaderBadges();
-
       renderShowroomGrid();
 
-
-
       const noticeEl = document.getElementById('pickerStatusNotice');
-
       if (noticeEl) {
-
         noticeEl.innerText = `✅ 현재 적용된 계정: [${metaConn.adName} (${metaConn.adAcc})] / 인스타 [@${metaConn.igUser || '연결됨'}]`;
-
       }
-
       if (!silent) {
-
         alert(`✅ 계정 적용 완료!\n• 광고계정: ${metaConn.adName} (${metaConn.adAcc})`);
-
       }
-
     }
-
-
 
     function updateHeaderBadges() {
-
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-
-
+      const metaConn = getMyMetaConn();
 
       const iBadge = document.getElementById('instaSyncBadge');
-
       const iDot = document.getElementById('instaSyncDot');
-
       const iText = document.getElementById('instaSyncText');
 
-
-
       const mBadge = document.getElementById('metaSyncBadge');
-
       const mDot = document.getElementById('metaSyncDot');
-
       const mText = document.getElementById('metaSyncText');
 
-
-
       if (metaConn) {
-
         if (mBadge) mBadge.classList.remove('off');
-
         if (mDot) mDot.classList.remove('off');
-
         if (mText) mText.innerText = `메타광고: ${metaConn.adName || metaConn.adAcc}`;
-
         const codeEl = document.getElementById('obAdAccountCode');
-
         if (codeEl) codeEl.innerText = `${metaConn.adName || ''} (${metaConn.adAcc || ''})`;
 
-
-
         if (metaConn.igId) {
-
           if (iBadge) iBadge.classList.remove('off');
-
           if (iDot) iDot.classList.remove('off');
-
           if (iText) iText.innerText = `인스타: @${metaConn.igUser || 'business'}`;
-
           const ob1 = document.getElementById('obBox1');
-
           if (ob1) ob1.classList.add('done');
-
           const btn1 = document.getElementById('obBtn1');
-
           if (btn1) btn1.innerHTML = `<i class="fa-solid fa-rotate"></i> 계정 다시 연동`;
-
           const stEl = document.getElementById('obDetectedStatus');
-
           if (stEl) stEl.innerText = `✅ 광고계정: ${metaConn.adName || metaConn.adAcc} / 인스타: @${metaConn.igUser}`;
-
         } else {
-
           if (iBadge) iBadge.classList.add('off');
-
           if (iDot) iDot.classList.add('off');
-
           if (iText) iText.innerText = `인스타 미연결`;
-
           const stEl = document.getElementById('obDetectedStatus');
-
           if (stEl) stEl.innerText = `⚠️ 광고계정(${metaConn.adName || metaConn.adAcc}) 연결됨 / 인스타 페이지를 선택해 주세요.`;
-
         }
-
+      } else {
+        if (mBadge) mBadge.classList.add('off');
+        if (mDot) mDot.classList.add('off');
+        if (mText) mText.innerText = '메타광고 미연동';
+        if (iBadge) iBadge.classList.add('off');
+        if (iDot) iDot.classList.add('off');
+        if (iText) iText.innerText = '인스타 미연동';
       }
-
     }
 
-
-
     function openOnboardingModal() {
-
       updateHeaderBadges();
-
-      const savedPh = localStorage.getItem('crm_agent_phone') || '';
-
+      const savedPh = getMyAgentPhone();
       if (savedPh && document.getElementById('obAgentPhoneInput')) {
-
         document.getElementById('obAgentPhoneInput').value = savedPh;
-
       }
-
       fetchUserMetaAssets();
-
       const m = document.getElementById('onboardingModal');
-
       m.style.display = 'flex';
-
       m.scrollTop = 0;
-
       window.scrollTo(0, 0);
-
       try {
-
         if (window.parent && window.parent !== window) {
-
           window.parent.scrollTo(0, 0);
-
           const pArea = window.parent.document.querySelector('.pb-content-area');
-
           if (pArea) pArea.scrollTop = 0;
-
         }
-
       } catch (e) {}
-
     }
 
     function closeOnboardingModal() {
-
       applySelectedMetaAssets(true);
-
       document.getElementById('onboardingModal').style.display = 'none';
-
     }
-
-
 
     function openMetaPageAndAdAccountPopup() {
-
-      const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
-
-      const redirectUri = encodeURIComponent(`${curOrigin}/api/meta-callback`);
-
-      const scope = encodeURIComponent('public_profile,ads_management,ads_read,business_management,pages_show_list,pages_read_engagement,pages_manage_ads,leads_retrieval,instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_messages,pages_messaging');
-
-      const oauthUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${META_APP_ID}&redirect_uri=${redirectUri}&scope=${scope}&auth_type=rerequest&response_type=code&state=weracle_unified_auth`;
-
-      if (window.top !== window.self) {
-
-        window.top.location.href = oauthUrl;
-
-      } else {
-
-        window.location.href = oauthUrl;
-
+      const myEmail = getActiveAgentId();
+      if (!myEmail || myEmail === 'guest_unauthenticated') {
+        alert('먼저 위라클랩 우측 상단에서 구글 로그인을 완료한 뒤 계정을 연동해 주세요.');
+        return;
       }
-
+      const encodedState = 'u_' + btoa(unescape(encodeURIComponent(myEmail)));
+      const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
+      const redirectUri = encodeURIComponent(`${curOrigin}/api/meta-callback`);
+      const scope = encodeURIComponent('public_profile,ads_management,ads_read,business_management,pages_show_list,pages_read_engagement,pages_manage_ads,leads_retrieval,instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_messages,pages_messaging');
+      const oauthUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${META_APP_ID}&redirect_uri=${redirectUri}&scope=${scope}&auth_type=rerequest&response_type=code&state=${encodeURIComponent(encodedState)}`;
+      if (window.top !== window.self) {
+        window.top.location.href = oauthUrl;
+      } else {
+        window.location.href = oauthUrl;
+      }
     }
-
-
 
     function openDirectBillingPaymentPopup() {
-
       applySelectedMetaAssets(true);
-
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
-
+      const metaConn = getMyMetaConn();
       const rawAccountId = (metaConn && metaConn.adAcc) ? String(metaConn.adAcc).replace(/^act_/, '') : '';
-
       const directBillingUrl = rawAccountId
-
         ? `https://adsmanager.facebook.com/billing_hub/payment_settings?asset_id=${rawAccountId}&act=${rawAccountId}`
-
         : `https://adsmanager.facebook.com/billing_hub/payment_settings`;
 
-
-
       const w = 1020, h = 760;
-
       const left = (window.screen.width / 2) - (w / 2);
-
       const top = (window.screen.height / 2) - (h / 2);
-
       window.open(directBillingUrl, 'MetaDirectBillingPopup', `width=${w},height=${h},top=${top},left=${left},scrollbars=yes`);
 
-
-
       const ob3 = document.getElementById('obBox3');
-
       if (ob3) ob3.classList.add('done');
-
     }
 
-
-
     async function finishOnboarding() {
-
       applySelectedMetaAssets(true);
-
       const phInput = document.getElementById('obAgentPhoneInput');
-
       if (phInput && phInput.value.trim()) {
-
         const cleanPh = phInput.value.trim();
-
-        localStorage.setItem('crm_agent_phone', cleanPh);
-
+        localStorage.setItem(uKey('crm_agent_phone'), cleanPh);
         try {
-
           await fetch('/api/meta-execute', {
-
             method: 'POST',
-
             headers: { 'Content-Type': 'application/json' },
-
             body: JSON.stringify({
-
               action: 'SAVE_AGENT_PHONE',
-
               agentId: getActiveAgentId(),
-
               userKeys: getActiveUserKeys(),
-
               agentPhone: cleanPh
-
             })
-
           });
-
         } catch (e) {}
-
       }
-
-
 
       const chk = document.getElementById('chkSkipOnboard');
-
       if (chk && chk.checked) {
-
-        localStorage.setItem('weracle_onboard_done_v6', 'true');
-
+        localStorage.setItem(uKey('weracle_onboard_done_v7'), 'true');
       }
-
       closeOnboardingModal();
-
       loadServerCampaigns(true);
-
     }
 
 
@@ -4072,8 +3870,8 @@ function filterLeadsTable(sourceFilter, btn) {
 
 
 function getActiveIgHandle() {
-      const customHandle = localStorage.getItem('weracle_insta_handle_v6');
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
+      const customHandle = localStorage.getItem(uKey('weracle_insta_handle_v7'));
+      const metaConn = getMyMetaConn();
       if (customHandle) return `@${customHandle}`;
       if (metaConn && metaConn.igUser) return `@${metaConn.igUser}`;
       return '@weraclelab';
@@ -4165,7 +3963,7 @@ const SUPABASE_DIRECT_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
 
       customContents = customContents.filter(c => c.id !== itemId);
       delete slideIndexes[itemId];
-      try { localStorage.setItem('weracle_custom_v6', JSON.stringify(customContents)); } catch (err) {}
+      try { localStorage.setItem(uKey('weracle_custom_v7'), JSON.stringify(customContents)); } catch (err) {}
       renderShowroomGrid();
 
       try {
@@ -4437,7 +4235,7 @@ const SUPABASE_DIRECT_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
           };
 
           customContents = [newVideo, ...customContents.filter(c => c.id !== newVideo.id)];
-          try { localStorage.setItem('weracle_custom_v6', JSON.stringify(customContents)); } catch (e) {}
+          try { localStorage.setItem(uKey('weracle_custom_v7'), JSON.stringify(customContents)); } catch (e) {}
 
           await fetch('/api/meta-execute', {
             method: 'POST',
@@ -4503,7 +4301,7 @@ const SUPABASE_DIRECT_URL = 'https://tjohrovsvgnkrlqhjkwt.supabase.co';
         };
 
         customContents = [newCarousel, ...customContents.filter(c => c.id !== newCarousel.id)];
-        try { localStorage.setItem('weracle_custom_v6', JSON.stringify(customContents)); } catch (e) {}
+        try { localStorage.setItem(uKey('weracle_custom_v7'), JSON.stringify(customContents)); } catch (e) {}
 
         await fetch('/api/meta-execute', {
           method: 'POST',
@@ -5343,7 +5141,7 @@ let displayCaption = rawCaption || '';
       submitBtn.disabled = true;
       submitBtn.innerText = '⏳ 광고 및 정밀 타겟팅 생성 중...';
 
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
+     const metaConn = getMyMetaConn();
       const token = metaConn ? metaConn.token : '';
       const adAccountId = metaConn ? metaConn.adAcc : '';
       const adAccountName = metaConn ? (metaConn.adName || adAccountId) : '';
@@ -5495,8 +5293,8 @@ const validCustomQuestions = customQuestionsList
         detectedPixelId = await ensureMetaPixelId(cleanActId, token, adAccountName);
       }
 
-      const agentName = localStorage.getItem('crm_agent_name') || '';
-      const agentPhone = localStorage.getItem('crm_agent_phone') || '';
+      const agentName = getMyAgentName();
+      const agentPhone = getMyAgentPhone();
       const agentId = getActiveAgentId();
       const srcTag = wizardTrack === 'insta' ? 'insta_dm' : 'meta_ad';
       const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
@@ -6394,6 +6192,15 @@ const targetSummaryValue = wizardTrack === 'meta'
       }
     }
 async function loadServerCampaigns(showLoading) {
+      const activeAgentIdVal = getActiveAgentId();
+      if (!activeAgentIdVal || activeAgentIdVal === 'guest_unauthenticated') {
+        myCampaigns = [];
+        myLeads = [];
+        renderMyAdsDashboard();
+        renderMyLeadsTable();
+        return;
+      }
+
       const syncBtn = document.getElementById('btnSyncMeta');
       const syncLeadsBtn = document.getElementById('btnSyncLeads');
       if (showLoading) {
@@ -6407,35 +6214,12 @@ async function loadServerCampaigns(showLoading) {
         }
       }
 
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
+      const metaConn = getMyMetaConn();
       const token = metaConn ? metaConn.token : '';
 
       try {
-        // 내 메타 토큰에 연결된 모든 페이지 및 인스타 계정(weracle_bohwan 등)을 자동 수집해 누락 원천 방지
-        if (token) {
-          try {
-            const pRes = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,instagram_business_account{id,username},connected_instagram_account{id,username}&limit=30&access_token=${token}`);
-            const pData = await pRes.json();
-            if (pData && Array.isArray(pData.data)) {
-              const tokenAliases = [];
-              pData.data.forEach(p => {
-                if (p.id) tokenAliases.push(p.id);
-                const ig = p.instagram_business_account || p.connected_instagram_account;
-                if (ig && ig.id) tokenAliases.push(ig.id);
-                if (ig && ig.username) tokenAliases.push(ig.username);
-              });
-              rememberOwnerAliases(tokenAliases);
-            }
-          } catch (e) {}
-        }
-
         const mergedUserKeys = getActiveUserKeys();
-        const activeAgentIdVal = getActiveAgentId();
-        const knownCampIds = Array.isArray(myCampaigns)
-          ? myCampaigns.map(c => String(c.id || '')).filter(Boolean)
-          : [];
 
-        // ★ 1순위: 수파베이스 최신 캠페인 & 유입 DB(박똥똥 등)부터 0.1초 만에 즉시 조회해 표 갱신!
         const res = await fetch(`/api/meta-execute?_t=${Date.now()}`, {
           method: 'POST',
           cache: 'no-store',
@@ -6443,8 +6227,7 @@ async function loadServerCampaigns(showLoading) {
           body: JSON.stringify({
             action: 'LIST',
             userId: activeAgentIdVal,
-            userKeys: mergedUserKeys,
-            knownCampIds
+            userKeys: mergedUserKeys
           })
         });
         const json = await res.json();
@@ -6452,13 +6235,13 @@ async function loadServerCampaigns(showLoading) {
 
         if (json.success && Array.isArray(json.leads)) {
           myLeads = json.leads;
-          localStorage.setItem('weracle_leads_v6', JSON.stringify(myLeads));
+          localStorage.setItem(uKey('weracle_leads_v7'), JSON.stringify(myLeads));
           renderMyLeadsTable();
           renderMyAdsDashboard();
         }
         if (json.success && Array.isArray(json.customAssets)) {
           customContents = json.customAssets;
-          try { localStorage.setItem('weracle_custom_v6', JSON.stringify(customContents)); } catch (e) {}
+          try { localStorage.setItem(uKey('weracle_custom_v7'), JSON.stringify(customContents)); } catch (e) {}
           renderShowroomGrid();
         }
 
@@ -6573,9 +6356,8 @@ async function loadServerCampaigns(showLoading) {
         }
 
         myCampaigns = syncedList;
-        localStorage.setItem('weracle_campaigns_v6', JSON.stringify(myCampaigns));
+        localStorage.setItem(uKey('weracle_campaigns_v7'), JSON.stringify(myCampaigns));
 
-        // DB 표 갱신 완료 후 백그라운드로 신규 인스타 댓글 스캔 실행
         scanAndSendInstaCommentDms(false).catch(() => {});
       } catch (e) {}
 
@@ -6671,7 +6453,7 @@ async function loadServerCampaigns(showLoading) {
       const target = myLeads[leadIdx];
       if (!target) return;
       target.status = newStatus;
-      localStorage.setItem('weracle_leads_v6', JSON.stringify(myLeads));
+      localStorage.setItem(uKey('weracle_leads_v7'), JSON.stringify(myLeads));
 
       if (selectEl) {
         selectEl.className = `lead-status-select ${getLeadStageClass(newStatus)}`;
@@ -6842,15 +6624,15 @@ async function loadServerCampaigns(showLoading) {
       }).join('');
     }
 
-    async function toggleCampaignStatus(idx, isChecked) {
+async function toggleCampaignStatus(idx, isChecked) {
       const target = myCampaigns[idx];
       if (!target) return;
       const newStatus = isChecked ? 'ACTIVE' : 'PAUSED';
       target.status = newStatus;
-      localStorage.setItem('weracle_campaigns_v6', JSON.stringify(myCampaigns));
+      localStorage.setItem(uKey('weracle_campaigns_v7'), JSON.stringify(myCampaigns));
       renderMyAdsDashboard();
 
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
+      const metaConn = getMyMetaConn();
       const token = metaConn ? metaConn.token : '';
 
       try {
@@ -6882,7 +6664,7 @@ async function loadServerCampaigns(showLoading) {
       const newEndDate = prompt(`📅 종료일자 입력 (YYYY-MM-DD 또는 '상시 게재'):`, item.endDate || '상시 게재');
       if (newEndDate === null) return;
 
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
+      const metaConn = getMyMetaConn();
       const token = metaConn ? metaConn.token : '';
       let targetAdSetId = item.adSetId;
 
@@ -6923,7 +6705,7 @@ async function loadServerCampaigns(showLoading) {
       if (!target) return;
       if (!confirm(`🗑️ [${target.title}] 항목을 삭제하시겠습니까?\n(메타 광고 관리자와 위라클랩에서 동시에 영구 삭제됩니다.)`)) return;
 
-      const metaConn = JSON.parse(localStorage.getItem('weracle_meta_conn_v6') || 'null');
+      const metaConn = getMyMetaConn();
       const token = metaConn ? metaConn.token : '';
 
       try {
@@ -6938,7 +6720,7 @@ async function loadServerCampaigns(showLoading) {
       } catch (e) {}
 
       myCampaigns.splice(idx, 1);
-      localStorage.setItem('weracle_campaigns_v6', JSON.stringify(myCampaigns));
+      localStorage.setItem(uKey('weracle_campaigns_v7'), JSON.stringify(myCampaigns));
       renderMyAdsDashboard();
     }
 

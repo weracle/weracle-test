@@ -1453,7 +1453,7 @@
       <nav class="panel-nav-tabs">
         <button type="button" class="panel-tab-btn active" id="tabBtn_color" onclick="switchSidebarTab('colorTab', this)">
           <i class="fa-solid fa-palette"></i>
-          <span>전체 배색 (10종)</span>
+          <span>테마 선택</span>
         </button>
         <button type="button" class="panel-tab-btn" id="tabBtn_content" onclick="switchSidebarTab('contentTab', this)">
           <i class="fa-solid fa-database"></i>
@@ -1468,12 +1468,64 @@
       <!-- Scrollable Tab Content Area -->
       <div class="sidebar-scroll-content">
 
-        <!-- ================= TAB 1: 전체 테마 색상 (10종) ================= -->
+        <!-- ================= TAB 1: 테마 선택 & 배색 (10종) ================= -->
         <div class="tab-pane active" id="colorTab">
-          
+
+          <!-- 1단계: 마스터 디자인 테마 선택 -->
           <div class="form-card">
             <div class="form-section-title">
-              <span><i class="fa-solid fa-swatchbook"></i> 10대 추천 컬러 테마</span>
+              <span><i class="fa-solid fa-layer-group"></i> 1단계: 디자인 테마 선택</span>
+              <span class="badge-auto" id="currMasterThemeDisplay">테마 01</span>
+            </div>
+            <p class="form-subtext">
+              원하는 표지 디자인 테마를 선택하세요. 테마별 최적화된 10종 컬러 에디션과 레이아웃이 지원됩니다.
+            </p>
+
+            <div class="master-theme-grid">
+              <!-- Theme 1 (Active Master) -->
+              <div class="master-theme-card active" id="mtheme_01" onclick="selectMasterTheme('01', this)">
+                <div class="mtheme-badge-row">
+                  <span class="mtheme-pill">테마 01</span>
+                  <span class="mtheme-status"><i class="fa-solid fa-circle-check"></i> 현재 적용 중</span>
+                </div>
+                <div class="mtheme-name">정통 공식 보고서형 (기본)</div>
+                <div class="mtheme-desc">신뢰감 높은 2단 대칭형 레이아웃 & 4대 목차 및 전산 KPI 보장분석 요약</div>
+                <div class="mtheme-colors-peek">
+                  <span style="background:#1e293b;" title="다크차콜"></span>
+                  <span style="background:#f1f5f9;" title="스틸그레이"></span>
+                  <span style="background:#064e3b;" title="그린골드"></span>
+                  <span style="background:#2563eb;" title="클래식네이비"></span>
+                  <span style="background:#f5f3ff;" title="소프트라벤더"></span>
+                  <span class="mtheme-color-count">+10종 컬러</span>
+                </div>
+              </div>
+
+              <!-- Theme 2 (Upcoming Framework Slot) -->
+              <div class="master-theme-card upcoming" id="mtheme_02" onclick="selectMasterTheme('02', this)">
+                <div class="mtheme-badge-row">
+                  <span class="mtheme-pill upcoming">테마 02</span>
+                  <span class="mtheme-status upcoming"><i class="fa-solid fa-clock"></i> 추가 예정</span>
+                </div>
+                <div class="mtheme-name">프리미엄 매거진 에디토리얼형</div>
+                <div class="mtheme-desc">심층 금융 매거진 & 2단 칼럼 감성의 고품격 에디토리얼 디자인</div>
+              </div>
+
+              <!-- Theme 3 (Upcoming Framework Slot) -->
+              <div class="master-theme-card upcoming" id="mtheme_03" onclick="selectMasterTheme('03', this)">
+                <div class="mtheme-badge-row">
+                  <span class="mtheme-pill upcoming">테마 03</span>
+                  <span class="mtheme-status upcoming"><i class="fa-solid fa-clock"></i> 추가 예정</span>
+                </div>
+                <div class="mtheme-name">미니멀 인포그래픽형</div>
+                <div class="mtheme-desc">젊은 고객층을 위한 감각적인 파스텔 비주얼 & 카드형 보장 현황</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2단계: [테마 1] 10대 추천 컬러 에디션 -->
+          <div class="form-card" id="themeColorsSection">
+            <div class="form-section-title">
+              <span><i class="fa-solid fa-swatchbook"></i> 2단계: [테마 1] 10대 추천 컬러 에디션</span>
               <span class="badge-auto" id="currThemeDisplay">다크 차콜</span>
             </div>
             <p class="form-subtext">
@@ -1951,6 +2003,9 @@
 
       <!-- Canvas Area: Scrollable in fitWidth mode, exactly centered -->
       <div class="preview-canvas-area" id="previewCanvasArea">
+        <div class="canvas-edit-hint">
+          <i class="fa-solid fa-i-cursor"></i> 💡 화면의 로고, 텍스트, 숫자를 직접 클릭하여 바로 수정할 수 있습니다
+        </div>
         <div id="a4Container">
           <div id="a4Sheet">
             <div id="canvasInner">
@@ -1958,7 +2013,7 @@
   <div class="a4-page">
     <!-- Top Header: Logo on Left, Enterprise Verification Badges on Right -->
     <div class="top-header">
-      <div class="header-logo-box">
+      <div class="header-logo-box clickable-slot-active" onclick="document.getElementById('logoUploadInput').click()" title="클릭하여 내 로고로 직접 변경">
         <img src="" style="height: 58px; object-fit: contain; display: none;" style="height: 58px; object-fit: contain; display: block;" data-slot="logo" alt="설계사 로고">
       </div>
       <div class="header-right-meta">
@@ -2633,6 +2688,7 @@
       }
 
       updateAllValues();
+      makeSheetElementsDirectlyEditable();
     }
 
     // Sync MyPage Registered Logo & Profile
@@ -2692,6 +2748,240 @@
           });
         }
         updateAllValues();
+      }
+    }
+
+    // ==========================================
+    // [MASTER THEME PACKS REGISTRY & FRAMEWORK]
+    // ==========================================
+    const THEME_PACKS = [
+      {
+        id: '01',
+        name: '정통 공식 보고서형',
+        badge: '기본 마스터',
+        desc: '신뢰감 높은 2단 대칭형 레이아웃 & 4대 목차 및 전산 KPI 보장분석 요약',
+        swatches: themeSwatches
+      },
+      {
+        id: '02',
+        name: '프리미엄 매거진 에디토리얼형',
+        badge: '추가 예정',
+        desc: '심층 금융 매거진 & 2단 칼럼 감성의 고품격 에디토리얼 디자인',
+        isUpcoming: true
+      },
+      {
+        id: '03',
+        name: '미니멀 인포그래픽형',
+        badge: '추가 예정',
+        desc: '젊은 고객층을 위한 감각적인 파스텔 비주얼 & 카드형 보장 현황',
+        isUpcoming: true
+      }
+    ];
+
+    let currentMasterThemeId = '01';
+
+    function selectMasterTheme(themeId, cardEl) {
+      const pack = THEME_PACKS.find(p => p.id === themeId);
+      if (!pack) return;
+
+      if (pack.isUpcoming) {
+        alert('📢 [' + pack.name + '] 테마는 곧 추가될 예정입니다! \n' + '현재는 [테마 01: 정통 공식 보고서형]이 기본 적용되어 있습니다.');
+        return;
+      }
+
+      currentMasterThemeId = themeId;
+      document.querySelectorAll('.master-theme-card').forEach(c => {
+        c.classList.toggle('active', c.id === 'mtheme_' + themeId);
+      });
+
+      const mDisplay = document.getElementById('currMasterThemeDisplay');
+      if (mDisplay) mDisplay.textContent = '테마 ' + themeId;
+
+      // Smooth scroll to 2nd step color editions
+      const colorsSection = document.getElementById('themeColorsSection');
+      if (colorsSection) {
+        colorsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    // ==========================================
+    // [DIRECT WYSIWYG CLICK-TO-EDIT ENGINE]
+    // ==========================================
+    function makeSheetElementsDirectlyEditable() {
+      if (!canvasPage) return;
+
+      // 1. Client Name (고객명)
+      canvasPage.querySelectorAll('.val-client').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 고객명 직접 수정');
+        el.oninput = () => {
+          const val = el.innerText.trim();
+          const input = document.getElementById('inputClientName');
+          if (input) input.value = val;
+          canvasPage.querySelectorAll('.val-client').forEach(c => { if (c !== el) c.innerText = val; });
+        };
+      });
+
+      // 2. Advisor Name (담당자 성함 및 직책)
+      canvasPage.querySelectorAll('.val-advisor').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 담당자 성함/직책 직접 수정');
+        el.oninput = () => {
+          const val = el.innerText.trim();
+          const input = document.getElementById('inputAdvisorName');
+          if (input) input.value = val;
+          canvasPage.querySelectorAll('.val-advisor').forEach(c => { if (c !== el) c.innerText = val; });
+        };
+      });
+
+      // 3. Advisor Phone (직통 연락처)
+      canvasPage.querySelectorAll('.val-phone').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 직통 연락처 직접 수정');
+        el.oninput = () => {
+          const val = el.innerText.trim();
+          const input = document.getElementById('inputAdvisorPhone');
+          if (input) input.value = val;
+          canvasPage.querySelectorAll('.val-phone').forEach(c => { if (c !== el) c.innerText = val; });
+        };
+      });
+
+      // 4. Company (소속 회사/지사)
+      canvasPage.querySelectorAll('.val-company').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 소속 지사/법인명 직접 수정');
+        el.oninput = () => {
+          const val = el.innerText.trim();
+          const input = document.getElementById('inputAdvisorBranch');
+          if (input) input.value = val;
+          canvasPage.querySelectorAll('.val-company').forEach(c => { if (c !== el) c.innerText = val; });
+        };
+      });
+
+      // 5. Slogan Philosophy (슬로건)
+      canvasPage.querySelectorAll('.val-slogan').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 슬로건 문구 직접 수정');
+        el.oninput = () => {
+          const val = el.innerText.trim();
+          const input = document.getElementById('inputAdvisorSlogan');
+          if (input) input.value = val;
+          canvasPage.querySelectorAll('.val-slogan').forEach(c => { if (c !== el) c.innerText = val; });
+        };
+      });
+
+      // 6. Contracts KPI (정상 계약건수)
+      canvasPage.querySelectorAll('.val-contracts').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 계약건수 직접 수정');
+        el.oninput = () => {
+          const val = el.innerText.trim();
+          const input = document.getElementById('inputContracts');
+          if (input) input.value = val + '건';
+          canvasPage.querySelectorAll('.val-contracts').forEach(c => { if (c !== el) c.innerText = val; });
+        };
+      });
+
+      // 7. Premium KPI (총 월 납입보험료)
+      canvasPage.querySelectorAll('.val-premium').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 합계보험료 직접 수정');
+        el.oninput = () => {
+          const val = el.innerText.trim();
+          const input = document.getElementById('inputPremium');
+          if (input) input.value = val + '원';
+          canvasPage.querySelectorAll('.val-premium').forEach(c => { if (c !== el) c.innerText = val; });
+        };
+      });
+
+      // 8. Diag Status (충분 / 부족 / 미가입 수치)
+      canvasPage.querySelectorAll('.val-st-ok').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 충분 건수 수정');
+        el.oninput = () => {
+          const val = el.innerText.trim();
+          const input = document.getElementById('inputDiagOk');
+          if (input) input.value = val;
+          canvasPage.querySelectorAll('.val-st-ok').forEach(c => { if (c !== el) c.innerText = val; });
+        };
+      });
+
+      canvasPage.querySelectorAll('.val-st-warn').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 부족 건수 수정');
+        el.oninput = () => {
+          const val = el.innerText.trim();
+          const input = document.getElementById('inputDiagWarn');
+          if (input) input.value = val;
+          canvasPage.querySelectorAll('.val-st-warn').forEach(c => { if (c !== el) c.innerText = val; });
+        };
+      });
+
+      canvasPage.querySelectorAll('.val-st-miss').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 미가입 건수 수정');
+        el.oninput = () => {
+          const val = el.innerText.trim();
+          const input = document.getElementById('inputDiagMiss');
+          if (input) input.value = val;
+          canvasPage.querySelectorAll('.val-st-miss').forEach(c => { if (c !== el) c.innerText = val; });
+        };
+      });
+
+      // 9. Pledge Oath Text (서약문 문구)
+      canvasPage.querySelectorAll('.val-pledge-text').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 서약문 내용 직접 수정');
+      });
+
+      // 10. Checklist Items (4대 목차명)
+      canvasPage.querySelectorAll('.chk-text').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 목차 텍스트 직접 수정');
+      });
+
+      // 11. Hero Title (대제목)
+      canvasPage.querySelectorAll('.hero-title').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 보고서 대제목 직접 수정');
+      });
+
+      // 12. Greeting Sub (인사말 서브텍스트)
+      canvasPage.querySelectorAll('.greeting-sub').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.classList.add('editable-active');
+        el.setAttribute('title', '클릭하여 인사말 서브텍스트 직접 수정');
+      });
+
+      // 13. Logo Slot Click to Upload
+      canvasPage.querySelectorAll('.header-logo-box, img[data-slot="logo"]').forEach(el => {
+        el.classList.add('clickable-slot-active');
+        el.setAttribute('title', '클릭하여 내 로고 직접 변경/업로드');
+        el.onclick = (e) => {
+          e.stopPropagation();
+          const input = document.getElementById('logoUploadInput');
+          if (input) input.click();
+        };
+      });
+
+      // 14. Photo Slot Click to Upload
+      const photoEl = canvasPage.querySelector('#photoView');
+      if (photoEl) {
+        photoEl.classList.add('clickable-slot-active');
+        photoEl.setAttribute('title', '클릭하여 내 사진 직접 변경/업로드');
       }
     }
 

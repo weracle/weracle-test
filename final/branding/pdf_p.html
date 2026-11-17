@@ -1813,6 +1813,11 @@
     window.addEventListener('message', function(e) {
         if (e.data && e.data.type === 'setLogo' && e.data.data) {
             window.globalLogoImage = new Image();
+            // 표지 프리뷰 및 스튜디오 모달 iframe으로 마이페이지 로고 실시간 전달
+            const pf = document.getElementById('bojangCoverPreviewFrame');
+            if (pf && pf.contentWindow) pf.contentWindow.postMessage({ type: 'setLogo', data: e.data.data }, '*');
+            const mf = document.getElementById('coverStudioModalFrame');
+            if (mf && mf.contentWindow) mf.contentWindow.postMessage({ type: 'setLogo', data: e.data.data }, '*');
             window.globalLogoImage.onload = function() {
                 // 로고가 성공적으로 로드되면 수동 업로드 UI를 숨깁니다.
                 const logoInputLabel = document.querySelector('label[for="logoInput"]');

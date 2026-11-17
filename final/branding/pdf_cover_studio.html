@@ -1522,7 +1522,7 @@
             
             <div class="form-row">
               <label class="form-label">고객 성함 (분석 대상자)</label>
-              <input type="text" class="form-input" id="inputClientName" value="조진주" oninput="updateClientGreeting()">
+              <input type="text" class="form-input" id="inputClientName" value="고객" oninput="updateClientGreeting()">
             </div>
             <div class="form-row">
               <label class="form-label">헌정 서브 문구 (모든 고객 공통 고정값)</label>
@@ -1816,7 +1816,7 @@
     <!-- Top Header: Logo on Left, Enterprise Verification Badges on Right -->
     <div class="top-header">
       <div class="header-logo-box">
-        <img src="images/보답화니_로고.png" style="height: 58px; object-fit: contain; display: block;" data-slot="logo" alt="보답화니 로고">
+        <img src="" style="height: 58px; object-fit: contain; display: none;" style="height: 58px; object-fit: contain; display: block;" data-slot="logo" alt="설계사 로고">
       </div>
       <div class="header-right-meta">
         <span class="corp-badge">OFFICIAL ENTERPRISE AUDIT</span>
@@ -1831,7 +1831,7 @@
       </h1>
       <div class="hero-underline"></div>
       <div class="greeting-box" data-slot="greeting">
-        <div class="greeting-client"><b class="val-client">조진주</b> 님을 위해</div>
+        <div class="greeting-client"><b class="val-client">고객</b> 님을 위해</div>
         <div class="greeting-sub">꼼꼼하게 준비했습니다.</div>
       </div>
     </div>
@@ -2364,7 +2364,80 @@
     }
 
     // Load saved cover config from localStorage
+    // Sync MyPage Registered Logo & Profile
+    function syncMyPageProfile() {
+      let myProfile = null;
+      try {
+        if (window.parent && window.parent.currentProfile) {
+          myProfile = window.parent.currentProfile;
+        }
+      } catch(e) {}
+
+      if (!myProfile) {
+        try {
+          myProfile = JSON.parse(localStorage.getItem('cached_profile') || 'null');
+        } catch(e) {}
+      }
+
+      // 1. Check MyPage Registered Logo
+      let myLogo = null;
+      if (myProfile && myProfile.logo_url) {
+        myLogo = myProfile.logo_url;
+      } else {
+        myLogo = localStorage.getItem('user_logo') || localStorage.getItem('weracle_user_logo');
+      }
+
+      if (myLogo) {
+        customLogoSrc = myLogo;
+        canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(img => {
+          img.src = myLogo;
+          img.style.display = 'block';
+        });
+      } else {
+        // Hide logo if not registered in MyPage yet
+        canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(img => {
+          if (!img.src || img.src.includes('보답화니') || img.src === window.location.href || img.getAttribute('src') === '') {
+            img.style.display = 'none';
+          }
+        });
+      }
+
+      // 2. Check MyPage Profile (name, phone, company) if not already customized in studio
+      const hasSavedConfig = localStorage.getItem('weracle_bojang_cover_config');
+      if (!hasSavedConfig && myProfile) {
+        if (myProfile.name && document.getElementById('inputAdvisorName')) {
+          const pos = myProfile.position ? ' ' + myProfile.position : ' 본부장';
+          document.getElementById('inputAdvisorName').value = myProfile.name + pos;
+        }
+        if (myProfile.phone && document.getElementById('inputAdvisorPhone')) {
+          document.getElementById('inputAdvisorPhone').value = myProfile.phone;
+        }
+        if (myProfile.company && document.getElementById('inputBranchName')) {
+          document.getElementById('inputBranchName').value = myProfile.company;
+        }
+        updateAllValues();
+      }
+    }
+
+    // Listen to parent message for logo updates
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'setLogo' && e.data.data) {
+        customLogoSrc = e.data.data;
+        canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(img => {
+          img.src = e.data.data;
+          img.style.display = 'block';
+        });
+      }
+    });
+
+    // Request logo from parent window (index.html)
+    if (window.parent && window.parent !== window) {
+      try { window.parent.postMessage({ type: 'requestLogo' }, '*'); } catch(e) {}
+    }
+
+    // Load saved cover config from localStorage
     function loadCoverConfig() {
+      syncMyPageProfile();
       try {
         const raw = localStorage.getItem('weracle_bojang_cover_config');
         if (!raw) return;
@@ -2380,8 +2453,10 @@
         if (cfg.visualMode) {
           switchVisualMode(cfg.visualMode);
         }
-        if (cfg.client && document.getElementById('inputClientName')) {
-          document.getElementById('inputClientName').value = cfg.client;
+        if (document.getElementById('inputClientName')) {
+          // If legacy '조진주' was saved, reset to default '고객'
+          const clientVal = (cfg.client && cfg.client !== '조진주') ? cfg.client : '고객';
+          document.getElementById('inputClientName').value = clientVal;
         }
         if (cfg.advisor && document.getElementById('inputAdvisorName')) {
           document.getElementById('inputAdvisorName').value = cfg.advisor;
@@ -2422,7 +2497,7 @@
         themeIdx: currentTemplateIndex,
         themeName: TEMPLATES[currentTemplateIndex] ? TEMPLATES[currentTemplateIndex].name : '코퍼레이트 다크차콜',
         visualMode: currentVisualMode,
-        client: document.getElementById('inputClientName') ? document.getElementById('inputClientName').value.trim() : '조진주',
+        client: document.getElementById('inputClientName') ? document.getElementById('inputClientName').value.trim() : '고객',
         advisor: document.getElementById('inputAdvisorName') ? document.getElementById('inputAdvisorName').value.trim() : '박보환 본부장',
         phone: document.getElementById('inputAdvisorPhone') ? document.getElementById('inputAdvisorPhone').value.trim() : '010-1234-5678',
         company: document.getElementById('inputBranchName') ? document.getElementById('inputBranchName').value.trim() : '위라클랩',

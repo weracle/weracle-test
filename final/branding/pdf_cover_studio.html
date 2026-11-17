@@ -2766,31 +2766,24 @@
               </div>
               <p style="font-size: 12px; color: #64748b; margin: 0 0 14px 0; line-height: 1.4;">사진 프레임 높이, 인물 확대 배율, 얼굴 상하 위치를 자유롭게 조절하여 완벽한 구도를 잡을 수 있습니다.</p>
 
-              <!-- Photo Height Slider -->
-              <div class="form-row" style="margin-bottom: 12px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-                  <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">사진 프레임 세로 높이</label>
-                  <span id="photoHeightVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">570px</span>
+              <!-- Photo Proportional Size Slider & Quick Step Buttons (Just Like Logo) -->
+              <div class="form-row" style="margin-bottom: 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                  <label class="form-label" style="margin:0; font-size:12.5px; font-weight:750; color:#334155;">
+                    <i class="fa-solid fa-camera mr-1" style="color:#0284c7;"></i> 사진 크기 (정비율 조절 · 로고처럼 원본 비율 100% 유지)
+                  </label>
+                  <span id="photoSizeVal" style="font-size:12px; font-weight:850; color:#0284c7; background:#f0f9ff; padding:2px 8px; border-radius:5px; border:1px solid #bae6fd;">100%</span>
                 </div>
-                <input type="range" min="380" max="680" value="570" id="photoHeightRange" oninput="updatePhotoHeight(this.value)" style="accent-color:#0284c7; width:100%;">
-                <div style="display:flex; gap:6px; margin-top:4px;">
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoHeight(450)">컴팩트 (450px)</button>
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoHeight(570)">표준 (570px)</button>
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoHeight(650)">와이드롱 (650px)</button>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <button type="button" class="preset-pill-btn" onclick="adjustPhotoSize(-10)" style="padding:5px 10px; font-weight:800; font-size:11px;" title="사진 10% 축소">◀ 작게</button>
+                  <input type="range" min="70" max="160" value="100" id="photoSizeRange" oninput="updatePhotoSize(this.value)" style="accent-color:#0284c7; flex:1;">
+                  <button type="button" class="preset-pill-btn" onclick="adjustPhotoSize(10)" style="padding:5px 10px; font-weight:800; font-size:11px;" title="사진 10% 확대">크게 ▶</button>
                 </div>
-              </div>
-
-              <!-- Photo Zoom (Scale) Slider -->
-              <div class="form-row" style="margin-bottom: 12px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-                  <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">사진 확대 / 축소 (Zoom)</label>
-                  <span id="photoZoomVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">100%</span>
-                </div>
-                <input type="range" min="70" max="180" value="100" id="photoZoomRange" oninput="updatePhotoZoom(this.value)" style="accent-color:#0284c7; width:100%;">
-                <div style="display:flex; gap:6px; margin-top:4px;">
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoZoom(85)">85% 축소</button>
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoZoom(100)">100% 표준</button>
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoZoom(120)">120% 확대</button>
+                <div style="display:flex; gap:6px; margin-top:8px;">
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:4px 0;" onclick="updatePhotoSize(80)">80% 작게</button>
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:4px 0;" onclick="updatePhotoSize(100)">100% 표준</button>
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:4px 0;" onclick="updatePhotoSize(120)">120% 크게</button>
+                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:4px 0;" onclick="updatePhotoSize(140)">140% 특대</button>
                 </div>
               </div>
 
@@ -3133,49 +3126,33 @@
         
         <!-- VISUAL SLOT: Photo Mode vs Pledge Mode -->
         <div class="card-visual-slot" id="cardVisualSlot" style="position: relative;">
-          <!-- 1. Photo View (Canva/PPT Style Interactive Frame) -->
-          <div class="card-photo clickable-slot-active is-selected" id="photoView" onclick="onPhotoViewClick(event)" title="클릭하여 크기 조절 및 사진 변경">
+          <!-- 1. Photo View (Proportional Aspect Ratio Scale, Just Like Logo) -->
+          <div class="card-photo clickable-slot-active is-selected" id="photoView" onclick="onPhotoViewClick(event)" title="클릭하여 사진 크기 조절 및 변경">
             <img src="images/consultant_model.jpg" id="sheetPhotoImg" data-slot="image" alt="담당 컨설턴트 사진">
 
-            <!-- Canva/PPT Style 4 Corner Handles -->
+            <!-- Proportional Corner Handles (Top-Left, Top-Right, Bottom-Left, Bottom-Right) -->
             <div class="corner-handle corner-tl" data-html2canvas-ignore="true"></div>
             <div class="corner-handle corner-tr" data-html2canvas-ignore="true"></div>
             <div class="corner-handle corner-bl" data-html2canvas-ignore="true"></div>
-            <div class="corner-handle corner-br" id="photoDragDiagonal" onmousedown="startPhotoDiagonalDrag(event)" onclick="adjustDiagonal(30, event)" title="대각선으로 끌어당겨 크기 늘리기 (클릭 시 확대)" data-html2canvas-ignore="true"></div>
-
-            <!-- Highly Obvious Bottom Grab Bar with -30px / +30px and Drag Handle -->
-            <div class="photo-resize-control-bar" id="photoDragBottom" onmousedown="startPhotoBottomDrag(event)" title="마우스로 잡고 아래로 끌어당기거나 버튼을 눌러 높이를 조절하세요" data-html2canvas-ignore="true">
-              <button type="button" class="resize-quick-btn" onclick="adjustPhotoHeight(-30, event)" title="사진 길이 30px 줄이기">
-                <i class="fa-solid fa-minus"></i> 짧게 (-30)
-              </button>
-              
-              <div class="resize-drag-grip" onclick="adjustPhotoHeight(30, event)" title="클릭 시 30px 늘어나며, 마우스로 위아래로 끌어당길 수도 있습니다">
-                <i class="fa-solid fa-arrows-up-down"></i>
-                <span>↕ 마우스로 당겨서 위아래 늘리기</span>
-              </div>
-
-              <button type="button" class="resize-quick-btn" onclick="adjustPhotoHeight(30, event)" title="사진 길이 30px 늘리기">
-                <i class="fa-solid fa-plus"></i> 길게 (+30)
-              </button>
-            </div>
+            <div class="corner-handle corner-br" id="photoDragDiagonal" onmousedown="startPhotoDiagonalDrag(event)" onclick="adjustPhotoSize(10, event)" title="모서리를 드래그하거나 클릭하여 사진 정비율 확대" data-html2canvas-ignore="true"></div>
           </div>
 
-          <!-- Top Floating Dock for Photo: Always clear and obvious -->
-          <div class="element-floating-dock open" id="photoQuickToolbar" data-html2canvas-ignore="true" style="top: -46px; left: 0; min-width: 460px;">
+          <!-- Top Floating Dock for Photo (Exact same intuitive layout as Logo) -->
+          <div class="element-floating-dock open" id="photoQuickToolbar" data-html2canvas-ignore="true" style="top: -46px; left: 0; min-width: 440px;">
             <div class="dock-group">
-              <span class="dock-label"><i class="fa-solid fa-arrows-up-down" style="color:#38bdf8;"></i> 세로길이</span>
-              <button type="button" class="dock-btn" onclick="adjustPhotoHeight(-30, event)">◀ 짧게</button>
-              <span class="dock-val" id="tbPhotoHeightVal">570px</span>
-              <button type="button" class="dock-btn" onclick="adjustPhotoHeight(30, event)">길게 ▶</button>
+              <span class="dock-label"><i class="fa-solid fa-camera" style="color:#38bdf8;"></i> 사진 크기</span>
+              <button type="button" class="dock-btn" onclick="adjustPhotoSize(-10, event)">◀ 작게</button>
+              <span class="dock-val" id="tbPhotoSizeVal">100%</span>
+              <button type="button" class="dock-btn" onclick="adjustPhotoSize(10, event)">크게 ▶</button>
             </div>
             
             <div class="dock-divider"></div>
 
             <div class="dock-group">
-              <span class="dock-label"><i class="fa-solid fa-magnifying-glass" style="color:#38bdf8;"></i> 확대</span>
-              <button type="button" class="dock-btn" onclick="adjustPhotoZoom(-10, event)">축소</button>
-              <span class="dock-val" id="tbPhotoZoomVal">100%</span>
-              <button type="button" class="dock-btn" onclick="adjustPhotoZoom(10, event)">확대</button>
+              <button type="button" class="dock-btn" onclick="updatePhotoSize(80)">80%</button>
+              <button type="button" class="dock-btn" onclick="updatePhotoSize(100)">100% 표준</button>
+              <button type="button" class="dock-btn" onclick="updatePhotoSize(120)">120%</button>
+              <button type="button" class="dock-btn" onclick="updatePhotoSize(140)">140%</button>
             </div>
 
             <div class="dock-divider"></div>
@@ -3831,8 +3808,7 @@
       dragType = 'photoDiagonal';
       dragStartX = e.clientX;
       dragStartY = e.clientY;
-      dragStartH = currentPhotoHeight;
-      dragStartZ = currentPhotoZoom;
+      dragStartSize = currentPhotoSize;
       document.body.style.cursor = 'nwse-resize';
       document.body.style.userSelect = 'none';
       const slot = document.getElementById('cardVisualSlot');
@@ -3878,18 +3854,12 @@
       const scale = getCanvasScale();
       if (!scale || isNaN(scale) || scale <= 0) return;
 
-      if (dragType === 'photoBottom') {
-        const deltaY = (e.clientY - dragStartY) / scale;
-        const newH = Math.round(Math.max(200, Math.min(850, dragStartH + deltaY)));
-        updatePhotoHeight(newH);
-      } else if (dragType === 'photoDiagonal') {
+      if (dragType === 'photoDiagonal') {
         const deltaY = (e.clientY - dragStartY) / scale;
         const deltaX = (e.clientX - dragStartX) / scale;
         const avgDelta = (deltaY + deltaX) / 2;
-        const newH = Math.round(Math.max(200, Math.min(850, dragStartH + avgDelta)));
-        const newZ = Math.round(Math.max(70, Math.min(180, dragStartZ + (avgDelta / 3.5))));
-        updatePhotoHeight(newH);
-        updatePhotoZoom(newZ);
+        const newSize = Math.round(Math.max(70, Math.min(160, dragStartSize + (avgDelta / 3.5))));
+        updatePhotoSize(newSize);
       } else if (dragType === 'logoDiagonal') {
         const deltaY = (e.clientY - dragStartY) / scale;
         const deltaX = (e.clientX - dragStartX) / scale;
@@ -3977,6 +3947,42 @@
     }
 
     // --- PHOTO SIZING & FINE-TUNING CONTROLS ---
+    
+    let currentPhotoSize = 100; // 100% default
+
+    function updatePhotoSize(val) {
+      currentPhotoSize = Math.round(Math.max(70, Math.min(160, parseInt(val, 10) || 100)));
+      
+      // Update values in docks and sidebars
+      const tbVal = document.getElementById('tbPhotoSizeVal');
+      if (tbVal) tbVal.textContent = currentPhotoSize + '%';
+      const sideVal = document.getElementById('photoSizeVal');
+      if (sideVal) sideVal.textContent = currentPhotoSize + '%';
+      const rangeEl = document.getElementById('photoSizeRange');
+      if (rangeEl && rangeEl.value != currentPhotoSize) rangeEl.value = currentPhotoSize;
+
+      // Update proportional scale on image (aspect ratio 100% locked, zero distortion)
+      const scale = currentPhotoSize / 100;
+      canvasPage.querySelectorAll('#photoView img, .card-photo img').forEach(img => {
+        img.style.setProperty('transform', 'scale(' + scale + ')', 'important');
+      });
+
+      // Also gently scale the container height proportionally (clamped between 450px and 720px)
+      const newHeight = Math.round(Math.max(450, Math.min(720, 570 * scale)));
+      currentPhotoHeight = newHeight;
+      document.documentElement.style.setProperty('--photo-slot-height', newHeight + 'px');
+      canvasPage.querySelectorAll('#cardVisualSlot, .card-visual-slot').forEach(slot => {
+        slot.style.setProperty('height', newHeight + 'px', 'important');
+      });
+      const sideHeightVal = document.getElementById('photoHeightVal');
+      if (sideHeightVal) sideHeightVal.textContent = newHeight + 'px';
+    }
+
+    function adjustPhotoSize(delta, e) {
+      if (e) e.stopPropagation();
+      updatePhotoSize(currentPhotoSize + delta);
+    }
+
     function updatePhotoHeight(h) {
       currentPhotoHeight = Math.round(Math.max(200, Math.min(850, parseInt(h, 10) || 570)));
       const valEl = document.getElementById('photoHeightVal');

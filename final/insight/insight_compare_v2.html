@@ -228,7 +228,7 @@
         { name: '순환계질환 주요치료비 보장범위 및 질병코드 정리', url: 'sheets/11_순환계질환 주요치료비 보장범위 및 질병코드 정리.html' },
         { name: '2대 순환계 주요치료비 비교 (손보)', url: 'sheets/13_2대 순환계 주요치료비 비교 (손보).html' },
         { name: '2대 순환계 주요치료비 비교 (생보)', url: 'sheets/12_2대 순환계 주요치료비 비교 (생보).html' },
-        { name: '암 후유장해 3~100% 비교', url: 'sheets/14_암 후유장해 3~100% 비교.html' },
+        { name: '암 후유장해 3~100% 비교', url: 'sheets/14_%EC%95%94%20%ED%9B%84%EC%9C%A0%EC%9E%A5%ED%95%B4%203~100%25%20%EB%B9%84%EA%B5%90.html' },
         { name: '암생활비 보험사 비교', url: 'sheets/15_암생활비 보험사 비교.html' },
         { name: '항암방사선 중입자치료비 비교', url: 'sheets/16_항암방사선 중입자치료비 비교.html' },
         { name: '주요치료 생활비(복합치료) 비교', url: 'sheets/17_주요치료 생활비(복합치료) 비교.html' },
@@ -265,7 +265,7 @@
         { name: '경영인 정기보험 비교', url: 'sheets/44_경영인 정기보험 비교.html' }
       ]},
       { category: '연금', items: [
-        { name: '7년 100% 연금보험 비교', url: 'sheets/39_7년 100% 연금보험 비교.html' },
+        { name: '7년 100% 연금보험 비교', url: 'sheets/39_7%EB%85%84%20100%25%20%EC%97%B0%EA%B8%88%EB%B3%B4%ED%97%98%20%EB%B9%84%EA%B5%90.html' },
         { name: '최저연금보증형 연금보험 비교', url: 'sheets/40_최저연금보증형 연금보험 비교.html' },
         { name: '최저연금보증형 변액연금보험 비교', url: 'sheets/41_최저연금보증형 변액연금보험 비교.html' }
       ]},
@@ -480,9 +480,10 @@
 
       // 4. Update Iframe Source
       const iframe = document.getElementById('insightFrame');
-      if (iframe.src !== currentUrl) {
+      const safeUrl = (currentUrl || '').replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
+      if (iframe.getAttribute('src') !== safeUrl) {
         showLoader();
-        iframe.src = currentUrl;
+        iframe.src = safeUrl;
       }
     }
 
@@ -507,13 +508,15 @@
       const iframe = document.getElementById('insightFrame');
       if (iframe) {
         showLoader();
-        iframe.src = currentUrl;
+        const safeUrl = (currentUrl || '').replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
+        iframe.src = safeUrl;
       }
     }
 
     function openCurrentInNewTab() {
       if (currentUrl) {
-        window.open(currentUrl, '_blank');
+        const safeUrl = (currentUrl || '').replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
+        window.open(safeUrl, '_blank');
       }
     }
 

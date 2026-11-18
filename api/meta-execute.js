@@ -520,7 +520,7 @@ module.exports = async function handler(req, res) {
                 updatedAt: parsed.updatedAt || row.created_at,
                 config: parsed
               });
-            } else if (!legacyDefaultRow && String(row.id).startsWith('pr_cfg_')) {
+           } else if (!legacyDefaultRow && String(row.id).startsWith('pr_cfg_') && row.cta_type !== 'NOTIFY_ONLY') {
               legacyDefaultRow = {
                 id: row.id,
                 title: parsed.pageTitle || (row.title !== 'PR_MAGAZINE_CONFIG' ? row.title : '나의 기본 대표 PR 페이지'),

@@ -2078,14 +2078,26 @@ const DEFAULT_INSURANCE_DISCLAIMER = '※ 계약 체결 전 상품설명서 및 
     });
 
     // 팝업창에서 메타 로그인 완료 시 부모 창이 즉시 감지하여 드롭다운·배지 자동 갱신
+// 팝업창에서 메타 로그인 완료 시 단 1회 발생하는 'weracle_oauth_ping' 신호만 수신 (무한 깜빡임 원천 차단!)
+    let isFetchingMetaAssets = false;
     window.addEventListener('storage', (ev) => {
-      if (ev.key === 'weracle_oauth_ping' || (ev.key && ev.key.startsWith('weracle_meta_conn_v7'))) {
-        reloadUserIsolatedStorage();
-        updateHeaderBadges();
-        fetchUserMetaAssets();
-        loadServerCampaigns(false);
-      }
-    });  
+      if (ev.key !== 'weracle_oauth_ping' || !ev.newValue) return;
+      try {
+        const payload = JSON.parse(ev.newValue);
+        if (payload && payload.conn) {
+          if (payload.email && (!syncedParentEmail || syncedParentEmail === 'guest_unauthenticated')) {
+            syncedParentEmail = payload.email;
+            sessionStorage.setItem('weracle_active_email', payload.email);
+          }
+          setMyMetaConn(payload.conn);
+          localStorage.setItem(uKey('weracle_onboard_done_v7'), 'true');
+        }
+      } catch (e) {}
+      reloadUserIsolatedStorage();
+      updateHeaderBadges();
+      fetchUserMetaAssets();
+      loadServerCampaigns(false);
+    });
 let mySavedPrPagesList = [];
 
     async function fetchMySavedPrPagesForSelect() {
@@ -3502,6 +3514,13 @@ function initConnectionState() {
         alert('⚠️ 메타 연동 안내: ' + params.get('error'));
       }
 if (params.get('meta_connected') === 'true') {
+        // 팝업창에서도 로그인했던 내 구글 이메일을 100% 정확히 복원!
+        const pendingEmail = localStorage.getItem('weracle_oauth_pending_email');
+        if (pendingEmail && (!syncedParentEmail || syncedParentEmail === 'guest_unauthenticated')) {
+          syncedParentEmail = pendingEmail.trim().toLowerCase();
+          sessionStorage.setItem('weracle_active_email', syncedParentEmail);
+        }
+
         const conn = {
           adAcc: params.get('ad_acc') || 'act_connected',
           adName: params.get('ad_name') || '내 광고계정',
@@ -3513,14 +3532,17 @@ if (params.get('meta_connected') === 'true') {
         };
         setMyMetaConn(conn);
         localStorage.setItem(uKey('weracle_onboard_done_v7'), 'true');
-        localStorage.setItem('weracle_oauth_ping', String(Date.now()));
+        localStorage.setItem('weracle_oauth_ping', JSON.stringify({
+          ts: Date.now(),
+          email: getActiveAgentId(),
+          conn
+        }));
         window.history.replaceState({}, document.title, window.location.pathname);
 
         if (window.opener && !window.opener.closed) {
           try { window.opener.postMessage({ type: 'WERACLE_META_OAUTH_DONE', conn }, '*'); } catch (e) {}
         }
 
-        // 팝업 단독 창인 경우 즉시 창을 닫고, 혹시 브라우저가 닫기를 막으면 깔끔한 완료 버튼 표시
         if (window.top === window.self) {
           window.close();
           setTimeout(() => {
@@ -3539,6 +3561,8 @@ if (params.get('meta_connected') === 'true') {
         }
         openOnboardingModal();
       }
+        openOnboardingModal();
+      }
 
       const savedPh = getMyAgentPhone();
       if (savedPh && document.getElementById('obAgentPhoneInput')) {
@@ -3554,13 +3578,15 @@ if (params.get('meta_connected') === 'true') {
       }
     }
 
-    async function fetchUserMetaAssets() {
-      const metaConn = getMyMetaConn();
-      const pickerSec = document.getElementById('accountPickerSection');
-      if (!metaConn || !metaConn.token) {
-        if (pickerSec) pickerSec.style.display = 'none';
-        return;
-      }
+   async function fetchUserMetaAssets() {
+  if (isFetchingMetaAssets) return;
+  const metaConn = getMyMetaConn();
+  const pickerSec = document.getElementById('accountPickerSection');
+  if (!metaConn || !metaConn.token) {
+    if (pickerSec) pickerSec.style.display = 'none';
+    return;
+  }
+  isFetchingMetaAssets = true;
 
       if (pickerSec) pickerSec.style.display = 'flex';
       const adSelect = document.getElementById('selectMetaAdAccount');
@@ -3606,7 +3632,7 @@ if (params.get('meta_connected') === 'true') {
         }
 
         applySelectedMetaAssets(true);
-      } catch (e) {}
+      } catch (e) {} finally { isFetchingMetaAssets = false; }
     }
 
     function applySelectedMetaAssets(silent) {
@@ -3735,6 +3761,7 @@ if (params.get('meta_connected') === 'true') {
         alert('먼저 위라클랩 우측 상단에서 구글 로그인을 완료한 뒤 계정을 연동해 주세요.');
         return;
       }
+      localStorage.setItem('weracle_oauth_pending_email', myEmail);
       const encodedState = 'u_' + btoa(unescape(encodeURIComponent(myEmail)));
       const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
       const redirectUri = encodeURIComponent(`${curOrigin}/api/meta-callback`);

@@ -1078,24 +1078,7 @@
     }
   
   
-    .hidden-comp-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: #fee2e2;
-      color: #dc2626;
-      font-size: 11.5px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      border: 1px solid #fecaca;
-    }
-    .hidden-comp-chip:hover {
-      background: #fca5a5;
-      color: #991b1b;
-    }
+    
     .comp-hidden {
       display: none !important;
     }
@@ -1231,11 +1214,10 @@
 
   <!-- 2. Clean Action Toolbar -->
   <div class="controls-bar" id="masterToolbar">
-    <div class="controls-left" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-      <button class="btn btn-outline" id="restoreCompBtn" onclick="restoreAllCompanies()" style="display: none;">
+    <div class="controls-left">
+      <button class="btn btn-outline" onclick="restoreAllCompanies()">
         <i class="fa-regular fa-eye"></i> 숨긴 회사 복원 (<span id="hiddenCompCount">0</span>)
       </button>
-      <div id="hiddenCompanyChips" style="display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap;"></div>
       <button class="btn btn-outline" onclick="resetAll()">
         <i class="fa-solid fa-arrows-rotate"></i> 전체 초기화
       </button>
@@ -1252,9 +1234,7 @@
         <table id="standardMasterTable">
       <thead>
         <tr class="sticky-header-row" data-row="companyHeader">
-          <th colspan="2" class="th-vert-header col-label col-label-corner" style="width: 200px; min-width: 200px; max-width: 200px; text-align: center; vertical-align: middle;">
-            <div style="font-size: 13.5px; font-weight: 800; color: #0f172a;">구분</div>
-          </th>
+          <th rowspan="2" colspan="2" class="col-label col-label-corner" style="width: 200px; min-width: 200px; max-width: 200px; border-right: 1.5px solid var(--border-strong) !important; border-bottom: 1.5px solid var(--border-strong) !important;"></th>
           <th class="th-company col-brand-0 th-brand-0" data-comp="0" style="width: 220px; min-width: 220px;">
             <button class="col-hide-btn" onclick="hideCompany(event, 0)" title="신한라이프 숨기기">
               <i class="fa-regular fa-eye eye-open-icon"></i>
@@ -1317,7 +1297,6 @@
           </th>
         </tr>
         <tr class="sticky-header-row-sub" data-row="productHeader">
-          <th colspan="2" class="col-label" style="background: var(--col-label-corner); border-bottom: 1.5px solid var(--border-strong);"></th>
           <th class="td-product col-brand-0" data-comp="0"><div class="product-badge-box">든든한실속종신</div></th>
           <th class="td-product col-brand-1" data-comp="1"><div class="product-badge-box">우리WON하는<br>안심상속종신</div></th>
           <th class="td-product col-brand-2" data-comp="2"><div class="product-badge-box">더착한종신<br>(기본형/라이트형)</div></th>
@@ -1477,14 +1456,6 @@
 </div>
 
 <script>
-  const compData = [
-    { index: 0, name: "신한라이프", color: "#0046ff" },
-    { index: 1, name: "동양생명", color: "#0284c7" },
-    { index: 2, name: "삼성생명", color: "#034ea2" },
-    { index: 3, name: "미래에셋생명", color: "#ea580c" },
-    { index: 4, name: "메트라이프", color: "#0095d9" }
-  ];
-
   const hiddenComps = new Set();
 
   function hideCompany(e, compIdx) {
@@ -1492,46 +1463,19 @@
     hiddenComps.add(compIdx);
     const cells = document.querySelectorAll('[data-comp="' + compIdx + '"]');
     cells.forEach(c => c.classList.add('comp-hidden'));
-    updateHiddenCompanyUI();
-  }
-
-  function restoreCompany(compIdx) {
-    hiddenComps.delete(compIdx);
-    const cells = document.querySelectorAll('[data-comp="' + compIdx + '"]');
-    cells.forEach(c => c.classList.remove('comp-hidden'));
-    updateHiddenCompanyUI();
+    updateHiddenCounts();
   }
 
   function restoreAllCompanies() {
     hiddenComps.clear();
     const hiddenEls = document.querySelectorAll('.comp-hidden');
     hiddenEls.forEach(c => c.classList.remove('comp-hidden'));
-    updateHiddenCompanyUI();
+    updateHiddenCounts();
   }
 
-  function updateHiddenCompanyUI() {
-    const restoreBtn = document.getElementById('restoreCompBtn');
-    const countSpan = document.getElementById('hiddenCompCount');
-    const chipsContainer = document.getElementById('hiddenCompanyChips');
-    if (!restoreBtn || !chipsContainer) return;
-
-    const count = hiddenComps.size;
-    if (countSpan) countSpan.innerText = count;
-
-    if (count > 0) {
-      restoreBtn.style.display = 'inline-flex';
-      let chipsHtml = '';
-      hiddenComps.forEach(idx => {
-        const c = compData[idx];
-        if (c) {
-          chipsHtml += `<button class="hidden-comp-chip" onclick="restoreCompany(${idx})" title="${c.name} 복원">${c.name} <i class="fa-solid fa-xmark"></i></button>`;
-        }
-      });
-      chipsContainer.innerHTML = chipsHtml;
-    } else {
-      restoreBtn.style.display = 'none';
-      chipsContainer.innerHTML = '';
-    }
+  function updateHiddenCounts() {
+    const compCount = document.getElementById('hiddenCompCount');
+    if (compCount) compCount.innerText = hiddenComps.size;
   }
 
   function resetAll() {

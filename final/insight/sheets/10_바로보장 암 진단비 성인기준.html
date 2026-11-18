@@ -147,7 +147,7 @@
       display: flex;
       gap: 20px; 
       margin-top: 18px;
-      max-width: 1260px;
+      max-width: 100%;
     }
     
     .wrc-summary-grid-2x2 {
@@ -273,7 +273,7 @@
 
     /* Table Responsive Container */
     .table-responsive {
-      overflow-x: auto;
+      overflow-x: hidden;
       overflow-y: visible;
       position: relative;
       scroll-behavior: smooth;
@@ -296,12 +296,14 @@
       background: #64748b;
     }
 
+    .vert-table { width: 100% !important; min-width: 0 !important; table-layout: fixed; }
     table {
+      table-layout: fixed;
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
       font-size: 12px;
-      min-width: 1500px;
+      min-width: 0;
       text-align: center;
     }
 
@@ -1175,47 +1177,40 @@
     <table id="standardMasterTable" class="vert-table">
       <thead>
         <tr class="sticky-header-row">
-          <th class="th-vert-header col-label col-label-corner" data-col="0">NO</th><th class="th-vert-header" data-col="1">구분</th><th class="th-vert-header" data-col="2">보험사</th><th class="th-vert-header" data-col="3">상 품 명</th>
+          <th class="th-vert-header col-label col-label-corner" style="width: 50px; min-width: 50px; max-width: 50px; text-align: center;">NO</th>
+          <th class="th-vert-header" style="width: 85px; min-width: 85px; max-width: 85px; text-align: center;">구분</th>
+          <th class="th-vert-header" style="width: 120px; min-width: 120px; max-width: 120px; text-align: center;">보험사</th>
+          <th class="th-vert-header" style="text-align: left; padding-left: 20px;">상품명</th>
         </tr>
       </thead>
       <tbody>
-        
-      <tr class="vert-table-row" data-row="vertRow-0">
-        <td class="col-label" style="text-align:center; font-weight:700;" >1</td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">생명<br>보험</td>
-          <td class="td-vert-comp col-brand-0"  style="border-left: 3px solid #059669 !important; background: #ffffff; padding: 8px 12px;">
-            <div class="vert-comp-cell" style="display:flex; align-items:center; gap:8px; white-space:nowrap; min-width:140px;">
-              <div class="company-logo-wrap" style="width: auto; max-width: 70px;">
-                <img src="data:image/png;base64,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" alt="NH생명 로고" class="real-company-logo" style="max-height:22px; max-width:70px; object-fit:contain;">
-              </div>
-              <span class="company-name-text" style="color: #059669; font-size:13.5px; font-weight:700;">NH생명</span>
-            </div>
-          </td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">[상품] 핑크케어NH건강보험<br>o가입조건(15세~80세 여성)<br>* 건강: 핑크케어NH건강보험(바로보장형)<br>* 간편: 핑크케어NH건강보험(3.2.5 바로보장형)<br>1. NH생명 암 진단비 담보 기가입자<br>(기가입 암보험 1년이상 유지/무사고)</td>
-      </tr>
-      <tr class="vert-table-row" data-row="vertRow-1">
-        <td class="col-label" style="text-align:center; font-weight:700;" >2</td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">-</td>
-          <td class="td-vert-comp col-brand-1"  style="border-left: 3px solid #f37321 !important; background: #ffffff; padding: 8px 12px;">
-            <div class="vert-comp-cell" style="display:flex; align-items:center; gap:8px; white-space:nowrap; min-width:140px;">
-              <div class="company-logo-wrap" style="width: auto; max-width: 70px;">
-                <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJf66CI7J207Ja0XzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDEzNC40NyA4Ny44MyI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiNmNGEwNTE7fS5jbHMtMntmaWxsOiNmN2JiODI7fS5jbHMtM3tmaWxsOiNlZDcxMDA7fS5jbHMtNHtmaWxsOiMyMzE4MTU7fTwvc3R5bGU+PC9kZWZzPjxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTU5LjA3LDI5LjA2Yy0uODEtNy4zNyw2LjkyLTEzLjI4LDE3LjI2LTEzLjIsMTAuMzQsLjA4LDE5LjM4LDYuMTIsMjAuMTksMTMuNDgsLjgyLDcuMzctNi45LDEzLjI4LTE3LjI1LDEzLjItMTAuMzQtLjA4LTE5LjM5LTYuMTEtMjAuMi0xMy40OG0zOS4zNywyLjI5Yy0uOTQtOS4xNC0xMS4zNC0xNi42Mi0yMy4yNC0xNi43My0xMS45MS0uMS0yMC43OSw3LjIzLTE5Ljg2LDE2LjM3LC45Myw5LjE0LDExLjM0LDE2LjYzLDIzLjI0LDE2LjczLDExLjksLjEsMjAuOC03LjIzLDE5Ljg2LTE2LjM3Ii8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNODAuNDgsNDcuOWMtNS44Niw2LjEzLTE1LjI3LDYuNjMtMjEuMDEsMS4xNC01Ljc1LTUuNS01LjY1LTE0LjkyLC4yMS0yMS4wNSw1Ljg2LTYuMTIsMTUuMjctNi42MywyMS4wMi0xLjEzLDUuNzQsNS41LDUuNjQsMTQuOTItLjIyLDIxLjA0bS0yMS43Mi0yMC4xYy02LjgxLDcuMTItNi45MiwxOC4wNy0uMjUsMjQuNDYsNi42OCw2LjM5LDE3LjYyLDUuOCwyNC40My0xLjMyLDYuODItNy4xMiw2LjkzLTE4LjA3LC4yNS0yNC40Ni02LjY3LTYuMzktMTcuNjEtNS44LTI0LjQzLDEuMzIiLz48cGF0aCBjbGFzcz0iY2xzLTMiIGQ9Ik01OS4zOCw0Ljg4YzEyLjItNC41NywyNC4yNSwuMDUsMjYuOTMsMTAuMzMsMi42OSwxMC4yNy01LjAzLDIyLjMtMTcuMjIsMjYuODctMTIuMiw0LjU3LTI0LjI1LS4wNi0yNi45My0xMC4zMi0yLjY4LTEwLjI3LDUuMDMtMjIuMywxNy4yMi0yNi44N20tMTEuMzIsMy45M2MtMTIuNjUsMTAuMDItMTUuODcsMjQuNTMtNy4yLDMyLjQxLDguNjgsNy44OCwyNS45Nyw2LjE2LDM4LjYyLTMuODYsMTIuNjUtMTAuMDEsMTUuODgtMjQuNTMsNy4xOS0zMi40MS04LjY4LTcuODktMjUuOTctNi4xNi0zOC42MSwzLjg2Ii8+PGc+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNMjAuNTQsNjUuMTV2MjIuNjdoLTMuNTV2LTExLjk2SDMuNTV2MTEuOTZIMHYtMjIuNjdIMy41NXY3LjYxaDEzLjQ0di03LjYxaDMuNTVaIi8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNMjkuMDcsODcuODNjLTEuNjYsMC0yLjk3LS40Ni0zLjk0LTEuMzktLjk5LS45My0xLjQ4LTIuMTItMS40OC0zLjU4di0xLjIxYzAtMS40OCwuNDktMi42OCwxLjQ4LTMuNjEsLjk3LS45NSwyLjI4LTEuNDIsMy45NC0xLjQyaDkuMjZ2LS4wOWMwLTEuODItMS0yLjcyLTIuOTktMi43MmgtMTAuM3YtMy4wMmgxMC4yNGMyLjEzLDAsMy43NiwuNTQsNC44OCwxLjYzLDEuMTQsMS4wNSwxLjcyLDIuNTcsMS43Miw0LjU2djYuMDFjMCwxLjU0LS41MiwyLjc1LTEuNTcsMy42NC0uOTUsLjgxLTIuMjgsMS4yMS00LDEuMjFoLTcuMjVabTYuNDgtOC4yaC01LjYyYy0xLjgyLDAtMi43MiwuNzctMi43MiwyLjMxdi41NmMwLDEuNTIsLjkxLDIuMjgsMi43MiwyLjI4aDUuNjJjMS44NSwwLDIuNzgtLjc2LDIuNzgtMi4yOHYtLjU2YzAtMS41NC0uOTMtMi4zMS0yLjc4LTIuMzFaIi8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNNTIuMjcsNzAuNzhoMy40OWMyLjIxLDAsMy45NSwuNjQsNS4yMSwxLjkyLDEuMjYsMS4yOCwxLjg5LDMuMDcsMS44OSw1LjM2djkuNzdoLTMuNTV2LTkuNTljMC0xLjQyLS4yOC0yLjQ2LS44My0zLjExLS42OS0uODUtMS42OS0xLjI3LTIuOTktMS4yN2gtMy4wMmMtMS4yNiwwLTIuMjUsLjQyLTIuOTYsMS4yNy0uNTEsLjY1LS43NywxLjY5LS43NywzLjExdjkuNTloLTMuNTV2LTkuNzdjMC0yLjI5LC42My00LjA3LDEuODktNS4zNiwxLjI2LTEuMjgsMi45OS0xLjkyLDUuMTgtMS45MloiLz48cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Ik03OS4yNCw4NS41NWMtMS4yNiwxLjUyLTIuODMsMi4yOC00LjcxLDIuMjhoLTIuMTljLTEuOTcsMC0zLjU0LS42Mi00LjcxLTEuODYtMS4xMS0xLjE2LTEuNjYtMi44MS0xLjY2LTQuOTR2LTEwLjI0aDMuNTJ2MTAuMjdjMCwxLjI0LC4yNywyLjE1LC44LDIuNzIsLjYxLC42NSwxLjQxLC45OCwyLjQsLjk4aDEuNTRjMS4wMSwwLDEuODItLjMzLDIuNDMtLjk4LC41NS0uNTcsLjgzLTEuNDgsLjgzLTIuNzJ2LTEwLjI3aDMuNDl2MTAuMjdjMCwxLjI0LC4yNywyLjE1LC44LDIuNzIsLjYxLC42NSwxLjQxLC45OCwyLjQsLjk4aDEuNTRjMS4wMSwwLDEuODItLjMzLDIuNDMtLjk4LC41NS0uNTcsLjgzLTEuNDgsLjgzLTIuNzJ2LTEwLjI3aDMuNTJ2MTAuMjRjMCwyLjEzLS41NywzLjc4LTEuNzIsNC45NC0xLjE3LDEuMjQtMi43NCwxLjg2LTQuNzQsMS44NmgtMi4xNmMtMS44NCwwLTMuMzgtLjc2LTQuNjUtMi4yOFoiLz48cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Ik0xMDIuOTIsNzMuODZjLTEuMjYsMC0yLjI1LC40Mi0yLjk2LDEuMjctLjUxLC42NS0uNzcsMS42OS0uNzcsMy4xMXY5LjU5aC0zLjU1di0yMi43M2gzLjU1djYuNzJjMS4wMy0uNjksMi4yLTEuMDQsMy41Mi0xLjA0aDMuNDljMi4yMSwwLDMuOTUsLjY0LDUuMjEsMS45MnMxLjg5LDMuMDcsMS44OSw1LjM2djkuNzdoLTMuNTV2LTkuNTljMC0xLjQyLS4yOC0yLjQ2LS44My0zLjExLS42OS0uODUtMS42OS0xLjI3LTIuOTktMS4yN2gtMy4wMloiLz48cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Ik0xMjEuNjYsODcuODNjLTEuNjYsMC0yLjk3LS40Ni0zLjk0LTEuMzktLjk5LS45My0xLjQ4LTIuMTItMS40OC0zLjU4di0xLjIxYzAtMS40OCwuNDktMi42OCwxLjQ4LTMuNjEsLjk3LS45NSwyLjI4LTEuNDIsMy45NC0xLjQyaDkuMjZ2LS4wOWMwLTEuODItMS0yLjcyLTIuOTktMi43MmgtMTAuM3YtMy4wMmgxMC4yNGMyLjEzLDAsMy43NiwuNTQsNC44OCwxLjYzLDEuMTQsMS4wNSwxLjcyLDIuNTcsMS43Miw0LjU2djYuMDFjMCwxLjU0LS41MiwyLjc1LTEuNTcsMy42NC0uOTUsLjgxLTIuMjgsMS4yMS00LDEuMjFoLTcuMjVabTYuNDgtOC4yaC01LjYyYy0xLjgyLDAtMi43MiwuNzctMi43MiwyLjMxdi41NmMwLDEuNTIsLjkxLDIuMjgsMi43MiwyLjI4aDUuNjJjMS44NSwwLDIuNzgtLjc2LDIuNzgtMi4yOHYtLjU2YzAtMS41NC0uOTMtMi4zMS0yLjc4LTIuMzFaIi8+PC9nPjwvc3ZnPg==" alt="한화생명 로고" class="real-company-logo" style="max-height:22px; max-width:70px; object-fit:contain;">
-              </div>
-              <span class="company-name-text" style="color: #f37321; font-size:13.5px; font-weight:700;">한화생명</span>
-            </div>
-          </td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">[상품]<br>O 가입조건(0세~35세)<br>* 건강: 영사모 든든건강플러스보험 5.10.5(바로보장형)<br>* 간편: 영사모 든든건강플러스보험 3.10.5(바로보장형)</td>
-      </tr>
-      <tr class="vert-table-row" data-row="vertRow-2">
-        <td class="col-label" style="text-align:center; font-weight:700;" >3</td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">손해<br>보험</td>
-          <td class="td-vert-comp col-brand-2"  rowspan="2" style="border-left: 3px solid #003087 !important; background: #ffffff; padding: 8px 12px;">
-            <div class="vert-comp-cell" style="display:flex; align-items:center; gap:8px; white-space:nowrap; min-width:140px;">
-              <div class="company-logo-wrap" style="width: auto; max-width: 70px;">
-                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MjUuNTg5IiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDcyNS41ODkgMTUwIj4KICA8cGF0aCBmaWxsPSIjMDAyYzVmIiBkPSJNNjc1Ljg3NCAxMzQuODA2YzguODQ2IDAgMTYuMDExLTYuNjE4IDE2LjAxMS0xNS4wOTcgMC04LjQ2OC03LjE2NS0xNC45MjktMTYuMDEtMTQuOTI5LTguODUyIDAtMTUuNjc5IDYuNDYxLTE1LjY3OSAxNC45MjkgMCA4LjQ3OSA2LjgyNyAxNS4wOTcgMTUuNjc4IDE1LjA5N20tMzMuOTA1LTE1LjA3NWMwLTE2LjU0IDE0LjQ5NS0zMC4xMTYgMzQuMDc1LTMwLjExNiAxOS41NjggMCAzNC4wNjIgMTMuNTc1IDM0LjA2MiAzMC4xMTZTNjk1LjYxMiAxNTAgNjc2LjA0NCAxNTBjLTE5LjU4IDAtMzQuMDc1LTEzLjcyOC0zNC4wNzUtMzAuMjY5bS0zOTguNzI1LTExLjk1NGgxOC44MTNWMTMxLjRoNTUuOTgydjE1LjM4aC03NC43OTV6bTQ2Ny41NTItNzguMDk4djE5Ljg5aDE0Ljc5M3YxNS42NzhoLTE0Ljc5M3YyMy4yMjFoLTE4LjI5NHYtNTguNzlabS03OC40MS4wMzhjLS4wOSAxNi41MjQtLjkxOSAzMC4xMTYtMjUuMTI3IDQxLjQxNGw4LjgxMiAxMy40NzRjMTAuNDQ2LTMuMDE2IDIyLjE5NS0xMi4xMSAyNi42ODgtMjAuMiA0LjUgOC4wOSAxNi4yMzcgMTcuMTg0IDI2LjY4MyAyMC4ybDguODE4LTEzLjQ3NGMtMjQuMjAzLTExLjI5OC0yNS4wNDgtMjQuODktMjUuMTI3LTQxLjQxNFptLTIwMC4yIDI3Ljc0NWgtOS42NTJWMjkuOTA1aC0xNy4yNTFWMTQ4LjcyaDE3LjI1MVY3NC43NjRoOS42NTJ2NzMuOTU1aDE3Ljc2NFYyOS45MDVoLTE3Ljc2NHptMTM4LjI4MiAwaC04LjM2VjI5LjkwNWgtMTcuNDU1VjE0OC43MmgxNy40NTRWNzQuNzY0aDguMzYxdjczLjk1NWgxNy45NVYyOS45MDVoLTE3Ljk1em0tMjcwLjY1MiAzNS4yaC0xMy44ODVWNzcuMzc4aDEzLjg4NVY2Ny4xMzRoLTEzLjkwOHYtMTUuMjloMTMuOTA4VjI5Ljg0OGgxOC4zdjg3LjM3MmgtMTguM3ptMjIxLjUyOS0yMy45NzRjMCA2LjMzMS01LjQxMiAxMi40NDItMTIuNDQ4IDEyLjQ0Mi03LjAyNSAwLTEyLjQ0Mi02LjExMS0xMi40NDItMTIuNDQyIDAtNi4zMTQgNS40MTctMTIuNDQ4IDEyLjQ0Mi0xMi40NDggNy4wMzYgMCAxMi40NDggNi4xMzQgMTIuNDQ4IDEyLjQ0OG0tMjEuNjgzLTQ0LjAzNnY5LjQ0OWgtMjAuODc2djE0LjUxMWgxMC4yOTRjLTYuMTU2IDQuMTM4LTkuNzM2IDEyLjAyLTkuNzM2IDIwLjM5MiAwIDE0LjQzOCAxMi40MjYgMjYuNzczIDI5LjU4MSAyNi43NzMgMTcuMTYxIDAgMjkuNTc1LTEyLjMzNSAyOS41NzUtMjYuNzczIDAtOC4zNzItMy41NjgtMTYuMjU0LTkuNzM2LTIwLjM5MmgxMC4zMDZWMzQuMTAxaC0yMC44ODh2LTkuNDQ5ek0yNjAuOTkgNjcuNTEzYzAgNi4zMy01LjQyOCAxMS44MTYtMTIuNDQ3IDExLjgxNi03LjAzIDAtMTIuNDQ4LTUuNDg1LTEyLjQ0OC0xMS44MTYgMC02LjMyIDUuNDE4LTExLjgxMSAxMi40NDgtMTEuODExIDcuMDE5IDAgMTIuNDQ4IDUuNDkgMTIuNDQ4IDExLjgxbS0yMi4xOTYtNDIuNzc4djkuNDU0aC0yMy4yMjd2MTQuNTE3aDEyLjkxYy02LjAxNSA0LjAwMy05LjQ4OCAxMS43NzctOS40ODggMTkuMTI5IDAgMTQuNDM4IDEyLjQyIDI2LjE0NyAyOS41NzUgMjYuMTQ3IDE3LjE2MSAwIDI5LjU3NS0xMS43MSAyOS41NzUtMjYuMTQ3IDAtNy4zNTItMy40NjctMTUuMTI2LTkuNDkzLTE5LjEyOWgxMi45MTZWMzQuMTg4SDI1OC4zM3YtOS40NTR6TTM5OS4wMSA5My45MjNoLTI5Ljg3VjQ4LjgzOGgyNC41NDJWMzMuMjU2aC00My4xOXY3Ni4zMTdoNDguNTE3eiIvPgogIDxwYXRoIGZpbGw9IiNmZjY3MDAiIGQ9Ik01NS43MjggNDguMzA0YzI2LjczNCAwIDQ4LjM1NS0yMS41NjQgNDguMzU1LTQ4LjI5OEwxNDguNjcgMGwtLjAyOCAxNDguNjMxaC01NS43NFY4NS40NzNINTUuNzI4djYzLjE4MUgwVi4wMDZoNTUuNzI4eiIvPgo8L3N2Zz4=" alt="현대해상 로고" class="real-company-logo" style="max-height:22px; max-width:70px; object-fit:contain;">
-              </div>
-              <span class="company-name-text" style="color: #003087; font-size:13.5px; font-weight:700;">현대해상</span>
-            </div>
-          </td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">[상품]<br>O 가입조건(15세~40세)<br>* 건강: 굿앤굿1540(10-6년 건강고지, 표준체)<br>1. 당/타사 암진단 담보 2년이상 가입/무사고<br>2. 현대 2Q-PASS고객</td>
-      </tr>
-      <tr class="vert-table-row" data-row="vertRow-3">
-        <td class="col-label" style="text-align:center; font-weight:700;" >4</td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">-</td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">[상품]<br>O 가입조건(15세~70세)<br>* 건강: 퍼펙트 플러스(10-6년 건강고지, 표준체)<br>1. 당/타사 암진단 담보 2년이상 가입/무사고<br>2. 현대 2Q-PASS고객<br>단, 유방암 제외</td>
-      </tr>
+        <tr class="vert-table-row" data-row="vertRow-0">
+          <td class="col-label" style="width: 50px; min-width: 50px; max-width: 50px; text-align: center; font-weight: 700; background: #f8fafc; vertical-align: middle;">1</td>
+          <td class="td-common text-center" rowspan="2" style="width: 85px; min-width: 85px; max-width: 85px; text-align: center; font-weight: 700; background: #ffffff; vertical-align: middle; padding: 12px 6px; font-size: 13px; color: #1e293b; border: 1px solid var(--border-cell);">생명보험</td>
+          <td class="td-vert-comp" style="width: 120px; min-width: 120px; max-width: 120px; border: 1px solid var(--border-cell) !important; background: #ffffff; text-align: center; padding: 12px 10px; vertical-align: middle;">
+            <span class="company-name-text" style="color: #059669; font-size: 13.5px; font-weight: 800; letter-spacing: -0.01em;">NH생명</span>
+          </td>
+          <td class="td-common text-left" style="text-align: left !important; padding: 12px 20px; font-size: 13px; line-height: 1.65; color: #1e293b; border: 1px solid var(--border-cell);">[상품]<br>O 가입조건(15세~40세)<br>* 건강: 평생안심 동행(10년~6년 건강고지, 표준체)<br>O 가입조건(15세~80세)<br>* 건강: 투스텝 암보험(10년~6년 건강고지, 표준체)</td>
+        </tr>
+        <tr class="vert-table-row" data-row="vertRow-1">
+          <td class="col-label" style="width: 50px; min-width: 50px; max-width: 50px; text-align: center; font-weight: 700; background: #f8fafc; vertical-align: middle;">2</td>
+          <td class="td-vert-comp" style="width: 120px; min-width: 120px; max-width: 120px; border: 1px solid var(--border-cell) !important; background: #ffffff; text-align: center; padding: 12px 10px; vertical-align: middle;">
+            <span class="company-name-text" style="color: #f37321; font-size: 13.5px; font-weight: 800; letter-spacing: -0.01em;">한화생명</span>
+          </td>
+          <td class="td-common text-left" style="text-align: left !important; padding: 12px 20px; font-size: 13px; line-height: 1.65; color: #1e293b; border: 1px solid var(--border-cell);">[상품]<br>O 가입조건(0세~35세)<br>* 건강: 영사모 든든건강플러스보험 5.10.5(바로보장형)<br>* 간편: 영사모 든든건강플러스보험 3.10.5(바로보장형)</td>
+        </tr>
+        <tr class="vert-table-row" data-row="vertRow-2">
+          <td class="col-label" style="width: 50px; min-width: 50px; max-width: 50px; text-align: center; font-weight: 700; background: #f8fafc; vertical-align: middle;">3</td>
+          <td class="td-common text-center" rowspan="2" style="width: 85px; min-width: 85px; max-width: 85px; text-align: center; font-weight: 700; background: #ffffff; vertical-align: middle; padding: 12px 6px; font-size: 13px; color: #1e293b; border: 1px solid var(--border-cell);">손해보험</td>
+          <td class="td-vert-comp" rowspan="2" style="width: 120px; min-width: 120px; max-width: 120px; border: 1px solid var(--border-cell) !important; background: #ffffff; text-align: center; padding: 12px 10px; vertical-align: middle;">
+            <span class="company-name-text" style="color: #003087; font-size: 13.5px; font-weight: 800; letter-spacing: -0.01em;">현대해상</span>
+          </td>
+          <td class="td-common text-left" style="text-align: left !important; padding: 12px 20px; font-size: 13px; line-height: 1.65; color: #1e293b; border: 1px solid var(--border-cell);">[상품]<br>O 가입조건(15세~40세)<br>* 건강: 굿앤굿1540(10-6년 건강고지, 표준체)<br>1. 당/타사 암진단 담보 2년이상 가입/무사고<br>2. 현대 2Q-PASS고객</td>
+        </tr>
+        <tr class="vert-table-row" data-row="vertRow-3">
+          <td class="col-label" style="width: 50px; min-width: 50px; max-width: 50px; text-align: center; font-weight: 700; background: #f8fafc; vertical-align: middle;">4</td>
+          <td class="td-common text-left" style="text-align: left !important; padding: 12px 20px; font-size: 13px; line-height: 1.65; color: #1e293b; border: 1px solid var(--border-cell);">[상품]<br>O 가입조건(15세~70세)<br>* 건강: 퍼펙트 플러스(10-6년 건강고지, 표준체)<br>1. 당/타사 암진단 담보 2년이상 가입/무사고<br>2. 현대 2Q-PASS고객<br>단, 유방암 제외</td>
+        </tr>
       </tbody>
     </table>
   </div>

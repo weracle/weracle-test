@@ -2,7 +2,17 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+ <meta name="viewport" id="prViewportMeta" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <script>
+    (function() {
+      var p = new URLSearchParams(window.location.search);
+      var isAdmin = p.get('edit') === 'true' || p.get('preview') === 'true' || ((window.self !== window.top) && window.innerWidth >= 650 && !p.has('camp') && !p.get('camp_id') && !p.get('utm_source') && !p.get('pr_id'));
+      if (!isAdmin && screen.width < 520) {
+        var vp = document.getElementById('prViewportMeta');
+        if (vp) vp.setAttribute('content', 'width=480, user-scalable=no');
+      }
+    })();
+  </script>
   <title>퍼스널 브랜딩 매거진 & 1:1 무료 맞춤 점검 신청</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -384,14 +394,16 @@
       gap: 8px;
     }
 
-  @media (max-width: 960px) {
-      .studio-workspace { flex-direction: column; align-items: center; padding: 14px !important; }
-      .pr-hub-panel, .easy-editor-panel { width: 480px; height: auto; max-height: none; margin-bottom: 20px; }
+@media (max-width: 960px) {
+      .studio-workspace { flex-direction: column; align-items: center; padding: 0 !important; }
+      body.can-edit-pr .studio-workspace,
+      body.is-editing .studio-workspace { padding: 14px !important; }
+      .pr-hub-panel, .easy-editor-panel { width: 480px; max-width: 100%; height: auto; max-height: none; margin-bottom: 20px; }
     }
 
     .magazine-wrapper {
-      width: 100%;
-      max-width: 480px;
+      width: 480px;
+      max-width: 100%;
       background: #ffffff;
       min-height: 100vh;
       position: relative;
@@ -399,6 +411,7 @@
       box-shadow: 0 22px 65px rgba(15, 23, 42, 0.18);
       padding-bottom: 68px;
       flex-shrink: 0;
+      margin: 0 auto;
     }
     body.is-editing .magazine-wrapper {
       border-radius: 26px;

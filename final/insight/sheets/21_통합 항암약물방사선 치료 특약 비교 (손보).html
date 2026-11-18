@@ -257,6 +257,56 @@
       font-weight: 600; 
       color: #334155; 
     }
+  
+    .hidden-comp-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #fee2e2;
+      color: #dc2626;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid #fecaca;
+    }
+    .hidden-comp-chip:hover {
+      background: #fca5a5;
+      color: #991b1b;
+    }
+    .row-hidden {
+      display: none !important;
+    }
+    .row-hide-btn {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+      opacity: 0.7;
+    }
+    .row-hide-btn .eye-slash-icon { display: none; }
+    .row-hide-btn:hover {
+      background: #fee2e2 !important;
+      color: #dc2626 !important;
+      opacity: 1;
+    }
+    .row-hide-btn:hover .eye-open-icon { display: none; }
+    .row-hide-btn:hover .eye-slash-icon { display: inline-block; }
+
   </style>
 </head>
 <body>
@@ -318,8 +368,12 @@
 
   <!-- 2. Clean Action Toolbar -->
   <div class="controls-bar" id="masterToolbar">
-    <div class="controls-left">
-      <button class="btn btn-outline" onclick="location.reload()">
+    <div class="controls-left" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <button class="btn btn-outline" id="restoreCompBtn" onclick="restoreAllCompanies()" style="display: none;">
+        <i class="fa-regular fa-eye"></i> 숨긴 회사 복원 (<span id="hiddenCompCount">0</span>)
+      </button>
+      <div id="hiddenCompanyChips" style="display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap;"></div>
+      <button class="btn btn-outline" onclick="resetAll()">
         <i class="fa-solid fa-arrows-rotate"></i> 전체 초기화
       </button>
     </div>
@@ -344,9 +398,15 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td style="width: 110px; min-width: 110px; max-width: 110px; background: #ffffff; text-align: center; vertical-align: middle; padding: 12px 10px;">
-            <span style="font-weight: 800; color: #dc2626; font-size: 13.5px; letter-spacing: -0.01em;">메리츠</span>
+        <tr class="vert-table-row" data-row="vertRow-1">
+          <td style="width: 110px; min-width: 110px; max-width: 110px; background: #ffffff; text-align: center; vertical-align: middle; padding: 12px 10px; position: relative;">
+            <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 20px;">
+              <span style="font-weight: 800; color: #dc2626; font-size: 13.5px; letter-spacing: -0.01em;">메리츠</span>
+              <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-1'], '메리츠')" title="메리츠 숨기기">
+                <i class="fa-regular fa-eye eye-open-icon"></i>
+                <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+              </button>
+            </div>
           </td>
           <td>26종항암방사선및약물 5천<br><span style="color:#2563eb; font-weight:700;">(최대 13억)</span></td>
           <td class="text-center font-bold">각 13개그룹</td>
@@ -354,9 +414,15 @@
           <td style="text-align: left; padding-left: 16px;">전 상품</td>
           <td class="text-center"><span class="status-tag tag-gray">개별조정불가</span></td>
         </tr>
-        <tr>
-          <td rowspan="2" style="width: 110px; min-width: 110px; max-width: 110px; background: #ffffff; text-align: center; vertical-align: middle; padding: 12px 10px;">
-            <span style="font-weight: 800; color: #db2777; font-size: 13.5px; letter-spacing: -0.01em;">흥국생명</span>
+        <tr class="vert-table-row" data-row="vertRow-2">
+          <td rowspan="2" style="width: 110px; min-width: 110px; max-width: 110px; background: #ffffff; text-align: center; vertical-align: middle; padding: 12px 10px; position: relative;">
+            <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 20px;">
+              <span style="font-weight: 800; color: #db2777; font-size: 13.5px; letter-spacing: -0.01em;">흥국생명</span>
+              <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-2', 'vertRow-3'], '흥국생명')" title="흥국생명 숨기기">
+                <i class="fa-regular fa-eye eye-open-icon"></i>
+                <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+              </button>
+            </div>
           </td>
           <td>통합항암약물방사선 1억<br><span style="color:#2563eb; font-weight:700;">(최대 10억)</span></td>
           <td class="text-center font-bold">10개그룹</td>
@@ -364,16 +430,22 @@
           <td style="text-align: left; padding-left: 16px;">다사랑, 다사랑3N5, 다재다능, 다재다능1540</td>
           <td class="text-center"><span class="status-tag tag-blue">개별조정가능</span></td>
         </tr>
-        <tr>
+        <tr class="vert-table-row" data-row="vertRow-3">
           <td>통합항암약물 6천<br>통합항암방사선 6천<br><span style="color:#2563eb; font-weight:700;">(최대 12억)</span></td>
           <td class="text-center font-bold">각 10개그룹</td>
           <td>15~80세 각 6천</td>
           <td style="text-align: left; padding-left: 16px;">다사랑3105, 31055, 오튼튼(비갱신만)</td>
           <td class="text-center">-</td>
         </tr>
-        <tr>
-          <td rowspan="2" style="width: 110px; min-width: 110px; max-width: 110px; background: #ffffff; text-align: center; vertical-align: middle; padding: 12px 10px;">
-            <span style="font-weight: 800; color: #0d9488; font-size: 13.5px; letter-spacing: -0.01em;">하나손보</span>
+        <tr class="vert-table-row" data-row="vertRow-4">
+          <td rowspan="2" style="width: 110px; min-width: 110px; max-width: 110px; background: #ffffff; text-align: center; vertical-align: middle; padding: 12px 10px; position: relative;">
+            <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 20px;">
+              <span style="font-weight: 800; color: #0d9488; font-size: 13.5px; letter-spacing: -0.01em;">하나손보</span>
+              <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-4', 'vertRow-5'], '하나손보')" title="하나손보 숨기기">
+                <i class="fa-regular fa-eye eye-open-icon"></i>
+                <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+              </button>
+            </div>
           </td>
           <td>통합항암약물방사선약물 3천<br><span style="color:#2563eb; font-weight:700;">(최대 4.5억)</span></td>
           <td class="text-center font-bold">9개그룹</td>
@@ -381,16 +453,22 @@
           <td style="text-align: left; padding-left: 16px;">하나더퍼스트 5N5 건강<br>하나더퍼스트 3N5 간편건강<br>하나더퍼스트 더건강 간편<br>하나더퍼스트 더건강</td>
           <td class="text-center"><span class="status-tag tag-gray">개별조정불가</span></td>
         </tr>
-        <tr>
+        <tr class="vert-table-row" data-row="vertRow-5">
           <td>상급종합(국립암센터, 서울원자력병원포함)<br>통합항암방사선약물 3천</td>
           <td class="text-center font-bold">9개그룹</td>
           <td>3천</td>
           <td style="text-align: left; padding-left: 16px;">-</td>
           <td class="text-center">-</td>
         </tr>
-        <tr>
-          <td style="width: 110px; min-width: 110px; max-width: 110px; background: #ffffff; text-align: center; vertical-align: middle; padding: 12px 10px;">
-            <span style="font-weight: 800; color: #db2777; font-size: 13.5px; letter-spacing: -0.01em;">흥국화재</span>
+        <tr class="vert-table-row" data-row="vertRow-6">
+          <td style="width: 110px; min-width: 110px; max-width: 110px; background: #ffffff; text-align: center; vertical-align: middle; padding: 12px 10px; position: relative;">
+            <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 20px;">
+              <span style="font-weight: 800; color: #db2777; font-size: 13.5px; letter-spacing: -0.01em;">흥국화재</span>
+              <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-6'], '흥국화재')" title="흥국화재 숨기기">
+                <i class="fa-regular fa-eye eye-open-icon"></i>
+                <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+              </button>
+            </div>
           </td>
           <td>신통합항암방사선약물 3천<br><span style="color:#2563eb; font-weight:700;">(최대 2.4억)</span></td>
           <td class="text-center font-bold">8개그룹</td>
@@ -398,9 +476,15 @@
           <td style="text-align: left; padding-left: 16px;">뉴키즈자녀, The건강한 0545/4565, 고당지3105, 3N5, 325암만생각해도, 더플러스종합</td>
           <td class="text-center"><span class="status-tag tag-gray">개별조정불가</span></td>
         </tr>
-        <tr>
-          <td style="width: 110px; min-width: 110px; max-width: 110px; background: #ffffff; text-align: center; vertical-align: middle; padding: 12px 10px;">
-            <span style="font-weight: 800; color: #002f6c; font-size: 13.5px; letter-spacing: -0.01em;">라이나 손보</span>
+        <tr class="vert-table-row" data-row="vertRow-7">
+          <td style="width: 110px; min-width: 110px; max-width: 110px; background: #ffffff; text-align: center; vertical-align: middle; padding: 12px 10px; position: relative;">
+            <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 20px;">
+              <span style="font-weight: 800; color: #002f6c; font-size: 13.5px; letter-spacing: -0.01em;">라이나 손보</span>
+              <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-7'], '라이나 손보')" title="라이나 손보 숨기기">
+                <i class="fa-regular fa-eye eye-open-icon"></i>
+                <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+              </button>
+            </div>
           </td>
           <td>통합항암방사선약물 3천<br><span style="color:#2563eb; font-weight:700;">(최대 3억)</span></td>
           <td class="text-center font-bold">10개그룹</td>
@@ -429,5 +513,68 @@
     });
   }
 </script>
+
+<script>
+  const hiddenCompanies = new Map();
+
+  function hideCompanyRow(e, rowKeys, compName) {
+    if (e) e.stopPropagation();
+    const keys = Array.isArray(rowKeys) ? rowKeys : [rowKeys];
+    hiddenCompanies.set(compName, keys);
+    keys.forEach(k => {
+      const rows = document.querySelectorAll('[data-row="' + k + '"]');
+      rows.forEach(r => r.classList.add('row-hidden'));
+    });
+    updateHiddenCompanyUI();
+  }
+
+  function restoreCompany(compName) {
+    const keys = hiddenCompanies.get(compName);
+    if (keys) {
+      keys.forEach(k => {
+        const rows = document.querySelectorAll('[data-row="' + k + '"]');
+        rows.forEach(r => r.classList.remove('row-hidden'));
+      });
+      hiddenCompanies.delete(compName);
+    }
+    updateHiddenCompanyUI();
+  }
+
+  function restoreAllCompanies() {
+    hiddenCompanies.forEach((keys, compName) => {
+      keys.forEach(k => {
+        const rows = document.querySelectorAll('[data-row="' + k + '"]');
+        rows.forEach(r => r.classList.remove('row-hidden'));
+      });
+    });
+    hiddenCompanies.clear();
+    updateHiddenCompanyUI();
+  }
+
+  function updateHiddenCompanyUI() {
+    const countEl = document.getElementById('hiddenCompCount');
+    if (countEl) countEl.innerText = hiddenCompanies.size;
+    const btn = document.getElementById('restoreCompBtn');
+    if (btn) btn.style.display = hiddenCompanies.size > 0 ? 'inline-flex' : 'none';
+
+    const chipsContainer = document.getElementById('hiddenCompanyChips');
+    if (chipsContainer) {
+      chipsContainer.innerHTML = '';
+      hiddenCompanies.forEach((keys, compName) => {
+        const chip = document.createElement('span');
+        chip.className = 'hidden-comp-chip';
+        chip.title = compName + ' 복원하기';
+        chip.innerHTML = compName + ' <i class="fa-solid fa-xmark"></i>';
+        chip.onclick = () => restoreCompany(compName);
+        chipsContainer.appendChild(chip);
+      });
+    }
+  }
+
+  function resetAll() {
+    restoreAllCompanies();
+  }
+</script>
+
 </body>
 </html>

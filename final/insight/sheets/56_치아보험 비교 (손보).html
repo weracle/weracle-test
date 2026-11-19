@@ -1203,7 +1203,13 @@
           </tr>
 <tr class="vert-table-row" data-row="row-0">
             <td rowspan="2" class="col-label text-center font-bold" style="width: 40px; min-width: 40px; max-width: 40px; text-align: center; font-weight: 700; background: #f8fafc; vertical-align: middle;">1</td>
-            <td rowspan="2" style="padding: 10px 8px; border-right: 1px solid #e2e8f0; font-weight: 800; font-size: 13px; color: #1e293b; text-align: center;">라이나<br>손보</td>
+            <td rowspan="2" class="td-vert-comp" style="width: 120px; min-width: 120px; max-width: 120px; text-align: center; vertical-align: middle; padding: 10px 28px 10px 8px; border: 1px solid var(--border-cell); background: #ffffff; position: relative;">
+              <span class="company-name-text" style="color: #005596; font-size: 13.5px; font-weight: 800; letter-spacing: -0.01em;">라이나손보</span>
+              <button class="row-hide-btn" onclick="hideCompanyRow(event, ['row-0', 'row-1'], '라이나손보')" title="라이나손보 숨기기" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%);">
+                <i class="fa-regular fa-eye eye-open-icon"></i>
+                <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+              </button>
+            </td>
             <td rowspan="2" style="padding: 10px 8px; font-weight: 600; color: #1e293b; border-right: 1px solid #e2e8f0;">더핏 THE 든든한 치아보험</td>
             <td style="padding: 8px 6px; font-size: 11.5px; text-align: center; border-right: 1px solid #e2e8f0;">1종: 1-69세<br>(갱신형)</td>
             <td style="padding: 8px 6px; font-size: 11.5px; text-align: center; border-right: 1px solid #e2e8f0;">10년만기</td>
@@ -1379,3 +1385,49 @@
     </div>
   </div>
 
+<script>
+  const hiddenCompanies = new Map();
+
+  function hideCompanyRow(e, rowKeys, compName) {
+    if (e) e.stopPropagation();
+    const keys = Array.isArray(rowKeys) ? rowKeys : [rowKeys];
+    hiddenCompanies.set(compName, keys);
+    keys.forEach(k => {
+      const rows = document.querySelectorAll('[data-row="' + k + '"]');
+      rows.forEach(r => r.classList.add('row-hidden'));
+    });
+    updateHiddenCounts();
+  }
+
+  function restoreAllCompanies() {
+    hiddenCompanies.forEach((keys, compName) => {
+      keys.forEach(k => {
+        const rows = document.querySelectorAll('[data-row="' + k + '"]');
+        rows.forEach(r => r.classList.remove('row-hidden'));
+      });
+    });
+    hiddenCompanies.clear();
+    updateHiddenCounts();
+  }
+
+  function resetAll() {
+    restoreAllCompanies();
+  }
+
+  function updateHiddenCounts() {
+    const el = document.getElementById('hiddenCompCount');
+    if (el) el.innerText = hiddenCompanies.size;
+  }
+
+  function saveImage() {
+    const target = document.getElementById('captureArea');
+    html2canvas(target, { scale: 2 }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = document.title.split('|')[0].trim() + '.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+  }
+</script>
+</body>
+</html>

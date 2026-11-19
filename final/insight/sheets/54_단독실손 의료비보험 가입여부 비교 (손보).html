@@ -325,98 +325,47 @@
       color: var(--text-muted);
       font-size: 11.5px;
     }
-  
-    .row-hide-btn {
-      position: absolute;
-      right: 5px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 18px;
-      height: 18px;
-      background: transparent;
-      border: none;
-      color: #94a3b8;
-      font-size: 11px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-      transition: all 0.15s ease;
-      opacity: 0.7;
-    }
-    .row-hide-btn:hover {
-      color: #0d9488;
-      background: #e6fffa;
-      opacity: 1;
-    }
-    .row-hide-btn .eye-slash-icon { display: none; }
-    .row-hide-btn:hover .eye-open-icon { display: none; }
-    .row-hide-btn:hover .eye-slash-icon { display: inline-block; }
-    .row-hidden { display: none !important; }
-
-    .col-hide-btn {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 18px;
-      height: 18px;
-      background: transparent;
-      border: none;
-      color: #94a3b8;
-      font-size: 11px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-      transition: all 0.15s ease;
-      opacity: 0.7;
-    }
-    .col-hide-btn:hover {
-      color: #0d9488;
-      background: #e6fffa;
-      opacity: 1;
-    }
-    .col-hide-btn .eye-slash-icon { display: none; }
-    .col-hide-btn:hover .eye-open-icon { display: none; }
-    .col-hide-btn:hover .eye-slash-icon { display: inline-block; }
-    .col-hidden { display: none !important; }
-
   </style>
 </head>
 <body>
 
 <div class="main-container" id="captureArea">
   
-  <header class="top-header" style="margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; position: relative;">
-    <div class="brand-row" style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-      <span class="badge-brand" style="background: #0f766e; color: #fff; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.05em;">WERACLE INSIGHT</span>
-      <span class="brand-title" style="font-size: 13px; font-weight: 700; color: #64748b;">위라클 한장비교표</span>
-    </div>
-    <div class="header-main" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px;">
-      <div>
-        <h1 class="header-title" style="font-size: 22px; font-weight: 900; color: #0f172a; letter-spacing: -0.02em;">단독실손 의료비보험 가입여부 비교 (생보 / 손보 전수 비교)</h1>
-        <p class="header-subtitle" style="font-size: 13px; color: #64748b; margin-top: 4px;">생명보험사 19개사 및 손해보험사 13개사 인수조건 및 방문진단(방진) 여부 전수 비교</p>
+  <!-- 1. Header Area -->
+  <div class="wrc-premium-header">
+    <div class="wrc-header-top">
+      <div class="brand-logo-area">
+        <span class="logo-badge">WERACLE INSIGHT</span>
+        <span class="brand-title">위라클 <span style="font-weight:400; color:#64748b;">한장비교표</span></span>
+      </div>
+      <div class="criteria-badge">
+        <i class="fa-regular fa-calendar-check"></i> 기준일: 2026.11.01
       </div>
     </div>
-  </header>
-  <div class="controls-bar" id="masterToolbar">
-    <div class="controls-left">
-      <button class="btn btn-outline" onclick="restoreAllCompanies()">
-        <i class="fa-regular fa-eye"></i> 숨긴 회사 복원 (<span id="hiddenCompCount">0</span>)
-      </button>
-      <button class="btn btn-outline" onclick="resetAll()">
-        <i class="fa-solid fa-arrows-rotate"></i> 전체 초기화
-      </button>
-    </div>
-    <div class="controls-right">
-      <button class="btn btn-primary" onclick="saveImage()">
-        <i class="fa-solid fa-camera"></i> 화면 캡처 저장
-      </button>
+    <div class="sheet-title-area">
+      <h1 class="wrc-main-title">
+        단독실손 의료비보험 가입여부 비교 (생보 / 손보 전수 비교)
+      </h1>
+<div class="excel-meta-tag" style="display:none;">손보사</div>
+<div class="excel-meta-tag" style="display:none;">생보사</div>
     </div>
   </div>
-<div class="table-viewport-wrapper">
+
+  <!-- 2. Interactive Toolbar -->
+  <div class="interactive-toolbar">
+    <div class="tool-group-left">
+      <span class="tool-chip"><i class="fa-solid fa-heart-pulse" style="color:#2563eb;"></i> 생명보험사 19개사</span>
+      <span class="tool-chip"><i class="fa-solid fa-shield-halved" style="color:#059669;"></i> 손해보험사 13개사</span>
+      <span class="tool-chip" style="background:#fef2f2; color:#b91c1c; border-color:#fecaca;"><i class="fa-solid fa-circle-exclamation"></i> 인수조건 및 방진여부 전수 수록</span>
+    </div>
+    <div class="tool-group-right">
+      <button class="action-btn" onclick="window.print()"><i class="fa-solid fa-print"></i> 인쇄</button>
+      <button class="action-btn btn-primary" onclick="saveImage()"><i class="fa-solid fa-camera"></i> 화면 캡처 저장</button>
+    </div>
+  </div>
+
+  <!-- 3. Table Viewport -->
+  <div class="table-viewport-wrapper">
     <table class="s54-table" id="standardMasterTable">
       <thead>
         <tr>
@@ -444,41 +393,40 @@
         </tr>
       </thead>
       <tbody>
-        <!-- Row 1 -->
-        <tr class="vert-table-row" data-row="vertRow-0">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">1
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-0'], '행 1')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #f37321; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">한화생명</span>
-    </td>
+        <tr class="vert-table-row" data-row="row-0">
+          <td class="col-no">1</td>
+          <td class="td-vert-comp" style="background:#ffffff; width: 140px; text-align: center; vertical-align: middle; padding: 8px 30px 8px 8px; position: relative;">
+        <span class="company-name-text" style="color: #f37321; font-weight: 800; font-size: 13px;">한화생명</span>
+        <button class="row-hide-btn" onclick="hideCompanyRow(event, 'row-0', '한화생명')" title="한화생명 숨기기" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%);">
+          <i class="fa-regular fa-eye eye-open-icon"></i>
+          <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+        </button>
+      </td>
           <td class="text-center"><span class="status-pill pill-green">가능</span></td>
           <td class="text-center">건강체</td>
           <td class="text-center">0-49세</td>
           <td class="text-left col-life-divide" style="font-size:12px; line-height:1.4;">건강진단 실시후<br>결과에 따라 인수여부 결정<br><span style="color:#64748b; font-size:11px;">(20세미만 제외)</span></td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #1e293b; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">NH손보</span>
-    </td>
+          <td class="td-vert-comp" style="background:#ffffff; width: 140px; text-align: center; vertical-align: middle; padding: 8px 30px 8px 8px; position: relative;">
+          <span class="company-name-text" style="color: #008850; font-weight: 800; font-size: 13px;">NH손보</span>
+          <button class="row-hide-btn" onclick="hideCompanyRow(event, 'row-0', 'NH손보')" title="NH손보 숨기기" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%);">
+            <i class="fa-regular fa-eye eye-open-icon"></i>
+            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+          </button>
+        </td>
           <td class="text-center"><span class="status-pill pill-green">가능</span></td>
           <td class="text-center" style="font-size:12px;">건강체<br>유병자</td>
           <td class="text-center" style="font-size:11.5px; line-height:1.35;">(건강) 0-65세<br>(간편) 15-90세</td>
           <td class="text-left" style="font-size:11.5px; line-height:1.35;">방진필수 <span style="color:#b91c1c;">(유병자 방진X)</span><br><span style="color:#64748b;">20세미만 대용서류로만 가능</span></td>
         </tr>
-
-        <!-- Row 2 -->
-        <tr class="vert-table-row" data-row="vertRow-1">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">2
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-1'], '행 2')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #1e293b; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">NH생명</span>
-    </td>
+        <tr class="vert-table-row" data-row="row-1">
+          <td class="col-no">2</td>
+          <td class="td-vert-comp" style="background:#ffffff; width: 140px; text-align: center; vertical-align: middle; padding: 8px 30px 8px 8px; position: relative;">
+        <span class="company-name-text" style="color: #002f6c; font-weight: 800; font-size: 13px;">NH생명</span>
+        <button class="row-hide-btn" onclick="hideCompanyRow(event, 'row-1', 'NH생명')" title="NH생명 숨기기" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%);">
+          <i class="fa-regular fa-eye eye-open-icon"></i>
+          <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+        </button>
+      </td>
           <td class="text-center"><span class="status-pill pill-green">가능</span></td>
           <td class="text-center">-</td>
           <td class="text-center">0-65세</td>
@@ -489,243 +437,231 @@
           <td class="text-center" style="color:#94a3b8;">-</td>
           <td class="text-center" style="color:#94a3b8;">-</td>
         </tr>
-
-        <!-- Row 3 -->
-        <tr class="vert-table-row" data-row="vertRow-2">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">3
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-2'], '행 3')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #005596; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">삼성생명</span>
-    </td>
+        <tr class="vert-table-row" data-row="row-2">
+          <td class="col-no">3</td>
+          <td class="td-vert-comp" style="background:#ffffff; width: 140px; text-align: center; vertical-align: middle; padding: 8px 30px 8px 8px; position: relative;">
+        <span class="company-name-text" style="color: #034ea2; font-weight: 800; font-size: 13px;">삼성생명</span>
+        <button class="row-hide-btn" onclick="hideCompanyRow(event, 'row-2', '삼성생명')" title="삼성생명 숨기기" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%);">
+          <i class="fa-regular fa-eye eye-open-icon"></i>
+          <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+        </button>
+      </td>
           <td class="text-center"><span class="status-pill pill-green">가능</span></td>
           <td class="text-center" style="font-size:12px;">건강체<br>유병자</td>
           <td class="text-center" style="font-size:11.5px; line-height:1.35;">(건강) 0-60세<br>(간편) 5-90세</td>
           <td class="text-left col-life-divide" style="font-size:12px; line-height:1.4;">방진 또는 전화<br>건강검진 서류제출<br><span style="color:#64748b; font-size:11px;">(20세미만 제외)</span></td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #ed1c24; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">롯데손보</span>
-    </td>
+          <td class="td-vert-comp" style="background:#ffffff; width: 140px; text-align: center; vertical-align: middle; padding: 8px 30px 8px 8px; position: relative;">
+          <span class="company-name-text" style="color: #ed1c24; font-weight: 800; font-size: 13px;">롯데손보</span>
+          <button class="row-hide-btn" onclick="hideCompanyRow(event, 'row-2', '롯데손보')" title="롯데손보 숨기기" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%);">
+            <i class="fa-regular fa-eye eye-open-icon"></i>
+            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+          </button>
+        </td>
           <td class="text-center"><span class="status-pill pill-green">가능</span></td>
           <td class="text-center" style="font-size:12px;">건강체<br>유병자</td>
           <td class="text-center" style="font-size:11.5px; line-height:1.35;">(건강) 0-65세<br>(간편) 15-90세</td>
           <td class="text-left" style="font-size:11.5px; line-height:1.35;">(건강체) 21세부터 방진필수<br><span style="color:#059669; font-weight:700;">(유병자) 방진X</span></td>
         </tr>
-
-        <!-- Row 4 -->
-        <tr class="vert-table-row" data-row="vertRow-3">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">4
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-3'], '행 4')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #0284c7; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">교보생명</span>
-    </td>
+        <tr class="vert-table-row" data-row="row-3">
+          <td class="col-no">4</td>
+          <td class="td-vert-comp" style="background:#ffffff; width: 140px; text-align: center; vertical-align: middle; padding: 8px 30px 8px 8px; position: relative;">
+        <span class="company-name-text" style="color: #e11d48; font-weight: 800; font-size: 13px;">교보생명</span>
+        <button class="row-hide-btn" onclick="hideCompanyRow(event, 'row-3', '교보생명')" title="교보생명 숨기기" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%);">
+          <i class="fa-regular fa-eye eye-open-icon"></i>
+          <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+        </button>
+      </td>
           <td rowspan="2" class="text-center" style="background:#fef2f2;"><span class="status-pill pill-red">단독가입불가</span></td>
           <td rowspan="2" class="text-center" style="color:#94a3b8;">-</td>
           <td rowspan="2" class="text-center" style="color:#94a3b8;">-</td>
           <td rowspan="2" class="text-center col-life-divide" style="color:#94a3b8;">-</td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #1e293b; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">KB손해</span>
-    </td>
+          <td class="td-vert-comp" style="background:#ffffff; width: 140px; text-align: center; vertical-align: middle; padding: 8px 30px 8px 8px; position: relative;">
+          <span class="company-name-text" style="color: #d97706; font-weight: 800; font-size: 13px;">KB손해</span>
+          <button class="row-hide-btn" onclick="hideCompanyRow(event, 'row-3', 'KB손해')" title="KB손해 숨기기" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%);">
+            <i class="fa-regular fa-eye eye-open-icon"></i>
+            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+          </button>
+        </td>
           <td rowspan="7" class="text-center" style="background:#fef2f2; vertical-align:middle;"><span class="status-pill pill-red">단독가입불가</span></td>
           <td rowspan="7" class="text-center" style="color:#94a3b8; vertical-align:middle;">-</td>
           <td rowspan="7" class="text-center" style="color:#94a3b8; vertical-align:middle;">-</td>
           <td rowspan="7" class="text-center" style="color:#94a3b8; vertical-align:middle;">-</td>
         </tr>
-
-        <!-- Row 5 -->
-        <tr class="vert-table-row" data-row="vertRow-4">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">5
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-4'], '행 5')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #db2777; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">흥국생명</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">5</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #d6006e; font-size: 13px;">흥국생명</span>
+    </div>
+  </td>
           <!-- rowspan cells for life cols 2,3,4,5 from Row 4 -->
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #1e293b; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">한화손해</span>
-    </td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #f37321; font-size: 13px;">한화손해</span>
+    </div>
+  </td>
         </tr>
-
-        <!-- Row 6 -->
-        <tr class="vert-table-row" data-row="vertRow-5">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">6
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-5'], '행 6')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #9333ea; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">동양생명</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">6</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #ff6a00; font-size: 13px;">동양생명</span>
+    </div>
+  </td>
           <td rowspan="2" class="text-center" style="background:#fffbeb;"><span class="status-pill pill-amber">전환실손만 가능</span></td>
           <td rowspan="2" class="text-center" style="color:#94a3b8;">-</td>
           <td rowspan="2" class="text-center" style="color:#94a3b8;">-</td>
           <td rowspan="2" class="text-center col-life-divide" style="color:#94a3b8;">-</td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #ef3b24; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">메리츠</span>
-    </td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #dc2626; font-size: 13px;">메리츠</span>
+    </div>
+  </td>
         </tr>
-
-        <!-- Row 7 -->
-        <tr class="vert-table-row" data-row="vertRow-6">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">7
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-6'], '행 7')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #ff9e1b; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">KB라이프</span>
-    </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #008a38; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">DB손보</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">7</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #ffb800; font-size: 13px;">KB라이프</span>
+    </div>
+  </td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #00843d; font-size: 13px;">DB손보</span>
+    </div>
+  </td>
         </tr>
-
-        <!-- Row 8 -->
-        <tr class="vert-table-row" data-row="vertRow-7">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">8
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-7'], '행 8')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #00a0e9; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">푸본현대</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">8</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #008cd6; font-size: 13px;">푸본현대</span>
+    </div>
+  </td>
           <td rowspan="12" class="text-center" style="background:#f8fafc; vertical-align:middle;"><span class="status-pill pill-gray">실손 판매안함</span></td>
           <td rowspan="12" class="text-center" style="color:#94a3b8; vertical-align:middle;">-</td>
           <td rowspan="12" class="text-center" style="color:#94a3b8; vertical-align:middle;">-</td>
           <td rowspan="12" class="text-center col-life-divide" style="color:#94a3b8; vertical-align:middle;">-</td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #003087; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">현대해상</span>
-    </td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #ff6700; font-size: 13px;">현대해상</span>
+    </div>
+  </td>
         </tr>
-
-        <!-- Row 9 -->
-        <tr class="vert-table-row" data-row="vertRow-8">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">9
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-8'], '행 9')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #0046ff; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">신한라이프</span>
-    </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #db2777; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">흥국화재</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">9</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #0046ff; font-size: 13px;">신한라이프</span>
+    </div>
+  </td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #d6006e; font-size: 13px;">흥국화재</span>
+    </div>
+  </td>
         </tr>
-
-        <!-- Row 10 -->
-        <tr class="vert-table-row" data-row="vertRow-9">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">10
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-9'], '행 10')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #008a38; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">DB생명</span>
-    </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #034ea2; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">삼성화재</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">10</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #00843d; font-size: 13px;">DB생명</span>
+    </div>
+  </td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #004b99; font-size: 13px;">삼성화재</span>
+    </div>
+  </td>
         </tr>
-
-        <!-- Row 11 -->
-        <tr class="vert-table-row" data-row="vertRow-10">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">11
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-10'], '행 11')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #003087; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">미래에셋</span>
-    </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #1e293b; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">예별손보</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">11</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #ff5000; font-size: 13px;">미래에셋</span>
+    </div>
+  </td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #1e40af; font-size: 13px;">예별손보</span>
+    </div>
+  </td>
           <td class="text-center" style="background:#fef2f2;"><span class="status-pill pill-red">신규가입 불가</span></td>
           <td class="text-center" style="color:#94a3b8;">-</td>
           <td class="text-center" style="color:#94a3b8;">-</td>
           <td class="text-center" style="color:#94a3b8;">-</td>
         </tr>
-
-        <!-- Row 12 -->
-        <tr class="vert-table-row" data-row="vertRow-11">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">12
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-11'], '행 12')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #005596; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">라이나생명</span>
-    </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #008485; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">하나손보</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">12</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #002f6c; font-size: 13px;">라이나생명</span>
+    </div>
+  </td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #008485; font-size: 13px;">하나손보</span>
+    </div>
+  </td>
           <td rowspan="3" class="text-center" style="background:#f8fafc; vertical-align:middle;"><span class="status-pill pill-gray">실손 판매안함</span></td>
           <td rowspan="3" class="text-center" style="color:#94a3b8; vertical-align:middle;">-</td>
           <td rowspan="3" class="text-center" style="color:#94a3b8; vertical-align:middle;">-</td>
           <td rowspan="3" class="text-center" style="color:#94a3b8; vertical-align:middle;">-</td>
         </tr>
-
-        <!-- Row 13 -->
-        <tr class="vert-table-row" data-row="vertRow-12">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">13
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-12'], '행 13')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #0284c7; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">KDB생명</span>
-    </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #005596; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">라이나손보</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">13</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #003666; font-size: 13px;">KDB생명</span>
+    </div>
+  </td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #002f6c; font-size: 13px;">라이나손보</span>
+    </div>
+  </td>
         </tr>
-
-        <!-- Row 14 -->
-        <tr class="vert-table-row" data-row="vertRow-13">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">14
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-13'], '행 14')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #e11d48; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">ABL생명</span>
-    </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #1e293b; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">AIG손보</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">14</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #d6001c; font-size: 13px;">ABL생명</span>
+    </div>
+  </td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #003666; font-size: 13px;">AIG손보</span>
+    </div>
+  </td>
         </tr>
-
-        <!-- Row 15 -->
-        <tr class="vert-table-row" data-row="vertRow-14">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">15
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-14'], '행 15')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #0090da; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">메트라이프</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">15</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #0090da; font-size: 13px;">메트라이프</span>
+    </div>
+  </td>
           <td colspan="5" class="text-center" style="background:#fffbeb; padding:10px;">
             <div style="display:inline-flex; align-items:center; gap:8px;">
               <span class="status-pill pill-amber"><i class="fa-solid fa-circle-info"></i> * 삼성생명</span>
@@ -733,60 +669,44 @@
             </div>
           </td>
         </tr>
-
-        <!-- Row 16 -->
-        <tr class="vert-table-row" data-row="vertRow-15">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">16
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-15'], '행 16')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #0072ce; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">iM라이프</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">16</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #007bc3; font-size: 13px;">iM라이프</span>
+    </div>
+  </td>
           <td colspan="5" rowspan="4" style="background:#f8fafc; text-align:center; color:#94a3b8; vertical-align:middle;">
             (해당 없음)
           </td>
         </tr>
-
-        <!-- Row 17 -->
-        <tr class="vert-table-row" data-row="vertRow-16">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">17
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-16'], '행 17')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #1e293b; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">처브라이프</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">17</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #00a3e0; font-size: 13px;">처브라이프</span>
+    </div>
+  </td>
         </tr>
-
-        <!-- Row 18 -->
-        <tr class="vert-table-row" data-row="vertRow-17">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">18
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-17'], '행 18')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #008485; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">하나생명</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">18</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #008485; font-size: 13px;">하나생명</span>
+    </div>
+  </td>
         </tr>
-
-        <!-- Row 19 -->
-        <tr class="vert-table-row" data-row="vertRow-18">
-          <td class="col-no" style="width: 36px; min-width: 36px; max-width: 36px; text-align: center; font-size: 11.5px; position: relative;">19
-          <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-18'], '행 19')" title="행 숨기기" style="right: 2px;">
-            <i class="fa-regular fa-eye eye-open-icon"></i>
-            <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
-          </button>
-        </td>
-          <td class="td-vert-comp" style="width: 100px; min-width: 100px; max-width: 100px; text-align: center; vertical-align: middle; padding: 8px 4px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
-      <span class="company-name-text" style="color: #1e293b; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">IBK연금보험</span>
-    </td>
+<tr class="row-hover">
+          <td class="col-no">19</td>
+          <td style="background:#ffffff;">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 2px 4px;">
+      
+      <span style="font-weight: 700; color: #004b99; font-size: 13px;">IBK연금보험</span>
+    </div>
+  </td>
         </tr>
       </tbody>
     </table>
@@ -799,6 +719,19 @@
     </div>
   </div>
 </div>
+
+<script>
+  function saveImage() {
+    const target = document.getElementById('captureArea');
+    html2canvas(target, { scale: 2 }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = '54_단독실손_의료비보험_가입여부_비교.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+</script>
+
 
 <script>
   const hiddenCompanies = new Map();
@@ -814,65 +747,33 @@
     updateHiddenCounts();
   }
 
-  function hideCompanyCol(e, compName) {
-    if (e) e.stopPropagation();
-    hiddenCompanies.set(compName, true);
-    document.querySelectorAll('[data-comp="' + compName + '"]').forEach(el => {
-      el.classList.add('col-hidden');
-    });
-    updateHiddenCounts();
-  }
-
   function restoreAllCompanies() {
-    hiddenCompanies.forEach((val, compName) => {
-      if (Array.isArray(val)) {
-        val.forEach(k => {
-          const rows = document.querySelectorAll('[data-row="' + k + '"]');
-          rows.forEach(r => r.classList.remove('row-hidden'));
-        });
-      } else {
-        document.querySelectorAll('[data-comp="' + compName + '"]').forEach(el => {
-          el.classList.remove('col-hidden');
-        });
-      }
+    hiddenCompanies.forEach((keys, compName) => {
+      keys.forEach(k => {
+        const rows = document.querySelectorAll('[data-row="' + k + '"]');
+        rows.forEach(r => r.classList.remove('row-hidden'));
+      });
     });
     hiddenCompanies.clear();
     updateHiddenCounts();
-  }
-
-  function updateHiddenCounts() {
-    const compCount = document.getElementById('hiddenCompCount');
-    if (compCount) compCount.innerText = hiddenCompanies.size;
   }
 
   function resetAll() {
     restoreAllCompanies();
   }
 
-  function saveImage() {
-    const target = document.getElementById('captureArea') || document.body;
-    const btn = event.currentTarget;
-    const origText = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장중...';
-    btn.disabled = true;
+  function updateHiddenCounts() {
+    const el = document.getElementById('hiddenCompCount');
+    if (el) el.innerText = hiddenCompanies.size;
+  }
 
-    html2canvas(target, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false
-    }).then(canvas => {
+  function saveImage() {
+    const target = document.getElementById('captureArea');
+    html2canvas(target, { scale: 2 }).then(canvas => {
       const link = document.createElement('a');
-      link.download = document.title.split('|')[0].trim() + '.png';
-      link.href = canvas.toDataURL('image/png');
+      link.download = '54_단독실손 의료비보험 가입여부 비교 (손보/생보).png';
+      link.href = canvas.toDataURL();
       link.click();
-      btn.innerHTML = origText;
-      btn.disabled = false;
-    }).catch(err => {
-      console.error(err);
-      alert('이미지 저장 중 오류가 발생했습니다.');
-      btn.innerHTML = origText;
-      btn.disabled = false;
     });
   }
 </script>

@@ -1789,4 +1789,92 @@
       </tr>
       </tbody>
     </table>
-  
+
+<script>
+  const hiddenComps = new Set();
+  const hiddenRows = new Set();
+
+  function hideCompany(e, compIdx) {
+    if (e) e.stopPropagation();
+    hiddenComps.add(compIdx);
+    const cells = document.querySelectorAll('[data-comp="' + compIdx + '"]');
+    cells.forEach(c => c.classList.add('comp-hidden'));
+    updateHiddenCounts();
+  }
+
+  function hideCompanyCol(e, compName) {
+    if (e) e.stopPropagation();
+    hiddenComps.add(compName);
+    const cells = document.querySelectorAll('[data-comp="' + compName + '"]');
+    cells.forEach(c => c.classList.add('comp-hidden'));
+    updateHiddenCounts();
+  }
+
+  function restoreAllCompanies() {
+    hiddenComps.clear();
+    const hiddenEls = document.querySelectorAll('.comp-hidden');
+    hiddenEls.forEach(c => c.classList.remove('comp-hidden'));
+    updateHiddenCounts();
+  }
+
+  function hideRow(e, rowKey) {
+    if (e) e.stopPropagation();
+    const keys = Array.isArray(rowKey) ? rowKey : [rowKey];
+    keys.forEach(k => {
+      hiddenRows.add(k);
+      const rows = document.querySelectorAll('[data-row="' + k + '"]');
+      rows.forEach(r => r.classList.add('row-hidden'));
+    });
+    updateHiddenCounts();
+  }
+
+  function restoreAllRows() {
+    hiddenRows.clear();
+    const hiddenRowEls = document.querySelectorAll('.row-hidden');
+    hiddenRowEls.forEach(r => r.classList.remove('row-hidden'));
+    updateHiddenCounts();
+  }
+
+  function resetAll() {
+    restoreAllCompanies();
+    restoreAllRows();
+  }
+
+  function updateHiddenCounts() {
+    const elC = document.getElementById('hiddenCompCount');
+    if (elC) elC.innerText = hiddenComps.size;
+    const elR = document.getElementById('hiddenRowCount');
+    if (elR) elR.innerText = hiddenRows.size;
+  }
+
+  // Setup column hover across all tables
+  document.querySelectorAll('table').forEach(table => {
+    table.addEventListener('mouseover', function(e) {
+      const target = e.target.closest('[data-comp]');
+      if (!target) return;
+      const compVal = target.getAttribute('data-comp');
+      const cells = document.querySelectorAll('[data-comp="' + compVal + '"]');
+      cells.forEach(c => c.classList.add('col-hover-active'));
+    });
+
+    table.addEventListener('mouseout', function(e) {
+      const target = e.target.closest('[data-comp]');
+      if (!target) return;
+      const compVal = target.getAttribute('data-comp');
+      const cells = document.querySelectorAll('[data-comp="' + compVal + '"]');
+      cells.forEach(c => c.classList.remove('col-hover-active'));
+    });
+  });
+
+  function saveImage() {
+    const target = document.getElementById('captureArea');
+    html2canvas(target, { scale: 2 }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = document.title.split('|')[0].trim() + '.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+  }
+</script>
+</body>
+</html>

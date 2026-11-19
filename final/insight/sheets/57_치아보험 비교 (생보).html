@@ -1396,3 +1396,49 @@
     </div>
   </div>
 
+<script>
+  const hiddenCompanies = new Map();
+
+  function hideCompanyRow(e, rowKeys, compName) {
+    if (e) e.stopPropagation();
+    const keys = Array.isArray(rowKeys) ? rowKeys : [rowKeys];
+    hiddenCompanies.set(compName, keys);
+    keys.forEach(k => {
+      const rows = document.querySelectorAll('[data-row="' + k + '"]');
+      rows.forEach(r => r.classList.add('row-hidden'));
+    });
+    updateHiddenCounts();
+  }
+
+  function restoreAllCompanies() {
+    hiddenCompanies.forEach((keys, compName) => {
+      keys.forEach(k => {
+        const rows = document.querySelectorAll('[data-row="' + k + '"]');
+        rows.forEach(r => r.classList.remove('row-hidden'));
+      });
+    });
+    hiddenCompanies.clear();
+    updateHiddenCounts();
+  }
+
+  function resetAll() {
+    restoreAllCompanies();
+  }
+
+  function updateHiddenCounts() {
+    const el = document.getElementById('hiddenCompCount');
+    if (el) el.innerText = hiddenCompanies.size;
+  }
+
+  function saveImage() {
+    const target = document.getElementById('captureArea');
+    html2canvas(target, { scale: 2 }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = document.title.split('|')[0].trim() + '.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+  }
+</script>
+</body>
+</html>

@@ -99,7 +99,34 @@
     .row-hide-btn:hover { color: #dc2626; }
     .row-hidden { display: none !important; }
 
-</style>
+
+    .row-hide-btn .eye-slash-icon { display: none !important; }
+    .row-hide-btn:hover .eye-open-icon { display: none !important; }
+    .row-hide-btn:hover .eye-slash-icon { display: inline-block !important; }
+    
+    .hidden-comp-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #fee2e2;
+      color: #dc2626;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid #fecaca;
+    }
+    .hidden-comp-chip:hover {
+      background: #fca5a5;
+      color: #991b1b;
+    }
+    .row-hidden {
+      display: none !important;
+    }
+
+  </style>
 </head>
 <body>
 <div class="main-container" id="captureArea">
@@ -117,28 +144,45 @@
     </div>
 
     <div class="wrc-three-col-section">
-      <div class="wrc-info-card-mini">
-        <div class="wrc-card-icon-mini"><i class="fas fa-calendar-check"></i></div>
-        <div class="wrc-card-text-mini">
-          <div class="wrc-card-label-mini">기준일</div>
-          <div class="wrc-card-value-mini">2026.11.01 (최신)</div>
+      <div class="wrc-summary-grid-2x2">
+        <div class="wrc-info-card-mini">
+          <div class="wrc-card-icon-mini"><i class="fas fa-calendar-check"></i></div>
+          <div class="wrc-card-text-mini">
+            <div class="wrc-card-label-mini">기준일</div>
+            <div class="wrc-card-value-mini">2026.11.01 (최신)</div>
+          </div>
+        </div>
+        <div class="wrc-info-card-mini">
+          <div class="wrc-card-icon-mini"><i class="fas fa-building"></i></div>
+          <div class="wrc-card-text-mini">
+            <div class="wrc-card-label-mini">비교군</div>
+            <div class="wrc-card-value-mini">생명보험 11개사</div>
+          </div>
+        </div>
+        <div class="wrc-info-card-mini">
+          <div class="wrc-card-icon-mini"><i class="fas fa-user-shield"></i></div>
+          <div class="wrc-card-text-mini">
+            <div class="wrc-card-label-mini">가입조건</div>
+            <div class="wrc-card-value-mini">50세 남 / 전기납 / 1억원</div>
+          </div>
+        </div>
+        <div class="wrc-info-card-mini">
+          <div class="wrc-card-icon-mini"><i class="fas fa-chart-line"></i></div>
+          <div class="wrc-card-text-mini">
+            <div class="wrc-card-label-mini">비교유형</div>
+            <div class="wrc-card-value-mini">예정이율·환급률·옵션</div>
+          </div>
         </div>
       </div>
-      <div class="wrc-info-card-mini">
-        <div class="wrc-card-icon-mini"><i class="fas fa-building"></i></div>
-        <div class="wrc-card-text-mini">
-          <div class="wrc-card-label-mini">비교군</div>
-          <div class="wrc-card-value-mini">생명보험 11개 원수사 전수</div>
-        </div>
+
+      <div class="wrc-info-box box-notice">
+        <div class="wrc-info-title"><i class="fas fa-info-circle"></i> 핵심 포인트</div>
+        <ul class="wrc-info-list">
+          <li>생명보험 11개사 경영인 정기보험 상품별 예정이율, 환급률, 옵션 전수 분석</li>
+          <li>법인 CEO 유고 보장 및 퇴직 플랜 최적화 가이드</li>
+        </ul>
       </div>
-      <div class="wrc-info-card-mini">
-        <div class="wrc-card-icon-mini"><i class="fas fa-user-shield"></i></div>
-        <div class="wrc-card-text-mini">
-          <div class="wrc-card-label-mini">가입조건</div>
-          <div class="wrc-card-value-mini">50세 남 / 일반심사 / 전기납 / 주계약 1억원</div>
-        </div>
-      </div>
-    </div>
+    </div></div>
   </div>
 
   <!-- Action Toolbar -->
@@ -147,6 +191,7 @@
       <button class="btn btn-outline" onclick="restoreAllCompanies()">
         <i class="fa-regular fa-eye"></i> 숨긴 회사 복원 (<span id="hiddenCompCount">0</span>)
       </button>
+      <div id="hiddenChipsContainer" style="display: inline-flex; align-items: center; gap: 6px;"></div>
       <button class="btn btn-outline" onclick="resetAll()">
         <i class="fa-solid fa-arrows-rotate"></i> 전체 초기화
       </button>
@@ -511,31 +556,49 @@
 
   function hideCompanyRow(e, rowKey, compName) {
     if (e) e.stopPropagation();
-    hiddenRows.set(compName, rowKey);
-    const row = document.querySelector('[data-row="' + rowKey + '"]');
-    if (row) row.classList.add('row-hidden');
-    updateHiddenCounts();
+    hiddenRows.set(rowKey, compName);
+    const tr = document.querySelector(`[data-row="${rowKey}"]`);
+    if (tr) tr.classList.add('row-hidden');
+    updateHiddenChips();
+  }
+
+  function restoreRow(rowKey) {
+    hiddenRows.delete(rowKey);
+    const tr = document.querySelector(`[data-row="${rowKey}"]`);
+    if (tr) tr.classList.remove('row-hidden');
+    updateHiddenChips();
   }
 
   function restoreAllCompanies() {
-    hiddenRows.forEach((rowKey) => {
-      const row = document.querySelector('[data-row="' + rowKey + '"]');
-      if (row) row.classList.remove('row-hidden');
+    hiddenRows.forEach((compName, rowKey) => {
+      const tr = document.querySelector(`[data-row="${rowKey}"]`);
+      if (tr) tr.classList.remove('row-hidden');
     });
     hiddenRows.clear();
-    updateHiddenCounts();
+    updateHiddenChips();
+  }
+
+  function updateHiddenChips() {
+    const countSpan = document.getElementById('hiddenCompCount');
+    if (countSpan) countSpan.innerText = hiddenRows.size;
+
+    const container = document.getElementById('hiddenChipsContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    hiddenRows.forEach((compName, rowKey) => {
+      const chip = document.createElement('span');
+      chip.className = 'hidden-comp-chip';
+      chip.innerHTML = `<i class="fa-solid fa-rotate-left"></i> ${compName}`;
+      chip.onclick = () => restoreRow(rowKey);
+      container.appendChild(chip);
+    });
   }
 
   function resetAll() {
     restoreAllCompanies();
   }
-
-  function updateHiddenCounts() {
-    const countEl = document.getElementById('hiddenCompCount');
-    if (countEl) countEl.innerText = hiddenRows.size;
-  }
-
-  function saveImage() {
+function saveImage() {
     const target = document.getElementById('captureArea') || document.querySelector('.main-container');
     html2canvas(target, { scale: 2 }).then(canvas => {
       const link = document.createElement('a');

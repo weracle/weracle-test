@@ -6552,7 +6552,7 @@ async function submitLeadForm(e) {
           padding-bottom: 16px;
           background-image: repeating-linear-gradient(transparent, transparent 25px, #f3ede2 25px, #f3ede2 26px);
         }
-        .tc-leader-sign {
+.tc-leader-sign {
           background: #ffffff !important;
           border: 1px solid #e2e8f0 !important;
           border-radius: 14px !important;
@@ -6561,6 +6561,8 @@ async function submitLeadForm(e) {
           display: flex !important;
           align-items: center !important;
           gap: 14px !important;
+          line-height: 1.4 !important;
+          white-space: normal !important;
           box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05) !important;
         }
         .tc-leader-frame,
@@ -6570,23 +6572,20 @@ async function submitLeadForm(e) {
           border-radius: 16px !important;
           overflow: hidden !important;
           flex-shrink: 0 !important;
-          background: #ffffff !important;
+          background-color: #f1f5f9 !important;
+          background-repeat: no-repeat !important;
+          background-size: cover !important;
+          background-position: 50% 20% !important;
           border: 2px solid #ffffff !important;
           box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12) !important;
           position: relative !important;
+          line-height: 0 !important;
+          font-size: 0 !important;
         }
+        /* 문제의 원인이었던 내부 img는 숨기고 프레임 배경으로 직접 렌더링! */
         .tc-leader-frame img,
-        .tb-advisor-frame img,
-        .tb-banner-frame img,
-        #tbSlideStage img,
-        .tc-arch-frame img,
-        .tc-photobook-imgwrap img {
-          width: 100% !important;
-          height: 100% !important;
-          object-fit: cover !important;
-          display: block !important;
-          pointer-events: none !important;
-          user-select: none !important;
+        .tb-advisor-frame img {
+          display: none !important;
         }
         body.is-editing .bc-pan-frame { cursor: grab; }
         body.is-editing .bc-pan-frame:active { cursor: grabbing; }
@@ -6627,18 +6626,22 @@ async function submitLeadForm(e) {
         `);
       }
 
-      window.applyAvatarTransformDom = function(imgEl, posObj) {
-        if (!imgEl) return;
+     window.applyAvatarTransformDom = function(imgEl, posObj) {
+        if (!imgEl || !imgEl.parentElement) return;
+        const frame = imgEl.parentElement;
+        const src = imgEl.getAttribute('src') || imgEl.src || '';
         const x = (posObj && posObj.x !== undefined) ? Number(posObj.x) : 50;
-        const y = (posObj && posObj.y !== undefined) ? Number(posObj.y) : 25;
+        const y = (posObj && posObj.y !== undefined) ? Number(posObj.y) : 20;
         const zm = Math.max(100, (posObj && posObj.zoom !== undefined) ? Number(posObj.zoom) : 100);
-        const sc = zm / 100;
-        imgEl.style.objectFit = 'cover';
-        imgEl.style.objectPosition = `${x}% ${y}%`;
-        imgEl.style.transformOrigin = `${x}% ${y}%`;
-        imgEl.style.transform = `scale(${sc})`;
-      };
 
+        if (src) {
+          frame.style.setProperty('background-image', `url("${src}")`, 'important');
+        }
+        // 100%일 때는 순수 cover로 박스에 빈틈없이 쏙 들어가고, 확대 시에만 자연스럽게 커짐
+        const bgSize = zm <= 100 ? 'cover' : `${zm}%`;
+        frame.style.setProperty('background-size', bgSize, 'important');
+        frame.style.setProperty('background-position', `${x}% ${y}%`, 'important');
+      };
       window.onTuneLeaderAdvPos = function(mode) {
         if (mode === 'C') {
           const x = Number(document.getElementById('rangeC_LeaderX').value);

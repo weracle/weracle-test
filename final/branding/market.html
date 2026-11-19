@@ -1,147 +1,5543 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@800;900&display=swap" rel="stylesheet">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>브랜딩 마켓 | 위라클</title>
+  <title>WERACLE SHOP - 보험설계사 맞춤 브랜딩 스토어</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    :root {
+      --primary: #0284c7;       /* 위라클 시그니처 블루 */
+      --primary-dark: #0369a1;
+      --primary-light: #e0f2fe;
+      --primary-gradient: linear-gradient(135deg, #0284c7, #38bdf8);
+      --apple-bg: #f8fafc;
+      --apple-card: #ffffff;
+      --text-main: #0f172a;
+      --text-sub: #64748b;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --radius-sm: 12px;
+      --radius-md: 20px;
+      --radius-lg: 24px;
+      --shadow-apple: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+      --shadow-float: 0 20px 40px rgba(0, 0, 0, 0.08);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
+
     body {
-      background: #f8fafc;
-      color: #0f172a;
-      min-height: 100vh;
+      background-color: var(--apple-bg);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding-bottom: 0 !important;
+    }
+
+    /* 1. 상단 네비게이션 헤더 */
+    .nav-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--text-main);
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-badge {
+      background: var(--primary-gradient);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.2px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f1f5f9;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .admin-switch-btn {
+      background: #0f172a;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .admin-switch-btn:hover {
+      background: #334155;
+      transform: scale(1.02);
+    }
+
+    .cart-btn {
+      position: relative;
+      background: white;
+      border: 1px solid var(--border-color);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      cursor: pointer;
+      font-size: 18px;
     }
-    .coming-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 24px;
-      padding: 48px 36px;
-      max-width: 520px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
-      animation: fadeIn 0.3s ease-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .icon-badge {
-      width: 72px;
-      height: 72px;
-      border-radius: 20px;
-      background: #faf5ff;
-      color: #7c3aed;
-      display: inline-flex;
+
+    .cart-count {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--primary);
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 32px;
-      margin-bottom: 24px;
-      border: 1px solid #f3e8ff;
     }
-    .status-pill {
+
+    /* ========================================================
+       2. [우측 서비스 소개 4가지 디자인 변형]
+       ======================================================== */
+    .webably-hero-wrap {
+      background-color: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 38px 0 34px;
+      position: relative;
+    }
+
+    .webably-hero-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 36px;
+    }
+
+    .webably-hero-left {
+      flex: 1;
+      text-align: left;
+    }
+
+    .webably-main-headline {
+      font-size: 34px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -1px;
+      line-height: 1.32;
+      margin-bottom: 8px;
+    }
+
+    .webably-marker {
+      background: linear-gradient(to top, #bae6fd 42%, transparent 42%);
+      padding: 0 6px;
+      border-radius: 4px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .webably-sub-desc {
+      font-size: 15px;
+      color: #64748b;
+      margin-bottom: 0;
+      font-weight: 500;
+      letter-spacing: -0.3px;
+      line-height: 1.5;
+    }
+
+    .webably-hero-right {
+      flex-shrink: 0;
+    }
+
+    /* 디자인 비교 선택 토글 바 (상단에 배치) */
+    .variant-switch-bar {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 999px;
+      gap: 4px;
+      margin-bottom: 12px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .variant-tab-btn {
+      background: transparent;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .variant-tab-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+    }
+
+    /* [1안 리뉴얼: 은은하게 빛나는 프리미엄 루미너스 라인 아이콘] */
+    /* ========================================================
+       [1안. 루미너스 라인 아이콘형 - 은은하게 빛나는 세련된 디자인]
+       ======================================================== */
+    .service-box-v1 {
+      display: flex;
+      background: #ffffff;
+      border: 1.5px solid #38bdf8;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(2, 132, 199, 0.12), 0 0 24px rgba(56, 189, 248, 0.2);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .service-item-v1 {
+      padding: 16px 22px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      background: transparent;
+      border: none;
+      min-width: 135px;
+      position: relative;
+    }
+
+    .service-item-v1:not(:last-child) {
+      border-right: 1px solid #e0f2fe;
+    }
+
+    .service-item-v1:hover {
+      background: linear-gradient(180deg, rgba(240, 249, 255, 0.9) 0%, rgba(224, 242, 254, 0.45) 100%);
+      transform: translateY(-2px);
+    }
+
+    /* 아이콘을 감싸는 빛나는 소프트 글래스 버블 (3개 모두 균일하게 영롱함) */
+    .service-icon-bubble {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border: 1.5px solid #bae6fd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0284c7;
+      margin-bottom: 2px;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .service-icon-bubble svg {
+      filter: drop-shadow(0 2px 4px rgba(2, 132, 199, 0.2));
+      transition: transform 0.25s ease;
+    }
+
+    .service-item-v1:hover .service-icon-bubble {
+      transform: scale(1.1);
+      background: linear-gradient(135deg, #e0f2fe 0%, #38bdf8 100%);
+      color: #0369a1;
+      border-color: #38bdf8;
+      box-shadow: 0 6px 18px rgba(2, 132, 199, 0.25), inset 0 1px 2px rgba(255, 255, 255, 1);
+    }
+
+    .service-title-v1 {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #0f172a;
+      white-space: nowrap;
+      letter-spacing: -0.3px;
+    }
+
+    /* 은은하게 빛나는 톤온톤 서브 캡슐 배지 */
+    .service-sub-pill {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0284c7;
+      background: #e0f2fe;
+      padding: 2.5px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      box-shadow: 0 1px 4px rgba(2, 132, 199, 0.08);
+      transition: all 0.2s ease;
+    }
+
+    .service-item-v1:hover .service-sub-pill {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+
+    /* 3. [상품이 주력!] 메인 쇼케이스 영역 헤더 */
+    .shop-main-section {
+      padding: 44px 0 60px;
+      background: #ffffff;
+    }
+
+    .shop-lead-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #0f172a;
+    }
+
+    .shop-lead-title {
+      font-size: 26px;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: -0.6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .shop-lead-title span.badge {
+      font-size: 12px;
+      font-weight: 700;
+      background: #0284c7;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .category-scroll-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+
+    .category-scroll-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat-pill-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      color: #475569;
+      font-weight: 700;
+      font-size: 13.5px;
+    }
+
+    .cat-pill-btn:hover {
+      background: #f0f9ff;
+      border-color: #bae6fd;
+      color: #0284c7;
+    }
+
+    .cat-pill-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+    }
+
+    .cat-pill-btn .pill-count {
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(0, 0, 0, 0.08);
+      padding: 1px 7px;
+      border-radius: 999px;
+      color: #64748b;
+    }
+
+    .cat-pill-btn.active .pill-count {
+      background: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    @media (max-width: 900px) {
+      .webably-main-headline {
+        font-size: 28px;
+      }
+      .webably-reviews-row {
+        grid-template-columns: 1fr 1fr;
+      }
+      .webably-stats-card {
+        padding: 24px 16px;
+      }
+      .stat-number {
+        font-size: 28px;
+      }
+    }
+    /* 4. 상품 쇼케이스 */
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .product-card {
+      background: var(--apple-card);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-apple);
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .product-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-float);
+      border-color: rgba(2, 132, 199, 0.3);
+    }
+
+    .product-img-box {
+      width: 100%;
+      height: 260px;
+      background: #f8fafc;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .product-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .product-card:hover .product-img-box img {
+      transform: scale(1.04);
+    }
+
+    .product-badge-float {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .product-badge-float.custom {
+      background: #059669;
+    }
+
+    .product-badge-float.blue {
+      background: var(--primary);
+    }
+
+    .product-info {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .product-tag {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .product-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+      line-height: 1.35;
+    }
+
+    .product-summary {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 16px;
+      line-height: 1.45;
+      flex: 1;
+    }
+
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .discount-rate {
+      color: #ef4444;
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    .price-current {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .price-original {
+      font-size: 13px;
+      color: #94a3b8;
+      text-decoration: line-through;
+    }
+
+    .product-footer-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #f1f5f9;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    /* 5. 컬리식 상세페이지 모달 */
+    .modal-overlay {
+      z-index: 99999 !important;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(10px);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex !important;
+      display: flex;
+    }
+
+    .sheet-container {
+      background: white;
+      width: 100%;
+      max-width: 980px;
+      height: 92vh;
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      overflow-y: auto;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .sheet-close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .detail-top-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      padding: 36px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .detail-thumb {
+      width: 100%;
+      height: 380px;
+      border-radius: 20px;
+      object-fit: cover;
+      background: #f8fafc;
+    }
+
+    .custom-option-box {
+      background: #f8fafc;
+      border: 1.5px dashed #0284c7;
+      border-radius: 16px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+
+    .custom-option-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .custom-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 8px;
+      background: white;
+    }
+
+    .kurly-tabs {
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 20;
+      display: flex;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 40px;
+    }
+
+    .kurly-tab {
+      flex: 1;
+      padding: 16px 0;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-sub);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s;
+    }
+
+    .kurly-tab.active {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .kurly-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .tab-content-area {
+      padding: 40px;
+      flex: 1;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .supabase-detail-images {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .supabase-detail-images img {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    }
+
+    .review-summary-card {
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      margin-bottom: 28px;
+    }
+
+    .review-score {
+      font-size: 38px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .star-gold {
+      color: #f59e0b;
+      font-size: 20px;
+    }
+
+    .review-item {
+      border-bottom: 1px solid #f1f5f9;
+      padding: 20px 0;
+    }
+
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .qna-write-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .btn-outline {
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      background: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .qna-item {
+      padding: 18px;
+      background: #f8fafc;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    .bottom-floating-bar {
+      position: sticky;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-color);
+      padding: 16px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+    }
+
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .quantity-btn {
+      width: 36px;
+      height: 36px;
+      background: white;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .quantity-val {
+      width: 44px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .btn-buy-primary {
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+      transition: all 0.2s;
+    }
+
+    .btn-buy-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+    }
+
+    /* 관리자 전용 대시보드 모달 */
+    .admin-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .admin-modal.open {
+      display: flex;
+    }
+
+    .admin-box {
+      background: white;
+      width: 100%;
+      max-width: 880px;
+      max-height: 90vh;
+      border-radius: 24px;
+      overflow-y: auto;
+      padding: 32px;
+      position: relative;
+    }
+
+    .admin-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 12px;
+    }
+
+    .admin-tab-btn {
+      background: none;
+      border: none;
+      font-size: 16px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      padding: 6px 14px;
+      border-radius: 8px;
+    }
+
+    .admin-tab-btn.active {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .image-dropzone {
+      border: 2px dashed #93c5fd;
+      background: #f0f9ff;
+      border-radius: 14px;
+      padding: 28px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .image-dropzone:hover {
+      background: #e0f2fe;
+    }
+
+    .order-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 16px;
+    }
+
+    .order-table th, .order-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .order-table th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 700;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .status-paid { background: #dbeafe; color: #1e40af; }
+
+    @media (max-width: 860px) {
+      .full-slider-wrapper {
+        height: 360px;
+      }
+      .slide-content-wrap {
+        padding: 0 20px;
+      }
+      .slide-heading {
+        font-size: 24px;
+      }
+      .slide-subtext {
+        font-size: 13px;
+      }
+      .slider-arrow {
+        display: none;
+      }
+      .slider-kurly-counter {
+        right: 16px;
+        bottom: 16px;
+      }
+      .slider-dots {
+        bottom: 16px;
+      }
+      .detail-top-section {
+        grid-template-columns: 1fr;
+      }
+    }
+  
+    /* ========================================================
+       6. [주식회사 위크레잇 공식 사업자 푸터 CSS - 세련된 딥 사파이어 블루 & 네이비]
+       ======================================================== */
+    .shop-footer {
+      background: linear-gradient(180deg, #132a4a 0%, #0c1b30 100%);
+      color: #94a3b8;
+      border-top: 3px solid #0284c7;
+      margin-top: 60px;
+      padding: 56px 0 40px;
+      font-size: 13px;
+      line-height: 1.6;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 48px;
+      padding-bottom: 36px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      flex-wrap: wrap;
+    }
+
+    .footer-cs-block {
+      max-width: 380px;
+    }
+
+    .cs-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #38bdf8;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .cs-phone {
+      font-size: 32px;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.1;
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
+    }
+
+    .cs-hours {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      color: #93c5fd;
+      font-size: 12.5px;
+      margin-bottom: 18px;
+    }
+
+    .cs-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .cs-btn-kakao {
+      background: #fee500;
+      color: #191919;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: opacity 0.2s;
+    }
+
+    .cs-btn-kakao:hover {
+      opacity: 0.9;
+    }
+
+    .cs-btn-faq {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .cs-btn-faq:hover {
+      background: rgba(255, 255, 255, 0.22);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .footer-links-group {
+      display: flex;
+      gap: 60px;
+      flex-wrap: wrap;
+    }
+
+    .footer-link-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .link-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 2px solid rgba(56, 189, 248, 0.4);
+      display: inline-block;
+      width: fit-content;
+    }
+
+    .footer-link-col a {
+      color: #bfdbfe;
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+
+    .footer-link-col a:hover {
+      color: #38bdf8;
+    }
+
+    .footer-bottom {
+      padding-top: 28px;
+      font-size: 12px;
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .company-info-text p {
+      margin-bottom: 4px;
+      line-height: 1.7;
+    }
+
+    .company-info-text b {
+      color: #e0f2fe;
+    }
+
+    .escrow-notice-box {
+      background: rgba(2, 132, 199, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      max-width: 820px;
+    }
+
+    .escrow-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .escrow-text {
+      font-size: 11.5px;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+
+    .escrow-text b {
+      color: #ffffff;
+    }
+
+    .copyright-row {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 11.5px;
+      color: #64748b;
+    }
+
+  
+    /* ========================================================
+       그 밑에 위치하는 큼직한 이모티콘 5대 카테고리 섹션 CSS 복구
+       ======================================================== */
+    .category-big-section {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 24px 0 26px;
+    }
+
+    .category-big-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .big-emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    .big-emoji-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 18px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+      text-decoration: none;
+    }
+
+    .big-emoji-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(2, 132, 199, 0.12);
+      border-color: #0284c7;
+    }
+
+    .big-emoji-card.active {
+      background: #f0f9ff;
+      border-color: #0284c7;
+      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.18), 0 0 0 1.5px #0284c7;
+    }
+
+    .big-emoji-icon {
+      font-size: 38px;
+      line-height: 1;
+      margin-bottom: 8px;
+      transition: transform 0.22s ease;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
+    }
+
+    .big-emoji-card:hover .big-emoji-icon {
+      transform: scale(1.18);
+    }
+
+    .big-emoji-name {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 5px;
+      white-space: nowrap;
+      letter-spacing: -0.3px;
+    }
+
+    .big-emoji-card.active .big-emoji-name {
+      color: #0284c7;
+    }
+
+    .big-emoji-count {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .big-emoji-card.active .big-emoji-count {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+
+  
+    /* ========================================================
+       3. 군더더기 없는 프리미엄 단독 상품 쇼케이스 (와이드 스포트라이트)
+       ======================================================== */
+    .shop-main-section {
+      padding: 48px 0 64px;
+      background: #ffffff;
+    }
+
+    .showcase-header-clean {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #0f172a;
+    }
+
+    .showcase-title-clean {
+      font-size: 24px;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: -0.6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .showcase-count-tag {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0284c7;
+      background: #e0f2fe;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    .showcase-sub-clean {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* 프리미엄 와이드 스포트라이트 카드 */
+    .spotlight-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 24px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.02);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+
+    .spotlight-card:hover {
+      border-color: #0284c7;
+      box-shadow: 0 20px 48px rgba(2, 132, 199, 0.12);
+      transform: translateY(-3px);
+    }
+
+    /* 좌측 큼직한 이미지 박스 */
+    .spotlight-img-box {
+      position: relative;
+      background: #f8fafc;
+      min-height: 440px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .spotlight-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .spotlight-card:hover .spotlight-img-box img {
+      transform: scale(1.04);
+    }
+
+    .spotlight-badge-top {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .spotlight-badge {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 999px;
+      letter-spacing: -0.2px;
+    }
+
+    .spotlight-badge.highlight {
+      background: #0284c7;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+    }
+
+    /* 우측 깔끔한 상품 정보 */
+    .spotlight-info-box {
+      padding: 40px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .spotlight-category-tag {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #f1f5f9;
-      color: #475569;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 6px 14px;
-      border-radius: 20px;
-      margin-bottom: 16px;
-    }
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #7c3aed;
-    }
-    .title {
-      font-size: 24px;
+      background: #f0f9ff;
+      color: #0284c7;
+      font-size: 13px;
       font-weight: 800;
-      color: #0f172a;
+      padding: 4px 12px;
+      border-radius: 999px;
+      width: fit-content;
       margin-bottom: 12px;
-      letter-spacing: -0.5px;
     }
-    .desc {
+
+    .spotlight-title {
+      font-size: 23px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.38;
+      letter-spacing: -0.6px;
+      margin-bottom: 12px;
+    }
+
+    .spotlight-desc {
       font-size: 14.5px;
       color: #64748b;
       line-height: 1.65;
-      margin-bottom: 32px;
+      margin-bottom: 20px;
     }
-    .btn-group {
+
+    .spotlight-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px;
       display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 8px;
     }
-    .btn {
-      padding: 13px 24px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 700;
-      text-decoration: none;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: inline-flex;
+
+    .spotlight-feature-item {
+      display: flex;
       align-items: center;
       gap: 8px;
-      border: none;
+      font-size: 13.5px;
+      color: #334155;
+      font-weight: 600;
     }
-    .btn-primary {
-      background: #7c3aed;
-      color: #ffffff;
+
+    .spotlight-feature-item span.icon {
+      color: #0284c7;
+      font-weight: 900;
     }
-    .btn-primary:hover {
-      background: #6d28d9;
-      transform: translateY(-1px);
+
+    .spotlight-price-box {
+      padding-top: 18px;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 20px;
     }
-    .btn-secondary {
-      background: #f1f5f9;
-      color: #475569;
+
+    .spotlight-discount {
+      font-size: 26px;
+      font-weight: 900;
+      color: #ef4444;
     }
-    .btn-secondary:hover {
-      background: #e2e8f0;
+
+    .spotlight-price-current {
+      font-size: 28px;
+      font-weight: 900;
       color: #0f172a;
     }
+
+    .spotlight-price-original {
+      font-size: 15px;
+      color: #94a3b8;
+      text-decoration: line-through;
+    }
+
+    .spotlight-rating {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .spotlight-btn-order {
+      width: 100%;
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #ffffff;
+      border: none;
+      padding: 16px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.28);
+      transition: all 0.2s ease;
+    }
+
+    .spotlight-btn-order:hover {
+      background: linear-gradient(135deg, #0369a1, #075985);
+      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.4);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 900px) {
+      .spotlight-card {
+        grid-template-columns: 1fr;
+      }
+      .spotlight-img-box {
+        min-height: 280px;
+      }
+      .spotlight-info-box {
+        padding: 24px 20px;
+      }
+    }
+
+  
+    /* ========================================================
+       상품 등록 시 노출되는 고품질 상세 모달/페이지 스타일
+       ======================================================== */
+    .sheet-container {
+      background: #ffffff;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      border-radius: 28px;
+      overflow-y: auto;
+      position: relative;
+      padding: 36px 40px 48px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.25);
+    }
+
+    .detail-top-section {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 36px;
+      align-items: start;
+      margin-bottom: 36px;
+    }
+
+    .detail-thumb-box {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      aspect-ratio: 1/1;
+    }
+
+    .detail-thumb-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .detail-info-box {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* 1:1 맞춤 각인 폼 박스 */
+    .custom-option-box {
+      background: #f0f9ff;
+      border: 1.5px solid #bae6fd;
+      border-radius: 18px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .custom-option-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #0369a1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .custom-input {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      font-size: 13px;
+      color: #0f172a;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .custom-input:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    .custom-select-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .custom-select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      font-size: 12.5px;
+      color: #334155;
+      font-weight: 600;
+    }
+
+    /* 상세 탭 */
+    .kurly-tabs {
+      display: flex;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 28px;
+      position: sticky;
+      top: -36px;
+      background: #ffffff;
+      z-index: 10;
+      padding-top: 10px;
+    }
+
+    .kurly-tab {
+      flex: 1;
+      text-align: center;
+      padding: 15px 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .kurly-tab:hover {
+      color: #0284c7;
+    }
+
+    .kurly-tab.active {
+      color: #0284c7;
+      font-weight: 800;
+    }
+
+    .kurly-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: #0284c7;
+      border-radius: 3px 3px 0 0;
+    }
+
+    /* 상세 콘텐츠 스타일 */
+    .detail-point-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .detail-point-badge {
+      background: #0284c7;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .detail-point-body h4 {
+      font-size: 15.5px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .detail-point-body p {
+      font-size: 13.5px;
+      color: #64748b;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* 스펙 정보 고시 테이블 */
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 24px;
+      font-size: 13px;
+    }
+
+    .spec-table th {
+      width: 25%;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+      font-weight: 700;
+    }
+
+    .spec-table td {
+      width: 75%;
+      padding: 12px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
+    }
+
+    @media (max-width: 820px) {
+      .detail-top-section {
+        grid-template-columns: 1fr;
+      }
+      .sheet-container {
+        padding: 24px 20px 90px;
+      }
+    }
+
+  
+    /* ========================================================
+       4 x 4 상품 그리드 (한 페이지 16개 상품 진열 & 확장 구조)
+       ======================================================== */
+    .product-grid-4x4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 28px 20px;
+      margin-top: 24px;
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 1100px) {
+      .product-grid-4x4 {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px 16px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .product-grid-4x4 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .product-grid-4x4 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 4x4 정갈한 상품 카드 스타일 */
+    .card-item-4x4 {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .card-item-4x4:hover {
+      transform: translateY(-5px);
+      border-color: #0284c7;
+      box-shadow: 0 16px 36px rgba(2, 132, 199, 0.14);
+    }
+
+    /* 이미지 박스: 1:1 정사각형 */
+    .card-thumb-4x4 {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #f8fafc;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-thumb-4x4 img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.35s ease;
+    }
+
+    .card-item-4x4:hover .card-thumb-4x4 img {
+      transform: scale(1.06);
+    }
+
+    .card-badge-float {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 2;
+    }
+
+    .card-badge {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(6px);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 9px;
+      border-radius: 999px;
+    }
+
+    .card-badge.highlight {
+      background: #0284c7;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+
+    /* 카드 본문 정보 */
+    .card-info-4x4 {
+      padding: 18px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .card-tag-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .card-tag-text {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #0284c7;
+      background: #e0f2fe;
+      padding: 2.5px 8px;
+      border-radius: 6px;
+    }
+
+    .card-free-engrave {
+      font-size: 11px;
+      font-weight: 800;
+      color: #059669;
+    }
+
+    .card-title-4x4 {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.42;
+      letter-spacing: -0.3px;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 42px;
+    }
+
+    .card-desc-4x4 {
+      font-size: 12.5px;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .card-discount-val {
+      font-size: 18px;
+      font-weight: 900;
+      color: #ef4444;
+    }
+
+    .card-price-current {
+      font-size: 19px;
+      font-weight: 900;
+      color: #0f172a;
+    }
+
+    .card-price-original {
+      font-size: 12.5px;
+      color: #94a3b8;
+      text-decoration: line-through;
+    }
+
+    .card-rating-row {
+      font-size: 11.5px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding-top: 10px;
+      border-top: 1px solid #f1f5f9;
+      margin-bottom: 12px;
+    }
+
+    .card-order-btn {
+      width: 100%;
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: background 0.2s;
+    }
+
+    .card-order-btn:hover {
+      background: #0369a1;
+    }
+
+    /* 상품 등록 대기 슬롯 카드 (4x4 구조 표현) */
+    .card-slot-placeholder {
+      background: #f8fafc;
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.24s ease;
+      min-height: 380px;
+    }
+
+    .card-slot-placeholder:hover {
+      background: #f0f9ff;
+      border-color: #0284c7;
+      transform: translateY(-3px);
+    }
+
+    .slot-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #64748b;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+
+    .card-slot-placeholder:hover .slot-icon {
+      border-color: #0284c7;
+      color: #0284c7;
+      background: #e0f2fe;
+      transform: scale(1.1);
+    }
+
+    .slot-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #334155;
+      margin-bottom: 4px;
+    }
+
+    .slot-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    /* 4x4 페이지네이션 바 */
+    .pagination-bar-4x4 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .page-btn {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .page-btn:hover {
+      border-color: #0284c7;
+      color: #0284c7;
+    }
+
+    .page-btn.active {
+      background: #0284c7;
+      border-color: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+
+    .page-btn.nav {
+      width: auto;
+      padding: 0 14px;
+      font-size: 12.5px;
+    }
+
+  
+    /* 구매 방식 선택 (일반 구매 vs 맞춤 각인) */
+    .order-option-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    .order-opt-card {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .order-opt-card:hover {
+      border-color: #0284c7;
+      background: #f0f9ff;
+    }
+
+    .order-opt-card.active {
+      border-color: #0284c7;
+      background: #f0f9ff;
+      box-shadow: 0 0 0 1px #0284c7;
+    }
+
+    .order-opt-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .order-opt-header input[type="radio"] {
+      width: 17px;
+      height: 17px;
+      accent-color: #0284c7;
+      cursor: pointer;
+    }
+
+    .order-opt-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .order-opt-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0284c7;
+      background: #e0f2fe;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .order-opt-badge.quick {
+      color: #059669;
+      background: #d1fae5;
+    }
+
+    .order-opt-desc {
+      font-size: 12.5px;
+      color: #64748b;
+      margin: 0;
+      padding-left: 27px;
+      line-height: 1.45;
+    }
+
+    .kakao-chat-box {
+      margin-top: 10px;
+      margin-left: 27px;
+      padding: 12px 14px;
+      background: #fffbeb;
+      border: 1.5px solid #fde68a;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-kakao-consult {
+      background: #fee500;
+      color: #191919;
+      border: none;
+      padding: 11px 16px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.2s;
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-kakao-consult:hover {
+      background: #fdd800;
+    }
+
+  
+    /* 우측 상단 인라인 주문 결제 박스 (스크롤 방해 제거) */
+    .inline-order-action-box {
+      margin-top: 14px;
+      padding: 16px 18px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .order-qty-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .quantity-btn {
+      width: 36px;
+      height: 36px;
+      background: #ffffff;
+      border: none;
+      font-size: 16px;
+      font-weight: 800;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .quantity-btn:hover {
+      background: #f1f5f9;
+      color: #0284c7;
+    }
+
+    .quantity-val {
+      width: 40px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .order-total-price-text {
+      font-size: 22px;
+      font-weight: 900;
+      color: #0f172a;
+    }
+
+    .order-buttons-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 10px;
+    }
+
+    .btn-cart-secondary {
+      background: #ffffff;
+      color: #334155;
+      border: 1.5px solid #cbd5e1;
+      padding: 13px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-cart-secondary:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .btn-buy-primary-now {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #ffffff;
+      border: none;
+      padding: 13px;
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-buy-primary-now:hover {
+      background: linear-gradient(135deg, #0369a1, #075985);
+      box-shadow: 0 6px 18px rgba(2, 132, 199, 0.4);
+      transform: translateY(-1px);
+    }
+
+  
+    /* ========================================================
+       컬리 스타일 풀페이지 상품 상세 뷰 (자연스러운 화면 전환)
+       ======================================================== */
+    #productDetailPageView {
+      display: none;
+      background: #ffffff;
+      min-height: 80vh;
+      padding-bottom: 80px;
+    }
+
+    .kurly-detail-container {
+      max-width: 1050px;
+      margin: 0 auto;
+      padding: 30px 20px 0;
+    }
+
+    /* 상단 브레드크럼 & 뒤로가기 바 */
+    .kurly-breadcrumb-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .kurly-breadcrumb {
+      font-size: 13px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .kurly-breadcrumb span.current {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .kurly-btn-back {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .kurly-btn-back:hover {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+
+    /* 컬리식 상단 2열 상품 주문 레이아웃 */
+    .kurly-product-top {
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 50px;
+      align-items: start;
+      margin-bottom: 60px;
+    }
+
+    .kurly-product-image-box {
+      position: sticky;
+      top: 80px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      aspect-ratio: 1 / 1;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    }
+
+    .kurly-product-image-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .kurly-product-image-box:hover img {
+      transform: scale(1.03);
+    }
+
+    .kurly-product-order-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .kurly-delivery-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #0284c7;
+      background: #e0f2fe;
+      padding: 4px 12px;
+      border-radius: 999px;
+      width: fit-content;
+      margin-bottom: 12px;
+    }
+
+    .kurly-title-main {
+      font-size: 20px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.35;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+      white-space: nowrap;
+    }
+
+    .kurly-desc-main {
+      font-size: 13.5px;
+      color: #64748b;
+      line-height: 1.55;
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .kurly-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .kurly-discount-rate {
+      font-size: 24px;
+      font-weight: 900;
+      color: #ef4444;
+    }
+
+    .kurly-price-val {
+      font-size: 25px;
+      font-weight: 900;
+      color: #0f172a;
+    }
+
+    .kurly-price-orig {
+      font-size: 13.5px;
+      color: #94a3b8;
+      text-decoration: line-through;
+    }
+
+    /* 컬리 스티키 탭 바 (화면 상단에 착 달라붙음) */
+    .kurly-sticky-tabs-wrap {
+      position: sticky;
+      top: 64px;
+      background: #ffffff;
+      z-index: 90;
+      border-bottom: 1.5px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      margin-bottom: 0;
+    }
+
+    .kurly-detail-container .tab-pane {
+      min-height: calc(100vh - 120px);
+    }
+
+    .kurly-sticky-tabs-container {
+      max-width: 1050px;
+      margin: 0 auto;
+      display: flex;
+    }
+
+    .kurly-sticky-tab-btn {
+      flex: 1;
+      padding: 16px 0;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      position: relative;
+      background: transparent;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    /* tab active legacy cleared */
+
+    @media (max-width: 900px) {
+      .kurly-product-top {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+      .kurly-product-image-box {
+        position: static;
+        max-width: 480px;
+        margin: 0 auto;
+      }
+      .kurly-title-main {
+        white-space: normal;
+        font-size: 19px;
+      }
+    }
+
   </style>
+<style>
+    /* ========================================================
+       참고 이미지 기반 견적 계산기, 스펙표, 안내 탭 전용 스타일
+       ======================================================== */
+    /* 단가표 테이블 (참고 이미지 KakaoTalk_20261108_125414930.png 재현) */
+    .pricing-tier-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 14px;
+      font-size: 11.5px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .pricing-tier-table th, .pricing-tier-table td {
+      border: 1px solid #e2e8f0;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    .pricing-tier-table th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+    }
+    .pricing-tier-table .text-red {
+      color: #dc2626;
+      font-weight: 800;
+    }
+    .pricing-tier-table td {
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    /* 옵션 및 실시간 금액 계산 박스 (참고 이미지 기반) */
+    .quote-calc-box {
+      background: #fafafa;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-top: 14px;
+    }
+    .quote-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      font-size: 13.5px;
+      color: #475569;
+    }
+    .quote-row.border-top {
+      border-top: 1px solid #e2e8f0;
+      margin-top: 6px;
+      padding-top: 10px;
+    }
+    .quote-row .quote-val {
+      font-weight: 700;
+      color: #0284c7;
+    }
+    .quote-row .quote-total-val {
+      font-size: 20px;
+      font-weight: 900;
+      color: #dc2626;
+    }
+
+    /* 고객센터 직통 안내 */
+    .cs-direct-call {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 9px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 11.5px;
+      color: #166534;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .cs-direct-call b {
+      font-size: 13px;
+      color: #15803d;
+    }
+
+    /* "알려드립니다!" 안내 배너 (참고 이미지 114712351.png / 144546612.png / 163835803.png 재현) */
+    .notice-hero-banner {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 24px;
+      margin: 24px 0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    }
+    .notice-hero-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .notice-hero-head .icon-headset {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #06b6d4, #0284c7);
+      color: #ffffff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+    }
+    .notice-hero-head h3 {
+      font-size: 22px;
+      font-weight: 900;
+      color: #0891b2;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+    .notice-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .notice-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .notice-finger-icon {
+      font-size: 24px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .notice-row-body {
+      font-size: 14px;
+      color: #334155;
+      line-height: 1.6;
+    }
+    .notice-row-body b {
+      color: #0f172a;
+    }
+
+    /* 스펙 사양표 (참고 이미지 105448276_02.png 규격표 재현) */
+    .ref-spec-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 24px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin: 20px 0;
+    }
+    .ref-spec-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+    }
+    .ref-spec-label {
+      background: #cbd5e1;
+      color: #334155;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 4px;
+      min-width: 60px;
+      text-align: center;
+      font-size: 13px;
+    }
+    .ref-spec-val {
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    /* 공통 4대 안내문 카드 */
+    .policy-clause-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .policy-clause-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 13.5px;
+      color: #334155;
+      line-height: 1.65;
+    }
+    .policy-clause-list li {
+      position: relative;
+      padding-left: 24px;
+    }
+    .policy-clause-list li .clause-num {
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-weight: 800;
+      color: #0284c7;
+    }
+
+    /* 관리자 상품등록 프리셋 칩 */
+    .preset-chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .preset-chip-btn {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .preset-chip-btn:hover {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+    .preset-chip-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    /* 이미지 미리보기 박스 */
+    .thumb-preview-box {
+      width: 100%;
+      height: 140px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1.5px dashed #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-top: 10px;
+      position: relative;
+    }
+    .thumb-preview-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+</style>
+
+<style id="custom-shop-spec-style">
+  
+  /* 5대 탭 산뜻한 블루 악센트 스타일 */
+  .kurly-sticky-tabs-wrap {
+    position: sticky;
+    top: 64px;
+    z-index: 90;
+    background: #ffffff;
+    border-bottom: 2px solid #e2e8f0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    margin-bottom: 0;
+  }
+  .kurly-sticky-tabs-container {
+    display: flex;
+    justify-content: center;
+    background: #ffffff;
+    max-width: 1050px;
+    margin: 0 auto;
+    border: none !important;
+  }
+  .kurly-sticky-tab-btn {
+    flex: 1;
+    max-width: 210px;
+    padding: 16px 10px;
+    background: transparent !important;
+    border: none !important;
+    font-size: 15px;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    text-align: center;
+    outline: none;
+  }
+  .kurly-sticky-tab-btn:hover {
+    color: #0284c7;
+    background: #f0f9ff !important;
+  }
+  .kurly-sticky-tab-btn.active {
+    color: #0284c7 !important;
+    font-weight: 900;
+    background: #f0f9ff !important;
+    border-radius: 8px 8px 0 0;
+  }
+  /* 오직 활성 탭 아래에만 세련되게 덮어씌워지는 그라디언트 포인트 바 */
+  .kurly-sticky-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 3.5px;
+    background: linear-gradient(90deg, #0284c7, #38bdf8);
+    border-radius: 3px 3px 0 0;
+  }
+
+
+  /* 색상 옵션 칩 스타일 */
+  .detail-color-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1.5px solid #cbd5e1;
+    background: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .detail-color-chip:hover {
+    border-color: #6366f1;
+    background: #f8fafc;
+  }
+  .detail-color-chip.active {
+    border-color: #4338ca;
+    background: #eef2ff;
+    color: #3730a3;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+  }
+  .color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.15);
+    display: inline-block;
+  }
+
+  /* 이미지 전환 부드러운 애니메이션 */
+  #kurlyProductImage {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  /* 탭 본문 안내 박스 */
+  .policy-img-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .policy-img-card img {
+    width: 100%;
+    display: block;
+  }
+  .policy-header-badge {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+</style>
+
+
+<style id="custom-shop-11-styles">
+  /* 9. 대표 썸네일 캐러셀 슬라이더 */
+  .kurly-slider-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .kurly-slider-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .slider-arrow-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #cbd5e1;
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: 900;
+    color: #1e293b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+    z-index: 10;
+  }
+  .slider-arrow-btn:hover {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+    transform: translateY(-50%) scale(1.08);
+  }
+  .slider-arrow-prev { left: 12px; }
+  .slider-arrow-next { right: 12px; }
+  .slider-counter-badge {
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+    background: rgba(15, 23, 42, 0.75);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    backdrop-filter: blur(4px);
+    z-index: 10;
+  }
+  .slider-thumbs-strip {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .slider-thumb-item {
+    width: 54px;
+    height: 54px;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    overflow: hidden;
+    cursor: pointer;
+    flex-shrink: 0;
+    opacity: 0.65;
+    transition: all 0.15s ease;
+  }
+  .slider-thumb-item:hover {
+    opacity: 1;
+    border-color: #94a3b8;
+  }
+  .slider-thumb-item.active {
+    opacity: 1;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  }
+  .slider-thumb-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* 4. 구매수량 / 실크인쇄 / 적용단가 / 추가합계금액 / 부가세 / 총합계금액 견적표 (KakaoTalk_20261108_125414930.png 완벽 일치) */
+  .quote-spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 12px 0;
+  }
+  .quote-spec-table tr {
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .quote-spec-table tr:last-child {
+    border-bottom: none;
+  }
+  .quote-spec-table th {
+    width: 32%;
+    background: #f8fafc;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    text-align: left;
+    border-right: 1px solid #f1f5f9;
+    vertical-align: middle;
+  }
+  .quote-spec-table td {
+    padding: 7px 12px;
+    font-size: 12.5px;
+    color: #1e293b;
+    vertical-align: middle;
+  }
+  .quote-total-row {
+    background: #eff6ff !important;
+  }
+  .quote-total-row th {
+    background: #e0f2fe !important;
+    color: #0369a1 !important;
+    font-weight: 800 !important;
+    font-size: 13px !important;
+  }
+  .quote-total-row td {
+    color: #dc2626 !important;
+    font-weight: 900 !important;
+    font-size: 15px !important;
+  }
+
+  /* 상세페이지 갤러리 이미지 추가 박스 */
+  .detail-add-img-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0fdf4;
+    border: 1.5px dashed #86efac;
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+  }
+  .policy-edit-btn {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .policy-edit-btn:hover {
+    background: #f1f5f9;
+    color: #2563eb;
+    border-color: #2563eb;
+  }
+</style>
+
+
+<style id="refined-shop-v8-styles">
+  /* 상품등록 탭 버튼 스타일 */
+  .admin-tab-btn {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #475569;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .admin-tab-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+  .admin-tab-btn.active {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+  }
+
+  /* 상품등록 대표 썸네일 박스 */
+  .reg-thumb-slider-box {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .reg-thumb-slider-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .reg-thumb-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid #cbd5e1;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 16px;
+    color: #1e293b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    z-index: 10;
+  }
+  .reg-thumb-nav-btn:hover {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+  }
+</style>
+
+
+<style id="custom-shop-v9-design">
+  /* 4. 전체 화면 레이아웃 & 줄맞춤 피팅 */
+  .nav-bar {
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 68px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+  }
+  .kurly-detail-container {
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  .kurly-product-top {
+    display: grid;
+    grid-template-columns: 440px 1fr;
+    gap: 40px;
+    align-items: start;
+    margin-bottom: 40px;
+  }
+
+  /* 3. 우리만의 독자적인 카드 및 섹션 디자인 */
+  .brand-card-box {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  }
+  .brand-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1.5px solid #f1f5f9;
+  }
+  .brand-card-icon {
+    font-size: 20px;
+  }
+
+  /* 프로세스 스텝 카드 (2. 제품안내) */
+  .process-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .process-step-item {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .process-step-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    border-color: #93c5fd;
+  }
+  .step-num-badge {
+    display: inline-block;
+    background: #2563eb;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .step-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 6px;
+  }
+  .step-desc {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+  }
+
+  /* 3열 정책 그리드 (배송, 결제, 교환) */
+  .policy-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .policy-info-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .policy-info-card h5 {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .policy-info-card p {
+    font-size: 12.5px;
+    color: #475569;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* 상세페이지 텍스트 블록 스타일 */
+  .detail-content-text-block {
+    background: #ffffff;
+    border-left: 4px solid #2563eb;
+    padding: 18px 22px;
+    margin: 16px 0;
+    border-radius: 0 10px 10px 0;
+    background: #f8fafc;
+  }
+  .detail-content-text-block h4 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+  .detail-content-text-block p {
+    font-size: 14px;
+    color: #334155;
+    line-height: 1.7;
+    margin: 0;
+    white-space: pre-line;
+  }
+</style>
+
 </head>
 <body>
 
-  <div class="coming-card">
-    <div class="icon-badge">
-      <i class="fa-solid fa-store"></i>
-    </div>
-    <div>
-      <span class="status-pill">
-        <span class="status-dot"></span> 서비스 준비 중
-      </span>
-    </div>
-    <h1 class="title">브랜딩 마켓 오픈 준비 중</h1>
-    <p class="desc">
-      위라클 파트너스 회원을 위한 맞춤형 브랜드 상품과<br>
-      마케팅 세일즈 자료 마켓이 현재 준비 중입니다.<br>
-      더 완성도 높은 구성으로 곧 찾아뵙겠습니다.
-    </p>
-    <div class="btn-group">
-      <button class="btn btn-primary" onclick="if(window.parent && window.parent.loadSubPage){ window.parent.loadSubPage('브랜딩', '위라클 브랜딩', 'branding/branding.html'); }else{ window.location.href='branding.html'; }">
-        <i class="fa-solid fa-arrow-left"></i> 위라클 브랜딩 보기
+  <!-- 1. 네비게이션 헤더 -->
+  <nav class="nav-bar">
+    <a href="javascript:showMainCatalogView()" class="brand-logo" title="WERACLE SHOP 메인으로 이동" style="text-decoration:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px;">
+      <span style="font-family:'Outfit','Montserrat',-apple-system,sans-serif; font-size:24px; font-weight:900; color:#0f172a; letter-spacing:-1.2px;">WERACLE</span>
+      <div style="background:linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color:#ffffff; font-size:11px; font-weight:800; padding:2.5px 8px; border-radius:6px; letter-spacing:0.5px; display:inline-flex; align-items:center; gap:4px; box-shadow:0 2px 6px rgba(37,99,235,0.25);">
+        <span style="font-size:10px;">❖</span>
+        <span>SHOP</span>
+      </div>
+    </a>
+
+    <div class="nav-actions">
+      <div class="user-pill" id="userPill">
+        <span>👔</span>
+        <span id="userDisplayName">김성훈 팀장 (현대해상/VIP)</span>
+      </div>
+
+      <button type="button" class="btn-buy-primary" onclick="openProductRegisterModal()" style="height: 38px; padding: 0 16px; font-size: 13px; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; background: #2563eb; color: #fff; border: none; cursor: pointer;">
+        <span>📦</span> 상품 등록
       </button>
-      <button class="btn btn-secondary" onclick="if(window.parent && window.parent.loadSubPage){ window.parent.loadSubPage('홈', '홈', 'home'); }else{ window.location.href='../index.html'; }">
-        홈으로 이동
+
+      <button class="admin-switch-btn" id="shopAdminBtn" onclick="openOrderAdminModal()">
+        <span>⚙️</span> 관리자 대시보드
       </button>
+
+      <div class="cart-btn" onclick="alert('장바구니 기능이 연동됩니다.')">
+        🛒
+        <span class="cart-count">1</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========================================================
+       2. [웹에이블(Webably) 실제 화면 1:1 완벽 반영 히어로 섹션]
+       - 하늘색 마커 형광펜 타이틀: '처음 브랜딩을 시작할 때, 가장 좋은 선택'
+       - 웹에이블 시그니처 2단 퀵 카드: [작업문의 / 제작사례] ➔ [각인 바인더 / 판촉물 대량구매]
+       - 3대 신뢰 수치 박스: [1,840+ 제작 바인더 | 320+ 지사·사업단 | 99.4% 만족도]
+       - 실제 설계사 4인 구매 평점 & 한줄 리뷰 카드
+       ======================================================== -->
+  <!-- ========================================================
+       2. [웹에이블 가로형 헤더: 좌측 헤드라인 + 우측 3대 서비스 소개]
+       ======================================================== -->
+  <div id="mainCatalogView">
+  <section class="webably-hero-wrap">
+    <div class="webably-hero-container">
+
+      <!-- 좌측 타이포그래피 (형광펜 마커 효과) -->
+      <div class="webably-hero-left">
+        <h1 class="webably-main-headline" style="word-break: keep-all; line-height: 1.35;">
+          <span class="webably-marker">고객에게 전달하는 마음,</span> <span style="white-space: nowrap;">위라클이 함께합니다</span>
+        </h1>
+        <p class="webably-sub-desc">
+          나만의 맞춤 브랜딩 상품부터 감사 판촉물까지, 설계사님의 성공적인 영업을 위라클이 함께 완성합니다.
+        </p>
+      </div>
+
+      <!-- 우측 영역: 4가지 디자인 버전 실시간 비교 선택 -->
+      <div class="webably-hero-right">
+        
+        <!-- 실시간 디자인 변경 스위처 버튼 -->
+        <div style="display: flex; justify-content: flex-end;">
+          <div class="variant-switch-bar" style="display: none;">
+            <button class="variant-tab-btn active" onclick="switchRightDesign('v1', this)">1안. 라인아이콘</button>
+            <button class="variant-tab-btn" onclick="switchRightDesign('v2', this)">2안. 가로 리스트</button>
+            <button class="variant-tab-btn" onclick="switchRightDesign('v3', this)">3안. 스텝 가이드</button>
+            <button class="variant-tab-btn" onclick="switchRightDesign('v4', this)">4안. 미니멀 인라인</button>
+          </div>
+        </div>
+
+        <!-- [1안. 라인아이콘형] - 이모티콘 대신 단정한 블루 벡터 아이콘 -->
+        <div class="service-box-v1" id="designBox_v1">
+          <button class="service-item-v1" onclick="filterCategoryAndScroll('binder')">
+            <div class="service-icon-bubble">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            </div>
+            <span class="service-title-v1">개인 브랜딩 상품제작</span>
+            <span class="service-sub-pill">맞춤형 주문제작</span>
+          </button>
+          <button class="service-item-v1" onclick="filterCategoryAndScroll('gift')">
+            <div class="service-icon-bubble">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+            </div>
+            <span class="service-title-v1">판촉물 대량구매</span>
+            <span class="service-sub-pill">지사 단체 특가</span>
+          </button>
+          <button class="service-item-v1" onclick="filterCategoryAndScroll('branding')">
+            <div class="service-icon-bubble">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+            <span class="service-title-v1">퍼스널 브랜딩</span>
+            <span class="service-sub-pill">네이밍 & 로고</span>
+          </button>
+        </div>
+
+        <!-- [2안. 슬림 가로 리스트형] - 하단 카테고리와 아예 다른 구조 -->
+        <div class="service-box-v2" id="designBox_v2" style="display: none;">
+          <button class="service-row-v2" onclick="filterCategoryAndScroll('binder')">
+            <div class="row-left-v2">
+              <span style="color:#0284c7;">●</span>
+              <span>개인 브랜딩 상품제작</span>
+            </div>
+            <div class="row-right-v2">
+              <span>맞춤형 주문제작</span>
+              <span>→</span>
+            </div>
+          </button>
+          <button class="service-row-v2" onclick="filterCategoryAndScroll('gift')" style="border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9;">
+            <div class="row-left-v2">
+              <span style="color:#0284c7;">●</span>
+              <span>판촉물 대량구매</span>
+            </div>
+            <div class="row-right-v2">
+              <span>지사 단체 특가</span>
+              <span>→</span>
+            </div>
+          </button>
+          <button class="service-row-v2" onclick="filterCategoryAndScroll('branding')">
+            <div class="row-left-v2">
+              <span style="color:#0284c7;">●</span>
+              <span>퍼스널 브랜딩</span>
+            </div>
+            <div class="row-right-v2">
+              <span>네이밍 & 로고</span>
+              <span>→</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- [3안. 소프트 블루 스텝 가이드형] - 파스텔 블루 배경 & 01/02/03 안내 -->
+        <div class="service-box-v3" id="designBox_v3" style="display: none;">
+          <button class="service-item-v3" onclick="filterCategoryAndScroll('binder')">
+            <span class="step-tag-v3">01 맞춤제작</span>
+            <span class="service-title-v3">개인 브랜딩 상품</span>
+            <span class="service-sub-v3">소속·성함 골드 불박</span>
+          </button>
+          <button class="service-item-v3" onclick="filterCategoryAndScroll('gift')">
+            <span class="step-tag-v3">02 단체특가</span>
+            <span class="service-title-v3">판촉물 대량구매</span>
+            <span class="service-sub-v3">지사 행사 신속 출고</span>
+          </button>
+          <button class="service-item-v3" onclick="filterCategoryAndScroll('branding')">
+            <span class="step-tag-v3">03 브랜딩</span>
+            <span class="service-title-v3">퍼스널 브랜딩</span>
+            <span class="service-sub-v3">네이밍 & 로고 제작</span>
+          </button>
+        </div>
+
+        <!-- [4안. 미니멀 인라인 텍스트형] - 테두리 없이 선으로만 구분한 극강의 심플 -->
+        <div class="service-box-v4" id="designBox_v4" style="display: none;">
+          <button class="service-item-v4" onclick="filterCategoryAndScroll('binder')">
+            <span class="service-sub-v4">맞춤형 주문제작</span>
+            <span class="service-title-v4">개인 브랜딩 상품</span>
+          </button>
+          <button class="service-item-v4" onclick="filterCategoryAndScroll('gift')">
+            <span class="service-sub-v4">지사 단체 특가</span>
+            <span class="service-title-v4">판촉물 대량구매</span>
+          </button>
+          <button class="service-item-v4" onclick="filterCategoryAndScroll('branding')">
+            <span class="service-sub-v4">네이밍 & 로고</span>
+            <span class="service-title-v4">퍼스널 브랜딩</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================
+       그 밑에 위치하는 큼직한 이모티콘 5대 카테고리 카드 (전체상품 뭐시기 뭐시기)
+       ======================================================== -->
+  <section class="category-big-section">
+    <div class="category-big-container">
+      <div class="big-emoji-grid">
+        
+        <div class="big-emoji-card active" data-cat="all" onclick="filterCategory('all', this)">
+          <div class="big-emoji-icon">✨</div>
+          <div class="big-emoji-name">전체상품</div>
+          <div class="big-emoji-count">1개</div>
+        </div>
+
+        <div class="big-emoji-card" data-cat="binder" onclick="filterCategory('binder', this)">
+          <div class="big-emoji-icon">📁</div>
+          <div class="big-emoji-name">개인 브랜딩 상품</div>
+          <div class="big-emoji-count">1개</div>
+        </div>
+
+        <div class="big-emoji-card" data-cat="gift" onclick="filterCategory('gift', this)">
+          <div class="big-emoji-icon">🎁</div>
+          <div class="big-emoji-name">판촉물 대량구매</div>
+          <div class="big-emoji-count">0개</div>
+        </div>
+
+        <div class="big-emoji-card" data-cat="branding" onclick="filterCategory('branding', this)">
+          <div class="big-emoji-icon">🎨</div>
+          <div class="big-emoji-name">퍼스널 브랜딩</div>
+          <div class="big-emoji-count">0개</div>
+        </div>
+
+        <div class="big-emoji-card" data-cat="print" onclick="filterCategory('print', this)">
+          <div class="big-emoji-icon">📄</div>
+          <div class="big-emoji-name">서식지 & 명함</div>
+          <div class="big-emoji-count">0개</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================
+       3. [상품이 주력!] 메인 쇼케이스 영역 (웹에이블 바로 아래 직관적 배치)
+       ======================================================== -->
+  <main class="shop-main-section" id="shopProductsSection">
+    <div class="container">
+
+      <!-- 쇼케이스 헤더 (4x4 구조 명시 & 정렬 탭) -->
+      <div class="showcase-header-clean">
+        <div>
+          <h2 class="showcase-title-clean">
+            <span>추천 상품 쇼케이스</span>
+            
+          </h2>
+          <p class="showcase-sub-clean">설계사님의 품격을 높여주는 1:1 맞춤 제작 상품 라인업입니다.</p>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:12.5px; color:#64748b; font-weight:600;">총 1개 등록됨 (1 / 1 페이지)</span>
+          <button onclick="openProductRegisterModal()" style="background:#0f172a; color:#fff; border:none; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+            + 새 상품 등록
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 x 4 상품 그리드 영역 (가로 4열 x 세로 4행 = 한 페이지 최대 16개 확장 구조) -->
+      <div class="product-grid-4x4" id="productGrid">
+        
+        <!-- [1번 슬롯: 등록된 대표 샘플 상품 - 클릭 시 상세 모달 오픈] -->
+        <div class="card-item-4x4" data-category="binder" onclick="showProductDetailPage('item1')">
+          
+          <div class="card-thumb-4x4">
+            <div class="card-badge-float">
+              <span class="card-badge highlight">🔥 BEST 시그니처</span>
+              <span class="card-badge">✦ 1:1 각인 무료</span>
+            </div>
+            <img src="branding_img/KakaoTalk_20261109_105448276.jpg" 
+                 alt="[1:1 각인제작] 프리미엄 사피아노 가죽 보험증권 전달 바인더"
+                 onerror="this.src='https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80'">
+          </div>
+
+          <div class="card-info-4x4">
+            <div>
+              <div class="card-tag-row">
+                <span class="card-tag-text">📁 개인 브랜딩 상품</span>
+                <span class="card-free-engrave">✦ 각인비 무료</span>
+              </div>
+
+              <h3 class="card-title-4x4">
+                [1:1 각인제작] 프리미엄 사피아노 가죽 보험증권 전달 바인더
+              </h3>
+
+              <p class="card-desc-4x4">
+                소속 GA 로고 및 설계사 성함 정밀 골드 불박 각인. 계약 체결 시 고객 감동을 완성합니다.
+              </p>
+            </div>
+
+            <div>
+              <div class="card-price-row">
+                <span class="card-discount-val">20%</span>
+                <span class="card-price-current">32,000원</span>
+                <span class="card-price-original">40,000원</span>
+              </div>
+
+              <div class="card-rating-row">
+                <span style="color:#f59e0b; font-size:13px;">★★★★★</span>
+                <span style="font-weight:800; color:#0f172a;">4.9</span>
+                <span>(후기 312건)</span>
+              </div>
+
+              <button class="card-order-btn" onclick="event.stopPropagation(); showProductDetailPage('item1');">
+                <span>1:1 맞춤 각인 주문하기</span>
+                <span>→</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- [2번 슬롯: 4x4 구조 표현 - 상품 추가 대기 슬롯] -->
+        <div class="card-slot-placeholder" onclick="openProductRegisterModal()">
+          <div class="slot-icon">+</div>
+          <div class="slot-title">새 상품 등록 대기 슬롯 2</div>
+          <div class="slot-desc">클릭하여 관리자 패널에서<br>신규 브랜딩 상품을 등록하세요</div>
+        </div>
+
+        <!-- [3번 슬롯: 4x4 구조 표현 - 상품 추가 대기 슬롯] -->
+        <div class="card-slot-placeholder" onclick="openProductRegisterModal()">
+          <div class="slot-icon">+</div>
+          <div class="slot-title">새 상품 등록 대기 슬롯 3</div>
+          <div class="slot-desc">위크레잇 마켓(weraclemarket.com)<br>판촉물 및 키트 연동 가능</div>
+        </div>
+
+        <!-- [4번 슬롯: 4x4 구조 표현 - 상품 추가 대기 슬롯] -->
+        <div class="card-slot-placeholder" onclick="openProductRegisterModal()">
+          <div class="slot-icon">+</div>
+          <div class="slot-title">새 상품 등록 대기 슬롯 4</div>
+          <div class="slot-desc">스마트 NFC 명함 및 서식지<br>상품 추가 등록 영역</div>
+        </div>
+
+      </div>
+
+      <!-- 4 x 4 페이지네이션 네비게이션 (16개 초과 시 다음 페이지로 확장) -->
+      <div class="pagination-bar-4x4">
+        <button class="page-btn nav" disabled style="opacity:0.5; cursor:not-allowed;">이전</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn" onclick="alert('상품이 16개를 초과하여 등록되면 2페이지가 자동으로 활성화됩니다.')">2</button>
+        <button class="page-btn" onclick="alert('상품이 32개를 초과하여 등록되면 3페이지가 자동으로 활성화됩니다.')">3</button>
+        <button class="page-btn" onclick="alert('상품이 48개를 초과하여 등록되면 4페이지가 자동으로 활성화됩니다.')">4</button>
+        <button class="page-btn nav" onclick="alert('다음 페이지로 이동합니다.')">다음</button>
+      </div>
+
+    </div>
+  </main>
+  </div><!-- /mainCatalogView -->
+
+  <section id="productDetailPageView">
+    <div class="kurly-detail-container">
+      
+      <!-- 상단 브레드크럼 & 목록으로 돌아가기 버튼 -->
+      <div class="kurly-breadcrumb-bar">
+        <div class="kurly-breadcrumb">
+          <span>홈</span>
+          <span>&gt;</span>
+          <span>개인 브랜딩 상품</span>
+          <span>&gt;</span>
+          <span class="current" id="kurlyBreadcrumbTitle">[1:1 각인제작] 프리미엄 사피아노 가죽 보험증권 전달 바인더</span>
+        </div>
+        <button type="button" class="kurly-btn-back" onclick="showMainCatalogView()">
+          <span>←</span>
+          <span>전체 상품 목록으로 돌아가기</span>
+        </button>
+      </div>
+
+      <!-- 상단 2열 상품 정보 및 주문 패널 (컬리 정석 레이아웃) -->
+      <div class="kurly-product-top">
+        
+        <!-- 좌측 대표 상품 이미지 캐러셀 (1장씩 꽉차게 + 여러장 넘겨보기 지원) -->
+        <div class="kurly-product-image-box">
+          <div class="kurly-slider-container">
+            <button type="button" class="slider-arrow-btn slider-arrow-prev" onclick="prevProductSlide()" title="이전 이미지">‹</button>
+            <img id="kurlyProductImage" class="kurly-slider-img" src="branding_img/KakaoTalk_20261109_105448276.jpg" alt="대표 상품 이미지">
+            <button type="button" class="slider-arrow-btn slider-arrow-next" onclick="nextProductSlide()" title="다음 이미지">›</button>
+            <div class="slider-counter-badge" id="productSliderCounter">1 / 8</div>
+          </div>
+          <!-- 하단 미니 썸네일 스트립 -->
+          <div class="slider-thumbs-strip" id="productSliderThumbsStrip">
+            <!-- JS 동적 생성 -->
+          </div>
+        </div>
+
+        <!-- 우측 주문 패널 -->
+        <div class="kurly-product-order-box">
+          <h1 class="kurly-title-main" id="kurlyProductTitle">
+            [1:1 각인제작] 프리미엄 사피아노 가죽 보험증권 전달 바인더
+          </h1>
+
+          <p class="kurly-desc-main" id="kurlyProductSummary">
+            소속 GA 로고 및 설계사 성함 정밀 120℃ 골드 불박 각인. 계약 체결 시 고객에게 평생 남는 감동과 신뢰를 선물합니다.
+          </p>
+
+          <!-- 가격 및 수량별 단가표 영역 (참고 이미지 KakaoTalk_20261108_125414930.png 완벽 재현) -->
+          <!-- [색상 옵션 탭 & 실시간 이미지 변경 인터랙션] -->
+          <div style="margin: 12px 0 16px; padding: 12px 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 13px; font-weight: 700; color: #1e293b;">
+                🎨 색상 옵션 선택 <span style="font-size: 11.5px; color: #64748b; font-weight: 400;">(색상 클릭 시 해당 대표 사진으로 변경)</span>
+              </span>
+              <span id="detailSelectedColorBadge" style="font-size: 12px; font-weight: 800; color: #0369a1; background: #e0f2fe; padding: 3px 8px; border-radius: 6px;">✨ 대표 전색상 모음</span>
+            </div>
+            <div id="detailColorChipsBox" style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <!-- 동적 색상 버튼 렌더링 -->
+            </div>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span class="kurly-discount-rate" id="detailDiscountRate">20%</span>
+              <span class="kurly-price-val" id="kurlyProductPrice">3,915원</span>
+              <span class="kurly-price-orig" id="detailOrigPrice">4,500원</span>
+              <span style="font-size: 12px; color: #64748b; font-weight: 600;">(부가세 별도 / 인쇄비 포함)</span>
+            </div>
+
+            <!-- 수량별 차등 단가표 -->
+            <table class="pricing-tier-table">
+              <thead>
+                <tr>
+                  <th style="width: 20%;">인쇄비</th>
+                  <th colspan="5" class="text-red">인쇄비 무료 (1:1 골드 불박 / 1도 실크 지원)</th>
+                </tr>
+                <tr>
+                  <th>수 량</th>
+                  <th>150</th>
+                  <th>300</th>
+                  <th>450</th>
+                  <th>750</th>
+                  <th>1,500+</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>일반가</th>
+                  <td id="tier150">3,915</td>
+                  <td id="tier300">3,828</td>
+                  <td id="tier450">3,712</td>
+                  <td id="tier750">3,654</td>
+                  <td id="tier1500">3,567</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- 고객센터 문의 직통 -->
+            <div class="cs-direct-call">
+              <div>
+                <span>주문이 어려우신 고객님은 고객센터로 문의하시면 친절 상담해 드립니다.</span><br>
+                <b>고객센터 1600-3758</b> <span style="font-size: 11px; color: #475569;">(평일 09:00 ~ 18:00)</span>
+              </div>
+              <button type="button" onclick="alert('고객센터 1600-3758로 연결됩니다.')" style="background:#15803d; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap;">
+                📞 전화문의
+              </button>
+            </div>
+
+            <!-- [4. 구매수량 / 실크인쇄 / 적용단가 / 추가합계금액 / 부가세 / 총합계금액 완벽 재현] -->
+            <table class="quote-spec-table">
+              <tr>
+                <th>구매수량</th>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; border: 1.5px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff;">
+                      <button type="button" onclick="changeQuoteQty(-10)" style="width: 28px; height: 28px; border: none; background: #f8fafc; font-weight: 800; cursor: pointer; color: #334155; font-size: 13px;">-</button>
+                      <input type="number" id="quoteQtyInput" value="160" min="10" step="10" oninput="handleQuoteQtyInput(this.value)" style="width: 52px; height: 28px; text-align: center; border: none; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-size: 12.5px; font-weight: 800; color: #0f172a;">
+                      <button type="button" onclick="changeQuoteQty(10)" style="width: 28px; height: 28px; border: none; background: #f8fafc; font-weight: 800; cursor: pointer; color: #334155; font-size: 13px;">+</button>
+                    </div>
+                    <span style="font-weight: 700; color: #475569; font-size: 12.5px;">권</span>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <th>실크인쇄</th>
+                <td>
+                  <select id="quotePrintOption" onchange="calcQuoteTotal()" style="width: 100%; height: 32px; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px; font-weight: 700; color: #1e293b;">
+                    <option value="0" selected>1도 실크인쇄 (무료 이벤트)</option>
+                    <option value="0">1:1 골드 불박 각인 (무료 지원)</option>
+                    <option value="0">인쇄 없음 (무지 / 빠른 출고)</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th>적용단가</th>
+                <td style="font-weight: 800; color: #1e293b; font-size: 12.5px;" id="quoteUnitPrice">3,900 원</td>
+              </tr>
+              <tr>
+                <th>추가합계금액</th>
+                <td style="font-weight: 800; color: #1e293b; font-size: 12.5px;" id="quoteSupplyPrice">624,000 원</td>
+              </tr>
+              <tr>
+                <th>부가세</th>
+                <td style="font-weight: 700; color: #475569; font-size: 12.5px;" id="quoteVatPrice">62,400 원</td>
+              </tr>
+              <tr class="quote-total-row">
+                <th>총합계금액</th>
+                <td id="quoteTotalPrice">686,400 원</td>
+              </tr>
+            </table>
+            </div>
+
+            <!-- 주문 및 결제 버튼 그룹 -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;">
+              <button type="button" class="btn-buy-primary" style="padding: 13px; font-size: 14.5px;" onclick="simulateKurlyOrder()">
+                <span>🛍️ 바로 주문/결제하기</span>
+              </button>
+              <button type="button" class="btn-outline" style="padding: 13px; font-size: 14.5px; font-weight: 800; border-color: #0284c7; color: #0284c7;" onclick="alert('장바구니에 담겼습니다! 상단 장바구니 메뉴에서 확인하실 수 있습니다.')">
+                <span>🛒 장바구니 담기</span>
+              </button>
+            </div>
+
+            <button type="button" onclick="alert('카카오톡 채널 [위크레잇]으로 연결됩니다.\n\n로고 AI/PNG 파일이나 지사 단체 각인 명단을 보내주시면 전담 디자이너가 실시간 시안을 무료로 제작해 드립니다.')" style="width: 100%; margin-top: 10px; background: #fee500; border: none; border-radius: 10px; padding: 12px; font-size: 13.5px; font-weight: 800; color: #191600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>💬 카카오톡으로 각인 시안·단체 견적 1:1 상담하기</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    <!-- 컬리식 상단 스티키 탭 바 (화면을 내려도 상단에 착 달라붙음) -->
+    <div class="kurly-sticky-tabs-wrap">
+      <div class="kurly-sticky-tabs-container">
+        <button type="button" class="kurly-sticky-tab-btn active" onclick="switchKurlyPageTab(0, this, true)">1. 상품정보</button>
+        <button type="button" class="kurly-sticky-tab-btn" onclick="switchKurlyPageTab(1, this, true)">2. 제품안내</button>
+        <button type="button" class="kurly-sticky-tab-btn" onclick="switchKurlyPageTab(2, this, true)">3. 배송안내</button>
+        <button type="button" class="kurly-sticky-tab-btn" onclick="switchKurlyPageTab(3, this, true)">4. 결제안내</button>
+        <button type="button" class="kurly-sticky-tab-btn" onclick="switchKurlyPageTab(4, this, true)">5. 교환/반품 환불안내</button>
+      </div>
+    </div>
+    <!-- 컬리 상세 탭 본문 영역 (1050px 컨테이너 완벽 줄맞춤 피팅) -->
+    <div class="kurly-detail-container" style="padding-top: 24px;">
+      
+      <!-- ====================================================
+           [탭 0: 1. 상품정보 - 갤러리 + 우리만의 규격표 + 알려드립니다]
+           ==================================================== -->
+      <div class="tab-pane active" id="kurlyPane0">
+        
+        <!-- 상세페이지 콘텐츠 관리 바 (이미지 추가 + 텍스트 추가) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #eff6ff; border: 1.5px dashed #93c5fd; border-radius: 12px; padding: 14px 20px; margin-bottom: 24px;">
+          <div>
+            <span style="font-weight: 800; font-size: 14px; color: #1e40af;">📸 상세페이지 콘텐츠 관리</span>
+            <span style="font-size: 12px; color: #3b82f6; margin-left: 8px;">실물 이미지와 텍스트 설명 블록을 원하는 만큼 추가할 수 있습니다.</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="file" id="detailGalleryAddInput" accept="image/*" multiple style="display:none;" onchange="handleAddDetailImages(this)">
+            <button type="button" class="btn-primary" style="padding: 7px 14px; font-size: 12.5px; font-weight: 800; background: #2563eb; color: #fff; border: none; border-radius: 7px; cursor: pointer;" onclick="document.getElementById('detailGalleryAddInput').click()">
+              + 📸 이미지 추가
+            </button>
+            <button type="button" class="btn-primary" style="padding: 7px 14px; font-size: 12.5px; font-weight: 800; background: #0f172a; color: #fff; border: none; border-radius: 7px; cursor: pointer;" onclick="promptAddDetailText()">
+              + 📝 텍스트 추가
+            </button>
+          </div>
+        </div>
+
+        <!-- 동적 상세 콘텐츠 영역 (이미지 + 텍스트 블록 순서대로 렌더링) -->
+        <div id="detailGalleryImages" style="display: flex; flex-direction: column; gap: 20px; align-items: center; margin-bottom: 36px;">
+          <!-- JS 동적 렌더링 -->
+        </div>
+
+        <!-- 3. 우리만의 정갈한 규격 및 스펙 안내 카드 (테이블 UI) -->
+        <div class="brand-card-box">
+          <div class="brand-card-header">
+            <span class="brand-card-icon">📋</span>
+            <span>상품 규격 및 제작 스펙 안내</span>
+            <span style="font-size: 12px; color: #64748b; font-weight: normal; margin-left: auto;">WERACLE OFFICIAL SPECIFICATION</span>
+          </div>
+          
+          <table class="spec-table" style="width: 100%; font-size: 13.5px; border-collapse: collapse; border: 1px solid #e2e8f0;">
+            <tr>
+              <th style="width: 22%; background: #f8fafc; padding: 12px 16px; text-align: left; border: 1px solid #e2e8f0; color: #334155; font-weight: 700;">원단 / 재질</th>
+              <td style="padding: 12px 16px; border: 1px solid #e2e8f0; color: #1e293b; font-weight: 600;">최고급 프리미엄 사피아노 PU 합성가죽 (스크래치 및 마모 방지 방수 코팅)</td>
+            </tr>
+            <tr>
+              <th style="background: #f8fafc; padding: 12px 16px; text-align: left; border: 1px solid #e2e8f0; color: #334155; font-weight: 700;">제품 규격</th>
+              <td style="padding: 12px 16px; border: 1px solid #e2e8f0; color: #1e293b;">A4 규격 서류 최적화 바인더 (약 240 x 315 mm, 세로형 슬림 포켓)</td>
+            </tr>
+            <tr>
+              <th style="background: #f8fafc; padding: 12px 16px; text-align: left; border: 1px solid #e2e8f0; color: #334155; font-weight: 700;">각인 / 인쇄</th>
+              <td style="padding: 12px 16px; border: 1px solid #e2e8f0; color: #1e293b;">정밀 120℃ 골드 불박 각인 / 1도 실크스크린 정밀 인쇄 (소속 GA 로고 및 설계사 성함)</td>
+            </tr>
+            <tr>
+              <th style="background: #f8fafc; padding: 12px 16px; text-align: left; border: 1px solid #e2e8f0; color: #334155; font-weight: 700;">최소 주문수량</th>
+              <td style="padding: 12px 16px; border: 1px solid #e2e8f0; color: #1e293b;">기본 150권부터 제작 가능 (대량 주문 시 추가 단가할인 적용)</td>
+            </tr>
+            <tr>
+              <th style="background: #f8fafc; padding: 12px 16px; text-align: left; border: 1px solid #e2e8f0; color: #334155; font-weight: 700;">제조국 / 원산지</th>
+              <td style="padding: 12px 16px; border: 1px solid #e2e8f0; color: #1e293b;">대한민국 (주식회사 위크레잇 자체 엄격 품질 관리)</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- 3. 우리만의 '알려드립니다!' 감성 안내 카드 -->
+        <div class="brand-card-box" style="border-color: #fecaca; background: #fffafb;">
+          <div class="brand-card-header" style="color: #dc2626; border-color: #fee2e2;">
+            <span class="brand-card-icon">⚠️</span>
+            <span>주문 전 꼭 확인해 주세요! (알려드립니다)</span>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div style="background: #ffffff; border: 1px solid #fee2e2; border-radius: 10px; padding: 14px 16px;">
+              <b style="font-size: 13.5px; color: #991b1b; display: block; margin-bottom: 4px;">• 1:1 맞춤 주문제작 상품</b>
+              <p style="font-size: 12.5px; color: #64748b; line-height: 1.6; margin: 0;">설계사님의 성함과 로고가 각인되는 1:1 주문제작 특성상, 시안 확정 후 제작에 착수하면 주문 취소 및 변경이 불가능합니다.</p>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #fee2e2; border-radius: 10px; padding: 14px 16px;">
+              <b style="font-size: 13.5px; color: #991b1b; display: block; margin-bottom: 4px;">• 시안 최종 검수 의무</b>
+              <p style="font-size: 12.5px; color: #64748b; line-height: 1.6; margin: 0;">전달드리는 카카오톡 시안의 오탈자(성함, 연락처, 지사명)를 꼼꼼히 확인해 주시기 바랍니다. 고객 최종 승인 후 발생한 오탈자는 재제작 사유가 되지 않습니다.</p>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #fee2e2; border-radius: 10px; padding: 14px 16px;">
+              <b style="font-size: 13.5px; color: #991b1b; display: block; margin-bottom: 4px;">• 인쇄 위치 및 가죽 톤</b>
+              <p style="font-size: 12.5px; color: #64748b; line-height: 1.6; margin: 0;">수작업 불박 프레스 공정상 1~2mm 내외의 미세한 위치 차이가 발생할 수 있으며, 모니터 해상도에 따라 실제 원단 색상과 다소 차이가 있을 수 있습니다.</p>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #fee2e2; border-radius: 10px; padding: 14px 16px;">
+              <b style="font-size: 13.5px; color: #991b1b; display: block; margin-bottom: 4px;">• 출고 및 배송 일정</b>
+              <p style="font-size: 12.5px; color: #64748b; line-height: 1.6; margin: 0;">시안 확정일로부터 영업일 기준 약 2~4일의 제작 기간이 소요되며, 검수 완료 즉시 우체국 택배로 안전하게 당일 출고됩니다.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ====================================================
+           [탭 1: 2. 제품안내 - 우리만의 4단계 제작 공정 프로세스 카드]
+           ==================================================== -->
+      <div class="tab-pane" id="kurlyPane1" style="display: none;">
+        <div class="brand-card-box">
+          <div class="brand-card-header">
+            <span class="brand-card-icon">🏭</span>
+            <span>위라클 1:1 맞춤 제작 프로세스 가이드</span>
+            <span style="font-size: 12px; color: #64748b; font-weight: normal; margin-left: auto;">STEP BY STEP PROCESS</span>
+          </div>
+
+          <p style="font-size: 13.5px; color: #475569; margin-bottom: 16px;">
+            설계사님의 첫인상을 빛내드릴 프리미엄 바인더는 아래의 4단계 정밀 공정을 거쳐 안전하게 완성됩니다.
+          </p>
+
+          <div class="process-steps-grid">
+            <div class="process-step-item">
+              <span class="step-num-badge">STEP 01</span>
+              <div style="font-size: 26px; margin-bottom: 6px;">📝</div>
+              <div class="step-title">주문 접수 & 정보 수집</div>
+              <div class="step-desc">소속 GA 로고, 직책, 성함, 연락처 등 각인하실 정보를 정확히 접수합니다.</div>
+            </div>
+
+            <div class="process-step-item">
+              <span class="step-num-badge" style="background: #0284c7;">STEP 02</span>
+              <div style="font-size: 26px; margin-bottom: 6px;">📱</div>
+              <div class="step-title">1:1 맞춤 시안 & 카톡 확정</div>
+              <div class="step-desc">전문 디자이너가 실물 크기 비율로 시안을 제작하여 카카오톡으로 전송 확인받습니다.</div>
+            </div>
+
+            <div class="process-step-item">
+              <span class="step-num-badge" style="background: #d97706;">STEP 03</span>
+              <div style="font-size: 26px; margin-bottom: 6px;">🔥</div>
+              <div class="step-title">120℃ 정밀 불박 / 실크 각인</div>
+              <div class="step-desc">고압 고온의 금박 프레스 기계로 가죽 표면에 깊고 영롱한 황금빛 불박을 정밀 압인합니다.</div>
+            </div>
+
+            <div class="process-step-item">
+              <span class="step-num-badge" style="background: #16a34a;">STEP 04</span>
+              <div style="font-size: 26px; margin-bottom: 6px;">🚚</div>
+              <div class="step-title">2중 안심 검수 & 우체국 택배</div>
+              <div class="step-desc">스크래치 및 각인 상태 전수 검사 후 고급 전용 박스에 완충 포장하여 우체국 택배로 발송합니다.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           [탭 2: 3. 배송안내 (공통) - 우리만의 세련된 배송 인포그래픽]
+           ==================================================== -->
+      <div class="tab-pane" id="kurlyPane2" style="display: none;">
+        <div class="brand-card-box">
+          <div class="brand-card-header">
+            <span class="brand-card-icon">🚚</span>
+            <span>배송 안내 (위라클 공식 표준 배송 규정)</span>
+            <button type="button" class="policy-edit-btn" onclick="triggerPolicyImgChange('shipping')" style="margin-left: auto;">✏️ 안내 이미지/파일 교체</button>
+          </div>
+
+          <div class="policy-grid-3">
+            <div class="policy-info-card">
+              <h5>📮 우체국 택배 100% 무료배송</h5>
+              <p>전국 어디든(제주도 및 도서산간 지역 포함) 추가 배송비 없이 <b>전액 무료배송</b>으로 가장 안전한 우체국 택배를 통해 직배송됩니다.</p>
+            </div>
+            <div class="policy-info-card">
+              <h5>⏱️ 제작 및 출고 소요 기간</h5>
+              <p>시안 확정일로부터 <b>영업일 기준 2~4일</b> 이내 제작 완료 후 출고되며, 출고 익일 전국 대부분의 지역에 신속하게 배송됩니다.</p>
+            </div>
+            <div class="policy-info-card">
+              <h5>📲 실시간 송장 & 알림톡</h5>
+              <p>상품 출고 즉시 주문자님의 카카오톡으로 <b>우체국 등기 송장번호 및 실시간 배송조회 링크</b>가 자동으로 발송됩니다.</p>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; padding: 14px 18px; background: #f1f5f9; border-radius: 10px; font-size: 13px; color: #475569;">
+            💡 <b>단체 / 지사 대량 주문 배송</b>: 동일 지사 및 사업단으로 300권 이상 주문 시 파손 방지를 위해 전용 팔레트 또는 튼튼한 2중 골판지 박스로 안심 분할 포장 출고됩니다.
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           [탭 3: 4. 결제안내 (공통) - 우리만의 비즈니스 결제 정책 카드]
+           ==================================================== -->
+      <div class="tab-pane" id="kurlyPane3" style="display: none;">
+        <div class="brand-card-box">
+          <div class="brand-card-header">
+            <span class="brand-card-icon">💳</span>
+            <span>결제 및 세금계산서 발행 안내</span>
+            <button type="button" class="policy-edit-btn" onclick="triggerPolicyImgChange('payment')" style="margin-left: auto;">✏️ 안내 이미지/파일 교체</button>
+          </div>
+
+          <div class="policy-grid-3">
+            <div class="policy-info-card">
+              <h5>🧾 전자세금계산서 100% 의무 발행</h5>
+              <p>법인 / 개인사업자 / GA 지사 세무 처리를 위한 <b>전자세금계산서가 결제 즉시 국세청으로 자동 연동 발행</b>됩니다.</p>
+            </div>
+            <div class="policy-info-card">
+              <h5>💳 다양한 안심 결제수단</h5>
+              <p>모든 국내외 신용카드(무이자 할부 지원), 실시간 계좌이체, 무통장 가상계좌 입금, 카카오페이 / 네이버페이 결제를 모두 지원합니다.</p>
+            </div>
+            <div class="policy-info-card">
+              <h5>🏢 본사 비용 정산용 증빙 지원</h5>
+              <p>설계사님 본사 영수증 제출용 [카드매출전표] 및 [거래명세서]가 주문 완료 페이지에서 1초 만에 PDF로 즉시 출력 가능합니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           [탭 4: 5. 교환/반품 환불안내 (공통) - 우리만의 안심 보장 정책]
+           ==================================================== -->
+      <div class="tab-pane" id="kurlyPane4" style="display: none;">
+        <div class="brand-card-box">
+          <div class="brand-card-header">
+            <span class="brand-card-icon">🔄</span>
+            <span>교환 및 환불 안심 보장 정책</span>
+            <button type="button" class="policy-edit-btn" onclick="triggerPolicyImgChange('refund')" style="margin-left: auto;">✏️ 안내 이미지/파일 교체</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 20px;">
+              <h5 style="color: #166534; font-size: 15px; font-weight: 800; margin-bottom: 8px;">✅ 100% 무상 재제작 / 교환 보장</h5>
+              <p style="font-size: 13px; color: #15803d; line-height: 1.65; margin: 0;">
+                위라클의 귀책으로 발생한 <b>오각인, 원단 파손, 봉제 불량, 배송 중 파손</b>의 경우 수령 즉시 연락 주시면 <b>전량 무상으로 즉각 재제작 및 맞교환</b>해 드립니다.
+              </p>
+            </div>
+
+            <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 12px; padding: 20px;">
+              <h5 style="color: #991b1b; font-size: 15px; font-weight: 800; margin-bottom: 8px;">⚠️ 단순 변심에 의한 환불 불가 안내</h5>
+              <p style="font-size: 13px; color: #b91c1c; line-height: 1.65; margin: 0;">
+                전자상거래법 제17조 제2항에 따라, 소비자의 요청에 의하여 개별적으로 제작되는 <b>1:1 맞춤 주문제작 상품은 최종 시안 승인 후 단순 변심으로 인한 취소 및 환불이 불가능</b>합니다.
+              </p>
+            </div>
+          </div>
+
+          <div style="margin-top: 18px; padding: 14px 18px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span style="font-weight: 800; font-size: 13.5px; color: #0f172a;">📞 위라클 고객감동센터 직통</span>
+              <span style="font-size: 12.5px; color: #64748b; margin-left: 8px;">상담시간: 평일 09:00 ~ 18:00 (점심시간 12:00 ~ 13:00)</span>
+            </div>
+            <span style="font-weight: 900; font-size: 16px; color: #2563eb;">1600-3758</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+  <script>
+    // ========================================================
+    // WERACLE SHOP - v9 정밀 통합 제어 스크립트
+    // ========================================================
+
+    const STORAGE_KEY = 'weracle_shop_v13_design';
+    const POLICY_STORAGE_KEY = 'weracle_shop_policy_v13';
+
+    // 공통 안내 이미지 (배송, 결제, 교환환불)
+    let commonPolicyImages = {
+      shipping: "branding_img/KakaoTalk_20261109_114539959.png",
+      payment: "branding_img/KakaoTalk_20261109_114555026.png",
+      refund: "branding_img/KakaoTalk_20261109_114612117.png"
+    };
+
+    function loadPolicyImages() {
+      try {
+        const saved = localStorage.getItem(POLICY_STORAGE_KEY);
+        if (saved) commonPolicyImages = Object.assign(commonPolicyImages, JSON.parse(saved));
+      } catch(e) {}
+    }
+
+    // 기본 등록 샘플 1개 (기존 쇼핑몰 탐색용)
+    const DEFAULT_PRODUCTS = {
+      item1: {
+        id: "item1",
+        title: "[1:1 각인제작] 프리미엄 사피아노 가죽 보험증권 전달 바인더",
+        tag: "📁 개인 브랜딩 상품",
+        category: "binder",
+        price: 3900,
+        originalPrice: 4500,
+        discountRate: "13%",
+        thumb: "branding_img/KakaoTalk_20261109_105448276.jpg",
+        thumbs: [
+          "branding_img/KakaoTalk_20261109_105448276.jpg",
+          "branding_img/KakaoTalk_20261109_105443294_07.jpg",
+          "branding_img/KakaoTalk_20261109_105443294.jpg",
+          "branding_img/KakaoTalk_20261109_105443294_03.jpg",
+          "branding_img/KakaoTalk_20261109_105443294_04.jpg",
+          "branding_img/KakaoTalk_20261109_105448276_01.jpg",
+          "branding_img/KakaoTalk_20261109_105443294_06.jpg",
+          "branding_img/KakaoTalk_20261109_105423888.jpg"
+        ],
+        summary: "소속 GA 로고 및 설계사 성함 정밀 120℃ 골드 불박 각인 / 프리미엄 서류 전달 바인더",
+        notice: "기본 배송: 우체국 택배 무료배송 / 주문제작 상품 (시안 확정 후 2~4일 출고)",
+        tiers: { t150: 3900, t300: 3800, t450: 3700, t750: 3600, t1500: 3500 },
+        printOptions: [
+          { name: "1도 실크인쇄 (무료 이벤트)", price: 0 },
+          { name: "1:1 골드 불박 각인 (무료 지원)", price: 0 },
+          { name: "인쇄 없음 (무지 / 빠른 출고)", price: 0 }
+        ],
+        colorOptions: [
+          { name: "네이비", colorCode: "#1e3a8a", image: "branding_img/KakaoTalk_20261109_105443294_07.jpg" },
+          { name: "레드", colorCode: "#b91c1c", image: "branding_img/KakaoTalk_20261109_105443294.jpg" },
+          { name: "브라운", colorCode: "#78350f", image: "branding_img/KakaoTalk_20261109_105443294_03.jpg" },
+          { name: "오렌지", colorCode: "#ea580c", image: "branding_img/KakaoTalk_20261109_105443294_04.jpg" }
+        ],
+        // 상세페이지 본문 갤러리 (이미지 대폭 보강 + 텍스트 스토리텔링 블록)
+        detailBlocks: [
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_105448276.jpg" },
+          { type: 'text', title: "WERACLE SIGNATURE : 품격과 신뢰를 담은 프리미엄 바인더", body: "고객과의 첫 만남, 그리고 가장 소중한 보험증권과 계약서를 전달하는 순간 설계사님의 품격을 한층 더 높여드립니다.\n엄선된 4가지 시그니처 컬러와 최고급 사피아노 가죽으로 완성된 위라클 시그니처 바인더를 만나보세요." },
+
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_105443294_07.jpg" },
+          { type: 'text', title: "Point 01. 클래식 네이비 (Classic Navy) - 비즈니스 불패의 시그니처", body: "차분하면서도 지적인 네이비 톤에 120℃ 고온 골드 불박 각인이 가장 선명하고 영롱하게 빛나는 판매 1위 베스트셀러 모델입니다.\n고객에게 단단한 신뢰와 책임감을 전달합니다." },
+
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_105443294_06.jpg" },
+          { type: 'text', title: "Point 02. 120℃ 정밀 유압 불박 골드 각인", body: "단순 잉크 인쇄가 아닌 120℃ 고온 고압 유압 프레스로 가죽 표면 깊숙이 압인하여, 수년간 손에 쥐고 상담해도 각인이 절대 벗겨지거나 변색되지 않습니다." },
+
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_105448276_01.jpg" },
+          { type: 'text', title: "Point 03. A4 전용 수납 슬림 포켓 & 양면 명함 꽂이", body: "두꺼운 종합보험 약관과 A4 규격 증권 서류도 구김 없이 쏙 들어가는 전용 포켓과 설계사님의 명함을 정갈하게 거치할 수 있는 스마트 슬롯이 기본 탑재되어 있습니다." },
+
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_105443294.jpg" },
+          { type: 'text', title: "Point 04. 로열 레드 (Royal Red) - 화사한 에너지와 당당한 첫인상", body: "시선을 사로잡는 세련된 버건디 레드 톤. 고객과의 만남에서 열정과 당당한 프로의 에너지를 각인시켜 드립니다." },
+
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_105443294_01.jpg" },
+
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_105443294_03.jpg" },
+          { type: 'text', title: "Point 05. 클래식 브라운 (Classic Brown) - 묵직하고 중후한 신뢰감", body: "천연 소가죽의 깊이 있는 에이징 텍스처를 구현한 앤틱 브라운. VIP 자산관리 및 법인 CEO 컨설팅 상담 시 최고의 권위와 신뢰를 선사합니다." },
+
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_105443294_02.jpg" },
+
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_105443294_04.jpg" },
+          { type: 'text', title: "Point 06. 비비드 오렌지 (Vivid Orange) - 트렌디한 젊은 감각", body: "산뜻하고 감각적인 유러피언 감성의 오렌지. 젊은 층과 신혼부부 고객 상담 시 특별하고 트렌디한 기억을 선물합니다." },
+
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_105443294_05.jpg" },
+
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_105423888.jpg" },
+          { type: 'text', title: "Point 07. 장인 정신이 깃든 1:1 맞춤 제작 & 전수 검수", body: "소속 GA의 공식 CI 로고와 설계사님의 성함, 직책, 연락처를 정밀 금형으로 제작하여 1권 1권 장인 정신으로 완성합니다.\n출고 전 100% 전수 검수로 오탈자 없는 완벽한 제품만을 전해드립니다." },
+
+          { type: 'image', src: "branding_img/KakaoTalk_20261109_144534166_14.jpg" },
+          { type: 'text', title: "Point 08. 프리미엄 완충 안심 포장 & 우체국 택배 무료 직배송", body: "모서리 찌그러짐이나 스크래치를 방지하는 2중 완충 패키징으로 포장되어, 시안 확정 후 가장 안전하고 신속한 우체국 택배로 전국 무료 배송됩니다." }
+        ]
+      }
+    };
+
+    function loadProducts() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Object.keys(parsed).length > 0) return parsed;
+        }
+      } catch(e) {}
+      return Object.assign({}, DEFAULT_PRODUCTS);
+    }
+
+    loadPolicyImages();
+    let products = loadProducts();
+    let currentItem = products.item1;
+    let quoteQty = 160;
+    let currentCategory = 'all';
+
+    const CATEGORY_MAP = {
+      binder: { name: "개인 브랜딩 상품", tag: "📁 개인 브랜딩 상품" },
+      gift: { name: "판촉물 대량구매", tag: "🎁 판촉물 대량구매" },
+      branding: { name: "퍼스널 브랜딩", tag: "🎨 퍼스널 브랜딩" },
+      print: { name: "서식지 & 명함", tag: "📄 서식지 & 명함" }
+    };
+
+    // 샵 첫페이지로 이동
+    function showMainCatalogView() {
+      const detailView = document.getElementById('productDetailPageView');
+      if (detailView) detailView.style.display = 'none';
+
+      const mainView = document.getElementById('mainCatalogView');
+      if (mainView) mainView.style.display = 'block';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 4대 카테고리 필터링
+    function filterCategory(cat) {
+      currentCategory = cat || 'all';
+
+      document.querySelectorAll('.big-emoji-card').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-cat') === currentCategory);
+      });
+
+      renderProductGrid();
+    }
+
+    function filterCategoryAndScroll(cat) {
+      filterCategory(cat);
+      const section = document.getElementById('shopProductsSection');
+      if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // 상단 디자인 시안 전환
+    function switchRightDesign(ver, btn) {
+      document.querySelectorAll('.variant-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      ['v1', 'v2', 'v3', 'v4'].forEach(v => {
+        const el = document.getElementById('designBox_' + v);
+        if (el) el.style.display = (v === ver) ? 'flex' : 'none';
+      });
+    }
+
+    // 메인 상품 목록 렌더링
+    function renderProductGrid() {
+      const grid = document.getElementById('productGrid');
+      if (!grid) return;
+
+      const keys = Object.keys(products);
+
+      const counts = { all: keys.length, binder: 0, gift: 0, branding: 0, print: 0 };
+      keys.forEach(k => {
+        const cat = products[k].category || 'binder';
+        if (counts[cat] !== undefined) counts[cat]++;
+      });
+
+      document.querySelectorAll('.big-emoji-card').forEach(card => {
+        const cat = card.getAttribute('data-cat');
+        const countEl = card.querySelector('.big-emoji-count');
+        if (countEl && counts[cat] !== undefined) {
+          countEl.innerText = counts[cat] + '개';
+        }
+      });
+
+      const filteredKeys = keys.filter(k => {
+        if (currentCategory === 'all') return true;
+        return (products[k].category || 'binder') === currentCategory;
+      });
+
+      const countHeader = document.querySelector('#shopProductsSection span[style*="총 "]');
+      if (countHeader) countHeader.innerText = `총 ${filteredKeys.length}개`;
+
+      let html = '';
+
+      if (filteredKeys.length === 0) {
+        html = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; background: #f8fafc; border-radius: 16px; border: 1.5px dashed #cbd5e1;">
+            <p style="font-size: 15px; font-weight: 700; color: #475569; margin-bottom: 12px;">등록된 상품이 없습니다.</p>
+            <button type="button" class="btn-buy-primary" onclick="openProductRegisterModal('${currentCategory}')" style="padding: 9px 20px; font-size: 13px; margin: 0 auto; background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer;">
+              + 새 상품 등록하기
+            </button>
+          </div>
+        `;
+      } else {
+        filteredKeys.forEach(key => {
+          const p = products[key];
+          const discountRate = p.discountRate || '10%';
+          const origPriceStr = p.originalPrice ? (p.originalPrice.toLocaleString() + '원') : '';
+          const currentPriceStr = (p.price || 0).toLocaleString() + '원';
+          const tagInfo = CATEGORY_MAP[p.category] ? CATEGORY_MAP[p.category].tag : '📁 개인 브랜딩 상품';
+
+          html += `
+          <div class="card-item-4x4" data-category="${p.category || 'binder'}" onclick="showProductDetailPage('${p.id || key}')">
+            <div class="card-thumb-4x4">
+              <img src="${p.thumb || 'branding_img/KakaoTalk_20261109_105448276.jpg'}" alt="${p.title}">
+            </div>
+
+            <div class="card-info-4x4">
+              <div>
+                <div class="card-tag-row">
+                  <span class="card-tag-text" style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:700; font-size:11.5px;">${tagInfo}</span>
+                </div>
+                <h3 class="card-title-4x4" style="margin-top:6px; font-size:15px; font-weight:700;">${p.title}</h3>
+                <p class="card-desc-4x4" style="font-size:12.5px; color:#64748b;">${p.summary || ''}</p>
+              </div>
+
+              <div>
+                <div class="card-price-row">
+                  <span class="card-discount-val">${discountRate}</span>
+                  <span class="card-price-current">${currentPriceStr}</span>
+                  ${origPriceStr ? `<span class="card-price-original">${origPriceStr}</span>` : ''}
+                </div>
+
+                <button class="card-order-btn" onclick="event.stopPropagation(); showProductDetailPage('${p.id || key}');" style="margin-top:8px;">
+                  <span>상세보기 & 주문</span>
+                  <span>→</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          `;
+        });
+
+        // 새 상품 등록 슬롯
+        html += `
+        <div class="card-slot-placeholder" onclick="openProductRegisterModal('${currentCategory === 'all' ? 'binder' : currentCategory}')">
+          <div class="slot-icon">+</div>
+          <div class="slot-title">새 상품 등록</div>
+          <div class="slot-desc">클릭하여 상품을 등록하세요</div>
+        </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+    }
+
+    // ========================================================
+    // 대표 썸네일 캐러셀 슬라이더 로직 (상세페이지 좌측)
+    // ========================================================
+    let currentSlideIdx = 0;
+    let sliderImagesList = [];
+
+    function renderProductSlider(images, initialIdx = 0) {
+      sliderImagesList = (images && images.length > 0) ? images : [currentItem.thumb || 'branding_img/KakaoTalk_20261109_105448276.jpg'];
+      currentSlideIdx = Math.max(0, Math.min(initialIdx, sliderImagesList.length - 1));
+
+      updateSliderView();
+      renderSliderThumbsStrip();
+    }
+
+    function updateSliderView() {
+      const imgEl = document.getElementById('kurlyProductImage');
+      const counterEl = document.getElementById('productSliderCounter');
+
+      if (imgEl && sliderImagesList[currentSlideIdx]) {
+        imgEl.style.opacity = '0.3';
+        imgEl.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+          imgEl.src = sliderImagesList[currentSlideIdx];
+          imgEl.style.opacity = '1';
+          imgEl.style.transform = 'scale(1)';
+        }, 120);
+      }
+
+      if (counterEl) {
+        counterEl.innerText = `${currentSlideIdx + 1} / ${sliderImagesList.length}`;
+      }
+
+      document.querySelectorAll('.slider-thumb-item').forEach((item, idx) => {
+        item.classList.toggle('active', idx === currentSlideIdx);
+      });
+
+      // 0번(대표 이미지: 여러 개 모여 있는 전색상 컷)일 때와 각 색상 슬라이드일 때 뱃지/칩 자동 동기화
+      const currentSrc = sliderImagesList[currentSlideIdx];
+      const badge = document.getElementById('detailSelectedColorBadge');
+      if (currentSlideIdx === 0) {
+        document.querySelectorAll('.detail-color-chip').forEach(btn => btn.classList.remove('active'));
+        if (badge) {
+          badge.innerText = '✨ 대표 전색상 모음';
+          badge.style.background = '#e0f2fe';
+          badge.style.color = '#0369a1';
+        }
+      } else if (currentItem && currentItem.colorOptions) {
+        const matched = currentItem.colorOptions.find(c => c.image === currentSrc);
+        if (matched) {
+          document.querySelectorAll('.detail-color-chip').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-color-name') === matched.name);
+          });
+          if (badge) {
+            badge.innerText = matched.name + ' 선택됨';
+            badge.style.background = '#e0e7ff';
+            badge.style.color = '#3730a3';
+          }
+        } else {
+          document.querySelectorAll('.detail-color-chip').forEach(btn => btn.classList.remove('active'));
+          if (badge) {
+            badge.innerText = '상세 컷 ' + (currentSlideIdx + 1);
+            badge.style.background = '#f1f5f9';
+            badge.style.color = '#475569';
+          }
+        }
+      }
+    }
+
+    function prevProductSlide() {
+      if (sliderImagesList.length <= 1) return;
+      currentSlideIdx = (currentSlideIdx - 1 + sliderImagesList.length) % sliderImagesList.length;
+      updateSliderView();
+    }
+
+    function nextProductSlide() {
+      if (sliderImagesList.length <= 1) return;
+      currentSlideIdx = (currentSlideIdx + 1) % sliderImagesList.length;
+      updateSliderView();
+    }
+
+    function goToProductSlide(idx) {
+      if (idx >= 0 && idx < sliderImagesList.length) {
+        currentSlideIdx = idx;
+        updateSliderView();
+      }
+    }
+
+    function renderSliderThumbsStrip() {
+      const strip = document.getElementById('productSliderThumbsStrip');
+      if (!strip) return;
+      strip.innerHTML = '';
+
+      if (sliderImagesList.length <= 1) {
+        strip.style.display = 'none';
+        return;
+      }
+      strip.style.display = 'flex';
+
+      sliderImagesList.forEach((src, idx) => {
+        const item = document.createElement('div');
+        item.className = 'slider-thumb-item' + (idx === currentSlideIdx ? ' active' : '');
+        item.innerHTML = `<img src="${src}" alt="썸네일 ${idx + 1}">`;
+        item.onclick = () => goToProductSlide(idx);
+        strip.appendChild(item);
+      });
+    }
+
+    // 색상 옵션 클릭 시 해당 단독 색상 이미지로 전환
+    function selectDetailColor(colorName, colorImg) {
+      const badge = document.getElementById('detailSelectedColorBadge');
+      if (badge) {
+        badge.innerText = colorName + ' 선택됨';
+        badge.style.background = '#e0e7ff';
+        badge.style.color = '#3730a3';
+      }
+
+      let foundIdx = sliderImagesList.indexOf(colorImg);
+      if (foundIdx === -1 && colorImg) {
+        sliderImagesList.push(colorImg);
+        foundIdx = sliderImagesList.length - 1;
+        renderSliderThumbsStrip();
+      }
+      if (foundIdx !== -1) {
+        goToProductSlide(foundIdx);
+      }
+
+      document.querySelectorAll('.detail-color-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-color-name') === colorName);
+      });
+    }
+
+    // ========================================================
+    // 상품 상세 페이지 열기
+    // ========================================================
+    function showProductDetailPage(itemId) {
+      try {
+        const item = (products && products[itemId]) ? products[itemId] : products.item1;
+        currentItem = item;
+
+        const titleEl = document.getElementById('kurlyProductTitle');
+        if (titleEl) titleEl.innerText = item.title;
+
+        const breadcrumbEl = document.getElementById('kurlyBreadcrumbTitle');
+        if (breadcrumbEl) breadcrumbEl.innerText = item.title;
+
+        const summaryEl = document.getElementById('kurlyProductSummary');
+        if (summaryEl) summaryEl.innerText = item.summary || '1:1 맞춤 제작 프리미엄 브랜딩 상품';
+
+        // 슬라이더 렌더링
+        const allThumbs = (item.thumbs && item.thumbs.length > 0) ? item.thumbs.slice() : [item.thumb];
+        renderProductSlider(allThumbs, 0);
+
+        // 색상 옵션 칩 동적 렌더링
+        const colorBox = document.getElementById('detailColorChipsBox');
+        if (colorBox) {
+          colorBox.innerHTML = '';
+          const colors = item.colorOptions && item.colorOptions.length > 0 ? item.colorOptions : [];
+
+          if (colors.length === 0) {
+            colorBox.innerHTML = '<span style="font-size:12px; color:#94a3b8;">단일 색상 기본 상품</span>';
+          } else {
+            colors.forEach((col) => {
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'detail-color-chip';
+              btn.setAttribute('data-color-name', col.name);
+              btn.innerHTML = `<span class="color-dot" style="background-color: ${col.colorCode || '#2563eb'};"></span> ${col.name}`;
+              btn.onclick = () => selectDetailColor(col.name, col.image);
+              colorBox.appendChild(btn);
+            });
+
+            const badge = document.getElementById('detailSelectedColorBadge');
+            if (badge) {
+              badge.innerText = '✨ 대표 전색상 모음';
+              badge.style.background = '#e0f2fe';
+              badge.style.color = '#0369a1';
+            }
+          }
+        }
+
+        // 인쇄 옵션 셀렉트박스 동적 바인딩
+        const printSelect = document.getElementById('quotePrintOption');
+        if (printSelect) {
+          printSelect.innerHTML = '';
+          const opts = (item.printOptions && item.printOptions.length > 0) ? item.printOptions : [
+            { name: "1도 실크인쇄 (무료 이벤트)", price: 0 },
+            { name: "1:1 골드 불박 각인 (무료 지원)", price: 0 },
+            { name: "인쇄 없음 (무지 / 빠른 출고)", price: 0 }
+          ];
+          opts.forEach(opt => {
+            const opEl = document.createElement('option');
+            opEl.value = opt.price || 0;
+            opEl.innerText = opt.price > 0 ? `${opt.name} (+단가 ${opt.price.toLocaleString()}원)` : opt.name;
+            printSelect.appendChild(opEl);
+          });
+        }
+
+        // 2. 상세페이지 복합 블록 (이미지 + 텍스트) 렌더링
+        renderDetailBlocks();
+
+        // 견적 연산 초기화
+        quoteQty = 160;
+        const qtyInp = document.getElementById('quoteQtyInput');
+        if (qtyInp) qtyInp.value = 160;
+        calcQuoteTotal();
+
+        // 1. 상품정보 탭 활성화 (초기 열림 시 스크롤 이동 방지)
+        switchKurlyPageTab(0, null, false);
+
+        // 뷰 전환
+        const mainCat = document.getElementById('mainCatalogView');
+        if (mainCat) mainCat.style.display = 'none';
+
+        const detailPage = document.getElementById('productDetailPageView');
+        if (detailPage) detailPage.style.display = 'block';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch(e) {
+        console.error('showProductDetailPage error:', e);
+      }
+    }
+
+    // ========================================================
+    // 2. 상세페이지 이미지 & 텍스트 복합 블록 렌더링
+    // ========================================================
+    function renderDetailBlocks() {
+      const container = document.getElementById('detailGalleryImages');
+      if (!container) return;
+
+      const blocks = currentItem.detailBlocks || (currentItem.gallery ? currentItem.gallery.map(src => ({ type: 'image', src: src })) : []);
+
+      if (blocks.length === 0) {
+        container.innerHTML = '<div style="padding:20px; text-align:center; color:#94a3b8; font-size:13px;">등록된 상세페이지 콘텐츠가 없습니다. (+ 상단 버튼으로 추가)</div>';
+        return;
+      }
+
+      container.innerHTML = blocks.map((b, i) => {
+        if (b.type === 'text') {
+          return `
+            <div style="position:relative; width:100%; max-width:680px; margin:0 auto;">
+              <div class="detail-content-text-block">
+                <h4>${b.title || '안내'}</h4>
+                <p>${b.body || ''}</p>
+              </div>
+              <button type="button" onclick="removeDetailBlock(${i})" style="position:absolute; top:8px; right:8px; background:rgba(220,38,38,0.85); color:#fff; border:none; width:24px; height:24px; border-radius:50%; cursor:pointer; font-size:11px;" title="블록 삭제">✕</button>
+            </div>
+          `;
+        } else {
+          return `
+            <div style="position:relative; width:100%; max-width:680px; margin:0 auto; text-align:center;">
+              <img src="${b.src}" style="width:100%; max-height:540px; object-fit:contain; background:#ffffff; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 2px 10px rgba(0,0,0,0.03); display:block; margin:0 auto;" alt="상세컷 ${i + 1}">
+              <button type="button" onclick="removeDetailBlock(${i})" style="position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.65); color:#fff; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; font-weight:bold;" title="이미지 삭제">✕</button>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    // 상세페이지 화면에서 직접 이미지 추가
+    function handleAddDetailImages(input) {
+      if (input.files && input.files.length > 0) {
+        const files = Array.from(input.files);
+        let loaded = 0;
+
+        if (!currentItem.detailBlocks) currentItem.detailBlocks = [];
+
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            currentItem.detailBlocks.push({ type: 'image', src: e.target.result });
+            loaded++;
+            if (loaded === files.length) {
+              renderDetailBlocks();
+              saveProductsToStorage();
+              alert(`${files.length}개의 상세 이미지가 추가되었습니다!`);
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+
+    // 상세페이지 화면에서 직접 텍스트 블록 추가
+    function promptAddDetailText() {
+      const title = prompt('추가할 설명의 소제목을 입력하세요:', '프리미엄 1:1 맞춤 제작 안내');
+      if (title === null) return;
+      const body = prompt('본문 설명 내용을 입력하세요:');
+      if (!body) return;
+
+      if (!currentItem.detailBlocks) currentItem.detailBlocks = [];
+      currentItem.detailBlocks.push({ type: 'text', title: title.trim(), body: body.trim() });
+      renderDetailBlocks();
+      saveProductsToStorage();
+    }
+
+    function removeDetailBlock(idx) {
+      if (confirm('해당 콘텐츠 블록을 삭제하시겠습니까?')) {
+        currentItem.detailBlocks.splice(idx, 1);
+        renderDetailBlocks();
+        saveProductsToStorage();
+      }
+    }
+
+    function saveProductsToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+      } catch(e) {}
+    }
+
+    // 공통 안내 이미지 교체 기능
+    let targetPolicyKey = '';
+
+    function triggerPolicyImgChange(key) {
+      targetPolicyKey = key;
+      const inp = document.getElementById('policyImgFileInput');
+      if (inp) inp.click();
+    }
+
+    function handlePolicyImgFile(input) {
+      if (input.files && input.files[0] && targetPolicyKey) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          commonPolicyImages[targetPolicyKey] = e.target.result;
+          try {
+            localStorage.setItem(POLICY_STORAGE_KEY, JSON.stringify(commonPolicyImages));
+          } catch(err) {}
+          alert('공통 안내 이미지가 성공적으로 변경되었습니다!');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // 상세페이지 5대 탭 전환
+    function switchKurlyPageTab(idx, btn, shouldScroll = true) {
+      document.querySelectorAll('.kurly-sticky-tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', i === idx);
+      });
+      if (btn) btn.classList.add('active');
+
+      for (let i = 0; i <= 4; i++) {
+        const pane = document.getElementById('kurlyPane' + i);
+        if (pane) pane.style.display = (i === idx) ? 'block' : 'none';
+      }
+
+      if (shouldScroll) {
+        // 스티키 탭 바가 상단 네비바(64px) 바로 아래에 정확히 안착하여 해당 탭 내용이 한눈에 보이도록 정밀 스크롤
+        const productTop = document.querySelector('.kurly-product-top');
+        const navBar = document.querySelector('.nav-bar');
+        const navHeight = navBar ? navBar.offsetHeight : 64;
+
+        if (productTop) {
+          const topOffset = productTop.getBoundingClientRect().bottom + window.pageYOffset;
+          const targetY = Math.max(0, Math.round(topOffset - navHeight));
+
+          window.scrollTo({
+            top: targetY,
+            behavior: 'smooth'
+          });
+        }
+      }
+    }
+
+    // 견적 연산
+    function changeQuoteQty(delta) {
+      let val = parseInt(document.getElementById('quoteQtyInput').value) || 160;
+      val = Math.max(10, val + delta);
+      document.getElementById('quoteQtyInput').value = val;
+      quoteQty = val;
+      calcQuoteTotal();
+    }
+
+    function handleQuoteQtyInput(val) {
+      let num = parseInt(val) || 10;
+      quoteQty = Math.max(10, num);
+      calcQuoteTotal();
+    }
+
+    function calcQuoteTotal() {
+      const item = currentItem || products.item1;
+      const basePrice = item.price || 3900;
+      const tiers = item.tiers || {
+        t150: basePrice,
+        t300: Math.round(basePrice * 0.98),
+        t450: Math.round(basePrice * 0.95),
+        t750: Math.round(basePrice * 0.93),
+        t1500: Math.round(basePrice * 0.90)
+      };
+
+      let unitPrice = tiers.t150;
+      if (quoteQty >= 1500) unitPrice = tiers.t1500;
+      else if (quoteQty >= 750) unitPrice = tiers.t750;
+      else if (quoteQty >= 450) unitPrice = tiers.t450;
+      else if (quoteQty >= 300) unitPrice = tiers.t300;
+
+      const printSelect = document.getElementById('quotePrintOption');
+      const printSurcharge = printSelect ? parseInt(printSelect.value) || 0 : 0;
+
+      const appliedUnit = unitPrice + printSurcharge;
+      const supplyAmount = appliedUnit * quoteQty; // 추가합계금액
+      const vatAmount = Math.round(supplyAmount * 0.1); // 부가세
+      const totalAmount = supplyAmount + vatAmount; // 총합계금액
+
+      if (document.getElementById('quoteUnitPrice')) {
+        document.getElementById('quoteUnitPrice').innerText = appliedUnit.toLocaleString() + ' 원';
+      }
+      if (document.getElementById('quoteSupplyPrice')) {
+        document.getElementById('quoteSupplyPrice').innerText = supplyAmount.toLocaleString() + ' 원';
+      }
+      if (document.getElementById('quoteVatPrice')) {
+        document.getElementById('quoteVatPrice').innerText = vatAmount.toLocaleString() + ' 원';
+      }
+      if (document.getElementById('quoteTotalPrice')) {
+        document.getElementById('quoteTotalPrice').innerText = totalAmount.toLocaleString() + ' 원';
+      }
+    }
+
+    function simulateKurlyOrder() {
+      const item = currentItem || products.item1;
+      const totalText = document.getElementById('quoteTotalPrice') ? document.getElementById('quoteTotalPrice').innerText : '';
+      alert(`[주문 접수 완료]\n\n• 상품: ${item.title}\n• 수량: ${quoteQty}권\n• 결제금액: ${totalText}\n\n주문이 정상적으로 접수되었습니다.`);
+    }
+
+    // ========================================================
+    // 신규 상품 등록 모달 전용 제어 - 완전 빈 기본값으로 시작!
+    // ========================================================
+    let adminThumbImages = [];
+    let regThumbSlideIdx = 0;
+    let adminPrintOptionList = [];
+    let adminColorList = [];
+    let adminDetailBlocksList = [];
+
+    function switchProductRegTab(idx, btn) {
+      document.querySelectorAll('#productRegisterModal .admin-tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', i === idx);
+      });
+      if (btn) btn.classList.add('active');
+
+      for (let i = 0; i <= 5; i++) {
+        const pane = document.getElementById('prodRegTabPane' + i);
+        if (pane) pane.style.display = (i === idx) ? 'block' : 'none';
+      }
+    }
+
+    function openProductRegisterModal(initialCategory) {
+      const modal = document.getElementById('productRegisterModal');
+      if (modal) modal.classList.add('open');
+
+      const catSelect = document.getElementById('adminProdCategory');
+      if (catSelect) catSelect.value = (initialCategory && initialCategory !== 'all') ? initialCategory : 'binder';
+
+      // 완전 빈칸 세팅
+      document.getElementById('adminProdTitle').value = '';
+      document.getElementById('adminProdSummary').value = '';
+      document.getElementById('adminProdPrice').value = '';
+      document.getElementById('adminProdOrigPrice').value = '';
+
+      // 대표 썸네일 초기화 (빈 상태)
+      adminThumbImages = [];
+      regThumbSlideIdx = 0;
+      updateRegThumbSlider();
+
+      // 인쇄 옵션 기본값
+      adminPrintOptionList = [
+        { name: "1도 실크인쇄 (무료)", price: 0 },
+        { name: "1:1 골드 불박 (무료)", price: 0 }
+      ];
+      renderAdminPrintOptionRows();
+
+      // 색상 옵션 초기화 (빈 상태)
+      adminColorList = [];
+      renderAdminColorRows();
+
+      // 상세페이지 블록 초기화 (빈 상태)
+      adminDetailBlocksList = [];
+      renderAdminDetailBlocksList();
+
+      switchProductRegTab(0);
+    }
+
+    function closeProductRegisterModal() {
+      const modal = document.getElementById('productRegisterModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    // 상품등록 모달 내 대표 썸네일 슬라이더
+    function handleAdminThumbMultiple(input) {
+      if (input.files && input.files.length > 0) {
+        Array.from(input.files).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            adminThumbImages.push(e.target.result);
+            updateRegThumbSlider();
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+
+    function updateRegThumbSlider() {
+      const emptyNotice = document.getElementById('regThumbEmptyNotice');
+      const imgEl = document.getElementById('regThumbPreviewImg');
+      const prevBtn = document.getElementById('regThumbPrevBtn');
+      const nextBtn = document.getElementById('regThumbNextBtn');
+      const counterEl = document.getElementById('regThumbCounter');
+
+      if (adminThumbImages.length === 0) {
+        if (emptyNotice) emptyNotice.style.display = 'block';
+        if (imgEl) imgEl.style.display = 'none';
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
+        if (counterEl) counterEl.innerText = '0장';
+      } else {
+        if (emptyNotice) emptyNotice.style.display = 'none';
+        if (imgEl) {
+          imgEl.style.display = 'block';
+          imgEl.src = adminThumbImages[regThumbSlideIdx];
+        }
+        if (prevBtn) prevBtn.style.display = adminThumbImages.length > 1 ? 'flex' : 'none';
+        if (nextBtn) nextBtn.style.display = adminThumbImages.length > 1 ? 'flex' : 'none';
+        if (counterEl) counterEl.innerText = `${regThumbSlideIdx + 1} / ${adminThumbImages.length}`;
+      }
+
+      renderAdminThumbMiniStrip();
+    }
+
+    function regPrevThumb() {
+      if (adminThumbImages.length <= 1) return;
+      regThumbSlideIdx = (regThumbSlideIdx - 1 + adminThumbImages.length) % adminThumbImages.length;
+      updateRegThumbSlider();
+    }
+
+    function regNextThumb() {
+      if (adminThumbImages.length <= 1) return;
+      regThumbSlideIdx = (regThumbSlideIdx + 1) % adminThumbImages.length;
+      updateRegThumbSlider();
+    }
+
+    function renderAdminThumbMiniStrip() {
+      const strip = document.getElementById('adminThumbMiniStrip');
+      if (!strip) return;
+      strip.innerHTML = '';
+
+      adminThumbImages.forEach((src, idx) => {
+        const item = document.createElement('div');
+        item.style.cssText = `position:relative; width:44px; height:44px; border-radius:6px; overflow:hidden; border:2px solid ${idx === regThumbSlideIdx ? '#2563eb' : '#cbd5e1'}; flex-shrink:0; cursor:pointer;`;
+        item.innerHTML = `
+          <img src="${src}" style="width:100%; height:100%; object-fit:cover;">
+          <button type="button" onclick="event.stopPropagation(); adminDeleteThumb(${idx})" style="position:absolute; top:2px; right:2px; background:rgba(220,38,38,0.85); color:#fff; border:none; width:16px; height:16px; border-radius:50%; font-size:10px; cursor:pointer; line-height:1;">✕</button>
+        `;
+        item.onclick = () => {
+          regThumbSlideIdx = idx;
+          updateRegThumbSlider();
+        };
+        strip.appendChild(item);
+      });
+    }
+
+    function adminDeleteThumb(idx) {
+      adminThumbImages.splice(idx, 1);
+      if (regThumbSlideIdx >= adminThumbImages.length) {
+        regThumbSlideIdx = Math.max(0, adminThumbImages.length - 1);
+      }
+      updateRegThumbSlider();
+    }
+
+    // 인쇄 옵션 동적 추가/삭제
+    function renderAdminPrintOptionRows() {
+      const container = document.getElementById('adminPrintOptionRows');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (adminPrintOptionList.length === 0) {
+        container.innerHTML = '<span style="font-size:12px; color:#64748b;">인쇄 옵션이 없습니다. (+ 인쇄 옵션 추가 클릭)</span>';
+        return;
+      }
+
+      adminPrintOptionList.forEach((opt, idx) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display: flex; gap: 8px; align-items: center; background: #fff; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;';
+        row.innerHTML = `
+          <span style="font-weight:700; font-size:12px; color:#475569; width:55px;">옵션 ${idx + 1}</span>
+          <input type="text" value="${opt.name}" placeholder="옵션명 (예: 1도 실크인쇄)" onchange="adminPrintOptionList[${idx}].name = this.value" style="flex:1; height:34px; border:1px solid #cbd5e1; border-radius:6px; padding:0 8px; font-size:13px; font-weight:700;">
+          <span style="font-size:12px; font-weight:700; color:#64748b;">추가금액:</span>
+          <input type="number" value="${opt.price}" placeholder="0" onchange="adminPrintOptionList[${idx}].price = parseInt(this.value) || 0" style="width:90px; height:34px; border:1px solid #cbd5e1; border-radius:6px; padding:0 8px; font-size:13px; text-align:right;">
+          <span style="font-size:12px; font-weight:700; color:#475569;">원</span>
+          <button type="button" onclick="adminRemovePrintOptionRow(${idx})" style="background:#fee2e2; color:#dc2626; border:none; width:28px; height:28px; border-radius:6px; cursor:pointer; font-weight:bold;">✕</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function adminAddPrintOptionRow() {
+      adminPrintOptionList.push({ name: "1도 실크인쇄", price: 0 });
+      renderAdminPrintOptionRows();
+    }
+
+    function adminRemovePrintOptionRow(idx) {
+      adminPrintOptionList.splice(idx, 1);
+      renderAdminPrintOptionRows();
+    }
+
+    // 색상 옵션 관리
+    function renderAdminColorRows() {
+      const container = document.getElementById('adminColorRowsContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (adminColorList.length === 0) {
+        container.innerHTML = '<span style="font-size:12px; color:#64748b;">등록된 색상 옵션이 없습니다. (+ 색상 추가를 눌러 옵션을 등록하세요)</span>';
+        return;
+      }
+
+      adminColorList.forEach((col, idx) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display: flex; gap: 8px; align-items: center; background: #fff; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0;';
+        row.innerHTML = `
+          <span style="font-weight: 700; font-size: 12px; color: #64748b; width: 45px;">색상 ${idx + 1}</span>
+          <input type="text" value="${col.name}" placeholder="색상명" onchange="adminColorList[${idx}].name = this.value" style="width: 80px; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px; font-weight: 700;">
+          <input type="color" value="${col.colorCode || '#2563eb'}" onchange="adminColorList[${idx}].colorCode = this.value" style="width: 36px; height: 32px; border: none; background: transparent; cursor: pointer;">
+          <input type="text" value="${col.image}" placeholder="이미지 파일 경로" onchange="adminColorList[${idx}].image = this.value" style="flex: 1; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 11.5px; color: #334155;">
+          <button type="button" onclick="adminRemoveColorRow(${idx})" style="background: #fee2e2; color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: bold;">✕</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function adminAddColorRow() {
+      adminColorList.push({ name: "신규색상", colorCode: "#2563eb", image: "branding_img/KakaoTalk_20261109_105448276.jpg" });
+      renderAdminColorRows();
+    }
+
+    function adminRemoveColorRow(idx) {
+      adminColorList.splice(idx, 1);
+      renderAdminColorRows();
+    }
+
+    // ========================================================
+    // 상품등록 모달 내 상세페이지 블록(이미지+텍스트) 관리
+    // ========================================================
+    function handleAdminDetailGalleryInput(input) {
+      if (input.files && input.files.length > 0) {
+        Array.from(input.files).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            adminDetailBlocksList.push({ type: 'image', src: e.target.result });
+            renderAdminDetailBlocksList();
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+
+    function adminPromptAddText() {
+      const title = prompt('소제목을 입력하세요:', '특장점 안내');
+      if (title === null) return;
+      const body = prompt('설명 본문 내용을 입력하세요:');
+      if (!body) return;
+
+      adminDetailBlocksList.push({ type: 'text', title: title.trim(), body: body.trim() });
+      renderAdminDetailBlocksList();
+    }
+
+    function renderAdminDetailBlocksList() {
+      const container = document.getElementById('adminDetailBlocksPreviewList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (adminDetailBlocksList.length === 0) {
+        container.innerHTML = '<span style="font-size:12.5px; color:#94a3b8; text-align:center; padding:30px 0;">등록된 상세 블록이 없습니다. (+ 이미지 또는 + 텍스트 블록 추가)</span>';
+        return;
+      }
+
+      adminDetailBlocksList.forEach((b, idx) => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;';
+        
+        if (b.type === 'text') {
+          item.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-weight:800; font-size:11.5px; background:#e0f2fe; color:#0284c7; padding:2px 6px; border-radius:4px;">텍스트</span>
+              <div>
+                <b style="font-size:13px; color:#0f172a;">${b.title}</b>
+                <p style="font-size:11.5px; color:#64748b; margin:0; max-width:500px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${b.body}</p>
+              </div>
+            </div>
+            <button type="button" onclick="adminRemoveDetailBlock(${idx})" style="background:#fee2e2; color:#dc2626; border:none; width:26px; height:26px; border-radius:6px; cursor:pointer; font-weight:bold;">✕</button>
+          `;
+        } else {
+          item.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-weight:800; font-size:11.5px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px;">이미지</span>
+              <img src="${b.src}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1;">
+              <span style="font-size:12px; color:#334155; font-weight:600;">상세컷 ${idx + 1}</span>
+            </div>
+            <button type="button" onclick="adminRemoveDetailBlock(${idx})" style="background:#fee2e2; color:#dc2626; border:none; width:26px; height:26px; border-radius:6px; cursor:pointer; font-weight:bold;">✕</button>
+          `;
+        }
+        container.appendChild(item);
+      });
+    }
+
+    function adminRemoveDetailBlock(idx) {
+      adminDetailBlocksList.splice(idx, 1);
+      renderAdminDetailBlocksList();
+    }
+
+    // 신규 상품 저장
+    function saveProductFromAdmin() {
+      const titleEl = document.getElementById('adminProdTitle');
+      const title = titleEl ? titleEl.value.trim() : '';
+
+      if (!title) {
+        alert('상품명을 입력하세요.');
+        switchProductRegTab(0);
+        if (titleEl) titleEl.focus();
+        return;
+      }
+
+      const summaryEl = document.getElementById('adminProdSummary');
+      const summary = summaryEl ? summaryEl.value.trim() : '';
+
+      const priceVal = document.getElementById('adminProdPrice').value;
+      const origVal = document.getElementById('adminProdOrigPrice').value;
+      const category = document.getElementById('adminProdCategory').value || 'binder';
+
+      const price = parseInt(priceVal);
+      if (!price || price <= 0) {
+        alert('판매가를 입력하세요.');
+        switchProductRegTab(0);
+        document.getElementById('adminProdPrice').focus();
+        return;
+      }
+
+      const originalPrice = parseInt(origVal) || Math.round(price * 1.15);
+      const discountRate = originalPrice > price ? Math.round((1 - price / originalPrice) * 100) + '%' : '0%';
+      const newId = 'item_' + Date.now();
+
+      const tagText = CATEGORY_MAP[category] ? CATEGORY_MAP[category].tag : '📁 개인 브랜딩 상품';
+
+      const thumbs = adminThumbImages.length > 0 ? adminThumbImages.slice() : ['branding_img/KakaoTalk_20261109_105448276.jpg'];
+      const mainThumb = thumbs[0];
+
+      // 색상 복사
+      const colorOpts = adminColorList.map(c => ({
+        name: c.name || '색상',
+        colorCode: c.colorCode || '#2563eb',
+        image: c.image || mainThumb
+      }));
+
+      // 상세 블록 복사
+      const detailBlocks = adminDetailBlocksList.length > 0 ? adminDetailBlocksList.slice() : [
+        { type: 'image', src: mainThumb },
+        { type: 'text', title: title, body: summary || '1:1 맞춤 제작 프리미엄 브랜딩 상품' }
+      ];
+
+      // 인쇄 옵션 복사
+      const printOpts = adminPrintOptionList.length > 0 ? adminPrintOptionList.slice() : [
+        { name: "1도 실크인쇄 (무료)", price: 0 }
+      ];
+
+      const newProduct = {
+        id: newId,
+        title: title,
+        tag: tagText,
+        category: category,
+        price: price,
+        originalPrice: originalPrice,
+        discountRate: discountRate,
+        thumb: mainThumb,
+        thumbs: thumbs,
+        summary: summary || '1:1 맞춤 제작 프리미엄 브랜딩 상품',
+        notice: '기본 배송: 무료배송 / 주문제작 상품 (시안 확정 후 2~4일 출고)',
+        tiers: {
+          t150: price,
+          t300: Math.round(price * 0.98),
+          t450: Math.round(price * 0.95),
+          t750: Math.round(price * 0.93),
+          t1500: Math.round(price * 0.90)
+        },
+        printOptions: printOpts,
+        colorOptions: colorOpts,
+        detailBlocks: detailBlocks
+      };
+
+      products[newId] = newProduct;
+      saveProductsToStorage();
+
+      closeProductRegisterModal();
+      renderProductGrid();
+      showProductDetailPage(newId);
+      alert('신규 상품이 등록되었습니다! 새 상품 상세페이지로 이동합니다.');
+    }
+
+    // ========================================================
+    // 위라클 권한 체크 (manager, admin, 관리자, 본사 계정만 허용)
+    // ========================================================
+    function isUserAdmin() {
+      const p = window.currentProfile || (window.parent && window.parent.currentProfile);
+      if (!p) {
+        // 단독 프리뷰 모드일 때는 기본 허용
+        return true;
+      }
+      const gradeStr = ((p.user_grade || '') + ',' + (p.access_grades || '') + ',' + (p.role || '')).toLowerCase();
+      const grades = gradeStr.split(',').map(s => s.trim());
+      if (grades.includes('manager') || grades.includes('admin') || grades.includes('m') || p.team === '관리자' || p.team === '본사') {
+        return true;
+      }
+      return false;
+    }
+
+    function initShopAuthUI() {
+      const p = window.currentProfile || (window.parent && window.parent.currentProfile);
+      const adminBtn = document.getElementById('shopAdminBtn');
+      const userPill = document.getElementById('userDisplayName');
+      
+      if (p && userPill) {
+        const name = p.name || p.nickname || p.full_name || '설계사';
+        const company = p.company || p.team || '파트너스';
+        const gradeText = (p.user_grade === 'manager' || p.user_grade === 'admin') ? '관리자' : (p.user_grade === 'VIP' ? 'VIP' : (p.user_grade === 'family' ? '식구' : '일반'));
+        userPill.innerText = `${name} (${company}/${gradeText})`;
+      }
+
+      const isAdmin = isUserAdmin();
+      if (adminBtn) {
+        adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+      }
+    }
+
+    // ========================================================
+    // 관리자 전용 대시보드 모달 (#orderAdminModal)
+    // ========================================================
+    function openOrderAdminModal() {
+      if (!isUserAdmin()) {
+        alert('🔒 관리자(본사) 권한이 있는 계정만 접근할 수 있는 메뉴입니다.');
+        return;
+      }
+      const modal = document.getElementById('orderAdminModal');
+      if (modal) modal.classList.add('open');
+      switchOrderAdminTab(0);
+    }
+
+    function closeOrderAdminModal() {
+      const modal = document.getElementById('orderAdminModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function switchOrderAdminTab(idx, btn) {
+      document.querySelectorAll('#orderAdminModal .admin-tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', i === idx);
+      });
+      if (btn) btn.classList.add('active');
+
+      const p0 = document.getElementById('orderAdminPane0');
+      const p1 = document.getElementById('orderAdminPane1');
+      const p2 = document.getElementById('orderAdminPane2');
+      if (p0) p0.style.display = idx === 0 ? 'block' : 'none';
+      if (p1) p1.style.display = idx === 1 ? 'block' : 'none';
+      if (p2) p2.style.display = idx === 2 ? 'block' : 'none';
+    }
+
+    function simulateSendTracking() {
+      const num = document.getElementById('trackingNumInput') ? document.getElementById('trackingNumInput').value : '';
+      alert(`🚚 운송장 번호(${num || '자동생성'})가 등록되었습니다.\n\n설계사님 카카오톡으로 [배송 시작 및 송장조회 알림톡]이 발송되었습니다!`);
+    }
+
+    // 초기 실행
+    window.addEventListener('DOMContentLoaded', () => {
+      filterCategory('all');
+      initShopAuthUI();
+    });
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      filterCategory('all');
+      initShopAuthUI();
+    }
+  </script>
+
+  
+  <!-- ========================================================
+       컬리 스타일 풀페이지 상품 상세 뷰 (#productDetailPageView)
+       ======================================================== -->
+  
+
+
+  <!-- ========================================================
+       6. [주식회사 위크레잇 공식 사업자 정보 푸터 (weraclemarket.com 참조)]
+       ======================================================== -->
+  <footer class="shop-footer">
+    <div class="footer-container">
+      
+      <!-- 상단 푸터: 고객센터 & 서비스 바로가기 -->
+      <div class="footer-top">
+        <div class="footer-cs-block">
+          <div class="cs-label">위크레잇 고객센터</div>
+          <div class="cs-phone">1600-3758</div>
+          <div class="cs-hours">
+            <span>평일 09:30 ~ 18:00</span>
+            <span>점심 12:00 ~ 13:00</span>
+            <span>주말 및 공휴일 휴무</span>
+          </div>
+          <div class="cs-actions">
+            <button class="cs-btn-kakao" onclick="alert('카카오 알림톡 1:1 상담으로 연결됩니다.')">💬 카카오톡 1:1 시안상담</button>
+            <button class="cs-btn-faq" onclick="alert('위크레잇 고객지원 센터로 연결됩니다.')">고객센터 문의</button>
+          </div>
+        </div>
+
+        <div class="footer-links-group">
+          <div class="footer-link-col">
+            <div class="link-title">ABOUT WERACREATE</div>
+            <a href="https://weraclemarket.com/" target="_blank">회사소개</a>
+            <a href="https://weraclemarket.com/" target="_blank">위크레잇 판촉마켓</a>
+            <a href="#">지사 대량구매 견적요청</a>
+            <a href="#">제휴 및 입점 제안</a>
+          </div>
+          <div class="footer-link-col">
+            <div class="link-title">CUSTOMER HELP</div>
+            <a href="#">주문 / 배송 조회</a>
+            <a href="#">1:1 각인 시안 확인</a>
+            <a href="#">교환 및 반품 안내</a>
+            <a href="#">세금계산서 발행</a>
+          </div>
+          <div class="footer-link-col">
+            <div class="link-title">TERMS & POLICY</div>
+            <a href="#">이용약관</a>
+            <a href="#"><b>개인정보처리방침</b></a>
+            <a href="#">구매안전(에스크로) 확인</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 하단 푸터: 주식회사 위크레잇 공식 사업자 정보 -->
+      <div class="footer-bottom">
+        <div class="company-info-text">
+          <p>
+            <b>주식회사 위크레잇</b> &nbsp;|&nbsp; 대표자 : 박보환 &nbsp;|&nbsp; 서울특별시 강남구 삼성로85길33, B04-에이107호(대치동)
+          </p>
+          <p>
+            사업자등록번호 : 116-81-80481 &nbsp;|&nbsp; 통신판매업신고 : 제2026-서울강남-06125호 &nbsp;|&nbsp; 고객센터 : 1600-3758 &nbsp;|&nbsp; FAX : 050-4172-5189
+          </p>
+          <p>
+            이메일 : iart48@naver.com &nbsp;|&nbsp; 개인정보보호책임자 : 박보환 (iart48@naver.com) &nbsp;|&nbsp; 호스팅제공자 : Supabase / Vercel
+          </p>
+        </div>
+
+        <!-- 구매안전서비스 에스크로 안내 -->
+        <div class="escrow-notice-box">
+          <div class="escrow-icon">🛡️</div>
+          <div class="escrow-text">
+            <b>에스크로 구매안전서비스 안내</b><br>
+            고객님은 안전거래를 위해 현금 등으로 5만원 이상 결제 시 구매자가 보호를 받을 수 있는 구매안전서비스(에스크로)를 이용하실 수 있습니다. (보상대상 : 미배송, 반품/환불거부, 쇼핑몰부도)
+          </div>
+        </div>
+
+        <div class="copyright-row">
+          <span>주식회사 위크레잇의 사전 서면 동의 없이 사이트의 일체의 정보, 콘텐츠 및 UI 등을 상업적 목적으로 전재, 전송, 스크래핑 등 무단 사용할 수 없습니다.</span>
+          <span>Copyright ⓒ 주식회사 위크레잇 (WERACREATE) All rights reserved.</span>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+<input type="file" id="policyImgFileInput" accept="image/*" style="display:none;" onchange="handlePolicyImgFile(this)">
+
+  <!-- ========================================================
+       1. [순수 상품 등록 전용 모달] - 주문/송장 분리 완료
+       ======================================================== -->
+  
+  <!-- ========================================================
+       1. [새 상품 등록 전용 모달 (개편 완료)]
+       - 빈 기본값으로 시작
+       - 대표 썸네일 캐러셀 슬라이더 미리보기 (꽉차게 + 여러장 넘겨보기)
+       - 인쇄옵션 동적 추가 (이름 + 금액)
+       - 상세페이지 이미지 추가 영역
+       - 배송/결제/교환 탭 실제 서비스 화면 뷰 & 클릭 수정 지원
+       ======================================================== -->
+  <div class="admin-modal" id="productRegisterModal">
+    <div class="admin-box" style="max-width: 960px; max-height: 92vh; overflow-y: auto; padding: 28px;">
+      
+      <!-- 모달 헤더 -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 2px solid #0f172a; padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 26px;">📦</span>
+          <div>
+            <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0;">새 상품 등록</h2>
+            <p style="font-size: 12.5px; color: #64748b; margin: 2px 0 0;">기본 정보, 대표 사진, 옵션, 상세 이미지 및 공통 배송·결제·교환 안내를 설정하세요.</p>
+          </div>
+        </div>
+        <button type="button" class="sheet-close-btn" style="position: static; font-size: 22px; cursor: pointer; background: none; border: none; font-weight: bold; color: #64748b;" onclick="closeProductRegisterModal()">✕</button>
+      </div>
+
+      <!-- 4. 모달 내부 탭 바: 실제 서비스 화면 탭 스타일과 연동! -->
+      <div class="admin-tabs" style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; flex-wrap: wrap;">
+        <button type="button" class="admin-tab-btn active" onclick="switchProductRegTab(0, this)">1. 기본정보 & 대표사진</button>
+        <button type="button" class="admin-tab-btn" onclick="switchProductRegTab(1, this)">2. 색상 & 인쇄옵션</button>
+        <button type="button" class="admin-tab-btn" onclick="switchProductRegTab(2, this)">3. 상세페이지 이미지</button>
+        <button type="button" class="admin-tab-btn" onclick="switchProductRegTab(3, this)">4. 배송안내 (공통)</button>
+        <button type="button" class="admin-tab-btn" onclick="switchProductRegTab(4, this)">5. 결제안내 (공통)</button>
+        <button type="button" class="admin-tab-btn" onclick="switchProductRegTab(5, this)">6. 교환/환불안내 (공통)</button>
+      </div>
+
+      <form id="pureProductRegisterForm" onsubmit="event.preventDefault(); saveProductFromAdmin();">
+        
+        <!-- [탭 0: 1. 기본정보 & 대표사진] -->
+        <div id="prodRegTabPane0">
+          <div style="display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start;">
+            
+            <!-- 좌측: 6. 대표 썸네일 캐러셀 뷰어 (하나씩 꽉차게 보이고 여러개 입력 시 넘겨서 확인!) -->
+            <div>
+              <div style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span>🖼️ 대표 썸네일 미리보기</span>
+                <span id="regThumbCounter" style="font-size: 12px; color: #2563eb; font-weight: 800;">0장</span>
+              </div>
+              
+              <div class="reg-thumb-slider-box" id="regThumbSliderBox">
+                <!-- 썸네일이 없을 때 안내 -->
+                <div id="regThumbEmptyNotice" style="text-align: center; padding: 20px;">
+                  <span style="font-size: 32px; display: block; margin-bottom: 8px;">📷</span>
+                  <span style="font-size: 13px; color: #64748b; font-weight: 600;">대표 사진을 추가해주세요</span>
+                </div>
+                <!-- 썸네일이 있을 때 이미지 -->
+                <img id="regThumbPreviewImg" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;" alt="대표 이미지">
+                <!-- 슬라이더 화살표 -->
+                <button type="button" id="regThumbPrevBtn" class="reg-thumb-nav-btn" onclick="regPrevThumb()" style="display: none; left: 8px;">‹</button>
+                <button type="button" id="regThumbNextBtn" class="reg-thumb-nav-btn" onclick="regNextThumb()" style="display: none; right: 8px;">›</button>
+              </div>
+
+              <!-- 사진 추가 버튼 및 파일 인풋 -->
+              <div style="margin-top: 10px;">
+                <input type="file" id="adminProdThumbFileInput" accept="image/*" multiple style="display:none;" onchange="handleAdminThumbMultiple(this)">
+                <button type="button" class="btn-outline" style="width: 100%; height: 40px; font-size: 13px; font-weight: 800; cursor: pointer; border: 1.5px solid #2563eb; color: #2563eb; border-radius: 8px; background: #eff6ff;" onclick="document.getElementById('adminProdThumbFileInput').click()">
+                  + 대표 사진 파일 선택 (여러 장 등록 가능)
+                </button>
+              </div>
+              <!-- 등록된 미니 썸네일 리스트 -->
+              <div id="adminThumbMiniStrip" style="display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; min-height: 44px; padding-bottom: 4px;"></div>
+            </div>
+
+            <!-- 우측: 기본정보 입력 (3. 샘플 없이 완전히 빈 기본값) -->
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <!-- 카테고리 -->
+              <div>
+                <label style="font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 6px; display: block;">📁 제품 분류 (카테고리)</label>
+                <select id="adminProdCategory" style="width: 100%; height: 42px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 12px;">
+                  <option value="binder" selected>📁 개인 브랜딩 상품</option>
+                  <option value="gift">🎁 판촉물 대량구매</option>
+                  <option value="branding">🎨 퍼스널 브랜딩</option>
+                  <option value="print">📄 서식지 & 명함</option>
+                </select>
+              </div>
+
+              <!-- 상품명 (빈칸 placeholder) -->
+              <div>
+                <label style="font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 6px; display: block;">🏷️ 상품명 <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="adminProdTitle" placeholder="상품명을 입력하세요" required style="width: 100%; height: 42px; font-weight: 600; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 12px;">
+              </div>
+
+              <!-- 한줄 설명 (빈칸) -->
+              <div>
+                <label style="font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 6px; display: block;">📝 한줄 설명</label>
+                <input type="text" id="adminProdSummary" placeholder="상품에 대한 간단한 설명을 입력하세요" style="width: 100%; height: 42px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 12px;">
+              </div>
+
+              <!-- 금액 설정 (빈칸) -->
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
+                <div style="font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 8px;">💰 금액 설정</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #475569; display: block;">판매가 (원) <span style="color:#ef4444;">*</span></label>
+                    <input type="number" id="adminProdPrice" placeholder="판매가 입력 (예: 3900)" required style="width: 100%; height: 40px; margin-top: 4px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 10px;">
+                  </div>
+                  <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #475569; display: block;">정상가 (원)</label>
+                    <input type="number" id="adminProdOrigPrice" placeholder="정상가 입력 (예: 4500)" style="width: 100%; height: 40px; margin-top: 4px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 10px;">
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- [탭 1: 2. 색상 & 인쇄옵션] -->
+        <div id="prodRegTabPane1" style="display: none;">
+          <!-- 2. 인쇄 옵션 동적 추가 (옵션명 + 금액 선택/입력) -->
+          <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div>
+                <span style="font-weight: 800; font-size: 14px; color: #166534;">🖨️ 인쇄 옵션 관리 (실크인쇄 등)</span>
+                <p style="font-size: 12px; color: #15803d; margin: 2px 0 0;">옵션명과 추가금액을 입력하여 원하는 인쇄 옵션들을 추가하세요.</p>
+              </div>
+              <button type="button" onclick="adminAddPrintOptionRow()" style="background: #16a34a; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
+                + 인쇄 옵션 추가
+              </button>
+            </div>
+            <div id="adminPrintOptionRows" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- 동적 인쇄 옵션 행 -->
+            </div>
+          </div>
+
+          <!-- 색상 옵션 관리 (빈 상태 시작, + 색상 추가) -->
+          <div style="background: #fdf4ff; border: 1.5px solid #f0abfc; border-radius: 10px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div>
+                <span style="font-weight: 800; font-size: 14px; color: #86198f;">🎨 색상 옵션 관리</span>
+                <p style="font-size: 12px; color: #a21caf; margin: 2px 0 0;">색상명과 해당 색상 이미지를 등록하면 상세페이지에서 클릭 시 대표 이미지가 바뀝니다.</p>
+              </div>
+              <button type="button" onclick="adminAddColorRow()" style="background: #a21caf; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
+                + 색상 추가
+              </button>
+            </div>
+            <div id="adminColorRowsContainer" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- 동적 색상 행 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- [탭 2: 5. 상세페이지 이미지 추가] -->
+        
+        <!-- [탭 2: 2. 상세페이지 이미지 & 텍스트 블록 구성] -->
+        <div id="prodRegTabPane2" style="display: none;">
+          <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <div>
+                <span style="font-weight: 800; font-size: 14px; color: #0f172a;">📸 상세페이지 콘텐츠 구성 (이미지 + 텍스트)</span>
+                <p style="font-size: 12px; color: #64748b; margin: 2px 0 0;">상세페이지에 노출될 실물 이미지와 설명 텍스트 블록을 자유롭게 추가하세요.</p>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <input type="file" id="adminDetailGalleryFileInput" accept="image/*" multiple style="display:none;" onchange="handleAdminDetailGalleryInput(this)">
+                <button type="button" class="btn-primary" style="padding: 7px 14px; font-size: 12.5px; font-weight: 800; background: #2563eb; color: #fff; border: none; border-radius: 7px; cursor: pointer;" onclick="document.getElementById('adminDetailGalleryFileInput').click()">
+                  + 📸 이미지 추가
+                </button>
+                <button type="button" class="btn-primary" style="padding: 7px 14px; font-size: 12.5px; font-weight: 800; background: #0f172a; color: #fff; border: none; border-radius: 7px; cursor: pointer;" onclick="adminPromptAddText()">
+                  + 📝 텍스트 블록 추가
+                </button>
+              </div>
+            </div>
+            
+            <div id="adminDetailBlocksPreviewList" style="display: flex; flex-direction: column; gap: 10px; min-height: 140px; max-height: 380px; overflow-y: auto; padding: 10px; background: #fff; border: 1.5px solid #cbd5e1; border-radius: 10px;">
+              <!-- 동적 블록 렌더링 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- [탭 3: 4. 배송안내 (공통) - 실제 나오는 화면 탭 미리보기 & 클릭해서 이미지 교체] -->
+        <div id="prodRegTabPane3" style="display: none;">
+          <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <b style="font-size: 14px; color: #166534;">🚚 배송안내 (실제 적용 미리보기)</b>
+              <p style="font-size: 12px; color: #15803d; margin: 2px 0 0;">모든 상품에 공통 적용되는 실제 안내 화면입니다. 아래 이미지를 클릭하거나 [교체]를 누르면 수정됩니다.</p>
+            </div>
+            <button type="button" class="policy-edit-btn" onclick="triggerPolicyImgChange('shipping')" style="background:#16a34a; color:#fff; border:none; padding:6px 14px; font-size:12px; font-weight:700; border-radius:6px; cursor:pointer;">
+              ✏️ 배송안내 이미지 교체
+            </button>
+          </div>
+          <div style="text-align: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; cursor: pointer;" onclick="triggerPolicyImgChange('shipping')" title="클릭하여 이미지 교체">
+            <img id="regShippingPreviewImg" src="branding_img/KakaoTalk_20261109_114539959.png" style="max-width: 100%; border-radius: 8px;" alt="배송안내">
+          </div>
+        </div>
+
+        <!-- [탭 4: 4. 결제안내 (공통)] -->
+        <div id="prodRegTabPane4" style="display: none;">
+          <div style="background: #faf5ff; border: 1px solid #d8b4fe; border-radius: 10px; padding: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <b style="font-size: 14px; color: #6b21a8;">💳 결제안내 (실제 적용 미리보기)</b>
+              <p style="font-size: 12px; color: #7e22ce; margin: 2px 0 0;">모든 상품에 공통 적용되는 결제 안내입니다. 이미지를 클릭하여 교체할 수 있습니다.</p>
+            </div>
+            <button type="button" class="policy-edit-btn" onclick="triggerPolicyImgChange('payment')" style="background:#7e22ce; color:#fff; border:none; padding:6px 14px; font-size:12px; font-weight:700; border-radius:6px; cursor:pointer;">
+              ✏️ 결제안내 이미지 교체
+            </button>
+          </div>
+          <div style="text-align: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; cursor: pointer;" onclick="triggerPolicyImgChange('payment')" title="클릭하여 이미지 교체">
+            <img id="regPaymentPreviewImg" src="branding_img/KakaoTalk_20261109_114555026.png" style="max-width: 100%; border-radius: 8px;" alt="결제안내">
+          </div>
+        </div>
+
+        <!-- [탭 5: 4. 교환/환불안내 (공통)] -->
+        <div id="prodRegTabPane5" style="display: none;">
+          <div style="background: #fff7ed; border: 1px solid #fdba74; border-radius: 10px; padding: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <b style="font-size: 14px; color: #9a3412;">🔄 교환 / 환불 안내 (실제 적용 미리보기)</b>
+              <p style="font-size: 12px; color: #c2410c; margin: 2px 0 0;">모든 상품에 공통 적용되는 교환/환불 안내입니다. 이미지를 클릭하여 교체할 수 있습니다.</p>
+            </div>
+            <button type="button" class="policy-edit-btn" onclick="triggerPolicyImgChange('refund')" style="background:#c2410c; color:#fff; border:none; padding:6px 14px; font-size:12px; font-weight:700; border-radius:6px; cursor:pointer;">
+              ✏️ 교환환불 이미지 교체
+            </button>
+          </div>
+          <div style="text-align: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; cursor: pointer;" onclick="triggerPolicyImgChange('refund')" title="클릭하여 이미지 교체">
+            <img id="regRefundPreviewImg" src="branding_img/KakaoTalk_20261109_114612117.png" style="max-width: 100%; border-radius: 8px;" alt="교환환불안내">
+          </div>
+        </div>
+
+        <!-- 하단 등록 및 취소 버튼 -->
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+          <button type="button" class="btn-outline" style="height: 44px; padding: 0 20px; font-weight: 700; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff;" onclick="closeProductRegisterModal()">취소</button>
+          <button type="submit" class="btn-primary" style="height: 44px; padding: 0 32px; font-weight: 800; font-size: 15px; background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer;">
+            📝 상품 등록하기 (즉시 쇼핑몰 반영)
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+        
+  <!-- ========================================================
+       2. [관리자 전용 대시보드 모달] - 주문/송장/공통안내 관리 전담
+       ======================================================== -->
+  <div class="admin-modal" id="orderAdminModal">
+    <div class="admin-box" style="max-width: 820px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #0f172a; padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 24px;">⚙️</span>
+          <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0;">위라클 관리자 대시보드</h2>
+          <span style="background: #dbeafe; color: #1e40af; font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">주문·송장·공통관리</span>
+        </div>
+        <button type="button" class="sheet-close-btn" style="position: static; font-size: 20px; cursor: pointer; background: none; border: none; font-weight: bold;" onclick="closeOrderAdminModal()">✕</button>
+      </div>
+
+      <!-- 관리자 탭 -->
+      <div class="admin-tabs" style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">
+        <button type="button" class="admin-tab-btn active" onclick="switchOrderAdminTab(0, this)">📋 주문·1:1 각인정보 확인</button>
+        <button type="button" class="admin-tab-btn" onclick="switchOrderAdminTab(1, this)">🚚 송장 입력 & 카카오 알림톡</button>
+        <button type="button" class="admin-tab-btn" onclick="switchOrderAdminTab(2, this)">📑 공통 안내 (배송/결제/교환) 관리</button>
+      </div>
+
+      <!-- 탭 0: 주문/각인정보 확인 -->
+      <div id="orderAdminPane0">
+        <table class="spec-table" style="width: 100%; font-size: 13px; border-collapse: collapse; margin-bottom: 16px;">
+          <thead>
+            <tr style="background: #f8fafc;">
+              <th style="padding: 10px; border: 1px solid #e2e8f0;">주문번호</th>
+              <th style="padding: 10px; border: 1px solid #e2e8f0;">주문상품</th>
+              <th style="padding: 10px; border: 1px solid #e2e8f0;">색상 / 수량</th>
+              <th style="padding: 10px; border: 1px solid #e2e8f0;">1:1 각인 요청 성함/로고</th>
+              <th style="padding: 10px; border: 1px solid #e2e8f0;">결제금액</th>
+              <th style="padding: 10px; border: 1px solid #e2e8f0;">진행상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-weight: 700;">ORD-20261109-01</td>
+              <td style="padding: 10px; border: 1px solid #e2e8f0;">사피아노 가죽 바인더</td>
+              <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">네이비 / 160권</td>
+              <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: 700; color: #1d4ed8;">현대해상 김성훈 팀장 (로고 금박)</td>
+              <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: right; font-weight: 800;">686,400원</td>
+              <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;"><span style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">제작중</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 탭 1: 송장 입력 & 알림톡 발송 -->
+      <div id="orderAdminPane1" style="display: none;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+          <h4 style="font-size: 14.5px; font-weight: 800; color: #0f172a; margin: 0 0 10px;">🚚 우체국 택배 송장 연동</h4>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="trackingNumInput" value="6892-4112-9014" placeholder="운송장 번호 입력" style="flex: 1; height: 40px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13.5px; font-weight: 700;">
+            <button type="button" class="btn-primary" onclick="simulateSendTracking()" style="height: 40px; padding: 0 18px; font-size: 13px; font-weight: 700; background: #16a34a; border: none; border-radius: 8px; color: #fff; cursor: pointer;">
+              알림톡 발송
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 탭 2: 공통 안내 (배송/결제/교환) 관리 -->
+      <div id="orderAdminPane2" style="display: none;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+            <div>
+              <b style="font-size: 14px; color: #0f172a;">3. 배송안내 이미지</b>
+              <div style="font-size: 12px; color: #64748b;" id="adminShippingImgPath">branding_img/KakaoTalk_20261109_114539959.png</div>
+            </div>
+            <button type="button" class="policy-edit-btn" onclick="triggerPolicyImgChange('shipping')">교체하기</button>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+            <div>
+              <b style="font-size: 14px; color: #0f172a;">4. 결제안내 이미지</b>
+              <div style="font-size: 12px; color: #64748b;" id="adminPaymentImgPath">branding_img/KakaoTalk_20261109_114555026.png</div>
+            </div>
+            <button type="button" class="policy-edit-btn" onclick="triggerPolicyImgChange('payment')">교체하기</button>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <b style="font-size: 14px; color: #0f172a;">5. 교환/환불안내 이미지</b>
+              <div style="font-size: 12px; color: #64748b;" id="adminRefundImgPath">branding_img/KakaoTalk_20261109_114612117.png</div>
+            </div>
+            <button type="button" class="policy-edit-btn" onclick="triggerPolicyImgChange('refund')">교체하기</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+        <button type="button" class="btn-outline" onclick="closeOrderAdminModal()" style="height: 38px; padding: 0 18px; font-weight: 700; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff;">닫기</button>
+      </div>
+
     </div>
   </div>
 

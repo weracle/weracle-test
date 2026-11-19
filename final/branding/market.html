@@ -3276,9 +3276,9 @@
         <span>⚙️</span> 관리자 대시보드
       </button>
 
-      <div class="cart-btn" onclick="alert('장바구니 기능이 연동됩니다.')">
+      <div class="cart-btn" id="headerCartBtn" onclick="openCartModal()" title="장바구니 열기" style="cursor: pointer;">
         🛒
-        <span class="cart-count">1</span>
+        <span class="cart-count" id="cartCountBadge" style="display: none;">0</span>
       </div>
     </div>
   </nav>
@@ -3707,10 +3707,10 @@
 
             <!-- 주문 및 결제 버튼 그룹 -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;">
-              <button type="button" class="btn-buy-primary" style="padding: 13px; font-size: 14.5px;" onclick="simulateKurlyOrder()">
+              <button type="button" class="btn-buy-primary" style="padding: 13px; font-size: 14.5px;" onclick="buyNowDirect()">
                 <span>🛍️ 바로 주문/결제하기</span>
               </button>
-              <button type="button" class="btn-outline" style="padding: 13px; font-size: 14.5px; font-weight: 800; border-color: #0284c7; color: #0284c7;" onclick="alert('장바구니에 담겼습니다! 상단 장바구니 메뉴에서 확인하실 수 있습니다.')">
+              <button type="button" class="btn-outline" style="padding: 13px; font-size: 14.5px; font-weight: 800; border-color: #0284c7; color: #0284c7;" onclick="addToCart()">
                 <span>🛒 장바구니 담기</span>
               </button>
             </div>
@@ -5167,6 +5167,388 @@
     }
 
     // 초기 실행
+
+    // ========================================================
+    // 🛒 장바구니 (Cart) 및 주문 시스템 (LocalStorage 연동)
+    // ========================================================
+    const CART_STORAGE_KEY = 'weracle_shop_cart';
+    const ORDERS_STORAGE_KEY = 'weracle_shop_orders';
+    let currentCheckoutItems = [];
+
+    function getCartItems() {
+      try {
+        const raw = localStorage.getItem(CART_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch(e) {
+        return [];
+      }
+    }
+
+    function saveCartItems(items) {
+      try {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      } catch(e) {}
+      updateCartBadge();
+    }
+
+    function updateCartBadge() {
+      const items = getCartItems();
+      const count = items.length;
+      const badge = document.getElementById('cartCountBadge') || document.querySelector('.cart-count');
+      if (badge) {
+        badge.innerText = count;
+        badge.style.display = count > 0 ? 'inline-flex' : 'none';
+      }
+    }
+
+    // [장바구니 담기] 실행
+    function addToCart() {
+      const item = currentItem || products.item1;
+      if (!item) return;
+
+      const colorEl = document.querySelector('.detail-color-chip.active');
+      const colorName = colorEl ? colorEl.getAttribute('data-color-name') : (item.colorOptions && item.colorOptions[0] ? item.colorOptions[0].name : '기본 색상');
+
+      const printSelect = document.getElementById('quotePrintOption');
+      const printOptionText = printSelect && printSelect.options[printSelect.selectedIndex] ? printSelect.options[printSelect.selectedIndex].text : '1도 실크인쇄 (무료)';
+      const printSurcharge = printSelect ? parseInt(printSelect.value) || 0 : 0;
+
+      const basePrice = item.price || 32000;
+      const tiers = item.tiers || {
+        t150: basePrice,
+        t300: Math.round(basePrice * 0.98),
+        t450: Math.round(basePrice * 0.95),
+        t750: Math.round(basePrice * 0.93),
+        t1500: Math.round(basePrice * 0.90)
+      };
+
+      let unitPrice = tiers.t150;
+      if (quoteQty >= 1500) unitPrice = tiers.t1500;
+      else if (quoteQty >= 750) unitPrice = tiers.t750;
+      else if (quoteQty >= 450) unitPrice = tiers.t450;
+      else if (quoteQty >= 300) unitPrice = tiers.t300;
+
+      const appliedUnit = unitPrice + printSurcharge;
+      const supplyAmount = appliedUnit * quoteQty;
+      const vatAmount = Math.round(supplyAmount * 0.1);
+      const totalAmount = supplyAmount + vatAmount;
+
+      const cartItems = getCartItems();
+      const existingIdx = cartItems.findIndex(ci => ci.productId === (item.id || 'item1') && ci.color === colorName && ci.printOption === printOptionText);
+
+      if (existingIdx !== -1) {
+        cartItems[existingIdx].qty += quoteQty;
+        cartItems[existingIdx].totalPrice = Math.round((appliedUnit * cartItems[existingIdx].qty) * 1.1);
+      } else {
+        cartItems.push({
+          cartId: 'cart_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          productId: item.id || 'item1',
+          title: item.title,
+          thumb: (item.thumbs && item.thumbs[0]) || item.thumb || 'branding_img/KakaoTalk_20261109_105448276.jpg',
+          color: colorName,
+          printOption: printOptionText,
+          qty: quoteQty,
+          unitPrice: appliedUnit,
+          totalPrice: totalAmount
+        });
+      }
+
+      saveCartItems(cartItems);
+
+      if (confirm(`🛒 장바구니에 [${item.title}]이(가) 담겼습니다!\n\n장바구니 목록으로 바로 이동하시겠습니까?`)) {
+        openCartModal();
+      }
+    }
+
+    // [바로 주문/결제하기] 실행
+    function buyNowDirect() {
+      const item = currentItem || products.item1;
+      if (!item) return;
+
+      const colorEl = document.querySelector('.detail-color-chip.active');
+      const colorName = colorEl ? colorEl.getAttribute('data-color-name') : (item.colorOptions && item.colorOptions[0] ? item.colorOptions[0].name : '기본 색상');
+
+      const printSelect = document.getElementById('quotePrintOption');
+      const printOptionText = printSelect && printSelect.options[printSelect.selectedIndex] ? printSelect.options[printSelect.selectedIndex].text : '1도 실크인쇄 (무료)';
+      const printSurcharge = printSelect ? parseInt(printSelect.value) || 0 : 0;
+
+      const basePrice = item.price || 32000;
+      const tiers = item.tiers || {
+        t150: basePrice,
+        t300: Math.round(basePrice * 0.98),
+        t450: Math.round(basePrice * 0.95),
+        t750: Math.round(basePrice * 0.93),
+        t1500: Math.round(basePrice * 0.90)
+      };
+
+      let unitPrice = tiers.t150;
+      if (quoteQty >= 1500) unitPrice = tiers.t1500;
+      else if (quoteQty >= 750) unitPrice = tiers.t750;
+      else if (quoteQty >= 450) unitPrice = tiers.t450;
+      else if (quoteQty >= 300) unitPrice = tiers.t300;
+
+      const appliedUnit = unitPrice + printSurcharge;
+      const supplyAmount = appliedUnit * quoteQty;
+      const vatAmount = Math.round(supplyAmount * 0.1);
+      const totalAmount = supplyAmount + vatAmount;
+
+      currentCheckoutItems = [{
+        cartId: 'direct_' + Date.now(),
+        productId: item.id || 'item1',
+        title: item.title,
+        thumb: (item.thumbs && item.thumbs[0]) || item.thumb || 'branding_img/KakaoTalk_20261109_105448276.jpg',
+        color: colorName,
+        printOption: printOptionText,
+        qty: quoteQty,
+        unitPrice: appliedUnit,
+        totalPrice: totalAmount
+      }];
+
+      openCheckoutModal();
+    }
+
+    function openCartModal() {
+      renderCartModalList();
+      const modal = document.getElementById('cartModal');
+      if (modal) modal.classList.add('open');
+    }
+
+    function closeCartModal() {
+      const modal = document.getElementById('cartModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function renderCartModalList() {
+      const items = getCartItems();
+      const listEl = document.getElementById('cartItemsList');
+      const countEl = document.getElementById('cartModalCount');
+      const subtotalEl = document.getElementById('cartSubtotal');
+      const totalSumEl = document.getElementById('cartTotalSum');
+      const footerEl = document.getElementById('cartSummaryFooter');
+
+      if (countEl) countEl.innerText = items.length;
+
+      if (!listEl) return;
+
+      if (items.length === 0) {
+        listEl.innerHTML = `
+          <div style="text-align: center; padding: 48px 20px;">
+            <div style="font-size: 42px; margin-bottom: 12px;">🛒</div>
+            <div style="font-size: 15.5px; font-weight: 800; color: #1e293b; margin-bottom: 6px;">장바구니가 비어 있습니다.</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 20px;">원하시는 맞춤 브랜딩 상품을 담아보세요!</div>
+            <button type="button" class="btn-buy-primary" onclick="closeCartModal(); showMainCatalog();" style="padding: 9px 20px; font-size: 13px; margin: 0 auto;">
+              상품 둘러보기
+            </button>
+          </div>
+        `;
+        if (subtotalEl) subtotalEl.innerText = '0 원';
+        if (totalSumEl) totalSumEl.innerText = '0 원';
+        return;
+      }
+
+      let subtotal = 0;
+      let html = '';
+
+      items.forEach((it, idx) => {
+        subtotal += (it.totalPrice || 0);
+        html += `
+          <div style="display: flex; gap: 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; position: relative; align-items: center;">
+            <img src="${it.thumb}" alt="${it.title}" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; flex-shrink: 0;" onerror="this.src='branding_img/KakaoTalk_20261109_105448276.jpg'">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${it.title}</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;">
+                <span style="font-size: 11px; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 2px 7px; border-radius: 4px;">${it.color}</span>
+                <span style="font-size: 11px; font-weight: 600; color: #475569; background: #f1f5f9; padding: 2px 7px; border-radius: 4px;">${it.printOption}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <button type="button" onclick="changeCartQty('${it.cartId}', -10)" style="width: 24px; height: 24px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; cursor: pointer; font-weight: bold;">-</button>
+                  <span style="font-size: 13px; font-weight: 800; min-width: 38px; text-align: center;">${it.qty}권</span>
+                  <button type="button" onclick="changeCartQty('${it.cartId}', 10)" style="width: 24px; height: 24px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; cursor: pointer; font-weight: bold;">+</button>
+                </div>
+                <div style="font-size: 14px; font-weight: 800; color: #0284c7;">${(it.totalPrice || 0).toLocaleString()}원</div>
+              </div>
+            </div>
+            <button type="button" onclick="removeCartItem('${it.cartId}')" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 14px; color: #94a3b8; cursor: pointer; font-weight: bold;" title="상품 삭제">✕</button>
+          </div>
+        `;
+      });
+
+      listEl.innerHTML = html;
+      if (subtotalEl) subtotalEl.innerText = subtotal.toLocaleString() + ' 원';
+      if (totalSumEl) totalSumEl.innerText = subtotal.toLocaleString() + ' 원';
+    }
+
+    function changeCartQty(cartId, delta) {
+      const items = getCartItems();
+      const it = items.find(c => c.cartId === cartId);
+      if (!it) return;
+
+      const newQty = (it.qty || 160) + delta;
+      if (newQty < 10) {
+        if (confirm('상품을 장바구니에서 삭제하시겠습니까?')) {
+          removeCartItem(cartId);
+        }
+        return;
+      }
+      it.qty = newQty;
+      it.totalPrice = Math.round((it.unitPrice * newQty) * 1.1);
+      saveCartItems(items);
+      renderCartModalList();
+    }
+
+    function removeCartItem(cartId) {
+      let items = getCartItems();
+      items = items.filter(c => c.cartId !== cartId);
+      saveCartItems(items);
+      renderCartModalList();
+    }
+
+    function clearCart() {
+      if (confirm('장바구니의 모든 상품을 비우시겠습니까?')) {
+        saveCartItems([]);
+        renderCartModalList();
+      }
+    }
+
+    function proceedToCheckout() {
+      const items = getCartItems();
+      if (items.length === 0) {
+        alert('장바구니에 담긴 상품이 없습니다.');
+        return;
+      }
+      currentCheckoutItems = items;
+      closeCartModal();
+      openCheckoutModal();
+    }
+
+    function openCheckoutModal() {
+      const items = currentCheckoutItems.length > 0 ? currentCheckoutItems : getCartItems();
+      if (items.length === 0) {
+        alert('주문할 상품이 없습니다.');
+        return;
+      }
+
+      const summaryEl = document.getElementById('checkoutItemsSummary');
+      const totalAmountEl = document.getElementById('checkoutTotalAmount');
+      const totalSum = items.reduce((acc, it) => acc + (it.totalPrice || 0), 0);
+
+      if (summaryEl) {
+        summaryEl.innerHTML = items.map(it => `
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>• ${it.title} (${it.color} / ${it.qty}권)</span>
+            <span style="font-weight: 700;">${(it.totalPrice || 0).toLocaleString()}원</span>
+          </div>
+        `).join('');
+      }
+
+      if (totalAmountEl) {
+        totalAmountEl.innerText = totalSum.toLocaleString() + ' 원';
+      }
+
+      // 로그인된 사용자 정보 자동 채우기
+      let p = window.currentProfile;
+      try {
+        if (!p && window.parent && window.parent.currentProfile) p = window.parent.currentProfile;
+      } catch(e) {}
+      if (!p) {
+        try {
+          const cached = localStorage.getItem('cached_profile');
+          if (cached) p = JSON.parse(cached);
+        } catch(e) {}
+      }
+
+      if (p) {
+        const nameInp = document.getElementById('orderBuyerName');
+        const phoneInp = document.getElementById('orderBuyerPhone');
+        const compInp = document.getElementById('orderBuyerCompany');
+        if (nameInp && !nameInp.value) nameInp.value = p.name || p.nickname || p.full_name || '';
+        if (phoneInp && !phoneInp.value) phoneInp.value = p.phone || p.mobile || '';
+        if (compInp && !compInp.value) compInp.value = p.company || p.team || '';
+      }
+
+      const modal = document.getElementById('checkoutModal');
+      if (modal) modal.classList.add('open');
+    }
+
+    function closeCheckoutModal() {
+      const modal = document.getElementById('checkoutModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    // 최종 주문 접수 완료 처리
+    function submitFinalOrder(e) {
+      if (e) e.preventDefault();
+
+      const buyerName = document.getElementById('orderBuyerName').value.trim();
+      const buyerPhone = document.getElementById('orderBuyerPhone').value.trim();
+      const buyerCompany = document.getElementById('orderBuyerCompany').value.trim();
+      const address = document.getElementById('orderAddress').value.trim();
+      const addressDetail = document.getElementById('orderAddressDetail').value.trim();
+      const memo = document.getElementById('orderMemo').value.trim();
+      const engraveText = document.getElementById('orderEngraveText').value.trim();
+      const payMethod = document.querySelector('input[name="payMethod"]:checked')?.value || 'vbank';
+
+      if (!buyerName || !buyerPhone || !address) {
+        alert('주문자 성함, 연락처, 배송지 주소는 필수 입력 항목입니다.');
+        return;
+      }
+
+      const items = currentCheckoutItems.length > 0 ? currentCheckoutItems : getCartItems();
+      if (items.length === 0) {
+        alert('주문할 상품이 없습니다.');
+        return;
+      }
+
+      const totalAmount = items.reduce((sum, it) => sum + (it.totalPrice || 0), 0);
+      const now = new Date();
+      const ymd = now.getFullYear().toString() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+      const orderId = 'ORD-' + ymd + '-' + Math.floor(1000 + Math.random() * 9000);
+
+      const newOrder = {
+        id: orderId,
+        date: now.toLocaleString(),
+        buyerName: buyerName,
+        buyerPhone: buyerPhone,
+        buyerCompany: buyerCompany,
+        address: `${address} ${addressDetail}`.trim(),
+        memo: memo,
+        engraveText: engraveText || '요청 없음',
+        payMethod: payMethod,
+        items: items,
+        totalAmount: totalAmount,
+        status: '주문접수'
+      };
+
+      // 관리자 주문 목록 저장
+      try {
+        const rawOrders = localStorage.getItem(ORDERS_STORAGE_KEY);
+        const orders = rawOrders ? JSON.parse(rawOrders) : [];
+        orders.unshift(newOrder);
+        localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
+      } catch(err) {}
+
+      // 장바구니 비우기
+      saveCartItems([]);
+
+      closeCheckoutModal();
+
+      const payMethodLabel = payMethod === 'vbank' ? '가상계좌/무통장입금(세금계산서 발행)' : (payMethod === 'card' ? '신용카드' : '카카오페이/토스');
+
+      alert(`🎉 주문이 성공적으로 접수되었습니다!\n\n• 주문번호: ${orderId}\n• 주문자: ${buyerName} (${buyerPhone})\n• 결제금액: ${totalAmount.toLocaleString()}원\n• 결제방식: ${payMethodLabel}\n\n위크레잇 전담 디자이너가 배정되어 1:1 맞춤 각인 시안을 카카오톡으로 안내해 드립니다.`);
+    }
+
+    // 메인 카탈로그로 화면 전환
+    function showMainCatalog() {
+      const detailPage = document.getElementById('productDetailPageView');
+      if (detailPage) detailPage.style.display = 'none';
+
+      const mainCat = document.getElementById('mainCatalogView');
+      if (mainCat) mainCat.style.display = 'block';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       filterCategory('all');
       initShopAuthUI();
@@ -5597,6 +5979,154 @@
         <button type="button" class="btn-outline" onclick="closeOrderAdminModal()" style="height: 38px; padding: 0 18px; font-weight: 700; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff;">닫기</button>
       </div>
 
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       장바구니 모달 (#cartModal)
+       ======================================================== -->
+  <div class="admin-modal" id="cartModal">
+    <div class="admin-box" style="max-width: 600px; max-height: 90vh; border-radius: 20px; padding: 26px;">
+      <!-- 모달 헤더 -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 18px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">🛒</span>
+          <h2 style="font-size: 19px; font-weight: 800; color: #0f172a; margin: 0;">장바구니 (<span id="cartModalCount">0</span>)</h2>
+        </div>
+        <button type="button" style="background: none; border: none; font-size: 22px; cursor: pointer; color: #64748b; font-weight: bold;" onclick="closeCartModal()">✕</button>
+      </div>
+
+      <!-- 장바구니 상품 목록 영역 -->
+      <div id="cartItemsList" style="display: flex; flex-direction: column; gap: 12px; max-height: 46vh; overflow-y: auto; padding-right: 4px; margin-bottom: 18px;">
+        <!-- JS 동적 렌더링 -->
+      </div>
+
+      <!-- 장바구니 하단 결제 정보 및 버튼 -->
+      <div id="cartSummaryFooter" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13.5px; color: #64748b;">
+          <span>총 상품금액</span>
+          <span id="cartSubtotal" style="font-weight: 700; color: #1e293b;">0 원</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13.5px; color: #64748b;">
+          <span>배송비</span>
+          <span style="font-weight: 700; color: #16a34a;">0 원 (100% 무료배송)</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: #94a3b8;">
+          <span>부가세(10%)</span>
+          <span id="cartVat">포함</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1.5px dashed #cbd5e1; padding-top: 10px;">
+          <span style="font-size: 14.5px; font-weight: 800; color: #0f172a;">총 결제 예정 금액</span>
+          <span id="cartTotalSum" style="font-size: 20px; font-weight: 900; color: #0284c7;">0 원</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button type="button" onclick="clearCart()" style="flex: 1; height: 44px; border: 1px solid #cbd5e1; background: #fff; border-radius: 10px; font-size: 13.5px; font-weight: 700; color: #64748b; cursor: pointer;">
+          🗑️ 장바구니 비우기
+        </button>
+        <button type="button" class="btn-buy-primary" onclick="proceedToCheckout()" style="flex: 2; height: 44px; font-size: 15px; font-weight: 800; border-radius: 10px; justify-content: center; cursor: pointer;">
+          🛍️ 주문서 작성하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       주문서 작성 모달 (#checkoutModal)
+       ======================================================== -->
+  <div class="admin-modal" id="checkoutModal">
+    <div class="admin-box" style="max-width: 620px; max-height: 90vh; border-radius: 20px; padding: 24px;">
+      <!-- 헤더 -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 18px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">📋</span>
+          <h2 style="font-size: 19px; font-weight: 800; color: #0f172a; margin: 0;">1:1 맞춤 제작 주문서</h2>
+        </div>
+        <button type="button" style="background: none; border: none; font-size: 22px; cursor: pointer; color: #64748b; font-weight: bold;" onclick="closeCheckoutModal()">✕</button>
+      </div>
+
+      <!-- 주문 상품 요약 -->
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 12px 16px; margin-bottom: 18px;">
+        <div style="font-size: 12.5px; font-weight: 800; color: #1e40af; margin-bottom: 6px;">📦 주문 상품 요약</div>
+        <div id="checkoutItemsSummary" style="font-size: 13.5px; color: #1e293b; line-height: 1.6;"></div>
+        <div style="text-align: right; margin-top: 6px; font-size: 16px; font-weight: 900; color: #0284c7;">
+          최종 결제 금액: <span id="checkoutTotalAmount">0 원</span>
+        </div>
+      </div>
+
+      <!-- 폼 영역 -->
+      <form id="checkoutForm" onsubmit="submitFinalOrder(event)" style="display: flex; flex-direction: column; gap: 14px;">
+        <!-- 1. 주문자 정보 -->
+        <div>
+          <h4 style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">1. 주문자 정보</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="font-size: 12px; color: #475569; font-weight: 700;">주문자 성함 *</label>
+              <input type="text" id="orderBuyerName" required placeholder="홍길동" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; margin-top: 4px;">
+            </div>
+            <div>
+              <label style="font-size: 12px; color: #475569; font-weight: 700;">연락처 (휴대폰) *</label>
+              <input type="tel" id="orderBuyerPhone" required placeholder="010-0000-0000" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; margin-top: 4px;">
+            </div>
+          </div>
+          <div style="margin-top: 6px;">
+            <label style="font-size: 12px; color: #475569; font-weight: 700;">소속 회사 및 지점명</label>
+            <input type="text" id="orderBuyerCompany" placeholder="예: 현대해상 강남사업단 / 프라임에셋 1본부" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; margin-top: 4px;">
+          </div>
+        </div>
+
+        <!-- 2. 배송지 정보 -->
+        <div>
+          <h4 style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">2. 배송지 정보 (우체국 택배 100% 무료배송)</h4>
+          <div style="margin-bottom: 6px;">
+            <label style="font-size: 12px; color: #475569; font-weight: 700;">배송지 주소 *</label>
+            <input type="text" id="orderAddress" required placeholder="기본 주소 입력 (시/군/구, 도로명)" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; margin-top: 4px;">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="font-size: 12px; color: #475569; font-weight: 700;">상세 주소 (동/호수, 층수)</label>
+              <input type="text" id="orderAddressDetail" placeholder="상세 주소 입력" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; margin-top: 4px;">
+            </div>
+            <div>
+              <label style="font-size: 12px; color: #475569; font-weight: 700;">배송 요청사항</label>
+              <input type="text" id="orderMemo" placeholder="부재 시 문 앞에 놓아주세요" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; margin-top: 4px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 각인 요청사항 -->
+        <div>
+          <h4 style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">3. 1:1 맞춤 각인 문구 및 요청</h4>
+          <textarea id="orderEngraveText" rows="2" placeholder="바인더 전면 골드 불박 각인 문구를 적어주세요. (예: 현대해상 강남사업단 김성훈 팀장 / 로고 AI 파일 카카오톡 접수 예정)" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; font-size: 13px; resize: vertical;"></textarea>
+        </div>
+
+        <!-- 4. 결제 수단 선택 -->
+        <div>
+          <h4 style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">4. 결제 수단 선택</h4>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <label style="border: 1.5px solid #0284c7; background: #f0f9ff; border-radius: 8px; padding: 9px; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer;">
+              <input type="radio" name="payMethod" value="vbank" checked style="margin-right: 4px;"> 무통장입금/세금계산서
+            </label>
+            <label style="border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 9px; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer;">
+              <input type="radio" name="payMethod" value="card" style="margin-right: 4px;"> 신용카드
+            </label>
+            <label style="border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 9px; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer;">
+              <input type="radio" name="payMethod" value="easypay" style="margin-right: 4px;"> 카카오페이/토스
+            </label>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 6px;">
+          <button type="button" onclick="closeCheckoutModal()" style="flex: 1; height: 44px; border: 1px solid #cbd5e1; background: #fff; border-radius: 10px; font-size: 13.5px; font-weight: 700; color: #64748b; cursor: pointer;">
+            취소
+          </button>
+          <button type="submit" class="btn-buy-primary" style="flex: 2; height: 44px; font-size: 15px; font-weight: 800; border-radius: 10px; justify-content: center; cursor: pointer;">
+            ✓ 최종 주문 접수하기
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

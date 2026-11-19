@@ -7108,6 +7108,53 @@ async function submitLeadForm(e) {
       renderTypeBDom();
       renderTypeCDom();
     })();
+ /* ======================================================================
+       [실전 배포 안전망] C타입 고객화면 채용질문 고정 & 인물사진 계승·여백 보호
+       ====================================================================== */
+    (function applyProductionSafeguards() {
+      // 1) B타입 컨설턴트 배너 숨김 시에도 신청 카드가 Q&A와 겹치지 않도록 여백 안정화
+      const safeCss = document.createElement('style');
+      safeCss.textContent = `
+        #tbSecAdvisor { padding-bottom: 14px !important; }
+        .magazine-wrapper[data-active-preset="B"] .ending-overlap-card { margin-top: 10px !important; }
+      `;
+      document.head.appendChild(safeCss);
+
+      // 2) B·C 페이지를 '⭐ 대표'로 지정해도 새 페이지 생성 시 배너가 아닌 '원본 인물 사진'을 계승
+      const _prevExtractIden = extractMyBaseIdentity;
+      extractMyBaseIdentity = function() {
+        const iden = _prevExtractIden();
+        const defPage = hubSavedPages.find(p => p.isDefault && p.config) || hubSavedPages[0];
+        if (defPage && defPage.config && defPage.config.photos && defPage.config.photos.origHeroPhotoBox) {
+          iden.heroPhoto = defPage.config.photos.origHeroPhotoBox;
+        }
+        return iden;
+      };
+
+      // 3) 지원자가 인스타 DM·복사링크로 C타입(리쿠르팅) 접속 시 하단 객관식 질문을 채용 전용으로 고정
+      const enforceRecruitQuestionIfNeeded = () => {
+        if (String(currentPresetType).toUpperCase() === 'C' && !params.get('qs')) {
+          const qWrap = document.getElementById('dynamicQuestionsWrap');
+          if (qWrap) {
+            qWrap.innerHTML = `
+              <div class="question-box custom-q-item" data-q-type="CHOICE" data-q-idx="0">
+                <div class="q-title">Q. 어떤 부분이 가장 궁금하신가요?</div>
+                <label class="radio-item"><input type="radio" name="qAnswer_0" value="신입 교육·정착 지원 및 DB 시스템 안내" checked /><span>🌱 신입 교육·정착 지원 및 DB 시스템 안내</span></label>
+                <label class="radio-item"><input type="radio" name="qAnswer_0" value="경력직 수수료 조건 및 가벼운 티타임 신청" /><span>☕ 경력직 우대 조건 및 가벼운 커피챗 신청</span></label>
+              </div>
+            `;
+          }
+        }
+      };
+
+      const _origLoadServerPrState = loadServerPrState;
+      loadServerPrState = async function() {
+        const res = await _origLoadServerPrState.apply(this, arguments);
+        setTimeout(enforceRecruitQuestionIfNeeded, 60);
+        setTimeout(enforceRecruitQuestionIfNeeded, 500);
+        return res;
+      };
+    })();
   </script>
 </body>
 </html> 

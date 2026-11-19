@@ -3263,16 +3263,16 @@
     </a>
 
     <div class="nav-actions">
-      <div class="user-pill" id="userPill">
+      <div class="user-pill" id="userPill" style="display: none;">
         <span>👔</span>
-        <span id="userDisplayName">김성훈 팀장 (현대해상/VIP)</span>
+        <span id="userDisplayName"></span>
       </div>
 
-      <button type="button" class="btn-buy-primary" onclick="openProductRegisterModal()" style="height: 38px; padding: 0 16px; font-size: 13px; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; background: #2563eb; color: #fff; border: none; cursor: pointer;">
+      <button type="button" class="btn-buy-primary" id="shopProductRegisterBtn" onclick="openProductRegisterModal()" style="display: none; height: 38px; padding: 0 16px; font-size: 13px; font-weight: 700; border-radius: 8px; align-items: center; gap: 6px; background: #2563eb; color: #fff; border: none; cursor: pointer;">
         <span>📦</span> 상품 등록
       </button>
 
-      <button class="admin-switch-btn" id="shopAdminBtn" onclick="openOrderAdminModal()">
+      <button class="admin-switch-btn" id="shopAdminBtn" onclick="openOrderAdminModal()" style="display: none;">
         <span>⚙️</span> 관리자 대시보드
       </button>
 
@@ -3478,7 +3478,7 @@
 
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="font-size:12.5px; color:#64748b; font-weight:600;">총 1개 등록됨 (1 / 1 페이지)</span>
-          <button onclick="openProductRegisterModal()" style="background:#0f172a; color:#fff; border:none; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+          <button id="showcaseRegisterBtn" onclick="openProductRegisterModal()" style="display:none; background:#0f172a; color:#fff; border:none; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
             + 새 상품 등록
           </button>
         </div>
@@ -3537,27 +3537,6 @@
 
           </div>
 
-        </div>
-
-        <!-- [2번 슬롯: 4x4 구조 표현 - 상품 추가 대기 슬롯] -->
-        <div class="card-slot-placeholder" onclick="openProductRegisterModal()">
-          <div class="slot-icon">+</div>
-          <div class="slot-title">새 상품 등록 대기 슬롯 2</div>
-          <div class="slot-desc">클릭하여 관리자 패널에서<br>신규 브랜딩 상품을 등록하세요</div>
-        </div>
-
-        <!-- [3번 슬롯: 4x4 구조 표현 - 상품 추가 대기 슬롯] -->
-        <div class="card-slot-placeholder" onclick="openProductRegisterModal()">
-          <div class="slot-icon">+</div>
-          <div class="slot-title">새 상품 등록 대기 슬롯 3</div>
-          <div class="slot-desc">위크레잇 마켓(weraclemarket.com)<br>판촉물 및 키트 연동 가능</div>
-        </div>
-
-        <!-- [4번 슬롯: 4x4 구조 표현 - 상품 추가 대기 슬롯] -->
-        <div class="card-slot-placeholder" onclick="openProductRegisterModal()">
-          <div class="slot-icon">+</div>
-          <div class="slot-title">새 상품 등록 대기 슬롯 4</div>
-          <div class="slot-desc">스마트 NFC 명함 및 서식지<br>상품 추가 등록 영역</div>
         </div>
 
       </div>
@@ -3761,8 +3740,8 @@
            ==================================================== -->
       <div class="tab-pane active" id="kurlyPane0">
         
-        <!-- 상세페이지 콘텐츠 관리 바 (이미지 추가 + 텍스트 추가) -->
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #eff6ff; border: 1.5px dashed #93c5fd; border-radius: 12px; padding: 14px 20px; margin-bottom: 24px;">
+        <!-- 상세페이지 콘텐츠 관리 바 (관리자에게만 노출) -->
+        <div id="detailAdminBar" style="display: none; justify-content: space-between; align-items: center; background: #eff6ff; border: 1.5px dashed #93c5fd; border-radius: 12px; padding: 14px 20px; margin-bottom: 24px;">
           <div>
             <span style="font-weight: 800; font-size: 14px; color: #1e40af;">📸 상세페이지 콘텐츠 관리</span>
             <span style="font-size: 12px; color: #3b82f6; margin-left: 8px;">실물 이미지와 텍스트 설명 블록을 원하는 만큼 추가할 수 있습니다.</span>
@@ -4183,9 +4162,10 @@
         html = `
           <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; background: #f8fafc; border-radius: 16px; border: 1.5px dashed #cbd5e1;">
             <p style="font-size: 15px; font-weight: 700; color: #475569; margin-bottom: 12px;">등록된 상품이 없습니다.</p>
+            ${isUserAdmin() ? `
             <button type="button" class="btn-buy-primary" onclick="openProductRegisterModal('${currentCategory}')" style="padding: 9px 20px; font-size: 13px; margin: 0 auto; background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer;">
               + 새 상품 등록하기
-            </button>
+            </button>` : ''}
           </div>
         `;
       } else {
@@ -4228,14 +4208,16 @@
           `;
         });
 
-        // 새 상품 등록 슬롯
-        html += `
-        <div class="card-slot-placeholder" onclick="openProductRegisterModal('${currentCategory === 'all' ? 'binder' : currentCategory}')">
-          <div class="slot-icon">+</div>
-          <div class="slot-title">새 상품 등록</div>
-          <div class="slot-desc">클릭하여 상품을 등록하세요</div>
-        </div>
-        `;
+        // 새 상품 등록 슬롯 (오직 관리자에게만 노출)
+        if (isUserAdmin()) {
+          html += `
+          <div class="card-slot-placeholder" onclick="openProductRegisterModal('${currentCategory === 'all' ? 'binder' : currentCategory}')">
+            <div class="slot-icon">+</div>
+            <div class="slot-title">새 상품 등록</div>
+            <div class="slot-desc">클릭하여 상품을 등록하세요</div>
+          </div>
+          `;
+        }
       }
 
       grid.innerHTML = html;
@@ -4457,6 +4439,14 @@
         const detailPage = document.getElementById('productDetailPageView');
         if (detailPage) detailPage.style.display = 'block';
 
+        // 관리자/일반 사용자 UI 동적 토글 재확인
+        const isAdminUser = isUserAdmin();
+        const dAdminBar = document.getElementById('detailAdminBar');
+        if (dAdminBar) dAdminBar.style.display = isAdminUser ? 'flex' : 'none';
+        document.querySelectorAll('.policy-edit-btn').forEach(btn => {
+          btn.style.display = isAdminUser ? 'inline-flex' : 'none';
+        });
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch(e) {
         console.error('showProductDetailPage error:', e);
@@ -4473,11 +4463,19 @@
       const blocks = currentItem.detailBlocks || (currentItem.gallery ? currentItem.gallery.map(src => ({ type: 'image', src: src })) : []);
 
       if (blocks.length === 0) {
-        container.innerHTML = '<div style="padding:20px; text-align:center; color:#94a3b8; font-size:13px;">등록된 상세페이지 콘텐츠가 없습니다. (+ 상단 버튼으로 추가)</div>';
+        container.innerHTML = isUserAdmin() 
+          ? '<div style="padding:20px; text-align:center; color:#94a3b8; font-size:13px;">등록된 상세페이지 콘텐츠가 없습니다. (+ 상단 버튼으로 추가)</div>'
+          : '<div style="padding:30px; text-align:center; color:#94a3b8; font-size:13.5px;">상세 안내 콘텐츠 준비 중입니다.</div>';
         return;
       }
 
+      const isAdmin = isUserAdmin();
+
       container.innerHTML = blocks.map((b, i) => {
+        const deleteBtn = isAdmin 
+          ? `<button type="button" onclick="removeDetailBlock(${i})" style="position:absolute; top:8px; right:8px; background:rgba(220,38,38,0.85); color:#fff; border:none; width:24px; height:24px; border-radius:50%; cursor:pointer; font-size:11px;" title="블록 삭제">✕</button>`
+          : '';
+
         if (b.type === 'text') {
           return `
             <div style="position:relative; width:100%; max-width:680px; margin:0 auto;">
@@ -4485,14 +4483,14 @@
                 <h4>${b.title || '안내'}</h4>
                 <p>${b.body || ''}</p>
               </div>
-              <button type="button" onclick="removeDetailBlock(${i})" style="position:absolute; top:8px; right:8px; background:rgba(220,38,38,0.85); color:#fff; border:none; width:24px; height:24px; border-radius:50%; cursor:pointer; font-size:11px;" title="블록 삭제">✕</button>
+              ${deleteBtn}
             </div>
           `;
         } else {
           return `
             <div style="position:relative; width:100%; max-width:680px; margin:0 auto; text-align:center;">
               <img src="${b.src}" style="width:100%; max-height:540px; object-fit:contain; background:#ffffff; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 2px 10px rgba(0,0,0,0.03); display:block; margin:0 auto;" alt="상세컷 ${i + 1}">
-              <button type="button" onclick="removeDetailBlock(${i})" style="position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.65); color:#fff; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; font-weight:bold;" title="이미지 삭제">✕</button>
+              ${isAdmin ? `<button type="button" onclick="removeDetailBlock(${i})" style="position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.65); color:#fff; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; font-weight:bold;" title="이미지 삭제">✕</button>` : ''}
             </div>
           `;
         }
@@ -4554,6 +4552,10 @@
     let targetPolicyKey = '';
 
     function triggerPolicyImgChange(key) {
+      if (!isUserAdmin()) {
+        alert('🔒 관리자(본사) 권한이 있는 계정만 공통 정책 이미지를 변경할 수 있습니다.');
+        return;
+      }
       targetPolicyKey = key;
       const inp = document.getElementById('policyImgFileInput');
       if (inp) inp.click();
@@ -4686,6 +4688,10 @@
     }
 
     function openProductRegisterModal(initialCategory) {
+      if (!isUserAdmin()) {
+        alert('🔒 관리자(본사) 권한이 있는 계정만 신규 상품을 등록할 수 있습니다.');
+        return;
+      }
       const modal = document.getElementById('productRegisterModal');
       if (modal) modal.classList.add('open');
 
@@ -5039,11 +5045,33 @@
     // 위라클 권한 체크 (manager, admin, 관리자, 본사 계정만 허용)
     // ========================================================
     function isUserAdmin() {
-      const p = window.currentProfile || (window.parent && window.parent.currentProfile);
+      // 1. URL 파라미터 오버라이드 지원 (?admin=true 테스트 시 관리자 모드, ?admin=false 시 고객 모드)
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('admin') === 'true' || urlParams.get('role') === 'admin') return true;
+        if (urlParams.get('admin') === 'false' || urlParams.get('role') === 'user') return false;
+      } catch(e) {}
+
+      // 2. 실제 로그인 세션 검증 (부모 창 iframe, 현재 창, 또는 로컬스토리지 캐시)
+      let p = window.currentProfile;
+      try {
+        if (!p && window.parent && window.parent.currentProfile) {
+          p = window.parent.currentProfile;
+        }
+      } catch(e) {}
+
       if (!p) {
-        // 단독 프리뷰 모드일 때는 기본 허용
-        return true;
+        try {
+          const cached = localStorage.getItem('cached_profile');
+          if (cached) p = JSON.parse(cached);
+        } catch(e) {}
       }
+
+      if (!p) {
+        // 비로그인 / 게스트는 무조건 일반 고객 (관리자 기능 원천 차단)
+        return false;
+      }
+
       const gradeStr = ((p.user_grade || '') + ',' + (p.access_grades || '') + ',' + (p.role || '')).toLowerCase();
       const grades = gradeStr.split(',').map(s => s.trim());
       if (grades.includes('manager') || grades.includes('admin') || grades.includes('m') || p.team === '관리자' || p.team === '본사') {
@@ -5053,21 +5081,52 @@
     }
 
     function initShopAuthUI() {
-      const p = window.currentProfile || (window.parent && window.parent.currentProfile);
+      let p = window.currentProfile;
+      try {
+        if (!p && window.parent && window.parent.currentProfile) {
+          p = window.parent.currentProfile;
+        }
+      } catch(e) {}
+
+      if (!p) {
+        try {
+          const cached = localStorage.getItem('cached_profile');
+          if (cached) p = JSON.parse(cached);
+        } catch(e) {}
+      }
+      const userPill = document.getElementById('userPill');
+      const userDisplayName = document.getElementById('userDisplayName');
       const adminBtn = document.getElementById('shopAdminBtn');
-      const userPill = document.getElementById('userDisplayName');
-      
-      if (p && userPill) {
+      const prodRegBtn = document.getElementById('shopProductRegisterBtn');
+      const showcaseRegBtn = document.getElementById('showcaseRegisterBtn');
+      const detailAdminBar = document.getElementById('detailAdminBar');
+
+      const isAdmin = isUserAdmin();
+
+      // 1. 유저 정보 표시 (로그인 계정에 한해서만 표시)
+      if (p && userDisplayName) {
         const name = p.name || p.nickname || p.full_name || '설계사';
         const company = p.company || p.team || '파트너스';
         const gradeText = (p.user_grade === 'manager' || p.user_grade === 'admin') ? '관리자' : (p.user_grade === 'VIP' ? 'VIP' : (p.user_grade === 'family' ? '식구' : '일반'));
-        userPill.innerText = `${name} (${company}/${gradeText})`;
+        userDisplayName.innerText = `${name} (${company}/${gradeText})`;
+        if (userPill) userPill.style.display = 'inline-flex';
+      } else {
+        if (userPill) userPill.style.display = 'none';
       }
 
-      const isAdmin = isUserAdmin();
-      if (adminBtn) {
-        adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-      }
+      // 2. 관리자 전용 버튼 표시 / 숨김 제어
+      if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+      if (prodRegBtn) prodRegBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+      if (showcaseRegBtn) showcaseRegBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+      if (detailAdminBar) detailAdminBar.style.display = isAdmin ? 'flex' : 'none';
+
+      // 3. 공통 정책 이미지 [교체하기] 버튼 관리자만 노출
+      document.querySelectorAll('.policy-edit-btn').forEach(btn => {
+        btn.style.display = isAdmin ? 'inline-flex' : 'none';
+      });
+
+      // 4. 상품 그리드 렌더링 (새 상품 등록 대기 슬롯 관리자만 노출)
+      renderProductGrid();
     }
 
     // ========================================================

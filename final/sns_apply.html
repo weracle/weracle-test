@@ -7044,11 +7044,10 @@ async function submitLeadForm(e) {
       renderTypeCDom();
       syncLeaderAdvSlidersUI();
     })();
-    /* ======================================================================
-       [리더·컨설턴트 미니 프로필 사진 잘림/배경 노출 원천 차단 & 호버 배지 위치 보정]
+/* ======================================================================
+       [리더·컨설턴트 미니 프로필: 빈 배경 노출 0% 원천 차단 (Auto-Cover 엔진)]
        ====================================================================== */
     (function fixMiniAvatarCropAndHoverBadge() {
-      // 1) 액자 기본 배경을 은은한 뉴트럴 톤으로 바꾸고 이미지 꽉 채움 고정
       const avatarFixStyle = document.createElement('style');
       avatarFixStyle.textContent = `
         .tc-leader-frame,
@@ -7056,7 +7055,8 @@ async function submitLeadForm(e) {
           width: 78px !important;
           height: 88px !important;
           border-radius: 16px !important;
-          background: #f1f5f9 !important;
+          background-color: #ffffff !important;
+          background-repeat: no-repeat !important;
           overflow: hidden !important;
           position: relative !important;
         }
@@ -7065,35 +7065,35 @@ async function submitLeadForm(e) {
           width: 100% !important;
           height: 100% !important;
           object-fit: cover !important;
-          object-position: center center !important;
-          transform-origin: center center !important;
-          will-change: transform;
+          display: block !important;
+          will-change: transform, object-position;
         }
       `;
       document.head.appendChild(avatarFixStyle);
 
-      // 2) 슬라이더 범위를 축소(60%)~확대(280%), 상하좌우(-100 ~ +100) 자유 이동 방식으로 업그레이드
+      // 슬라이더를 A타입과 똑같은 0% ~ 100% 초점 + 100% ~ 260% 확대 체계로 통일
       ['C_Leader', 'B_Adv'].forEach(prefix => {
         const rx = document.getElementById('range' + prefix + 'X');
         const ry = document.getElementById('range' + prefix + 'Y');
         const rz = document.getElementById('range' + prefix + 'Zoom');
-        if (rx) { rx.min = '-80'; rx.max = '80'; }
-        if (ry) { ry.min = '-80'; ry.max = '80'; }
-        if (rz) { rz.min = '60'; rz.max = '280'; }
+        if (rx) { rx.min = '0'; rx.max = '100'; }
+        if (ry) { ry.min = '0'; ry.max = '100'; }
+        if (rz) { rz.min = '100'; rz.max = '260'; }
       });
 
-      // 3) 사진 경계선이 액자 중간에서 끊기지 않는 실제 이동(translate + scale) 엔진
+      // ★ 핵심: 이동량(tx, ty)이 있어도 배율(scale)이 항상 그보다 크게 자동 방어되어 빈 배경이 1px도 절대 안 보임!
       window.applyAvatarTransformDom = function(imgEl, posObj) {
         if (!imgEl) return;
-        // 기존 구버전 값(x:50, y:18)이 들어있으면 중앙(0, 0) 기준으로 자동 변환
-        let tx = (posObj && posObj.tx !== undefined) ? Number(posObj.tx) : 0;
-        let ty = (posObj && posObj.ty !== undefined) ? Number(posObj.ty) : 0;
-        let zm = (posObj && posObj.zoom !== undefined) ? Number(posObj.zoom) : 108;
-        const sc = Math.max(0.6, zm / 100);
-        imgEl.style.objectFit = sc < 1 ? 'contain' : 'cover';
-        imgEl.style.objectPosition = '50% 35%';
-        imgEl.style.transformOrigin = 'center center';
-        imgEl.style.transform = `translate(${tx}%, ${ty}%) scale(${sc})`;
+        const x = (posObj && posObj.x !== undefined) ? Number(posObj.x) : 50;
+        const y = (posObj && posObj.y !== undefined) ? Number(posObj.y) : 25;
+        const zm = Math.max(100, (posObj && posObj.zoom !== undefined) ? Number(posObj.zoom) : 100);
+        const sc = zm / 100;
+
+        // object-position(0~100%)은 사진 안쪽에서만 앵글을 이동시키므로 사진 바깥 배경이 절대 노출되지 않음!
+        imgEl.style.objectFit = 'cover';
+        imgEl.style.objectPosition = `${x}% ${y}%`;
+        imgEl.style.transformOrigin = `${x}% ${y}%`;
+        imgEl.style.transform = `scale(${sc})`;
       };
 
       const _prevRenderB2 = renderTypeBDom;
@@ -7110,86 +7110,86 @@ async function submitLeadForm(e) {
 
       window.onTuneLeaderAdvPos = function(mode) {
         if (mode === 'C') {
-          const tx = Number(document.getElementById('rangeC_LeaderX').value);
-          const ty = Number(document.getElementById('rangeC_LeaderY').value);
+          const x = Number(document.getElementById('rangeC_LeaderX').value);
+          const y = Number(document.getElementById('rangeC_LeaderY').value);
           const zoom = Number(document.getElementById('rangeC_LeaderZoom').value);
-          document.getElementById('valC_LeaderX').innerText = (tx > 0 ? '+' + tx : tx) + '%';
-          document.getElementById('valC_LeaderY').innerText = (ty > 0 ? '+' + ty : ty) + '%';
+          document.getElementById('valC_LeaderX').innerText = x + '%';
+          document.getElementById('valC_LeaderY').innerText = y + '%';
           document.getElementById('valC_LeaderZoom').innerText = zoom + '%';
-          typeCData.leaderPos = { tx, ty, zoom };
+          typeCData.leaderPos = { x, y, zoom };
           renderTypeCDom();
         } else {
-          const tx = Number(document.getElementById('rangeB_AdvX').value);
-          const ty = Number(document.getElementById('rangeB_AdvY').value);
+          const x = Number(document.getElementById('rangeB_AdvX').value);
+          const y = Number(document.getElementById('rangeB_AdvY').value);
           const zoom = Number(document.getElementById('rangeB_AdvZoom').value);
-          document.getElementById('valB_AdvX').innerText = (tx > 0 ? '+' + tx : tx) + '%';
-          document.getElementById('valB_AdvY').innerText = (ty > 0 ? '+' + ty : ty) + '%';
+          document.getElementById('valB_AdvX').innerText = x + '%';
+          document.getElementById('valB_AdvY').innerText = y + '%';
           document.getElementById('valB_AdvZoom').innerText = zoom + '%';
-          typeBData.advPos = { tx, ty, zoom };
+          typeBData.advPos = { x, y, zoom };
           renderTypeBDom();
         }
         saveAllPrState(false);
       };
 
       window.syncLeaderAdvSlidersUI = function() {
-        const lp = typeCData.leaderPos || { tx: 0, ty: 0, zoom: 108 };
+        const lp = typeCData.leaderPos || { x: 50, y: 25, zoom: 100 };
         if (document.getElementById('rangeC_LeaderX')) {
-          const tx = lp.tx ?? 0, ty = lp.ty ?? 0, zm = lp.zoom ?? 108;
-          document.getElementById('rangeC_LeaderX').value = tx;
-          document.getElementById('rangeC_LeaderY').value = ty;
+          const x = lp.x ?? 50, y = lp.y ?? 25, zm = Math.max(100, lp.zoom ?? 100);
+          document.getElementById('rangeC_LeaderX').value = x;
+          document.getElementById('rangeC_LeaderY').value = y;
           document.getElementById('rangeC_LeaderZoom').value = zm;
-          document.getElementById('valC_LeaderX').innerText = (tx > 0 ? '+' + tx : tx) + '%';
-          document.getElementById('valC_LeaderY').innerText = (ty > 0 ? '+' + ty : ty) + '%';
+          document.getElementById('valC_LeaderX').innerText = x + '%';
+          document.getElementById('valC_LeaderY').innerText = y + '%';
           document.getElementById('valC_LeaderZoom').innerText = zm + '%';
         }
-        const ap = typeBData.advPos || { tx: 0, ty: 0, zoom: 108 };
+        const ap = typeBData.advPos || { x: 50, y: 25, zoom: 100 };
         if (document.getElementById('rangeB_AdvX')) {
-          const tx = ap.tx ?? 0, ty = ap.ty ?? 0, zm = ap.zoom ?? 108;
-          document.getElementById('rangeB_AdvX').value = tx;
-          document.getElementById('rangeB_AdvY').value = ty;
+          const x = ap.x ?? 50, y = ap.y ?? 25, zm = Math.max(100, ap.zoom ?? 100);
+          document.getElementById('rangeB_AdvX').value = x;
+          document.getElementById('rangeB_AdvY').value = y;
           document.getElementById('rangeB_AdvZoom').value = zm;
-          document.getElementById('valB_AdvX').innerText = (tx > 0 ? '+' + tx : tx) + '%';
-          document.getElementById('valB_AdvY').innerText = (ty > 0 ? '+' + ty : ty) + '%';
+          document.getElementById('valB_AdvX').innerText = x + '%';
+          document.getElementById('valB_AdvY').innerText = y + '%';
           document.getElementById('valB_AdvZoom').innerText = zm + '%';
         }
       };
 
-      // 4) 새 사진을 업로드하면 이전 어긋난 구도값을 즉시 정중앙(tx:0, ty:0, zoom:108)으로 자동 리셋!
+      // 새 사진을 올릴 때 무조건 꽉 찬 중앙 상단(x:50, y:25, zoom:100)으로 깔끔하게 세팅
       bcFileInput.addEventListener('change', () => {
         if (bcUploadMode === 'C_LEADER') {
-          typeCData.leaderPos = { tx: 0, ty: 0, zoom: 108 };
-          setTimeout(() => { syncLeaderAdvSlidersUI(); renderTypeCDom(); }, 600);
+          typeCData.leaderPos = { x: 50, y: 25, zoom: 100 };
+          setTimeout(() => { syncLeaderAdvSlidersUI(); renderTypeCDom(); }, 500);
         } else if (bcUploadMode === 'B_ADVISOR') {
-          typeBData.advPos = { tx: 0, ty: 0, zoom: 108 };
-          setTimeout(() => { syncLeaderAdvSlidersUI(); renderTypeBDom(); }, 600);
+          typeBData.advPos = { x: 50, y: 25, zoom: 100 };
+          setTimeout(() => { syncLeaderAdvSlidersUI(); renderTypeBDom(); }, 500);
         }
       });
 
-      // 5) 마우스로 직접 잡고 원하는 방향 그대로 끌어 얼굴 위치 맞추기
-      const rebindDirectDrag = (imgId, mode) => {
+      // 마우스로 드래그할 때도 0%~100% 안에서만 움직여 테두리 밖 빈 공간 노출 원천 차단
+      const rebindSafeCoverDrag = (imgId, mode) => {
         const img = document.getElementById(imgId);
         if (!img || !img.parentElement) return;
         const oldFrame = img.parentElement;
         const newFrame = oldFrame.cloneNode(true);
         oldFrame.parentNode.replaceChild(newFrame, oldFrame);
 
-        let dragging = false, sx = 0, sy = 0, stx = 0, sty = 0;
+        let dragging = false, sx = 0, sy = 0, ox = 50, oy = 25;
         newFrame.addEventListener('pointerdown', ev => {
           if (!isEditMode) return;
           dragging = true; newFrame.setPointerCapture(ev.pointerId);
           sx = ev.clientX; sy = ev.clientY;
           const pos = mode === 'C' ? (typeCData.leaderPos || {}) : (typeBData.advPos || {});
-          stx = pos.tx ?? 0; sty = pos.ty ?? 0;
+          ox = pos.x ?? 50; oy = pos.y ?? 25;
         });
         newFrame.addEventListener('pointermove', ev => {
           if (!dragging || !isEditMode) return;
-          const ntx = Math.max(-80, Math.min(80, Math.round(stx + (ev.clientX - sx) * 0.9)));
-          const nty = Math.max(-80, Math.min(80, Math.round(sty + (ev.clientY - sy) * 0.9)));
+          const nx = Math.max(0, Math.min(100, Math.round(ox - (ev.clientX - sx) * 0.45)));
+          const ny = Math.max(0, Math.min(100, Math.round(oy - (ev.clientY - sy) * 0.45)));
           if (mode === 'C') {
-            typeCData.leaderPos = { ...(typeCData.leaderPos || { zoom: 108 }), tx: ntx, ty: nty };
+            typeCData.leaderPos = { ...(typeCData.leaderPos || { zoom: 100 }), x: nx, y: ny };
             renderTypeCDom();
           } else {
-            typeBData.advPos = { ...(typeBData.advPos || { zoom: 108 }), tx: ntx, ty: nty };
+            typeBData.advPos = { ...(typeBData.advPos || { zoom: 100 }), x: nx, y: ny };
             renderTypeBDom();
           }
           syncLeaderAdvSlidersUI();
@@ -7198,10 +7198,10 @@ async function submitLeadForm(e) {
           if (dragging) { dragging = false; saveAllPrState(false); }
         });
       };
-      rebindDirectDrag('tcLeaderImg', 'C');
-      rebindDirectDrag('tbAdvisorImg', 'B');
+      rebindSafeCoverDrag('tcLeaderImg', 'C');
+      rebindSafeCoverDrag('tbAdvisorImg', 'B');
 
-      // 6) 마우스 호버 배지가 작은 사진 얼굴을 가리지 않도록 액자 위쪽으로 띄우기
+      // 호버 배지가 얼굴을 가리지 않도록 프레임 위쪽으로 띄우기
       document.addEventListener('mousemove', ev => {
         if (!isEditMode) return;
         const avatarTarget = ev.target.closest('.tc-leader-frame, .tb-advisor-frame');
@@ -7213,12 +7213,12 @@ async function submitLeadForm(e) {
         }
       });
 
-      // 기존 어긋난 좌표가 남아있다면 즉시 정중앙으로 초기화 반영
-      if (!typeCData.leaderPos || typeCData.leaderPos.tx === undefined) {
-        typeCData.leaderPos = { tx: 0, ty: 0, zoom: 108 };
+      // 이전 tx/ty 잔재가 남아 있으면 즉시 안전한 0~100% 체계로 자동 변환
+      if (!typeCData.leaderPos || typeCData.leaderPos.x === undefined) {
+        typeCData.leaderPos = { x: 50, y: 25, zoom: 100 };
       }
-      if (!typeBData.advPos || typeBData.advPos.tx === undefined) {
-        typeBData.advPos = { tx: 0, ty: 0, zoom: 108 };
+      if (!typeBData.advPos || typeBData.advPos.x === undefined) {
+        typeBData.advPos = { x: 50, y: 25, zoom: 100 };
       }
       syncLeaderAdvSlidersUI();
       renderTypeBDom();

@@ -1091,6 +1091,24 @@
     }
     .text-left { text-align: left !important; }
     .text-center { text-align: center !important; }
+  
+    .hidden-comp-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #fee2e2;
+      color: #dc2626;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .hidden-comp-chip:hover {
+      background: #fecaca;
+    }
+
   </style>
 </head>
 <body>
@@ -1157,6 +1175,7 @@
       <button class="btn btn-outline" onclick="restoreAllCompanies()">
         <i class="fa-regular fa-eye"></i> 숨긴 회사 복원 (<span id="hiddenCompCount">0</span>)
       </button>
+      <div id="hiddenChipsContainer" style="display: inline-flex; align-items: center; gap: 6px;"></div>
       <button class="btn btn-outline" onclick="resetAll()">
         <i class="fa-solid fa-arrows-rotate"></i> 전체 초기화
       </button>
@@ -1180,11 +1199,11 @@
       </thead>
       <tbody>
         
-      <tr class="vert-table-row" data-row="vertRow-0">
+      <tr class="vert-table-row" data-company="ABL생명">
         <td class="td-vert-comp" rowspan="2" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #e11d48; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">ABL생명</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), 'ABL생명')" title="ABL생명 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, 'ABL생명')" title="ABL생명 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1192,15 +1211,15 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">하모니 변액연금보험,투자에강한 변액연금</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-1">
+      <tr class="vert-table-row" data-company="ABL생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">보너스주는 저축보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-2">
+      <tr class="vert-table-row" data-company="교보생명">
         <td class="td-vert-comp" rowspan="7" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #0284c7; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">교보생명</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), '교보생명')" title="교보생명 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, '교보생명')" title="교보생명 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1208,35 +1227,35 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">장애인전용(무)교보곰두리보장</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-3">
+      <tr class="vert-table-row" data-company="교보생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">(무)교보용종케어보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-4">
+      <tr class="vert-table-row" data-company="교보생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">교보암·뇌·심장보험(무배당)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-5">
+      <tr class="vert-table-row" data-company="교보생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">(무)교보바로받는웰스연금</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-6">
+      <tr class="vert-table-row" data-company="교보생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">(무)교보뉴플랜연금보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-7">
+      <tr class="vert-table-row" data-company="교보생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">교보하이브리드연금보험 24.01 (무배당,거치형)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-8">
+      <tr class="vert-table-row" data-company="교보생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">교보변액연금보험(무배당)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-9">
+      <tr class="vert-table-row" data-company="동양생명">
         <td class="td-vert-comp" rowspan="2" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #9333ea; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">동양생명</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), '동양생명')" title="동양생명 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, '동양생명')" title="동양생명 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1244,15 +1263,15 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">수호천사 누구나 행복연금보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-10">
+      <tr class="vert-table-row" data-company="동양생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">우리won하는 꿈나무우리아이보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-11">
+      <tr class="vert-table-row" data-company="삼성생명">
         <td class="td-vert-comp" rowspan="6" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #005596; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">삼성생명</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), '삼성생명')" title="삼성생명 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, '삼성생명')" title="삼성생명 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1260,31 +1279,31 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">즉시연금 종신연금형</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-12">
+      <tr class="vert-table-row" data-company="삼성생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">즉시연금 상속연금형</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-13">
+      <tr class="vert-table-row" data-company="삼성생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">즉시연금 확정기간연금형</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-14">
+      <tr class="vert-table-row" data-company="삼성생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">변액연금 보증형</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-15">
+      <tr class="vert-table-row" data-company="삼성생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">스마트저축10万미만</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-16">
+      <tr class="vert-table-row" data-company="삼성생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">삼성 연금보험 플러스(2308)(무배당) (기본형,연금강화형)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-17">
+      <tr class="vert-table-row" data-company="iM라이프">
         <td class="td-vert-comp" rowspan="3" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #00a4e3; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">iM라이프</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), 'iM라이프')" title="iM라이프 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, 'iM라이프')" title="iM라이프 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1292,19 +1311,19 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">마이솔루션AI변액연금보험 무배당</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-18">
+      <tr class="vert-table-row" data-company="iM라이프">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">HighFive평생든든변액저축보험 무배당</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-19">
+      <tr class="vert-table-row" data-company="iM라이프">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">HighFive그랑에이지변액연금보험 무배당</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-20">
+      <tr class="vert-table-row" data-company="처브라이프">
         <td class="td-vert-comp" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #7c3aed; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">처브라이프</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), '처브라이프')" title="처브라이프 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, '처브라이프')" title="처브라이프 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1312,11 +1331,11 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">Chubb 든든한 변액연금보험 무배당</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-21">
+      <tr class="vert-table-row" data-company="농협생명">
         <td class="td-vert-comp" rowspan="5" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #059669; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">농협생명</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), '농협생명')" title="농협생명 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, '농협생명')" title="농협생명 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1324,27 +1343,27 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">인생든든NH유니버셜종신보험(일시납,보증비용부과형)_2101</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-22">
+      <tr class="vert-table-row" data-company="농협생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">내일의힘NH즉시연금보험(무배당)_2101</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-23">
+      <tr class="vert-table-row" data-company="농협생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">행복열매NH연금보험(무배당)_2101</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-24">
+      <tr class="vert-table-row" data-company="농협생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">행복나눔NH정기보험_2101</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-25">
+      <tr class="vert-table-row" data-company="농협생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">프리미엄NH저축보험(무배당)_2101</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-26">
+      <tr class="vert-table-row" data-company="미래에셋">
         <td class="td-vert-comp" rowspan="5" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #003087; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">미래에셋</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), '미래에셋')" title="미래에셋 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, '미래에셋')" title="미래에셋 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1352,27 +1371,27 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">미래에셋생명 변액연금보험 무배당 (4가지유형)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-27">
+      <tr class="vert-table-row" data-company="미래에셋">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">월지급식 변액즉시연금보험 무배당 보증형/미보증형</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-28">
+      <tr class="vert-table-row" data-company="미래에셋">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">미래에셋생명 변액저축보험 무배당기본형</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-29">
+      <tr class="vert-table-row" data-company="미래에셋">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">건강담은 GI변액종신보험 무배당</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-30">
+      <tr class="vert-table-row" data-company="미래에셋">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">미래에셋생명 정기보험 무배당</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-31">
+      <tr class="vert-table-row" data-company="흥국생명">
         <td class="td-vert-comp" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #db2777; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">흥국생명</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), '흥국생명')" title="흥국생명 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, '흥국생명')" title="흥국생명 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1380,11 +1399,11 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">OK연금보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-32">
+      <tr class="vert-table-row" data-company="메트라이프">
         <td class="td-vert-comp" rowspan="7" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #0090da; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">메트라이프</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), '메트라이프')" title="메트라이프 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, '메트라이프')" title="메트라이프 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1392,35 +1411,35 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">더해주고 채워주는 정기보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-33">
+      <tr class="vert-table-row" data-company="메트라이프">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">변액연금 동행(고도재해장해보장형-일시납)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-34">
+      <tr class="vert-table-row" data-company="메트라이프">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">변액연금 동행 Plus - 1종</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-35">
+      <tr class="vert-table-row" data-company="메트라이프">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">변액연금 동행 Plus - 2종</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-36">
+      <tr class="vert-table-row" data-company="메트라이프">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">오늘의 연금보험(일시납)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-37">
+      <tr class="vert-table-row" data-company="메트라이프">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">오늘의 달러연금보험 1형 (거치형)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-38">
+      <tr class="vert-table-row" data-company="메트라이프">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">오늘의 달러연금보험 2형 (쿠폰형)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-39">
+      <tr class="vert-table-row" data-company="KDB생명">
         <td class="td-vert-comp" rowspan="4" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #0284c7; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">KDB생명</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), 'KDB생명')" title="KDB생명 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, 'KDB생명')" title="KDB생명 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1428,23 +1447,23 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">(무)인생愛플러스되는변액종신보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-40">
+      <tr class="vert-table-row" data-company="KDB생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">(무)KDB MIMI건강종신보험(표준형)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-41">
+      <tr class="vert-table-row" data-company="KDB생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">행복을지켜주는유니버셜종신보험(보증비용부과형)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-42">
+      <tr class="vert-table-row" data-company="KDB생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">(무)KDB플러스저축보험(수익형/거치형)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-43">
+      <tr class="vert-table-row" data-company="KB라이프">
         <td class="td-vert-comp" rowspan="2" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #ff9e1b; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">KB라이프</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), 'KB라이프')" title="KB라이프 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, 'KB라이프')" title="KB라이프 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1452,15 +1471,15 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">평생소득 변액연금보험, 달러평생소득변액연금</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-44">
+      <tr class="vert-table-row" data-company="KB라이프">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">KB 역모기지 일시납종신보험 무배당</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-45">
+      <tr class="vert-table-row" data-company="한화생명">
         <td class="td-vert-comp" rowspan="6" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #f37321; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">한화생명</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), '한화생명')" title="한화생명 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, '한화생명')" title="한화생명 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1468,31 +1487,31 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">The스마트한 일시납종신보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-46">
+      <tr class="vert-table-row" data-company="한화생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">H2 2.0종신보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-47">
+      <tr class="vert-table-row" data-company="한화생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">피델리티 변액저축보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-48">
+      <tr class="vert-table-row" data-company="한화생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">내게맞는 연금보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-49">
+      <tr class="vert-table-row" data-company="한화생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">바로연금보험 종신연금형</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-50">
+      <tr class="vert-table-row" data-company="한화생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">바로연금보험 확정기간/상속연금형</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-51">
+      <tr class="vert-table-row" data-company="IBK생명">
         <td class="td-vert-comp" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #005aab; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">IBK생명</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), 'IBK생명')" title="IBK생명 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, 'IBK생명')" title="IBK생명 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1500,11 +1519,11 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">IBK페이백변액연금보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-52">
+      <tr class="vert-table-row" data-company="AIA생명">
         <td class="td-vert-comp" rowspan="2" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #d31145; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">AIA생명</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), 'AIA생명')" title="AIA생명 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, 'AIA생명')" title="AIA생명 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1512,15 +1531,15 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">(무) AIA 달러로받는 연금보험 III</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-53">
+      <tr class="vert-table-row" data-company="AIA생명">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">(무) AIA 글로벌 레거시 미국달러 상속종신보험</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-54">
+      <tr class="vert-table-row" data-company="신한라이프">
         <td class="td-vert-comp" rowspan="3" style="width: 130px; min-width: 130px; max-width: 130px; text-align: center; vertical-align: middle; padding: 8px 8px; border: 1px solid var(--border-cell) !important; background: #ffffff;">
       <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 14px;">
         <span class="company-name-text" style="color: #0046ff; font-size: 13px; font-weight: 800; letter-spacing: -0.01em;">신한라이프</span>
-        <button class="row-hide-btn" onclick="hideCompanyRow(event, this.closest('tr').getAttribute('data-row'), '신한라이프')" title="신한라이프 숨기기">
+        <button class="row-hide-btn" onclick="hideCompany(event, '신한라이프')" title="신한라이프 숨기기">
           <i class="fa-regular fa-eye eye-open-icon"></i>
           <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
         </button>
@@ -1528,11 +1547,11 @@
     </td>
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">(무) 신한탄탄든든유니버셜종신보험 (기본형,체증형)</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-55">
+      <tr class="vert-table-row" data-company="신한라이프">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">신한 ONE 더드림 변액연금보험 기본형</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
-      <tr class="vert-table-row" data-row="vertRow-56">
+      <tr class="vert-table-row" data-company="신한라이프">
         
           <td class="td-common text-left" style="padding: 8px 12px; font-size: 12px; color: #1e293b; text-align: left !important; font-weight: 600;"><span class="wrc-prod-badge" style="display: inline-block; background: #f8fafc; color: #1e293b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; line-height: 1.4;">신한 ONE 더드림 변액연금보험 연금강화형</span></td><td class="text-center font-bold" style="width: 90px; min-width: 90px; max-width: 90px; text-align: center; vertical-align: middle; color: #1e293b; background: #f8fafc; font-size: 13px; border: 1px solid var(--border-cell);">일시납</td>
       </tr>
@@ -1552,33 +1571,48 @@
 </div>
 
 <script>
-  const hiddenCompanies = new Map();
+  const hiddenCompanies = new Set();
 
-  function hideCompanyRow(e, rowKeys, compName) {
+  function hideCompany(e, compName) {
     if (e) e.stopPropagation();
-    const keys = Array.isArray(rowKeys) ? rowKeys : [rowKeys];
-    hiddenCompanies.set(compName, keys);
-    keys.forEach(k => {
-      const rows = document.querySelectorAll('[data-row="' + k + '"]');
-      rows.forEach(r => r.classList.add('row-hidden'));
-    });
-    updateHiddenCounts();
+    hiddenCompanies.add(compName);
+    const rows = document.querySelectorAll(`tr[data-company="${compName}"]`);
+    rows.forEach(r => r.classList.add('row-hidden'));
+    updateHiddenChips();
+  }
+
+  function restoreCompany(compName) {
+    hiddenCompanies.delete(compName);
+    const rows = document.querySelectorAll(`tr[data-company="${compName}"]`);
+    rows.forEach(r => r.classList.remove('row-hidden'));
+    updateHiddenChips();
   }
 
   function restoreAllCompanies() {
-    hiddenCompanies.forEach((keys, compName) => {
-      keys.forEach(k => {
-        const rows = document.querySelectorAll('[data-row="' + k + '"]');
-        rows.forEach(r => r.classList.remove('row-hidden'));
-      });
+    hiddenCompanies.forEach(compName => {
+      const rows = document.querySelectorAll(`tr[data-company="${compName}"]`);
+      rows.forEach(r => r.classList.remove('row-hidden'));
     });
     hiddenCompanies.clear();
-    updateHiddenCounts();
+    updateHiddenChips();
   }
 
-  function updateHiddenCounts() {
+  function updateHiddenChips() {
     const compCount = document.getElementById('hiddenCompCount');
     if (compCount) compCount.innerText = hiddenCompanies.size;
+
+    const container = document.getElementById('hiddenChipsContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    hiddenCompanies.forEach(compName => {
+      const chip = document.createElement('span');
+      chip.className = 'hidden-comp-chip';
+      chip.innerHTML = `<i class="fa-solid fa-rotate-left"></i> ${compName}`;
+      chip.title = `${compName} 복원`;
+      chip.onclick = () => restoreCompany(compName);
+      container.appendChild(chip);
+    });
   }
 
   function resetAll() {
@@ -1586,7 +1620,7 @@
   }
 
   function saveImage() {
-    const target = document.getElementById('captureArea') || document.body;
+    const target = document.getElementById('captureArea') || document.querySelector('.main-container');
     const btn = event.currentTarget;
     const origText = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장중...';

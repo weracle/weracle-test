@@ -6487,6 +6487,340 @@ async function submitLeadForm(e) {
     renderTypeCDom();
     syncTypeBStudioInputs();
     syncTypeCStudioInputs();
+/* ======================================================================
+       [B·C 타입 핀포인트 클릭-투-에디트 & 마우스 드래그 사진 구도 조절 패치]
+       ====================================================================== */
+    (function enableBcPinpointClickBridge() {
+      // 1) 클릭한 텍스트의 정확한 입력칸으로 중앙 스크롤 + 자동 커서 선택 강화
+      jumpToLeftEditorCard = function(tabIdx, cardId, inputId) {
+        switchEditorTab(tabIdx, false);
+        const panel = document.getElementById('easyEditorPanel');
+        const scrollBody = document.getElementById('eepScrollBody');
+        const card = document.getElementById(cardId);
+
+        if (card && panel && scrollBody) {
+          document.querySelectorAll('.eep-card').forEach(c => {
+            c.classList.remove('highlight-focus', 'active-single-card');
+          });
+          panel.classList.add('single-card-mode');
+          card.classList.add('active-single-card');
+          scrollBody.scrollTop = 0;
+
+          requestAnimationFrame(() => {
+            void card.offsetWidth;
+            card.classList.add('highlight-focus');
+          });
+        }
+
+        if (inputId) {
+          setTimeout(() => {
+            const inp = document.getElementById(inputId);
+            if (!inp || !scrollBody) return;
+
+            const bodyRect = scrollBody.getBoundingClientRect();
+            const inpRect = inp.getBoundingClientRect();
+            const targetTop = scrollBody.scrollTop + (inpRect.top - bodyRect.top) - Math.max(55, (bodyRect.height / 2) - 45);
+            scrollBody.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+
+            try { inp.focus({ preventScroll: true }); } catch (e) { inp.focus(); }
+
+            if ((inp.tagName === 'INPUT' && inp.type === 'text') || inp.tagName === 'TEXTAREA') {
+              const len = inp.value ? inp.value.length : 0;
+              try { inp.setSelectionRange(0, len); } catch (e) {}
+            }
+
+            const prevShadow = inp.style.boxShadow;
+            inp.style.boxShadow = '0 0 0 3px rgba(249, 115, 22, 0.45)';
+            setTimeout(() => { inp.style.boxShadow = prevShadow || ''; }, 1300);
+          }, 90);
+        }
+      };
+
+      // 2) 좌측 동적 리스트 입력창에 개별 고유 ID 자동 부여
+      const _prevVsList = renderTypeBVsEditorList;
+      renderTypeBVsEditorList = function() {
+        _prevVsList();
+        document.querySelectorAll('#eepB_VsList > div').forEach((row, idx) => {
+          const ins = row.querySelectorAll('input');
+          if (ins[0]) ins[0].id = 'inpB_VsOld_' + idx;
+          if (ins[1]) ins[1].id = 'inpB_VsNew_' + idx;
+        });
+      };
+
+      const _prevSimRows = renderTypeBSimEditorRows;
+      renderTypeBSimEditorRows = function() {
+        _prevSimRows();
+        document.querySelectorAll('#eepB_SimRowsList > div').forEach((row, rIdx) => {
+          const ins = row.querySelectorAll('input[type="text"]');
+          if (ins[0]) ins[0].id = 'inpB_SimName_' + rIdx;
+          if (ins[1]) ins[1].id = 'inpB_SimPrice_' + rIdx;
+          if (ins[2]) ins[2].id = 'inpB_SimDesc_' + rIdx;
+        });
+      };
+
+      const _prevFaqList = renderTypeBFaqEditorList;
+      renderTypeBFaqEditorList = function() {
+        _prevFaqList();
+        document.querySelectorAll('#eepB_FaqList > div').forEach((row, idx) => {
+          const qInp = row.querySelector('input');
+          const aTxt = row.querySelector('textarea');
+          if (qInp) qInp.id = 'inpB_FaqQ_' + idx;
+          if (aTxt) aTxt.id = 'inpB_FaqA_' + idx;
+        });
+      };
+
+      const _prevTlList = renderTypeCTimelineEditorList;
+      renderTypeCTimelineEditorList = function() {
+        _prevTlList();
+        document.querySelectorAll('#eepC_TimelineList > div').forEach((row, idx) => {
+          const ins = row.querySelectorAll('input');
+          if (ins[0]) ins[0].id = 'inpC_TlTime_' + idx;
+          if (ins[1]) ins[1].id = 'inpC_TlTitle_' + idx;
+          if (ins[2]) ins[2].id = 'inpC_TlDesc_' + idx;
+        });
+      };
+
+      const _prevQnaList = renderTypeCQnaEditorList;
+      renderTypeCQnaEditorList = function() {
+        _prevQnaList();
+        document.querySelectorAll('#eepC_QnaList > div').forEach((row, idx) => {
+          const ins = row.querySelectorAll('input');
+          const aTxt = row.querySelector('textarea');
+          if (ins[0]) ins[0].id = 'inpC_QnaQ_' + idx;
+          if (aTxt) aTxt.id = 'inpC_QnaA_' + idx;
+          if (ins[1]) ins[1].id = 'inpC_QnaWho_' + idx;
+        });
+      };
+
+      const _prevChkList = renderTypeCCheckEditorList;
+      renderTypeCCheckEditorList = function() {
+        _prevChkList();
+        document.querySelectorAll('#eepC_ChkList > div').forEach((row, idx) => {
+          const inp = row.querySelector('input');
+          if (inp) inp.id = 'inpC_Chk_' + idx;
+        });
+      };
+
+      // 3) 우측 고정 문구·사진 개별 핀포인트 연결
+      const setLink = (elOrId, linkVal) => {
+        const el = typeof elOrId === 'string' ? document.getElementById(elOrId) : elOrId;
+        if (el) el.setAttribute('data-edit-link', linkVal);
+      };
+
+      const advBtn = document.querySelector('#cardB_Advisor button');
+      if (advBtn) advBtn.id = 'btnB_AdvUpload';
+      const leaderBtn = document.querySelector('#cardC_Letter button');
+      if (leaderBtn) leaderBtn.id = 'btnC_LeaderUpload';
+
+      // 타입 B 고정 요소 세부 연결
+      setLink('tbHeroBadge', '1|cardB_Hero|inpB_Badge|🅱️ 상단 리포트 배지 수정');
+      setLink('tbHeroTitle', '1|cardB_Hero|inpB_HeroTitle|🅱️ 메인 헤드라인 타이틀 수정');
+      setLink('tbHeroSub', '1|cardB_Hero|inpB_HeroSub|🅱️ 보조 요약 설명문 수정');
+      setLink(document.querySelector('#tbHeroAnchor .tb-banner-frame'), '1|cardB_Hero|rangeB_BannerZoom|📸 상단 상품 배너 사진 변경·구도 조절');
+
+      [0, 1, 2].forEach(i => {
+        setLink('tbBentoLbl' + i, `1|cardB_Bento|inpB_BentoLbl${i}|⚡ 스펙 ${i + 1}번 상단 라벨 수정`);
+        setLink('tbBentoVal' + i, `1|cardB_Bento|inpB_BentoVal${i}|⚡ 스펙 ${i + 1}번 핵심 수치 수정`);
+        setLink('tbBentoSub' + i, `1|cardB_Bento|inpB_BentoSub${i}|⚡ 스펙 ${i + 1}번 보조 설명 수정`);
+      });
+
+      setLink('tbSlideTag', '2|cardB_Slides|inpB_SlideTag|🖼️ 슬라이드 영문 라벨 수정');
+      setLink('tbSlideSecTitle', '2|cardB_Slides|inpB_SlideSecTitle|🖼️ 슬라이드 섹션 제목 수정');
+      setLink('tbSlideStage', '2|cardB_Slides|rangeB_SlideZoom|🖼️ 현재 슬라이드 장표 교체·구도 조절');
+      setLink('tbSlideCaption', '2|cardB_Slides|inpB_SlideCaption|🖼️ 슬라이드 하단 한 줄 캡션 수정');
+
+      setLink('tbVsTag', '3|cardB_Vs|inpB_VsTag|⚖️ 비교표 영문 라벨 수정');
+      setLink('tbVsSecTitle', '3|cardB_Vs|inpB_VsSecTitle|⚖️ 비교표 섹션 제목 수정');
+      setLink('tbVsOldHead', '3|cardB_Vs|inpB_VsOldHead|❌ 좌측 비교 제목 수정');
+      setLink('tbVsNewHead', '3|cardB_Vs|inpB_VsNewHead|⭕ 우측 비교 제목 수정');
+
+      setLink('tbSimTag', '4|cardB_Sim|inpB_SimTag|📊 시뮬레이터 영문 라벨 수정');
+      setLink('tbSimSecTitle', '4|cardB_Sim|inpB_SimSecTitle|📊 시뮬레이터 섹션 제목 수정');
+      setLink('tbSimFootNote', '4|cardB_Sim|inpB_SimFoot|📊 하단 유의사항 문구 수정');
+
+      setLink('tbFaqTag', '5|cardB_Faq|inpB_FaqTag|❓ Q&A 영문 라벨 수정');
+      setLink('tbFaqSecTitle', '5|cardB_Faq|inpB_FaqSecTitle|❓ Q&A 섹션 제목 수정');
+
+      const advImgEl = document.getElementById('tbAdvisorImg');
+      if (advImgEl && advImgEl.parentElement) setLink(advImgEl.parentElement, '5|cardB_Advisor|btnB_AdvUpload|📷 컨설턴트 실물 사진 변경');
+      setLink('tbAdvisorRole', '5|cardB_Advisor|inpB_AdvRole|🪪 컨설턴트 소속·직함 수정');
+      setLink('tbAdvisorName', '5|cardB_Advisor|inpB_AdvName|🪪 컨설턴트 성함·직책 수정');
+      setLink('tbAdvisorPromise', '5|cardB_Advisor|inpB_AdvPromise|💬 안심 약속 한 줄 멘트 수정');
+
+      // 타입 C 고정 요소 세부 연결
+      setLink('tcIssueTag', '1|cardC_Cover|inpC_IssueTag|🅲 매거진 이슈 라벨 수정');
+      setLink('tcCoverTitle', '1|cardC_Cover|inpC_CoverTitle|🅲 커버 메인 타이틀 수정');
+      setLink('tcCoverSub', '1|cardC_Cover|inpC_CoverSub|🅲 커버 인트로 설명 수정');
+      setLink(document.querySelector('#tcCoverAnchor .tc-arch-frame'), '1|cardC_Cover|rangeC_CoverZoom|📸 커버 아치 화보 사진·구도 조절');
+      setLink('tcLocSticker', '1|cardC_Cover|inpC_LocSticker|📍 화보 우측 하단 스티커 문구 수정');
+
+      setLink('tcLetterTag', '2|cardC_Letter|inpC_LetterTag|✉️ 편지 영문 라벨 수정');
+      setLink('tcLetterTitle', '2|cardC_Letter|inpC_LetterTitle|✉️ 편지 제목 수정');
+      setLink('tcLetterBody', '2|cardC_Letter|inpC_LetterBody|✉️ 줄노트 편지 본문 수정');
+      const ldImgEl = document.getElementById('tcLeaderImg');
+      if (ldImgEl && ldImgEl.parentElement) setLink(ldImgEl.parentElement, '2|cardC_Letter|btnC_LeaderUpload|📷 리더 원형 프로필 사진 변경');
+      setLink('tcLeaderRole', '2|cardC_Letter|inpC_LeaderRole|🪪 리더 직함 수정');
+      setLink('tcLeaderName', '2|cardC_Letter|inpC_LeaderName|✍️ 리더 서명 수정');
+
+      setLink('tcTlTag', '3|cardC_Timeline|inpC_TlTag|⏰ 타임라인 영문 라벨 수정');
+      setLink('tcTlSecTitle', '3|cardC_Timeline|inpC_TlSecTitle|⏰ 타임라인 섹션 제목 수정');
+
+      setLink('tcPbTag', '4|cardC_Photobook|inpC_PbTag|📷 사진첩 영문 라벨 수정');
+      setLink('tcPbSecTitle', '4|cardC_Photobook|inpC_PbSecTitle|📷 사진첩 섹션 제목 수정');
+      setLink(document.querySelector('#tcSecPhotobook .tc-photobook-imgwrap'), '4|cardC_Photobook|rangeC_PbZoom|📷 현재 포토북 사진 교체·구도 조절');
+      setLink('tcPbCardTitle', '4|cardC_Photobook|inpC_PbCardTitle|📷 현재 사진 카드 제목 수정');
+      setLink('tcPbCardDesc', '4|cardC_Photobook|inpC_PbCardDesc|📷 현재 사진 카드 간략 설명 수정');
+
+      setLink('tcQnaTag', '5|cardC_Qna|inpC_QnaTag|💬 인터뷰 영문 라벨 수정');
+      setLink('tcQnaSecTitle', '5|cardC_Qna|inpC_QnaSecTitle|💬 인터뷰 섹션 제목 수정');
+
+      setLink('tcChkTag', '5|cardC_Checklist|inpC_ChkSecTitle|☑️ 체크리스트 제목 수정');
+      setLink('tcChkSecTitle', '5|cardC_Checklist|inpC_ChkSecTitle|☑️ 체크리스트 제목 수정');
+      setLink('tcChkFeedback', '5|cardC_Checklist|inpC_ChkFeedback|💡 하단 응원 배너 문구 수정');
+
+      setLink('tcTicketBadge', '5|cardC_Ticket|inpC_TicketBadge|☕ 티켓 상단 영문 라벨 수정');
+      setLink('tcTicketTitle', '5|cardC_Ticket|inpC_TicketTitle|☕ 티켓 메인 초대 타이틀 수정');
+      setLink('tcTicketSub', '5|cardC_Ticket|inpC_TicketSub|☕ 티켓 보조 안내문 수정');
+
+      // 공통 신청폼 상단 카드 개별 연결
+      setLink('uiEndingBadge', '5|cardFormLabels|inpFormBadge|📝 신청 카드 상단 배지 수정');
+      setLink('uiTitle', '5|cardFormLabels|inpFormTitle|📝 신청 카드 메인 제목 수정');
+      setLink('uiSub', '5|cardFormLabels|inpFormSub|📝 신청 카드 보조 안내문 수정');
+
+      // 4) 동적 렌더링 항목(비교표·보험료탭·FAQ·타임라인·인터뷰·체크리스트) 자동 핀포인트 연결
+      const _prevRenderB = renderTypeBDom;
+      renderTypeBDom = function() {
+        _prevRenderB();
+        document.querySelectorAll('#tbVsOldList .tb-vs-item').forEach((el, idx) => {
+          setLink(el, `3|cardB_Vs|inpB_VsOld_${idx}|❌ 예전 구성 0${idx + 1} 문구 수정`);
+        });
+        document.querySelectorAll('#tbVsNewList .tb-vs-item').forEach((el, idx) => {
+          setLink(el, `3|cardB_Vs|inpB_VsNew_${idx}|⭕ 최신 플랜 0${idx + 1} 문구 수정`);
+        });
+        document.querySelectorAll('#tbSimTabBtns .tb-sim-tab').forEach((btn, idx) => {
+          setLink(btn, `4|cardB_Sim|inpB_CurTabName|📊 [${btn.innerText}] 탭 이름·플랜 수정`);
+          btn.onclick = function(ev) {
+            ev.stopPropagation();
+            selectTypeBSimTab(idx);
+            if (isEditMode) jumpToLeftEditorCard(4, 'cardB_Sim', 'inpB_CurTabName');
+          };
+        });
+        document.querySelectorAll('#tbSimRowsBox .tb-sim-row').forEach((row, rIdx) => {
+          const nameSpan = row.querySelector('span');
+          const descDiv = row.children[0] && row.children[0].children[1];
+          const priceDiv = row.children[1];
+          if (nameSpan) setLink(nameSpan, `4|cardB_Sim|inpB_SimName_${rIdx}|📊 플랜명 수정`);
+          if (descDiv) setLink(descDiv, `4|cardB_Sim|inpB_SimDesc_${rIdx}|📊 담보 한 줄 요약 수정`);
+          if (priceDiv) setLink(priceDiv, `4|cardB_Sim|inpB_SimPrice_${rIdx}|💰 예상 월 보험료 수정`);
+        });
+        document.querySelectorAll('#tbFaqList .tb-faq-item').forEach((item, idx) => {
+          const qBtn = item.querySelector('.tb-faq-q');
+          const aDiv = item.querySelector('.tb-faq-a');
+          if (qBtn) {
+            setLink(qBtn, `5|cardB_Faq|inpB_FaqQ_${idx}|❓ 질문 Q${idx + 1} 수정`);
+            qBtn.onclick = function(ev) {
+              ev.stopPropagation();
+              item.classList.toggle('open');
+              if (isEditMode) jumpToLeftEditorCard(5, 'cardB_Faq', 'inpB_FaqQ_' + idx);
+            };
+          }
+          if (aDiv) setLink(aDiv, `5|cardB_Faq|inpB_FaqA_${idx}|💬 답변 A${idx + 1} 수정`);
+        });
+      };
+
+      const _prevRenderC = renderTypeCDom;
+      renderTypeCDom = function() {
+        _prevRenderC();
+        document.querySelectorAll('#tcTimelineList .tc-tl-item').forEach((item, idx) => {
+          setLink(item.querySelector('.tc-tl-time'), `3|cardC_Timeline|inpC_TlTime_${idx}|⏰ 일과 0${idx + 1} 시간 수정`);
+          setLink(item.querySelector('.tc-tl-title'), `3|cardC_Timeline|inpC_TlTitle_${idx}|⏰ 일과 0${idx + 1} 제목 수정`);
+          setLink(item.querySelector('.tc-tl-desc'), `3|cardC_Timeline|inpC_TlDesc_${idx}|⏰ 일과 0${idx + 1} 설명 수정`);
+        });
+        document.querySelectorAll('#tcQnaList .tc-qna-card').forEach((card, idx) => {
+          setLink(card.querySelector('.tc-qna-q'), `5|cardC_Qna|inpC_QnaQ_${idx}|💬 인터뷰 0${idx + 1} 질문 수정`);
+          setLink(card.querySelector('.tc-qna-a'), `5|cardC_Qna|inpC_QnaA_${idx}|💬 인터뷰 0${idx + 1} 답변 수정`);
+          setLink(card.querySelector('.tc-qna-who'), `5|cardC_Qna|inpC_QnaWho_${idx}|💬 인터뷰 0${idx + 1} 작성자 수정`);
+        });
+        document.querySelectorAll('#tcChecklistWrap .tc-chk-item').forEach((chk, idx) => {
+          setLink(chk, `5|cardC_Checklist|inpC_Chk_${idx}|☑️ 체크 문항 0${idx + 1} 수정`);
+          chk.onclick = function(ev) {
+            ev.stopPropagation();
+            toggleTypeCCheckItem(chk);
+            if (isEditMode) jumpToLeftEditorCard(5, 'cardC_Checklist', 'inpC_Chk_' + idx);
+          };
+        });
+        const metaSpans = document.querySelectorAll('#tcTicketMeta span');
+        if (metaSpans[0]) setLink(metaSpans[0], '5|cardC_Ticket|inpC_TicketMetaL|🔒 티켓 좌측 하단 문구 수정');
+        if (metaSpans[1]) setLink(metaSpans[1], '5|cardC_Ticket|inpC_TicketMetaR|⏱️ 티켓 우측 하단 문구 수정');
+      };
+
+      // 5) B·C 사진 마우스 직접 드래그 구도 조절 (A타입과 동일)
+      const bindBcPhotoDrag = (frameEl, getPosFn, setPosFn) => {
+        if (!frameEl) return;
+        frameEl.classList.add('pan-photo-target');
+        const innerImg = frameEl.querySelector('img');
+        if (innerImg) { innerImg.draggable = false; innerImg.style.pointerEvents = 'none'; }
+
+        let panning = false, sx = 0, sy = 0, ox = 50, oy = 50;
+        frameEl.addEventListener('pointerdown', ev => {
+          if (!isEditMode) return;
+          if (ev.target.closest('button') || ev.target.closest('#tcLocSticker')) return;
+          panning = true;
+          frameEl.setPointerCapture(ev.pointerId);
+          sx = ev.clientX; sy = ev.clientY;
+          const cur = getPosFn();
+          ox = cur.x; oy = cur.y;
+        });
+        frameEl.addEventListener('pointermove', ev => {
+          if (!panning || !isEditMode) return;
+          const nx = Math.max(0, Math.min(100, Math.round(ox - (ev.clientX - sx) * 0.22)));
+          const ny = Math.max(0, Math.min(100, Math.round(oy - (ev.clientY - sy) * 0.22)));
+          setPosFn(nx, ny);
+        });
+        frameEl.addEventListener('pointerup', () => {
+          if (panning) { panning = false; saveAllPrState(false); }
+        });
+      };
+
+      bindBcPhotoDrag(
+        document.querySelector('#tbHeroAnchor .tb-banner-frame'),
+        () => ({ x: (typeBData.bannerPos && typeBData.bannerPos.x) ?? 50, y: (typeBData.bannerPos && typeBData.bannerPos.y) ?? 50 }),
+        (nx, ny) => {
+          typeBData.bannerPos = { ...(typeBData.bannerPos || { zoom: 100 }), x: nx, y: ny };
+          renderTypeBDom(); syncTypeBStudioInputs();
+        }
+      );
+      bindBcPhotoDrag(
+        document.getElementById('tbSlideStage'),
+        () => { const s = typeBData.slides[currentTypeBSlideIdx] || {}; return { x: s.posX ?? 50, y: s.posY ?? 50 }; },
+        (nx, ny) => {
+          const s = typeBData.slides[currentTypeBSlideIdx];
+          if (s) { s.posX = nx; s.posY = ny; renderTypeBDom(); syncTypeBStudioSlideFieldsOnly(); }
+        }
+      );
+      bindBcPhotoDrag(
+        document.querySelector('#tcCoverAnchor .tc-arch-frame'),
+        () => ({ x: (typeCData.coverPos && typeCData.coverPos.x) ?? 50, y: (typeCData.coverPos && typeCData.coverPos.y) ?? 50 }),
+        (nx, ny) => {
+          typeCData.coverPos = { ...(typeCData.coverPos || { zoom: 100 }), x: nx, y: ny };
+          renderTypeCDom(); syncTypeCStudioInputs();
+        }
+      );
+      bindBcPhotoDrag(
+        document.querySelector('#tcSecPhotobook .tc-photobook-imgwrap'),
+        () => { const p = typeCData.photobook[currentTypeCPhotoIdx] || {}; return { x: p.posX ?? 50, y: p.posY ?? 50 }; },
+        (nx, ny) => {
+          const p = typeCData.photobook[currentTypeCPhotoIdx];
+          if (p) { p.posX = nx; p.posY = ny; renderTypeCDom(); syncTypeCStudioPhotobookFieldsOnly(); }
+        }
+      );
+
+      // 즉시 재렌더링하여 ID 및 클릭 링크 활성화
+      syncTypeBStudioInputs();
+      syncTypeCStudioInputs();
+      renderTypeBDom();
+      renderTypeCDom();
+    })();
   </script>
 </body>
 </html> 

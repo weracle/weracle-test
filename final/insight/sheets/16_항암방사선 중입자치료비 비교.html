@@ -1176,12 +1176,11 @@
   </div>
 
   <!-- 2. Clean Action Toolbar -->
-  <div class="controls-bar" id="masterToolbar">
-    <div class="controls-left" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-      <button class="btn btn-outline" id="restoreCompBtn" onclick="restoreAllCompanies()" style="display: none;">
+    <div class="controls-bar" id="masterToolbar">
+    <div class="controls-left">
+      <button class="btn btn-outline" onclick="restoreAllCompanies()">
         <i class="fa-regular fa-eye"></i> 숨긴 회사 복원 (<span id="hiddenCompCount">0</span>)
       </button>
-      <div id="hiddenCompanyChips" style="display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap;"></div>
       <button class="btn btn-outline" onclick="resetAll()">
         <i class="fa-solid fa-arrows-rotate"></i> 전체 초기화
       </button>
@@ -1222,8 +1221,13 @@
       <tr class="vert-table-row" data-row="vertRow-3">
         <td class="col-label" style="width: 50px; min-width: 50px; max-width: 50px; text-align: center; font-weight: 700; background: #f8fafc; vertical-align: middle;">2</td>
           <td class="td-vert-comp" style="width: 110px; min-width: 110px; max-width: 110px; border: 1px solid var(--border-cell) !important; background: #ffffff; text-align: center; padding: 10px 8px; vertical-align: middle;">
-      <span class="company-name-text" style="color: #034ea2; font-size: 13.5px; font-weight: 800; letter-spacing: -0.01em;">삼성생명</span>
-    </td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">5천만원</td><td class="td-common text-left"  style="padding: 8px 10px; font-size: 12.5px;">The 간편한 다모은 건강보험(갱신형:간편)<br>The라이트 간편건강보험(갱신형)<br>가족대표건강보험<br>1540청춘대표/4180인생대표</td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;"><span class="status-circle status-yes">○</span></td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;"><span class="status-circle status-yes">○</span></td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">비갱신/갱신</td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">1억</td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">2만원</td>
+      <div style="display: flex; align-items: center; justify-content: center; position: relative; padding-right: 20px;">
+        <span class="company-name-text" style="color: #034ea2; font-size: 13.5px; font-weight: 800; letter-spacing: -0.01em;">삼성생명</span>
+        <button class="row-hide-btn" onclick="hideCompanyRow(event, ['vertRow-3'], '삼성생명')" title="삼성생명 숨기기">
+          <i class="fa-regular fa-eye eye-open-icon"></i>
+          <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+        </button>
+      </div></td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">5천만원</td><td class="td-common text-left"  style="padding: 8px 10px; font-size: 12.5px;">The 간편한 다모은 건강보험(갱신형:간편)<br>The라이트 간편건강보험(갱신형)<br>가족대표건강보험<br>1540청춘대표/4180인생대표</td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;"><span class="status-circle status-yes">○</span></td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;"><span class="status-circle status-yes">○</span></td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">비갱신/갱신</td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">1억</td><td class="td-common text-center"  style="padding: 8px 10px; font-size: 12.5px;">2만원</td>
       </tr>
       <tr class="vert-table-row" data-row="vertRow-4">
         <td class="col-label" style="width: 50px; min-width: 50px; max-width: 50px; text-align: center; font-weight: 700; background: #f8fafc; vertical-align: middle;">3</td>
@@ -1376,19 +1380,7 @@
       const rows = document.querySelectorAll('[data-row="' + k + '"]');
       rows.forEach(r => r.classList.add('row-hidden'));
     });
-    updateHiddenCompanyUI();
-  }
-
-  function restoreCompany(compName) {
-    const keys = hiddenCompanies.get(compName);
-    if (keys) {
-      keys.forEach(k => {
-        const rows = document.querySelectorAll('[data-row="' + k + '"]');
-        rows.forEach(r => r.classList.remove('row-hidden'));
-      });
-      hiddenCompanies.delete(compName);
-    }
-    updateHiddenCompanyUI();
+    updateHiddenCounts();
   }
 
   function restoreAllCompanies() {
@@ -1399,27 +1391,12 @@
       });
     });
     hiddenCompanies.clear();
-    updateHiddenCompanyUI();
+    updateHiddenCounts();
   }
 
-  function updateHiddenCompanyUI() {
-    const countEl = document.getElementById('hiddenCompCount');
-    if (countEl) countEl.innerText = hiddenCompanies.size;
-    const btn = document.getElementById('restoreCompBtn');
-    if (btn) btn.style.display = hiddenCompanies.size > 0 ? 'inline-flex' : 'none';
-
-    const chipsContainer = document.getElementById('hiddenCompanyChips');
-    if (chipsContainer) {
-      chipsContainer.innerHTML = '';
-      hiddenCompanies.forEach((keys, compName) => {
-        const chip = document.createElement('span');
-        chip.className = 'hidden-comp-chip';
-        chip.title = compName + ' 복원하기';
-        chip.innerHTML = compName + ' <i class="fa-solid fa-xmark"></i>';
-        chip.onclick = () => restoreCompany(compName);
-        chipsContainer.appendChild(chip);
-      });
-    }
+  function updateHiddenCounts() {
+    const compCount = document.getElementById('hiddenCompCount');
+    if (compCount) compCount.innerText = hiddenCompanies.size;
   }
 
   function resetAll() {
@@ -1427,12 +1404,29 @@
   }
 
   function saveImage() {
-    const target = document.getElementById('captureArea');
-    html2canvas(target, { scale: 2 }).then(canvas => {
+    const target = document.getElementById('captureArea') || document.body;
+    const btn = event.currentTarget;
+    const origText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장중...';
+    btn.disabled = true;
+
+    html2canvas(target, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false
+    }).then(canvas => {
       const link = document.createElement('a');
-      link.download = '16_항암방사선 중입자치료비 비교.png';
-      link.href = canvas.toDataURL();
+      link.download = document.title.split('|')[0].trim() + '.png';
+      link.href = canvas.toDataURL('image/png');
       link.click();
+      btn.innerHTML = origText;
+      btn.disabled = false;
+    }).catch(err => {
+      console.error(err);
+      alert('이미지 저장 중 오류가 발생했습니다.');
+      btn.innerHTML = origText;
+      btn.disabled = false;
     });
   }
 </script>

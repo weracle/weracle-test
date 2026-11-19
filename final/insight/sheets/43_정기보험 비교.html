@@ -1176,12 +1176,11 @@
   </div>
 
   <!-- 2. Clean Action Toolbar -->
-  <div class="controls-bar" id="masterToolbar">
-    <div class="controls-left" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-      <button class="btn btn-outline" id="restoreCompBtn" onclick="restoreAllCompanies()" style="display: none;">
+    <div class="controls-bar" id="masterToolbar">
+    <div class="controls-left">
+      <button class="btn btn-outline" onclick="restoreAllCompanies()">
         <i class="fa-regular fa-eye"></i> 숨긴 회사 복원 (<span id="hiddenCompCount">0</span>)
       </button>
-      <div id="hiddenCompanyChips" style="display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap;"></div>
       <button class="btn btn-outline" onclick="resetAll()">
         <i class="fa-solid fa-arrows-rotate"></i> 전체 초기화
       </button>
@@ -1334,61 +1333,33 @@
 </div>
 
 <script>
-  const hiddenCompanyMap = new Map(); // compName -> [rowKeys]
+  const hiddenCompanies = new Map();
 
   function hideCompanyRow(e, rowKeys, compName) {
     if (e) e.stopPropagation();
-    hiddenCompanyMap.set(compName, rowKeys);
-    rowKeys.forEach(rk => {
-      const rows = document.querySelectorAll('[data-row="' + rk + '"]');
+    const keys = Array.isArray(rowKeys) ? rowKeys : [rowKeys];
+    hiddenCompanies.set(compName, keys);
+    keys.forEach(k => {
+      const rows = document.querySelectorAll('[data-row="' + k + '"]');
       rows.forEach(r => r.classList.add('row-hidden'));
     });
-    updateHiddenCompanyUI();
-  }
-
-  function restoreCompany(compName) {
-    const rowKeys = hiddenCompanyMap.get(compName);
-    if (rowKeys) {
-      rowKeys.forEach(rk => {
-        const rows = document.querySelectorAll('[data-row="' + rk + '"]');
-        rows.forEach(r => r.classList.remove('row-hidden'));
-      });
-      hiddenCompanyMap.delete(compName);
-    }
-    updateHiddenCompanyUI();
+    updateHiddenCounts();
   }
 
   function restoreAllCompanies() {
-    hiddenCompanyMap.forEach((rowKeys) => {
-      rowKeys.forEach(rk => {
-        const rows = document.querySelectorAll('[data-row="' + rk + '"]');
+    hiddenCompanies.forEach((keys, compName) => {
+      keys.forEach(k => {
+        const rows = document.querySelectorAll('[data-row="' + k + '"]');
         rows.forEach(r => r.classList.remove('row-hidden'));
       });
     });
-    hiddenCompanyMap.clear();
-    updateHiddenCompanyUI();
+    hiddenCompanies.clear();
+    updateHiddenCounts();
   }
 
-  function updateHiddenCompanyUI() {
-    const restoreBtn = document.getElementById('restoreCompBtn');
-    const countSpan = document.getElementById('hiddenCompCount');
-    const chipsContainer = document.getElementById('hiddenCompanyChips');
-    if (!restoreBtn || !chipsContainer) return;
-
-    const count = hiddenCompanyMap.size;
-    if (countSpan) countSpan.innerText = count;
-
-    if (count > 0) {
-      restoreBtn.style.display = 'inline-flex';
-      let chipsHtml = '';
-      hiddenCompanyMap.forEach((_, compName) => {
-        chipsHtml += `<button class="hidden-comp-chip" onclick="restoreCompany('${compName}')" title="${compName} 복원">${compName} <i class="fa-solid fa-xmark"></i></button>`;
-      });
-      chipsContainer.innerHTML = chipsHtml;
-    } else {
-      restoreBtn.style.display = 'none';
-      chipsContainer.innerHTML = '';
-    }
+  function updateHiddenCounts() {
+    const compCount = document.getElementById('hiddenCompCount');
+    if (compCount) compCount.innerText = hiddenCompanies.size;
   }
 
   function resetAll() {
@@ -1396,12 +1367,29 @@
   }
 
   function saveImage() {
-    const target = document.getElementById('captureArea');
-    html2canvas(target, { scale: 2 }).then(canvas => {
+    const target = document.getElementById('captureArea') || document.body;
+    const btn = event.currentTarget;
+    const origText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장중...';
+    btn.disabled = true;
+
+    html2canvas(target, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false
+    }).then(canvas => {
       const link = document.createElement('a');
-      link.download = '43_정기보험 비교.png';
-      link.href = canvas.toDataURL();
+      link.download = document.title.split('|')[0].trim() + '.png';
+      link.href = canvas.toDataURL('image/png');
       link.click();
+      btn.innerHTML = origText;
+      btn.disabled = false;
+    }).catch(err => {
+      console.error(err);
+      alert('이미지 저장 중 오류가 발생했습니다.');
+      btn.innerHTML = origText;
+      btn.disabled = false;
     });
   }
 </script>

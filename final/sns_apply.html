@@ -6821,6 +6821,229 @@ async function submitLeadForm(e) {
       renderTypeBDom();
       renderTypeCDom();
     })();
+ /* ======================================================================
+       [타입 C 리더 프로필 액자·구도 조절 & 하단 고정바 겹침 완벽 보정 패치]
+       ====================================================================== */
+    (function fixTypeCLeaderAndStickyBar() {
+      // 1) CSS 보정: 리더 세로형 프로필 액자 + 서명란 분리 + 하단 고정바 본문 침범 원천 차단
+      const fixStyle = document.createElement('style');
+      fixStyle.textContent = `
+        /* 오른쪽 미리보기 스크롤 시 하단 고정바가 본문 중간에 붕 뜨지 않도록 flex 레이아웃 정렬 */
+        @media (min-width: 961px) {
+          body.can-edit-pr .magazine-wrapper,
+          body.is-editing .magazine-wrapper {
+            padding-bottom: 0 !important;
+          }
+          body.can-edit-pr .bottom-sticky-bar,
+          body.is-editing .bottom-sticky-bar {
+            position: sticky !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            margin-top: auto !important;
+          }
+        }
+
+        /* C타입 편지지 가독성 및 하단 리더 서명 명함 카드 고급화 */
+        .tc-letter-paper {
+          background: #fffdf9 !important;
+          background-image: none !important;
+          border: 1.5px solid #e7e0d3 !important;
+          border-radius: 18px !important;
+          padding: 22px 20px 18px !important;
+          box-shadow: 0 10px 26px rgba(28, 25, 23, 0.06) !important;
+        }
+        #tcLetterBody {
+          font-size: 14px !important;
+          line-height: 1.85 !important;
+          color: #292524 !important;
+          letter-spacing: -0.2px;
+          padding-bottom: 16px;
+          background-image: repeating-linear-gradient(transparent, transparent 25px, #f3ede2 25px, #f3ede2 26px);
+        }
+        .tc-leader-sign {
+          background: #ffffff !important;
+          border: 1px solid #e2e8f0 !important;
+          border-radius: 14px !important;
+          padding: 12px 14px !important;
+          margin-top: 14px !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 14px !important;
+          box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05) !important;
+        }
+        .tc-leader-frame,
+        .tb-advisor-frame {
+          width: 74px !important;
+          height: 88px !important;
+          border-radius: 14px !important;
+          overflow: hidden !important;
+          flex-shrink: 0 !important;
+          background: linear-gradient(160deg, #e0f2fe 0%, #dbeafe 50%, #cbd5e1 100%) !important;
+          border: 2px solid #ffffff !important;
+          box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12) !important;
+          position: relative !important;
+        }
+        .tc-leader-frame img,
+        .tb-advisor-frame img {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          display: block !important;
+        }
+      `;
+      document.head.appendChild(fixStyle);
+
+      // 2) 리더 사진 & B타입 컨설턴트 사진 박스에 큼직한 상반신 프레임 클래스 부여
+      const ldImg = document.getElementById('tcLeaderImg');
+      if (ldImg && ldImg.parentElement) {
+        ldImg.parentElement.className = 'tc-leader-frame pan-photo-target';
+        ldImg.parentElement.setAttribute('data-edit-link', '2|cardC_Letter|rangeC_LeaderZoom|📷 리더 프로필 사진 변경·얼굴 구도 조절');
+      }
+      const advImg = document.getElementById('tbAdvisorImg');
+      if (advImg && advImg.parentElement) {
+        advImg.parentElement.className = 'tb-advisor-frame pan-photo-target';
+        advImg.parentElement.setAttribute('data-edit-link', '5|cardB_Advisor|rangeB_AdvZoom|📷 컨설턴트 사진 변경·얼굴 구도 조절');
+      }
+
+      // 3) 스튜디오 왼쪽 카드(C 리더편지 & B 컨설턴트배너)에 사진 초점·확대 슬라이더 주입
+      const letterCard = document.getElementById('cardC_Letter');
+      if (letterCard && !document.getElementById('rangeC_LeaderZoom')) {
+        letterCard.insertAdjacentHTML('beforeend', `
+          <div class="fine-tune-box" style="margin-top:8px;">
+            <div style="font-size:11px; font-weight:800; color:var(--theme-accent);">🎯 리더 프로필 사진 얼굴 위치·크기 조절 (오른쪽 사진 드래그 가능)</div>
+            <div class="ft-row"><span class="ft-name">↔ 좌우 초점</span><input type="range" id="rangeC_LeaderX" min="0" max="100" value="50" oninput="onTuneLeaderAdvPos('C')" /><span class="ft-val" id="valC_LeaderX">50%</span></div>
+            <div class="ft-row"><span class="ft-name">↕ 상하 초점</span><input type="range" id="rangeC_LeaderY" min="0" max="100" value="18" oninput="onTuneLeaderAdvPos('C')" /><span class="ft-val" id="valC_LeaderY">18%</span></div>
+            <div class="ft-row"><span class="ft-name">🔍 얼굴 확대</span><input type="range" id="rangeC_LeaderZoom" min="100" max="240" value="125" oninput="onTuneLeaderAdvPos('C')" /><span class="ft-val" id="valC_LeaderZoom">125%</span></div>
+          </div>
+        `);
+      }
+
+      const advCard = document.getElementById('cardB_Advisor');
+      if (advCard && !document.getElementById('rangeB_AdvZoom')) {
+        advCard.insertAdjacentHTML('beforeend', `
+          <div class="fine-tune-box" style="margin-top:8px;">
+            <div style="font-size:11px; font-weight:800; color:var(--theme-accent);">🎯 내 실물 사진 얼굴 위치·크기 조절 (오른쪽 사진 드래그 가능)</div>
+            <div class="ft-row"><span class="ft-name">↔ 좌우 초점</span><input type="range" id="rangeB_AdvX" min="0" max="100" value="50" oninput="onTuneLeaderAdvPos('B')" /><span class="ft-val" id="valB_AdvX">50%</span></div>
+            <div class="ft-row"><span class="ft-name">↕ 상하 초점</span><input type="range" id="rangeB_AdvY" min="0" max="100" value="18" oninput="onTuneLeaderAdvPos('B')" /><span class="ft-val" id="valB_AdvY">18%</span></div>
+            <div class="ft-row"><span class="ft-name">🔍 얼굴 확대</span><input type="range" id="rangeB_AdvZoom" min="100" max="240" value="125" oninput="onTuneLeaderAdvPos('B')" /><span class="ft-val" id="valB_AdvZoom">125%</span></div>
+          </div>
+        `);
+      }
+
+      window.onTuneLeaderAdvPos = function(mode) {
+        if (mode === 'C') {
+          const x = Number(document.getElementById('rangeC_LeaderX').value);
+          const y = Number(document.getElementById('rangeC_LeaderY').value);
+          const zoom = Number(document.getElementById('rangeC_LeaderZoom').value);
+          document.getElementById('valC_LeaderX').innerText = x + '%';
+          document.getElementById('valC_LeaderY').innerText = y + '%';
+          document.getElementById('valC_LeaderZoom').innerText = zoom + '%';
+          typeCData.leaderPos = { x, y, zoom };
+          renderTypeCDom();
+        } else {
+          const x = Number(document.getElementById('rangeB_AdvX').value);
+          const y = Number(document.getElementById('rangeB_AdvY').value);
+          const zoom = Number(document.getElementById('rangeB_AdvZoom').value);
+          document.getElementById('valB_AdvX').innerText = x + '%';
+          document.getElementById('valB_AdvY').innerText = y + '%';
+          document.getElementById('valB_AdvZoom').innerText = zoom + '%';
+          typeBData.advPos = { x, y, zoom };
+          renderTypeBDom();
+        }
+        saveAllPrState(false);
+      };
+
+      window.syncLeaderAdvSlidersUI = function() {
+        const lp = typeCData.leaderPos || { x: 50, y: 18, zoom: 125 };
+        if (document.getElementById('rangeC_LeaderX')) {
+          document.getElementById('rangeC_LeaderX').value = lp.x ?? 50;
+          document.getElementById('rangeC_LeaderY').value = lp.y ?? 18;
+          document.getElementById('rangeC_LeaderZoom').value = lp.zoom ?? 125;
+          document.getElementById('valC_LeaderX').innerText = (lp.x ?? 50) + '%';
+          document.getElementById('valC_LeaderY').innerText = (lp.y ?? 18) + '%';
+          document.getElementById('valC_LeaderZoom').innerText = (lp.zoom ?? 125) + '%';
+        }
+        const ap = typeBData.advPos || { x: 50, y: 18, zoom: 125 };
+        if (document.getElementById('rangeB_AdvX')) {
+          document.getElementById('rangeB_AdvX').value = ap.x ?? 50;
+          document.getElementById('rangeB_AdvY').value = ap.y ?? 18;
+          document.getElementById('rangeB_AdvZoom').value = ap.zoom ?? 125;
+          document.getElementById('valB_AdvX').innerText = (ap.x ?? 50) + '%';
+          document.getElementById('valB_AdvY').innerText = (ap.y ?? 18) + '%';
+          document.getElementById('valB_AdvZoom').innerText = (ap.zoom ?? 125) + '%';
+        }
+      };
+
+      // 누끼 프로필 사진을 자동 계승할 때 얼굴 상단(y:18%, zoom:130%)에 초점이 자동으로 잡히도록 보정
+      const _prevInherit = inheritMyIdentityIntoBc;
+      inheritMyIdentityIntoBc = function() {
+        _prevInherit();
+        if (!typeCData.leaderPos || typeCData.leaderPos.zoom === 100) {
+          typeCData.leaderPos = { x: 55, y: 18, zoom: 130 };
+        }
+        if (!typeBData.advPos || typeBData.advPos.zoom === 100) {
+          typeBData.advPos = { x: 55, y: 18, zoom: 130 };
+        }
+      };
+
+      // 스튜디오 안에서 구성 폼 전환(A/B/C) 클릭 시 기본 자동 제목이었으면 새 타입 제목으로 함께 변경
+      switchTemplateLayoutInStudio = function(typeCode) {
+        const t = String(typeCode || 'A').toUpperCase();
+        if (!confirm(`[타입 ${t}] 레이아웃 구성으로 전환하시겠습니까?\n(내 프로필 사진·성함·컬러는 유지되며 본문 디자인만 전환됩니다.)`)) return;
+        const titleInp = document.getElementById('inpPrPageTitle');
+        if (titleInp) {
+          const curVal = titleInp.value.trim();
+          if (!curVal || /^\[(브랜딩|상품|리쿠르팅)/.test(curVal) || curVal.includes('대표 PR 페이지')) {
+            const autoTitles = {
+              A: `[브랜딩·점검] 나의 대표 PR 페이지`,
+              B: `[상품 집중] 핵심 담보 요약 & 견적 안내`,
+              C: `[리쿠르팅] 함께 성장할 팀 파트너 모집`
+            };
+            titleInp.value = autoTitles[t] || autoTitles.A;
+          }
+        }
+        applyPresetWithIdentity(t, true);
+        syncLeaderAdvSlidersUI();
+      };
+
+      // 마우스로 리더·컨설턴트 사진 직접 드래그해서 초점 이동 지원
+      const attachMiniPhotoDrag = (frameEl, mode) => {
+        if (!frameEl) return;
+        let drag = false, sx = 0, sy = 0, ox = 50, oy = 20;
+        frameEl.addEventListener('pointerdown', ev => {
+          if (!isEditMode) return;
+          drag = true; frameEl.setPointerCapture(ev.pointerId);
+          sx = ev.clientX; sy = ev.clientY;
+          const pos = mode === 'C' ? (typeCData.leaderPos || {}) : (typeBData.advPos || {});
+          ox = pos.x ?? 50; oy = pos.y ?? 18;
+        });
+        frameEl.addEventListener('pointermove', ev => {
+          if (!drag || !isEditMode) return;
+          const nx = Math.max(0, Math.min(100, Math.round(ox - (ev.clientX - sx) * 0.35)));
+          const ny = Math.max(0, Math.min(100, Math.round(oy - (ev.clientY - sy) * 0.35)));
+          if (mode === 'C') {
+            typeCData.leaderPos = { ...(typeCData.leaderPos || { zoom: 130 }), x: nx, y: ny };
+            renderTypeCDom();
+          } else {
+            typeBData.advPos = { ...(typeBData.advPos || { zoom: 130 }), x: nx, y: ny };
+            renderTypeBDom();
+          }
+          syncLeaderAdvSlidersUI();
+        });
+        frameEl.addEventListener('pointerup', () => {
+          if (drag) { drag = false; saveAllPrState(false); }
+        });
+      };
+
+      if (ldImg) attachMiniPhotoDrag(ldImg.parentElement, 'C');
+      if (advImg) attachMiniPhotoDrag(advImg.parentElement, 'B');
+
+      inheritMyIdentityIntoBc();
+      renderTypeBDom();
+      renderTypeCDom();
+      syncLeaderAdvSlidersUI();
+    })();
   </script>
 </body>
 </html> 

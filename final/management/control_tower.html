@@ -1336,6 +1336,60 @@
     </div>
   </div>
 
+    <!-- 수파베이스 RLS / 마스터키 설정 모달 -->
+  <div class="modal-overlay" id="masterKeyModal">
+    <div class="modal-box" style="max-width:580px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i>
+          <span>수파베이스 DB 삭제/수정 권한 활성화 (RLS 해제)</span>
+        </div>
+        <button type="button" onclick="closeMasterKeyModal()" style="border:none; background:transparent; font-size:18px; cursor:pointer; color:#94a3b8;">&times;</button>
+      </div>
+      <div class="modal-body" style="gap:16px;">
+        <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:10px; padding:14px; font-size:13px; color:#92400e; line-height:1.6;">
+          <strong>⚠️ 삭제 후 새로고침 시 회원이 다시 나타나는 원인</strong><br>
+          수파베이스 <code>profiles</code> 테이블에 <strong>Row Level Security (행 보안 RLS)</strong>가 기본 활성화되어 있어, 일반 브라우저 키로는 타인 계정의 삭제/수정이 DB에서 무시됩니다.<br>
+          아래 <strong>방법 1(가장 추천)</strong> 또는 <strong>방법 2</strong> 중 하나만 진행하시면 즉시 영구 삭제 및 등급 변경이 DB에 100% 반영됩니다.
+        </div>
+
+        <!-- 방법 1 -->
+        <div style="border:1.5px solid #0284c7; border-radius:10px; padding:16px; background:#f0f9ff;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-weight:800; color:#0369a1; font-size:13.5px;">
+              <i class="fa-solid fa-bolt" style="color:#0284c7;"></i> 방법 1. 수파베이스 SQL 1줄 실행 (가장 추천 / 30초 완료)
+            </div>
+            <button class="btn-action-sm primary" onclick="copySqlToClipboard()">SQL 복사</button>
+          </div>
+          <p style="font-size:12px; color:#475569; margin-bottom:8px;">
+            수파베이스 대시보드 ➔ <strong>SQL Editor</strong> ➔ 새 쿼리창에 아래 코드를 붙여넣고 <strong>[RUN]</strong>을 누르시면 RLS가 해제되어 자유롭게 삭제/수정됩니다.
+          </p>
+          <pre id="rlsSqlBox" style="background:#0f172a; color:#38bdf8; padding:10px 12px; border-radius:6px; font-size:12px; font-family:monospace; user-select:all; margin:0;">ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;</pre>
+        </div>
+
+        <!-- 방법 2 -->
+        <div style="border:1px solid #cbd5e1; border-radius:10px; padding:16px; background:#f8fafc;">
+          <div style="font-weight:800; color:#334155; font-size:13.5px; margin-bottom:8px;">
+            <i class="fa-solid fa-key" style="color:#f59e0b;"></i> 방법 2. 마스터 Service Role Key 직접 입력
+          </div>
+          <p style="font-size:12px; color:#64748b; line-height:1.5; margin-bottom:10px;">
+            수파베이스 <strong>Project Settings ➔ API ➔ Project API keys ➔ service_role (secret)</strong> 키를 입력하시면 브라우저에서 슈퍼 관리자 모드로 즉시 삭제를 실행합니다.
+          </p>
+          <div class="form-group">
+            <input type="password" class="form-input" id="serviceRoleKeyInput" placeholder="eyJhbGciOi... 또는 sb_secret_... 키 입력">
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+            <button class="btn-action-sm outline" onclick="clearServiceRoleKey()">키 초기화</button>
+            <button class="btn-action-sm primary" onclick="saveServiceRoleKey()">마스터 키 저장</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-action-sm outline" onclick="closeMasterKeyModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 토스트 알림 컴포넌트 -->
   <div class="toast-box" id="towerToast">
     <i class="fa-solid fa-circle-check" style="color:#34d399; font-size:16px;"></i>
@@ -1348,6 +1402,86 @@
     // ========================================================
     const SUPABASE_URL = "https://tjohrovsvgnkrlqhjkwt.supabase.co";
     const SUPABASE_ANON = "sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR";
+
+    function getActiveSupabaseKey() {
+      return localStorage.getItem('weracle_supabase_service_key') || SUPABASE_ANON;
+    }
+
+    function getActiveHeaders(returnRep = true) {
+      const key = getActiveSupabaseKey();
+      const h = {
+        'apikey': key,
+        'Authorization': 'Bearer ' + key,
+        'Content-Type': 'application/json'
+      };
+      if (returnRep) {
+        h['Prefer'] = 'return=representation';
+      }
+      return h;
+    }
+
+    function updateMasterKeyPillUI() {
+      const key = localStorage.getItem('weracle_supabase_service_key');
+      const textEl = document.getElementById('masterKeyText');
+      const pillEl = document.getElementById('btnMasterKeyPill');
+      if (key && key.trim().length > 10) {
+        if (textEl) textEl.innerText = '✅ DB 마스터키 활성';
+        if (pillEl) {
+          pillEl.style.borderColor = '#10b981';
+          pillEl.style.color = '#059669';
+          pillEl.style.background = '#ecfdf5';
+        }
+      } else {
+        if (textEl) textEl.innerText = 'DB 권한(RLS) 설정';
+        if (pillEl) {
+          pillEl.style.borderColor = '#f59e0b';
+          pillEl.style.color = '#d97706';
+          pillEl.style.background = 'transparent';
+        }
+      }
+    }
+
+    function openMasterKeyModal() {
+      const saved = localStorage.getItem('weracle_supabase_service_key') || '';
+      const inp = document.getElementById('serviceRoleKeyInput');
+      if (inp) inp.value = saved;
+      document.getElementById('masterKeyModal').classList.add('open');
+    }
+
+    function closeMasterKeyModal() {
+      document.getElementById('masterKeyModal').classList.remove('open');
+    }
+
+    function copySqlToClipboard() {
+      const sql = document.getElementById('rlsSqlBox').innerText;
+      navigator.clipboard.writeText(sql).then(() => {
+        showToast('📋 SQL이 클립보드에 복사되었습니다! 수파베이스 SQL Editor에 붙여넣고 실행하세요.');
+      }).catch(() => {
+        prompt('아래 SQL을 복사하여 수파베이스 SQL Editor에서 실행하세요:', sql);
+      });
+    }
+
+    function saveServiceRoleKey() {
+      const inp = document.getElementById('serviceRoleKeyInput');
+      const val = inp ? inp.value.trim() : '';
+      if (!val) {
+        alert('service_role 키를 입력해주세요.');
+        return;
+      }
+      localStorage.setItem('weracle_supabase_service_key', val);
+      updateMasterKeyPillUI();
+      closeMasterKeyModal();
+      showToast('🔑 수파베이스 마스터 키가 등록되었습니다! 이제 RLS 제한 없이 모든 작업이 적용됩니다.');
+      loadSupabaseProfiles();
+    }
+
+    function clearServiceRoleKey() {
+      localStorage.removeItem('weracle_supabase_service_key');
+      const inp = document.getElementById('serviceRoleKeyInput');
+      if (inp) inp.value = '';
+      updateMasterKeyPillUI();
+      showToast('마스터 키가 초기화되었습니다. (기본 익명 키 사용)');
+    }
 
     let sbClient = null;
     let allProfiles = [];
@@ -1372,6 +1506,7 @@
       document.getElementById('towerHeader').style.display = 'flex';
       document.getElementById('towerContainer').style.display = 'block';
 
+      updateMasterKeyPillUI();
       await loadSupabaseProfiles();
       renderSubsTable();
       renderBillingTable();
@@ -1579,57 +1714,48 @@
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
           method: 'PATCH',
-          headers: {
-            'apikey': SUPABASE_ANON,
-            'Authorization': `Bearer ${SUPABASE_ANON}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-          },
+          headers: getActiveHeaders(true),
           body: JSON.stringify({ user_grade: newGrade })
         });
+        const data = await res.json().catch(() => []);
 
-        if (res.ok) {
-          showToast(`🎉 [${userName}] 등급이 '${newGrade}'(으)로 즉시 변경되었습니다.`);
+        if (Array.isArray(data) && data.length > 0) {
+          showToast(`🎉 [${userName}] 등급이 '${newGrade}'(으)로 수파베이스 DB에 즉시 변경되었습니다.`);
           if (u) u.user_grade = newGrade;
           filterUserTable();
           updateUserCounts(allProfiles);
           renderSubsTable();
           updateKPICards();
         } else {
-          // Fallback via serverless admin-update
-          const token = localStorage.getItem('g_access_token') || '';
-          await fetch('/api/admin-update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ userId: userId, updates: { user_grade: newGrade } })
-          });
-          showToast(`[${userName}] 등급 '${newGrade}' 변경 완료`);
-          await loadSupabaseProfiles();
+          // 0개 변경됨 -> RLS 차단
+          alert(`⚠️ [${userName}] 등급 변경이 수파베이스 DB에 반영되지 않았습니다.\n\n원인: 수파베이스 profiles 테이블의 RLS(보안 정책) 때문입니다.\n화면에 열리는 안내창에서 [SQL 1줄 실행] 또는 [마스터키 입력]을 해주세요.`);
+          openMasterKeyModal();
         }
       } catch(e) {
         alert('등급 변경 실패: ' + e.message);
       }
     }
 
-    // 팩스 쿼터 추가
     async function addFaxQuota(userId, count) {
       const u = allProfiles.find(p => p.id === userId);
       if (!u) return;
       const newCount = (u.fax_count ?? 0) + count;
 
       try {
-        await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
           method: 'PATCH',
-          headers: {
-            'apikey': SUPABASE_ANON,
-            'Authorization': `Bearer ${SUPABASE_ANON}`,
-            'Content-Type': 'application/json'
-          },
+          headers: getActiveHeaders(true),
           body: JSON.stringify({ fax_count: newCount })
         });
-        u.fax_count = newCount;
-        showToast(`팩스 ${count}회가 충전되었습니다. (현재 ${newCount}회)`);
-        filterUserTable();
+        const data = await res.json().catch(() => []);
+        if (Array.isArray(data) && data.length > 0) {
+          u.fax_count = newCount;
+          showToast(`팩스 ${count}회가 충전되었습니다. (현재 ${newCount}회)`);
+          filterUserTable();
+        } else {
+          alert('⚠️ 수파베이스 RLS 보안 정책으로 인해 팩스 충전이 DB에 반영되지 않았습니다.\n안내창의 안내에 따라 권한을 허용해주세요.');
+          openMasterKeyModal();
+        }
       } catch(e) {
         alert('팩스 쿼터 충전 실패: ' + e.message);
       }
@@ -1688,20 +1814,24 @@
       if (!confirm(`선택한 ${selectedUserIds.size}명의 회원 등급을 '${newGrade}'(으)로 일괄 변경하시겠습니까?`)) return;
 
       const ids = Array.from(selectedUserIds);
+      let successCount = 0;
       for (const id of ids) {
-        await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${id}`, {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${id}`, {
           method: 'PATCH',
-          headers: {
-            'apikey': SUPABASE_ANON,
-            'Authorization': `Bearer ${SUPABASE_ANON}`,
-            'Content-Type': 'application/json'
-          },
+          headers: getActiveHeaders(true),
           body: JSON.stringify({ user_grade: newGrade })
         });
+        const data = await res.json().catch(() => []);
+        if (Array.isArray(data) && data.length > 0) successCount++;
       }
-      showToast(`${ids.length}명의 등급이 '${newGrade}'(으)로 일괄 변경되었습니다.`);
-      clearUserSelection();
-      await loadSupabaseProfiles();
+      if (successCount > 0) {
+        showToast(`${successCount}명의 등급이 '${newGrade}'(으)로 수파베이스 DB에 일괄 변경되었습니다.`);
+        clearUserSelection();
+        await loadSupabaseProfiles();
+      } else {
+        alert('⚠️ 수파베이스 RLS 정책으로 인해 일괄 변경이 DB에 반영되지 않았습니다.\n안내창의 SQL을 실행하거나 마스터키를 등록해주세요.');
+        openMasterKeyModal();
+      }
     }
 
     async function batchAddFax(count) {
@@ -1727,35 +1857,29 @@
     // ----------------------------------------------------
     async function executeDeleteUserProfile(userId) {
       let isSuccess = false;
+      let rlsBlocked = false;
 
-      // 1. Supabase Client SDK 시도
+      // 1. Supabase REST API (Prefer: return=representation 으로 실제 삭제된 레코드 수 검증)
       try {
-        if (sbClient) {
-          const { error } = await sbClient.from('profiles').delete().eq('id', userId);
-          if (!error) isSuccess = true;
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+          method: 'DELETE',
+          headers: getActiveHeaders(true)
+        });
+        const text = await res.text();
+        let data = [];
+        try { data = JSON.parse(text); } catch(e){}
+
+        if (Array.isArray(data) && data.length > 0) {
+          isSuccess = true; // 실제 DB에서 레코드가 삭제됨!
+        } else if (res.ok && Array.isArray(data) && data.length === 0) {
+          // HTTP 200/204는 떴으나 삭제된 행이 0개 -> RLS 정책에 의해 차단됨!
+          rlsBlocked = true;
         }
       } catch (err) {
-        console.warn('[Delete] Supabase SDK delete warn:', err);
+        console.warn('[Delete] Supabase REST direct delete warn:', err);
       }
 
-      // 2. Supabase REST API 시도 (Direct DELETE)
-      if (!isSuccess) {
-        try {
-          const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
-            method: 'DELETE',
-            headers: {
-              'apikey': SUPABASE_ANON,
-              'Authorization': `Bearer ${SUPABASE_ANON}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          if (res.ok) isSuccess = true;
-        } catch (err) {
-          console.warn('[Delete] Supabase REST direct delete warn:', err);
-        }
-      }
-
-      // 3. Serverless API Fallback (/api/admin-update)
+      // 2. Serverless API Fallback (/api/admin-update)
       if (!isSuccess) {
         try {
           const token = localStorage.getItem('g_access_token') || sessionStorage.getItem('g_access_token') || '';
@@ -1767,13 +1891,16 @@
             },
             body: JSON.stringify({ action: 'delete', userId: userId })
           });
-          if (res.ok) isSuccess = true;
+          if (res.ok) {
+            const json = await res.json().catch(() => ({}));
+            if (json.success) isSuccess = true;
+          }
         } catch (err) {
           console.warn('[Delete] Admin-update fallback warn:', err);
         }
       }
 
-      return isSuccess;
+      return { isSuccess, rlsBlocked };
     }
 
     async function deleteUser(userId) {
@@ -1817,20 +1944,29 @@
       if (!confirm(confirmMsg)) return;
 
       const ids = Array.from(selectedUserIds);
+      let deletedCount = 0;
+      let rlsBlocked = false;
+
       for (const id of ids) {
-        await executeDeleteUserProfile(id);
+        const res = await executeDeleteUserProfile(id);
+        if (res.isSuccess) deletedCount++;
+        if (res.rlsBlocked) rlsBlocked = true;
       }
 
-      // 로컬 메모리 및 UI 갱신
-      allProfiles = allProfiles.filter(u => !selectedUserIds.has(u.id));
-      clearUserSelection();
+      if (deletedCount > 0) {
+        allProfiles = allProfiles.filter(u => !selectedUserIds.has(u.id));
+        clearUserSelection();
 
-      filterUserTable();
-      updateUserCounts(allProfiles);
-      renderSubsTable();
-      updateKPICards();
+        filterUserTable();
+        updateUserCounts(allProfiles);
+        renderSubsTable();
+        updateKPICards();
 
-      showToast(`🗑️ 선택한 ${ids.length}명의 회원이 성공적으로 삭제되었습니다.`);
+        showToast(`🗑️ ${deletedCount}명의 회원이 수파베이스 DB에서 영구 삭제되었습니다.`);
+      } else if (rlsBlocked) {
+        alert('⚠️ 수파베이스 RLS(행 보안) 정책으로 인해 DB에서 삭제가 차단되었습니다.\n\n안내창의 [방법 1. SQL 실행] 또는 [방법 2. 마스터키 입력]을 진행해주세요.');
+        openMasterKeyModal();
+      }
     }
 
     // 검색 & 필터

@@ -1454,6 +1454,22 @@ async function confirmAndSendFax() {
 
   // 3. 담당 설계사 정보(프로필) 및 추가 파라미터 추출
   const planner = (window.parent && window.parent.currentProfile) || window.currentProfile || {};
+  const currentUid = planner.id || (window.parent && window.parent.currentUser && window.parent.currentUser.id) || (window.currentUser && window.currentUser.id) || localStorage.getItem('user_id') || '';
+  const userGrade = (planner.user_grade || (window.parent && window.parent.currentProfile && window.parent.currentProfile.user_grade) || 'basic').toLowerCase();
+  const rawFaxCount = planner.fax_count !== undefined ? planner.fax_count : (window.parent && window.parent.currentProfile && window.parent.currentProfile.fax_count !== undefined ? window.parent.currentProfile.fax_count : null);
+  const currentFaxCount = rawFaxCount !== null ? Number(rawFaxCount) : 0;
+
+  // 팩스 전송 가능 횟수(0회 소진 여부) 사전 검증 (관리자/식구는 무제한 통과)
+  const isUnlimited = ['manager', 'admin', 'family', 'svip'].includes(userGrade);
+  if (!isUnlimited && currentUid && rawFaxCount !== null && currentFaxCount <= 0) {
+    alert('[팩스 발송 제한]\n\n보유하신 팩스 무료 전송 횟수(0회)를 모두 소진하셨습니다.\n관리자에게 팩스 횟수 충전을 요청해 주세요.');
+    if (sendBtn) {
+      sendBtn.innerText = '팩스 발송하기';
+      sendBtn.disabled = false;
+    }
+    return;
+  }
+
   let plannerPhone = planner.phone || planner.mobile || (planner.card_data && planner.card_data.phone) || localStorage.getItem('user_phone') || '';
   let plannerName = planner.nickname || planner.name || (planner.card_data && planner.card_data.name) || '담당자';
 
@@ -1478,6 +1494,7 @@ async function confirmAndSendFax() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        userId: currentUid,
         receiverNumber: cleanFaxNumber,
         receiverName: currentTargetCompanyName + ' 보상과',
         pdfBase64: currentGeneratedPdfBase64,
@@ -1491,7 +1508,25 @@ async function confirmAndSendFax() {
     });
 
     const result = await response.json();
+
+    if (!result.success && result.code === 'FAX_QUOTA_EXHAUSTED') {
+      alert(result.message || '보유하신 팩스 전송 가능 횟수를 모두 소진하셨습니다. 관리자에게 충전을 요청해 주세요.');
+      if (sendBtn) {
+        sendBtn.innerText = '팩스 발송하기';
+        sendBtn.disabled = false;
+      }
+      return;
+    }
+
     if (result.success) {
+      // 팩스 발송 성공 시 잔여 횟수 실시간 차감 (-1)
+      if (!isUnlimited && rawFaxCount !== null) {
+        const nextCount = Math.max(0, currentFaxCount - 1);
+        planner.fax_count = nextCount;
+        if (window.parent && window.parent.currentProfile) {
+          window.parent.currentProfile.fax_count = nextCount;
+        }
+      }
       // [청구관리 구글 시트 자동 기록]
       try {
         if (typeof window.saveClaimRecordToGoogleSheet === 'function') {

@@ -1202,6 +1202,9 @@
       <button class="btn-grade-toggle manager" style="background:#8b5cf6; color:#fff;" onclick="batchChangeUserGrade('manager')">⚡ 관리자</button>
       <div style="width:1px; height:18px; background:rgba(255,255,255,0.2); margin:0 4px;"></div>
       <button class="btn-action-sm primary" onclick="batchAddFax(10)">팩스 +10회</button>
+      <button class="btn-action-sm danger" style="background:#ef4444; color:#fff; border:none; padding:5px 12px;" onclick="batchDeleteUsers()">
+        <i class="fa-solid fa-trash"></i> 선택 회원 일괄 삭제
+      </button>
       <button class="btn-action-sm outline" style="color:#fff; border-color:#64748b;" onclick="clearUserSelection()">선택 해제</button>
     </div>
   </div>
@@ -1266,11 +1269,16 @@
           </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn-action-sm outline" onclick="closeUserModal()">취소</button>
-        <button class="btn-action-sm primary" onclick="saveUserModalData()">
-          <i class="fa-solid fa-floppy-disk"></i> 수파베이스 DB 저장
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <button type="button" class="btn-action-sm danger" onclick="deleteUserFromModal()" style="display:inline-flex; align-items:center; gap:6px;">
+          <i class="fa-solid fa-trash"></i> 회원 영구 삭제
         </button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn-action-sm outline" onclick="closeUserModal()">취소</button>
+          <button type="button" class="btn-action-sm primary" onclick="saveUserModalData()">
+            <i class="fa-solid fa-floppy-disk"></i> 수파베이스 DB 저장
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1547,9 +1555,14 @@
             </td>
             <td style="font-size:12px; color:#64748b;">${createdDate}</td>
             <td>
-              <button class="btn-action-sm primary" onclick="openUserModal('${u.id}')">
-                <i class="fa-solid fa-pen-to-square"></i> 관리
-              </button>
+              <div style="display:flex; align-items:center; gap:5px;">
+                <button class="btn-action-sm primary" onclick="openUserModal('${u.id}')" title="회원 360° 상세 및 수정">
+                  <i class="fa-solid fa-pen-to-square"></i> 관리
+                </button>
+                <button class="btn-action-sm danger" onclick="deleteUser('${u.id}')" title="회원 삭제">
+                  <i class="fa-solid fa-trash"></i> 삭제
+                </button>
+              </div>
             </td>
           </tr>
         `;
@@ -1707,6 +1720,117 @@
       showToast(`${selectedUserIds.size}명에게 팩스 ${count}회가 충전되었습니다.`);
       clearUserSelection();
       await loadSupabaseProfiles();
+    }
+
+    // ----------------------------------------------------
+    // 회원 영구 삭제 (개별 / 모달 / 일괄)
+    // ----------------------------------------------------
+    async function executeDeleteUserProfile(userId) {
+      let isSuccess = false;
+
+      // 1. Supabase Client SDK 시도
+      try {
+        if (sbClient) {
+          const { error } = await sbClient.from('profiles').delete().eq('id', userId);
+          if (!error) isSuccess = true;
+        }
+      } catch (err) {
+        console.warn('[Delete] Supabase SDK delete warn:', err);
+      }
+
+      // 2. Supabase REST API 시도 (Direct DELETE)
+      if (!isSuccess) {
+        try {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_ANON,
+              'Authorization': `Bearer ${SUPABASE_ANON}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          if (res.ok) isSuccess = true;
+        } catch (err) {
+          console.warn('[Delete] Supabase REST direct delete warn:', err);
+        }
+      }
+
+      // 3. Serverless API Fallback (/api/admin-update)
+      if (!isSuccess) {
+        try {
+          const token = localStorage.getItem('g_access_token') || sessionStorage.getItem('g_access_token') || '';
+          const res = await fetch('/api/admin-update', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ action: 'delete', userId: userId })
+          });
+          if (res.ok) isSuccess = true;
+        } catch (err) {
+          console.warn('[Delete] Admin-update fallback warn:', err);
+        }
+      }
+
+      return isSuccess;
+    }
+
+    async function deleteUser(userId) {
+      const u = allProfiles.find(p => p.id === userId);
+      const userName = u ? (u.nickname || u.email || '회원') : '회원';
+      const confirmMsg = `⚠️ [${userName}] 회원을 정말로 삭제하시겠습니까?\n\n삭제 시 수파베이스 DB에서 완전히 제거되며 복구할 수 없습니다. 계속하시겠습니까?`;
+      if (!confirm(confirmMsg)) return;
+
+      const success = await executeDeleteUserProfile(userId);
+
+      // 로컬 메모리 및 화면 즉시 갱신
+      allProfiles = allProfiles.filter(p => p.id !== userId);
+      selectedUserIds.delete(userId);
+
+      filterUserTable();
+      updateUserCounts(allProfiles);
+      renderSubsTable();
+      updateKPICards();
+      updateFloatingBatchBar();
+
+      showToast(`🗑️ [${userName}] 회원이 안전하게 삭제되었습니다.`);
+    }
+
+    async function deleteUserFromModal() {
+      const userId = document.getElementById('modalUserId').value;
+      if (!userId) return;
+      const u = allProfiles.find(p => p.id === userId);
+      const userName = u ? (u.nickname || u.email || '회원') : '회원';
+
+      closeUserModal();
+      await deleteUser(userId);
+    }
+
+    async function batchDeleteUsers() {
+      if (selectedUserIds.size === 0) {
+        alert('삭제할 회원을 먼저 체크박스로 선택해주세요.');
+        return;
+      }
+      const count = selectedUserIds.size;
+      const confirmMsg = `⚠️ 선택한 [${count}명]의 회원을 정말로 일괄 삭제하시겠습니까?\n\n수파베이스 DB에서 영구 제거되며 되돌릴 수 없습니다.`;
+      if (!confirm(confirmMsg)) return;
+
+      const ids = Array.from(selectedUserIds);
+      for (const id of ids) {
+        await executeDeleteUserProfile(id);
+      }
+
+      // 로컬 메모리 및 UI 갱신
+      allProfiles = allProfiles.filter(u => !selectedUserIds.has(u.id));
+      clearUserSelection();
+
+      filterUserTable();
+      updateUserCounts(allProfiles);
+      renderSubsTable();
+      updateKPICards();
+
+      showToast(`🗑️ 선택한 ${ids.length}명의 회원이 성공적으로 삭제되었습니다.`);
     }
 
     // 검색 & 필터

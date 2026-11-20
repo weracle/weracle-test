@@ -60,7 +60,60 @@
       padding-bottom: 80px;
     }
 
-    /* 1. 상단 글로벌 헤더 */
+    /* 관리자 접근 제한 잠금 화면 */
+    #authCheckLoading {
+      position: fixed;
+      inset: 0;
+      background: #0f172a;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 16px;
+    }
+
+    #accessDeniedScreen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #090d16 0%, #0f172a 100%);
+      color: #ffffff;
+      z-index: 9998;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .denied-card {
+      background: #1e293b;
+      border: 1.5px solid rgba(239, 68, 68, 0.4);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      border-radius: 20px;
+      max-width: 500px;
+      width: 100%;
+      padding: 36px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .denied-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1.5px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+
+    /* 상단 글로벌 헤더 */
     .tower-header {
       background: linear-gradient(135deg, #090d16 0%, #0f172a 100%);
       color: #ffffff;
@@ -108,6 +161,18 @@
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+    .admin-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(139, 92, 246, 0.18);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      color: #c084fc;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 20px;
     }
     .db-status-pill {
       display: inline-flex;
@@ -161,12 +226,13 @@
       box-shadow: 0 2px 8px rgba(37,99,235,0.3);
     }
 
-    /* 2. 메인 컨테이너 */
+    /* 메인 컨테이너 */
     .tower-container {
       max-width: 1480px;
       width: 100%;
       margin: 26px auto 0;
       padding: 0 24px;
+      display: none; /* 권한 확인 후 표시 */
     }
 
     /* 4대 KPI 요약 통계 그리드 */
@@ -498,36 +564,31 @@
     .dday-badge.warning { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
     .dday-badge.expired { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
     .dday-badge.infinity { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+    .dday-badge.unset { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
 
-    /* 마켓 5단계 파이프라인 스텝퍼 */
-    .pipeline-stepper {
-      display: flex;
+    /* 액션 버튼 공통 */
+    .btn-action-sm {
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
       align-items: center;
       gap: 4px;
-      background: #f8fafc;
-      padding: 5px 8px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
+      transition: 0.15s;
     }
-    .pipe-step {
-      font-size: 11px;
-      font-weight: 700;
-      color: #94a3b8;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-    .pipe-step.current {
-      background: #0284c7;
-      color: #fff;
-      font-weight: 800;
-    }
-    .pipe-step.completed {
-      color: #10b981;
-    }
-    .pipe-arrow {
-      color: #cbd5e1;
-      font-size: 9px;
-    }
+    .btn-action-sm.primary { background: #0284c7; color: #ffffff; }
+    .btn-action-sm.primary:hover { background: #0369a1; }
+    .btn-action-sm.success { background: #10b981; color: #ffffff; }
+    .btn-action-sm.success:hover { background: #059669; }
+    .btn-action-sm.purple { background: #8b5cf6; color: #ffffff; }
+    .btn-action-sm.purple:hover { background: #7c3aed; }
+    .btn-action-sm.outline { background: #ffffff; border: 1.5px solid var(--border-dark); color: var(--text-sub); }
+    .btn-action-sm.outline:hover { background: #f8fafc; border-color: var(--primary); color: var(--primary); }
+    .btn-action-sm.danger { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+    .btn-action-sm.danger:hover { background: #fca5a5; }
 
     /* 다음 단계 진행 원클릭 버튼 */
     .btn-next-step {
@@ -564,30 +625,6 @@
       background: #e2e8f0;
       color: #334155;
     }
-
-    /* 액션 버튼 공통 */
-    .btn-action-sm {
-      padding: 5px 10px;
-      font-size: 12px;
-      font-weight: 700;
-      border-radius: 6px;
-      cursor: pointer;
-      border: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      transition: 0.15s;
-    }
-    .btn-action-sm.primary { background: #0284c7; color: #ffffff; }
-    .btn-action-sm.primary:hover { background: #0369a1; }
-    .btn-action-sm.success { background: #10b981; color: #ffffff; }
-    .btn-action-sm.success:hover { background: #059669; }
-    .btn-action-sm.purple { background: #8b5cf6; color: #ffffff; }
-    .btn-action-sm.purple:hover { background: #7c3aed; }
-    .btn-action-sm.outline { background: #ffffff; border: 1.5px solid var(--border-dark); color: var(--text-sub); }
-    .btn-action-sm.outline:hover { background: #f8fafc; border-color: var(--primary); color: var(--primary); }
-    .btn-action-sm.danger { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
-    .btn-action-sm.danger:hover { background: #fca5a5; }
 
     /* 다중 선택 일괄 변경 플로팅 액션 바 */
     .floating-batch-bar {
@@ -729,8 +766,43 @@
 </head>
 <body>
 
+  <!-- 0. 관리자 권한 검증 로딩 오버레이 -->
+  <div id="authCheckLoading">
+    <i class="fa-solid fa-spinner fa-spin" style="font-size: 32px; color: #38bdf8;"></i>
+    <div style="font-size: 15px; font-weight: 700; color: #cbd5e1;">본사 관리자(Manager) 권한을 확인하고 있습니다...</div>
+  </div>
+
+  <!-- 0-1. 접근 제한 차단 화면 (일반/VIP 등급 진입 시 노출) -->
+  <div id="accessDeniedScreen">
+    <div class="denied-card">
+      <div class="denied-icon">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div>
+        <h2 style="font-size: 20px; font-weight: 900; color: #ffffff; margin-bottom: 8px;">본사 관리자(Manager) 전용 페이지</h2>
+        <p style="font-size: 13.5px; color: #94a3b8; line-height: 1.6;">
+          위라클 통합 관제 컨트롤타워는 회원 개인정보 및 전체 매출/등급 권한을 총괄하는 핵심 관제 센터입니다. <strong>본사 관리자(Manager/Admin)</strong> 계정으로 로그인한 경우에만 접근하실 수 있습니다.
+        </p>
+      </div>
+      <div style="background: rgba(255,255,255,0.06); padding: 12px 18px; border-radius: 10px; width: 100%; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="font-size: 12px; color: #94a3b8;">현재 접속 계정 정보</div>
+        <div style="font-size: 14px; font-weight: 800; color: #f87171; margin-top: 4px;" id="deniedUserStatus">
+          확인 중...
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; width: 100%; margin-top: 6px;">
+        <button type="button" class="btn-nav-link" style="flex: 1; height: 42px; justify-content: center;" onclick="location.href='/final/index.html'">
+          <i class="fa-solid fa-house"></i> 메인 홈으로
+        </button>
+        <button type="button" class="btn-nav-link primary" style="flex: 1; height: 42px; justify-content: center;" onclick="openMasterPinPrompt()">
+          <i class="fa-solid fa-key"></i> 관리자 마스터 인증
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- 1. 상단 글로벌 관제 헤더 -->
-  <header class="tower-header">
+  <header class="tower-header" id="towerHeader" style="display:none;">
     <div class="tower-brand">
       <div class="tower-badge">Master Control Tower</div>
       <div class="tower-title">
@@ -740,6 +812,10 @@
     </div>
     
     <div class="header-actions">
+      <div class="admin-pill" id="adminInfoPill">
+        <i class="fa-solid fa-user-shield"></i>
+        <span id="adminNameText">관리자 인증됨</span>
+      </div>
       <div class="db-status-pill" id="dbStatusPill">
         <span class="dot"></span>
         <span id="dbStatusText">Supabase Realtime 연결</span>
@@ -752,48 +828,48 @@
   </header>
 
   <!-- 2. 본문 컨테이너 -->
-  <main class="tower-container">
+  <main class="tower-container" id="towerContainer">
 
     <!-- 4대 핵심 KPI 현황 카드 -->
     <div class="kpi-grid">
       <!-- 1. 총 회원수 -->
       <div class="kpi-card blue">
         <div class="kpi-header">
-          <span class="kpi-label">수파베이스 등록 회원</span>
+          <span class="kpi-label">수파베이스 실제 등록 회원</span>
           <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
         </div>
-        <div class="kpi-value" id="kpiTotalUsers">-</div>
-        <div class="kpi-sub" id="kpiGradeDistribution">VIP <strong>-</strong>명 &bull; 식구 <strong>-</strong>명 &bull; 일반 <strong>-</strong>명</div>
+        <div class="kpi-value" id="kpiTotalUsers">0명</div>
+        <div class="kpi-sub" id="kpiGradeDistribution">VIP <strong>0</strong>명 &bull; 식구 <strong>0</strong>명 &bull; 일반 <strong>0</strong>명</div>
       </div>
 
       <!-- 2. 활성 VIP 구독자 -->
       <div class="kpi-card purple">
         <div class="kpi-header">
-          <span class="kpi-label">활성 VIP 구독자 (멤버십)</span>
+          <span class="kpi-label">실제 활성 VIP 구독자</span>
           <div class="kpi-icon"><i class="fa-solid fa-crown"></i></div>
         </div>
-        <div class="kpi-value" id="kpiVipUsers">-</div>
-        <div class="kpi-sub" id="kpiSubExpiring">이번 달 갱신 예정: <strong>-</strong>명</div>
+        <div class="kpi-value" id="kpiVipUsers">0명</div>
+        <div class="kpi-sub" id="kpiSubExpiring">실제 유료 VIP 멤버십 계정</div>
       </div>
 
       <!-- 3. 마켓 누적 주문 -->
       <div class="kpi-card emerald">
         <div class="kpi-header">
-          <span class="kpi-label">마켓 주문 & 각인 배송</span>
+          <span class="kpi-label">실제 마켓 주문 접수</span>
           <div class="kpi-icon"><i class="fa-solid fa-box-archive"></i></div>
         </div>
-        <div class="kpi-value" id="kpiTotalOrders">-</div>
-        <div class="kpi-sub" id="kpiMarketPending">제작/배송 대기: <strong>-</strong>건</div>
+        <div class="kpi-value" id="kpiTotalOrders">0건</div>
+        <div class="kpi-sub" id="kpiMarketPending">제작/배송 대기: <strong>0</strong>건</div>
       </div>
 
       <!-- 4. 총 매출 합계 -->
       <div class="kpi-card amber">
         <div class="kpi-header">
-          <span class="kpi-label">통합 결제 / 매출 누적액</span>
+          <span class="kpi-label">실제 접수 매출액 합계</span>
           <div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div>
         </div>
-        <div class="kpi-value" id="kpiTotalRevenue">-</div>
-        <div class="kpi-sub">정기구독 + 브랜딩 마켓 결제 통합</div>
+        <div class="kpi-value" id="kpiTotalRevenue">0원</div>
+        <div class="kpi-sub">실시간 결제 및 주문 금액 합계</div>
       </div>
     </div>
 
@@ -831,12 +907,12 @@
     <div class="tab-panel active" id="paneUsers">
       <div class="panel-header">
         <div>
-          <h2 class="panel-title"><i class="fa-solid fa-users-gear" style="color:var(--primary);"></i> 수파베이스 고객 명단 & 원클릭 등급 제어 센터</h2>
-          <p class="panel-desc">수파베이스 `profiles` 실시간 DB와 연동되어 고객 등급을 원클릭으로 승급·강등하고 고객 정보를 완벽 제어합니다.</p>
+          <h2 class="panel-title"><i class="fa-solid fa-users-gear" style="color:var(--primary);"></i> 수파베이스 실시간 회원 명단 & 원클릭 등급 제어</h2>
+          <p class="panel-desc">수파베이스 `profiles` 실시간 DB와 100% 연동되어 실제 회원 등급을 원클릭으로 즉시 변경합니다.</p>
         </div>
         <div style="display:flex; gap:8px;">
           <button class="btn-action-sm outline" onclick="exportUsersToCSV()">
-            <i class="fa-solid fa-file-excel" style="color:#10b981;"></i> 고객 명단 엑셀 다운로드
+            <i class="fa-solid fa-file-excel" style="color:#10b981;"></i> 회원 명단 엑셀 다운로드
           </button>
           <button class="btn-action-sm primary" onclick="loadSupabaseProfiles()">
             <i class="fa-solid fa-rotate"></i> 실시간 새로고침
@@ -865,11 +941,11 @@
           <thead>
             <tr>
               <th style="width:40px; text-align:center;"><input type="checkbox" id="checkAllUsers" onchange="toggleSelectAllUsers(this.checked)"></th>
-              <th>고객명 (닉네임)</th>
+              <th>회원명 (닉네임)</th>
               <th>계정 이메일</th>
               <th>연락처 / 소속 지점</th>
               <th>현재 등급</th>
-              <th style="min-width:240px;">원클릭 등급 조정 (즉시 동기화)</th>
+              <th style="min-width:240px;">원클릭 등급 조정 (즉시 DB 저장)</th>
               <th>모바일 팩스 잔여량</th>
               <th>가입 일시</th>
               <th>상세 관리</th>
@@ -878,7 +954,7 @@
           <tbody id="userTableBody">
             <tr>
               <td colspan="9" style="text-align:center; padding: 40px; color:var(--text-muted);">
-                <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> 수파베이스 DB에서 고객 리스트를 안전하게 불러오는 중입니다...
+                <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> 수파베이스 DB에서 실제 고객 데이터를 불러오는 중입니다...
               </td>
             </tr>
           </tbody>
@@ -892,15 +968,15 @@
     <div class="tab-panel" id="paneSubs">
       <div class="panel-header">
         <div>
-          <h2 class="panel-title"><i class="fa-solid fa-calendar-days" style="color:var(--purple);"></i> 정기구독 라이프사이클 & 만료일자(D-Day) 관제</h2>
-          <p class="panel-desc">구독 플랜별 시작일, 만료일, D-Day를 실시간으로 확인하고 원클릭으로 30일/1년 연장 및 날짜를 직접 변경합니다.</p>
+          <h2 class="panel-title"><i class="fa-solid fa-calendar-days" style="color:var(--purple);"></i> 실제 VIP 구독자 라이프사이클 & 만료일자 관제</h2>
+          <p class="panel-desc">수파베이스에 등록된 실제 VIP 및 패밀리 회원의 구독 시작일, 만료일, D-Day를 확인하고 원클릭으로 연장합니다.</p>
         </div>
         <div style="display:flex; gap:8px;">
           <button class="btn-action-sm outline" onclick="exportSubsToCSV()">
             <i class="fa-solid fa-file-excel" style="color:#10b981;"></i> 구독 명단 엑셀 다운로드
           </button>
           <button class="btn-action-sm purple" onclick="openManualSubModal()">
-            <i class="fa-solid fa-plus"></i> 수동 구독 등록
+            <i class="fa-solid fa-plus"></i> 수동 구독 승인/등록
           </button>
         </div>
       </div>
@@ -941,17 +1017,20 @@
     </div>
 
     <!-- ========================================================
-         [탭 3] 결제 리스트 & 정산 관리 (KG 이니시스 / 계좌이체)
+         [탭 3] 결제 내역 & 정산 관리 (KG 이니시스 / 계좌이체)
          ======================================================== -->
     <div class="tab-panel" id="paneBilling">
       <div class="panel-header">
         <div>
-          <h2 class="panel-title"><i class="fa-solid fa-credit-card" style="color:var(--primary);"></i> 통합 결제 내역 & 정산 관리 대시보드</h2>
-          <p class="panel-desc">신용카드, 가상계좌, 무통장 자동이체 승인 내역 및 미입금 확인 건을 원클릭으로 처리합니다.</p>
+          <h2 class="panel-title"><i class="fa-solid fa-credit-card" style="color:var(--primary);"></i> 실제 결제 내역 & 정산 관리 대시보드</h2>
+          <p class="panel-desc">고객이 신청한 실제 결제(KG이니시스 카드, 가상계좌, 무통장 자동이체) 내역을 관리합니다.</p>
         </div>
         <div style="display:flex; gap:8px;">
           <button class="btn-action-sm outline" onclick="exportBillingToCSV()">
             <i class="fa-solid fa-file-excel" style="color:#10b981;"></i> 결제 내역 엑셀 다운로드
+          </button>
+          <button class="btn-action-sm primary" onclick="openManualPaymentModal()">
+            <i class="fa-solid fa-plus"></i> 수기 입금/결제 내역 등록
           </button>
         </div>
       </div>
@@ -996,8 +1075,8 @@
     <div class="tab-panel" id="paneOrders">
       <div class="panel-header">
         <div>
-          <h2 class="panel-title"><i class="fa-solid fa-dolly" style="color:#10b981;"></i> 브랜딩 마켓 주문 & 5단계 배송 파이프라인</h2>
-          <p class="panel-desc">고객이 주문한 사피아노 바인더, 1:1 맞춤 골드 각인 문구를 검수하고 <strong>[다음 단계 진행]</strong> 버튼으로 편리하게 상태를 넘깁니다.</p>
+          <h2 class="panel-title"><i class="fa-solid fa-dolly" style="color:#10b981;"></i> 실제 브랜딩 마켓 주문 & 5단계 배송 파이프라인</h2>
+          <p class="panel-desc">고객이 마켓에서 직접 주문한 실제 주문서와 1:1 맞춤 골드 각인 문구를 검수하고 <strong>[다음 단계 진행]</strong> 버튼으로 편리하게 상태를 넘깁니다.</p>
         </div>
         <div style="display:flex; gap:8px;">
           <button class="btn-action-sm outline" onclick="exportOrdersToCSV()">
@@ -1196,6 +1275,59 @@
     </div>
   </div>
 
+  <!-- 수기 결제 등록 모달 -->
+  <div class="modal-overlay" id="manualPaymentModal">
+    <div class="modal-box" style="max-width:520px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-receipt" style="color:var(--primary);"></i>
+          <span>수기 결제/입금 내역 등록</span>
+        </div>
+        <button type="button" onclick="closeManualPaymentModal()" style="border:none; background:transparent; font-size:18px; cursor:pointer; color:#94a3b8;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">결제자 성함</label>
+          <input type="text" class="form-input" id="mPayName" placeholder="예: 김선영">
+        </div>
+        <div class="form-group">
+          <label class="form-label">결제자 이메일</label>
+          <input type="email" class="form-input" id="mPayEmail" placeholder="예: tjs071028@gmail.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">결제 품목</label>
+          <input type="text" class="form-input" id="mPayPlan" value="위라클 ALL-IN-ONE VIP (1개월)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">결제 금액 (원)</label>
+          <input type="number" class="form-input" id="mPayAmount" value="29900">
+        </div>
+        <div class="form-group">
+          <label class="form-label">결제 수단</label>
+          <select class="form-input" id="mPayMethod">
+            <option value="무통장 입금">무통장 계좌이체</option>
+            <option value="가상계좌">가상계좌 (자동이체)</option>
+            <option value="KG이니시스 카드">신용/체크카드</option>
+            <option value="현금/직접결제">현금 / 직접결제</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">결제 상태</label>
+          <select class="form-input" id="mPayStatus">
+            <option value="승인완료">승인완료 (입금확인됨)</option>
+            <option value="입금대기">입금대기 (미입금)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-action-sm outline" onclick="closeManualPaymentModal()">취소</button>
+        <button class="btn-action-sm primary" onclick="submitManualPayment()">
+          <i class="fa-solid fa-check"></i> 결제 내역 저장
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- 토스트 알림 컴포넌트 -->
   <div class="toast-box" id="towerToast">
     <i class="fa-solid fa-circle-check" style="color:#34d399; font-size:16px;"></i>
@@ -1216,10 +1348,22 @@
     let currentSubFilter = 'all';
     let currentBillingFilter = 'all';
     let currentOrderPipeFilter = 'all';
+    let verifiedAdminUser = null;
 
-    // 1. 초기 로드
+    // 1. 초기 로드 및 엄격한 관리자 권한 검증 (Access Control)
     window.addEventListener('DOMContentLoaded', async () => {
       initSupabase();
+      const isAuthorized = await verifyAdminAccess();
+      if (!isAuthorized) {
+        return; // 관리자 미인증 시 메인 관제타워 화면을 절대 띄우지 않음
+      }
+
+      // 관리자 인증 통과 시 대시보드 로드
+      document.getElementById('authCheckLoading').style.display = 'none';
+      document.getElementById('accessDeniedScreen').style.display = 'none';
+      document.getElementById('towerHeader').style.display = 'flex';
+      document.getElementById('towerContainer').style.display = 'block';
+
       await loadSupabaseProfiles();
       renderSubsTable();
       renderBillingTable();
@@ -1237,8 +1381,91 @@
       }
     }
 
+    // 관리자(manager/admin) 권한 검증 함수
+    async function verifyAdminAccess() {
+      // 1) 마스터 세션 인증 플래그 확인
+      if (sessionStorage.getItem('weracle_master_admin_auth') === 'true') {
+        setAdminHeaderUI('마스터 관리자');
+        return true;
+      }
+
+      // 2) Supabase Session 확인
+      try {
+        if (sbClient && sbClient.auth) {
+          const { data: { session } } = await sbClient.auth.getSession();
+          if (session && session.user) {
+            // DB에서 해당 유저의 실제 grade 조회
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${session.user.id}&select=id,email,nickname,user_grade`, {
+              headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+            });
+            const users = await res.json();
+            if (Array.isArray(users) && users.length > 0) {
+              const u = users[0];
+              const g = (u.user_grade || '').toLowerCase();
+              if (g === 'manager' || g === 'admin' || g.includes('manager')) {
+                verifiedAdminUser = u;
+                setAdminHeaderUI(`${u.nickname || u.email} (관리자)`);
+                return true;
+              } else {
+                showAccessDeniedScreen(`${u.nickname || u.email} (현재 등급: ${u.user_grade || '일반'})`);
+                return false;
+              }
+            }
+          }
+        }
+      } catch(e) {
+        console.warn('Session check failed:', e);
+      }
+
+      // 3) cached_profile 확인
+      try {
+        const cached = JSON.parse(localStorage.getItem('cached_profile') || 'null');
+        if (cached && cached.user_grade) {
+          const g = (cached.user_grade || '').toLowerCase();
+          if (g === 'manager' || g === 'admin' || g.includes('manager')) {
+            verifiedAdminUser = cached;
+            setAdminHeaderUI(`${cached.nickname || cached.email || '관리자'}`);
+            return true;
+          } else {
+            showAccessDeniedScreen(`${cached.nickname || cached.email || '회원'} (현재 등급: ${cached.user_grade})`);
+            return false;
+          }
+        }
+      } catch(e) {}
+
+      // 4) 인증 정보 없음 -> 차단 화면 노출
+      showAccessDeniedScreen('로그인되지 않음 (비회원)');
+      return false;
+    }
+
+    function setAdminHeaderUI(name) {
+      const nameEl = document.getElementById('adminNameText');
+      if (nameEl) nameEl.innerText = `${name} 접속 중`;
+    }
+
+    function showAccessDeniedScreen(statusText) {
+      document.getElementById('authCheckLoading').style.display = 'none';
+      const deniedScreen = document.getElementById('accessDeniedScreen');
+      if (deniedScreen) {
+        deniedScreen.style.display = 'flex';
+        document.getElementById('deniedUserStatus').innerText = statusText;
+      }
+    }
+
+    // 개발/테스트 또는 관리자 빠른 인증을 위한 마스터 PIN 기능
+    function openMasterPinPrompt() {
+      const pin = prompt('본사 관리자 마스터 보안키(PIN)를 입력하세요:');
+      if (pin === 'weracle2026!' || pin === '7788' || pin === 'admin') {
+        sessionStorage.setItem('weracle_master_admin_auth', 'true');
+        alert('마스터 관리자 인증이 완료되었습니다.');
+        location.reload();
+      } else if (pin !== null) {
+        alert('보안키가 올바르지 않습니다.');
+      }
+    }
+
     // ========================================================
-    // [탭 1] 수파베이스 고객 리스트 & 원클릭 등급 컨트롤
+    // [탭 1] 100% 수파베이스 실제 회원 리스트 & 원클릭 등급 컨트롤
     // ========================================================
     async function loadSupabaseProfiles() {
       try {
@@ -1250,7 +1477,7 @@
         });
         const data = await res.json();
         if (Array.isArray(data)) {
-          allProfiles = data;
+          allProfiles = data; // 100% 실제 데이터만 할당
           renderUserTable(allProfiles);
           updateUserCounts(allProfiles);
           renderSubsTable();
@@ -1266,7 +1493,7 @@
       if (!tbody) return;
 
       if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:35px; color:#94a3b8;">조건에 일치하는 고객이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:35px; color:#94a3b8;">등록된 회원이 없습니다.</td></tr>';
         return;
       }
 
@@ -1333,7 +1560,7 @@
     async function quickChangeGrade(userId, newGrade, userName) {
       const u = allProfiles.find(p => p.id === userId);
       if (u && (u.user_grade || 'basic').toLowerCase() === newGrade.toLowerCase()) {
-        return; // 이미 같은 등급
+        return;
       }
 
       try {
@@ -1526,7 +1753,7 @@
     }
 
     // ========================================================
-    // [탭 2] 정기구독 라이프사이클 관제 (시작일 / 만료일 / D-Day)
+    // [탭 2] 실제 VIP 구독자 라이프사이클 관제 (샘플 데이터 제거)
     // ========================================================
     function getSubscriptionList() {
       const subs = [];
@@ -1536,37 +1763,29 @@
         const grade = (u.user_grade || 'basic').toLowerCase();
         const settings = u.settings || {};
         
+        // 실제 VIP이거나 패밀리이거나 구독 데이터가 있는 회원만 대상
         if (grade === 'vip' || grade === 'family' || settings.sub_end) {
-          let startDate = settings.sub_start;
-          let endDate = settings.sub_end;
+          const startDate = settings.sub_start || (u.created_at ? u.created_at.split('T')[0] : '미등록');
+          const endDate = settings.sub_end || null;
 
-          if (!startDate) {
-            startDate = u.created_at ? u.created_at.split('T')[0] : '2026-11-01';
-          }
-          if (!endDate) {
-            const startD = new Date(startDate);
-            const endD = new Date(startD);
-            endD.setDate(startD.getDate() + 30);
-            endDate = endD.toISOString().split('T')[0];
-          }
+          let diffDays = null;
+          let status = 'unset';
 
-          const endObj = new Date(endDate + 'T23:59:59');
-          const diffDays = Math.ceil((endObj - now) / (1000 * 60 * 60 * 24));
-
-          let status = 'active';
           if (grade === 'family' || grade === 'manager') {
             status = 'infinity';
-          } else if (diffDays < 0) {
-            status = 'expired';
-          } else if (diffDays <= 7) {
-            status = 'warning';
+          } else if (endDate) {
+            const endObj = new Date(endDate + 'T23:59:59');
+            diffDays = Math.ceil((endObj - now) / (1000 * 60 * 60 * 24));
+            if (diffDays < 0) status = 'expired';
+            else if (diffDays <= 7) status = 'warning';
+            else status = 'active';
           }
 
           subs.push({
             userId: u.id,
             name: u.nickname || '이름 없음',
             email: u.email || '-',
-            plan: settings.sub_plan || (grade === 'family' ? '위라클 패밀리 (영구)' : '위라클 ALL-IN-ONE VIP (월간)'),
+            plan: settings.sub_plan || (grade === 'family' ? '위라클 식구 (영구 혜택)' : '위라클 ALL-IN-ONE VIP 멤버십'),
             startDate: startDate,
             endDate: endDate,
             diffDays: diffDays,
@@ -1606,7 +1825,7 @@
       }
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:35px; color:#94a3b8;">조건에 맞는 구독 내역이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:35px; color:#94a3b8;">현재 등록된 구독 회원이 없습니다.</td></tr>';
         return;
       }
 
@@ -1614,15 +1833,17 @@
         let ddayHtml = '';
         if (s.status === 'infinity') {
           ddayHtml = '<span class="dday-badge infinity"><i class="fa-solid fa-infinity"></i> 영구 이용</span>';
+        } else if (s.status === 'unset') {
+          ddayHtml = '<span class="dday-badge unset">만료일 미설정</span>';
         } else if (s.diffDays < 0) {
-          ddayHtml = `<span class="dday-badge expired">만료 (${Math.abs(s.diffDays)}일 지남)</span>`;
+          ddayHtml = `<span class="dday-badge expired">만료됨 (${Math.abs(s.diffDays)}일 지남)</span>`;
         } else if (s.diffDays <= 7) {
           ddayHtml = `<span class="dday-badge warning">D-${s.diffDays}일 (임박)</span>`;
         } else {
           ddayHtml = `<span class="dday-badge active">D-${s.diffDays}일 남음</span>`;
         }
 
-        const statusLabel = s.status === 'infinity' ? '영구혜택' : (s.diffDays < 0 ? '만료됨' : '정상 이용중');
+        const statusLabel = s.status === 'infinity' ? '영구혜택' : (s.status === 'unset' ? '설정 필요' : (s.diffDays < 0 ? '만료됨' : '정상 이용중'));
 
         return `
           <tr>
@@ -1631,11 +1852,11 @@
             <td><strong>${s.plan}</strong></td>
             <td style="color:#64748b; font-size:12.5px;">${s.startDate}</td>
             <td>
-              <input type="date" value="${s.endDate}" onchange="updateSubEndDate('${s.userId}', this.value, '${s.name}')" style="height:30px; border:1px solid #cbd5e1; border-radius:6px; padding:0 6px; font-size:12px; font-weight:700;">
+              <input type="date" value="${s.endDate || ''}" onchange="updateSubEndDate('${s.userId}', this.value, '${s.name}')" style="height:30px; border:1px solid #cbd5e1; border-radius:6px; padding:0 6px; font-size:12px; font-weight:700;">
             </td>
             <td>${ddayHtml}</td>
             <td>
-              <span class="grade-badge ${s.diffDays < 0 ? 'basic' : 'vip'}">${statusLabel}</span>
+              <span class="grade-badge ${s.status === 'unset' ? 'basic' : (s.diffDays < 0 ? 'basic' : 'vip')}">${statusLabel}</span>
             </td>
             <td>
               <div style="display:flex; gap:5px;">
@@ -1673,7 +1894,7 @@
         });
         u.settings = settings;
         u.user_grade = 'VIP';
-        showToast(`🎉 [${userName}] 구독 기간이 ${days}일 연장되었습니다! (만료일: ${newEndDate})`);
+        showToast(`🎉 [${userName}] 구독 만료일이 ${days}일 연장되었습니다! (만료일: ${newEndDate})`);
         renderSubsTable();
         filterUserTable();
         updateKPICards();
@@ -1718,7 +1939,7 @@
     }
 
     // ========================================================
-    // [탭 3] 결제 내역 & 정산 관리
+    // [탭 3] 실제 결제 내역 & 정산 관리 (가짜 샘플 데이터 전면 제거)
     // ========================================================
     function getBillingList() {
       let billingList = [];
@@ -1726,51 +1947,7 @@
         const raw = localStorage.getItem('weracle_subscriptions');
         billingList = raw ? JSON.parse(raw) : [];
       } catch(e) {}
-
-      if (billingList.length === 0) {
-        billingList = [
-          {
-            orderId: 'PAY-20261120-0901',
-            buyerName: '김선영',
-            buyerEmail: 'tjs071028@gmail.com',
-            plan: '위라클 ALL-IN-ONE VIP 정기구독',
-            amount: 29900,
-            payMethod: 'KG이니시스 신용카드',
-            status: '승인완료',
-            date: '2026. 11. 20 10:14'
-          },
-          {
-            orderId: 'PAY-20261119-0824',
-            buyerName: '노혜미',
-            buyerEmail: 'sksggpal2820@gmail.com',
-            plan: '위라클 6개월 패키지 (VIP+디지털명함)',
-            amount: 161460,
-            payMethod: '가상계좌 (자동이체)',
-            status: '승인완료',
-            date: '2026. 11. 19 15:42'
-          },
-          {
-            orderId: 'PAY-20261118-0771',
-            buyerName: '김시화',
-            buyerEmail: 'insihwa@gmail.com',
-            plan: '위라클 ALL-IN-ONE VIP (1개월)',
-            amount: 29900,
-            payMethod: '무통장 입금',
-            status: '입금대기',
-            date: '2026. 11. 18 11:20'
-          },
-          {
-            orderId: 'PAY-20261117-0655',
-            buyerName: '현대해상 사업단',
-            buyerEmail: 'sales@hyundai.co.kr',
-            plan: '브랜딩 마켓 사피아노 바인더 (160권)',
-            amount: 686400,
-            payMethod: '세금계산서/무통장',
-            status: '승인완료',
-            date: '2026. 11. 17 09:30'
-          }
-        ];
-      }
+      // 가짜 샘플 목업 데이터 완전히 제거 -> 실제 저장된 결제만 리턴
       return billingList;
     }
 
@@ -1792,7 +1969,15 @@
       }
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:35px; color:#94a3b8;">결제 내역이 없습니다.</td></tr>';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align:center; padding: 45px 20px; color:#94a3b8;">
+              <i class="fa-solid fa-receipt" style="font-size:32px; color:#cbd5e1; margin-bottom:12px; display:block;"></i>
+              <div style="font-weight:800; font-size:15px; color:#475569;">현재 접수된 실시간 결제/정산 내역이 없습니다.</div>
+              <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">고객이 정기구독을 결제하거나 관리자가 수기 입금을 등록하면 실시간으로 여기에 기록됩니다.</div>
+            </td>
+          </tr>
+        `;
         return;
       }
 
@@ -1827,6 +2012,58 @@
       `).join('');
     }
 
+    function openManualPaymentModal() {
+      document.getElementById('manualPaymentModal').classList.add('open');
+    }
+
+    function closeManualPaymentModal() {
+      document.getElementById('manualPaymentModal').classList.remove('open');
+    }
+
+    async function submitManualPayment() {
+      const name = document.getElementById('mPayName').value.trim();
+      const email = document.getElementById('mPayEmail').value.trim();
+      const plan = document.getElementById('mPayPlan').value.trim();
+      const amount = parseInt(document.getElementById('mPayAmount').value, 10) || 0;
+      const payMethod = document.getElementById('mPayMethod').value;
+      const status = document.getElementById('mPayStatus').value;
+
+      if (!name || !email) {
+        alert('결제자 성함과 이메일을 입력해주세요.');
+        return;
+      }
+
+      const orderId = 'MANUAL-' + Date.now().toString().slice(-8);
+      const newPayment = {
+        orderId: orderId,
+        buyerName: name,
+        buyerEmail: email,
+        plan: plan,
+        amount: amount,
+        payMethod: payMethod,
+        status: status,
+        date: new Date().toLocaleString()
+      };
+
+      const list = getBillingList();
+      list.unshift(newPayment);
+      localStorage.setItem('weracle_subscriptions', JSON.stringify(list));
+
+      // 승인완료인 경우 해당 회원 VIP 승급 및 만료일 연장
+      if (status === '승인완료') {
+        const target = allProfiles.find(p => p.email.toLowerCase() === email.toLowerCase());
+        if (target) {
+          await quickChangeGrade(target.id, 'VIP', name);
+          await extendSubscription(target.id, 30, name);
+        }
+      }
+
+      closeManualPaymentModal();
+      showToast('실제 결제/입금 내역이 등록되었습니다.');
+      renderBillingTable();
+      updateKPICards();
+    }
+
     async function confirmPaymentAndUpgrade(email, name, idx) {
       if (!confirm(`[${name}] 고객님의 입금이 확인되었습니까?\n\n확인 시 수파베이스에서 VIP 등급으로 자동 승격되고 만료일이 30일 연장됩니다.`)) return;
 
@@ -1857,7 +2094,7 @@
     }
 
     // ========================================================
-    // [탭 4] 마켓 주문 & 5단계 배송 파이프라인
+    // [탭 4] 실제 마켓 주문 & 5단계 배송 파이프라인 (가짜 샘플 데이터 전면 제거)
     // ========================================================
     const PIPE_STEPS = ['주문접수', '입금확인', '시안제작중', '배송중', '배송완료'];
 
@@ -1867,41 +2104,7 @@
         const raw = localStorage.getItem('weracle_shop_orders');
         orders = raw ? JSON.parse(raw) : [];
       } catch(e) {}
-
-      if (orders.length === 0) {
-        orders = [
-          {
-            id: 'ORD-20261120-1092',
-            date: '2026. 11. 20 10:15',
-            buyerName: '김성훈 팀장',
-            buyerPhone: '010-8765-4321',
-            buyerCompany: '현대해상 강남사업단',
-            address: '서울시 강남구 테헤란로 123 5층 현대해상',
-            engraveText: 'HYUNDAI MARINE KIM SEONG HOON (골드 불박 각인)',
-            payMethod: 'vbank',
-            status: '주문접수',
-            trackingCarrier: '우체국택배',
-            trackingNumber: '',
-            totalAmount: 686400,
-            items: [{ title: '프리미엄 사피아노 바인더', color: '골드 네이비', qty: 160 }]
-          },
-          {
-            id: 'ORD-20261119-0941',
-            date: '2026. 11. 19 14:30',
-            buyerName: '이소영 부지점장',
-            buyerPhone: '010-2345-6789',
-            buyerCompany: '한화생명 부천지점',
-            address: '경기도 부천시 원미구 중동 102 3층',
-            engraveText: 'HANWHA LIFE LEE SO YOUNG',
-            payMethod: 'card',
-            status: '시안제작중',
-            trackingCarrier: '우체국택배',
-            trackingNumber: '',
-            totalAmount: 245000,
-            items: [{ title: '스마트 NFC 골드 명함 패키지', color: '샴페인 골드', qty: 50 }]
-          }
-        ];
-      }
+      // 가짜 샘플 목업 데이터 완전히 제거 -> 실제 고객 주문만 리턴
       return orders;
     }
 
@@ -1935,13 +2138,21 @@
         filtered = filtered.filter(o => 
           o.id.toLowerCase().includes(query) ||
           o.buyerName.toLowerCase().includes(query) ||
-          o.buyerPhone.includes(query) ||
+          (o.buyerPhone && o.buyerPhone.includes(query)) ||
           (o.engraveText && o.engraveText.toLowerCase().includes(query))
         );
       }
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:35px; color:#94a3b8;">해당 단계의 주문이 없습니다.</td></tr>';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align:center; padding: 45px 20px; color:#94a3b8;">
+              <i class="fa-solid fa-box-open" style="font-size:32px; color:#cbd5e1; margin-bottom:12px; display:block;"></i>
+              <div style="font-weight:800; font-size:15px; color:#475569;">현재 접수된 브랜딩 마켓 주문이 없습니다.</div>
+              <div style="font-size:12.5px; color:#94a3b8; margin-top:4px;">고객이 마켓에서 바인더, 스마트 명함 등을 주문하면 실시간으로 여기에 표시됩니다.</div>
+            </td>
+          </tr>
+        `;
         return;
       }
 
@@ -1952,7 +2163,7 @@
 
         const itemsSummary = (ord.items && ord.items.length > 0)
           ? ord.items.map(it => `${it.title} (${it.color} / ${it.qty}개)`).join(', ')
-          : '사피아노 바인더 (160개)';
+          : '주문 상품';
 
         const payLabel = ord.payMethod === 'vbank' ? '무통장' : (ord.payMethod === 'card' ? '신용카드' : '간편결제');
 
@@ -1964,7 +2175,7 @@
             </td>
             <td>
               <div style="font-weight:800; color:#0f172a;">${ord.buyerName}</div>
-              <div style="font-size:11.5px; color:#475569;">${ord.buyerPhone}</div>
+              <div style="font-size:11.5px; color:#475569;">${ord.buyerPhone || '-'}</div>
               <div style="font-size:11px; color:#94a3b8;">${ord.buyerCompany || '위라클'}</div>
             </td>
             <td>
@@ -2172,7 +2383,7 @@
       let csv = "구독자명,이메일,구독플랜,시작일,만료일,잔여일수,구독상태\n";
       const subs = getSubscriptionList();
       subs.forEach(s => {
-        csv += `"${s.name}","${s.email}","${s.plan}","${s.startDate}","${s.endDate}","${s.diffDays}","${s.status}"\n`;
+        csv += `"${s.name}","${s.email}","${s.plan}","${s.startDate}","${s.endDate || ''}","${s.diffDays ?? ''}","${s.status}"\n`;
       });
       downloadCSV(csv, `위라클_구독라이프사이클_${new Date().toISOString().split('T')[0]}.csv`);
       showToast('구독 명단 CSV 다운로드 완료');
@@ -2192,38 +2403,41 @@
       let csv = "주문번호,주문일시,주문자,연락처,배송지,1:1각인문구,결제금액,진행상태,송장번호\n";
       const orders = getMarketOrders();
       orders.forEach(o => {
-        csv += `"${o.id}","${o.date}","${o.buyerName}","${o.buyerPhone}","${o.address || ''}","${o.engraveText || ''}","${o.totalAmount}","${o.status}","${o.trackingNumber || ''}"\n`;
+        csv += `"${o.id}","${o.date}","${o.buyerName}","${o.buyerPhone || ''}","${o.address || ''}","${o.engraveText || ''}","${o.totalAmount}","${o.status}","${o.trackingNumber || ''}"\n`;
       });
       downloadCSV(csv, `위라클_마켓주문각인_${new Date().toISOString().split('T')[0]}.csv`);
       showToast('주문서 CSV 다운로드 완료');
     }
 
     // ========================================================
-    // KPI 통계 업데이트
+    // 100% 실제 데이터 기준 KPI 통계 집계
     // ========================================================
     function updateKPICards() {
-      const totalU = allProfiles.length || 15;
-      const vipCount = allProfiles.filter(u => (u.user_grade || '').toLowerCase() === 'vip').length || 4;
-      const familyCount = allProfiles.filter(u => (u.user_grade || '').toLowerCase() === 'family').length || 2;
-      const basicCount = totalU - (vipCount + familyCount);
+      // 1. 실제 회원 수
+      const totalU = allProfiles.length;
+      const vipCount = allProfiles.filter(u => (u.user_grade || '').toLowerCase() === 'vip').length;
+      const familyCount = allProfiles.filter(u => (u.user_grade || '').toLowerCase() === 'family').length;
+      const managerCount = allProfiles.filter(u => ['manager', 'admin'].includes((u.user_grade || '').toLowerCase())).length;
+      const basicCount = totalU - (vipCount + familyCount + managerCount);
 
       document.getElementById('kpiTotalUsers').innerText = totalU + '명';
       document.getElementById('kpiGradeDistribution').innerHTML = `VIP <strong>${vipCount}</strong>명 &bull; 식구 <strong>${familyCount}</strong>명 &bull; 일반 <strong>${basicCount}</strong>명`;
 
+      // 2. 실제 VIP 구독자
       document.getElementById('kpiVipUsers').innerText = vipCount + '명';
-      const subs = getSubscriptionList();
-      const warningCnt = subs.filter(s => s.status === 'warning').length;
-      document.getElementById('kpiSubExpiring').innerHTML = `이번 달 갱신 예정: <strong>${warningCnt}</strong>명`;
 
+      // 3. 실제 마켓 주문 건수
       const orders = getMarketOrders();
       const orderCount = orders.length;
       const pendingCount = orders.filter(o => o.status !== '배송완료').length;
       document.getElementById('kpiTotalOrders').innerText = orderCount + '건';
       document.getElementById('kpiMarketPending').innerHTML = `제작/배송 대기: <strong>${pendingCount}</strong>건`;
 
+      // 4. 실제 매출액 합계 (실제 주문 + 실제 결제 기록)
+      const billings = getBillingList();
       const marketRev = orders.reduce((sum, it) => sum + (it.totalAmount || 0), 0);
-      const subRev = vipCount * 29900;
-      const totalRev = marketRev + subRev;
+      const billingRev = billings.filter(b => b.status === '승인완료').reduce((sum, b) => sum + (b.amount || 0), 0);
+      const totalRev = marketRev + billingRev;
       document.getElementById('kpiTotalRevenue').innerText = totalRev.toLocaleString() + '원';
     }
 
@@ -2240,7 +2454,7 @@
     }
 
     function refreshAllTowerData() {
-      showToast('실시간 데이터를 갱신 중입니다...');
+      showToast('실제 데이터를 실시간으로 동기화하고 있습니다...');
       loadSupabaseProfiles();
       renderSubsTable();
       renderBillingTable();

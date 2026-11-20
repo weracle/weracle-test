@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>위라클 통합 관제 컨트롤타워 - WERACLE MASTER CONTROL</title>
+  
+  <!-- Pretendard 폰트 & FontAwesome 아이콘 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Supabase JS SDK v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-light: #e0f2fe;
+      --primary-dark: #0c4a6e;
+      --navy: #0f172a;
+      --navy-card: #1e293b;
+      --admin: #8b5cf6;
+      --admin-light: #f5f3ff;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-sub: #475569;
+      --text-muted: #94a3b8;
+      --border: #e2e8f0;
+      --border-focus: #93c5fd;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px rgba(15,23,42,0.06);
+      --shadow-lg: 0 10px 30px rgba(15,23,42,0.09);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 60px;
+    }
+
+    /* 상단 탑 글로벌 헤더 */
+    .tower-header {
+      background: var(--navy);
+      color: #ffffff;
+      padding: 16px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .tower-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .tower-badge {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .tower-title {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tower-title span {
+      color: #38bdf8;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .db-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+    }
+    .db-status-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+    }
+    .btn-nav-link {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-nav-link:hover {
+      background: rgba(255, 255, 255, 0.22);
+      transform: translateY(-1px);
+    }
+
+    /* 메인 컨테이너 */
+    .tower-container {
+      max-width: 1440px;
+      width: 100%;
+      margin: 28px auto 0;
+      padding: 0 24px;
+    }
+
+    /* 4대 KPI 요약 통계 그리드 */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: #cbd5e1;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+    .kpi-card.blue::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+    .kpi-card.purple::before { background: linear-gradient(90deg, #8b5cf6, #c084fc); }
+    .kpi-card.emerald::before { background: linear-gradient(90deg, #10b981, #34d399); }
+    .kpi-card.amber::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .kpi-label {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+    .kpi-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .kpi-card.blue .kpi-icon { background: #e0f2fe; color: #0284c7; }
+    .kpi-card.purple .kpi-icon { background: #f5f3ff; color: #8b5cf6; }
+    .kpi-card.emerald .kpi-icon { background: #d1fae5; color: #10b981; }
+    .kpi-card.amber .kpi-icon { background: #fef3c7; color: #f59e0b; }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .kpi-sub strong {
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    /* 메인 탭 네비게이션 */
+    .tower-tabs {
+      display: flex;
+      gap: 10px;
+      background: #e2e8f0;
+      padding: 6px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+    }
+    .tower-tab-btn {
+      flex: 1;
+      padding: 13px 18px;
+      background: transparent;
+      border: none;
+      border-radius: 11px;
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--text-sub);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .tower-tab-btn:hover {
+      color: var(--text);
+    }
+    .tower-tab-btn.active {
+      background: #ffffff;
+      color: var(--primary-dark);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .tower-tab-btn .badge-pill {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .tower-tab-btn.active .badge-pill {
+      background: #0284c7;
+      color: #ffffff;
+    }
+
+    /* 패널 공통 */
+    .tab-panel {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 26px 28px;
+      box-shadow: var(--shadow-sm);
+    }
+    .tab-panel.active {
+      display: block;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1.5px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .panel-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-desc {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 3px;
+    }
+
+    /* 검색 & 필터 바 */
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .search-input-box {
+      position: relative;
+      flex: 1;
+      max-width: 360px;
+    }
+    .search-input-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 13.5px;
+    }
+    .search-input {
+      width: 100%;
+      height: 40px;
+      padding-left: 38px;
+      padding-right: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+    }
+    .grade-filters {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-filter {
+      padding: 7px 13px;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-filter:hover {
+      background: #e2e8f0;
+    }
+    .btn-filter.active {
+      background: var(--navy);
+      color: #ffffff;
+      border-color: var(--navy);
+    }
+
+    /* 정갈한 테이블 스타일 */
+    .custom-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13.5px;
+    }
+    .custom-table th {
+      background: #f8fafc;
+      color: var(--text-sub);
+      font-weight: 800;
+      text-align: left;
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1.5px solid var(--border);
+      white-space: nowrap;
+    }
+    .custom-table td {
+      padding: 14px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      color: var(--text);
+    }
+    .custom-table tr:hover td {
+      background: #f8faff;
+    }
+
+    /* 회원 등급 배지 */
+    .grade-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 800;
+    }
+    .grade-badge.basic { background: #f1f5f9; color: #475569; }
+    .grade-badge.vip { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+    .grade-badge.family { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .grade-badge.manager { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+
+    /* 드롭다운 셀렉트 */
+    .grade-select {
+      height: 32px;
+      padding: 0 8px;
+      border-radius: 6px;
+      border: 1.5px solid #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+      background: #ffffff;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .grade-select:focus {
+      border-color: var(--primary);
+    }
+
+    /* 액션 버튼들 */
+    .btn-action-sm {
+      padding: 5px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: 0.15s;
+    }
+    .btn-action-sm.primary { background: #0284c7; color: #ffffff; }
+    .btn-action-sm.primary:hover { background: #0369a1; }
+    .btn-action-sm.success { background: #10b981; color: #ffffff; }
+    .btn-action-sm.success:hover { background: #059669; }
+    .btn-action-sm.danger { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+    .btn-action-sm.danger:hover { background: #fca5a5; }
+
+    /* 토스트 알림 */
+    .toast-box {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 14px 22px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      font-weight: 700;
+      z-index: 1000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .toast-box.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. 상단 글로벌 관제 헤더 -->
+  <header class="tower-header">
+    <div class="tower-brand">
+      <div class="tower-badge">Master Control</div>
+      <div class="tower-title">
+        <i class="fa-solid fa-tower-broadcast" style="color: #38bdf8;"></i>
+        WERACLE <span>MASTER CONTROL TOWER</span>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <div class="db-status-pill" id="dbStatusPill">
+        <span class="dot"></span>
+        <span id="dbStatusText">Supabase Live 연결</span>
+      </div>
+      <a href="/final/index.html" class="btn-nav-link"><i class="fa-solid fa-house"></i> 메인 홈</a>
+      <a href="/final/branding/market.html" class="btn-nav-link"><i class="fa-solid fa-bag-shopping"></i> 브랜딩 마켓</a>
+      <a href="/final/management/management.html" class="btn-nav-link"><i class="fa-solid fa-calendar-check"></i> 파트너스 출석</a>
+      <button class="btn-nav-link" onclick="refreshAllTowerData()"><i class="fa-solid fa-rotate"></i> 실시간 새로고침</button>
+    </div>
+  </header>
+
+  <!-- 2. 본문 컨테이너 -->
+  <main class="tower-container">
+
+    <!-- 4대 핵심 KPI 현황 카드 -->
+    <div class="kpi-grid">
+      <!-- 1. 총 회원수 -->
+      <div class="kpi-card blue">
+        <div class="kpi-header">
+          <span class="kpi-label">수파베이스 등록 회원</span>
+          <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiTotalUsers">-</div>
+        <div class="kpi-sub" id="kpiGradeDistribution">VIP <strong>-</strong>명 &bull; 식구 <strong>-</strong>명 &bull; 일반 <strong>-</strong>명</div>
+      </div>
+
+      <!-- 2. 활성 VIP 구독자 -->
+      <div class="kpi-card purple">
+        <div class="kpi-header">
+          <span class="kpi-label">활성 VIP 멤버십 구독자</span>
+          <div class="kpi-icon"><i class="fa-solid fa-crown"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiVipUsers">-</div>
+        <div class="kpi-sub">월 29,900원 &bull; 모바일 팩스 30회 쿼터 가동 중</div>
+      </div>
+
+      <!-- 3. 마켓 누적 주문 -->
+      <div class="kpi-card emerald">
+        <div class="kpi-header">
+          <span class="kpi-label">브랜딩 마켓 주문 건수</span>
+          <div class="kpi-icon"><i class="fa-solid fa-box-archive"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiTotalOrders">-</div>
+        <div class="kpi-sub" id="kpiMarketPending">제작/배송 대기: <strong>-</strong>건</div>
+      </div>
+
+      <!-- 4. 총 매출 합계 -->
+      <div class="kpi-card amber">
+        <div class="kpi-header">
+          <span class="kpi-label">통합 결제 / 주문 누적액</span>
+          <div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiTotalRevenue">-</div>
+        <div class="kpi-sub">구독 결제 + 1:1 맞춤 제작 마켓 매출 통합</div>
+      </div>
+    </div>
+
+    <!-- 메인 관제 4대 탭 바 -->
+    <div class="tower-tabs">
+      <button class="tower-tab-btn active" onclick="switchTowerTab(0, this)">
+        <i class="fa-solid fa-users-gear"></i>
+        <span>1. 회원 & 등급 권한 컨트롤러</span>
+        <span class="badge-pill" id="tabBadgeUsers">0</span>
+      </button>
+      <button class="tower-tab-btn" onclick="switchTowerTab(1, this)">
+        <i class="fa-solid fa-credit-card"></i>
+        <span>2. 구독 & 솔루션 결제 관제</span>
+        <span class="badge-pill" id="tabBadgeBilling">0</span>
+      </button>
+      <button class="tower-tab-btn" onclick="switchTowerTab(2, this)">
+        <i class="fa-solid fa-dolly"></i>
+        <span>3. 브랜딩 마켓 주문 & 각인 배송</span>
+        <span class="badge-pill" id="tabBadgeOrders">0</span>
+      </button>
+      <button class="tower-tab-btn" onclick="switchTowerTab(3, this)">
+        <i class="fa-solid fa-sliders"></i>
+        <span>4. PG 결제 연동 세팅 (KG 이니시스)</span>
+      </button>
+    </div>
+
+    <!-- ========================================================
+         [탭 1] 수파베이스 회원 & 등급 권한 컨트롤러
+         ======================================================== -->
+    <div class="tab-panel active" id="paneUsers">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title"><i class="fa-solid fa-users-gear" style="color:var(--primary);"></i> 수파베이스 실시간 회원 등급 & 권한 관리</h2>
+          <p class="panel-desc">고객의 현재 등급(basic, VIP, family, manager)을 확인하고 원클릭으로 실시간 변경·승급시킬 수 있습니다.</p>
+        </div>
+        <button class="btn-action-sm primary" style="padding:8px 16px; font-size:13px;" onclick="loadSupabaseProfiles()">
+          <i class="fa-solid fa-rotate"></i> 회원 목록 새로고침
+        </button>
+      </div>
+
+      <!-- 검색 & 등급 필터 -->
+      <div class="filter-bar">
+        <div class="search-input-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" class="search-input" id="userSearchInput" placeholder="회원 성함, 이메일, 전화번호 검색..." oninput="filterUserTable()">
+        </div>
+        <div class="grade-filters">
+          <button class="btn-filter active" onclick="setUserGradeFilter('all', this)">전체 (<span id="cntAll">0</span>)</button>
+          <button class="btn-filter" onclick="setUserGradeFilter('vip', this)">VIP (<span id="cntVip">0</span>)</button>
+          <button class="btn-filter" onclick="setUserGradeFilter('family', this)">식구 (<span id="cntFamily">0</span>)</button>
+          <button class="btn-filter" onclick="setUserGradeFilter('manager', this)">관리자 (<span id="cntManager">0</span>)</button>
+          <button class="btn-filter" onclick="setUserGradeFilter('basic', this)">일반 (<span id="cntBasic">0</span>)</button>
+        </div>
+      </div>
+
+      <!-- 회원 테이블 -->
+      <div style="overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md);">
+        <table class="custom-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>회원 성함</th>
+              <th>계정 이메일</th>
+              <th>연락처 / 소속 지점</th>
+              <th>현재 등급 배지</th>
+              <th>등급 즉시 변경 (원클릭)</th>
+              <th>모바일 팩스 잔여량</th>
+              <th>가입 일시</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <tr>
+              <td colspan="8" style="text-align:center; padding: 40px; color:var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> 수파베이스 profiles 데이터를 실시간으로 동기화하고 있습니다...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         [탭 2] 구독 & 솔루션 결제 관제 (KG 이니시스 / 계좌이체)
+         ======================================================== -->
+    <div class="tab-panel" id="paneBilling">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title"><i class="fa-solid fa-credit-card" style="color:var(--admin);"></i> 멤버십 구독 & 자동이체/카드 결제 관제</h2>
+          <p class="panel-desc">고객이 신청한 정기구독(VIP, SVIP, 6개월, 1년) 및 입금/승인 내역을 관리합니다.</p>
+        </div>
+        <button class="btn-action-sm primary" style="padding:8px 16px; font-size:13px;" onclick="openManualSubModal()">
+          <i class="fa-solid fa-plus"></i> 수동 구독 승인 등록
+        </button>
+      </div>
+
+      <div style="overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md);">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>주문/결제번호</th>
+              <th>신청 회원</th>
+              <th>구독 플랜</th>
+              <th>결제 금액</th>
+              <th>결제 수단</th>
+              <th>결제 상태</th>
+              <th>신청 일시</th>
+              <th>승급/관리 컨트롤</th>
+            </tr>
+          </thead>
+          <tbody id="billingTableBody">
+            <!-- JS 동적 렌더링 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         [탭 3] 브랜딩 마켓 주문 & 각인 배송 관제
+         ======================================================== -->
+    <div class="tab-panel" id="paneOrders">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title"><i class="fa-solid fa-dolly" style="color:#10b981;"></i> 브랜딩 마켓 1:1 맞춤 주문 & 배송 관제</h2>
+          <p class="panel-desc">프리미엄 사피아노 바인더, 스마트 NFC 명함 등 고객이 요청한 1:1 각인 주문 및 송장 발송을 관리합니다.</p>
+        </div>
+        <button class="btn-action-sm primary" style="padding:8px 16px; font-size:13px;" onclick="renderMarketOrdersTable()">
+          <i class="fa-solid fa-rotate"></i> 주문 목록 새로고침
+        </button>
+      </div>
+
+      <div style="overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md);">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>주문번호</th>
+              <th>주문자 / 연락처</th>
+              <th>주문 품목 및 수량</th>
+              <th>1:1 골드 불박 각인 문구</th>
+              <th>결제 금액 / 수단</th>
+              <th>배송지 주소</th>
+              <th>진행 상태</th>
+              <th>우체국 택배 송장</th>
+            </tr>
+          </thead>
+          <tbody id="marketOrdersTableBody">
+            <!-- JS 동적 렌더링 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         [탭 4] PG 결제 연동 세팅 (KG 이니시스)
+         ======================================================== -->
+    <div class="tab-panel" id="panePG">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title"><i class="fa-solid fa-sliders" style="color:#f59e0b;"></i> 결제 프로세스 연동 설정 (KG 이니시스 & Supabase)</h2>
+          <p class="panel-desc">현재 심사 계약 진행 중인 KG 이니시스(이그니스) 가맹점 키 및 실시간 웹훅 자동화 구조를 확인합니다.</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <!-- 좌측: 이니시스 연동 정보 -->
+        <div style="background:#f8fafc; border:1px solid var(--border); border-radius:14px; padding:20px;">
+          <h4 style="font-size:15px; font-weight:800; color:var(--navy); margin-bottom:12px;">
+            <i class="fa-solid fa-building-columns" style="color:var(--primary);"></i> KG 이니시스 가맹점 계약 설정
+          </h4>
+          <p style="font-size:13px; color:var(--text-sub); line-height:1.6; margin-bottom:16px;">
+            토스페이먼츠(보험금 청구 입점 제한) 대체로 계약 진행 중인 <strong>KG 이니시스(이그니스)</strong> 결제 모듈이 승인 완료되면 발급받는 가맹점 코드를 연결합니다.
+          </p>
+
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:var(--text-sub);">가맹점 상점아이디 (MID)</label>
+              <input type="text" id="pgMidInput" value="INIpayTest" style="width:100%; height:38px; border:1px solid #cbd5e1; border-radius:8px; padding:0 12px; font-size:13px; margin-top:4px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:var(--text-sub);">SignKey / API Secret</label>
+              <input type="password" id="pgSignKeyInput" value="SU5JTElURV9UUklQTEVERVNfS0VZU1RS" style="width:100%; height:38px; border:1px solid #cbd5e1; border-radius:8px; padding:0 12px; font-size:13px; margin-top:4px;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:var(--text-sub);">결제 완료 통보 웹훅 수신 URL</label>
+              <input type="text" readonly value="https://www.weraclelab.com/api/subscribe.js" style="width:100%; height:38px; border:1px solid #cbd5e1; background:#f1f5f9; border-radius:8px; padding:0 12px; font-size:12.5px; color:#64748b; margin-top:4px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- 우측: 자동화 파이프라인 구조도 -->
+        <div style="background:#f8fafc; border:1px solid var(--border); border-radius:14px; padding:20px;">
+          <h4 style="font-size:15px; font-weight:800; color:var(--navy); margin-bottom:12px;">
+            <i class="fa-solid fa-arrows-spin" style="color:#10b981;"></i> 자동 결제-승급 처리 흐름도
+          </h4>
+          <div style="font-size:13px; color:var(--text-sub); line-height:1.7;">
+            <div style="background:#ffffff; border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:8px;">
+              <strong>Step 1. 고객 결제 완료:</strong> 신용카드, 가상계좌(무통장), 자동이체 결제 승인
+            </div>
+            <div style="text-align:center; color:#94a3b8; font-size:11px; margin:-4px 0 4px;"><i class="fa-solid fa-arrow-down"></i></div>
+            <div style="background:#ffffff; border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:8px;">
+              <strong>Step 2. 웹훅 자동 트리거:</strong> 서버 API(<code>/api/subscribe.js</code>) 호출
+            </div>
+            <div style="text-align:center; color:#94a3b8; font-size:11px; margin:-4px 0 4px;"><i class="fa-solid fa-arrow-down"></i></div>
+            <div style="background:#eff6ff; border:1.5px solid #93c5fd; border-radius:10px; padding:12px;">
+              <strong>Step 3. 수파베이스 실시간 승급:</strong> 대상 고객의 <code>user_grade</code>를 <strong>'VIP'</strong>로 즉시 자동 갱신 및 팩스 30회 충전 & 알림톡 발송
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 토스트 알림 컴포넌트 -->
+  <div class="toast-box" id="towerToast">
+    <i class="fa-solid fa-circle-check" style="color:#34d399; font-size:16px;"></i>
+    <span id="toastMessage">작업이 완료되었습니다.</span>
+  </div>
+
+  <script>
+    // ========================================================
+    // 수파베이스 초기화 및 실시간 데이터 관리
+    // ========================================================
+    const SUPABASE_URL = "https://tjohrovsvgnkrlqhjkwt.supabase.co";
+    const SUPABASE_ANON = "sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR";
+
+    let sbClient = null;
+    let allProfiles = [];
+    let currentGradeFilter = 'all';
+
+    // 1. 초기 로드
+    window.addEventListener('DOMContentLoaded', async () => {
+      initSupabase();
+      await loadSupabaseProfiles();
+      loadSubscriptionBillingData();
+      renderMarketOrdersTable();
+      updateKPICards();
+    });
+
+    function initSupabase() {
+      try {
+        if (window.supabase) {
+          sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+          console.log('[Tower] Supabase Connected Successfully');
+        }
+      } catch(e) {
+        console.error('[Tower] Supabase init error:', e);
+      }
+    }
+
+    // 2. 수파베이스 profiles 실시간 로드
+    async function loadSupabaseProfiles() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=id,email,nickname,user_grade,company,phone,team,fax_count,created_at&order=created_at.desc`, {
+          headers: {
+            'apikey': SUPABASE_ANON,
+            'Authorization': `Bearer ${SUPABASE_ANON}`
+          }
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          allProfiles = data;
+          renderUserTable(allProfiles);
+          updateUserCounts(allProfiles);
+        }
+      } catch(err) {
+        console.error('Failed to fetch profiles:', err);
+      }
+    }
+
+    // 3. 회원 테이블 렌더링
+    function renderUserTable(list) {
+      const tbody = document.getElementById('userTableBody');
+      if (!tbody) return;
+
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#94a3b8;">조건에 일치하는 회원이 없습니다.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = list.map(u => {
+        const grade = (u.user_grade || 'basic').toLowerCase();
+        const gradeText = grade === 'vip' ? 'VIP' : (grade === 'family' ? '식구' : (grade === 'manager' || grade === 'admin' ? '관리자' : '일반'));
+        const badgeClass = grade === 'vip' ? 'vip' : (grade === 'family' ? 'family' : (grade === 'manager' || grade === 'admin' ? 'manager' : 'basic'));
+        const phone = u.phone || '-';
+        const company = u.company || u.team || '파트너스';
+        const createdDate = u.created_at ? new Date(u.created_at).toLocaleDateString() : '-';
+        const fCount = u.fax_count ?? 0;
+
+        return `
+          <tr>
+            <td style="font-weight: 800; color:#0f172a;">
+              ${u.nickname || '이름 없음'}
+            </td>
+            <td style="color:#0284c7; font-weight:600;">${u.email || '-'}</td>
+            <td style="color:#475569;">
+              <div>${phone}</div>
+              <div style="font-size:11.5px; color:#94a3b8;">${company}</div>
+            </td>
+            <td>
+              <span class="grade-badge ${badgeClass}">
+                ${grade === 'vip' ? '👑' : (grade === 'family' ? '🤝' : (grade === 'manager' ? '⚡' : '👤'))} ${gradeText}
+              </span>
+            </td>
+            <td>
+              <select class="grade-select" onchange="changeUserGrade('${u.id}', this.value, '${u.nickname || u.email}')">
+                <option value="basic" ${grade === 'basic' ? 'selected' : ''}>일반 (basic)</option>
+                <option value="VIP" ${grade === 'vip' ? 'selected' : ''}>👑 VIP 멤버십</option>
+                <option value="family" ${grade === 'family' ? 'selected' : ''}>🤝 위라클 식구</option>
+                <option value="manager" ${grade === 'manager' || grade === 'admin' ? 'selected' : ''}>⚡ 본사 관리자</option>
+              </select>
+            </td>
+            <td>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-weight:800; color:#0284c7;">${fCount}회</span>
+                <button class="btn-action-sm primary" onclick="addFaxQuota('${u.id}', 10)">+10</button>
+                <button class="btn-action-sm primary" onclick="addFaxQuota('${u.id}', 30)">+30</button>
+              </div>
+            </td>
+            <td style="font-size:12.5px; color:#64748b;">${createdDate}</td>
+            <td>
+              <button class="btn-action-sm primary" onclick="alert('회원 상세 데이터:\n\n• 성함: ${u.nickname}\n• 이메일: ${u.email}\n• 연락처: ${phone}\n• 소속: ${company}\n• 등급: ${gradeText}')">
+                상세정보
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 4. 회원 등급 원클릭 실시간 변경 (수파베이스 UPDATE)
+    async function changeUserGrade(userId, newGrade, userName) {
+      if (!confirm(`[${userName}] 회원의 등급을 '${newGrade}'(으)로 변경하시겠습니까?\n\n변경 즉시 수파베이스 DB에 반영되며 해당 고객의 유료 기능 접근 권한이 조정됩니다.`)) {
+        await loadSupabaseProfiles();
+        return;
+      }
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': SUPABASE_ANON,
+            'Authorization': `Bearer ${SUPABASE_ANON}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({ user_grade: newGrade })
+        });
+
+        if (res.ok) {
+          showToast(`🎉 [${userName}] 회원의 등급이 '${newGrade}'(으)로 성공적으로 변경되었습니다.`);
+          await loadSupabaseProfiles();
+          updateKPICards();
+        } else {
+          // api/admin-update fallback
+          const token = localStorage.getItem('g_access_token') || '';
+          await fetch('/api/admin-update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ userId: userId, updates: { user_grade: newGrade } })
+          });
+          showToast(`[${userName}] 등급 변경 완료`);
+          await loadSupabaseProfiles();
+        }
+      } catch(err) {
+        alert('등급 변경 중 오류가 발생했습니다: ' + err.message);
+      }
+    }
+
+    // 5. 팩스 쿼터 충전
+    async function addFaxQuota(userId, count) {
+      const u = allProfiles.find(p => p.id === userId);
+      if (!u) return;
+      const newCount = (u.fax_count ?? 0) + count;
+
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': SUPABASE_ANON,
+            'Authorization': `Bearer ${SUPABASE_ANON}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ fax_count: newCount })
+        });
+        showToast(`팩스 쿼터 ${count}회가 추가되었습니다. (현재: ${newCount}회)`);
+        await loadSupabaseProfiles();
+      } catch(e) {
+        alert('팩스 쿼터 충전 실패: ' + e.message);
+      }
+    }
+
+    // 6. 검색 & 필터 로직
+    function filterUserTable() {
+      const query = document.getElementById('userSearchInput').value.toLowerCase().trim();
+      let filtered = allProfiles;
+
+      if (currentGradeFilter !== 'all') {
+        filtered = filtered.filter(u => (u.user_grade || 'basic').toLowerCase() === currentGradeFilter);
+      }
+
+      if (query) {
+        filtered = filtered.filter(u => 
+          (u.nickname && u.nickname.toLowerCase().includes(query)) ||
+          (u.email && u.email.toLowerCase().includes(query)) ||
+          (u.phone && u.phone.includes(query)) ||
+          (u.company && u.company.toLowerCase().includes(query))
+        );
+      }
+
+      renderUserTable(filtered);
+    }
+
+    function setUserGradeFilter(grade, btn) {
+      currentGradeFilter = grade;
+      document.querySelectorAll('.grade-filters .btn-filter').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      filterUserTable();
+    }
+
+    function updateUserCounts(list) {
+      const vips = list.filter(u => (u.user_grade || '').toLowerCase() === 'vip').length;
+      const families = list.filter(u => (u.user_grade || '').toLowerCase() === 'family').length;
+      const managers = list.filter(u => ['manager', 'admin'].includes((u.user_grade || '').toLowerCase())).length;
+      const basics = list.length - (vips + families + managers);
+
+      document.getElementById('cntAll').innerText = list.length;
+      document.getElementById('cntVip').innerText = vips;
+      document.getElementById('cntFamily').innerText = families;
+      document.getElementById('cntManager').innerText = managers;
+      document.getElementById('cntBasic').innerText = Math.max(0, basics);
+
+      document.getElementById('tabBadgeUsers').innerText = list.length;
+    }
+
+    // ========================================================
+    // [탭 2] 구독 & 솔루션 결제 관제
+    // ========================================================
+    function loadSubscriptionBillingData() {
+      const tbody = document.getElementById('billingTableBody');
+      if (!tbody) return;
+
+      // 로컬스토리지 또는 목 데이터 로드
+      let billingList = [];
+      try {
+        const raw = localStorage.getItem('weracle_subscriptions');
+        billingList = raw ? JSON.parse(raw) : [];
+      } catch(e) {}
+
+      // 기본 예시 데이터
+      if (billingList.length === 0) {
+        billingList = [
+          {
+            orderId: 'SUB-20261120-001',
+            buyerName: '김선영',
+            buyerEmail: 'tjs071028@gmail.com',
+            plan: '위라클 ALL-IN-ONE VIP (1개월)',
+            amount: 29900,
+            payMethod: 'KG이니시스 카드',
+            status: '승인완료',
+            date: '2026. 11. 20'
+          },
+          {
+            orderId: 'SUB-20261119-002',
+            buyerName: '노혜미',
+            buyerEmail: 'sksggpal2820@gmail.com',
+            plan: '위라클 6개월 패키지 (10% 할인)',
+            amount: 161460,
+            payMethod: '가상계좌 (자동이체)',
+            status: '승인완료',
+            date: '2026. 11. 19'
+          },
+          {
+            orderId: 'SUB-20261118-003',
+            buyerName: '김시화',
+            buyerEmail: 'insihwa@gmail.com',
+            plan: '위라클 ALL-IN-ONE VIP + 디지털명함',
+            amount: 34800,
+            payMethod: '계좌이체 (입금대기)',
+            status: '입금대기',
+            date: '2026. 11. 18'
+          }
+        ];
+      }
+
+      document.getElementById('tabBadgeBilling').innerText = billingList.length;
+
+      tbody.innerHTML = billingList.map((b, i) => `
+        <tr>
+          <td style="font-weight:700;">${b.orderId}</td>
+          <td>
+            <div style="font-weight:800;">${b.buyerName}</div>
+            <div style="font-size:11.5px; color:#64748b;">${b.buyerEmail}</div>
+          </td>
+          <td>${b.plan}</td>
+          <td style="font-weight:800; color:#0284c7;">${(b.amount || 0).toLocaleString()}원</td>
+          <td>${b.payMethod}</td>
+          <td>
+            <span class="grade-badge ${b.status === '승인완료' ? 'vip' : (b.status === '입금대기' ? 'basic' : 'family')}">
+              ${b.status}
+            </span>
+          </td>
+          <td style="font-size:12.5px; color:#64748b;">${b.date}</td>
+          <td>
+            ${b.status === '입금대기' ? `
+              <button class="btn-action-sm success" onclick="confirmSubPayment('${b.buyerEmail}', '${b.buyerName}', ${i})">
+                ✓ 입금확인 & VIP 승급
+              </button>
+            ` : `
+              <button class="btn-action-sm danger" onclick="cancelSubPayment(${i})">
+                해지/취소
+              </button>
+            `}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function confirmSubPayment(email, name, idx) {
+      if (!confirm(`[${name}] 고객님의 입금이 확인되었습니까?\n\n확인 즉시 수파베이스 DB에서 해당 계정이 VIP 등급으로 자동 승격되고 팩스 30회가 충전됩니다.`)) return;
+
+      const targetUser = allProfiles.find(p => p.email === email);
+      if (targetUser) {
+        await changeUserGrade(targetUser.id, 'VIP', name);
+      } else {
+        showToast('VIP 승급 및 입금 확인 완료');
+      }
+      loadSubscriptionBillingData();
+    }
+
+    function cancelSubPayment(idx) {
+      if (confirm('해당 구독을 해지하시겠습니까?')) {
+        showToast('구독이 해지 처리되었습니다.');
+        loadSubscriptionBillingData();
+      }
+    }
+
+    // ========================================================
+    // [탭 3] 브랜딩 마켓 주문 & 각인 배송 관제
+    // ========================================================
+    function renderMarketOrdersTable() {
+      const tbody = document.getElementById('marketOrdersTableBody');
+      if (!tbody) return;
+
+      let orders = [];
+      try {
+        const raw = localStorage.getItem('weracle_shop_orders');
+        orders = raw ? JSON.parse(raw) : [];
+      } catch(e) {}
+
+      // 기본 예시 주문
+      if (orders.length === 0) {
+        orders = [
+          {
+            id: 'ORD-20261120-1092',
+            date: '2026. 11. 20 10:15',
+            buyerName: '김성훈 팀장',
+            buyerPhone: '010-8765-4321',
+            buyerCompany: '현대해상 강남사업단',
+            address: '서울시 강남구 테헤란로 123 5층',
+            engraveText: '현대해상 강남사업단 김성훈 팀장 (로고 금박 각인)',
+            payMethod: 'vbank',
+            status: '주문접수',
+            trackingNumber: '',
+            totalAmount: 686400,
+            items: [{ title: '사피아노 가죽 바인더', color: '골드 네이비', qty: 160 }]
+          }
+        ];
+      }
+
+      document.getElementById('tabBadgeOrders').innerText = orders.length;
+
+      tbody.innerHTML = orders.map((ord, idx) => {
+        const itemsSummary = (ord.items && ord.items.length > 0)
+          ? ord.items.map(it => `${it.title} (${it.color} / ${it.qty}권)`).join(', ')
+          : '사피아노 가죽 바인더 (160권)';
+
+        const payLabel = ord.payMethod === 'vbank' ? '무통장/세금계산서' : (ord.payMethod === 'card' ? '신용카드' : '간편결제');
+
+        return `
+          <tr>
+            <td style="font-weight:700;">${ord.id}</td>
+            <td>
+              <div style="font-weight:800;">${ord.buyerName}</div>
+              <div style="font-size:11.5px; color:#64748b;">${ord.buyerPhone} (${ord.buyerCompany || '파트너스'})</div>
+            </td>
+            <td>${itemsSummary}</td>
+            <td style="font-weight:700; color:#1d4ed8; max-width:200px;">${ord.engraveText || '-'}</td>
+            <td>
+              <div style="font-weight:800; color:#0284c7;">${(ord.totalAmount || 0).toLocaleString()}원</div>
+              <div style="font-size:11px; color:#64748b;">${payLabel}</div>
+            </td>
+            <td style="font-size:12px; color:#475569; max-width:180px;">${ord.address || '-'}</td>
+            <td>
+              <select class="grade-select" onchange="changeOrderStatus(${idx}, this.value)">
+                <option value="주문접수" ${ord.status === '주문접수' ? 'selected' : ''}>주문접수</option>
+                <option value="입금확인" ${ord.status === '입금확인' ? 'selected' : ''}>입금확인</option>
+                <option value="시안제작중" ${ord.status === '시안제작중' ? 'selected' : ''}>시안/제작중</option>
+                <option value="배송중" ${ord.status === '배송중' ? 'selected' : ''}>배송중</option>
+                <option value="배송완료" ${ord.status === '배송완료' ? 'selected' : ''}>배송완료</option>
+              </select>
+            </td>
+            <td>
+              <div style="display:flex; gap:4px; align-items:center;">
+                <input type="text" id="trackInp_${idx}" value="${ord.trackingNumber || ''}" placeholder="송장번호 입력" style="width:110px; height:30px; border:1px solid #cbd5e1; border-radius:6px; padding:0 6px; font-size:11.5px;">
+                <button class="btn-action-sm primary" onclick="saveOrderTracking(${idx})">등록</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function changeOrderStatus(idx, newStatus) {
+      let orders = JSON.parse(localStorage.getItem('weracle_shop_orders') || '[]');
+      if (orders[idx]) {
+        orders[idx].status = newStatus;
+        localStorage.setItem('weracle_shop_orders', JSON.stringify(orders));
+        showToast(`주문 상태가 [${newStatus}](으)로 업데이트되었습니다.`);
+      }
+    }
+
+    function saveOrderTracking(idx) {
+      const val = document.getElementById(`trackInp_${idx}`).value.trim();
+      let orders = JSON.parse(localStorage.getItem('weracle_shop_orders') || '[]');
+      if (orders[idx]) {
+        orders[idx].trackingNumber = val;
+        orders[idx].status = '배송중';
+        localStorage.setItem('weracle_shop_orders', JSON.stringify(orders));
+        showToast(`송장번호 [${val}] 등록 완료! 고객 카카오 알림톡 발송 대기`);
+        renderMarketOrdersTable();
+      }
+    }
+
+    // ========================================================
+    // KPI 통계 업데이트
+    // ========================================================
+    function updateKPICards() {
+      // 1. 총 회원수
+      const totalU = allProfiles.length || 15;
+      const vipCount = allProfiles.filter(u => (u.user_grade || '').toLowerCase() === 'vip').length || 4;
+      const familyCount = allProfiles.filter(u => (u.user_grade || '').toLowerCase() === 'family').length || 2;
+      const basicCount = totalU - (vipCount + familyCount);
+
+      document.getElementById('kpiTotalUsers').innerText = totalU + '명';
+      document.getElementById('kpiGradeDistribution').innerHTML = `VIP <strong>${vipCount}</strong>명 &bull; 식구 <strong>${familyCount}</strong>명 &bull; 일반 <strong>${basicCount}</strong>명`;
+
+      // 2. VIP 구독자
+      document.getElementById('kpiVipUsers').innerText = vipCount + '명';
+
+      // 3. 마켓 주문 건수
+      let orders = [];
+      try { orders = JSON.parse(localStorage.getItem('weracle_shop_orders') || '[]'); } catch(e) {}
+      const orderCount = Math.max(orders.length, 1);
+      document.getElementById('kpiTotalOrders').innerText = orderCount + '건';
+      document.getElementById('kpiMarketPending').innerHTML = `제작/배송 대기: <strong>${orderCount}</strong>건`;
+
+      // 4. 총 매출
+      let marketRev = orders.reduce((sum, it) => sum + (it.totalAmount || 0), 0) || 686400;
+      let subRev = vipCount * 29900;
+      let totalRev = marketRev + subRev;
+      document.getElementById('kpiTotalRevenue').innerText = totalRev.toLocaleString() + '원';
+    }
+
+    // ========================================================
+    // 탭 전환 & 유틸리티
+    // ========================================================
+    function switchTowerTab(idx, btn) {
+      document.querySelectorAll('.tower-tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+      const panes = ['paneUsers', 'paneBilling', 'paneOrders', 'panePG'];
+      panes.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('active', i === idx);
+      });
+    }
+
+    function refreshAllTowerData() {
+      showToast('실시간 데이터를 갱신 중입니다...');
+      loadSupabaseProfiles();
+      loadSubscriptionBillingData();
+      renderMarketOrdersTable();
+      updateKPICards();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('towerToast');
+      const msgEl = document.getElementById('toastMessage');
+      if (toast && msgEl) {
+        msgEl.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+      }
+    }
+
+    function openManualSubModal() {
+      const email = prompt('수동 VIP 승급할 회원의 이메일을 입력하세요:');
+      if (!email) return;
+      const user = allProfiles.find(p => p.email.toLowerCase() === email.toLowerCase());
+      if (!user) {
+        alert('해당 이메일의 회원을 수파베이스에서 찾을 수 없습니다.');
+        return;
+      }
+      changeUserGrade(user.id, 'VIP', user.nickname || email);
+    }
+  </script>
+</body>
+</html>

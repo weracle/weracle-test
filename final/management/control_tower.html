@@ -10,7 +10,155 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   
   <!-- Supabase JS SDK v2 -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    // ========================================================
+    // [탭 6] 공지사항 CRUD & 수파베이스 연동
+    // ========================================================
+    let allNotices = [];
+
+    async function loadTowerNotices() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/partners_settings?key=eq.app_notices&select=key,value,updated_at`, {
+          headers: getActiveHeaders(false)
+        });
+        if (res.ok) {
+          const rows = await res.json();
+          if (Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0].value)) {
+            allNotices = rows[0].value;
+          } else {
+            allNotices = [];
+          }
+          renderTowerNoticesTable();
+        }
+      } catch(e) {
+        console.warn('loadTowerNotices error:', e);
+      }
+    }
+
+    function renderTowerNoticesTable() {
+      const tbody = document.getElementById('towerNoticesTableBody');
+      const countEl = document.getElementById('towerNoticeCount');
+      const badgeEl = document.getElementById('tabBadgeNotices');
+      if (countEl) countEl.innerText = allNotices.length;
+      if (badgeEl) badgeEl.innerText = allNotices.length;
+      if (!tbody) return;
+
+      if (allNotices.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">등록된 공지사항이 없습니다. 좌측에서 새 공지사항을 등록해 보세요!</td></tr>';
+        return;
+      }
+
+      const escapeFn = typeof escapeHtml === 'function' ? escapeHtml : (str => String(str || '').replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)));
+
+      tbody.innerHTML = allNotices.map(n => {
+        const pBadge = n.priority === 'urgent' ? '<span class="grade-badge danger">🚨 긴급</span>' : (n.priority === 'important' ? '<span class="grade-badge warning">🔴 중요</span>' : '<span class="grade-badge primary">📢 일반</span>');
+        const targetLabel = n.target === 'vip' ? '👑 VIP' : (n.target === 'basic' ? '🌱 일반' : '전체');
+        const dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString() : '-';
+
+        return `
+          <tr>
+            <td>${pBadge}</td>
+            <td>
+              <div style="font-weight:800; color:#0f172a; margin-bottom:3px; font-size:13.5px;">${escapeFn(n.title)}</div>
+              <div style="font-size:12px; color:#64748b; line-height:1.4; max-width:480px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeFn(n.content)}</div>
+            </td>
+            <td><span class="badge-pill" style="font-size:11px;">${targetLabel}</span></td>
+            <td style="font-size:12px; color:#64748b;">${dateStr}</td>
+            <td style="text-align:center;">
+              <button class="btn-action-sm danger" onclick="deleteNotice('${n.id}')" title="공지사항 삭제">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function submitNewNotice() {
+      const title = document.getElementById('newNoticeTitle').value.trim();
+      const priority = document.getElementById('newNoticePriority').value;
+      const target = document.getElementById('newNoticeTarget').value;
+      const content = document.getElementById('newNoticeContent').value.trim();
+
+      if (!title) {
+        alert('공지사항 제목을 입력해 주세요.');
+        document.getElementById('newNoticeTitle').focus();
+        return;
+      }
+      if (!content) {
+        alert('공지사항 본문 내용을 입력해 주세요.');
+        document.getElementById('newNoticeContent').focus();
+        return;
+      }
+
+      const newNotice = {
+        id: 'notice_' + Date.now() + '_' + Math.random().toString(36).substring(7),
+        title: title,
+        priority: priority,
+        target: target,
+        content: content,
+        author: '위라클 본사 관리자',
+        created_at: new Date().toISOString()
+      };
+
+      allNotices.unshift(newNotice); // 최신 공지 맨 위에 배치
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/partners_settings`, {
+          method: 'POST',
+          headers: {
+            ...getActiveHeaders(false),
+            'Prefer': 'resolution=merge-duplicates,return=representation'
+          },
+          body: JSON.stringify({
+            key: 'app_notices',
+            value: allNotices,
+            description: '위라클 전체 공지사항 및 실시간 알림 목록'
+          })
+        });
+
+        if (res.ok) {
+          showToast('📢 공지사항이 수파베이스 DB에 등록되었으며, 회원 알림 불이 켜졌습니다!');
+          document.getElementById('newNoticeTitle').value = '';
+          document.getElementById('newNoticeContent').value = '';
+          renderTowerNoticesTable();
+        } else {
+          alert('공지사항 저장 중 오류가 발생했습니다.');
+        }
+      } catch(err) {
+        alert('공지사항 저장 실패: ' + err.message);
+      }
+    }
+
+    async function deleteNotice(noticeId) {
+      if (!confirm('이 공지사항을 정말 삭제하시겠습니까?\n\n삭제 시 모든 사용자의 알림 목록에서도 즉시 제거됩니다.')) return;
+
+      allNotices = allNotices.filter(n => n.id !== noticeId);
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/partners_settings`, {
+          method: 'POST',
+          headers: {
+            ...getActiveHeaders(false),
+            'Prefer': 'resolution=merge-duplicates,return=representation'
+          },
+          body: JSON.stringify({
+            key: 'app_notices',
+            value: allNotices,
+            description: '위라클 전체 공지사항 및 실시간 알림 목록'
+          })
+        });
+
+        if (res.ok) {
+          showToast('🗑️ 공지사항이 삭제되었습니다.');
+          renderTowerNoticesTable();
+        }
+      } catch(err) {
+        alert('공지사항 삭제 실패: ' + err.message);
+      }
+    }
+  
+</script>
 
   <style>
     :root {
@@ -903,6 +1051,11 @@
         <i class="fa-solid fa-sliders"></i>
         <span>5. 결제연동관리</span>
       </button>
+      <button class="tower-tab-btn" onclick="switchTowerTab(5, this)">
+        <i class="fa-solid fa-bullhorn"></i>
+        <span>6. 공지사항 관리</span>
+        <span class="badge-pill" id="tabBadgeNotices">0</span>
+      </button>
     </div>
 
     <!-- ========================================================
@@ -1202,6 +1355,96 @@
       </div>
     </div>
 
+    <!-- ========================================================
+         [탭 6] 실시간 공지사항 작성 & 알림 발송 센터
+         ======================================================== -->
+    <div class="tab-panel" id="paneNotices">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title"><i class="fa-solid fa-bullhorn" style="color:#0284c7;"></i> 실시간 공지사항 작성 & 알림 발송 센터</h2>
+          <p class="panel-desc">등록하신 공지사항은 수파베이스 DB에 실시간 저장되며, 모든 사용자 화면의 상단 알림 벨에 즉시 <strong>빨간색 불(Glow)</strong>이 켜집니다.</p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-action-sm primary" onclick="loadTowerNotices()">
+            <i class="fa-solid fa-rotate"></i> 실시간 새로고침
+          </button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 420px 1fr; gap:20px; align-items:start;">
+        <!-- 좌측: 공지사항 신규 작성 폼 -->
+        <div style="background:#ffffff; border:1px solid var(--border); border-radius:14px; padding:22px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+          <h3 style="font-size:15px; font-weight:800; color:var(--navy); margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-pen-nib" style="color:var(--primary);"></i> 새 공지사항 작성
+          </h3>
+          
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div class="form-group">
+              <label class="form-label">공지사항 제목 <span style="color:#ef4444;">*</span></label>
+              <input type="text" class="form-input" id="newNoticeTitle" placeholder="예: 11월 시스템 점검 및 신기능 업데이트 안내">
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+              <div class="form-group">
+                <label class="form-label">중요도 / 알림 유형</label>
+                <select class="form-input" id="newNoticePriority">
+                  <option value="important">🔴 중요 공지</option>
+                  <option value="urgent">🚨 긴급 공지</option>
+                  <option value="normal">📢 일반 공지</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">수신 대상 회원</label>
+                <select class="form-input" id="newNoticeTarget">
+                  <option value="all">전체 회원</option>
+                  <option value="vip">👑 VIP 회원만</option>
+                  <option value="basic">🌱 일반 회원만</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">공지사항 본문 내용 <span style="color:#ef4444;">*</span></label>
+              <textarea class="form-input" id="newNoticeContent" rows="6" style="height:auto; padding:10px; resize:vertical; font-family:inherit; line-height:1.5;" placeholder="회원들에게 안내할 공지사항 상세 내용을 입력해 주세요..."></textarea>
+            </div>
+
+            <button type="button" class="btn-action-sm primary" style="width:100%; height:42px; justify-content:center; font-size:13.5px;" onclick="submitNewNotice()">
+              <i class="fa-solid fa-paper-plane"></i> 공지사항 등록 및 즉시 알림 발송
+            </button>
+          </div>
+        </div>
+
+        <!-- 우측: 등록된 공지사항 목록 테이블 -->
+        <div style="background:#ffffff; border:1px solid var(--border); border-radius:14px; padding:22px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 style="font-size:15px; font-weight:800; color:var(--navy); display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-list-check" style="color:#10b981;"></i> 등록된 공지사항 목록 (<span id="towerNoticeCount">0</span>건)
+            </h3>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th style="width:90px;">유형</th>
+                  <th>공지사항 제목 및 내용</th>
+                  <th style="width:80px;">대상</th>
+                  <th style="width:100px;">등록일시</th>
+                  <th style="width:70px; text-align:center;">관리</th>
+                </tr>
+              </thead>
+              <tbody id="towerNoticesTableBody">
+                <tr>
+                  <td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">
+                    공지사항을 불러오는 중...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- 다중 선택 일괄 변경 플로팅 액션 바 -->
@@ -1551,6 +1794,7 @@
       renderBillingTable();
       renderMarketOrdersTable();
       updateKPICards();
+      loadTowerNotices();
     });
 
     function initSupabase() {
@@ -2758,7 +3002,7 @@
     // ========================================================
     function switchTowerTab(idx, btn) {
       document.querySelectorAll('.tower-tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
-      const panes = ['paneUsers', 'paneSubs', 'paneBilling', 'paneOrders', 'panePG'];
+      const panes = ['paneUsers', 'paneSubs', 'paneBilling', 'paneOrders', 'panePG', 'paneNotices'];
       panes.forEach((id, i) => {
         const el = document.getElementById(id);
         if (el) el.classList.toggle('active', i === idx);

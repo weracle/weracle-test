@@ -466,8 +466,15 @@
             transition: transform 0.3s ease;
         }
 
-        .premium-littly-card-root .large-profile-wrapper:hover .large-profile-img {
-            transform: scale(1.03);
+        .premium-littly-card-root .large-profile-wrapper {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        .premium-littly-card-root .large-profile-img {
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
         /* Brand / Company Logo Overlay on Profile Image */
@@ -1525,6 +1532,40 @@
                 const isSingleEmoji = (Array.from(text).length <= 2 && /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u.test(text));
                 badge.className = `card-sticker-item ${isSingleEmoji ? 'card-sticker-emoji' : 'card-sticker-text'}`;
 
+                // [스티커 하얀 배경 형태 및 투명도 적용]
+                const sShape = currentCardData.sticker_bg_shape || 'diecut';
+                const sOpacity = (currentCardData.sticker_bg_opacity !== undefined && currentCardData.sticker_bg_opacity !== null) ? Number(currentCardData.sticker_bg_opacity) : 95;
+                const sAlpha = sOpacity / 100;
+
+                if (isSingleEmoji && sShape === 'diecut') {
+                    badge.style.background = 'transparent';
+                    badge.style.border = 'none';
+                    badge.style.boxShadow = 'none';
+                    badge.style.backdropFilter = 'none';
+                    badge.style.webkitBackdropFilter = 'none';
+                    if (sAlpha > 0) {
+                        badge.style.filter = `
+                            drop-shadow(2px 0 0 rgba(255,255,255,${sAlpha}))
+                            drop-shadow(-2px 0 0 rgba(255,255,255,${sAlpha}))
+                            drop-shadow(0 2px 0 rgba(255,255,255,${sAlpha}))
+                            drop-shadow(0 -2px 0 rgba(255,255,255,${sAlpha}))
+                            drop-shadow(0 4px 12px rgba(0,0,0,${sAlpha * 0.35}))
+                        `;
+                    } else {
+                        badge.style.filter = 'drop-shadow(0 4px 10px rgba(0,0,0,0.3))';
+                    }
+                } else if (isSingleEmoji) {
+                    badge.style.background = `rgba(255, 255, 255, ${sAlpha})`;
+                    badge.style.border = `2.5px solid rgba(255, 255, 255, ${Math.min(1, sAlpha * 0.95)})`;
+                    badge.style.boxShadow = `0 8px 24px rgba(0, 0, 0, ${sAlpha * 0.2})`;
+                } else {
+                    if (!item.bg) {
+                        badge.style.background = `rgba(255, 255, 255, ${sAlpha})`;
+                        badge.style.border = `2px solid rgba(255, 255, 255, ${Math.min(1, sAlpha * 0.95)})`;
+                        badge.style.boxShadow = `0 8px 24px rgba(0, 0, 0, ${sAlpha * 0.2})`;
+                    }
+                }
+
                 // 커스텀 폰트 및 색상 적용
                 if (typeof item === 'object' && item !== null) {
                     if (item.font && STICKER_FONT_MAP[item.font]) {
@@ -1650,6 +1691,98 @@
 
                 container.appendChild(badge);
             });
+        }
+
+
+        // ==========================================
+        // 프로필 사진 마우스/터치 드래그 위치 이동 이벤트
+        // ==========================================
+        function initPhotoDrag() {
+            const wrapper = document.querySelector('.large-profile-wrapper');
+            const avatarEl = document.getElementById('planner-avatar');
+            if (!wrapper || !avatarEl || wrapper.dataset.photoDragInit) return;
+            wrapper.dataset.photoDragInit = 'true';
+
+            wrapper.style.cursor = 'grab';
+
+            let isDragging = false;
+            let startX = 0, startY = 0;
+            let startPosX = 50, startPosY = 20;
+
+            function startDrag(clientX, clientY) {
+                isDragging = true;
+                startX = clientX;
+                startY = clientY;
+                const c = currentCardData || {};
+                startPosX = (c.photo_pos_x !== undefined && c.photo_pos_x !== null) ? Number(c.photo_pos_x) : 50;
+                startPosY = (c.photo_pos_y !== undefined && c.photo_pos_y !== null) ? Number(c.photo_pos_y) : 20;
+                wrapper.style.cursor = 'grabbing';
+            }
+
+            function moveDrag(clientX, clientY) {
+                if (!isDragging) return;
+                const rect = wrapper.getBoundingClientRect();
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+
+                // 마우스 이동 방향에 따른 중심점 이동 (반대 방향 이동으로 뷰포트 패닝 느낌)
+                let newX = startPosX - (dx / rect.width) * 60;
+                let newY = startPosY - (dy / rect.height) * 60;
+
+                newX = Math.max(0, Math.min(100, Math.round(newX)));
+                newY = Math.max(0, Math.min(100, Math.round(newY)));
+
+                avatarEl.style.objectPosition = `${newX}% ${newY}%`;
+                if (!currentCardData) currentCardData = {};
+                currentCardData.photo_pos_x = newX;
+                currentCardData.photo_pos_y = newY;
+
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'PHOTO_POSITION_CHANGED', posX: newX, posY: newY }, '*');
+                }
+            }
+
+            function endDrag() {
+                if (!isDragging) return;
+                isDragging = false;
+                wrapper.style.cursor = 'grab';
+            }
+
+            wrapper.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.card-logo-overlay') || e.target.closest('.card-sticker-item')) return;
+                e.preventDefault();
+                startDrag(e.clientX, e.clientY);
+
+                function onMouseMove(me) {
+                    me.preventDefault();
+                    moveDrag(me.clientX, me.clientY);
+                }
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    endDrag();
+                }
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            wrapper.addEventListener('touchstart', function(e) {
+                if (e.target.closest('.card-logo-overlay') || e.target.closest('.card-sticker-item')) return;
+                const t0 = e.touches[0];
+                startDrag(t0.clientX, t0.clientY);
+
+                function onTouchMove(te) {
+                    const t = te.touches[0];
+                    moveDrag(t.clientX, t.clientY);
+                }
+                function onTouchEnd() {
+                    document.removeEventListener('touchmove', onTouchMove);
+                    document.removeEventListener('touchend', onTouchEnd);
+                    endDrag();
+                }
+                document.addEventListener('touchmove', onTouchMove, { passive: false });
+                document.addEventListener('touchend', onTouchEnd);
+            }, { passive: true });
         }
 
         // ==========================================
@@ -1781,6 +1914,47 @@
                         logoOverlay.style.top = '18px';
                         logoOverlay.style.transform = 'none';
                     }
+
+                    // [로고 하얀 배경 형태 & 투명도 적용]
+                    const lShape = card.logo_bg_shape || 'diecut';
+                    const lOpacity = (card.logo_bg_opacity !== undefined && card.logo_bg_opacity !== null) ? Number(card.logo_bg_opacity) : 85;
+                    const lAlpha = lOpacity / 100;
+
+                    if (lShape === 'none' || lAlpha === 0) {
+                        logoOverlay.style.background = 'transparent';
+                        logoOverlay.style.border = 'none';
+                        logoOverlay.style.boxShadow = 'none';
+                        logoOverlay.style.backdropFilter = 'none';
+                        logoOverlay.style.webkitBackdropFilter = 'none';
+                        logoImg.style.filter = 'drop-shadow(0 2px 6px rgba(0,0,0,0.35))';
+                    } else if (lShape === 'diecut') {
+                        logoOverlay.style.background = 'transparent';
+                        logoOverlay.style.border = 'none';
+                        logoOverlay.style.boxShadow = 'none';
+                        logoOverlay.style.backdropFilter = 'none';
+                        logoOverlay.style.webkitBackdropFilter = 'none';
+                        
+                        logoImg.style.filter = `
+                            drop-shadow(2px 0 0 rgba(255,255,255,${lAlpha}))
+                            drop-shadow(-2px 0 0 rgba(255,255,255,${lAlpha}))
+                            drop-shadow(0 2px 0 rgba(255,255,255,${lAlpha}))
+                            drop-shadow(0 -2px 0 rgba(255,255,255,${lAlpha}))
+                            drop-shadow(1.5px 1.5px 0 rgba(255,255,255,${lAlpha}))
+                            drop-shadow(-1.5px 1.5px 0 rgba(255,255,255,${lAlpha}))
+                            drop-shadow(1.5px -1.5px 0 rgba(255,255,255,${lAlpha}))
+                            drop-shadow(-1.5px -1.5px 0 rgba(255,255,255,${lAlpha}))
+                            drop-shadow(0 4px 10px rgba(0,0,0,${lAlpha * 0.35}))
+                        `;
+                    } else { // 'round'
+                        logoOverlay.style.background = `rgba(255, 255, 255, ${lAlpha})`;
+                        logoOverlay.style.border = `1px solid rgba(255, 255, 255, ${Math.min(1, lAlpha * 0.95)})`;
+                        logoOverlay.style.borderRadius = '12px';
+                        logoOverlay.style.boxShadow = `0 4px 14px rgba(0, 0, 0, ${lAlpha * 0.15})`;
+                        logoOverlay.style.backdropFilter = lAlpha > 0.2 ? 'blur(10px)' : 'none';
+                        logoOverlay.style.webkitBackdropFilter = lAlpha > 0.2 ? 'blur(10px)' : 'none';
+                        logoImg.style.filter = 'none';
+                    }
+
                     initLogoDrag();
                 } else {
                     logoOverlay.style.display = 'none';
@@ -1826,13 +2000,26 @@
             }
 
             const avatarEl = document.getElementById('planner-avatar');
-            if (avatarEl && card.avatar_url) {
-                avatarEl.src = card.avatar_url;
-                avatarEl.alt = card.name || '프로필';
+            const pZoom = (card.photo_zoom !== undefined && card.photo_zoom !== null) ? Number(card.photo_zoom) : 100;
+            const pX = (card.photo_pos_x !== undefined && card.photo_pos_x !== null) ? Number(card.photo_pos_x) : 50;
+            const pY = (card.photo_pos_y !== undefined && card.photo_pos_y !== null) ? Number(card.photo_pos_y) : 20;
+
+            if (avatarEl) {
+                if (card.avatar_url) {
+                    avatarEl.src = card.avatar_url;
+                    avatarEl.alt = card.name || '프로필';
+                }
+                avatarEl.style.objectPosition = `${pX}% ${pY}%`;
+                avatarEl.style.transform = `scale(${pZoom / 100})`;
+                avatarEl.style.transformOrigin = `${pX}% ${pY}%`;
+                initPhotoDrag();
             }
             const tplAvatar = document.getElementById('tpl-profile-img');
             if (tplAvatar && card.avatar_url) {
                 tplAvatar.src = card.avatar_url;
+                tplAvatar.style.objectPosition = `${pX}% ${pY}%`;
+                tplAvatar.style.transform = `scale(${pZoom / 100})`;
+                tplAvatar.style.transformOrigin = `${pX}% ${pY}%`;
             }
 
             const tagContainer = document.getElementById('tag-row');

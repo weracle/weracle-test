@@ -1070,6 +1070,56 @@
                 </div>
             </div>
 
+            <!-- 프로필 사진 구도 & 크기 정밀 조절 패널 -->
+            <div class="photo-controls-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:14px 16px; margin-top:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-size:12.5px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-crop-simple" style="color:#0284c7;"></i> 사진 크기 & 구도 조절
+                    </span>
+                    <span style="font-size:11px; color:#64748b;">우측 화면에서 마우스 드래그로도 이동 가능</span>
+                </div>
+                
+                <!-- 1. 사진 크기(줌) -->
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:#475569; margin-bottom:4px;">
+                        <span><i class="fa-solid fa-magnifying-glass-plus"></i> 사진 크기 (Zoom)</span>
+                        <span id="label-photo-zoom" style="font-weight:700; color:#0284c7;">100%</span>
+                    </div>
+                    <input type="range" id="input-photo-zoom" min="70" max="200" value="100" step="2" style="width:100%; accent-color:#0284c7; cursor:pointer;" oninput="updatePhotoSettings()">
+                </div>
+
+                <!-- 2. 상하 위치 (Y축) -->
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:#475569; margin-bottom:4px;">
+                        <span><i class="fa-solid fa-arrows-up-down"></i> 상하 위치 (얼굴 높이)</span>
+                        <span id="label-photo-pos-y" style="font-weight:700; color:#0284c7;">상단 20%</span>
+                    </div>
+                    <input type="range" id="input-photo-pos-y" min="0" max="100" value="20" step="1" style="width:100%; accent-color:#0284c7; cursor:pointer;" oninput="updatePhotoSettings()">
+                </div>
+
+                <!-- 3. 좌우 위치 (X축) -->
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:#475569; margin-bottom:4px;">
+                        <span><i class="fa-solid fa-arrows-left-right"></i> 좌우 위치 (가로 중심)</span>
+                        <span id="label-photo-pos-x" style="font-weight:700; color:#0284c7;">중앙 50%</span>
+                    </div>
+                    <input type="range" id="input-photo-pos-x" min="0" max="100" value="50" step="1" style="width:100%; accent-color:#0284c7; cursor:pointer;" oninput="updatePhotoSettings()">
+                </div>
+
+                <!-- 빠른 프리셋 버튼 -->
+                <div style="display:flex; gap:6px; margin-top:8px;">
+                    <button type="button" class="btn-subtle" style="flex:1; padding:6px 8px; font-size:11px; font-weight:600; background:#fff; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;" onclick="setPhotoPreset(100, 50, 20)">
+                        👤 얼굴 중심 (추천)
+                    </button>
+                    <button type="button" class="btn-subtle" style="flex:1; padding:6px 8px; font-size:11px; font-weight:600; background:#fff; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;" onclick="setPhotoPreset(100, 50, 50)">
+                        🎯 정중앙
+                    </button>
+                    <button type="button" class="btn-subtle" style="flex:1; padding:6px 8px; font-size:11px; font-weight:600; background:#fff; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;" onclick="setPhotoPreset(100, 50, 20)">
+                        ↺ 기본 리셋
+                    </button>
+                </div>
+            </div>
+
             <!-- 소속 / 회사 로고 (프로필 사진 위에 마우스로 자유롭게 배치) -->
             <div class="form-label" style="margin-top:18px; display:flex; justify-content:space-between; align-items:center;">
                 <span><i class="fa-solid fa-shield-halved" style="color:#0284c7;"></i> 소속 / 회사 로고 <span class="sub">(프로필 사진 위에 표시)</span></span>
@@ -1099,6 +1149,43 @@
                     <div style="margin-top:8px;">
                         <input type="text" id="input-logo-url" class="form-control" style="font-size:12px; padding:7px 12px;" placeholder="또는 직접 로고 이미지 URL 링크 입력" oninput="onLogoUrlInput(this.value)">
                     </div>
+                </div>
+            </div>
+
+            <!-- 로고 배경 스타일 및 투명도 조절 패널 -->
+            <div class="logo-controls-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:14px 16px; margin-top:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-size:12.5px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="color:#0284c7;"></i> 로고 배경 스타일 & 투명도
+                    </span>
+                </div>
+
+                <!-- 로고 배경 스타일 선택 -->
+                <div style="margin-bottom:10px;">
+                    <div style="font-size:11.5px; color:#475569; margin-bottom:6px;">로고 하얀 배경 형태</div>
+                    <div style="display:flex; gap:6px;">
+                        <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:7px 8px; background:#fff; border:1.5px solid #cbd5e1; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer;">
+                            <input type="radio" name="logo-bg-shape" value="diecut" checked onchange="updateLogoSettings()">
+                            <span>✨ 모양 맞춤(스티커형)</span>
+                        </label>
+                        <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:7px 8px; background:#fff; border:1.5px solid #cbd5e1; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer;">
+                            <input type="radio" name="logo-bg-shape" value="round" onchange="updateLogoSettings()">
+                            <span>🔲 둥근 박스형</span>
+                        </label>
+                        <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:7px 8px; background:#fff; border:1.5px solid #cbd5e1; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer;">
+                            <input type="radio" name="logo-bg-shape" value="none" onchange="updateLogoSettings()">
+                            <span>🚫 배경 없음</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 로고 배경 투명도 조절 -->
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:#475569; margin-bottom:4px;">
+                        <span>하얀 배경 투명도 (불투명도)</span>
+                        <span id="label-logo-bg-opacity" style="font-weight:700; color:#0284c7;">85%</span>
+                    </div>
+                    <input type="range" id="input-logo-bg-opacity" min="0" max="100" value="85" step="5" style="width:100%; accent-color:#0284c7; cursor:pointer;" oninput="updateLogoSettings()">
                 </div>
             </div>
 
@@ -1213,6 +1300,31 @@
                     📌 추천 스티커 <span style="font-size:11px; font-weight:normal; color:#94a3b8;">(클릭하면 바로 추가)</span>
                 </div>
                 <div class="sticker-preset-palette" id="sticker-preset-palette" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;"></div>
+
+                <!-- 스티커 배경 스타일 및 투명도 조절 패널 -->
+                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:12px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:5px;">
+                            <i class="fa-solid fa-circle-half-stroke" style="color:#0284c7;"></i> 스티커 하얀 배경 형태 & 투명도
+                        </span>
+                        <span id="label-sticker-bg-opacity" style="font-size:11.5px; font-weight:700; color:#0284c7;">95%</span>
+                    </div>
+
+                    <div style="display:flex; gap:6px; margin-bottom:10px;">
+                        <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:6px 8px; background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">
+                            <input type="radio" name="sticker-bg-shape" value="diecut" checked onchange="updateStickerSettings()">
+                            <span>✨ 이모지 모양 맞춤</span>
+                        </label>
+                        <label style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:6px 8px; background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">
+                            <input type="radio" name="sticker-bg-shape" value="box" onchange="updateStickerSettings()">
+                            <span>⚪ 둥근 캡슐형</span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <input type="range" id="input-sticker-bg-opacity" min="0" max="100" value="95" step="5" style="width:100%; accent-color:#0284c7; cursor:pointer;" oninput="updateStickerSettings()">
+                    </div>
+                </div>
 
                 <!-- 2. 나만의 맞춤 텍스트 스티커 스튜디오 (폰트, 색상, 위치) -->
                 <div class="custom-sticker-studio" style="background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:16px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
@@ -1995,6 +2107,13 @@
                 logo_url: logoUrl,
                 logo_x: currentLogoX,
                 logo_y: currentLogoY,
+                photo_zoom: document.getElementById('input-photo-zoom') ? Number(document.getElementById('input-photo-zoom').value) : 100,
+                photo_pos_x: document.getElementById('input-photo-pos-x') ? Number(document.getElementById('input-photo-pos-x').value) : 50,
+                photo_pos_y: document.getElementById('input-photo-pos-y') ? Number(document.getElementById('input-photo-pos-y').value) : 20,
+                logo_bg_shape: (document.querySelector('input[name="logo-bg-shape"]:checked') || {}).value || 'diecut',
+                logo_bg_opacity: document.getElementById('input-logo-bg-opacity') ? Number(document.getElementById('input-logo-bg-opacity').value) : 85,
+                sticker_bg_shape: (document.querySelector('input[name="sticker-bg-shape"]:checked') || {}).value || 'diecut',
+                sticker_bg_opacity: document.getElementById('input-sticker-bg-opacity') ? Number(document.getElementById('input-sticker-bg-opacity').value) : 95,
                 bgm: {
                     enabled: getChecked('input-bgm-enabled'),
                     type: getVal('select-bgm-type') || 'cafe',
@@ -2148,6 +2267,34 @@
                 document.getElementById('avatar-preview-img').src = DEFAULT_PLACEHOLDER_AVATAR;
                 document.getElementById('input-avatar-url').value = '';
             }
+
+            // 프로필 사진 줌 및 위치 로드
+            const pZoom = (cardData.photo_zoom !== undefined && cardData.photo_zoom !== null) ? cardData.photo_zoom : 100;
+            const pX = (cardData.photo_pos_x !== undefined && cardData.photo_pos_x !== null) ? cardData.photo_pos_x : 50;
+            const pY = (cardData.photo_pos_y !== undefined && cardData.photo_pos_y !== null) ? cardData.photo_pos_y : 20;
+
+            if (document.getElementById('input-photo-zoom')) document.getElementById('input-photo-zoom').value = pZoom;
+            if (document.getElementById('input-photo-pos-x')) document.getElementById('input-photo-pos-x').value = pX;
+            if (document.getElementById('input-photo-pos-y')) document.getElementById('input-photo-pos-y').value = pY;
+            if (document.getElementById('label-photo-zoom')) document.getElementById('label-photo-zoom').textContent = pZoom + '%';
+            if (document.getElementById('label-photo-pos-x')) document.getElementById('label-photo-pos-x').textContent = '가로 ' + pX + '%';
+            if (document.getElementById('label-photo-pos-y')) document.getElementById('label-photo-pos-y').textContent = '높이 ' + pY + '%';
+
+            // 로고 배경 형태 & 투명도 로드
+            const lShape = cardData.logo_bg_shape || 'diecut';
+            const lOpacity = (cardData.logo_bg_opacity !== undefined && cardData.logo_bg_opacity !== null) ? cardData.logo_bg_opacity : 85;
+            const rLogoShape = document.querySelector(`input[name="logo-bg-shape"][value="${lShape}"]`);
+            if (rLogoShape) rLogoShape.checked = true;
+            if (document.getElementById('input-logo-bg-opacity')) document.getElementById('input-logo-bg-opacity').value = lOpacity;
+            if (document.getElementById('label-logo-bg-opacity')) document.getElementById('label-logo-bg-opacity').textContent = lOpacity + '%';
+
+            // 스티커 배경 형태 & 투명도 로드
+            const sShape = cardData.sticker_bg_shape || 'diecut';
+            const sOpacity = (cardData.sticker_bg_opacity !== undefined && cardData.sticker_bg_opacity !== null) ? cardData.sticker_bg_opacity : 95;
+            const rStickerShape = document.querySelector(`input[name="sticker-bg-shape"][value="${sShape}"]`);
+            if (rStickerShape) rStickerShape.checked = true;
+            if (document.getElementById('input-sticker-bg-opacity')) document.getElementById('input-sticker-bg-opacity').value = sOpacity;
+            if (document.getElementById('label-sticker-bg-opacity')) document.getElementById('label-sticker-bg-opacity').textContent = sOpacity + '%';
 
             // 로고 정보 로드
             currentLogoUrl = cardData.logo_url || fallbackUser.logo_url || '';
@@ -2592,6 +2739,13 @@
                 logo_url: currentLogoUrl || (document.getElementById('input-logo-url') ? document.getElementById('input-logo-url').value.trim() : '') || '',
                 logo_x: currentLogoX,
                 logo_y: currentLogoY,
+                photo_zoom: document.getElementById('input-photo-zoom') ? Number(document.getElementById('input-photo-zoom').value) : 100,
+                photo_pos_x: document.getElementById('input-photo-pos-x') ? Number(document.getElementById('input-photo-pos-x').value) : 50,
+                photo_pos_y: document.getElementById('input-photo-pos-y') ? Number(document.getElementById('input-photo-pos-y').value) : 20,
+                logo_bg_shape: (document.querySelector('input[name="logo-bg-shape"]:checked') || {}).value || 'diecut',
+                logo_bg_opacity: document.getElementById('input-logo-bg-opacity') ? Number(document.getElementById('input-logo-bg-opacity').value) : 85,
+                sticker_bg_shape: (document.querySelector('input[name="sticker-bg-shape"]:checked') || {}).value || 'diecut',
+                sticker_bg_opacity: document.getElementById('input-sticker-bg-opacity') ? Number(document.getElementById('input-sticker-bg-opacity').value) : 95,
                 consult_email: document.getElementById('input-consult-email').value.trim(),
                 updated_at: new Date().toISOString()
             };
@@ -2789,9 +2943,61 @@
                 }
             }
 
+
+        // 사진, 로고, 스티커 인터랙티브 제어 함수들
+        function updatePhotoSettings() {
+            const zEl = document.getElementById('input-photo-zoom');
+            const xEl = document.getElementById('input-photo-pos-x');
+            const yEl = document.getElementById('input-photo-pos-y');
+            const zoom = zEl ? zEl.value : 100;
+            const posX = xEl ? xEl.value : 50;
+            const posY = yEl ? yEl.value : 20;
+
+            if (document.getElementById('label-photo-zoom')) document.getElementById('label-photo-zoom').textContent = zoom + '%';
+            if (document.getElementById('label-photo-pos-x')) document.getElementById('label-photo-pos-x').textContent = '가로 ' + posX + '%';
+            if (document.getElementById('label-photo-pos-y')) document.getElementById('label-photo-pos-y').textContent = '높이 ' + posY + '%';
+
+            syncLivePreview();
+        }
+
+        function setPhotoPreset(zoom, posX, posY) {
+            if (document.getElementById('input-photo-zoom')) document.getElementById('input-photo-zoom').value = zoom;
+            if (document.getElementById('input-photo-pos-x')) document.getElementById('input-photo-pos-x').value = posX;
+            if (document.getElementById('input-photo-pos-y')) document.getElementById('input-photo-pos-y').value = posY;
+            updatePhotoSettings();
+        }
+
+        function updateLogoSettings() {
+            const opEl = document.getElementById('input-logo-bg-opacity');
+            if (opEl && document.getElementById('label-logo-bg-opacity')) {
+                document.getElementById('label-logo-bg-opacity').textContent = opEl.value + '%';
+            }
+            syncLivePreview();
+        }
+
+        function updateStickerSettings() {
+            const opEl = document.getElementById('input-sticker-bg-opacity');
+            if (opEl && document.getElementById('label-sticker-bg-opacity')) {
+                document.getElementById('label-sticker-bg-opacity').textContent = opEl.value + '%';
+            }
+            syncLivePreview();
+        }
+
             window.addEventListener('message', (event) => {
                 if (event.data && (event.data.type === 'STICKER_DRAGGED' || event.data.type === 'LOGO_DRAGGED')) {
                     handlePositionUpdate(event.data.type, event.data);
+                }
+                if (event.data && event.data.type === 'PHOTO_POSITION_CHANGED') {
+                    const posX = event.data.posX;
+                    const posY = event.data.posY;
+                    if (posX !== undefined && document.getElementById('input-photo-pos-x')) {
+                        document.getElementById('input-photo-pos-x').value = posX;
+                        document.getElementById('label-photo-pos-x').textContent = '가로 ' + posX + '%';
+                    }
+                    if (posY !== undefined && document.getElementById('input-photo-pos-y')) {
+                        document.getElementById('input-photo-pos-y').value = posY;
+                        document.getElementById('label-photo-pos-y').textContent = '높이 ' + posY + '%';
+                    }
                 }
             });
 

@@ -4525,37 +4525,6 @@
           item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
       });
-
-      // 0번(대표 이미지: 여러 개 모여 있는 전색상 컷)일 때와 각 색상 슬라이드일 때 뱃지/칩 자동 동기화
-      const currentSrc = sliderImagesList[currentSlideIdx];
-      const badge = document.getElementById('detailSelectedColorBadge');
-      if (currentSlideIdx === 0) {
-        document.querySelectorAll('.detail-color-chip').forEach(btn => btn.classList.remove('active'));
-        if (badge) {
-          badge.innerText = '✨ 대표 전색상 모음';
-          badge.style.background = '#e0f2fe';
-          badge.style.color = '#0369a1';
-        }
-      } else if (currentItem && currentItem.colorOptions) {
-        const matched = currentItem.colorOptions.find(c => c.image === currentSrc);
-        if (matched) {
-          document.querySelectorAll('.detail-color-chip').forEach(btn => {
-            btn.classList.toggle('active', btn.getAttribute('data-color-name') === matched.name);
-          });
-          if (badge) {
-            badge.innerText = matched.name + ' 선택됨';
-            badge.style.background = '#e0e7ff';
-            badge.style.color = '#3730a3';
-          }
-        } else {
-          document.querySelectorAll('.detail-color-chip').forEach(btn => btn.classList.remove('active'));
-          if (badge) {
-            badge.innerText = '상세 컷 ' + (currentSlideIdx + 1);
-            badge.style.background = '#f1f5f9';
-            badge.style.color = '#475569';
-          }
-        }
-      }
     }
 
     function prevProductSlide() {
@@ -4776,23 +4745,13 @@
       input.value = '';
     }
 
-    // 색상 옵션 클릭 시 해당 단독 색상 이미지로 전환
-    function selectDetailColor(colorName, colorImg) {
+    // 색상 옵션 선택 로직 (대표 슬라이드 갤러리와 완전 분리: 슬라이드 이미지를 수정/추가하지 않음)
+    function selectDetailColor(colorName) {
       const badge = document.getElementById('detailSelectedColorBadge');
       if (badge) {
         badge.innerText = colorName + ' 선택됨';
         badge.style.background = '#e0e7ff';
         badge.style.color = '#3730a3';
-      }
-
-      let foundIdx = sliderImagesList.indexOf(colorImg);
-      if (foundIdx === -1 && colorImg) {
-        sliderImagesList.push(colorImg);
-        foundIdx = sliderImagesList.length - 1;
-        renderSliderThumbsStrip();
-      }
-      if (foundIdx !== -1) {
-        goToProductSlide(foundIdx);
       }
 
       document.querySelectorAll('.detail-color-chip').forEach(btn => {
@@ -4830,22 +4789,28 @@
 
           if (colors.length === 0) {
             colorBox.innerHTML = '<span style="font-size:12px; color:#94a3b8;">단일 색상 기본 상품</span>';
+            const badge = document.getElementById('detailSelectedColorBadge');
+            if (badge) {
+              badge.innerText = '단일 색상';
+              badge.style.background = '#f1f5f9';
+              badge.style.color = '#475569';
+            }
           } else {
-            colors.forEach((col) => {
+            colors.forEach((col, idx) => {
               const btn = document.createElement('button');
               btn.type = 'button';
-              btn.className = 'detail-color-chip';
+              btn.className = 'detail-color-chip' + (idx === 0 ? ' active' : '');
               btn.setAttribute('data-color-name', col.name);
               btn.innerHTML = `<span class="color-dot" style="background-color: ${col.colorCode || '#2563eb'};"></span> ${col.name}`;
-              btn.onclick = () => selectDetailColor(col.name, col.image);
+              btn.onclick = () => selectDetailColor(col.name);
               colorBox.appendChild(btn);
             });
 
             const badge = document.getElementById('detailSelectedColorBadge');
             if (badge) {
-              badge.innerText = '✨ 대표 전색상 모음';
-              badge.style.background = '#e0f2fe';
-              badge.style.color = '#0369a1';
+              badge.innerText = colors[0].name + ' 선택됨';
+              badge.style.background = '#e0e7ff';
+              badge.style.color = '#3730a3';
             }
           }
         }

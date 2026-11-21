@@ -403,7 +403,54 @@ const TargetEngine = (function() {
         }
 
         if (menuTitle.includes('보상청구')) {
-            return { match: true, badge: '청구 점검 대상', badgeColor: '#059669', badgeBg: '#ecfdf5', priority: 1 };
+            const records = client._claimRecords || (client.crmData && client.crmData._claimRecords) || [];
+            if (!records || records.length === 0) {
+                return { match: false };
+            }
+
+            const today = new Date();
+            const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+            const oneDayMs = 24 * 60 * 60 * 1000;
+
+            let latestValidClaim = null;
+            let minDiffDays = 9999;
+
+            for (let r of records) {
+                const claimDateStr = r.claimDate || r.date || r['청구일시'] || r['접수일자'] || '';
+                if (!claimDateStr) continue;
+
+                const cDate = parseDateString(claimDateStr.substring(0, 10));
+                if (!cDate) continue;
+                const cMidnight = new Date(cDate.year || today.getFullYear(), (cDate.month || 1) - 1, cDate.day || 1).getTime();
+
+                // 오늘 기준 과거 31일 이내 (당일 포함: 0 <= diffDays <= 31, 시간 오차 감안하여 -1도 당일 처리)
+                const diffTime = todayMidnight - cMidnight;
+                const diffDays = Math.round(diffTime / oneDayMs);
+
+                if (diffDays >= -1 && diffDays <= 31) {
+                    const normDiff = Math.max(0, diffDays);
+                    if (normDiff < minDiffDays) {
+                        minDiffDays = normDiff;
+                        latestValidClaim = { ...r, diffDays: normDiff };
+                    }
+                }
+            }
+
+            if (latestValidClaim) {
+                const dayText = minDiffDays === 0 ? '당일 청구' : `청구 ${minDiffDays}일차`;
+                const company = latestValidClaim.companyName || latestValidClaim['접수보험사'] || latestValidClaim.company || '';
+                const badgeText = company ? `📋 ${dayText} (${company})` : `📋 ${dayText}`;
+                return {
+                    match: true,
+                    badge: badgeText,
+                    badgeColor: '#059669',
+                    badgeBg: '#ecfdf5',
+                    priority: 1,
+                    sortOrder: minDiffDays
+                };
+            }
+
+            return { match: false };
         }
 
         return { match: true, badge: '고객관리', badgeColor: '#475569', badgeBg: '#f8fafc', priority: 1 };
@@ -415,7 +462,7 @@ const TargetEngine = (function() {
         for (let nt of nonTargeting) {
             if (menuTitle.includes(nt)) return false;
         }
-        const targetingKeywords = ['생일', '상령일', '자동차', '장기보험', '연금', '간병', '입원', '치료비', '생활비', '3대', '운전자'];
+        const targetingKeywords = ['생일', '상령일', '자동차', '장기보험', '보상청구', '연금', '간병', '입원', '치료비', '생활비', '3대', '운전자'];
         return targetingKeywords.some(k => menuTitle.includes(k));
     }
 

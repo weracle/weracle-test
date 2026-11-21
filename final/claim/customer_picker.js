@@ -4334,6 +4334,25 @@
 
       if (appendResp.ok) {
         console.log('[Claim Logger] "청구관리" 탭에 청구 이력 저장 성공:', newRow);
+        try {
+          const curClaims = JSON.parse(localStorage.getItem('weracle_claim_records') || '[]');
+          curClaims.unshift({
+            claimDate: claimDateStr,
+            insuredName: claimInfo.insuredName || claimInfo.clientName || '',
+            insuredRrn: claimInfo.insuredRrn || '',
+            contractorName: claimInfo.contractorName || claimInfo.insuredName || claimInfo.clientName || '',
+            contractorRrn: claimInfo.contractorRrn || claimInfo.insuredRrn || '',
+            companyName: claimInfo.companyName || '',
+            category: claimInfo.category || '',
+            accType: claimInfo.accType || '',
+            accDate: claimInfo.accDate || '',
+            faxNumber: claimInfo.faxNumber || '',
+            receiptNum: claimInfo.receiptNum || '',
+            status: claimInfo.status || '접수완료',
+            plannerName: claimInfo.plannerName || ''
+          });
+          localStorage.setItem('weracle_claim_records', JSON.stringify(curClaims));
+        } catch(e) {}
         return true;
       } else {
         console.warn('[Claim Logger] 행 추가 실패:', await appendResp.text());

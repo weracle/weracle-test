@@ -1164,6 +1164,7 @@
             }
 
             if (window.parent !== window) window.parent.postMessage({ type: 'requestLogo' }, '*');
+            loadClaimRecordsFromGoogleSheet();
             const filterListContainer = document.querySelector('.filter-list');
             const tabTarget = document.getElementById('tab-target');
             const tabProduct = document.getElementById('tab-product');
@@ -1510,6 +1511,7 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                 window.isSyncDataReceived = true;
                 weraclecrm = event.data.data || [];
                 crmContacts = event.data.crmContacts || [];
+                if (typeof loadClaimRecordsFromGoogleSheet === 'function') loadClaimRecordsFromGoogleSheet();
                 if (event.data.blacklist && Array.isArray(event.data.blacklist)) {
                     try {
                         const bList = event.data.blacklist
@@ -1541,7 +1543,87 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
             }, 500);
        }
 
-                              function extractCustomerPhone(c) {
+                                      // [구글 시트 '청구관리' 탭 실시간 연동 엔진]
+        async function loadClaimRecordsFromGoogleSheet() {
+            try {
+                // 1. 로컬 캐시 즉시 복원
+                const cached = localStorage.getItem('weracle_claim_records');
+                if (cached) {
+                    try {
+                        window.weracleClaimRecords = JSON.parse(cached);
+                    } catch(e) {}
+                }
+
+                // 2. 토큰 및 시트 ID 탐색
+                const token = (function() {
+                    try {
+                        return localStorage.getItem('g_access_token') ||
+                               sessionStorage.getItem('g_access_token') ||
+                               (window.gToken) ||
+                               (window.parent && window.parent.gToken) ||
+                               (window.opener && window.opener.gToken);
+                    } catch(e) { return null; }
+                })();
+
+                const sheetId = (function() {
+                    try {
+                        return localStorage.getItem('g_sheet_id') ||
+                               sessionStorage.getItem('g_sheet_id') ||
+                               (window.gSheetId) ||
+                               (window.parent && window.parent.gSheetId) ||
+                               (window.opener && window.opener.gSheetId);
+                    } catch(e) { return null; }
+                })();
+
+                if (!token || !sheetId) {
+                    console.log('[Target Claim] 토큰 또는 sheetId 없음 - 캐시 데이터 사용');
+                    if (window.weracleClaimRecords && typeof buildMergedData === 'function') {
+                        buildMergedData();
+                    }
+                    return;
+                }
+
+                const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/' + encodeURIComponent("'청구관리'!A2:M");
+                const resp = await fetch(url, {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+
+                if (!resp.ok) {
+                    console.warn('[Target Claim] 청구관리 탭 조회 응답:', resp.status);
+                    return;
+                }
+
+                const data = await resp.json();
+                const rows = data.values || [];
+                const parsedClaims = rows.map(r => ({
+                    claimDate: r[0] || '',
+                    insuredName: r[1] || '',
+                    insuredRrn: r[2] || '',
+                    contractorName: r[3] || '',
+                    contractorRrn: r[4] || '',
+                    companyName: r[5] || '',
+                    category: r[6] || '',
+                    accType: r[7] || '',
+                    accDate: r[8] || '',
+                    faxNumber: r[9] || '',
+                    receiptNum: r[10] || '',
+                    status: r[11] || '',
+                    plannerName: r[12] || ''
+                })).filter(c => c.claimDate || c.insuredName);
+
+                window.weracleClaimRecords = parsedClaims;
+                localStorage.setItem('weracle_claim_records', JSON.stringify(parsedClaims));
+                console.log('[Target Claim] 청구관리 시트에서 ' + parsedClaims.length + '건 동기화 완료');
+
+                if (typeof buildMergedData === 'function') {
+                    buildMergedData();
+                }
+            } catch (err) {
+                console.error('[Target Claim Error]', err);
+            }
+        }
+
+function extractCustomerPhone(c) {
             if (!c) return "";
             if (typeof c === 'string') {
                 const m = c.match(/01[016789][\s-]?\d{3,4}[\s-]?\d{4}/);
@@ -1711,6 +1793,77 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                 };
             });
 
+            // 3-1. 청구관리 데이터 연동 및 매칭 (오늘 기준 1달 전 타겟용)
+            const claims = window.weracleClaimRecords || (function() {
+                try { return JSON.parse(localStorage.getItem('weracle_claim_records') || '[]'); } catch(e) { return []; }
+            })();
+
+            const matchedClaimIndices = new Set();
+            if (claims && claims.length > 0) {
+                window.pureCrmList.forEach(cust => {
+                    const cName = String(cust.name || '').replace(/\s/g, '');
+                    const cPhone = String(cust.phone || '').replace(/[^0-9]/g, '');
+                    const cRrn = String((cust.crmData && (cust.crmData['주민번호'] || cust.crmData['주민등록번호'])) || '').replace(/[^0-9]/g, '');
+                    
+                    const clientClaims = [];
+                    claims.forEach((claim, idx) => {
+                        const insName = String(claim.insuredName || '').replace(/\s/g, '');
+                        const conName = String(claim.contractorName || '').replace(/\s/g, '');
+                        const insRrn = String(claim.insuredRrn || '').replace(/[^0-9]/g, '');
+                        const conRrn = String(claim.contractorRrn || '').replace(/[^0-9]/g, '');
+                        const clPhone = String(claim.phone || claim.faxNumber || '').replace(/[^0-9]/g, '');
+
+                        let isMatch = false;
+                        if (cRrn && cRrn.length >= 6 && (insRrn.startsWith(cRrn.substring(0, 6)) || conRrn.startsWith(cRrn.substring(0, 6)))) {
+                            isMatch = true;
+                        } else if (cPhone && clPhone && cPhone === clPhone) {
+                            isMatch = true;
+                        } else if (cName && (cName === insName || cName === conName)) {
+                            isMatch = true;
+                        }
+
+                        if (isMatch) {
+                            clientClaims.push(claim);
+                            matchedClaimIndices.add(idx);
+                        }
+                    });
+
+                    cust._claimRecords = clientClaims;
+                    if (cust.crmData) cust.crmData._claimRecords = clientClaims;
+                });
+
+                // CRM에 없는 단독 청구 고객 자동 생성 (누락 100% 방지)
+                const claimOnlyMap = new Map();
+                claims.forEach((claim, idx) => {
+                    if (!matchedClaimIndices.has(idx)) {
+                        const targetName = claim.insuredName || claim.contractorName || '청구고객';
+                        const key = targetName + '_' + (claim.insuredRrn || claim.receiptNum || idx);
+                        if (!claimOnlyMap.has(key)) {
+                            claimOnlyMap.set(key, {
+                                name: targetName,
+                                originalName: targetName,
+                                phone: claim.phone || claim.faxNumber || '',
+                                tag: '청구고객',
+                                color: '#059669',
+                                _isClaimOnly: true,
+                                _claimRecords: [claim],
+                                crmData: {
+                                    '고객명': targetName,
+                                    '주민번호': claim.insuredRrn || '',
+                                    _claimRecords: [claim]
+                                }
+                            });
+                        } else {
+                            claimOnlyMap.get(key)._claimRecords.push(claim);
+                            claimOnlyMap.get(key).crmData._claimRecords.push(claim);
+                        }
+                    }
+                });
+                window.claimOnlyCustomerList = Array.from(claimOnlyMap.values());
+            } else {
+                window.claimOnlyCustomerList = [];
+            }
+
             const activeItem = document.querySelector('.filter-item.active') || document.querySelector('.filter-item');
             if (activeItem) activeItem.click();
         }
@@ -1744,6 +1897,11 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                 tag: '고객관리',
                 color: '#0284c7'
             }));
+
+            // [보상청구 현황 체크] 메뉴 선택 시 CRM 미등록 청구 고객도 포함하여 누락 방지
+            if (menuTitle && menuTitle.includes('보상청구') && window.claimOnlyCustomerList && window.claimOnlyCustomerList.length > 0) {
+                crmCustomerList = [...crmCustomerList, ...window.claimOnlyCustomerList];
+            }
 
             // [핵심 2: 휴대폰 등록 연락처 고객 리스트]
             // 휴대폰/CSV로 등록한 고객 명단(mergedList)은 오른쪽 탭에서만 전담 노출
@@ -1912,6 +2070,9 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
 
                 let pDigits = String(cust.phone || '').replace(/[^0-9]/g, '');
                 let displayPhone = pDigits.length === 11 ? pDigits.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3') : (pDigits.length === 10 ? pDigits.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : (cust.phone || ''));
+                if (!displayPhone && cust._isClaimOnly) {
+                    displayPhone = '청구 접수완료';
+                }
                 
                 // 그룹을 넘나들어도 체크 상태 보존
                 const isChecked = GroupManager.isCustomerSelected(cust.phone);

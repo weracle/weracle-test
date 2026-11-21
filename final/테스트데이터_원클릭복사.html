@@ -228,6 +228,123 @@
 
 </div>
 
+  <!-- 3. 청구관리 구글 시트 테스트 데이터 -->
+  <div class="card" style="margin-top: 24px; border-top: 4px solid #059669;">
+    <div class="card-header">
+      <div>
+        <div class="card-title" style="color: #059669;">3. 구글 시트 '청구관리' 탭 테스트 데이터 (오늘 기준 1달 전 타겟 검증)</div>
+        <div class="card-desc">타겟관리의 <b>[보상청구 현황 체크]</b>에 연동되는 청구관리 시트의 최신 청구 이력 5건입니다. (1일 전, 5일 전, 12일 전, 25일 전, 40일 전 제외건)</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="inject-btn" style="background:#059669;" onclick="injectClaimDataOnly(this)">⚡ 브라우저(localStorage)에 청구데이터 즉시 주입</button>
+        <button class="copy-btn" style="background:#059669;" onclick="copyTable('claim-table', this)">📋 청구관리 시트(A2 셀) 원클릭 복사</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" class="search-input" placeholder="고객명, 보험사, 사고유형 검색..." onkeyup="filterTable('claim-table', this.value)">
+    </div>
+
+    <div class="table-wrapper">
+      <table id="claim-table">
+        <thead>
+          <tr>
+            <th>청구일시</th>
+            <th>피보험자(고객명)</th>
+            <th>피보험자 주민번호</th>
+            <th>계약자</th>
+            <th>계약자 주민번호</th>
+            <th>접수보험사</th>
+            <th>청구분야</th>
+            <th>사고유형</th>
+            <th>사고/발병일자</th>
+            <th>수신팩스번호</th>
+            <th>팩스접수번호</th>
+            <th>전송상태</th>
+            <th>담당설계사</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background:#ecfdf5;">
+            <td><b>2026-11-20 10:30</b></td>
+            <td><b>김청구</b></td>
+            <td>900512-1234567</td>
+            <td>김청구</td>
+            <td>900512-1234567</td>
+            <td><span class="badge blue">삼성화재</span></td>
+            <td>질병/상해</td>
+            <td>상해사고</td>
+            <td>2026-11-19</td>
+            <td>0505-111-2222</td>
+            <td>FAX-20261120-001</td>
+            <td><span class="badge green">접수완료</span></td>
+            <td>[테스트] 1일 전 청구 (D-1)</td>
+          </tr>
+          <tr style="background:#ecfdf5;">
+            <td><b>2026-11-16 14:15</b></td>
+            <td><b>이보상</b></td>
+            <td>880304-2234567</td>
+            <td>이보상</td>
+            <td>880304-2234567</td>
+            <td><span class="badge blue">DB손해보험</span></td>
+            <td>질병/상해</td>
+            <td>질병입원</td>
+            <td>2026-11-14</td>
+            <td>0505-222-3333</td>
+            <td>FAX-20261116-002</td>
+            <td><span class="badge green">접수완료</span></td>
+            <td>[테스트] 5일 전 청구 (D-5)</td>
+          </tr>
+          <tr style="background:#ecfdf5;">
+            <td><b>2026-11-09 11:00</b></td>
+            <td><b>박지급</b></td>
+            <td>950720-1234567</td>
+            <td>박지급</td>
+            <td>950720-1234567</td>
+            <td><span class="badge blue">현대해상</span></td>
+            <td>질병/상해</td>
+            <td>통원치료</td>
+            <td>2026-11-07</td>
+            <td>0505-333-4444</td>
+            <td>FAX-20261109-003</td>
+            <td><span class="badge green">접수완료</span></td>
+            <td>[테스트] 12일 전 청구 (D-12)</td>
+          </tr>
+          <tr style="background:#ecfdf5;">
+            <td><b>2026-10-27 16:20</b></td>
+            <td><b>최한달</b></td>
+            <td>820915-1234567</td>
+            <td>최한달</td>
+            <td>820915-1234567</td>
+            <td><span class="badge blue">KB손해보험</span></td>
+            <td>질병/상해</td>
+            <td>골절진단</td>
+            <td>2026-10-25</td>
+            <td>0505-444-5555</td>
+            <td>FAX-20261027-004</td>
+            <td><span class="badge green">접수완료</span></td>
+            <td>[테스트] 25일 전 청구 (D-25, 30일이내)</td>
+          </tr>
+          <tr style="background:#fef2f2; color:#991b1b;">
+            <td>2026-10-12 09:30</td>
+            <td>정제외</td>
+            <td>750401-1234567</td>
+            <td>정제외</td>
+            <td>750401-1234567</td>
+            <td>메리츠화재</td>
+            <td>배상책임</td>
+            <td>시설사고</td>
+            <td>2026-10-10</td>
+            <td>0505-555-6666</td>
+            <td>FAX-20261012-005</td>
+            <td>접수완료</td>
+            <td>[테스트] 40일 전 청구 (30일 초과 -> 타겟 제외 검증용)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 <!-- 토스트 -->
 <div id="toast">✨ 완료되었습니다.</div>
 
@@ -299,6 +416,26 @@ function showToast(msg) {
   t.innerText = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+const CLAIM_DATA_OBJ = [
+  {"claimDate":"2026-11-20 10:30","insuredName":"김청구","insuredRrn":"900512-1234567","contractorName":"김청구","contractorRrn":"900512-1234567","companyName":"삼성화재","category":"질병/상해","accType":"상해사고","accDate":"2026-11-19","faxNumber":"0505-111-2222","receiptNum":"FAX-20261120-001","status":"접수완료","plannerName":"김팀장"},
+  {"claimDate":"2026-11-16 14:15","insuredName":"이보상","insuredRrn":"880304-2234567","contractorName":"이보상","contractorRrn":"880304-2234567","companyName":"DB손해보험","category":"질병/상해","accType":"질병입원","accDate":"2026-11-14","faxNumber":"0505-222-3333","receiptNum":"FAX-20261116-002","status":"접수완료","plannerName":"김팀장"},
+  {"claimDate":"2026-11-09 11:00","insuredName":"박지급","insuredRrn":"950720-1234567","contractorName":"박지급","contractorRrn":"950720-1234567","companyName":"현대해상","category":"질병/상해","accType":"통원치료","accDate":"2026-11-07","faxNumber":"0505-333-4444","receiptNum":"FAX-20261109-003","status":"접수완료","plannerName":"김팀장"},
+  {"claimDate":"2026-10-27 16:20","insuredName":"최한달","insuredRrn":"820915-1234567","contractorName":"최한달","contractorRrn":"820915-1234567","companyName":"KB손해보험","category":"질병/상해","accType":"골절진단","accDate":"2026-10-25","faxNumber":"0505-444-5555","receiptNum":"FAX-20261027-004","status":"접수완료","plannerName":"김팀장"},
+  {"claimDate":"2026-10-12 09:30","insuredName":"정제외","insuredRrn":"750401-1234567","contractorName":"정제외","contractorRrn":"750401-1234567","companyName":"메리츠화재","category":"배상책임","accType":"시설사고","accDate":"2026-10-10","faxNumber":"0505-555-6666","receiptNum":"FAX-20261012-005","status":"접수완료","plannerName":"김팀장"}
+];
+
+function injectClaimDataOnly(btn) {
+  try {
+    localStorage.setItem('weracle_claim_records', JSON.stringify(CLAIM_DATA_OBJ));
+    const old = btn.innerHTML;
+    btn.innerHTML = '⚡ 주입 성공!';
+    showToast('⚡ 테스트 청구 데이터 5건이 브라우저에 즉시 주입되었습니다! 타겟관리에서 확인하세요.');
+    setTimeout(() => { btn.innerHTML = old; }, 2500);
+  } catch(e) {
+    alert('데이터 주입 실패: ' + e);
+  }
 }
 </script>
 

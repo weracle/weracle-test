@@ -2994,6 +2994,180 @@
     display: block;
   }
 
+  /* 관리자 전용 대표이미지 편집 툴바 & 뱃지 스타일 */
+  .admin-slider-toolbar {
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0fdf4;
+    border: 1.5px dashed #22c55e;
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .admin-toolbar-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .admin-toolbar-badge .admin-role-tag {
+    background: #15803d;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .admin-toolbar-badge .admin-role-title {
+    font-weight: 800;
+    font-size: 13px;
+    color: #14532d;
+  }
+  .admin-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .admin-slider-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 6px 11px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .admin-slider-btn.btn-replace {
+    background: #2563eb;
+    color: #ffffff;
+  }
+  .admin-slider-btn.btn-replace:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+  }
+  .admin-slider-btn.btn-set-main {
+    background: #f59e0b;
+    color: #ffffff;
+  }
+  .admin-slider-btn.btn-set-main:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+  }
+  .admin-slider-btn.btn-set-main.is-main {
+    background: #e2e8f0;
+    color: #64748b;
+    cursor: default;
+    transform: none;
+  }
+  .admin-slider-btn.btn-add {
+    background: #4f46e5;
+    color: #ffffff;
+  }
+  .admin-slider-btn.btn-add:hover {
+    background: #4338ca;
+    transform: translateY(-1px);
+  }
+  .admin-slider-btn.btn-delete {
+    background: #ef4444;
+    color: #ffffff;
+  }
+  .admin-slider-btn.btn-delete:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+  }
+  .admin-slide-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 10;
+    font-size: 11.5px;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 4px 10px;
+    display: none;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  .admin-slide-badge.badge-main {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+  }
+  .admin-slide-badge.badge-sub {
+    background: rgba(15, 23, 42, 0.78);
+    color: #ffffff;
+  }
+  .slider-thumb-item {
+    position: relative;
+  }
+  .thumb-main-star {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 10px;
+    background: rgba(245, 158, 11, 0.95);
+    border-radius: 4px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    pointer-events: none;
+    color: #ffffff;
+    font-weight: 900;
+  }
+  .slider-thumb-add-btn {
+    width: 68px;
+    height: 68px;
+    border-radius: 12px;
+    border: 2px dashed #93c5fd;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-weight: 800;
+    font-size: 18px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .slider-thumb-add-btn:hover {
+    background: #dbeafe;
+    border-color: #2563eb;
+    transform: translateY(-2px);
+  }
+  /* 카탈로그 카드 대표사진 변경 버튼 */
+  .admin-card-thumb-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 5;
+    background: rgba(15, 23, 42, 0.85);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
+  }
+  .admin-card-thumb-btn:hover {
+    background: #0284c7;
+    border-color: #38bdf8;
+    transform: scale(1.05);
+  }
+
   /* 4. 구매수량 / 실크인쇄 / 적용단가 / 추가합계금액 / 부가세 / 총합계금액 견적표 (KakaoTalk_20261108_125414930.png 완벽 일치) */
   .quote-spec-table {
     width: 100%;
@@ -3617,7 +3791,31 @@
         
         <!-- 좌측 대표 상품 이미지 캐러셀 (1장씩 꽉차게 + 여러장 넘겨보기 지원) -->
         <div class="kurly-product-image-box">
+          
+          <!-- 관리자 전용 대표이미지 편집 툴바 -->
+          <div id="adminSliderToolbar" class="admin-slider-toolbar" style="display: none;">
+            <div class="admin-toolbar-badge">
+              <span class="admin-role-tag">관리자</span>
+              <span class="admin-role-title">📸 대표이미지 관리</span>
+            </div>
+            <div class="admin-toolbar-actions">
+              <button type="button" class="admin-slider-btn btn-replace" onclick="triggerReplaceCurrentSlide()" title="현재 보고 있는 사진을 다른 사진으로 교체합니다">
+                📷 사진 교체
+              </button>
+              <button type="button" class="admin-slider-btn btn-set-main" id="btnSetAsRepresentative" onclick="setSlideAsRepresentative()" title="현재 사진을 상품의 1번째 대표이미지로 설정합니다">
+                ⭐ 대표 지정
+              </button>
+              <button type="button" class="admin-slider-btn btn-add" onclick="triggerAddNewSlides()" title="새로운 사진들을 대표 슬라이드에 추가합니다">
+                ➕ 사진 추가
+              </button>
+              <button type="button" class="admin-slider-btn btn-delete" onclick="deleteCurrentSlide()" title="현재 사진을 슬라이드에서 삭제합니다">
+                🗑️ 삭제
+              </button>
+            </div>
+          </div>
+
           <div class="kurly-slider-container">
+            <span id="adminSlideBadge" class="admin-slide-badge" style="display: none;">⭐ 대표 썸네일</span>
             <button type="button" class="slider-arrow-btn slider-arrow-prev" onclick="prevProductSlide()" title="이전 이미지">‹</button>
             <img id="kurlyProductImage" class="kurly-slider-img" src="branding_img/KakaoTalk_20261109_105448276.jpg" alt="대표 상품 이미지">
             <button type="button" class="slider-arrow-btn slider-arrow-next" onclick="nextProductSlide()" title="다음 이미지">›</button>
@@ -4219,6 +4417,7 @@
           <div class="card-item-4x4" data-category="${p.category || 'binder'}" onclick="showProductDetailPage('${p.id || key}')">
             <div class="card-thumb-4x4">
               <img src="${p.thumb || 'branding_img/KakaoTalk_20261109_105448276.jpg'}" alt="${p.title}">
+              ${isUserAdmin() ? `<button type="button" class="admin-card-thumb-btn" onclick="event.stopPropagation(); triggerCardThumbEdit('${p.id || key}')" title="대표사진 변경">📷 대표사진 변경</button>` : ''}
             </div>
 
             <div class="card-info-4x4">
@@ -4267,9 +4466,10 @@
     // ========================================================
     let currentSlideIdx = 0;
     let sliderImagesList = [];
+    let currentDetailItemId = 'item1';
 
     function renderProductSlider(images, initialIdx = 0) {
-      sliderImagesList = (images && images.length > 0) ? images : [currentItem.thumb || 'branding_img/KakaoTalk_20261109_105448276.jpg'];
+      sliderImagesList = (images && images.length > 0) ? images.slice() : [currentItem.thumb || 'branding_img/KakaoTalk_20261109_105448276.jpg'];
       currentSlideIdx = Math.max(0, Math.min(initialIdx, sliderImagesList.length - 1));
 
       updateSliderView();
@@ -4292,6 +4492,30 @@
 
       if (counterEl) {
         counterEl.innerText = `${currentSlideIdx + 1} / ${sliderImagesList.length}`;
+      }
+
+      // 관리자용 대표 뱃지 및 대표지정 버튼 상태 동기화
+      const slideBadge = document.getElementById('adminSlideBadge');
+      const btnSetRep = document.getElementById('btnSetAsRepresentative');
+      if (slideBadge) {
+        if (currentSlideIdx === 0) {
+          slideBadge.className = 'admin-slide-badge badge-main';
+          slideBadge.innerText = '⭐ 대표 썸네일 (메인 노출)';
+        } else {
+          slideBadge.className = 'admin-slide-badge badge-sub';
+          slideBadge.innerText = `📸 슬라이드 #${currentSlideIdx + 1}`;
+        }
+      }
+      if (btnSetRep) {
+        if (currentSlideIdx === 0) {
+          btnSetRep.classList.add('is-main');
+          btnSetRep.innerText = '⭐ 현재 대표사진';
+          btnSetRep.title = '이미 상품의 1번째 대표이미지로 설정되어 있습니다.';
+        } else {
+          btnSetRep.classList.remove('is-main');
+          btnSetRep.innerText = '⭐ 대표로 지정';
+          btnSetRep.title = '현재 보고 계신 사진을 1번째 대표이미지로 설정합니다.';
+        }
       }
 
       document.querySelectorAll('.slider-thumb-item').forEach((item, idx) => {
@@ -4358,7 +4582,9 @@
       if (!strip) return;
       strip.innerHTML = '';
 
-      if (sliderImagesList.length <= 1) {
+      const isAdmin = isUserAdmin();
+
+      if (sliderImagesList.length <= 1 && !isAdmin) {
         strip.style.display = 'none';
         return;
       }
@@ -4367,10 +4593,187 @@
       sliderImagesList.forEach((src, idx) => {
         const item = document.createElement('div');
         item.className = 'slider-thumb-item' + (idx === currentSlideIdx ? ' active' : '');
-        item.innerHTML = `<img src="${src}" alt="썸네일 ${idx + 1}">`;
+        item.innerHTML = `
+          <img src="${src}" alt="썸네일 ${idx + 1}">
+          ${idx === 0 ? '<span class="thumb-main-star" title="대표 이미지">⭐</span>' : ''}
+        `;
         item.onclick = () => goToProductSlide(idx);
         strip.appendChild(item);
       });
+
+      // 관리자인 경우 미니 썸네일 스트립 끝에 [+ 추가] 슬롯 노출
+      if (isAdmin) {
+        const addBtn = document.createElement('div');
+        addBtn.className = 'slider-thumb-add-btn';
+        addBtn.title = '새 슬라이드 사진 추가';
+        addBtn.innerHTML = `<span>+</span><span style="font-size:9.5px; margin-top:2px;">추가</span>`;
+        addBtn.onclick = () => triggerAddNewSlides();
+        strip.appendChild(addBtn);
+      }
+    }
+
+    // ========================================================
+    // 관리자 전용 대표이미지 동기화 & 편집 로직
+    // ========================================================
+    function syncCurrentProductThumbs(persist = true) {
+      if (!currentItem) return;
+      currentItem.thumbs = sliderImagesList.slice();
+      currentItem.thumb = sliderImagesList[0] || 'branding_img/KakaoTalk_20261109_105448276.jpg';
+
+      const pKey = currentDetailItemId || currentItem.id || 'item1';
+      if (products[pKey]) {
+        products[pKey].thumb = currentItem.thumb;
+        products[pKey].thumbs = currentItem.thumbs.slice();
+      }
+
+      if (persist) {
+        saveProductsToStorage();
+        renderProductGrid();
+      }
+    }
+
+    // 1) 현재 사진 교체
+    function triggerReplaceCurrentSlide() {
+      if (!isUserAdmin()) {
+        alert('🔒 관리자(본사) 권한이 있는 계정만 대표이미지를 수정할 수 있습니다.');
+        return;
+      }
+      const inp = document.getElementById('adminReplaceSlideInput');
+      if (inp) inp.click();
+    }
+
+    function handleReplaceSlideFile(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          sliderImagesList[currentSlideIdx] = e.target.result;
+          syncCurrentProductThumbs(true);
+          updateSliderView();
+          renderSliderThumbsStrip();
+          alert(`선택하신 이미지로 ${currentSlideIdx === 0 ? '대표 이미지가' : (currentSlideIdx + 1) + '번째 사진이'} 교체되었습니다.`);
+        };
+        reader.readAsDataURL(file);
+      }
+      input.value = '';
+    }
+
+    // 2) 현재 사진을 1번째 대표 이미지로 지정
+    function setSlideAsRepresentative() {
+      if (!isUserAdmin()) {
+        alert('🔒 관리자(본사) 권한이 필요합니다.');
+        return;
+      }
+      if (currentSlideIdx <= 0 || currentSlideIdx >= sliderImagesList.length) {
+        return;
+      }
+      const picked = sliderImagesList.splice(currentSlideIdx, 1)[0];
+      sliderImagesList.unshift(picked);
+      currentSlideIdx = 0;
+      syncCurrentProductThumbs(true);
+      updateSliderView();
+      renderSliderThumbsStrip();
+      alert('선택하신 사진이 1번째 대표이미지로 설정되었습니다!');
+    }
+
+    // 3) 새로운 슬라이드 사진 추가
+    function triggerAddNewSlides() {
+      if (!isUserAdmin()) {
+        alert('🔒 관리자(본사) 권한이 필요합니다.');
+        return;
+      }
+      const inp = document.getElementById('adminAddSlidesInput');
+      if (inp) inp.click();
+    }
+
+    function handleAddSlidesFiles(input) {
+      if (input.files && input.files.length > 0) {
+        const files = Array.from(input.files);
+        let loaded = 0;
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            sliderImagesList.push(e.target.result);
+            loaded++;
+            if (loaded === files.length) {
+              currentSlideIdx = sliderImagesList.length - 1;
+              syncCurrentProductThumbs(true);
+              updateSliderView();
+              renderSliderThumbsStrip();
+              alert(`${files.length}장의 사진이 대표 슬라이드에 추가되었습니다.`);
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      input.value = '';
+    }
+
+    // 4) 현재 사진 삭제
+    function deleteCurrentSlide() {
+      if (!isUserAdmin()) {
+        alert('🔒 관리자(본사) 권한이 필요합니다.');
+        return;
+      }
+      if (sliderImagesList.length <= 1) {
+        alert('상품에는 최소 1장 이상의 대표이미지가 등록되어 있어야 하므로 삭제할 수 없습니다.');
+        return;
+      }
+      const targetIdx = currentSlideIdx;
+      if (!confirm(`현재 보고 계신 ${targetIdx + 1}번째 사진을 삭제하시겠습니까?`)) {
+        return;
+      }
+      sliderImagesList.splice(targetIdx, 1);
+      if (currentSlideIdx >= sliderImagesList.length) {
+        currentSlideIdx = sliderImagesList.length - 1;
+      }
+      syncCurrentProductThumbs(true);
+      updateSliderView();
+      renderSliderThumbsStrip();
+      alert('사진이 슬라이드에서 삭제되었습니다.');
+    }
+
+    // 5) 메인 카탈로그 카드에서 직접 대표사진 변경
+    let targetCardItemId = '';
+    function triggerCardThumbEdit(itemId) {
+      if (!isUserAdmin()) {
+        alert('🔒 관리자(본사) 권한이 필요합니다.');
+        return;
+      }
+      targetCardItemId = itemId;
+      const inp = document.getElementById('adminCardThumbInput');
+      if (inp) inp.click();
+    }
+
+    function handleCardThumbFile(input) {
+      if (input.files && input.files[0] && targetCardItemId) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const newImg = e.target.result;
+          if (products[targetCardItemId]) {
+            products[targetCardItemId].thumb = newImg;
+            if (products[targetCardItemId].thumbs && products[targetCardItemId].thumbs.length > 0) {
+              products[targetCardItemId].thumbs[0] = newImg;
+            } else {
+              products[targetCardItemId].thumbs = [newImg];
+            }
+          }
+          if (currentItem && (currentItem.id === targetCardItemId || currentDetailItemId === targetCardItemId)) {
+            currentItem.thumb = newImg;
+            if (sliderImagesList && sliderImagesList.length > 0) {
+              sliderImagesList[0] = newImg;
+              updateSliderView();
+              renderSliderThumbsStrip();
+            }
+          }
+          saveProductsToStorage();
+          renderProductGrid();
+          alert('대표이미지가 성공적으로 변경되었습니다!');
+        };
+        reader.readAsDataURL(file);
+      }
+      input.value = '';
     }
 
     // 색상 옵션 클릭 시 해당 단독 색상 이미지로 전환
@@ -4404,6 +4807,7 @@
       try {
         const item = (products && products[itemId]) ? products[itemId] : products.item1;
         currentItem = item;
+        currentDetailItemId = itemId;
 
         const titleEl = document.getElementById('kurlyProductTitle');
         if (titleEl) titleEl.innerText = item.title;
@@ -4486,6 +4890,10 @@
         const isAdminUser = isUserAdmin();
         const dAdminBar = document.getElementById('detailAdminBar');
         if (dAdminBar) dAdminBar.style.display = isAdminUser ? 'flex' : 'none';
+        const sliderAdminBar = document.getElementById('adminSliderToolbar');
+        if (sliderAdminBar) sliderAdminBar.style.display = isAdminUser ? 'flex' : 'none';
+        const slideBadge = document.getElementById('adminSlideBadge');
+        if (slideBadge) slideBadge.style.display = isAdminUser ? 'inline-flex' : 'none';
         document.querySelectorAll('.policy-edit-btn').forEach(btn => {
           btn.style.display = isAdminUser ? 'inline-flex' : 'none';
         });
@@ -5162,6 +5570,10 @@
       if (prodRegBtn) prodRegBtn.style.display = isAdmin ? 'inline-flex' : 'none';
       if (showcaseRegBtn) showcaseRegBtn.style.display = isAdmin ? 'inline-flex' : 'none';
       if (detailAdminBar) detailAdminBar.style.display = isAdmin ? 'flex' : 'none';
+      const sliderAdminBar = document.getElementById('adminSliderToolbar');
+      if (sliderAdminBar) sliderAdminBar.style.display = isAdmin ? 'flex' : 'none';
+      const slideBadge = document.getElementById('adminSlideBadge');
+      if (slideBadge) slideBadge.style.display = isAdmin ? 'inline-flex' : 'none';
 
       // 3. 공통 정책 이미지 [교체하기] 버튼 관리자만 노출
       document.querySelectorAll('.policy-edit-btn').forEach(btn => {
@@ -5688,6 +6100,10 @@
   </footer>
 
 <input type="file" id="policyImgFileInput" accept="image/*" style="display:none;" onchange="handlePolicyImgFile(this)">
+  <!-- 관리자 전용 대표이미지 편집 파일 입력 필드 -->
+  <input type="file" id="adminReplaceSlideInput" accept="image/*" style="display:none;" onchange="handleReplaceSlideFile(this)">
+  <input type="file" id="adminAddSlidesInput" accept="image/*" multiple style="display:none;" onchange="handleAddSlidesFiles(this)">
+  <input type="file" id="adminCardThumbInput" accept="image/*" style="display:none;" onchange="handleCardThumbFile(this)">
 
   <!-- ========================================================
        1. [순수 상품 등록 전용 모달] - 주문/송장 분리 완료

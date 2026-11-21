@@ -2354,32 +2354,15 @@
       margin-bottom: 60px;
     }
 
+    /* 좌측 대표 상품 이미지 영역 (메인 대표 이미지 1개 + 하단 썸네일 스트립 세로 배치) */
     .kurly-product-image-box {
       position: sticky;
       top: 80px;
-      border-radius: 20px;
-      overflow: hidden;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      aspect-ratio: 1 / 1;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      box-sizing: border-box;
-    }
-
-    .kurly-product-image-box img {
       width: 100%;
-      height: 100%;
-      object-fit: contain;
-      transition: transform 0.4s ease;
-      filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.06));
-    }
-
-    .kurly-product-image-box:hover img {
-      transform: scale(1.03);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-sizing: border-box;
     }
 
     .kurly-product-order-box {
@@ -2879,19 +2862,21 @@
 
 
 <style id="custom-shop-11-styles">
-  /* 9. 대표 썸네일 캐러셀 슬라이더 */
+  /* 9. 대표 썸네일 캐러셀 슬라이더 (대표이미지 1개가 시원하고 크게 돋보이는 1:1 정방형 메인 뷰어) */
   .kurly-slider-container {
     position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
-    border-radius: 14px;
+    border-radius: 20px;
     overflow: hidden;
     background: #ffffff;
     border: 1.5px solid #e2e8f0;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
   }
   .kurly-slider-img {
     width: 100%;
@@ -2899,80 +2884,114 @@
     object-fit: contain;
     display: block;
     transition: opacity 0.25s ease, transform 0.25s ease;
-    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.06));
+    filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.07));
+  }
+  .kurly-slider-container:hover .kurly-slider-img {
+    transform: scale(1.02);
   }
   .slider-arrow-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 38px;
-    height: 38px;
-    background: rgba(255, 255, 255, 0.9);
+    width: 42px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.92);
     border: 1px solid #cbd5e1;
     border-radius: 50%;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 900;
     color: #1e293b;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 10;
   }
   .slider-arrow-btn:hover {
-    background: #2563eb;
+    background: #0284c7;
     color: #ffffff;
-    border-color: #2563eb;
+    border-color: #0284c7;
     transform: translateY(-50%) scale(1.08);
   }
-  .slider-arrow-prev { left: 12px; }
-  .slider-arrow-next { right: 12px; }
+  .slider-arrow-prev { left: 14px; }
+  .slider-arrow-next { right: 14px; }
   .slider-counter-badge {
     position: absolute;
-    bottom: 12px;
-    right: 14px;
+    bottom: 14px;
+    right: 16px;
     background: rgba(15, 23, 42, 0.75);
     color: #ffffff;
     font-size: 12px;
     font-weight: 700;
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: 999px;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(6px);
     z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   }
+  /* 하단 여러 장 넘겨보기 미니 썸네일 스트립 */
   .slider-thumbs-strip {
     display: flex;
-    gap: 8px;
-    margin-top: 10px;
+    gap: 10px;
+    width: 100%;
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding: 4px 2px 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    align-items: center;
+  }
+  .slider-thumbs-strip::-webkit-scrollbar {
+    height: 6px;
+  }
+  .slider-thumbs-strip::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .slider-thumbs-strip::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  .slider-thumbs-strip::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
   }
   .slider-thumb-item {
-    width: 54px;
-    height: 54px;
-    border-radius: 8px;
+    width: 68px;
+    height: 68px;
+    border-radius: 12px;
     border: 2px solid #e2e8f0;
     overflow: hidden;
     cursor: pointer;
     flex-shrink: 0;
-    opacity: 0.65;
-    transition: all 0.15s ease;
+    background: #ffffff;
+    opacity: 0.6;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    box-sizing: border-box;
   }
   .slider-thumb-item:hover {
     opacity: 1;
     border-color: #94a3b8;
+    transform: translateY(-2px);
   }
   .slider-thumb-item.active {
     opacity: 1;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    border-color: #0284c7;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+    transform: translateY(-2px);
   }
   .slider-thumb-item img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    border-radius: 8px;
+    display: block;
   }
 
   /* 4. 구매수량 / 실크인쇄 / 적용단가 / 추가합계금액 / 부가세 / 총합계금액 견적표 (KakaoTalk_20261108_125414930.png 완벽 일치) */
@@ -4276,7 +4295,11 @@
       }
 
       document.querySelectorAll('.slider-thumb-item').forEach((item, idx) => {
-        item.classList.toggle('active', idx === currentSlideIdx);
+        const isActive = (idx === currentSlideIdx);
+        item.classList.toggle('active', isActive);
+        if (isActive && typeof item.scrollIntoView === 'function') {
+          item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
       });
 
       // 0번(대표 이미지: 여러 개 모여 있는 전색상 컷)일 때와 각 색상 슬라이드일 때 뱃지/칩 자동 동기화

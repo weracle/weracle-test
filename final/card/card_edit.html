@@ -1135,12 +1135,18 @@
                 </div>
                 <div class="logo-uploader-info">
                     <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <button type="button" class="btn-upload-file" id="btn-trigger-logo-upload" style="cursor:pointer; flex:1;" onclick="triggerLogoFileInput()">
-                            <i class="fa-solid fa-arrow-up-from-bracket"></i> 로고 파일 업로드 (PNG 추천)
+                        <button type="button" class="btn-upload-file" id="btn-trigger-logo-upload" style="cursor:pointer; flex:1.2; min-width:140px;" onclick="triggerLogoFileInput()">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i> 로고 파일 직접 업로드
+                        </button>
+                        <button type="button" class="btn-subtle" id="btn-import-mypage-logo" style="cursor:pointer; padding:8px 12px; font-size:12px; font-weight:700; background:#f0f9ff; color:#0284c7; border:1px solid #bae6fd; border-radius:8px; display:inline-flex; align-items:center; gap:5px;" onclick="importMyPageLogo()" title="마이페이지에 등록된 로고 가져오기">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> 마이페이지 로고 연동
                         </button>
                         <button type="button" class="btn-clear-logo" id="btn-clear-logo" style="cursor:pointer;" onclick="clearLogo()" title="로고 제거">
                             <i class="fa-solid fa-trash-can"></i> 삭제
                         </button>
+                    </div>
+                    <div id="mypage-logo-badge" style="display:none; font-size:11.5px; color:#0284c7; font-weight:600; margin-top:6px; align-items:center; gap:4px;">
+                        <i class="fa-solid fa-circle-check"></i> 마이페이지 등록 로고가 자동으로 연동되었습니다.
                     </div>
                     <input type="file" id="file-logo-input" accept="image/*" style="display:none;" onchange="handleLogoFileSelect(this)">
                     <div style="font-size:11.5px; color:#64748b; margin-top:6px;">
@@ -2296,8 +2302,30 @@
             if (document.getElementById('input-sticker-bg-opacity')) document.getElementById('input-sticker-bg-opacity').value = sOpacity;
             if (document.getElementById('label-sticker-bg-opacity')) document.getElementById('label-sticker-bg-opacity').textContent = sOpacity + '%';
 
-            // 로고 정보 로드
-            currentLogoUrl = cardData.logo_url || fallbackUser.logo_url || '';
+            // 마이페이지 등록 로고 자동 탐색
+            window.myPageRegisteredLogo = (function() {
+                try {
+                    return (fallbackUser && fallbackUser.logo_url) ||
+                           localStorage.getItem('weracle_user_logo') ||
+                           (window.currentProfile && window.currentProfile.logo_url) ||
+                           (window.parent && window.parent.currentProfile && window.parent.currentProfile.logo_url) ||
+                           (JSON.parse(localStorage.getItem('weracle_current_profile') || '{}').logo_url) ||
+                           '';
+                } catch(e) { return ''; }
+            })();
+
+            // 카드에 저장된 로고가 없으면 마이페이지 로고를 1순위로 자동 연동!
+            currentLogoUrl = cardData.logo_url || window.myPageRegisteredLogo || '';
+
+            // 마이페이지 로고 자동 연동 뱃지 표시 제어
+            const mpBadge = document.getElementById('mypage-logo-badge');
+            if (mpBadge) {
+                if (currentLogoUrl && window.myPageRegisteredLogo && currentLogoUrl === window.myPageRegisteredLogo) {
+                    mpBadge.style.display = 'inline-flex';
+                } else {
+                    mpBadge.style.display = 'none';
+                }
+            }
             currentLogoX = (cardData.logo_x !== undefined && cardData.logo_x !== null) ? cardData.logo_x : null;
             currentLogoY = (cardData.logo_y !== undefined && cardData.logo_y !== null) ? cardData.logo_y : null;
 
@@ -2558,7 +2586,9 @@
                     if (logoUrlInput) logoUrlInput.value = logoDataUrl;
 
                     syncLivePreview();
-                    showToast('🛡️ 회사 / 소속 로고가 등록되었습니다! 스마트폰 화면에서 마우스로 원하는 위치로 옮겨보세요.');
+                    const mpBadge = document.getElementById('mypage-logo-badge');
+                    if (mpBadge) mpBadge.style.display = 'none';
+                    showToast('🛡️ 회사 / 소속 로고가 직접 등록되었습니다! 스마트폰 화면에서 마우스로 원하는 위치로 옮겨보세요.');
                 };
                 img.src = e.target.result;
             };
@@ -2581,6 +2611,42 @@
             syncLivePreview();
         }
         window.onLogoUrlInput = onLogoUrlInput;
+
+        function importMyPageLogo() {
+            const myLogo = window.myPageRegisteredLogo || (function() {
+                try {
+                    return localStorage.getItem('weracle_user_logo') ||
+                           (window.currentProfile && window.currentProfile.logo_url) ||
+                           (window.parent && window.parent.currentProfile && window.parent.currentProfile.logo_url) ||
+                           (JSON.parse(localStorage.getItem('weracle_current_profile') || '{}').logo_url) ||
+                           '';
+                } catch(e) { return ''; }
+            })();
+
+            if (!myLogo) {
+                alert('마이페이지에 등록된 로고가 없습니다.\n마이페이지에서 먼저 로고를 등록하시거나, 직접 파일 업로드 버튼을 이용해 주세요.');
+                return;
+            }
+
+            currentLogoUrl = myLogo;
+            const logoUrlInput = document.getElementById('input-logo-url');
+            if (logoUrlInput) logoUrlInput.value = myLogo;
+
+            const previewImg = document.getElementById('logo-preview-img');
+            const placeholder = document.getElementById('logo-placeholder');
+            if (previewImg) {
+                previewImg.src = myLogo;
+                previewImg.style.display = 'block';
+            }
+            if (placeholder) placeholder.style.display = 'none';
+
+            const mpBadge = document.getElementById('mypage-logo-badge');
+            if (mpBadge) mpBadge.style.display = 'inline-flex';
+
+            syncLivePreview();
+            showToast('🏢 마이페이지의 로고가 디지털 명함에 성공적으로 연동되었습니다!');
+        }
+        window.importMyPageLogo = importMyPageLogo;
 
         function clearLogo() {
             currentLogoUrl = '';

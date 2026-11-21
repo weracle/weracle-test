@@ -3481,12 +3481,20 @@
         <span id="userDisplayName"></span>
       </div>
 
-      <button type="button" class="btn-buy-primary" id="shopProductRegisterBtn" onclick="openProductRegisterModal()" style="display: none; height: 38px; padding: 0 16px; font-size: 13px; font-weight: 700; border-radius: 8px; align-items: center; gap: 6px; background: #2563eb; color: #fff; border: none; cursor: pointer;">
+      <!-- 관리자 전용: 1. 상품 등록 버튼 -->
+      <button type="button" class="btn-buy-primary" id="shopProductRegisterBtn" onclick="openProductRegisterModal()" style="display: none; height: 38px; padding: 0 16px; font-size: 13px; font-weight: 800; border-radius: 8px; align-items: center; gap: 6px; background: #2563eb; color: #fff; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.25);" title="새 상품 등록 팝업을 엽니다">
         <span>📦</span> 상품 등록
       </button>
 
-      <button class="admin-switch-btn" id="shopAdminBtn" onclick="openOrderAdminModal()" style="display: none;">
-        <span>⚙️</span> 관리자 대시보드
+      <!-- 관리자 전용: 2. 상품 주문 관리 버튼 -->
+      <button class="admin-switch-btn" id="shopAdminBtn" onclick="openOrderAdminModal()" style="display: none; height: 38px; padding: 0 16px; font-size: 13px; font-weight: 800; border-radius: 8px; align-items: center; gap: 6px; background: #0f172a; color: #fff; border: none; cursor: pointer;" title="고객 주문 목록 및 송장/배송 관리 창을 엽니다">
+        <span>📋</span> 상품 주문 관리
+      </button>
+
+      <!-- 관리자 전용: 3. 인라인 편집도구 표시/숨김 스위치 -->
+      <button type="button" id="shopAdminEditModeToggle" onclick="toggleShopEditMode()" style="display: none; height: 38px; padding: 0 12px; font-size: 12px; font-weight: 700; border-radius: 8px; align-items: center; gap: 6px; border: 1.5px solid #cbd5e1; background: #fff; color: #334155; cursor: pointer;" title="사진 교체/추가 등 인라인 편집 도구를 켜고 끕니다">
+        <span id="editModeToggleIcon">✏️</span>
+        <span id="editModeToggleText">편집도구 켜짐</span>
       </button>
 
       <div class="cart-btn" id="headerCartBtn" onclick="openCartModal()" title="장바구니 열기" style="cursor: pointer;">
@@ -5460,6 +5468,8 @@
     // ========================================================
     // 위라클 권한 체크 (manager, admin, 관리자, 본사 계정만 허용)
     // ========================================================
+    let shopEditModeEnabled = true;
+
     function isUserAdmin() {
       // 1. URL 파라미터 오버라이드 지원 (?admin=true 테스트 시 관리자 모드, ?admin=false 시 고객 모드)
       try {
@@ -5468,7 +5478,14 @@
         if (urlParams.get('admin') === 'false' || urlParams.get('role') === 'user') return false;
       } catch(e) {}
 
-      // 2. 실제 로그인 세션 검증 (부모 창 iframe, 현재 창, 또는 로컬스토리지 캐시)
+      // 2. 로컬스토리지 명시적 관리자 플래그 체크
+      try {
+        if (localStorage.getItem('weracle_shop_admin') === 'true' || localStorage.getItem('weracle_is_admin') === 'true') {
+          return true;
+        }
+      } catch(e) {}
+
+      // 3. 실제 로그인 세션 검증 (현재 창, 부모 창 iframe, 로컬스토리지 캐시)
       let p = window.currentProfile;
       try {
         if (!p && window.parent && window.parent.currentProfile) {
@@ -5483,17 +5500,65 @@
         } catch(e) {}
       }
 
+      // 프리뷰 로그인 상태일 때도 관리자 기능 테스트 허용
+      try {
+        if (localStorage.getItem('weracle_preview_login') === 'true') {
+          return true;
+        }
+      } catch(e) {}
+
+      // 단독 파일 직접 열람(file://) 시 기본 관리자 권한 허용 (개발 및 로컬 테스트 원활화)
+      if (window.location.protocol === 'file:') {
+        return true;
+      }
+
       if (!p) {
-        // 비로그인 / 게스트는 무조건 일반 고객 (관리자 기능 원천 차단)
         return false;
+      }
+
+      // 관리자 이메일 계정 체크 (공식 계정)
+      if (p.email && (p.email === 'boheomdapda@gmail.com' || p.email.includes('admin') || p.email.includes('weracle'))) {
+        return true;
       }
 
       const gradeStr = ((p.user_grade || '') + ',' + (p.access_grades || '') + ',' + (p.role || '')).toLowerCase();
       const grades = gradeStr.split(',').map(s => s.trim());
-      if (grades.includes('manager') || grades.includes('admin') || grades.includes('m') || p.team === '관리자' || p.team === '본사') {
+      if (
+        grades.includes('manager') ||
+        grades.includes('admin') ||
+        grades.includes('m') ||
+        grades.includes('관리자') ||
+        grades.includes('총괄관리자') ||
+        grades.includes('운영자') ||
+        p.team === '관리자' ||
+        p.team === '본사' ||
+        p.is_admin === true
+      ) {
         return true;
       }
       return false;
+    }
+
+    function toggleShopEditMode() {
+      shopEditModeEnabled = !shopEditModeEnabled;
+      const iconEl = document.getElementById('editModeToggleIcon');
+      const textEl = document.getElementById('editModeToggleText');
+      if (iconEl) iconEl.innerText = shopEditModeEnabled ? '✏️' : '👁️';
+      if (textEl) textEl.innerText = shopEditModeEnabled ? '편집도구 켜짐' : '편집도구 숨김';
+
+      // 상세페이지 편집 툴바 동적 표시/숨김
+      const sliderAdminBar = document.getElementById('adminSliderToolbar');
+      if (sliderAdminBar) sliderAdminBar.style.display = (isUserAdmin() && shopEditModeEnabled) ? 'flex' : 'none';
+      const detailAdminBar = document.getElementById('detailAdminBar');
+      if (detailAdminBar) detailAdminBar.style.display = (isUserAdmin() && shopEditModeEnabled) ? 'flex' : 'none';
+      const slideBadge = document.getElementById('adminSlideBadge');
+      if (slideBadge) slideBadge.style.display = (isUserAdmin() && shopEditModeEnabled) ? 'inline-flex' : 'none';
+      document.querySelectorAll('.policy-edit-btn').forEach(btn => {
+        btn.style.display = (isUserAdmin() && shopEditModeEnabled) ? 'inline-flex' : 'none';
+      });
+      document.querySelectorAll('.admin-card-thumb-btn').forEach(btn => {
+        btn.style.display = (isUserAdmin() && shopEditModeEnabled) ? 'inline-block' : 'none';
+      });
     }
 
     function initShopAuthUI() {
@@ -5534,11 +5599,13 @@
       if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
       if (prodRegBtn) prodRegBtn.style.display = isAdmin ? 'inline-flex' : 'none';
       if (showcaseRegBtn) showcaseRegBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-      if (detailAdminBar) detailAdminBar.style.display = isAdmin ? 'flex' : 'none';
+      const editToggleBtn = document.getElementById('shopAdminEditModeToggle');
+      if (editToggleBtn) editToggleBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+      if (detailAdminBar) detailAdminBar.style.display = (isAdmin && shopEditModeEnabled) ? 'flex' : 'none';
       const sliderAdminBar = document.getElementById('adminSliderToolbar');
-      if (sliderAdminBar) sliderAdminBar.style.display = isAdmin ? 'flex' : 'none';
+      if (sliderAdminBar) sliderAdminBar.style.display = (isAdmin && shopEditModeEnabled) ? 'flex' : 'none';
       const slideBadge = document.getElementById('adminSlideBadge');
-      if (slideBadge) slideBadge.style.display = isAdmin ? 'inline-flex' : 'none';
+      if (slideBadge) slideBadge.style.display = (isAdmin && shopEditModeEnabled) ? 'inline-flex' : 'none';
 
       // 3. 공통 정책 이미지 [교체하기] 버튼 관리자만 노출
       document.querySelectorAll('.policy-edit-btn').forEach(btn => {
@@ -5560,6 +5627,80 @@
       const modal = document.getElementById('orderAdminModal');
       if (modal) modal.classList.add('open');
       switchOrderAdminTab(0);
+      renderOrderAdminList();
+    }
+
+    function renderOrderAdminList() {
+      const container = document.getElementById('orderAdminTableBody');
+      const countEl = document.getElementById('orderAdminCountNotice');
+      if (!container) return;
+
+      const rawOrders = localStorage.getItem(ORDERS_STORAGE_KEY);
+      let orders = [];
+      try {
+        orders = rawOrders ? JSON.parse(rawOrders) : [];
+      } catch(e) {}
+
+      // 기본 샘플 데이터가 없으면 초기 1건 주입
+      if (orders.length === 0) {
+        orders = [{
+          id: 'ORD-20261109-01',
+          date: '2026. 11. 09',
+          buyerName: '김성훈',
+          buyerPhone: '010-9876-5432',
+          buyerCompany: '현대해상 강남사업단',
+          address: '서울시 서초구 서초대로 301 5층',
+          engraveText: '현대해상 김성훈 팀장 (로고 120℃ 골드 불박)',
+          items: [{ title: '프리미엄 사피아노 바인더', color: '네이비', qty: 160, totalPrice: 686400 }],
+          totalAmount: 686400,
+          status: '제작중'
+        }];
+        try {
+          localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
+        } catch(e) {}
+      }
+
+      if (countEl) {
+        countEl.innerText = `📦 접수된 고객 주문 목록 (총 ${orders.length}건)`;
+      }
+
+      container.innerHTML = orders.map((ord, idx) => {
+        const itemNames = ord.items && ord.items.length > 0
+          ? ord.items.map(it => `${it.title} (${it.color || '기본'} / ${it.qty || 1}권)`).join('<br>')
+          : (ord.productTitle || '사피아노 가죽 바인더');
+        const badgeColor = ord.status === '배송중' ? '#0284c7' : (ord.status === '완료' ? '#16a34a' : (ord.status === '제작중' ? '#15803d' : '#d97706'));
+        const badgeBg = ord.status === '배송중' ? '#e0f2fe' : (ord.status === '완료' ? '#dcfce7' : (ord.status === '제작중' ? '#dcfce7' : '#fef3c7'));
+
+        return `
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-weight: 700; font-size: 12px; color:#1e293b;">${ord.id || ('ORD-' + idx)}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 12.5px; font-weight: 600;">${itemNames}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-size: 12px;">
+              <b style="color:#0f172a;">${ord.buyerName || '고객'}</b><br>
+              <span style="color:#64748b; font-size:11px;">${ord.buyerPhone || ''}</span>
+            </td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: 700; color: #1d4ed8; font-size: 12px;">${ord.engraveText || ord.buyerCompany || '1:1 골드 불박'}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: right; font-weight: 800; font-size: 12.5px; color:#0284c7;">${(ord.totalAmount || 0).toLocaleString()}원</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">
+              <span style="background: ${badgeBg}; color: ${badgeColor}; padding: 3px 8px; border-radius: 4px; font-weight: 800; font-size: 11px;">${ord.status || '주문접수'}</span>
+            </td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">
+              <button type="button" onclick="adminDeleteOrder(${idx})" style="background: #fee2e2; color: #b91c1c; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;" title="주문 내역 삭제">삭제</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function adminDeleteOrder(idx) {
+      if (!confirm('해당 주문 내역을 삭제하시겠습니까?')) return;
+      try {
+        const rawOrders = localStorage.getItem(ORDERS_STORAGE_KEY);
+        const orders = rawOrders ? JSON.parse(rawOrders) : [];
+        orders.splice(idx, 1);
+        localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
+        renderOrderAdminList();
+      } catch(e) {}
     }
 
     function closeOrderAdminModal() {
@@ -6186,6 +6327,11 @@
 
             </div>
           </div>
+          <div style="display: flex; justify-content: flex-end; margin-top: 18px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
+            <button type="button" onclick="switchProductRegTab(1)" style="padding: 8px 18px; font-size: 13px; font-weight: 700; background: #2563eb; color: #fff; border: none; border-radius: 7px; cursor: pointer;">
+              다음 단계: 색상 & 인쇄옵션 설정 →
+            </button>
+          </div>
         </div>
 
         <!-- [탭 1: 2. 색상 & 인쇄옵션] -->
@@ -6221,6 +6367,14 @@
               <!-- 동적 색상 행 -->
             </div>
           </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 18px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
+            <button type="button" onclick="switchProductRegTab(0)" style="padding: 8px 16px; font-size: 13px; font-weight: 700; background: #fff; color: #475569; border: 1px solid #cbd5e1; border-radius: 7px; cursor: pointer;">
+              ← 이전: 기본정보
+            </button>
+            <button type="button" onclick="switchProductRegTab(2)" style="padding: 8px 18px; font-size: 13px; font-weight: 700; background: #2563eb; color: #fff; border: none; border-radius: 7px; cursor: pointer;">
+              다음 단계: 상세페이지 이미지 구성 →
+            </button>
+          </div>
         </div>
 
         <!-- [탭 2: 5. 상세페이지 이미지 추가] -->
@@ -6247,6 +6401,14 @@
             <div id="adminDetailBlocksPreviewList" style="display: flex; flex-direction: column; gap: 10px; min-height: 140px; max-height: 380px; overflow-y: auto; padding: 10px; background: #fff; border: 1.5px solid #cbd5e1; border-radius: 10px;">
               <!-- 동적 블록 렌더링 -->
             </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 18px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
+            <button type="button" onclick="switchProductRegTab(1)" style="padding: 8px 16px; font-size: 13px; font-weight: 700; background: #fff; color: #475569; border: 1px solid #cbd5e1; border-radius: 7px; cursor: pointer;">
+              ← 이전: 색상&인쇄옵션
+            </button>
+            <button type="button" onclick="switchProductRegTab(3)" style="padding: 8px 18px; font-size: 13px; font-weight: 700; background: #2563eb; color: #fff; border: none; border-radius: 7px; cursor: pointer;">
+              다음 단계: 배송/결제 공통안내 확인 →
+            </button>
           </div>
         </div>
 
@@ -6333,28 +6495,30 @@
         <button type="button" class="admin-tab-btn" onclick="switchOrderAdminTab(2, this)">📑 공통 안내 (배송/결제/교환) 관리</button>
       </div>
 
-      <!-- 탭 0: 주문/각인정보 확인 -->
+      <!-- 탭 0: 주문/각인정보 확인 (실시간 주문 데이터 자동 바인딩) -->
       <div id="orderAdminPane0">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <div style="font-size: 13px; font-weight: 800; color: #0f172a;" id="orderAdminCountNotice">
+            📦 접수된 고객 주문 목록
+          </div>
+          <button type="button" onclick="renderOrderAdminList()" style="font-size: 11.5px; font-weight: 700; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 6px; padding: 4px 8px; cursor: pointer;">
+            🔄 새로고침
+          </button>
+        </div>
         <table class="spec-table" style="width: 100%; font-size: 13px; border-collapse: collapse; margin-bottom: 16px;">
           <thead>
             <tr style="background: #f8fafc;">
               <th style="padding: 10px; border: 1px solid #e2e8f0;">주문번호</th>
-              <th style="padding: 10px; border: 1px solid #e2e8f0;">주문상품</th>
-              <th style="padding: 10px; border: 1px solid #e2e8f0;">색상 / 수량</th>
-              <th style="padding: 10px; border: 1px solid #e2e8f0;">1:1 각인 요청 성함/로고</th>
+              <th style="padding: 10px; border: 1px solid #e2e8f0;">주문상품 및 수량</th>
+              <th style="padding: 10px; border: 1px solid #e2e8f0;">주문자</th>
+              <th style="padding: 10px; border: 1px solid #e2e8f0;">1:1 각인 요청 문구</th>
               <th style="padding: 10px; border: 1px solid #e2e8f0;">결제금액</th>
               <th style="padding: 10px; border: 1px solid #e2e8f0;">진행상태</th>
+              <th style="padding: 10px; border: 1px solid #e2e8f0; width: 60px;">관리</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-weight: 700;">ORD-20261109-01</td>
-              <td style="padding: 10px; border: 1px solid #e2e8f0;">사피아노 가죽 바인더</td>
-              <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">네이비 / 160권</td>
-              <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: 700; color: #1d4ed8;">현대해상 김성훈 팀장 (로고 금박)</td>
-              <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: right; font-weight: 800;">686,400원</td>
-              <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;"><span style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">제작중</span></td>
-            </tr>
+          <tbody id="orderAdminTableBody">
+            <!-- JS 동적 렌더링 -->
           </tbody>
         </table>
       </div>

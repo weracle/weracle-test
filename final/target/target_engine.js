@@ -4,9 +4,9 @@
  * - 고객 계약(CRM UID 기반 보험관리, 가입내역, 보험1~20_만기일) 실시간 계산
  * - 생일: 오직 당일(D-0) 생일자만 100% 매칭
  * - 상령일: 상령일 7일 전(D-7) ~ 상령일 당일(D-0)만 100% 매칭
- * - 만기: 만기 7일 전(D-7) ~ 만기 당일(D-0)만 100% 매칭
- *   - 자동차보험 만기: 보험종류 === '자동차보험' (또는 자동차_만기일)
- *   - 장기보험 만기: 보험종류 === '장기보험' (또는 장기)
+ * - 만기: 만기 30일 전(D-30) ~ 만기 당일(D-0)까지 월 경계 완벽 매칭
+ *   - 자동차보험 만기: 보험종류 === '자동차보험' (또는 자동차_만기일, 차_만기일 등)
+ *   - 장기보험 만기: 보험종류 === '장기보험' (또는 장기, 만기일자, 80세/100세만기)
  *   - 일반/재물보험 만기: 현재 미세팅 (매칭 비활성)
  * - 이달의 추천상품: 터치인사이트 100% 엄격 매칭 (미설정 시 절대 노출 안 됨)
  */
@@ -74,11 +74,24 @@ const TargetEngine = (function() {
         return null;
     }
 
-    // 2. 만기일/날짜 파싱 헬퍼 (YYYY-MM-DD, YYYYMMDD, MMDD 등)
-    function parseDateString(dateVal) {
+    // 2. 만기일/날짜 파싱 헬퍼 (YYYY-MM-DD, YYYYMMDD, MMDD, 80세만기 등 지원)
+    function parseDateString(dateVal, clientBirth) {
         if (!dateVal) return null;
         const str = String(dateVal).trim();
         if (!str || str === '-' || str === 'null' || str === 'undefined') return null;
+
+        // 특수 텍스트 만기 처리 (예: "80세만기", "100세만기", "90세만기")
+        if (str.includes('세만기') && clientBirth && clientBirth.year) {
+            const ageMatch = str.match(/(\d{1,3})\s*세만기/);
+            if (ageMatch) {
+                const targetAge = parseInt(ageMatch[1], 10);
+                return {
+                    year: clientBirth.year + targetAge,
+                    month: clientBirth.month || 1,
+                    day: clientBirth.day || 1
+                };
+            }
+        }
 
         const cleanNums = str.replace(/[^0-9]/g, '');
         let y = null, m = null, d = null;
@@ -87,6 +100,20 @@ const TargetEngine = (function() {
             y = parseInt(cleanNums.substring(0, 4), 10);
             m = parseInt(cleanNums.substring(4, 6), 10);
             d = parseInt(cleanNums.substring(6, 8), 10);
+        } else if (cleanNums.length === 6) {
+            let yy = parseInt(cleanNums.substring(0, 2), 10);
+            let firstYear = yy >= 30 ? (1900 + yy) : (2000 + yy);
+            let mm = parseInt(cleanNums.substring(2, 4), 10);
+            let dd = parseInt(cleanNums.substring(4, 6), 10);
+            if (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) {
+                y = firstYear;
+                m = mm;
+                d = dd;
+            } else {
+                y = parseInt(cleanNums.substring(0, 4), 10);
+                m = parseInt(cleanNums.substring(4, 6), 10);
+                d = 1;
+            }
         } else if (cleanNums.length === 4) {
             m = parseInt(cleanNums.substring(0, 2), 10);
             d = parseInt(cleanNums.substring(2, 4), 10);
@@ -105,30 +132,32 @@ const TargetEngine = (function() {
         return null;
     }
 
-    // 3. 고객의 전체 계약 전수 추출 (가입내역 JSON 배열, 보험1~20_만기일, 상품명, 자동차_만기일 등)
+    // 3. 고객의 전체 계약 전수 추출 (가입내역 JSON 배열, 보험1~20_만기일자, 자동차_만기일 등 전수 포괄)
     function extractAllClientContracts(client) {
         if (!client) return [];
         const target = client.crmData || client;
         const contracts = [];
+        const clientBirth = parseClientBirthday(client);
 
-        // A. 루트 자동차 만기일
-        if (target['자동차_만기일']) {
-            const parsed = parseDateString(target['자동차_만기일']);
+        // A. 루트 자동차 만기일 (다양한 필드명 포괄 지원)
+        const autoMat = target['자동차_만기일'] || target['자동차만기일'] || target['차_만기일'] || target['차량_만기일'] || target['차량만기일'] || target['자동차_갱신일'] || target['책임종료일'];
+        if (autoMat) {
+            const parsed = parseDateString(autoMat, clientBirth);
             if (parsed) {
                 contracts.push({
                     prodName: String(target['차량번호'] || target['차종'] || target['자동차보험사'] || '자동차보험'),
                     compName: String(target['차_보험사'] || target['차_보험사명'] || target['자동차보험사'] || ''),
                     insType: '자동차보험',
                     expireParsed: parsed,
-                    raw: target['자동차_만기일']
+                    raw: autoMat
                 });
             }
         }
 
         // B. 루트 일반 만기일 및 상품명
-        const rootMat = target['만기일'] || target['갱신일'];
+        const rootMat = target['만기일'] || target['만기일자'] || target['갱신일'] || target['갱신일자'] || target['expireDate'] || target['renewalDate'];
         if (rootMat) {
-            const parsed = parseDateString(rootMat);
+            const parsed = parseDateString(rootMat, clientBirth);
             if (parsed) {
                 contracts.push({
                     prodName: String(target['상품명'] || target['대표상품'] || '보험계약'),
@@ -142,14 +171,14 @@ const TargetEngine = (function() {
 
         // C. 보험1 ~ 보험20 개별 컬럼 스캔
         for (let i = 1; i <= 20; i++) {
-            const matKey = target[`보험${i}_만기일`] || target[`보험${i}_갱신일`];
+            const matKey = target[`보험${i}_만기일`] || target[`보험${i}_만기일자`] || target[`보험${i}_갱신일`] || target[`보험${i}_갱신일자`];
             const prodKey = target[`보험${i}_상품명`];
             const compKey = target[`보험${i}_보험사명`] || target[`보험${i}_보험회사`] || target[`보험${i}_사명`];
             const typeKey = target[`보험${i}_보험종류`] || target[`보험${i}_종류`];
             const covKey = target[`보험${i}_가입내역`];
 
             if (matKey || prodKey || covKey) {
-                const parsed = parseDateString(matKey);
+                const parsed = parseDateString(matKey, clientBirth);
                 contracts.push({
                     prodName: String(prodKey || `계약 ${i}`),
                     compName: String(compKey || ''),
@@ -162,7 +191,7 @@ const TargetEngine = (function() {
         }
 
         // D. '가입내역' 및 '보험가입리스트' JSON 또는 배열 스캔
-        let rawList = target['가입내역'] || target['보험가입리스트'];
+        let rawList = target['가입내역'] || target['보험가입리스트'] || target['계약목록'] || target['insuranceList'];
         if (rawList) {
             let parsedList = [];
             if (Array.isArray(rawList)) {
@@ -175,8 +204,8 @@ const TargetEngine = (function() {
             if (Array.isArray(parsedList)) {
                 parsedList.forEach((c, idx) => {
                     if (c && typeof c === 'object') {
-                        const matVal = c['만기일'] || c['expireDate'] || c['갱신일'] || c['renewalDate'] || c['만기'];
-                        const parsed = parseDateString(matVal);
+                        const matVal = c['만기일'] || c['만기일자'] || c['expireDate'] || c['갱신일'] || c['갱신일자'] || c['renewalDate'] || c['만기'] || c['종료일'];
+                        const parsed = parseDateString(matVal, clientBirth);
                         const insType = String(c['보험종류'] || c['종류'] || c['category'] || (c['차종'] || c['차량번호'] ? '자동차보험' : '장기보험'));
                         contracts.push({
                             prodName: String(c['상품명'] || c['product'] || c['증권명'] || c['차량번호'] || `계약 ${idx+1}`),
@@ -204,25 +233,32 @@ const TargetEngine = (function() {
         const curMonth = today.getMonth() + 1;
         const curDay = today.getDate();
 
-        const bday = parseClientBirthday(target);
-        const age = bday ? bday.age : null;
-        const allContracts = extractAllClientContracts(target);
+        const allContracts = extractAllClientContracts(client);
 
         // ==========================================
-        // 1. 오늘의 추천 타겟 (Target)
+        // 1. 오늘의 추천 타겟 (Targeting)
         // ==========================================
 
-        // A. 생일 고객 (오직 당일 생일자 D-0만 100% 한정, 지난 날짜 및 D-1 이상 제외)
+        // A. 생일 고객 (오직 당일(D-0) 생일자만 100% 매칭)
         if (menuTitle.includes('생일')) {
+            const bday = parseClientBirthday(client);
             if (!bday) return { match: false };
             if (bday.month === curMonth && bday.day === curDay) {
-                return { match: true, badge: '🎂 오늘 생일', badgeColor: '#e11d48', badgeBg: '#ffe4e6', priority: 1, sortOrder: 0 };
+                return {
+                    match: true,
+                    badge: '🎂 오늘 생일',
+                    badgeColor: '#ec4899',
+                    badgeBg: '#fdf2f8',
+                    priority: 0,
+                    sortOrder: 0
+                };
             }
             return { match: false };
         }
 
-        // B. 상령일 안내 (생월 + 6개월: 상령일 7일 전(D-7)부터 당일(D-0)까지만 노출)
+        // B. 상령일 고객 (오직 상령일 7일 전(D-7) ~ 상령일 당일(D-0)만 100% 매칭)
         if (menuTitle.includes('상령일')) {
+            const bday = parseClientBirthday(client);
             if (!bday) return { match: false };
             let sangMonth = bday.month + 6;
             if (sangMonth > 12) sangMonth -= 12;
@@ -239,7 +275,7 @@ const TargetEngine = (function() {
             return { match: false };
         }
 
-        // C. 만기 고객 (자동차보험 만기 vs 장기보험 만기 - CRM 보험관리 기준)
+        // C. 만기 고객 (자동차보험 만기 vs 장기보험 만기 - D-30 및 월 경계 완벽 지원)
         if (menuTitle.includes('만기')) {
             // [일반/재물보험 만기는 현재 미세팅 처리]
             if (menuTitle.includes('재물') || menuTitle.includes('화재') || menuTitle.includes('일반')) {
@@ -248,44 +284,75 @@ const TargetEngine = (function() {
 
             let matchedContract = null;
             let minDiff = 999;
+            const todayMidnight = new Date(curYear, today.getMonth(), curDay).getTime();
+            const oneDayMs = 1000 * 60 * 60 * 24;
 
             for (let c of allContracts) {
                 if (!c.expireParsed) continue;
                 const p = c.expireParsed;
                 
-                // 만기 연도 검증 (과거 연도 제외, 당해 연도 또는 1년 이내)
-                if (p.year && p.year < curYear) continue;
-                if (p.year && p.year > curYear + 1) continue;
+                // 만기 연도 확정 (만약 연도가 없으면 올해 또는 내년으로 간주)
+                let expYear = p.year;
+                if (!expYear) {
+                    expYear = curYear;
+                    const testDate = new Date(curYear, p.month - 1, p.day).getTime();
+                    if (testDate < todayMidnight) expYear = curYear + 1;
+                }
 
-                // 당월 만기 도래 여부 검증 (만기 7일 전(D-7)부터 만기 당일(D-0)까지만)
-                if (p.month === curMonth) {
-                    const diff = p.day ? (p.day - curDay) : 0;
-                    if (diff < 0 || diff > 7) continue; // 7일 초과 또는 이미 지난 만기일 제외
+                const expDateObj = new Date(expYear, p.month - 1, p.day);
+                const expMidnight = expDateObj.getTime();
 
-                    const insType = String(c.insType || '').trim();
-                    let isTargetType = false;
+                // 정확한 남은 일수 계산 (실제 Date 타임스탬프 차이)
+                const diff = Math.round((expMidnight - todayMidnight) / oneDayMs);
 
-                    // 1) 자동차보험 만기: 보험종류가 '자동차보험'(또는 '자동차')이거나 자동차_만기일
-                    if (menuTitle.includes('자동차')) {
-                        isTargetType = insType.includes('자동차') || c.prodName.includes('자동차') || (target['자동차_만기일'] != null);
-                    } 
-                    // 2) 장기보험 만기: 보험종류가 '장기보험'(또는 '장기')인 계약 (자동차가 아닌 계약)
-                    else if (menuTitle.includes('장기')) {
-                        isTargetType = insType.includes('장기') || (!insType.includes('자동차') && !c.prodName.includes('자동차'));
-                    }
+                // 영업 타겟 범위: 만기 30일 전(D-30)부터 만기 당일(D-0)까지 완벽 포괄
+                if (diff < 0 || diff > 30) continue;
 
-                    if (isTargetType && diff < minDiff) {
-                        minDiff = diff;
-                        matchedContract = { ...c, diff: diff, month: p.month, day: p.day };
-                    }
+                const insType = String(c.insType || '').trim();
+                let isTargetType = false;
+
+                // 1) 자동차보험 만기: 보험종류가 '자동차보험'(또는 '자동차')이거나 자동차_만기일
+                if (menuTitle.includes('자동차')) {
+                    isTargetType = insType.includes('자동차') || c.prodName.includes('자동차') || (target['자동차_만기일'] != null);
+                } 
+                // 2) 장기보험 만기: 보험종류가 '장기보험'(또는 '장기')인 계약 (자동차가 아닌 계약)
+                else if (menuTitle.includes('장기')) {
+                    isTargetType = insType.includes('장기') || (!insType.includes('자동차') && !c.prodName.includes('자동차'));
+                }
+
+                if (isTargetType && diff < minDiff) {
+                    minDiff = diff;
+                    matchedContract = { ...c, diff: diff, year: expYear, month: p.month, day: p.day };
                 }
             }
 
             if (matchedContract) {
-                const badgeText = matchedContract.diff === 0 
-                    ? '오늘 만기' 
-                    : `만기 D-${matchedContract.diff} (${matchedContract.month}/${matchedContract.day})`;
-                return { match: true, badge: badgeText, badgeColor: '#d97706', badgeBg: '#fef3c7', priority: 1, sortOrder: matchedContract.diff };
+                let badgeText = '';
+                let badgeColor = '#d97706';
+                let badgeBg = '#fef3c7';
+
+                if (matchedContract.diff === 0) {
+                    badgeText = '🔥 오늘 만기';
+                    badgeColor = '#dc2626';
+                    badgeBg = '#fee2e2';
+                } else if (matchedContract.diff <= 7) {
+                    badgeText = `⏰ 만기 D-${matchedContract.diff} (${matchedContract.month}/${matchedContract.day})`;
+                    badgeColor = '#ea580c';
+                    badgeBg = '#ffedd5';
+                } else {
+                    badgeText = `만기 D-${matchedContract.diff} (${matchedContract.month}/${matchedContract.day})`;
+                    badgeColor = '#d97706';
+                    badgeBg = '#fef3c7';
+                }
+
+                return {
+                    match: true,
+                    badge: badgeText,
+                    badgeColor: badgeColor,
+                    badgeBg: badgeBg,
+                    priority: matchedContract.diff === 0 ? 0 : (matchedContract.diff <= 7 ? 1 : 2),
+                    sortOrder: matchedContract.diff
+                };
             }
             return { match: false };
         }

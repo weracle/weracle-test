@@ -1767,7 +1767,7 @@
     }
   }
   
-    /* PREVIEW MODE (Clean Pure A4 Cover Only - No adjustment buttons, no sidebar) */
+    /* PREVIEW MODE (Clean Pure A4 Cover Only - Strictly Read-Only Result Viewer) */
     html.mode-preview, body.mode-preview {
       background: transparent !important;
       overflow: hidden !important;
@@ -1775,18 +1775,43 @@
       margin: 0 !important;
       width: 100% !important;
       height: 100% !important;
+      pointer-events: none !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+    }
+    html.mode-preview * {
+      cursor: default !important;
+      pointer-events: none !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      -webkit-user-modify: read-only !important;
     }
     html.mode-preview .left-control-sidebar,
     body.mode-preview .left-control-sidebar,
     html.mode-preview .preview-floating-bar,
     body.mode-preview .preview-floating-bar,
     html.mode-preview .floating-viewport-bar,
-    body.mode-preview .floating-viewport-bar {
+    body.mode-preview .floating-viewport-bar,
+    html.mode-preview .btn-edit-badge,
+    html.mode-preview .logo-hover-badge,
+    html.mode-preview .logo-drag-handle,
+    html.mode-preview .corner-handle,
+    html.mode-preview .element-floating-dock,
+    html.mode-preview [data-html2canvas-ignore="true"] {
       display: none !important;
       visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
       height: 0 !important;
+      width: 0 !important;
       margin: 0 !important;
       padding: 0 !important;
+    }
+    html.mode-preview .editable-active {
+      outline: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
     }
     html.mode-preview .studio-app-container,
     body.mode-preview .studio-app-container {
@@ -3441,15 +3466,15 @@
             
             <div class="form-row">
               <label class="form-label">담당자 성함 및 직책</label>
-              <input type="text" class="form-input" id="inputAdvisorName" value="ㅇㅇㅇ 팀장" oninput="updateOfficialInfo()">
+              <input type="text" class="form-input" id="inputAdvisorName" value="담당 설계사" oninput="updateOfficialInfo()">
             </div>
             <div class="form-row">
               <label class="form-label">직통 핸드폰 연락처</label>
-              <input type="text" class="form-input" id="inputAdvisorPhone" value="010-1234-5678" oninput="updateOfficialInfo()">
+              <input type="text" class="form-input" id="inputAdvisorPhone" value="010-0000-0000" oninput="updateOfficialInfo()">
             </div>
             <div class="form-row">
               <label class="form-label">소속 지사 / 법인명</label>
-              <input type="text" class="form-input" id="inputAdvisorBranch" value="위라클랩" oninput="updateOfficialInfo()">
+              <input type="text" class="form-input" id="inputAdvisorBranch" value="금융보험서비스" oninput="updateOfficialInfo()">
             </div>
           </div>
 
@@ -3791,20 +3816,20 @@
     <!-- Centered Contact Pill -->
     <div style="text-align:center;">
       <div class="bojang-contact-pill" data-slot="contact">
-        <span><i class="fa-solid fa-user-tie mr-1"></i> 담당자: <b class="val-advisor">ㅇㅇㅇ 팀장</b></span>
+        <span><i class="fa-solid fa-user-tie mr-1"></i> 담당자: <b class="val-advisor">담당 설계사</b></span>
         <span class="contact-pill-divider">|</span>
-        <span><i class="fa-solid fa-phone mr-1"></i> 직통 연락처: <b class="val-phone">010-1234-5678</b></span>
+        <span><i class="fa-solid fa-phone mr-1"></i> 직통 연락처: <b class="val-phone">010-0000-0000</b></span>
       </div>
     </div>
 
     <!-- Symmetrical & Clean 1-Line Footer Bar -->
     <div class="official-footer-bar" data-slot="footer">
       <div class="footer-row-meta">
-        <span class="footer-item item-company">❚ 소속: <b class="val-company">위라클랩</b></span>
+        <span class="footer-item item-company">❚ 소속: <b class="val-company">금융보험서비스</b></span>
         <span class="footer-sep">|</span>
-        <span class="footer-item item-advisor">❚ 담당: <b class="val-advisor">ㅇㅇㅇ 팀장</b></span>
+        <span class="footer-item item-advisor">❚ 담당: <b class="val-advisor">담당 설계사</b></span>
         <span class="footer-sep">|</span>
-        <span class="footer-item item-phone">❚ 직통 핸드폰: <b class="val-phone">010-1234-5678</b></span>
+        <span class="footer-item item-phone">❚ 직통 핸드폰: <b class="val-phone">010-0000-0000</b></span>
       </div>
     </div>
 
@@ -3853,6 +3878,32 @@
     let currentMasterThemeId = '01'; // '01' | '02' | '03' | '04' | '05'
     let currentMasterCategory = 'basic'; // 'basic' | 'signature'
     let activeSignatureType = 'A'; // 'A' | 'B' | 'C' | 'D'
+    let currentLoadedCoverId = null;
+    let currentLoadedCoverTitle = null;
+
+    window.currentMasterThemeId = currentMasterThemeId;
+    window.currentLoadedCoverId = currentLoadedCoverId;
+    window.currentLoadedCoverTitle = currentLoadedCoverTitle;
+
+    function showStudioToast(msg, type = 'success') {
+      let toast = document.getElementById('studioFloatingToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'studioFloatingToast';
+        toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-20px); z-index:999999; background:rgba(15,23,42,0.95); color:#ffffff; padding:12px 24px; border-radius:30px; font-size:13.5px; font-weight:800; box-shadow:0 10px 25px rgba(0,0,0,0.4); border:1.5px solid #38bdf8; display:flex; align-items:center; gap:10px; opacity:0; pointer-events:none; transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1);';
+        document.body.appendChild(toast);
+      }
+      const icon = type === 'success' ? '<i class="fa-solid fa-circle-check" style="color:#10b981; font-size:16px;"></i>' : '<i class="fa-solid fa-circle-info" style="color:#38bdf8; font-size:16px;"></i>';
+      toast.innerHTML = icon + '<span>' + msg + '</span>';
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      clearTimeout(window.__studioToastTimer);
+      window.__studioToastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-20px)';
+      }, 3500);
+    }
+    window.showStudioToast = showStudioToast;
 
     function createCleanSuitCutoutSvgDataUrl() {
       const svg = `
@@ -3911,35 +3962,35 @@
         subHeader: '{{고객명}}의 건강한 삶을 위한',
         mainHeadline: '보장분석\n제안서',
         headlineSize: 64,
-        bannerTitle: '보답화니 박보환',
-        promiseBody: '보험으로 보답하는 보답화니\n보험다운 보험을 권하고, 정직하고 좋은 보\n험으로 고객님 신뢰에 보답드리겠습니다'
+        bannerTitle: '정직과 신뢰의 금융 파트너',
+        promiseBody: '고객님의 건강과 자산을 지키는 든든한 평생 파트너.\n정직하고 좋은 보장으로 고객님 신뢰에 보답하겠습니다.'
       },
       B: {
         subHeader: 'PREPARED FOR {{고객명}}',
         mainHeadline: '맞춤 보장분석\n프리미엄 리포트',
         headlineSize: 48,
-        bannerTitle: '평생 든든한 내 편 · 보답화니 박보환',
+        bannerTitle: '평생 든든한 내 편 · 금융 파트너',
         promiseBody: '복잡한 수십 장의 증권 속에서 꼭 지켜야 할 핵심 보장과\n불필요하게 새어 나가는 보험료를 명쾌하게 정리했습니다.'
       },
       C: {
         subHeader: 'CORPORATE & VIP ADVISORY · {{고객명}}',
         mainHeadline: '경영 리스크 &\n보장자산 진단서',
         headlineSize: 48,
-        bannerTitle: '위라클랩 본부장 박보환',
-        promiseBody: '기업의 영속성과 대표님의 자산 보호를 위한 정밀 분석 리포트.\n세무·노무·보상 네트워크로 끝까지 책임 관리합니다.'
+        bannerTitle: '기업 및 VIP 자산관리 파트너',
+        promiseBody: '기업의 영속성과 대표님의 자산 보호를 위한 정밀 분석 리포트.\n전문 네트워크로 끝까지 책임 관리합니다.'
       },
       D: {
         subHeader: '{{고객명}} 가정을 위한 따뜻한 약속',
         mainHeadline: '우리 가족 통합\n보장분석 제안서',
         headlineSize: 50,
-        bannerTitle: '우리 가족 전담 파트너 · 박보환',
+        bannerTitle: '우리 가족 전담 안심 파트너',
         promiseBody: '가입 권유보다 소중한 가족의 미래를 지키는 보장 설계.\n우리 가족 첫 주치의처럼 평생 곁에서 든든히 함께하겠습니다.'
       }
     });
 
-    const sigState = {
+    let sigState = {
       activeType: 'A',
-      simCustomer: '홍길동 고객님',
+      simCustomer: '고객 귀중',
       showClientBadge: true,
       mainColor: '#113f67',
       accentColor: '#f59e0b',
@@ -3960,26 +4011,26 @@
         topShow: true,
         topSize: 135,
         emblemSub: '보험으로 보답하는',
-        emblemMain: '보답화니',
+        emblemMain: '맞춤 보장분석',
         botSize: 225
       },
       sns: {
-        instaShow: true,
-        instaUrl: 'https://instagram.com/weraclelab',
-        blogShow: true,
-        blogUrl: 'https://blog.naver.com/weraclelab',
-        kakaoShow: true,
-        kakaoUrl: 'https://pf.kakao.com/_weracle'
+        instaShow: false,
+        instaUrl: '',
+        blogShow: false,
+        blogUrl: '',
+        kakaoShow: false,
+        kakaoUrl: ''
       },
       footer: {
-        org: '위라클랩',
-        name: '박보환',
-        role: '본부장',
-        code: '2532055',
-        tel: '1588-1234',
-        phone: '010-1234-5678',
-        fax: '02-123-4567',
-        addr: '경기도 의정부시 시민로 57, 위라클랩'
+        org: '금융보험서비스',
+        name: '담당 설계사',
+        role: '전문 컨설턴트',
+        code: '',
+        tel: '1588-0000',
+        phone: '010-0000-0000',
+        fax: '',
+        addr: ''
       },
       copies: signatureDefaultCopies()
     };
@@ -4072,18 +4123,24 @@
 
     function buildOfficialFooterBarHtml(f) {
       if (!f) return '';
+      const org = (f.org && f.org !== '위라클랩' && !f.org.includes('위라클')) ? f.org : '금융보험서비스';
+      const name = (f.name && f.name !== '박보환' && !f.name.includes('박보환')) ? f.name : '담당 설계사';
+      const role = (f.role && f.role !== '본부장') ? f.role : '전문 컨설턴트';
+      const code = (f.code && f.code !== '2532055') ? f.code : '';
+      const phone = (f.phone && f.phone !== '010-1234-5678' && !f.phone.includes('1234-5678')) ? f.phone : (f.tel && f.tel !== '1588-1234' ? f.tel : '010-0000-0000');
+      const addr = (f.addr && !f.addr.includes('의정부시')) ? f.addr : '';
       return `
         <div class="relative z-30 w-full px-7 py-3 text-white shadow-2xl flex items-center justify-between text-[11px] font-medium"
              style="background: linear-gradient(90deg, #091426 0%, #112847 50%, #091426 100%); border-top: 1px solid rgba(255,255,255,0.12);">
           <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-extrabold border border-blue-400/30">${sigEsc(f.org || '위라클')}</span>
-            <span class="text-[13px] font-black text-white">${sigEsc(f.name)} ${sigEsc(f.role)}</span>
-            <span class="text-slate-400 text-[10px] ml-1">등록번호 ${sigEsc(f.code || '2532055')}</span>
+            <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-extrabold border border-blue-400/30">${sigEsc(org)}</span>
+            <span class="text-[13px] font-black text-white">${sigEsc(name)} ${sigEsc(role)}</span>
+            ${code ? `<span class="text-slate-400 text-[10px] ml-1">등록번호 ${sigEsc(code)}</span>` : ''}
           </div>
           <div class="flex items-center gap-4 text-slate-300">
-            <span><i class="fa-solid fa-phone text-blue-400 mr-1"></i>${sigEsc(f.phone || f.tel)}</span>
+            <span><i class="fa-solid fa-phone text-blue-400 mr-1"></i>${sigEsc(phone)}</span>
             ${f.fax ? `<span><i class="fa-solid fa-fax text-slate-400 mr-1"></i>${sigEsc(f.fax)}</span>` : ''}
-            ${f.addr ? `<span class="text-slate-400 truncate max-w-[190px]"><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${sigEsc(f.addr)}</span>` : ''}
+            ${addr ? `<span class="text-slate-400 truncate max-w-[190px]"><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${sigEsc(addr)}</span>` : ''}
           </div>
         </div>
       `;
@@ -4411,6 +4468,8 @@
     function selectMasterTheme(themeId) {
       initCoreDomElements();
       currentMasterThemeId = themeId;
+      window.currentMasterThemeId = themeId;
+      window.sigState = sigState;
       const pack = THEME_PACKS.find(p => p.id === themeId);
       if (!pack) return;
 
@@ -4899,85 +4958,23 @@
     // ★ SUPABASE CLOUD LIBRARY (profiles.settings.bojang_covers) ★
     // =========================================================================
     async function getActiveSupabaseClient() {
-      if (window.sb) return window.sb;
-      if (window.parent && window.parent.sb) return window.parent.sb;
+      try {
+        if (window.sb) return window.sb;
+        if (window.parent && window.parent !== window && window.parent.sb) return window.parent.sb;
+      } catch(e) {}
       if (typeof initSupabaseConfigOnly === 'function') {
-        return await initSupabaseConfigOnly();
+        try {
+          return await initSupabaseConfigOnly();
+        } catch(e) {}
       }
       return null;
     }
 
     async function saveCoverToLibrary() {
       initCoreDomElements();
-      const inp = document.getElementById('inpLibraryTitle');
-      const title = (inp && inp.value.trim()) ? inp.value.trim() : (`보장분석 표지 ${new Date().toLocaleDateString('ko-KR')}`);
-
-      let thumbDataUrl = '';
-      try {
-        const targetEl = (currentMasterThemeId !== '01')
-          ? document.getElementById('a4PaperCanvas')
-          : canvasPage;
-        if (targetEl) {
-          const cv = await html2canvas(targetEl, { scale: 0.18, useCORS: true, backgroundColor: '#ffffff' });
-          thumbDataUrl = cv.toDataURL('image/jpeg', 0.65);
-        }
-      } catch (cvErr) {
-        console.warn('Thumbnail generation warning:', cvErr);
-      }
-
-      const item = {
-        id: 'cov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-        title: title,
-        masterThemeId: currentMasterThemeId,
-        themeId: (currentMasterThemeId !== '01') ? activeSignatureType : currentTemplateIndex,
-        sigState: JSON.parse(JSON.stringify(sigState)),
-        basicIndex: currentTemplateIndex,
-        thumbnail: thumbDataUrl,
-        updatedAt: new Date().toISOString()
-      };
-
-      try {
-        let list = JSON.parse(localStorage.getItem('weracle_a4_cover_library_v2') || '[]');
-        list.unshift(item);
-        if (list.length > 25) list = list.slice(0, 25);
-        localStorage.setItem('weracle_a4_cover_library_v2', JSON.stringify(list));
-        savedCloudLibrary = list;
-      } catch (lsErr) {
-        console.warn('LocalStorage save error:', lsErr);
-      }
-
-      try {
-        const sbClient = await getActiveSupabaseClient();
-        const myProf = getMyProfile();
-        const userId = myProf ? (myProf.id || (window.currentUser && window.currentUser.id)) : null;
-
-        if (sbClient && userId) {
-          const { data: profData } = await sbClient
-            .from('profiles')
-            .select('settings')
-            .eq('id', userId)
-            .single();
-
-          const curSettings = (profData && profData.settings) || {};
-          let cloudCovers = Array.isArray(curSettings.bojang_covers) ? curSettings.bojang_covers : [];
-          cloudCovers.unshift(item);
-          if (cloudCovers.length > 20) cloudCovers = cloudCovers.slice(0, 20);
-
-          await sbClient
-            .from('profiles')
-            .update({ settings: { ...curSettings, bojang_covers: cloudCovers } })
-            .eq('id', userId);
-
-          console.log('[Supabase Cloud] Successfully saved cover to profiles.settings.bojang_covers!');
-        }
-      } catch (cloudErr) {
-        console.warn('[Supabase Cloud] Save exception (cached locally):', cloudErr);
-      }
-
-      if (inp) inp.value = '';
-      alert(`🎉 '${title}' 디자인이 내 보관함에 안전하게 저장되었습니다!`);
-      renderLibraryList();
+      await saveCoverConfig(false, true);
     }
+    window.saveCoverToLibrary = saveCoverToLibrary;
 
     async function loadCoversFromCloud() {
       try {
@@ -5001,10 +4998,20 @@
             .single();
 
           if (!error && profData && profData.settings && Array.isArray(profData.settings.bojang_covers)) {
-            savedCloudLibrary = profData.settings.bojang_covers;
+            const cloudCovers = profData.settings.bojang_covers;
+            let localList = [];
+            try { localList = JSON.parse(localStorage.getItem('weracle_a4_cover_library_v2') || '[]'); } catch(e) {}
+            const map = new Map();
+            localList.forEach(item => { if (item && item.id) map.set(item.id, item); });
+            cloudCovers.forEach(item => {
+              if (item && item.id && !map.has(item.id)) {
+                map.set(item.id, item);
+              }
+            });
+            savedCloudLibrary = Array.from(map.values());
             localStorage.setItem('weracle_a4_cover_library_v2', JSON.stringify(savedCloudLibrary));
             renderLibraryList();
-            console.log('[Supabase Cloud] Loaded', savedCloudLibrary.length, 'covers from cloud profile!');
+            console.log('[Supabase Cloud] Merged', savedCloudLibrary.length, 'covers with cloud profile!');
           }
         }
       } catch (err) {
@@ -5012,42 +5019,97 @@
       }
     }
 
+    // 5 VIP Master Themes Presets (Always Available Out-of-the-Box)
+    const PRESET_VIP_COVERS = [
+      {
+        id: 'preset_theme_01',
+        title: '🏛️ 코퍼레이트 다크차콜 (정통 공식문서)',
+        masterThemeId: '01',
+        basicIndex: 0,
+        themeIdx: 0,
+        visualMode: 'photo',
+        isPreset: true
+      },
+      {
+        id: 'preset_theme_02',
+        title: '⚡ 시그니처 사선 누끼형 (BEST 추천)',
+        masterThemeId: '02',
+        themeId: 'A',
+        activeSignatureType: 'A',
+        sigState: { activeType: 'A', mainColor: '#113f67', accentColor: '#f59e0b' },
+        visualMode: 'photo',
+        isPreset: true
+      },
+      {
+        id: 'preset_theme_03',
+        title: '📰 매거진 풀화보형 (에디토리얼)',
+        masterThemeId: '03',
+        themeId: 'B',
+        activeSignatureType: 'B',
+        sigState: { activeType: 'B', mainColor: '#0284c7', accentColor: '#38bdf8' },
+        visualMode: 'photo',
+        isPreset: true
+      },
+      {
+        id: 'preset_theme_04',
+        title: '👑 골드 에디션 (VIP / CEO)',
+        masterThemeId: '04',
+        themeId: 'C',
+        activeSignatureType: 'C',
+        sigState: { activeType: 'C', mainColor: '#1e293b', accentColor: '#eab308' },
+        visualMode: 'photo',
+        isPreset: true
+      },
+      {
+        id: 'preset_theme_05',
+        title: '🌸 소프트 파스텔 (패밀리 케어)',
+        masterThemeId: '05',
+        themeId: 'D',
+        activeSignatureType: 'D',
+        sigState: { activeType: 'D', mainColor: '#831843', accentColor: '#ec4899' },
+        visualMode: 'photo',
+        isPreset: true
+      }
+    ];
+
     function renderLibraryList() {
       const container = document.getElementById('libraryCardsList');
       if (!container) return;
 
-      if (!savedCloudLibrary || savedCloudLibrary.length === 0) {
-        container.innerHTML = `
-          <div style="text-align: center; padding: 40px 10px; color: #64748b; font-size: 13px;">
-            <i class="fa-solid fa-folder-closed" style="font-size: 32px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
-            저장된 표지가 없습니다.<br>위에서 현재 디자인을 저장해 보세요!
-          </div>
-        `;
-        return;
+      let allCovers = [];
+      if (savedCloudLibrary && savedCloudLibrary.length > 0) {
+        allCovers = allCovers.concat(savedCloudLibrary);
       }
+      PRESET_VIP_COVERS.forEach(p => {
+        if (!allCovers.some(c => c.id === p.id)) {
+          allCovers.push(p);
+        }
+      });
 
-      container.innerHTML = savedCloudLibrary.map((item, idx) => {
-        const dateStr = item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('ko-KR') : '';
+      container.innerHTML = allCovers.map((item, idx) => {
+        const dateStr = item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('ko-KR') : (item.isPreset ? '추천 마스터' : '');
         const pack = THEME_PACKS.find(p => p.id === item.masterThemeId) || THEME_PACKS[0];
-        const badgeTxt = pack ? pack.badge : '마스터';
+        const badgeTxt = item.isPreset ? '추천 VIP' : (pack ? pack.badge : '마스터');
         const thumbSrc = item.thumbnail || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="85" fill="%23334155"><rect width="100%" height="100%"/><text x="50%" y="50%" fill="%23ffffff" font-size="10" text-anchor="middle">A4</text></svg>';
 
         return `
-          <div class="library-item-card">
-            <img src="${thumbSrc}" class="library-thumb" alt="표지 썸네일" />
-            <div class="library-info">
-              <div class="library-title" title="${sigEsc(item.title)}">${sigEsc(item.title)}</div>
-              <div class="library-meta">
-                <span class="badge-auto" style="background:#0284c7; color:#ffffff; font-size:10px; padding:1px 6px;">${badgeTxt}</span>
+          <div class="library-item-card" style="display: flex; gap: 12px; align-items: center; background: #ffffff; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 8px;">
+            <img src="${thumbSrc}" class="library-thumb" style="width: 50px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;" alt="표지 썸네일" />
+            <div class="library-info" style="flex: 1; min-width: 0;">
+              <div class="library-title" style="font-size: 13px; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${sigEsc(item.title)}">${sigEsc(item.title)}</div>
+              <div class="library-meta" style="display: flex; gap: 6px; align-items: center; font-size: 11px; color: #64748b; margin-top: 2px;">
+                <span class="badge-auto" style="background:#0284c7; color:#ffffff; font-size:10px; padding:1px 6px; border-radius: 4px;">${badgeTxt}</span>
                 <span>${dateStr}</span>
               </div>
-              <div class="library-actions">
-                <button type="button" class="btn-lib-apply" onclick="applyLibraryCover('${item.id}')">
-                  <i class="fa-solid fa-check"></i> 불러오기
+              <div class="library-actions" style="display: flex; gap: 6px; margin-top: 6px;">
+                <button type="button" class="btn-lib-apply" onclick="applyAndCloseLibraryCover('${item.id}')" style="background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; font-weight: 800; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 11px;">
+                  <i class="fa-solid fa-check"></i> 이 표지로 즉시 적용
                 </button>
-                <button type="button" class="btn-lib-del" onclick="deleteLibraryCover('${item.id}')">
-                  <i class="fa-solid fa-trash-can"></i> 삭제
-                </button>
+                ${item.isPreset ? '' : `
+                  <button type="button" class="btn-lib-del" onclick="deleteLibraryCover('${item.id}')" style="background: #f1f5f9; color: #ef4444; border: 1px solid #e2e8f0; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 11px;">
+                    <i class="fa-solid fa-trash-can"></i> 삭제
+                  </button>
+                `}
               </div>
             </div>
           </div>
@@ -5055,9 +5117,38 @@
       }).join('');
     }
 
-    function applyLibraryCover(id) {
-      const item = savedCloudLibrary.find(x => x.id === id);
-      if (!item) return;
+    async function applyLibraryCover(id, silent = false, isInitial = false) {
+      try {
+        const localList = JSON.parse(localStorage.getItem('weracle_a4_cover_library_v2') || '[]');
+        if (localList && localList.length > 0) {
+          savedCloudLibrary = localList;
+        }
+      } catch(e) {}
+      let item = (savedCloudLibrary || []).find(x => x.id === id);
+      if (!item) {
+        try {
+          const fresh = JSON.parse(localStorage.getItem('weracle_a4_cover_library_v2') || '[]');
+          item = fresh.find(x => x.id === id);
+          if (item) savedCloudLibrary = fresh;
+        } catch(e) {}
+      }
+      if (!item) {
+        item = PRESET_VIP_COVERS.find(x => x.id === id);
+      }
+      if (!item) {
+        console.warn('[applyLibraryCover] Cover item not found in library:', id);
+        return false;
+      }
+
+      currentLoadedCoverId = item.id;
+      currentLoadedCoverTitle = item.title;
+      window.currentLoadedCoverId = item.id;
+      window.currentLoadedCoverTitle = item.title;
+
+      const inpTitle = document.getElementById('inpLibraryTitle');
+      if (inpTitle && item.title) {
+        inpTitle.value = item.title;
+      }
 
       const targetThemeId = item.masterThemeId || (item.category === 'signature' ? '02' : '01');
       if (item.sigState) {
@@ -5066,9 +5157,131 @@
       if (item.basicIndex !== undefined && typeof currentTemplateIndex !== 'undefined') {
         currentTemplateIndex = item.basicIndex;
       }
+      if (item.themeId && targetThemeId !== '01') {
+        activeSignatureType = item.themeId;
+        sigState.activeType = item.themeId;
+      }
+      if (item.visualMode) {
+        setVisualMode(item.visualMode);
+      }
+      if (item.photoSrc && !item.photoSrc.includes('consultant_model.jpg')) {
+        customPhotoSrc = item.photoSrc;
+        if (canvasPage) {
+          canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = customPhotoSrc);
+        }
+        if (sigState.person) {
+          sigState.person.displayUrl = customPhotoSrc;
+          sigState.person.originalUrl = customPhotoSrc;
+        }
+      }
+      if (item.logoSrc) {
+        customLogoSrc = item.logoSrc;
+        applyRegisteredLogoToAll(customLogoSrc);
+      }
+      if (item.client) {
+        if (document.getElementById('inputClientName')) {
+          document.getElementById('inputClientName').value = item.client;
+        }
+        sigState.simCustomer = item.client;
+      }
+      if (item.advisor) {
+        if (document.getElementById('inputAdvisorName')) {
+          document.getElementById('inputAdvisorName').value = item.advisor;
+        }
+        if (sigState.footer) {
+          const advParts = item.advisor.trim().split(' ');
+          if (advParts.length > 1) {
+            sigState.footer.name = advParts.slice(0, -1).join(' ');
+            sigState.footer.role = advParts[advParts.length - 1];
+          } else {
+            sigState.footer.name = item.advisor;
+          }
+        }
+      }
+      if (item.phone) {
+        if (document.getElementById('inputAdvisorPhone')) {
+          document.getElementById('inputAdvisorPhone').value = item.phone;
+        }
+        if (sigState.footer) sigState.footer.phone = item.phone;
+      }
+      if (item.company) {
+        if (document.getElementById('inputAdvisorBranch')) {
+          document.getElementById('inputAdvisorBranch').value = item.company;
+        }
+        if (sigState.footer) sigState.footer.org = item.company;
+      }
+      if (item.slogan && document.getElementById('inputAdvisorSlogan')) {
+        document.getElementById('inputAdvisorSlogan').value = item.slogan;
+      }
+      if (item.contracts && document.getElementById('inputContracts')) {
+        document.getElementById('inputContracts').value = item.contracts;
+      }
+      if (item.premium && document.getElementById('inputPremium')) {
+        document.getElementById('inputPremium').value = item.premium;
+      }
+      if (item.stOk && document.getElementById('inputDiagOk')) {
+        document.getElementById('inputDiagOk').value = item.stOk;
+      }
+      if (item.stWarn && document.getElementById('inputDiagWarn')) {
+        document.getElementById('inputDiagWarn').value = item.stWarn;
+      }
+      if (item.stMiss && document.getElementById('inputDiagMiss')) {
+        document.getElementById('inputDiagMiss').value = item.stMiss;
+      }
+      if (item.logoSize !== undefined) currentLogoSize = item.logoSize;
+      if (item.logoVisible !== undefined) isLogoVisible = item.logoVisible;
+      if (item.photoHeight !== undefined) currentPhotoHeight = item.photoHeight;
+      if (item.photoZoom !== undefined) currentPhotoZoom = item.photoZoom;
+      if (item.photoPosY !== undefined) currentPhotoPosY = item.photoPosY;
+      if (item.photoRadius !== undefined) currentPhotoRadius = item.photoRadius;
+      if (item.titleSize !== undefined) currentTitleSize = item.titleSize;
+      if (item.greetingSize !== undefined) currentGreetingSize = item.greetingSize;
+
       selectMasterTheme(targetThemeId);
-      alert(`✅ '${item.title}' 표지 디자인을 성공적으로 불러왔습니다!`);
+      if (targetThemeId === '01' && item.basicIndex !== undefined) {
+        applyTemplate(item.basicIndex);
+      } else if (targetThemeId !== '01') {
+        renderSignatureCover(item.themeId || activeSignatureType);
+      }
+      updateAllValues();
+
+      if (typeof fitA4ToScreen === 'function') {
+        fitA4ToScreen();
+      }
+
+      if (!isInitial) {
+        // Automatically switch tab to color/theme tab so user sees the loaded layout
+        if (typeof switchSidebarTab === 'function') {
+          const colorBtn = document.getElementById('tabBtn_color');
+          if (colorBtn) switchSidebarTab('colorTab', colorBtn);
+        }
+        if (!silent) {
+          showStudioToast(`📂 '${item.title}' 표지를 불러왔습니다. 확인/수정 후 하단 초록색 [수정 후 표지 보장분석에 즉시 적용] 버튼을 눌러주세요.`);
+        }
+      }
+
+      return true;
     }
+    window.applyLibraryCover = applyLibraryCover;
+
+    // 1-Click Instant Apply from Library (loads, persists active config, notifies parent & closes modal)
+    async function applyAndCloseLibraryCover(id) {
+      const ok = await applyLibraryCover(id, true, false);
+      if (!ok) return;
+
+      if (window.parent && window.parent !== window) {
+        await saveCoverConfig(true, false, id, currentLoadedCoverTitle, true);
+        if (typeof window.parent.closeCoverStudioModal === 'function') {
+          window.parent.closeCoverStudioModal();
+        }
+      } else {
+        showStudioToast('표지 디자인이 성공적으로 적용되었습니다.');
+      }
+    }
+    window.applyAndCloseLibraryCover = applyAndCloseLibraryCover;
+    window.loadCoverConfig = loadCoverConfig;
+    window.selectMasterTheme = selectMasterTheme;
+    window.fitA4ToScreen = fitA4ToScreen;
 
     async function deleteLibraryCover(id) {
       if (!confirm('정말 이 디자인을 보관함에서 삭제하시겠습니까?')) return;
@@ -5089,6 +5302,10 @@
           }).eq('id', userId);
         }
       } catch (e) {}
+
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'WERACLE_COVER_DELETED', coverId: id }, '*');
+      }
     }
 
 // Premature getCoverCanvas moved to canonical definition at bottom
@@ -5413,37 +5630,65 @@
 
     // Customer Data Updater
     function updateClientGreeting() {
-      const clientName = document.getElementById('inputClientName').value.trim() || '고객';
-      const subText = document.getElementById('inputGreetingSub').value.trim();
+      const clientName = document.getElementById('inputClientName') ? (document.getElementById('inputClientName').value.trim() || '고객') : '고객';
+      const subText = document.getElementById('inputGreetingSub') ? document.getElementById('inputGreetingSub').value.trim() : '';
 
-      canvasPage.querySelectorAll('.greeting-client, [data-slot="client"]').forEach(el => {
-        el.innerHTML = '<b class="val-client">' + clientName + '</b> 님을 위해';
-      });
-      canvasPage.querySelectorAll('.greeting-sub').forEach(el => {
-        el.textContent = subText;
-      });
+      sigState.simCustomer = clientName;
+
+      if (canvasPage) {
+        canvasPage.querySelectorAll('.greeting-client, [data-slot="client"]').forEach(el => {
+          el.innerHTML = '<b class="val-client">' + clientName + '</b> 님을 위해';
+        });
+        canvasPage.querySelectorAll('.greeting-sub').forEach(el => {
+          el.textContent = subText;
+        });
+      }
+
+      if (currentMasterThemeId !== '01') {
+        renderSignatureCover(activeSignatureType);
+      }
     }
 
     // Consultant Info Updater
     function updateOfficialInfo() {
-      const name = document.getElementById('inputAdvisorName').value.trim();
-      const phone = document.getElementById('inputAdvisorPhone').value.trim();
-      const branch = document.getElementById('inputAdvisorBranch').value.trim();
+      const name = document.getElementById('inputAdvisorName') ? document.getElementById('inputAdvisorName').value.trim() : '';
+      const phone = document.getElementById('inputAdvisorPhone') ? document.getElementById('inputAdvisorPhone').value.trim() : '';
+      const branch = document.getElementById('inputAdvisorBranch') ? document.getElementById('inputAdvisorBranch').value.trim() : '';
 
-      canvasPage.querySelectorAll('.val-advisor').forEach(el => el.textContent = name);
-      canvasPage.querySelectorAll('.val-phone').forEach(el => el.textContent = phone);
-      canvasPage.querySelectorAll('.val-company').forEach(el => el.textContent = branch);
+      if (sigState.footer) {
+        if (branch) sigState.footer.org = branch;
+        if (phone) sigState.footer.phone = phone;
+        if (name) {
+          const advParts = name.split(' ');
+          if (advParts.length > 1) {
+            sigState.footer.name = advParts.slice(0, -1).join(' ');
+            sigState.footer.role = advParts[advParts.length - 1];
+          } else {
+            sigState.footer.name = name;
+          }
+        }
+      }
 
-      const footer = canvasPage.querySelector('.official-footer-bar');
-      if (footer) {
-        footer.innerHTML = 
-          '<div class="footer-row-meta">' +
-            '<span class="footer-item item-company">❚ 소속: <b class="val-company">' + branch + '</b></span>' +
-            '<span class="footer-sep">|</span>' +
-            '<span class="footer-item item-advisor">❚ 담당: <b class="val-advisor">' + name + '</b></span>' +
-            '<span class="footer-sep">|</span>' +
-            '<span class="footer-item item-phone">❚ 직통 핸드폰: <b class="val-phone">' + phone + '</b></span>' +
-          '</div>';
+      if (canvasPage) {
+        canvasPage.querySelectorAll('.val-advisor').forEach(el => el.textContent = name);
+        canvasPage.querySelectorAll('.val-phone').forEach(el => el.textContent = phone);
+        canvasPage.querySelectorAll('.val-company').forEach(el => el.textContent = branch);
+
+        const footer = canvasPage.querySelector('.official-footer-bar');
+        if (footer) {
+          footer.innerHTML = 
+            '<div class="footer-row-meta">' +
+              '<span class="footer-item item-company">❚ 소속: <b class="val-company">' + branch + '</b></span>' +
+              '<span class="footer-sep">|</span>' +
+              '<span class="footer-item item-advisor">❚ 담당: <b class="val-advisor">' + name + '</b></span>' +
+              '<span class="footer-sep">|</span>' +
+              '<span class="footer-item item-phone">❚ 직통 핸드폰: <b class="val-phone">' + phone + '</b></span>' +
+            '</div>';
+        }
+      }
+
+      if (currentMasterThemeId !== '01') {
+        renderSignatureCover(activeSignatureType);
       }
     }
 
@@ -5993,6 +6238,14 @@
 
       if (!myProfile) {
         try {
+          if (window.parent && window.parent.parent && window.parent.parent.currentProfile) {
+            myProfile = window.parent.parent.currentProfile;
+          }
+        } catch(e) {}
+      }
+
+      if (!myProfile) {
+        try {
           myProfile = JSON.parse(localStorage.getItem('cached_profile') || 'null');
         } catch(e) {}
       }
@@ -6000,6 +6253,23 @@
       if (!myProfile) {
         try {
           myProfile = JSON.parse(localStorage.getItem('user_profile') || 'null');
+        } catch(e) {}
+      }
+
+      if (!myProfile) {
+        try {
+          const profStr = localStorage.getItem('weracle_profile');
+          if (profStr) myProfile = JSON.parse(profStr);
+        } catch(e) {}
+      }
+
+      if (!myProfile) {
+        try {
+          const auth = localStorage.getItem('sb-bbubqotefsuxpvfapowu-auth-token');
+          if (auth) {
+            const a = JSON.parse(auth);
+            if (a.user) myProfile = { id: a.user.id, email: a.user.email };
+          }
         } catch(e) {}
       }
 
@@ -6016,6 +6286,9 @@
     // Apply Profile data directly to form & sheet elements
     function applyProfileData(profile) {
       if (!profile) return;
+      if (isPreviewMode || document.documentElement.classList.contains('mode-preview') || (document.body && document.body.classList.contains('mode-preview'))) {
+        return; // In preview mode, do not allow generic profile to overwrite active loaded cover design
+      }
       
       // 1. Advisor Name & Position
       if (profile.name && document.getElementById('inputAdvisorName')) {
@@ -6184,6 +6457,18 @@
     // [DIRECT WYSIWYG CLICK-TO-EDIT ENGINE]
     // ==========================================
     function makeSheetElementsDirectlyEditable() {
+      // In preview mode, ensure sheet elements are completely read-only
+      if (isPreviewMode || document.documentElement.classList.contains('mode-preview') || (document.body && document.body.classList.contains('mode-preview'))) {
+        if (canvasPage) {
+          canvasPage.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.removeAttribute('contenteditable');
+            el.classList.remove('editable-active');
+            el.removeAttribute('title');
+            el.oninput = null;
+          });
+        }
+        return;
+      }
       if (!canvasPage) return;
 
       // 1. Client Name (고객명)
@@ -6394,7 +6679,7 @@
       if (sloganEl) updateSloganText(sloganEl.value);
     }
 
-    // Listen to parent message for logo & profile updates
+    // Listen to parent message for logo, profile, library cover & client name updates
     window.addEventListener('message', function(e) {
       if (!e.data) return;
       if (e.data.type === 'setLogo' && e.data.data) {
@@ -6406,6 +6691,68 @@
           applyRegisteredLogoToAll(e.data.data.logo_url);
         }
       }
+      if ((e.data.type === 'APPLY_COVER_CONFIG' || e.data.action === 'APPLY_COVER_CONFIG') && e.data.config) {
+        applyCoverConfigDirectly(e.data.config);
+      }
+      if ((e.data.type === 'APPLY_LIBRARY_COVER' || e.data.action === 'APPLY_LIBRARY_COVER') && e.data.coverId) {
+        applyLibraryCover(e.data.coverId, true, true);
+      }
+      if (e.data.type === 'UPDATE_CLIENT_NAME' && e.data.clientName) {
+        const cName = e.data.clientName;
+        if (document.getElementById('inputClientName')) {
+          document.getElementById('inputClientName').value = cName;
+        }
+        sigState.simCustomer = cName;
+        if (canvasPage) {
+          canvasPage.querySelectorAll('.val-client, .greeting-client b').forEach(el => el.innerText = cName);
+        }
+        if (currentMasterThemeId !== '01') {
+          renderSignatureCover(activeSignatureType);
+        }
+      }
+      if (e.data.type === 'RELOAD_COVER_CONFIG') {
+        loadCoverConfig();
+      }
+      if (e.data.type === 'REQUEST_COVER_CANVAS') {
+        const summary = e.data.summary || {};
+        const reqId = e.data.requestId || ('req_' + Date.now());
+        console.log('[Studio Iframe] REQUEST_COVER_CANVAS received for reqId:', reqId);
+        (async () => {
+          try {
+            const cv = await window.getCoverCanvas(summary);
+            console.log('[Studio Iframe] getCoverCanvas completed, cv:', !!cv);
+            if (cv) {
+              const dataUrl = cv.toDataURL('image/png');
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                  type: 'RESPONSE_COVER_CANVAS',
+                  requestId: reqId,
+                  dataUrl: dataUrl,
+                  width: cv.width,
+                  height: cv.height
+                }, '*');
+              }
+            } else {
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                  type: 'RESPONSE_COVER_CANVAS',
+                  requestId: reqId,
+                  error: 'Canvas returned null'
+                }, '*');
+              }
+            }
+          } catch(cvErr) {
+            console.error('[Studio Iframe] getCoverCanvas error:', cvErr);
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({
+                type: 'RESPONSE_COVER_CANVAS',
+                requestId: reqId,
+                error: cvErr.message
+              }, '*');
+            }
+          }
+        })();
+      }
     });
 
     // Request logo and profile from parent window (index.html)
@@ -6416,8 +6763,179 @@
       } catch(e) {}
     }
 
+    // Direct In-Memory Configuration Applier
+    function applyCoverConfigDirectly(cfg) {
+      if (!cfg) return;
+      initCoreDomElements();
+
+      // Dynamic Upgrade: Replace any old placeholder profile data with active user profile or clean generic
+      const realProf = getMyProfile();
+      const profName = realProf ? realProf.name : null;
+      const profPhone = realProf ? realProf.phone : null;
+      const profCompany = realProf ? realProf.company : null;
+      const profRole = realProf ? realProf.position : null;
+      const profAvatar = realProf ? (realProf.avatar_url || realProf.photo_url || realProf.profile_image) : null;
+      const profLogo = realProf ? (realProf.logo_url || getRegisteredLogoSrc()) : getRegisteredLogoSrc();
+
+      if (!cfg.advisor || cfg.advisor.includes('박보환') || cfg.advisor.includes('ㅇㅇㅇ')) {
+        cfg.advisor = profName ? (profName + (profRole ? (' ' + profRole) : ' 팀장')) : '담당 설계사';
+      }
+      if (!cfg.phone || cfg.phone === '010-1234-5678' || cfg.phone.includes('1234-5678')) {
+        cfg.phone = profPhone || '010-0000-0000';
+      }
+      if (!cfg.company || cfg.company === '위라클랩' || cfg.company.includes('위라클')) {
+        cfg.company = profCompany || '금융보험서비스';
+      }
+      if (profAvatar && (!cfg.photoSrc || cfg.photoSrc.includes('consultant_model.jpg'))) {
+        cfg.photoSrc = profAvatar;
+      }
+      if (!cfg.logoSrc && profLogo) {
+        cfg.logoSrc = profLogo;
+      }
+
+      if (cfg.activeCoverId) {
+        currentLoadedCoverId = cfg.activeCoverId;
+        window.currentLoadedCoverId = cfg.activeCoverId;
+      }
+      if (cfg.coverTitle) {
+        currentLoadedCoverTitle = cfg.coverTitle;
+        window.currentLoadedCoverTitle = cfg.coverTitle;
+      }
+      const targetThemeId = cfg.masterThemeId || (cfg.category === 'signature' ? '02' : (cfg.themeIdx !== undefined ? '01' : '02'));
+      if (cfg.sigState) {
+        Object.assign(sigState, cfg.sigState);
+      }
+      if (sigState.footer) {
+        if (!sigState.footer.name || sigState.footer.name === '박보환' || sigState.footer.name.includes('박보환')) {
+          sigState.footer.name = profName || '담당 설계사';
+        }
+        if (!sigState.footer.role || sigState.footer.role === '본부장') {
+          sigState.footer.role = profRole || '전문 컨설턴트';
+        }
+        if (!sigState.footer.org || sigState.footer.org === '위라클랩' || sigState.footer.org.includes('위라클')) {
+          sigState.footer.org = profCompany || '금융보험서비스';
+        }
+        if (!sigState.footer.phone || sigState.footer.phone === '010-1234-5678' || sigState.footer.phone.includes('1234-5678')) {
+          sigState.footer.phone = profPhone || '010-0000-0000';
+        }
+        if (sigState.footer.code === '2532055') sigState.footer.code = '';
+        if (sigState.footer.addr && sigState.footer.addr.includes('의정부시')) sigState.footer.addr = '';
+      }
+      if (sigState.logos && sigState.logos.emblemMain === '보답화니') {
+        sigState.logos.emblemMain = profCompany || '맞춤 보장분석';
+      }
+      if (sigState.copies) {
+        Object.keys(sigState.copies).forEach(k => {
+          if (sigState.copies[k] && sigState.copies[k].bannerTitle && sigState.copies[k].bannerTitle.includes('박보환')) {
+            sigState.copies[k].bannerTitle = profName ? (profName + ' 금융 파트너') : '정직과 신뢰의 금융 파트너';
+          }
+        });
+      }
+      if (cfg.themeIdx !== undefined) {
+        currentTemplateIndex = cfg.themeIdx;
+      } else if (cfg.basicIndex !== undefined) {
+        currentTemplateIndex = cfg.basicIndex;
+      }
+      if (cfg.activeSignatureType && targetThemeId !== '01') {
+        activeSignatureType = cfg.activeSignatureType;
+        sigState.activeType = cfg.activeSignatureType;
+      } else if (cfg.themeId && targetThemeId !== '01') {
+        activeSignatureType = cfg.themeId;
+        sigState.activeType = cfg.themeId;
+      }
+      if (cfg.visualMode) {
+        setVisualMode(cfg.visualMode);
+      }
+      if (cfg.photoSrc && !cfg.photoSrc.includes('consultant_model.jpg')) {
+        customPhotoSrc = cfg.photoSrc;
+        if (canvasPage) {
+          canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = customPhotoSrc);
+        }
+        if (sigState.person) {
+          sigState.person.displayUrl = customPhotoSrc;
+          sigState.person.originalUrl = customPhotoSrc;
+        }
+      }
+      if (cfg.logoSrc) {
+        customLogoSrc = cfg.logoSrc;
+        applyRegisteredLogoToAll(customLogoSrc);
+      }
+      if (cfg.client) {
+        if (document.getElementById('inputClientName')) {
+          document.getElementById('inputClientName').value = cfg.client;
+        }
+        sigState.simCustomer = cfg.client;
+      }
+      if (cfg.advisor) {
+        if (document.getElementById('inputAdvisorName')) {
+          document.getElementById('inputAdvisorName').value = cfg.advisor;
+        }
+        if (sigState.footer) {
+          const advParts = cfg.advisor.trim().split(' ');
+          if (advParts.length > 1) {
+            sigState.footer.name = advParts.slice(0, -1).join(' ');
+            sigState.footer.role = advParts[advParts.length - 1];
+          } else {
+            sigState.footer.name = cfg.advisor;
+          }
+        }
+      }
+      if (cfg.phone) {
+        if (document.getElementById('inputAdvisorPhone')) {
+          document.getElementById('inputAdvisorPhone').value = cfg.phone;
+        }
+        if (sigState.footer) sigState.footer.phone = cfg.phone;
+      }
+      if (cfg.company) {
+        if (document.getElementById('inputAdvisorBranch')) {
+          document.getElementById('inputAdvisorBranch').value = cfg.company;
+        }
+        if (sigState.footer) sigState.footer.org = cfg.company;
+      }
+      if (cfg.slogan && document.getElementById('inputAdvisorSlogan')) {
+        document.getElementById('inputAdvisorSlogan').value = cfg.slogan;
+      }
+      if (cfg.contracts && document.getElementById('inputContracts')) {
+        document.getElementById('inputContracts').value = cfg.contracts;
+      }
+      if (cfg.premium && document.getElementById('inputPremium')) {
+        document.getElementById('inputPremium').value = cfg.premium;
+      }
+      if (cfg.stOk && document.getElementById('inputDiagOk')) {
+        document.getElementById('inputDiagOk').value = cfg.stOk;
+      }
+      if (cfg.stWarn && document.getElementById('inputDiagWarn')) {
+        document.getElementById('inputDiagWarn').value = cfg.stWarn;
+      }
+      if (cfg.stMiss && document.getElementById('inputDiagMiss')) {
+        document.getElementById('inputDiagMiss').value = cfg.stMiss;
+      }
+
+      if (cfg.logoSize !== undefined) updateLogoSize(cfg.logoSize);
+      if (cfg.logoVisible !== undefined) toggleLogo(cfg.logoVisible);
+      if (cfg.photoHeight !== undefined) updatePhotoHeight(cfg.photoHeight);
+      if (cfg.photoZoom !== undefined) updatePhotoZoom(cfg.photoZoom);
+      if (cfg.photoPosY !== undefined) updatePhotoPosY(cfg.photoPosY);
+      if (cfg.photoRadius !== undefined) updatePhotoRadius(cfg.photoRadius);
+      if (cfg.titleSize !== undefined) updateTitleSize(cfg.titleSize);
+      if (cfg.greetingSize !== undefined) updateGreetingSize(cfg.greetingSize);
+
+      selectMasterTheme(targetThemeId);
+      if (targetThemeId === '01') {
+        applyTemplate(cfg.themeIdx !== undefined ? cfg.themeIdx : (currentTemplateIndex || 0));
+      } else {
+        renderSignatureCover(cfg.activeSignatureType || cfg.themeId || activeSignatureType);
+      }
+      updateAllValues();
+      if (typeof fitA4ToScreen === 'function') {
+        fitA4ToScreen();
+      }
+    }
+    window.applyCoverConfigDirectly = applyCoverConfigDirectly;
+
     // Load saved cover config from localStorage (supporting user isolation & profile auto-population)
-    function loadCoverConfig() {
+    async function loadCoverConfig() {
+      initCoreDomElements();
       syncMyPageProfile();
       try {
         const myProfile = getMyProfile();
@@ -6428,264 +6946,47 @@
           raw = localStorage.getItem('weracle_bojang_cover_config');
         }
 
-        if (raw) {
-          const cfg = JSON.parse(raw);
-          
-          if (cfg.masterThemeId) {
-            selectMasterTheme(cfg.masterThemeId);
-          } else if (cfg.themeIdx !== undefined && TEMPLATES[cfg.themeIdx]) {
-            selectMasterTheme('01');
-            applyTemplate(cfg.themeIdx);
-          }
-          if (cfg.sigState) {
-            sigState = Object.assign(sigState, cfg.sigState);
-            if (cfg.masterThemeId && cfg.masterThemeId !== '01') {
-              renderSignatureCover(cfg.activeSignatureType || 'A');
+        let cfg = raw ? JSON.parse(raw) : null;
+        let activeCoverId = cfg ? cfg.activeCoverId : null;
+
+        if (!activeCoverId) {
+          try {
+            const lib = JSON.parse(localStorage.getItem('weracle_a4_cover_library_v2') || '[]');
+            if (lib && lib.length > 0 && lib[0].id) {
+              activeCoverId = lib[0].id;
             }
-          }
-          if (cfg.visualMode) {
-            setVisualMode(cfg.visualMode);
-          }
-          if (cfg.photoSrc && !cfg.photoSrc.includes('consultant_model.jpg')) {
-            customPhotoSrc = cfg.photoSrc;
-            canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = customPhotoSrc);
-          }
-          if (cfg.logoSrc) {
-            customLogoSrc = cfg.logoSrc;
-            canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(img => {
-              img.src = customLogoSrc;
-              img.style.display = 'block';
-            });
-          }
-          if (document.getElementById('inputClientName')) {
-            const clientVal = (cfg.client && cfg.client !== '조진주') ? cfg.client : '고객';
-            document.getElementById('inputClientName').value = clientVal;
-          }
-          
-          // Advisor Name resolution:
-          // If the saved value is the legacy hardcoded name '박보환 본부장' or empty or default 'ㅇㅇㅇ 팀장'
-          // and we have a logged-in user profile, always prioritize the real logged-in user!
-          let finalAdvisor = cfg.advisor;
-          if (!finalAdvisor || finalAdvisor === '박보환 본부장' || (myProfile && myProfile.name && finalAdvisor === 'ㅇㅇㅇ 팀장')) {
-            if (myProfile && myProfile.name) {
-              const pos = myProfile.position ? (' ' + myProfile.position) : ' 팀장';
-              finalAdvisor = myProfile.name + pos;
-            } else {
-              finalAdvisor = 'ㅇㅇㅇ 팀장';
-            }
-          }
-          if (document.getElementById('inputAdvisorName')) {
-            document.getElementById('inputAdvisorName').value = finalAdvisor;
-          }
+          } catch(e) {}
+        }
 
-          // Phone resolution
-          let finalPhone = cfg.phone;
-          if (!finalPhone || finalPhone === '010-1234-5678') {
-            if (myProfile && myProfile.phone) finalPhone = myProfile.phone;
-            else finalPhone = '010-1234-5678';
-          }
-          if (document.getElementById('inputAdvisorPhone')) {
-            document.getElementById('inputAdvisorPhone').value = finalPhone;
-          }
-
-          // Company resolution
-          let finalCompany = cfg.company;
-          if (!finalCompany || finalCompany === '위라클랩') {
-            if (myProfile && myProfile.company) finalCompany = myProfile.company;
-            else finalCompany = '위라클랩';
-          }
-          if (document.getElementById('inputAdvisorBranch')) {
-            document.getElementById('inputAdvisorBranch').value = finalCompany;
-          }
-
-          if (cfg.slogan && document.getElementById('inputAdvisorSlogan')) {
-            document.getElementById('inputAdvisorSlogan').value = cfg.slogan;
-          }
-          if (cfg.contracts && document.getElementById('inputContracts')) {
-            document.getElementById('inputContracts').value = cfg.contracts;
-          }
-          if (cfg.premium && document.getElementById('inputPremium')) {
-            document.getElementById('inputPremium').value = cfg.premium;
-          }
-          if (cfg.stOk && document.getElementById('inputDiagOk')) {
-            document.getElementById('inputDiagOk').value = cfg.stOk;
-          }
-          if (cfg.stWarn && document.getElementById('inputDiagWarn')) {
-            document.getElementById('inputDiagWarn').value = cfg.stWarn;
-          }
-          if (cfg.stMiss && document.getElementById('inputDiagMiss')) {
-            document.getElementById('inputDiagMiss').value = cfg.stMiss;
+        if (activeCoverId) {
+          const applied = await applyLibraryCover(activeCoverId, true, true);
+          if (applied) {
+            if (typeof fitA4ToScreen === 'function') fitA4ToScreen();
+            return;
           }
         }
+
+        if (cfg) {
+          applyCoverConfigDirectly(cfg);
+        } else {
+          selectMasterTheme('01');
+          updateAllValues();
+        }
         
-        updateAllValues();
+        if (typeof fitA4ToScreen === 'function') {
+          fitA4ToScreen();
+        }
       } catch(e) {
         console.error('loadCoverConfig error:', e);
       }
     }
 
     // Save cover config to localStorage (both global and user-specific) and notify parent window
-    window.saveCoverConfig = function() {
-      const myProfile = getMyProfile();
-      const userKey = getUserStorageKey(myProfile);
-
-      const cfg = {
-        userId: myProfile ? (myProfile.id || myProfile.email || '') : '',
-        themeIdx: currentTemplateIndex,
-        themeName: TEMPLATES[currentTemplateIndex] ? TEMPLATES[currentTemplateIndex].name : '코퍼레이트 다크차콜',
-        visualMode: currentVisualMode,
-        photoSrc: customPhotoSrc,
-        logoSrc: customLogoSrc,
-        client: document.getElementById('inputClientName') ? document.getElementById('inputClientName').value.trim() : '고객',
-        advisor: document.getElementById('inputAdvisorName') ? document.getElementById('inputAdvisorName').value.trim() : 'ㅇㅇㅇ 팀장',
-        phone: document.getElementById('inputAdvisorPhone') ? document.getElementById('inputAdvisorPhone').value.trim() : '010-1234-5678',
-        company: document.getElementById('inputAdvisorBranch') ? document.getElementById('inputAdvisorBranch').value.trim() : '위라클랩',
-        slogan: document.getElementById('inputAdvisorSlogan') ? document.getElementById('inputAdvisorSlogan').value.trim() : '',
-        contracts: document.getElementById('inputContracts') ? document.getElementById('inputContracts').value.trim() : '18건',
-        premium: document.getElementById('inputPremium') ? document.getElementById('inputPremium').value.trim() : '420,548원',
-        stOk: document.getElementById('inputDiagOk') ? document.getElementById('inputDiagOk').value.trim() : '23',
-        stWarn: document.getElementById('inputDiagWarn') ? document.getElementById('inputDiagWarn').value.trim() : '8',
-        stMiss: document.getElementById('inputDiagMiss') ? document.getElementById('inputDiagMiss').value.trim() : '6',
-        logoSize: currentLogoSize,
-        logoVisible: isLogoVisible,
-        photoHeight: currentPhotoHeight,
-        photoZoom: currentPhotoZoom,
-        photoPosY: currentPhotoPosY,
-        photoRadius: currentPhotoRadius,
-        titleSize: currentTitleSize,
-        greetingSize: currentGreetingSize,
-        savedAt: new Date().toISOString()
-      };
-      
-      try {
-        localStorage.setItem('weracle_bojang_cover_config', JSON.stringify(cfg));
-        if (userKey && userKey !== 'weracle_bojang_cover_config') {
-          localStorage.setItem(userKey, JSON.stringify(cfg));
-        }
-      } catch(e) {
-        console.warn('localStorage save warning:', e);
-      }
-
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'WERACLE_COVER_SAVED', config: cfg }, '*');
-      }
-      alert('✨ 맞춤 표지 설정과 이미지가 안전하게 저장되었습니다! \n보장분석 페이지에 즉시 적용됩니다.');
-    };
-
-    // Export cover canvas for Bojang PDF integration
-    // ★ UNIVERSAL window.getCoverCanvas FOR PDF DOWNLOAD INTEGRATION ★
-    // Supports both Theme 01 (Official Guarantee) and Themes 02~05 (Signature Dynamic Covers)
-    window.getCoverCanvas = async function(extractedData) {
-      initCoreDomElements();
-      let customClient = (typeof extractedData === 'string') ? extractedData : (extractedData ? extractedData.clientName : null);
-
-      if (currentMasterThemeId !== '01') {
-        // --- THEMES 02 ~ 05: SIGNATURE THEMES ---
-        if (customClient) {
-          sigState.simCustomer = customClient;
-        }
-        renderSignatureCover(activeSignatureType);
-        const paper = document.getElementById('a4PaperCanvas');
-        if (!paper) return null;
-
-        const origTransform = paper.style.transform;
-        paper.style.transform = 'none';
-
-        try {
-          const canvas = await html2canvas(paper, {
-            scale: 2.0840336, // Exact 1240 x 1754 A4 resolution
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff',
-            logging: false
-          });
-          paper.style.transform = origTransform;
-          return canvas;
-        } catch (err) {
-          console.error('[Signature getCoverCanvas] Error:', err);
-          paper.style.transform = origTransform;
-          return null;
-        }
-      } else {
-        // --- THEME 01: STANDARD OFFICIAL GUARANTEE THEME ---
-        const origTransform = a4Sheet ? a4Sheet.style.transform : 'none';
-        if (a4Sheet) a4Sheet.style.transform = 'none';
-
-        const origValues = {
-          client: canvasPage.querySelector('.val-client') ? canvasPage.querySelector('.val-client').innerText : '',
-          contracts: canvasPage.querySelector('.val-contracts') ? canvasPage.querySelector('.val-contracts').innerText : '',
-          premium: canvasPage.querySelector('.val-premium') ? canvasPage.querySelector('.val-premium').innerText : '',
-          stOk: canvasPage.querySelector('.val-st-ok') ? canvasPage.querySelector('.val-st-ok').innerText : '',
-          stWarn: canvasPage.querySelector('.val-st-warn') ? canvasPage.querySelector('.val-st-warn').innerText : '',
-          stMiss: canvasPage.querySelector('.val-st-miss') ? canvasPage.querySelector('.val-st-miss').innerText : ''
-        };
-
-        if (customClient) {
-          canvasPage.querySelectorAll('.val-client, .greeting-client b').forEach(el => el.innerText = customClient);
-        }
-        if (typeof extractedData === 'object' && extractedData) {
-          if (extractedData.contracts) {
-            canvasPage.querySelectorAll('.val-contracts').forEach(el => el.innerText = extractedData.contracts);
-          }
-          if (extractedData.premium) {
-            canvasPage.querySelectorAll('.val-premium').forEach(el => el.innerText = extractedData.premium);
-          }
-          if (extractedData.stOk !== undefined && extractedData.stOk !== null) {
-            canvasPage.querySelectorAll('.val-st-ok').forEach(el => el.innerText = extractedData.stOk);
-          }
-          if (extractedData.stWarn !== undefined && extractedData.stWarn !== null) {
-            canvasPage.querySelectorAll('.val-st-warn').forEach(el => el.innerText = extractedData.stWarn);
-          }
-          if (extractedData.stMiss !== undefined && extractedData.stMiss !== null) {
-            canvasPage.querySelectorAll('.val-st-miss').forEach(el => el.innerText = extractedData.stMiss);
-          }
-        }
-
-        let resCanvas = null;
-        try {
-          resCanvas = await html2canvas(canvasPage, {
-            scale: 1, // exact 1240 x 1754
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: null,
-            logging: false
-          });
-        } catch(err) {
-          console.error('getCoverCanvas failed:', err);
-        } finally {
-          if (a4Sheet) a4Sheet.style.transform = origTransform;
-          if (origValues.client) {
-            canvasPage.querySelectorAll('.val-client, .greeting-client b').forEach(el => el.innerText = origValues.client);
-          }
-          if (origValues.contracts) {
-            canvasPage.querySelectorAll('.val-contracts').forEach(el => el.innerText = origValues.contracts);
-          }
-          if (origValues.premium) {
-            canvasPage.querySelectorAll('.val-premium').forEach(el => el.innerText = origValues.premium);
-          }
-          if (origValues.stOk) {
-            canvasPage.querySelectorAll('.val-st-ok').forEach(el => el.innerText = origValues.stOk);
-          }
-          if (origValues.stWarn) {
-            canvasPage.querySelectorAll('.val-st-warn').forEach(el => el.innerText = origValues.stWarn);
-          }
-          if (origValues.stMiss) {
-            canvasPage.querySelectorAll('.val-st-miss').forEach(el => el.innerText = origValues.stMiss);
-          }
-        }
-
-        return resCanvas;
-      }
-    };
-
-    // =========================================================================
-    // ACTION FOOTER BUTTONS: SAVE & APPLY, HIGH-RES DOWNLOAD, PRINT
-    // =========================================================================
-    async function saveCoverConfig() {
+    async function saveCoverConfig(silent = false, addToLibrary = true, existingCoverId = null, existingCoverTitle = null, fromApply = false) {
       const btn = document.getElementById('btnSaveApply');
       const origHtml = btn ? btn.innerHTML : '';
-      if (btn) {
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...';
+      if (btn && !silent) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 및 표지 적용 중...';
         btn.disabled = true;
       }
 
@@ -6693,41 +6994,173 @@
         const myProfile = getMyProfile();
         const userKey = getUserStorageKey(myProfile);
 
+        const themeTitle = (currentMasterThemeId === '01')
+          ? (TEMPLATES[currentTemplateIndex] ? TEMPLATES[currentTemplateIndex].name : '코퍼레이트 다크차콜')
+          : (THEME_PACKS.find(p => p.id === currentMasterThemeId) ? THEME_PACKS.find(p => p.id === currentMasterThemeId).name : '시그니처 표지');
+
+        const inpTitle = document.getElementById('inpLibraryTitle');
+        const customTitle = (inpTitle && inpTitle.value.trim()) ? inpTitle.value.trim() : '';
+        const now = new Date();
+        const dateStr = `${now.toLocaleDateString('ko-KR')} ${now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
+        
+        const coverId = existingCoverId || currentLoadedCoverId || ('cov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
+        const libTitle = existingCoverTitle || customTitle || currentLoadedCoverTitle || `${themeTitle} (${dateStr})`;
+
+        currentLoadedCoverId = coverId;
+        currentLoadedCoverTitle = libTitle;
+        window.currentLoadedCoverId = coverId;
+        window.currentLoadedCoverTitle = libTitle;
+
+        // Generate fast thumbnail for library if adding to library
+        let thumbDataUrl = '';
+        if (addToLibrary) {
+          try {
+            const targetEl = (currentMasterThemeId !== '01')
+              ? document.getElementById('a4PaperCanvas')
+              : canvasPage;
+            if (targetEl && targetEl.offsetWidth > 0 && targetEl.offsetHeight > 0) {
+              const cv = await html2canvas(targetEl, { scale: 0.15, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false });
+              thumbDataUrl = cv.toDataURL('image/jpeg', 0.65);
+            }
+          } catch (cvErr) {
+            console.warn('Thumbnail generation warning:', cvErr);
+          }
+        }
+
+        const clientVal = document.getElementById('inputClientName') ? document.getElementById('inputClientName').value.trim() : (sigState.simCustomer || '고객');
+        const advisorVal = document.getElementById('inputAdvisorName') ? document.getElementById('inputAdvisorName').value.trim() : 'ㅇㅇㅇ 팀장';
+        const phoneVal = document.getElementById('inputAdvisorPhone') ? document.getElementById('inputAdvisorPhone').value.trim() : '010-1234-5678';
+        const companyVal = document.getElementById('inputAdvisorBranch') ? document.getElementById('inputAdvisorBranch').value.trim() : '위라클랩';
+        const sloganVal = document.getElementById('inputAdvisorSlogan') ? document.getElementById('inputAdvisorSlogan').value.trim() : '';
+        const contractsVal = document.getElementById('inputContracts') ? document.getElementById('inputContracts').value.trim() : '18건';
+        const premiumVal = document.getElementById('inputPremium') ? document.getElementById('inputPremium').value.trim() : '420,548원';
+        const stOkVal = document.getElementById('inputDiagOk') ? document.getElementById('inputDiagOk').value.trim() : '23';
+        const stWarnVal = document.getElementById('inputDiagWarn') ? document.getElementById('inputDiagWarn').value.trim() : '8';
+        const stMissVal = document.getElementById('inputDiagMiss') ? document.getElementById('inputDiagMiss').value.trim() : '6';
+
+        if (clientVal) sigState.simCustomer = clientVal;
+        if (sigState.footer) {
+          if (companyVal) sigState.footer.org = companyVal;
+          if (phoneVal) sigState.footer.phone = phoneVal;
+          if (advisorVal) {
+            const advParts = advisorVal.split(' ');
+            if (advParts.length > 1) {
+              sigState.footer.name = advParts.slice(0, -1).join(' ');
+              sigState.footer.role = advParts[advParts.length - 1];
+            } else {
+              sigState.footer.name = advisorVal;
+            }
+          }
+        }
+
+        // Library Item with complete snapshot
+        const libItem = {
+          id: coverId,
+          title: libTitle,
+          masterThemeId: currentMasterThemeId,
+          themeId: (currentMasterThemeId !== '01') ? activeSignatureType : currentTemplateIndex,
+          sigState: JSON.parse(JSON.stringify(sigState)),
+          basicIndex: currentTemplateIndex,
+          visualMode: typeof currentVisualMode !== 'undefined' ? currentVisualMode : 'photo',
+          photoSrc: customPhotoSrc,
+          logoSrc: customLogoSrc,
+          client: clientVal,
+          advisor: advisorVal,
+          phone: phoneVal,
+          company: companyVal,
+          slogan: sloganVal,
+          contracts: contractsVal,
+          premium: premiumVal,
+          stOk: stOkVal,
+          stWarn: stWarnVal,
+          stMiss: stMissVal,
+          logoSize: currentLogoSize,
+          logoVisible: isLogoVisible,
+          photoHeight: currentPhotoHeight,
+          photoZoom: currentPhotoZoom,
+          photoPosY: currentPhotoPosY,
+          photoRadius: currentPhotoRadius,
+          titleSize: currentTitleSize,
+          greetingSize: currentGreetingSize,
+          thumbnail: thumbDataUrl,
+          updatedAt: new Date().toISOString()
+        };
+
+        if (addToLibrary) {
+          try {
+            let list = JSON.parse(localStorage.getItem('weracle_a4_cover_library_v2') || '[]');
+            const exIdx = list.findIndex(x => x.id === coverId);
+            if (exIdx >= 0) {
+              if (!libItem.thumbnail && list[exIdx].thumbnail) {
+                libItem.thumbnail = list[exIdx].thumbnail;
+              }
+              list[exIdx] = libItem;
+            } else {
+              list.unshift(libItem);
+            }
+            if (list.length > 30) list = list.slice(0, 30);
+            localStorage.setItem('weracle_a4_cover_library_v2', JSON.stringify(list));
+            savedCloudLibrary = list;
+            try { renderLibraryList(); } catch(e) {}
+            if (inpTitle) inpTitle.value = '';
+          } catch (lsErr) {
+            console.warn('LocalStorage library save warning:', lsErr);
+          }
+        }
+
         const cfg = {
+          userId: myProfile ? (myProfile.id || myProfile.email || '') : '',
+          activeCoverId: coverId,
+          coverTitle: libTitle,
           masterThemeId: currentMasterThemeId,
           themeIdx: typeof currentTemplateIndex !== 'undefined' ? currentTemplateIndex : 0,
-          themeName: (currentMasterThemeId === '01')
-            ? (TEMPLATES[currentTemplateIndex] ? TEMPLATES[currentTemplateIndex].name : '기본 보증서')
-            : (THEME_PACKS.find(p => p.id === currentMasterThemeId) ? THEME_PACKS.find(p => p.id === currentMasterThemeId).name : '시그니처 표지'),
+          themeName: themeTitle,
           activeSignatureType: activeSignatureType,
           sigState: sigState,
           visualMode: typeof currentVisualMode !== 'undefined' ? currentVisualMode : 'photo',
           photoSrc: customPhotoSrc,
           logoSrc: customLogoSrc,
-          timestamp: Date.now()
+          client: clientVal,
+          advisor: advisorVal,
+          phone: phoneVal,
+          company: companyVal,
+          slogan: sloganVal,
+          contracts: contractsVal,
+          premium: premiumVal,
+          stOk: stOkVal,
+          stWarn: stWarnVal,
+          stMiss: stMissVal,
+          logoSize: currentLogoSize,
+          logoVisible: isLogoVisible,
+          photoHeight: currentPhotoHeight,
+          photoZoom: currentPhotoZoom,
+          photoPosY: currentPhotoPosY,
+          photoRadius: currentPhotoRadius,
+          titleSize: currentTitleSize,
+          greetingSize: currentGreetingSize,
+          timestamp: Date.now(),
+          savedAt: new Date().toISOString()
         };
 
-        localStorage.setItem(userKey, JSON.stringify(cfg));
-        localStorage.setItem('weracle_bojang_cover_config', JSON.stringify(cfg));
-
         try {
-          const sbClient = await getActiveSupabaseClient();
-          const userId = myProfile ? (myProfile.id || (window.currentUser && window.currentUser.id)) : null;
-          if (sbClient && userId) {
-            const { data: profData } = await sbClient.from('profiles').select('settings').eq('id', userId).single();
-            const curSettings = (profData && profData.settings) || {};
-            await sbClient.from('profiles').update({
-              settings: { ...curSettings, active_cover_config: cfg }
-            }).eq('id', userId);
-            console.log('[Supabase Cloud] Active cover config updated in profile!');
+          localStorage.setItem('weracle_bojang_cover_config', JSON.stringify(cfg));
+          if (userKey && userKey !== 'weracle_bojang_cover_config') {
+            localStorage.setItem(userKey, JSON.stringify(cfg));
           }
         } catch(e) {
-          console.warn('[Supabase Sync Warning]', e);
+          console.warn('localStorage save warning:', e);
         }
 
-        if (btn) {
-          btn.innerHTML = '<i class="fa-solid fa-check"></i> 저장 및 즉시 적용 완료!';
-          btn.style.background = 'linear-gradient(135deg, #059669, #047857)';
+        // IMMEDIATELY notify parent window FIRST before async network calls!
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ 
+            type: 'WERACLE_COVER_SAVED', 
+            coverId: coverId,
+            coverTitle: libTitle,
+            masterThemeId: currentMasterThemeId,
+            fromApply: true,
+            config: cfg 
+          }, '*');
         }
 
         try {
@@ -6736,24 +7169,198 @@
           }
         } catch(e) {}
 
-        setTimeout(() => {
-          if (btn) {
-            btn.innerHTML = origHtml;
+        // Non-blocking background Supabase sync
+        (async () => {
+          try {
+            const sbClient = await getActiveSupabaseClient();
+            const userId = myProfile ? (myProfile.id || (window.currentUser && window.currentUser.id)) : null;
+            if (sbClient && userId) {
+              const { data: profData } = await sbClient.from('profiles').select('settings').eq('id', userId).single();
+              const curSettings = (profData && profData.settings) || {};
+              const updatePayload = {
+                settings: { ...curSettings, active_cover_config: cfg }
+              };
+              if (addToLibrary) {
+                let cloudCovers = Array.isArray(curSettings.bojang_covers) ? curSettings.bojang_covers : [];
+                const cIdx = cloudCovers.findIndex(x => x.id === coverId);
+                if (cIdx >= 0) {
+                  cloudCovers[cIdx] = libItem;
+                } else {
+                  cloudCovers.unshift(libItem);
+                }
+                if (cloudCovers.length > 30) cloudCovers = cloudCovers.slice(0, 30);
+                updatePayload.settings.bojang_covers = cloudCovers;
+              }
+              await sbClient.from('profiles').update(updatePayload).eq('id', userId);
+              console.log('[Supabase Cloud] Active cover config updated in background!');
+            }
+          } catch(sbErr) {
+            console.warn('[Supabase Sync Warning]', sbErr);
+          }
+        })();
+
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> 저장 및 즉시 적용 완료!';
+          btn.style.background = 'linear-gradient(135deg, #059669, #047857)';
+          setTimeout(() => {
+            btn.innerHTML = origHtml || '<i class="fa-solid fa-cloud-arrow-up"></i> 수정 후 표지 보장분석에 즉시 적용';
             btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
             btn.disabled = false;
-          }
-        }, 2000);
+          }, 2000);
+        }
 
-        alert('✅ 현재 표지 디자인이 저장되었으며, 보장분석 PDF 다운로드 표지로 즉시 적용되었습니다!');
+        if (window.parent === window && !silent) {
+          showStudioToast(`🎉 '${libTitle}' 표지 디자인이 안전하게 저장되었습니다!\n보장분석 페이지에 즉시 적용됩니다.`);
+        }
+        return cfg;
       } catch(err) {
         console.error('saveCoverConfig error:', err);
         if (btn) {
-          btn.innerHTML = origHtml;
+          btn.innerHTML = origHtml || '<i class="fa-solid fa-cloud-arrow-up"></i> 수정 후 표지 보장분석에 즉시 적용';
           btn.disabled = false;
         }
-        alert('설정 저장 중 오류가 발생했습니다: ' + err.message);
+        if (!silent) {
+          alert('설정 저장 중 오류가 발생했습니다: ' + err.message);
+        }
+        return null;
       }
     }
+    window.saveCoverConfig = saveCoverConfig;
+
+    // Export cover canvas for Bojang PDF integration
+    // ★ UNIVERSAL window.getCoverCanvas FOR PDF DOWNLOAD INTEGRATION ★
+    // Supports both Theme 01 (Official Guarantee) and Themes 02~05 (Signature Dynamic Covers)
+    window.getCoverCanvas = async function(extractedData) {
+      initCoreDomElements();
+      let customClient = (typeof extractedData === 'string') ? extractedData : (extractedData ? extractedData.clientName : null);
+
+      const a4Cont = document.getElementById('a4Container');
+      const origContW = a4Cont ? a4Cont.style.width : '';
+      const origContH = a4Cont ? a4Cont.style.height : '';
+      const origContOverflow = a4Cont ? a4Cont.style.overflow : '';
+      if (a4Cont) {
+        a4Cont.style.width = '1240px';
+        a4Cont.style.height = '1754px';
+        a4Cont.style.overflow = 'visible';
+      }
+
+      try {
+        if (currentMasterThemeId !== '01') {
+          // --- THEMES 02 ~ 05: SIGNATURE THEMES ---
+          if (customClient) {
+            sigState.simCustomer = customClient;
+          }
+          renderSignatureCover(activeSignatureType);
+          const paper = document.getElementById('a4PaperCanvas');
+          if (!paper) return null;
+
+          const origPaperTransform = paper.style.transform;
+          const origSheetTransform = a4Sheet ? a4Sheet.style.transform : 'none';
+          paper.style.transform = 'none';
+          if (a4Sheet) a4Sheet.style.transform = 'none';
+
+          try {
+            const canvas = await html2canvas(paper, {
+              scale: 2.0840336, // Exact 1240 x 1754 A4 resolution
+              useCORS: true,
+              allowTaint: false,
+              backgroundColor: '#ffffff',
+              logging: false
+            });
+            paper.style.transform = origPaperTransform;
+            if (a4Sheet) a4Sheet.style.transform = origSheetTransform;
+            return canvas;
+          } catch (err) {
+            console.error('[Signature getCoverCanvas] Error:', err);
+            paper.style.transform = origPaperTransform;
+            if (a4Sheet) a4Sheet.style.transform = origSheetTransform;
+            return null;
+          }
+        } else {
+          // --- THEME 01: STANDARD OFFICIAL GUARANTEE THEME ---
+          const origTransform = a4Sheet ? a4Sheet.style.transform : 'none';
+          if (a4Sheet) a4Sheet.style.transform = 'none';
+
+          const origValues = {
+            client: canvasPage.querySelector('.val-client') ? canvasPage.querySelector('.val-client').innerText : '',
+            contracts: canvasPage.querySelector('.val-contracts') ? canvasPage.querySelector('.val-contracts').innerText : '',
+            premium: canvasPage.querySelector('.val-premium') ? canvasPage.querySelector('.val-premium').innerText : '',
+            stOk: canvasPage.querySelector('.val-st-ok') ? canvasPage.querySelector('.val-st-ok').innerText : '',
+            stWarn: canvasPage.querySelector('.val-st-warn') ? canvasPage.querySelector('.val-st-warn').innerText : '',
+            stMiss: canvasPage.querySelector('.val-st-miss') ? canvasPage.querySelector('.val-st-miss').innerText : ''
+          };
+
+          if (customClient) {
+            canvasPage.querySelectorAll('.val-client, .greeting-client b').forEach(el => el.innerText = customClient);
+          }
+          if (typeof extractedData === 'object' && extractedData) {
+            if (extractedData.contracts) {
+              canvasPage.querySelectorAll('.val-contracts').forEach(el => el.innerText = extractedData.contracts);
+            }
+            if (extractedData.premium) {
+              canvasPage.querySelectorAll('.val-premium').forEach(el => el.innerText = extractedData.premium);
+            }
+            if (extractedData.stOk !== undefined && extractedData.stOk !== null) {
+              canvasPage.querySelectorAll('.val-st-ok').forEach(el => el.innerText = extractedData.stOk);
+            }
+            if (extractedData.stWarn !== undefined && extractedData.stWarn !== null) {
+              canvasPage.querySelectorAll('.val-st-warn').forEach(el => el.innerText = extractedData.stWarn);
+            }
+            if (extractedData.stMiss !== undefined && extractedData.stMiss !== null) {
+              canvasPage.querySelectorAll('.val-st-miss').forEach(el => el.innerText = extractedData.stMiss);
+            }
+          }
+
+          let resCanvas = null;
+          try {
+            resCanvas = await html2canvas(canvasPage, {
+              scale: 1, // exact 1240 x 1754
+              useCORS: true,
+              allowTaint: false,
+              backgroundColor: null,
+              logging: false
+            });
+          } catch(err) {
+            console.error('getCoverCanvas failed:', err);
+          } finally {
+            if (a4Sheet) a4Sheet.style.transform = origTransform;
+            if (origValues.client) {
+              canvasPage.querySelectorAll('.val-client, .greeting-client b').forEach(el => el.innerText = origValues.client);
+            }
+            if (origValues.contracts) {
+              canvasPage.querySelectorAll('.val-contracts').forEach(el => el.innerText = origValues.contracts);
+            }
+            if (origValues.premium) {
+              canvasPage.querySelectorAll('.val-premium').forEach(el => el.innerText = origValues.premium);
+            }
+            if (origValues.stOk) {
+              canvasPage.querySelectorAll('.val-st-ok').forEach(el => el.innerText = origValues.stOk);
+            }
+            if (origValues.stWarn) {
+              canvasPage.querySelectorAll('.val-st-warn').forEach(el => el.innerText = origValues.stWarn);
+            }
+            if (origValues.stMiss) {
+              canvasPage.querySelectorAll('.val-st-miss').forEach(el => el.innerText = origValues.stMiss);
+            }
+          }
+
+          return resCanvas;
+        }
+      } finally {
+        if (a4Cont) {
+          a4Cont.style.width = origContW;
+          a4Cont.style.height = origContH;
+          a4Cont.style.overflow = origContOverflow;
+        }
+        if (typeof fitA4ToScreen === 'function') {
+          fitA4ToScreen();
+        }
+      }
+    };
+
+    // =========================================================================
+    // ACTION FOOTER BUTTONS: HIGH-RES DOWNLOAD, PRINT
+    // =========================================================================
 
     async function downloadCoverImage() {
       initCoreDomElements();
@@ -6803,21 +7410,21 @@
     }
 
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       initCoreDomElements();
       applyRegisteredLogoToAll();
       try {
-        selectMasterTheme('01');
         loadCoversFromCloud();
       } catch(e) {
         console.warn('Init warning:', e);
       }
 
-      loadCoverConfig();
+      await loadCoverConfig();
       fitA4ToScreen();
       initDirectDragResize();
       makeSheetElementsDirectlyEditable();
       setTimeout(fitA4ToScreen, 80);
+      setTimeout(fitA4ToScreen, 250);
 
       if (window.ResizeObserver) {
         const ro = new ResizeObserver(() => fitA4ToScreen());

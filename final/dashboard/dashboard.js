@@ -1812,9 +1812,6 @@ async function initDashboard() {
     if (quotaSummaryEl) {
       quotaSummaryEl.innerHTML = `
         <div style="background: #fff; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; font-weight: 600;">
-          <span style="color: var(--text-muted);">보유 포인트:</span> <span style="color: var(--success); font-weight: 800;">${new Intl.NumberFormat('ko-KR').format(profile.point_balance || 0)} P</span>
-        </div>
-        <div style="background: #fff; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; font-weight: 600;">
           <span style="color: var(--text-muted);">잔여 팩스:</span> <span style="color: var(--primary); font-weight: 800;">${myLimits.fax - (profile.fax_count || 0)}건</span>
         </div>
       `;

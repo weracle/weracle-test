@@ -3878,31 +3878,23 @@
               <span style="font-size: 12px; color: #64748b; font-weight: 600;">(부가세 별도 / 인쇄비 포함)</span>
             </div>
 
-            <!-- 수량별 차등 단가표 -->
-            <table class="pricing-tier-table">
-              <thead>
-                <tr>
-                  <th style="width: 20%;">인쇄비</th>
-                  <th colspan="5" class="text-red">인쇄비 무료 (1:1 골드 불박 / 1도 실크 지원)</th>
-                </tr>
-                <tr>
-                  <th>수 량</th>
-                  <th>150</th>
-                  <th>300</th>
-                  <th>450</th>
-                  <th>750</th>
-                  <th>1,500+</th>
-                </tr>
+            <!-- 수량별 차등 단가표 헤더 바 (weraclemarket.com 규격) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; margin-bottom: 6px; font-size: 13px;">
+              <div>
+                <span style="font-weight: 800; color: #0f172a;">수량별 단가표</span>
+                <b style="color: #2563eb; margin-left: 6px;">[기본수량 : <span id="detailBaseQtyBadge">120</span>개]</b>
+                <span style="font-size: 12px; color: #64748b; margin-left: 6px;">(최소 주문수량: <b id="detailMinQtyBadge" style="color:#0f172a;">30</b>개)</span>
+              </div>
+              <span style="font-size: 11.5px; color: #64748b; font-weight: 600;">[단위 : 개/원]</span>
+            </div>
+
+            <!-- 수량별 차등 단가표 (인쇄비 무료 행 제거 및 상품별 동적 렌더링) -->
+            <table class="pricing-tier-table" id="pricingTierTable">
+              <thead id="pricingTierThead">
+                <!-- JS 동적 생성 -->
               </thead>
-              <tbody>
-                <tr>
-                  <th>일반가</th>
-                  <td id="tier150">3,915</td>
-                  <td id="tier300">3,828</td>
-                  <td id="tier450">3,712</td>
-                  <td id="tier750">3,654</td>
-                  <td id="tier1500">3,567</td>
-                </tr>
+              <tbody id="pricingTierTbody">
+                <!-- JS 동적 생성 -->
               </tbody>
             </table>
 
@@ -3925,10 +3917,14 @@
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <div style="display: flex; align-items: center; border: 1.5px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff;">
                       <button type="button" onclick="changeQuoteQty(-10)" style="width: 28px; height: 28px; border: none; background: #f8fafc; font-weight: 800; cursor: pointer; color: #334155; font-size: 13px;">-</button>
-                      <input type="number" id="quoteQtyInput" value="160" min="10" step="10" oninput="handleQuoteQtyInput(this.value)" style="width: 52px; height: 28px; text-align: center; border: none; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-size: 12.5px; font-weight: 800; color: #0f172a;">
+                      <input type="number" id="quoteQtyInput" value="120" min="1" step="10" oninput="handleQuoteQtyInput(this.value)" style="width: 58px; height: 28px; text-align: center; border: none; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-size: 13px; font-weight: 800; color: #0f172a;">
                       <button type="button" onclick="changeQuoteQty(10)" style="width: 28px; height: 28px; border: none; background: #f8fafc; font-weight: 800; cursor: pointer; color: #334155; font-size: 13px;">+</button>
                     </div>
-                    <span style="font-weight: 700; color: #475569; font-size: 12.5px;">권</span>
+                    <span style="font-weight: 700; color: #475569; font-size: 12.5px;">개 (권)</span>
+                  </div>
+                  <!-- 기본수량 미만 주문 시 안내문 (weraclemarket.com 규격) -->
+                  <div id="quoteMinQtyNotice" style="margin-top: 5px; font-size: 11.5px; color: #dc2626; font-weight: 800; line-height: 1.3;">
+                    기본수량(<span id="quoteMinQtyNoticeVal">120</span>개) 미만 주문 시 별도 견적문의 바랍니다.
                   </div>
                 </td>
               </tr>
@@ -3947,8 +3943,11 @@
                 <td style="font-weight: 800; color: #1e293b; font-size: 12.5px;" id="quoteUnitPrice">3,900 원</td>
               </tr>
               <tr>
-                <th>추가합계금액</th>
-                <td style="font-weight: 800; color: #1e293b; font-size: 12.5px;" id="quoteSupplyPrice">624,000 원</td>
+                <th>주문금액</th>
+                <td style="font-weight: 800; color: #1e293b; font-size: 12.5px;">
+                  <span id="quoteSupplyPrice">453,600 원</span>
+                  <span style="font-size: 11px; color: #64748b; font-weight: normal; margin-left: 4px;">(부가세 별도)</span>
+                </td>
               </tr>
               <tr>
                 <th>부가세</th>
@@ -4251,12 +4250,30 @@
     const DEFAULT_PRODUCTS = {
       item1: {
         id: "item1",
-        title: "[1:1 각인제작] 프리미엄 사피아노 가죽 보험증권 전달 바인더",
+        title: "솔리드 가죽 화일 (바인더)",
         tag: "📁 개인 브랜딩 상품",
         category: "binder",
-        price: 3900,
+        price: 3780,
         originalPrice: 4500,
-        discountRate: "13%",
+        discountRate: "16%",
+        baseQty: 120,
+        minQty: 30,
+        tierList: [
+          { qty: 120, price: 3780 },
+          { qty: 240, price: 3696 },
+          { qty: 360, price: 3584 },
+          { qty: 600, price: 3528 },
+          { qty: 1200, price: 3444 },
+          { qty: 2400, price: 3360 },
+          { qty: 6000, price: 3220 }
+        ],
+        tiers: { t120: 3780, t240: 3696, t360: 3584, t600: 3528, t1200: 3444, t2400: 3360, t6000: 3220 },
+        printOptions: [
+          { name: "박인쇄 1면", price: 150 },
+          { name: "박인쇄 2면", price: 250 },
+          { name: "실크인쇄 1도", price: 350 },
+          { name: "인쇄 없음 (무지 / 빠른 출고)", price: 0 }
+        ],
         thumb: "branding_img/KakaoTalk_20261109_105448276.jpg",
         thumbs: [
           "branding_img/KakaoTalk_20261109_105448276.jpg",
@@ -4270,12 +4287,6 @@
         ],
         summary: "소속 GA 로고 및 설계사 성함 정밀 120℃ 골드 불박 각인 / 프리미엄 서류 전달 바인더",
         notice: "기본 배송: 우체국 택배 무료배송 / 주문제작 상품 (시안 확정 후 2~4일 출고)",
-        tiers: { t150: 3900, t300: 3800, t450: 3700, t750: 3600, t1500: 3500 },
-        printOptions: [
-          { name: "1도 실크인쇄 (무료 이벤트)", price: 0 },
-          { name: "1:1 골드 불박 각인 (무료 지원)", price: 0 },
-          { name: "인쇄 없음 (무지 / 빠른 출고)", price: 0 }
-        ],
         colorOptions: [
           { name: "네이비", colorCode: "#1e3a8a", image: "branding_img/KakaoTalk_20261109_105443294_07.jpg" },
           { name: "레드", colorCode: "#b91c1c", image: "branding_img/KakaoTalk_20261109_105443294.jpg" },
@@ -4854,10 +4865,14 @@
         // 2. 상세페이지 복합 블록 (이미지 + 텍스트) 렌더링
         renderDetailBlocks();
 
-        // 견적 연산 초기화
-        quoteQty = 160;
+        // 1. 수량별 단가표 동적 렌더링
+        renderDetailPricingTiers(item);
+
+        // 2. 견적 연산 초기화 (해당 상품의 기본수량으로 설정)
+        const baseQty = item.baseQty || (item.tierList && item.tierList[0] ? item.tierList[0].qty : 120);
+        quoteQty = baseQty;
         const qtyInp = document.getElementById('quoteQtyInput');
-        if (qtyInp) qtyInp.value = 160;
+        if (qtyInp) qtyInp.value = baseQty;
         calcQuoteTotal();
 
         // 1. 상품정보 탭 활성화 (초기 열림 시 스크롤 이동 방지)
@@ -5056,30 +5071,123 @@
       calcQuoteTotal();
     }
 
+    // =========================================================
+    //  수량별 단가 및 동적 견적 계산 엔진 (weraclemarket.com 규격)
+    // =========================================================
+    function getItemTierList(item) {
+      if (!item) return [];
+      if (Array.isArray(item.tierList) && item.tierList.length > 0) {
+        return item.tierList.slice().sort((a,b) => a.qty - b.qty);
+      }
+      if (item.tiers) {
+        const list = [];
+        Object.keys(item.tiers).forEach(k => {
+          const num = parseInt(k.replace(/[^0-9]/g, ''));
+          if (num && item.tiers[k]) list.push({ qty: num, price: parseInt(item.tiers[k]) });
+        });
+        if (list.length > 0) return list.sort((a,b) => a.qty - b.qty);
+      }
+      const basePrice = item.price || 3780;
+      return [
+        { qty: 120, price: basePrice },
+        { qty: 240, price: Math.round(basePrice * 0.978) },
+        { qty: 360, price: Math.round(basePrice * 0.948) },
+        { qty: 600, price: Math.round(basePrice * 0.933) },
+        { qty: 1200, price: Math.round(basePrice * 0.911) },
+        { qty: 2400, price: Math.round(basePrice * 0.889) },
+        { qty: 6000, price: Math.round(basePrice * 0.852) }
+      ];
+    }
+
+    function getItemUnitPrice(item, qty) {
+      if (!item) return 3780;
+      const tierList = getItemTierList(item);
+      const sorted = tierList.slice().sort((a,b) => b.qty - a.qty);
+      for (const t of sorted) {
+        if (qty >= t.qty) {
+          return t.price;
+        }
+      }
+      return sorted.length > 0 ? sorted[sorted.length - 1].price : (item.price || 3780);
+    }
+
+    function renderDetailPricingTiers(item) {
+      const tierList = getItemTierList(item);
+      const baseQty = item.baseQty || (tierList[0] ? tierList[0].qty : 120);
+      const minQty = item.minQty || 30;
+
+      const baseBadge = document.getElementById('detailBaseQtyBadge');
+      if (baseBadge) baseBadge.innerText = baseQty.toLocaleString();
+
+      const minBadge = document.getElementById('detailMinQtyBadge');
+      if (minBadge) minBadge.innerText = minQty.toLocaleString();
+
+      const noticeVal = document.getElementById('quoteMinQtyNoticeVal');
+      if (noticeVal) noticeVal.innerText = baseQty.toLocaleString();
+
+      const thead = document.getElementById('pricingTierThead');
+      const tbody = document.getElementById('pricingTierTbody');
+      if (!thead || !tbody) return;
+
+      let headHtml = '<tr><th style="width: 18%; background: #f8fafc; font-weight: 800; color: #334155;">수 량</th>';
+      tierList.forEach((t, idx) => {
+        const isLast = idx === tierList.length - 1;
+        headHtml += `<th style="font-weight: 800; color: #334155;" id="thTier_${t.qty}">${t.qty.toLocaleString()}${isLast ? '+' : ''}</th>`;
+      });
+      headHtml += '</tr>';
+      thead.innerHTML = headHtml;
+
+      let bodyHtml = '<tr><th style="background: #f8fafc; font-weight: 800; color: #334155;">일반가</th>';
+      tierList.forEach(t => {
+        bodyHtml += `<td id="tdTier_${t.qty}" style="font-weight: 700; color: #0f172a;">${t.price.toLocaleString()}</td>`;
+      });
+      bodyHtml += '</tr>';
+      tbody.innerHTML = bodyHtml;
+    }
+
+    function highlightActiveTier(item, qty) {
+      const tierList = getItemTierList(item);
+      const sorted = tierList.slice().sort((a,b) => b.qty - a.qty);
+      let activeQty = sorted.length > 0 ? sorted[sorted.length - 1].qty : null;
+      for (const t of sorted) {
+        if (qty >= t.qty) {
+          activeQty = t.qty;
+          break;
+        }
+      }
+
+      tierList.forEach(t => {
+        const th = document.getElementById('thTier_' + t.qty);
+        const td = document.getElementById('tdTier_' + t.qty);
+        if (th && td) {
+          if (t.qty === activeQty) {
+            th.style.background = '#dbeafe';
+            th.style.color = '#1e40af';
+            td.style.background = '#eff6ff';
+            td.style.color = '#1e40af';
+            td.style.fontWeight = '900';
+          } else {
+            th.style.background = '#f8fafc';
+            th.style.color = '#334155';
+            td.style.background = '#ffffff';
+            td.style.color = '#0f172a';
+            td.style.fontWeight = '600';
+          }
+        }
+      });
+    }
+
     function calcQuoteTotal() {
       const item = currentItem || products.item1;
-      const basePrice = item.price || 3900;
-      const tiers = item.tiers || {
-        t150: basePrice,
-        t300: Math.round(basePrice * 0.98),
-        t450: Math.round(basePrice * 0.95),
-        t750: Math.round(basePrice * 0.93),
-        t1500: Math.round(basePrice * 0.90)
-      };
-
-      let unitPrice = tiers.t150;
-      if (quoteQty >= 1500) unitPrice = tiers.t1500;
-      else if (quoteQty >= 750) unitPrice = tiers.t750;
-      else if (quoteQty >= 450) unitPrice = tiers.t450;
-      else if (quoteQty >= 300) unitPrice = tiers.t300;
+      const unitPrice = getItemUnitPrice(item, quoteQty);
 
       const printSelect = document.getElementById('quotePrintOption');
       const printSurcharge = printSelect ? parseInt(printSelect.value) || 0 : 0;
 
       const appliedUnit = unitPrice + printSurcharge;
-      const supplyAmount = appliedUnit * quoteQty; // 추가합계금액
+      const supplyAmount = appliedUnit * quoteQty; // 주문금액 (부가세 별도)
       const vatAmount = Math.round(supplyAmount * 0.1); // 부가세
-      const totalAmount = supplyAmount + vatAmount; // 총합계금액
+      const totalAmount = supplyAmount + vatAmount; // 총합계금액 (부가세 포함)
 
       if (document.getElementById('quoteUnitPrice')) {
         document.getElementById('quoteUnitPrice').innerText = appliedUnit.toLocaleString() + ' 원';
@@ -5093,6 +5201,22 @@
       if (document.getElementById('quoteTotalPrice')) {
         document.getElementById('quoteTotalPrice').innerText = totalAmount.toLocaleString() + ' 원';
       }
+
+      // 미만 표현 안내문 갱신
+      const baseQty = item.baseQty || (item.tierList && item.tierList[0] ? item.tierList[0].qty : 120);
+      const noticeEl = document.getElementById('quoteMinQtyNotice');
+      if (noticeEl) {
+        if (quoteQty < baseQty) {
+          noticeEl.style.color = '#dc2626';
+          noticeEl.innerHTML = `⚠️ 기본수량(<b>${baseQty.toLocaleString()}개</b>) 미만 주문 시 별도 견적문의 바랍니다.`;
+        } else {
+          noticeEl.style.color = '#16a34a';
+          noticeEl.innerHTML = `✓ 기본수량(<b>${baseQty.toLocaleString()}개</b>) 이상 적용 완료 (수량 구간 할인 중)`;
+        }
+      }
+
+      // 단가표 활성 구간 하이라이트
+      highlightActiveTier(item, quoteQty);
     }
 
     function simulateKurlyOrder() {
@@ -5258,10 +5382,30 @@
       regThumbSlideIdx = 0;
       updateRegThumbSlider();
 
-      // 인쇄 옵션 기본값
+      // 기본/최소 수량 초기화
+      const bqInp = document.getElementById('adminProdBaseQty');
+      if (bqInp) bqInp.value = '120';
+      const mqInp = document.getElementById('adminProdMinQty');
+      if (mqInp) mqInp.value = '30';
+
+      // 단가표 초기화 (weraclemarket.com 규격 7단계)
+      adminTierList = [
+        { qty: 120, price: 3780 },
+        { qty: 240, price: 3696 },
+        { qty: 360, price: 3584 },
+        { qty: 600, price: 3528 },
+        { qty: 1200, price: 3444 },
+        { qty: 2400, price: 3360 },
+        { qty: 6000, price: 3220 }
+      ];
+      renderAdminTierRows();
+
+      // 인쇄 옵션 기본값 (weraclemarket.com 규격)
       adminPrintOptionList = [
-        { name: "1도 실크인쇄 (무료)", price: 0 },
-        { name: "1:1 골드 불박 (무료)", price: 0 }
+        { name: "박인쇄 1면", price: 150 },
+        { name: "박인쇄 2면", price: 250 },
+        { name: "실크인쇄 1도", price: 350 },
+        { name: "인쇄 없음 (무지 / 빠른 출고)", price: 0 }
       ];
       renderAdminPrintOptionRows();
 
@@ -5385,6 +5529,88 @@
         `;
         container.appendChild(row);
       });
+    }
+
+    
+    // 관리자 상품등록용 단가 구간 목록
+    let adminTierList = [
+      { qty: 120, price: 3780 },
+      { qty: 240, price: 3696 },
+      { qty: 360, price: 3584 },
+      { qty: 600, price: 3528 },
+      { qty: 1200, price: 3444 },
+      { qty: 2400, price: 3360 },
+      { qty: 6000, price: 3220 }
+    ];
+
+    function renderAdminTierRows() {
+      const container = document.getElementById('adminTierRowsContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (adminTierList.length === 0) {
+        container.innerHTML = '<span style="font-size:12px; color:#64748b;">등록된 단가 구간이 없습니다. (+ 단가 구간 추가를 눌러 등록하세요)</span>';
+        return;
+      }
+
+      const basePrice = parseInt(document.getElementById('adminProdPrice').value) || (adminTierList[0] ? adminTierList[0].price : 3780);
+
+      adminTierList.forEach((tier, idx) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display: flex; gap: 10px; align-items: center; background: #fff; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;';
+        
+        const discRate = basePrice > tier.price ? Math.round((1 - tier.price / basePrice) * 100) : 0;
+        const discBadge = discRate > 0 ? `<span style="background:#fee2e2; color:#b91c1c; font-size:11px; font-weight:800; padding:2px 6px; border-radius:4px;">${discRate}% 할인</span>` : `<span style="background:#f1f5f9; color:#475569; font-size:11px; font-weight:700; padding:2px 6px; border-radius:4px;">기준단가</span>`;
+
+        row.innerHTML = `
+          <span style="font-weight:700; font-size:12px; color:#475569; width:45px;">구간 ${idx + 1}</span>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <input type="number" value="${tier.qty}" placeholder="수량" min="1" step="10" oninput="adminTierList[${idx}].qty = parseInt(this.value)||0;" style="width:75px; height:32px; border:1px solid #cbd5e1; border-radius:6px; padding:0 8px; font-size:13px; font-weight:800; text-align:center;">
+            <span style="font-size:12px; color:#64748b; font-weight:700;">개 이상</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:4px; margin-left:6px;">
+            <span style="font-size:12px; color:#64748b; font-weight:700;">권당 단가</span>
+            <input type="number" value="${tier.price}" placeholder="단가" min="0" step="10" oninput="adminTierList[${idx}].price = parseInt(this.value)||0;" style="width:85px; height:32px; border:1px solid #cbd5e1; border-radius:6px; padding:0 8px; font-size:13px; font-weight:800; text-align:right;">
+            <span style="font-size:12px; color:#64748b; font-weight:700;">원</span>
+          </div>
+          <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+            ${discBadge}
+            <button type="button" onclick="adminRemoveTierRow(${idx})" style="background:#fee2e2; color:#ef4444; border:none; width:28px; height:28px; border-radius:6px; font-weight:bold; cursor:pointer;" title="구간 삭제">✕</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function adminAddTierRow(qty, price) {
+      const last = adminTierList[adminTierList.length - 1];
+      const newQty = qty || (last ? last.qty * 2 : 120);
+      const newPrice = price || (last ? Math.round(last.price * 0.97) : 3780);
+      adminTierList.push({ qty: newQty, price: newPrice });
+      renderAdminTierRows();
+    }
+
+    function adminRemoveTierRow(idx) {
+      adminTierList.splice(idx, 1);
+      renderAdminTierRows();
+    }
+
+    function adminPresetWeracleTiers() {
+      const baseP = parseInt(document.getElementById('adminProdPrice').value) || 3780;
+      document.getElementById('adminProdBaseQty').value = '120';
+      document.getElementById('adminProdMinQty').value = '30';
+
+      adminTierList = [
+        { qty: 120, price: baseP },
+        { qty: 240, price: Math.round(baseP * 0.978) },
+        { qty: 360, price: Math.round(baseP * 0.948) },
+        { qty: 600, price: Math.round(baseP * 0.933) },
+        { qty: 1200, price: Math.round(baseP * 0.911) },
+        { qty: 2400, price: Math.round(baseP * 0.889) },
+        { qty: 6000, price: Math.round(baseP * 0.852) }
+      ];
+      renderAdminTierRows();
+      alert('⚡ weraclemarket 표준 7단계 수량/단가 프리셋(120, 240, 360, 600, 1200, 2400, 6000)이 자동 적용되었습니다.');
     }
 
     function adminAddPrintOptionRow() {
@@ -5556,6 +5782,33 @@
         { name: "1도 실크인쇄 (무료)", price: 0 }
       ];
 
+      // 기본수량, 최소주문수량, 수량별 단가 구간 수집 (weraclemarket.com 연동)
+      const baseQty = parseInt(document.getElementById('adminProdBaseQty')?.value) || 120;
+      const minQty = parseInt(document.getElementById('adminProdMinQty')?.value) || 30;
+
+      let tierList = [];
+      if (adminTierList.length > 0) {
+        tierList = adminTierList.map(t => ({
+          qty: parseInt(t.qty) || 120,
+          price: parseInt(t.price) || price
+        })).sort((a,b) => a.qty - b.qty);
+      } else {
+        tierList = [
+          { qty: baseQty, price: price },
+          { qty: baseQty * 2, price: Math.round(price * 0.978) },
+          { qty: baseQty * 3, price: Math.round(price * 0.948) },
+          { qty: baseQty * 5, price: Math.round(price * 0.933) },
+          { qty: baseQty * 10, price: Math.round(price * 0.911) },
+          { qty: baseQty * 20, price: Math.round(price * 0.889) },
+          { qty: baseQty * 50, price: Math.round(price * 0.852) }
+        ];
+      }
+
+      const tiersMap = {};
+      tierList.forEach(t => {
+        tiersMap['t' + t.qty] = t.price;
+      });
+
       const newProduct = {
         id: newId,
         title: title,
@@ -5564,17 +5817,14 @@
         price: price,
         originalPrice: originalPrice,
         discountRate: discountRate,
+        baseQty: baseQty,
+        minQty: minQty,
+        tierList: tierList,
+        tiers: tiersMap,
         thumb: mainThumb,
         thumbs: thumbs,
         summary: summary || '1:1 맞춤 제작 프리미엄 브랜딩 상품',
         notice: '기본 배송: 무료배송 / 주문제작 상품 (시안 확정 후 2~4일 출고)',
-        tiers: {
-          t150: price,
-          t300: Math.round(price * 0.98),
-          t450: Math.round(price * 0.95),
-          t750: Math.round(price * 0.93),
-          t1500: Math.round(price * 0.90)
-        },
         printOptions: printOpts,
         colorOptions: colorOpts,
         detailBlocks: detailBlocks
@@ -5896,25 +6146,11 @@
       const printOptionText = printSelect && printSelect.options[printSelect.selectedIndex] ? printSelect.options[printSelect.selectedIndex].text : '1도 실크인쇄 (무료)';
       const printSurcharge = printSelect ? parseInt(printSelect.value) || 0 : 0;
 
-      const basePrice = item.price || 32000;
-      const tiers = item.tiers || {
-        t150: basePrice,
-        t300: Math.round(basePrice * 0.98),
-        t450: Math.round(basePrice * 0.95),
-        t750: Math.round(basePrice * 0.93),
-        t1500: Math.round(basePrice * 0.90)
-      };
-
-      let unitPrice = tiers.t150;
-      if (quoteQty >= 1500) unitPrice = tiers.t1500;
-      else if (quoteQty >= 750) unitPrice = tiers.t750;
-      else if (quoteQty >= 450) unitPrice = tiers.t450;
-      else if (quoteQty >= 300) unitPrice = tiers.t300;
-
+      const unitPrice = getItemUnitPrice(item, quoteQty);
       const appliedUnit = unitPrice + printSurcharge;
-      const supplyAmount = appliedUnit * quoteQty;
-      const vatAmount = Math.round(supplyAmount * 0.1);
-      const totalAmount = supplyAmount + vatAmount;
+      const supplyAmount = appliedUnit * quoteQty; // 주문금액 (부가세 별도)
+      const vatAmount = Math.round(supplyAmount * 0.1); // 부가세
+      const totalAmount = supplyAmount + vatAmount; // 총합계금액 (부가세 포함)
 
       const cartItems = getCartItems();
       const existingIdx = cartItems.findIndex(ci => ci.productId === (item.id || 'item1') && ci.color === colorName && ci.printOption === printOptionText);
@@ -5955,25 +6191,11 @@
       const printOptionText = printSelect && printSelect.options[printSelect.selectedIndex] ? printSelect.options[printSelect.selectedIndex].text : '1도 실크인쇄 (무료)';
       const printSurcharge = printSelect ? parseInt(printSelect.value) || 0 : 0;
 
-      const basePrice = item.price || 32000;
-      const tiers = item.tiers || {
-        t150: basePrice,
-        t300: Math.round(basePrice * 0.98),
-        t450: Math.round(basePrice * 0.95),
-        t750: Math.round(basePrice * 0.93),
-        t1500: Math.round(basePrice * 0.90)
-      };
-
-      let unitPrice = tiers.t150;
-      if (quoteQty >= 1500) unitPrice = tiers.t1500;
-      else if (quoteQty >= 750) unitPrice = tiers.t750;
-      else if (quoteQty >= 450) unitPrice = tiers.t450;
-      else if (quoteQty >= 300) unitPrice = tiers.t300;
-
+      const unitPrice = getItemUnitPrice(item, quoteQty);
       const appliedUnit = unitPrice + printSurcharge;
-      const supplyAmount = appliedUnit * quoteQty;
-      const vatAmount = Math.round(supplyAmount * 0.1);
-      const totalAmount = supplyAmount + vatAmount;
+      const supplyAmount = appliedUnit * quoteQty; // 주문금액 (부가세 별도)
+      const vatAmount = Math.round(supplyAmount * 0.1); // 부가세
+      const totalAmount = supplyAmount + vatAmount; // 총합계금액 (부가세 포함)
 
       currentCheckoutItems = [{
         cartId: 'direct_' + Date.now(),
@@ -6359,7 +6581,7 @@
       <!-- 4. 모달 내부 탭 바: 실제 서비스 화면 탭 스타일과 연동! -->
       <div class="admin-tabs" style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; flex-wrap: wrap;">
         <button type="button" class="admin-tab-btn active" onclick="switchProductRegTab(0, this)">1. 기본정보 & 대표사진</button>
-        <button type="button" class="admin-tab-btn" onclick="switchProductRegTab(1, this)">2. 색상 & 인쇄옵션</button>
+        <button type="button" class="admin-tab-btn" onclick="switchProductRegTab(1, this)">2. 단가표 & 옵션 설정</button>
         <button type="button" class="admin-tab-btn" onclick="switchProductRegTab(2, this)">3. 상세페이지 이미지</button>
         <button type="button" class="admin-tab-btn" onclick="switchProductRegTab(3, this)">4. 배송안내 (공통)</button>
         <button type="button" class="admin-tab-btn" onclick="switchProductRegTab(4, this)">5. 결제안내 (공통)</button>
@@ -6454,6 +6676,53 @@
 
         <!-- [탭 1: 2. 색상 & 인쇄옵션] -->
         <div id="prodRegTabPane1" style="display: none;">
+          
+          <!-- 1. 기본수량 및 수량별 단가표 (Tiers) 설정 (weraclemarket.com 연동) -->
+          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <span style="font-weight: 800; font-size: 14.5px; color: #0f172a;">📊 수량별 단가표 & 기본/최소수량 설정</span>
+                <p style="font-size: 12px; color: #64748b; margin: 3px 0 0;">상세페이지의 수량별 단가표 및 실시간 견적 연산기에 직접 연동되는 핵심 설정입니다.</p>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button type="button" onclick="adminPresetWeracleTiers()" style="background: #0284c7; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                  ⚡ weraclemarket 표준 7단계 자동 프리셋
+                </button>
+                <button type="button" onclick="adminAddTierRow()" style="background: #0f172a; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                  + 단가 구간 추가
+                </button>
+              </div>
+            </div>
+
+            <!-- 수량 설정 (기본수량, 최소 주문수량) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; background: #fff; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 14px;">
+              <div>
+                <label style="font-size: 12px; font-weight: 800; color: #334155;">기본 주문수량 (개/권) *</label>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                  <input type="number" id="adminProdBaseQty" value="120" min="1" step="10" style="width: 100%; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 800; color: #0284c7;">
+                  <span style="font-size: 12px; color: #64748b; font-weight: 700;">개</span>
+                </div>
+                <span style="font-size: 11px; color: #64748b;">상세페이지 진입 시 기본 선택되는 수량입니다.</span>
+              </div>
+              <div>
+                <label style="font-size: 12px; font-weight: 800; color: #334155;">최소 주문수량 (개/권) *</label>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                  <input type="number" id="adminProdMinQty" value="30" min="1" step="5" style="width: 100%; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 800; color: #0f172a;">
+                  <span style="font-size: 12px; color: #64748b; font-weight: 700;">개</span>
+                </div>
+                <span style="font-size: 11px; color: #64748b;">주문 가능한 절대 최소 수량입니다.</span>
+              </div>
+            </div>
+
+            <!-- 단가 구간 목록 테이블 -->
+            <div style="font-size: 12.5px; font-weight: 800; color: #334155; margin-bottom: 6px;">
+              구간별 수량 및 일반가(권당 공급단가)
+            </div>
+            <div id="adminTierRowsContainer" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- 동적 단가 구간 행 -->
+            </div>
+          </div>
+
           <!-- 2. 인쇄 옵션 동적 추가 (옵션명 + 금액 선택/입력) -->
           <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">

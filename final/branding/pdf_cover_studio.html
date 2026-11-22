@@ -2258,6 +2258,222 @@
     }
     
   </style>
+
+  <!-- Tailwind CSS (Scoped with Preflight False to protect existing UI) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    if (window.tailwind) {
+      tailwind.config = {
+        corePlugins: {
+          preflight: false,
+        }
+      };
+    }
+  </script>
+  <!-- Additional Signature Fonts (Jua, Black Han Sans) -->
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Signature Templates Utility & Scoped Styles */
+    .sig-serif-kr { font-family: 'Gowun Batang', serif; }
+    .sig-serif-en { font-family: 'Cinzel', Georgia, serif; }
+    .sig-display-kr { font-family: 'Jua', 'Noto Sans KR', sans-serif; }
+    .sig-heavy-kr { font-family: 'Black Han Sans', 'Noto Sans KR', sans-serif; }
+
+    /* A4 Paper Canvas Container for Signature Templates */
+    .sig-a4-sheet {
+      width: 595px;
+      height: 842px;
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+      transform-origin: top left;
+      user-select: none;
+      box-sizing: border-box;
+    }
+
+    .draggable-person-layer {
+      touch-action: none;
+      user-select: none;
+      cursor: grab;
+    }
+    .draggable-person-layer:active {
+      cursor: grabbing;
+    }
+
+    /* Category Switcher Tabs in colorTab */
+    .master-category-bar {
+      display: flex;
+      gap: 6px;
+      background: #0f172a;
+      padding: 5px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #334155;
+    }
+    .master-cat-btn {
+      flex: 1;
+      padding: 10px 8px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .master-cat-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+    }
+    .master-cat-btn:hover:not(.active) {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Signature Theme Cards Grid */
+    .sig-theme-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .sig-theme-card {
+      border: 2px solid #334155;
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .sig-theme-card:hover {
+      border-color: #38bdf8;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(56, 189, 248, 0.15);
+    }
+    .sig-theme-card.active {
+      border-color: #38bdf8;
+      background: linear-gradient(135deg, #0c4a6e 0%, #1e293b 100%);
+      box-shadow: 0 0 0 2px #38bdf8, 0 8px 20px rgba(56, 189, 248, 0.25);
+    }
+    .sig-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .sig-card-title {
+      font-size: 14.5px;
+      font-weight: 850;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sig-card-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+    .sig-theme-card.active .sig-card-badge {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+    .sig-card-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+
+    /* Library Cards Styling */
+    .library-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .library-item-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      transition: all 0.2s;
+    }
+    .library-item-card:hover {
+      border-color: #38bdf8;
+    }
+    .library-thumb {
+      width: 60px;
+      height: 85px;
+      border-radius: 6px;
+      background: #0f172a;
+      object-fit: cover;
+      border: 1px solid #475569;
+      flex-shrink: 0;
+    }
+    .library-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .library-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .library-meta {
+      font-size: 11px;
+      color: #94a3b8;
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .library-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-lib-apply {
+      padding: 4px 10px;
+      font-size: 11.5px;
+      font-weight: 800;
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-lib-apply:hover { background: #0369a1; }
+    .btn-lib-del {
+      padding: 4px 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-lib-del:hover { background: #ef4444; color: #ffffff; }
+  </style>
+
 </head>
 <body>
 
@@ -2293,6 +2509,10 @@
           <i class="fa-solid fa-feather-pointed"></i>
           <span>비주얼 & 서약</span>
         </button>
+        <button type="button" class="panel-tab-btn" id="tabBtn_library" onclick="switchSidebarTab('libraryTab', this)">
+          <i class="fa-solid fa-folder-open"></i>
+          <span>내 보관함</span>
+        </button>
       </nav>
 
       <!-- Scrollable Tab Content Area -->
@@ -2300,6 +2520,111 @@
 
         <!-- ================= TAB 1: 디자인 테마 & 10대 비주얼 컬러 에디션 ================= -->
         <div class="tab-pane active" id="colorTab">
+
+          <!-- Top Master Category Switcher: [⭐ 실전 세일즈 (4종)] vs [🏛️ 기본형 (보증서 10종)] -->
+          <div class="master-category-bar">
+            <button type="button" class="master-cat-btn active" id="btnMasterCatSig" onclick="setMasterCategory('signature')">
+              <i class="fa-solid fa-star" style="color:#f59e0b;"></i>
+              <span>실전 세일즈 (4종)</span>
+            </button>
+            <button type="button" class="master-cat-btn" id="btnMasterCatBasic" onclick="setMasterCategory('basic')">
+              <i class="fa-solid fa-file-shield"></i>
+              <span>기본형 보증서 (10종)</span>
+            </button>
+          </div>
+
+          <!-- SECTION A: 실전 세일즈 시그니처 4종 그리드 (보답화니 에디션) -->
+          <div id="sectionSignatureThemes" style="display: block;">
+            <div class="form-section-title" style="margin-bottom: 10px;">
+              <span><i class="fa-solid fa-sparkles" style="color:#f59e0b;"></i> 실전 세일즈 시그니처 표지 (4종)</span>
+              <span class="badge-auto" id="currSigThemeBadge" style="background:#f59e0b; color:#0f172a; font-weight:900;">BEST 시그니처 A</span>
+            </div>
+
+            <div class="sig-theme-grid">
+              <!-- Sig A: 보답화니 사선 누끼형 -->
+              <div class="sig-theme-card active" id="sigCard_A" onclick="selectSignatureTheme('A')">
+                <div class="sig-card-header">
+                  <span class="sig-card-title">
+                    <i class="fa-solid fa-crown" style="color:#f59e0b;"></i>
+                    ⭐ 시그니처 사선 누끼형 (보답화니)
+                  </span>
+                  <span class="sig-card-badge">BEST 추천</span>
+                </div>
+                <div class="sig-card-desc">
+                  딥네이비 사선 배너 + 골드 타이틀 & 다짐 + 대형 인물 누끼 레이어 + 3D 캐릭터 엠블럼 + 3단 SNS 세로 QR 스택
+                </div>
+              </div>
+
+              <!-- Sig B: 매거진 풀화보형 -->
+              <div class="sig-theme-card" id="sigCard_B" onclick="selectSignatureTheme('B')">
+                <div class="sig-card-header">
+                  <span class="sig-card-title">
+                    <i class="fa-solid fa-camera-retro" style="color:#38bdf8;"></i>
+                    📸 매거진 풀화보형 (풀배경)
+                  </span>
+                  <span class="sig-card-badge">에디토리얼</span>
+                </div>
+                <div class="sig-card-desc">
+                  전면 고화질 인물 화보 + 다크 글래스모피즘 그라데이션 오버레이 + 대형 헤드라인 + 하단 SNS QR 카드
+                </div>
+              </div>
+
+              <!-- Sig C: VIP 법인·CEO 다크골드형 -->
+              <div class="sig-theme-card" id="sigCard_C" onclick="selectSignatureTheme('C')">
+                <div class="sig-card-header">
+                  <span class="sig-card-title">
+                    <i class="fa-solid fa-gem" style="color:#eab308;"></i>
+                    🏛️ VIP 법인·CEO 다크골드형
+                  </span>
+                  <span class="sig-card-badge">VIP / CEO</span>
+                </div>
+                <div class="sig-card-desc">
+                  다크 네이비 & 골드 보더 프레임 + 경영 리스크 & 보장자산 진단서 + CEO 헌정 박스 + 파트너 다짐
+                </div>
+              </div>
+
+              <!-- Sig D: 가족·자녀 감성 아치형 -->
+              <div class="sig-theme-card" id="sigCard_D" onclick="selectSignatureTheme('D')">
+                <div class="sig-card-header">
+                  <span class="sig-card-title">
+                    <i class="fa-solid fa-heart" style="color:#ec4899;"></i>
+                    🌸 가족·자녀 감성 아치형
+                  </span>
+                  <span class="sig-card-badge">패밀리케어</span>
+                </div>
+                <div class="sig-card-desc">
+                  부드러운 아치 프레임 + 웜톤 파스텔 배경 + 우리 가족 통합 보장분석 + 따뜻한 약속 말풍선 & QR
+                </div>
+              </div>
+            </div>
+
+            <!-- Signature Brand Color Adjustments -->
+            <div class="form-card" style="margin-top: 14px; background: #1e293b; border: 1px solid #334155;">
+              <div class="form-section-title" style="color: #38bdf8; border-bottom: 1px solid #334155;">
+                <span><i class="fa-solid fa-palette"></i> 시그니처 브랜드 컬러 튜닝</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <div>
+                  <label style="font-size: 11.5px; font-weight: 700; color: #94a3b8; display: block; margin-bottom: 4px;">메인 브랜드 컬러</label>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="color" id="inpSigMainColor" value="#113f67" oninput="updateSigColors()" style="width: 38px; height: 32px; border: none; border-radius: 6px; cursor: pointer; background: transparent;">
+                    <span id="txtSigMainColor" style="font-size: 12px; font-family: monospace; color: #cbd5e1;">#113f67</span>
+                  </div>
+                </div>
+                <div>
+                  <label style="font-size: 11.5px; font-weight: 700; color: #94a3b8; display: block; margin-bottom: 4px;">포인트 액센트 골드</label>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="color" id="inpSigAccentColor" value="#f59e0b" oninput="updateSigColors()" style="width: 38px; height: 32px; border: none; border-radius: 6px; cursor: pointer; background: transparent;">
+                    <span id="txtSigAccentColor" style="font-size: 12px; font-family: monospace; color: #cbd5e1;">#f59e0b</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION B: 기존 기본형 (10대 추천 디자인 배색 에디션) 컨테이너 래퍼 시작 -->
+          <div id="sectionBasicThemes" style="display: none;">
+
 
           <!-- Selected Master Theme Display + Dropdown Drawer -->
           <div class="selected-theme-container">
@@ -2653,6 +2978,7 @@
         </div>
 
         <!-- ================= TAB 2: 고객 및 전산 데이터 ================= -->
+        </div>
         <div class="tab-pane" id="contentTab">
 
           <!-- Customer Data -->
@@ -2757,6 +3083,194 @@
             </div>
 
             <!-- Photo Fine-Tuning & Size Controls -->
+            
+            <!-- [NEW] AI 자동 인물 누끼 제거 & 스마트 스튜디오 키어 -->
+            <div style="margin-top: 14px; background: #ffffff; border: 1.5px solid #0284c7; border-radius: 14px; padding: 16px; box-shadow: 0 4px 14px rgba(2,132,199,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 13.5px; font-weight: 850; color: #0284c7; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> AI 자동 인물 누끼 & 배경 제거
+                </span>
+                <span class="badge-auto" id="cutoutStatusBadge" style="background: #e0f2fe; color: #0369a1; font-weight: 800; font-size: 11px;">준비 완료</span>
+              </div>
+
+              <!-- Upload Portrait File -->
+              <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <label class="btn-action primary" style="flex: 1; height: 38px; font-size: 12.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; background: #0284c7; color: white; border-radius: 8px;">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> 내 사진 파일 선택
+                  <input type="file" id="portraitFileInput" accept="image/*" style="display: none;" onchange="handlePortraitUpload(event)">
+                </label>
+                <button type="button" class="btn-action" onclick="restoreOriginalPhoto()" title="원본 사진으로 복원" style="padding: 0 12px; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; color: #475569; font-size: 12px; font-weight: 700; cursor: pointer;">
+                  <i class="fa-solid fa-rotate-left"></i> 복원
+                </button>
+              </div>
+
+              <!-- AI Actions Buttons -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                <button type="button" id="btnRunAiCutout" onclick="runAiPersonCutout()" style="height: 40px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 850; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 8px rgba(2,132,199,0.3);">
+                  <i class="fa-solid fa-microchip"></i> AI 딥러닝 누끼
+                </button>
+                <button type="button" onclick="runInstantStudioKeyer()" style="height: 40px; background: #f8fafc; color: #0284c7; border: 1.5px solid #0284c7; border-radius: 8px; font-size: 12.5px; font-weight: 850; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                  <i class="fa-solid fa-bolt"></i> 스마트 스튜디오 키어
+                </button>
+              </div>
+
+              <!-- AI Progress Bar -->
+              <div id="aiProgressWrap" style="display: none; margin-bottom: 10px;">
+                <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                  <div id="aiProgressBar" style="width: 0%; height: 100%; background: #0284c7; transition: width 0.3s ease;"></div>
+                </div>
+                <div id="aiProgressText" style="font-size: 11px; color: #64748b; margin-top: 4px; text-align: center; font-weight: 700;">인물 누끼 처리 중...</div>
+              </div>
+
+              <!-- Mode Switcher: 누끼 모드 vs 전체 배경 풀화보 모드 -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; background: #f1f5f9; padding: 4px; border-radius: 8px;">
+                <button type="button" id="btnPhotoModeCutout" class="master-cat-btn active" onclick="setPhotoDisplayMode('cutout')" style="font-size: 12px; padding: 6px;">
+                  <i class="fa-solid fa-user-tie"></i> 인물 누끼 모드
+                </button>
+                <button type="button" id="btnPhotoModeFullBg" class="master-cat-btn" onclick="setPhotoDisplayMode('fullbg')" style="font-size: 12px; padding: 6px;">
+                  <i class="fa-solid fa-panorama"></i> 전체 배경 풀화보
+                </button>
+              </div>
+
+              <!-- Sliders: Zoom, Fade, Flip, Position -->
+              <div style="space-y: 8px; font-size: 12px;">
+                <!-- Drag Hint -->
+                <div style="padding: 6px 10px; background: #eff6ff; border-radius: 6px; color: #1d4ed8; font-size: 11.5px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-hand-pointer"></i> 캔버스에서 인물을 마우스로 직접 드래그하여 이동할 수 있습니다!
+                </div>
+
+                <!-- Zoom Slider -->
+                <div style="margin-bottom: 8px;">
+                  <div style="display: flex; justify-content: space-between; font-weight: 700; color: #334155; margin-bottom: 2px;">
+                    <span>인물 크기 확대/축소</span>
+                    <span id="txtPersonScale">100%</span>
+                  </div>
+                  <input type="range" id="rangePersonScale" min="50" max="200" value="100" oninput="onPersonTransformInput()" style="width: 100%;">
+                </div>
+
+                <!-- Bottom Fade Slider -->
+                <div style="margin-bottom: 8px;">
+                  <div style="display: flex; justify-content: space-between; font-weight: 700; color: #334155; margin-bottom: 2px;">
+                    <span>하단 자연스러운 페이드아웃</span>
+                    <span id="txtPersonFade">8%</span>
+                  </div>
+                  <input type="range" id="rangePersonFade" min="0" max="40" value="8" oninput="onPersonTransformInput()" style="width: 100%;">
+                </div>
+
+                <!-- X & Y Fine Tune -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                  <div>
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; color: #334155; margin-bottom: 2px;">
+                      <span>좌우 X</span>
+                      <span id="txtPersonX">0px</span>
+                    </div>
+                    <input type="range" id="rangePersonX" min="-250" max="250" value="0" oninput="onPersonTransformInput()" style="width: 100%;">
+                  </div>
+                  <div>
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; color: #334155; margin-bottom: 2px;">
+                      <span>상하 Y</span>
+                      <span id="txtPersonY">0px</span>
+                    </div>
+                    <input type="range" id="rangePersonY" min="-250" max="250" value="0" oninput="onPersonTransformInput()" style="width: 100%;">
+                  </div>
+                </div>
+
+                <!-- Flip X & Shadow Checkboxes -->
+                <div style="display: flex; gap: 14px; margin-top: 8px; font-weight: 700; color: #334155;">
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="chkPersonFlipX" onchange="onPersonTransformInput()">
+                    <span>좌우 반전 (Flip)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="chkPersonShadow" checked onchange="onPersonTransformInput()">
+                    <span>인물 그림자 연출</span>
+                  </label>
+                  <button type="button" onclick="resetPersonTransform()" style="margin-left: auto; background: none; border: none; color: #0284c7; font-size: 11.5px; font-weight: 800; cursor: pointer;">
+                    <i class="fa-solid fa-arrows-rotate"></i> 초기화
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- [NEW] 시그니처 3D 캐릭터 & 브랜드 엠블럼 설정 -->
+            <div style="margin-top: 14px; background: #ffffff; border: 1.5px solid #bae6fd; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(2,132,199,0.06);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 13.5px; font-weight: 850; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-shield-cat" style="color:#f59e0b;"></i> 시그니처 입체 캐릭터 엠블럼
+                </span>
+                <label style="font-size: 11.5px; font-weight: 800; color: #0284c7; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                  <input type="checkbox" id="chkShowEmblem" checked onchange="onEmblemInputsChange()">
+                  <span>표시</span>
+                </label>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <div>
+                  <label style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px;">상단 보조 문구</label>
+                  <input type="text" id="inpEmblemSub" value="보험으로 보답하는" oninput="onEmblemInputsChange()" style="width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px;">
+                </div>
+                <div>
+                  <label style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px;">메인 3D 입체명</label>
+                  <input type="text" id="inpEmblemMain" value="보답화니" oninput="onEmblemInputsChange()" style="width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px; font-weight: 800; color: #113f67;">
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 11.5px; color: #475569; margin-bottom: 2px;">
+                  <span>엠블럼 크기</span>
+                  <span id="txtEmblemSize">225px</span>
+                </div>
+                <input type="range" id="rangeEmblemSize" min="120" max="320" value="225" oninput="onEmblemInputsChange()" style="width: 100%;">
+              </div>
+            </div>
+
+            <!-- [NEW] 3단 실시간 SNS QR 코드 스택 설정 -->
+            <div style="margin-top: 14px; background: #ffffff; border: 1.5px solid #bae6fd; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(2,132,199,0.06);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 13.5px; font-weight: 850; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-qrcode" style="color:#0284c7;"></i> 3단 실시간 SNS QR 코드 스택
+                </span>
+                <span style="font-size: 11px; color: #64748b; font-weight: 700;">실시간 자동 생성</span>
+              </div>
+              
+              <!-- Insta -->
+              <div style="margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <label style="font-size: 11.5px; font-weight: 700; color: #e1306c; display: flex; align-items: center; gap: 4px;">
+                    <i class="fa-brands fa-instagram"></i> 인스타그램 링크
+                  </label>
+                  <label style="font-size: 11px; cursor: pointer; color: #64748b;">
+                    <input type="checkbox" id="chkShowInsta" checked onchange="onSnsInputsChange()"> 표시
+                  </label>
+                </div>
+                <input type="text" id="inpInstaUrl" value="https://instagram.com/weraclelab" oninput="onSnsInputsChange()" placeholder="https://instagram.com/아이디" style="width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px;">
+              </div>
+
+              <!-- Blog -->
+              <div style="margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <label style="font-size: 11.5px; font-weight: 700; color: #03c75a; display: flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-blog"></i> 네이버 블로그 링크
+                  </label>
+                  <label style="font-size: 11px; cursor: pointer; color: #64748b;">
+                    <input type="checkbox" id="chkShowBlog" checked onchange="onSnsInputsChange()"> 표시
+                  </label>
+                </div>
+                <input type="text" id="inpBlogUrl" value="https://blog.naver.com/weraclelab" oninput="onSnsInputsChange()" placeholder="https://blog.naver.com/아이디" style="width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px;">
+              </div>
+
+              <!-- Kakao -->
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <label style="font-size: 11.5px; font-weight: 700; color: #f59e0b; display: flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-comment"></i> 카카오톡 채널 링크
+                  </label>
+                  <label style="font-size: 11px; cursor: pointer; color: #64748b;">
+                    <input type="checkbox" id="chkShowKakao" checked onchange="onSnsInputsChange()"> 표시
+                  </label>
+                </div>
+                <input type="text" id="inpKakaoUrl" value="https://pf.kakao.com/_weracle" oninput="onSnsInputsChange()" placeholder="https://pf.kakao.com/_채널ID" style="width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px;">
+              </div>
+            </div>
+
             <div id="photoControlGroup" style="margin-top: 14px; background: #ffffff; border: 1.5px solid #bae6fd; border-radius: 14px; padding: 16px 18px; box-shadow: 0 2px 8px rgba(2,132,199,0.06);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <span style="font-size: 13.5px; font-weight: 850; color: #0f172a; display: flex; align-items: center; gap: 6px;">
@@ -3016,7 +3530,44 @@
 
       </div>
 
-      <!-- WERACLE Sidebar Fixed Action Footer -->
+
+        <!-- ================= TAB 4: 내 보관함 (Supabase 프로필 클라우드 저장소) ================= -->
+        <div class="tab-pane" id="libraryTab">
+          <!-- Save Current Design Card -->
+          <div class="form-card" style="background: linear-gradient(135deg, #0c4a6e 0%, #1e293b 100%); border: 1.5px solid #0284c7;">
+            <div class="form-section-title" style="color: #38bdf8; border-bottom: 1px solid #0369a1;">
+              <span><i class="fa-solid fa-cloud-arrow-up"></i> 현재 디자인 수파베이스 보관</span>
+            </div>
+            <p class="form-subtext" style="color: #cbd5e1; margin-bottom: 10px;">
+              현재 설정된 테마, 인물 누끼, 문구, 브랜드 컬러, QR 코드를 <b>본인 수파베이스 프로필</b>에 영구 저장합니다.
+            </p>
+            <div style="margin-bottom: 10px;">
+              <input type="text" id="inpLibraryTitle" placeholder="표지 제목 입력 (예: 보답화니 사선 1안 - VIP용)" style="width: 100%; height: 40px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #ffffff; padding: 0 12px; font-size: 13px; font-weight: 700;">
+            </div>
+            <button type="button" class="btn-action success" onclick="saveCoverToLibrary()" style="width: 100%; height: 44px; font-size: 14px; font-weight: 850; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
+              <i class="fa-solid fa-floppy-disk"></i> 내 보관함(Supabase)에 영구 저장
+            </button>
+          </div>
+
+          <!-- Saved List Section -->
+          <div class="form-section-title" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fa-solid fa-folder-open" style="color:#0284c7;"></i> 저장된 표지 디자인 목록</span>
+            <button type="button" onclick="loadCoversFromCloud()" style="background: none; border: none; color: #0284c7; font-size: 12px; font-weight: 800; cursor: pointer;">
+              <i class="fa-solid fa-rotate"></i> 새로고침
+            </button>
+          </div>
+
+          <!-- Cards List Container -->
+          <div id="libraryCardsList" class="library-grid">
+            <div style="text-align: center; padding: 40px 10px; color: #64748b; font-size: 13px;">
+              <i class="fa-solid fa-folder-closed" style="font-size: 32px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+              저장된 표지가 없습니다.<br>위에서 현재 디자인을 저장해 보세요!
+            </div>
+          </div>
+        </div>
+
+
+            <!-- WERACLE Sidebar Fixed Action Footer -->
       <footer class="sidebar-action-footer">
       <button type="button" class="btn-action success" id="btnSaveApply" onclick="saveCoverConfig()" style="width: 100%; height: 46px; background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: 850; font-size: 15px; border: none; border-radius: 10px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
         <i class="fa-solid fa-cloud-arrow-up"></i> 설정 저장 및 보장분석에 즉시 적용
@@ -3281,6 +3832,1217 @@
 
   <!-- Client-side Logic Script -->
   <script>
+
+    // =========================================================================
+    // ★ [WERACLE UNIFIED SIGNATURE ENGINE] ★
+    // =========================================================================
+    let currentMasterCategory = 'signature'; // 'signature' | 'basic'
+    let activeSignatureType = 'A'; // 'A' | 'B' | 'C' | 'D'
+
+    function createCleanSuitCutoutSvgDataUrl() {
+      const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 700">
+        <defs>
+          <linearGradient id="suitGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#374151"/>
+            <stop offset="55%" stop-color="#1f2937"/>
+            <stop offset="100%" stop-color="#111827"/>
+          </linearGradient>
+          <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fde2cc"/>
+            <stop offset="100%" stop-color="#f3c6a5"/>
+          </linearGradient>
+          <linearGradient id="tieGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1e3a8a"/>
+            <stop offset="100%" stop-color="#0f172a"/>
+          </linearGradient>
+        </defs>
+        <!-- 정장 상반신 어깨 & 자켓 (배경 100% 투명 누끼) -->
+        <path d="M75 700 L95 420 Q105 345 185 322 L260 305 L335 322 Q415 345 425 420 L445 700 Z" fill="url(#suitGrad)"/>
+        <!-- 화이트 셔츠 & 네이비 타이 -->
+        <polygon points="215,312 305,312 260,475" fill="#ffffff"/>
+        <polygon points="248,342 272,342 278,468 260,492 242,468" fill="url(#tieGrad)"/>
+        <polygon points="244,325 276,325 268,346 252,346" fill="#172554"/>
+        <!-- 수트 라펠 -->
+        <polygon points="212,312 168,385 248,485 256,455" fill="#27303f"/>
+        <polygon points="308,312 352,385 272,485 264,455" fill="#27303f"/>
+        <!-- 팔짱 포즈 디테일 -->
+        <path d="M115 525 Q260 485 395 530 L405 620 Q260 595 110 618 Z" fill="#262f3d" stroke="#111827" stroke-width="3"/>
+        <rect x="332" y="516" width="16" height="48" rx="4" fill="#ffffff" transform="rotate(-12 332 516)"/>
+        <!-- 목 & 얼굴 -->
+        <rect x="228" y="242" width="64" height="82" rx="24" fill="#eab693"/>
+        <path d="M214 304 L260 338 L306 304 L296 342 L260 356 L224 342 Z" fill="#f8fafc"/>
+        <path d="M192 162 Q192 88 260 88 Q328 88 328 162 L324 218 Q320 278 260 282 Q200 278 196 218 Z" fill="url(#skinGrad)"/>
+        <!-- 귀 -->
+        <ellipse cx="192" cy="192" rx="12" ry="22" fill="#f1bfa0"/>
+        <ellipse cx="328" cy="192" rx="12" ry="22" fill="#f1bfa0"/>
+        <!-- 단정한 헤어스타일 -->
+        <path d="M186 172 Q178 102 225 78 Q268 58 314 82 Q344 102 334 172 Q325 130 296 118 Q255 106 214 124 Q195 136 186 172 Z" fill="#1e1b18"/>
+        <!-- 눈썹 · 눈 · 환한 미소 -->
+        <path d="M216 164 Q232 157 246 163" stroke="#292524" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+        <path d="M274 163 Q288 157 304 164" stroke="#292524" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+        <ellipse cx="232" cy="180" rx="7" ry="5.5" fill="#1c1917"/>
+        <ellipse cx="288" cy="180" rx="7" ry="5.5" fill="#1c1917"/>
+        <circle cx="230" cy="178" r="2" fill="#ffffff"/>
+        <circle cx="286" cy="178" r="2" fill="#ffffff"/>
+        <path d="M260 182 L256 208 Q260 212 266 208" stroke="#d99b78" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <path d="M236 228 Q260 248 284 228 Z" fill="#ffffff" stroke="#be6a5a" stroke-width="3" stroke-linejoin="round"/>
+      </svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    const signatureDefaultCopies = () => ({
+      A: {
+        subHeader: '{{고객명}}의 건강한 삶을 위한',
+        mainHeadline: '보장분석\n제안서',
+        headlineSize: 64,
+        bannerTitle: '보답화니 박보환',
+        promiseBody: '보험으로 보답하는 보답화니\n보험다운 보험을 권하고, 정직하고 좋은 보\n험으로 고객님 신뢰에 보답드리겠습니다'
+      },
+      B: {
+        subHeader: 'PREPARED FOR {{고객명}}',
+        mainHeadline: '맞춤 보장분석\n프리미엄 리포트',
+        headlineSize: 48,
+        bannerTitle: '평생 든든한 내 편 · 보답화니 박보환',
+        promiseBody: '복잡한 수십 장의 증권 속에서 꼭 지켜야 할 핵심 보장과\n불필요하게 새어 나가는 보험료를 명쾌하게 정리했습니다.'
+      },
+      C: {
+        subHeader: 'CORPORATE & VIP ADVISORY · {{고객명}}',
+        mainHeadline: '경영 리스크 &\n보장자산 진단서',
+        headlineSize: 48,
+        bannerTitle: '위라클랩 본부장 박보환',
+        promiseBody: '기업의 영속성과 대표님의 자산 보호를 위한 정밀 분석 리포트.\n세무·노무·보상 네트워크로 끝까지 책임 관리합니다.'
+      },
+      D: {
+        subHeader: '{{고객명}} 가정을 위한 따뜻한 약속',
+        mainHeadline: '우리 가족 통합\n보장분석 제안서',
+        headlineSize: 50,
+        bannerTitle: '우리 가족 전담 파트너 · 박보환',
+        promiseBody: '가입 권유보다 소중한 가족의 미래를 지키는 보장 설계.\n우리 가족 첫 주치의처럼 평생 곁에서 든든히 함께하겠습니다.'
+      }
+    });
+
+    const sigState = {
+      activeType: 'A',
+      simCustomer: '홍길동 고객님',
+      showClientBadge: true,
+      mainColor: '#113f67',
+      accentColor: '#f59e0b',
+      person: {
+        visible: true,
+        mode: 'cutout', // 'cutout' | 'fullbg'
+        originalUrl: createCleanSuitCutoutSvgDataUrl(),
+        displayUrl: createCleanSuitCutoutSvgDataUrl(),
+        scale: 100,
+        x: 0,
+        y: 0,
+        bottomFade: 8,
+        flipX: false,
+        shadow: true,
+        lastMethod: 'svg'
+      },
+      logos: {
+        topShow: true,
+        topSize: 135,
+        emblemSub: '보험으로 보답하는',
+        emblemMain: '보답화니',
+        botSize: 225
+      },
+      sns: {
+        instaShow: true,
+        instaUrl: 'https://instagram.com/weraclelab',
+        blogShow: true,
+        blogUrl: 'https://blog.naver.com/weraclelab',
+        kakaoShow: true,
+        kakaoUrl: 'https://pf.kakao.com/_weracle'
+      },
+      footer: {
+        org: '위라클랩',
+        name: '박보환',
+        role: '본부장',
+        code: '2532055',
+        tel: '1588-1234',
+        phone: '010-1234-5678',
+        fax: '02-123-4567',
+        addr: '경기도 의정부시 시민로 57, 위라클랩'
+      },
+      copies: signatureDefaultCopies()
+    };
+
+    let mpSegmenterInstance = null;
+    let savedCloudLibrary = [];
+
+    function sigCurCopy() {
+      return sigState.copies[sigState.activeType] || sigState.copies.A;
+    }
+
+    function sigEsc(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function sigReplaceTokens(str) {
+      const cust = sigState.simCustomer || '고객님';
+      return String(str || '').replace(/\{\{고객명\}\}/g, cust);
+    }
+
+    function buildSignatureEmblemHtml(subTxt, mainTxt, size = 180, isLight = false) {
+      const scale = size / 220;
+      return `
+        <div class="inline-flex items-center gap-3.5 select-none" style="transform: scale(${scale}); transform-origin: left center;">
+          <div class="relative w-[52px] h-[52px] rounded-2xl flex items-center justify-center shadow-lg"
+               style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: 2.5px solid #ffffff;">
+            <svg class="w-8 h-8 text-white drop-shadow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+            </svg>
+            <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 border-2 border-white flex items-center justify-center text-[9px] font-black text-white">★</div>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[11px] font-black tracking-widest uppercase"
+                  style="color: ${isLight ? '#38bdf8' : '#0284c7'};">
+              ${sigEsc(subTxt || '보험으로 보답하는')}
+            </span>
+            <div class="sig-display-kr font-black tracking-wider text-[27px] leading-tight"
+                 style="color: #ffffff; -webkit-text-stroke: 2.2px #113f67; text-shadow: 0 3px 0 #113f67, 0 5px 10px rgba(15,23,42,0.22);">
+              ${sigEsc(mainTxt || '보답화니')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function getQrImgHtml(url, label, iconClass) {
+      if (!url) return '';
+      const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
+      return `
+        <div class="flex flex-col items-center p-1.5 rounded-xl bg-white/95 shadow-md border border-slate-200/80">
+          <img src="${qrApi}" alt="${label}" class="w-14 h-14 rounded-lg bg-white object-contain" />
+          <span class="mt-1 text-[9px] font-extrabold text-slate-800 flex items-center gap-1">
+            <i class="${iconClass}"></i> ${label}
+          </span>
+        </div>
+      `;
+    }
+
+    function buildSnsQrStackHtml(sns) {
+      if (!sns) return '';
+      const items = [];
+      if (sns.instaShow && sns.instaUrl) items.push(getQrImgHtml(sns.instaUrl, 'Instagram', 'fa-brands fa-instagram text-pink-600'));
+      if (sns.blogShow && sns.blogUrl) items.push(getQrImgHtml(sns.blogUrl, 'Blog', 'fa-solid fa-blog text-emerald-600'));
+      if (sns.kakaoShow && sns.kakaoUrl) items.push(getQrImgHtml(sns.kakaoUrl, 'KakaoTalk', 'fa-solid fa-comment text-amber-500'));
+      if (items.length === 0) return '';
+      return `
+        <div class="flex flex-col gap-2 relative z-30">
+          ${items.join('')}
+        </div>
+      `;
+    }
+
+    function buildOfficialFooterBarHtml(f) {
+      if (!f) return '';
+      return `
+        <div class="relative z-30 w-full px-7 py-3 text-white shadow-2xl flex items-center justify-between text-[11px] font-medium"
+             style="background: linear-gradient(90deg, #091426 0%, #112847 50%, #091426 100%); border-top: 1px solid rgba(255,255,255,0.12);">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-extrabold border border-blue-400/30">${sigEsc(f.org || '위라클')}</span>
+            <span class="text-[13px] font-black text-white">${sigEsc(f.name)} ${sigEsc(f.role)}</span>
+            <span class="text-slate-400 text-[10px] ml-1">등록번호 ${sigEsc(f.code || '2532055')}</span>
+          </div>
+          <div class="flex items-center gap-4 text-slate-300">
+            <span><i class="fa-solid fa-phone text-blue-400 mr-1"></i>${sigEsc(f.phone || f.tel)}</span>
+            ${f.fax ? `<span><i class="fa-solid fa-fax text-slate-400 mr-1"></i>${sigEsc(f.fax)}</span>` : ''}
+            ${f.addr ? `<span class="text-slate-400 truncate max-w-[190px]"><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>${sigEsc(f.addr)}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function buildCutoutPersonHtml(p, extraStyle = '') {
+      if (!p || !p.visible || !p.displayUrl || p.mode === 'fullbg') return '';
+      const sc = (p.scale || 100) / 100;
+      const x = p.x || 0;
+      const y = p.y || 0;
+      const flip = p.flipX ? 'scaleX(-1)' : '';
+      const shadow = p.shadow ? 'drop-shadow(0 22px 28px rgba(0,0,0,0.38))' : '';
+      const fadePct = p.bottomFade ? (100 - p.bottomFade) : 92;
+      const mask = p.bottomFade > 0
+        ? `-webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${fadePct}%, rgba(0,0,0,0) 100%); mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${fadePct}%, rgba(0,0,0,0) 100%);`
+        : '';
+
+      return `
+        <div class="draggable-person-layer absolute pointer-events-auto"
+             style="right: 10px; bottom: 42px; width: 350px; height: 560px; z-index: 15; transform: translate(${x}px, ${y}px); ${extraStyle}"
+             title="마우스로 드래그하여 인물 위치를 이동할 수 있습니다">
+          <img src="${p.displayUrl}" alt="컨설턴트 인물"
+               class="w-full h-full object-contain object-bottom pointer-events-none"
+               style="transform: scale(${sc}) ${flip}; transform-origin: bottom center; filter: ${shadow}; ${mask}" />
+        </div>
+      `;
+    }
+
+    function buildFullBleedBgHtml(overlayGradient) {
+      const p = sigState.person;
+      const sc = (p.scale || 100) / 100;
+      const flip = p.flipX ? 'scaleX(-1)' : '';
+      return `
+        <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+          <img src="${p.originalUrl || p.displayUrl}" alt="전체 배경 화보"
+               class="w-full h-full object-cover object-center"
+               style="transform: scale(${sc}) ${flip}; transform-origin: center;" />
+          <div class="absolute inset-0" style="background: ${overlayGradient};"></div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // RENDER SIGNATURE A4 CANVAS
+    // =========================================================================
+    function renderSignatureCover(type) {
+      if (type) sigState.activeType = type;
+      activeSignatureType = sigState.activeType;
+      
+      const canvas = document.getElementById('a4PaperCanvas');
+      if (!canvas) return;
+
+      const c = sigCurCopy();
+      const main = sigState.mainColor;
+      const accent = sigState.accentColor;
+      const isFullBg = sigState.person.mode === 'fullbg';
+
+      // =====================================================================
+      // [타입 B: 매거진 풀화보형]
+      // =====================================================================
+      if (sigState.activeType === 'B' || isFullBg) {
+        canvas.innerHTML = `
+          <div class="w-full h-full flex flex-col justify-between relative text-white overflow-hidden bg-slate-900" style="width: 595px; height: 842px;">
+            ${buildFullBleedBgHtml(`linear-gradient(180deg, rgba(15,23,42,0.72) 0%, rgba(15,23,42,0.18) 42%, rgba(15,23,42,0.88) 84%, #09111e 100%)`)}
+
+            <!-- 상단 헤더 & 로고 -->
+            <div class="relative z-20 px-9 pt-8 flex items-start justify-between">
+              <div>
+                <div class="text-[13px] font-extrabold tracking-wider uppercase mb-2" style="color:${accent};">
+                  ${sigEsc(sigReplaceTokens(c.subHeader))}
+                </div>
+                <h1 class="font-black leading-[1.16] tracking-tight whitespace-pre-line drop-shadow-lg" style="font-size:${c.headlineSize}px;">${sigEsc(c.mainHeadline)}</h1>
+                ${sigState.showClientBadge ? `
+                  <div class="mt-3 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/30 text-[12px] font-extrabold">
+                    <span style="color:${accent};">VIP CLIENT</span> · <span>${sigEsc(sigState.simCustomer)} 귀중</span>
+                  </div>
+                ` : ''}
+              </div>
+
+              ${sigState.logos.topShow ? `
+                <div class="bg-white/90 backdrop-blur px-3 py-2 rounded-2xl shadow-lg">
+                  ${buildSignatureEmblemHtml(sigState.logos.emblemSub, sigState.logos.emblemMain, sigState.logos.topSize, true)}
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- 하단 다짐 카드 + SNS QR + 엠블럼 -->
+            <div class="relative z-20 mt-auto px-9 pb-5 space-y-4">
+              <div class="rounded-2xl p-5 backdrop-blur-md border border-white/20 shadow-2xl" style="background: linear-gradient(135deg, ${main}dd 0%, rgba(15,23,42,0.9) 100%);">
+                <div class="text-[18px] font-black tracking-tight mb-2 text-white flex items-center justify-between">
+                  <span>${sigEsc(c.bannerTitle)}</span>
+                  <span class="text-[11px] font-extrabold px-2 py-0.5 rounded bg-white/10 text-blue-200">WERACLE PRO</span>
+                </div>
+                <p class="text-[12.5px] leading-relaxed text-slate-200 whitespace-pre-line">
+                  ${sigEsc(c.promiseBody)}
+                </p>
+              </div>
+
+              <div class="flex items-center justify-between">
+                ${buildSnsQrStackHtml(sigState.sns)}
+                ${sigState.logos.botSize ? `
+                  <div class="ml-auto">
+                    ${buildSignatureEmblemHtml(sigState.logos.emblemSub, sigState.logos.emblemMain, sigState.logos.botSize, true)}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            ${buildOfficialFooterBarHtml(sigState.footer)}
+          </div>
+        `;
+      }
+      // =====================================================================
+      // ★ [타입 A: 시그니처 사선 누끼형 (보답화니)]
+      // =====================================================================
+      else if (sigState.activeType === 'A') {
+        canvas.innerHTML = `
+          <div class="w-full h-full flex flex-col justify-between relative overflow-hidden" style="width: 595px; height: 842px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 48%, #f4f7fb 100%);">
+
+            <!-- 배경 기하학 도형 1: 우측 연회색 사선 셰이프 -->
+            <div class="absolute inset-0 pointer-events-none z-0"
+                 style="background: #dfe5ec; clip-path: polygon(100% 28%, 42% 43%, 100% 72%); opacity: 0.85;"></div>
+
+            <!-- 배경 기하학 도형 2: 좌측 시그니처 딥 네이비 사선 삼각 배너 (핵심 디자인) -->
+            <div class="absolute inset-0 pointer-events-none z-10"
+                 style="background: ${main}; clip-path: polygon(0% 37%, 63% 56%, 0% 75%); box-shadow: 0 12px 30px rgba(17,63,103,0.25);"></div>
+
+            <!-- 상단 영역: 우측 상단 로고 + 좌측 상단 서브/메인 타이틀 -->
+            <div class="relative z-20 px-9 pt-8 flex items-start justify-between">
+              <div class="max-w-[340px]">
+                <div class="text-[13px] font-extrabold tracking-wider uppercase mb-2" style="color:${main};">
+                  ${sigEsc(sigReplaceTokens(c.subHeader))}
+                </div>
+                <h1 class="sig-heavy-kr text-[62px] leading-[1.08] tracking-tight whitespace-pre-line" style="color:#0f172a;">
+                  ${sigEsc(c.mainHeadline)}
+                </h1>
+                ${sigState.showClientBadge ? `
+                  <div class="mt-3.5 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[12px] font-extrabold border border-slate-300 shadow-sm">
+                    <span class="w-2 h-2 rounded-full" style="background:${accent};"></span>
+                    <span>${sigEsc(sigState.simCustomer)} 귀중</span>
+                  </div>
+                ` : ''}
+              </div>
+
+              ${sigState.logos.topShow ? `
+                <div class="pt-1">
+                  ${buildSignatureEmblemHtml(sigState.logos.emblemSub, sigState.logos.emblemMain, sigState.logos.topSize)}
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- 좌측 네이비 사선 배너 내부 텍스트 (골드 이름 + 화이트 다짐 문구) -->
+            <div class="absolute left-9 bottom-[225px] z-20 max-w-[275px] text-white pointer-events-none">
+              <div class="text-[21px] font-black tracking-tight mb-2 flex items-center gap-2" style="color:${accent};">
+                <span>${sigEsc(c.bannerTitle)}</span>
+              </div>
+              <p class="text-[12.5px] leading-relaxed text-slate-100 font-medium whitespace-pre-line drop-shadow-sm">
+                ${sigEsc(c.promiseBody)}
+              </p>
+            </div>
+
+            <!-- 좌측 하단 SNS QR 코드 3단 세로 스택 (인스타 / 블로그 / 카톡채널) -->
+            <div class="absolute left-9 bottom-[54px] z-20">
+              ${buildSnsQrStackHtml(sigState.sns)}
+            </div>
+
+            <!-- 우측 대형 인물 누끼 레이어 (마우스 드래그 & 크기 조절 가능) -->
+            ${buildCutoutPersonHtml(sigState.person, 'right: 4px; bottom: 42px; width: 360px; height: 570px;')}
+
+            <!-- 하단 중앙~우측 대형 시그니처 캐릭터·브랜드 엠블럼 (인물 앞 레이어) -->
+            ${sigState.logos.botSize ? `
+              <div class="absolute right-7 bottom-[54px] z-20 pointer-events-none">
+                ${buildSignatureEmblemHtml(sigState.logos.emblemSub, sigState.logos.emblemMain, sigState.logos.botSize)}
+              </div>
+            ` : ''}
+
+            <!-- 최하단 설계사 공식 8항목 스펙 바 -->
+            ${buildOfficialFooterBarHtml(sigState.footer)}
+          </div>
+        `;
+      }
+      // =====================================================================
+      // [타입 C: VIP 법인·CEO 다크골드형]
+      // =====================================================================
+      else if (sigState.activeType === 'C') {
+        canvas.innerHTML = `
+          <div class="w-full h-full flex flex-col justify-between relative overflow-hidden text-white"
+               style="width: 595px; height: 842px; background: radial-gradient(circle at 78% 38%, #1e4976 0%, ${main} 45%, #07111f 100%);">
+
+            <!-- 골드 프레임 라인 -->
+            <div class="absolute inset-4 border pointer-events-none z-10" style="border-color:${accent}44;"></div>
+            <div class="absolute right-[-60px] top-[180px] w-[380px] h-[380px] rounded-full pointer-events-none z-0"
+                 style="background: radial-gradient(circle, ${accent}28 0%, transparent 70%);"></div>
+
+            <!-- 상단 헤더 -->
+            <div class="relative z-20 px-9 pt-8 flex items-start justify-between">
+              <div>
+                <span class="sig-serif-en text-[11px] font-bold tracking-[0.25em] block mb-2" style="color:${accent};">
+                  ${sigEsc(sigReplaceTokens(c.subHeader))}
+                </span>
+                <h1 class="sig-serif-kr text-[46px] font-black leading-[1.18] tracking-tight whitespace-pre-line text-slate-100">
+                  ${sigEsc(c.mainHeadline)}
+                </h1>
+                ${sigState.showClientBadge ? `
+                  <div class="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded bg-black/40 border border-amber-400/40 text-[11.5px] font-bold text-amber-300">
+                    <i class="fa-solid fa-building-user"></i>
+                    <span>${sigEsc(sigState.simCustomer)} 대표님 귀하</span>
+                  </div>
+                ` : ''}
+              </div>
+
+              ${sigState.logos.topShow ? `
+                <div class="border border-white/20 p-2.5 rounded-xl bg-slate-900/60 backdrop-blur">
+                  ${buildSignatureEmblemHtml(sigState.logos.emblemSub, sigState.logos.emblemMain, sigState.logos.topSize, true)}
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- 좌측 VIP 헌정 & 다짐 박스 -->
+            <div class="relative z-20 px-9 mb-auto mt-6 max-w-[280px]">
+              <div class="p-4 rounded-xl border border-white/15 bg-white/5 backdrop-blur-md">
+                <div class="text-[13px] font-extrabold mb-1" style="color:${accent};">
+                  ${sigEsc(c.bannerTitle)}
+                </div>
+                <p class="text-[11.5px] leading-relaxed text-slate-300 whitespace-pre-line font-medium">
+                  ${sigEsc(c.promiseBody)}
+                </p>
+              </div>
+
+              <div class="mt-4">
+                ${buildSnsQrStackHtml(sigState.sns)}
+              </div>
+            </div>
+
+            <!-- 우측 인물 누끼 레이어 -->
+            ${buildCutoutPersonHtml(sigState.person, 'right: 6px; bottom: 44px; width: 350px; height: 560px;')}
+
+            ${buildOfficialFooterBarHtml(sigState.footer)}
+          </div>
+        `;
+      }
+      // =====================================================================
+      // [타입 D: 가족·자녀 감성 아치형]
+      // =====================================================================
+      else {
+        canvas.innerHTML = `
+          <div class="w-full h-full flex flex-col justify-between relative overflow-hidden"
+               style="width: 595px; height: 842px; background: #fdfbf7; color: #1e293b;">
+
+            <!-- 우측 하단 따뜻한 아치 배경 도형 -->
+            <div class="absolute right-[18px] bottom-[56px] w-[320px] h-[510px] pointer-events-none z-0"
+                 style="background: linear-gradient(180deg, ${main}18 0%, ${accent}25 100%); border-radius: 170px 170px 0 0; border: 2px solid ${main}22;"></div>
+
+            <!-- 상단 헤더 -->
+            <div class="relative z-20 px-9 pt-8">
+              <div class="flex items-center justify-between mb-4">
+                <span class="px-3 py-1 rounded-full text-[11px] font-extrabold" style="background:${accent}25; color:#92400e;">
+                  ♥ FAMILY CARE COVERAGE REPORT
+                </span>
+                ${sigState.logos.topShow ? `
+                  <div>
+                    ${buildSignatureEmblemHtml(sigState.logos.emblemSub, sigState.logos.emblemMain, Math.min(125, sigState.logos.topSize))}
+                  </div>
+                ` : ''}
+              </div>
+
+              <div class="text-[13px] font-bold text-slate-500 mb-1">
+                ${sigEsc(sigReplaceTokens(c.subHeader))}
+              </div>
+              <h1 class="sig-display-kr text-[48px] font-black leading-[1.15] tracking-tight text-slate-800 whitespace-pre-line">
+                ${sigEsc(c.mainHeadline)}
+              </h1>
+              ${sigState.showClientBadge ? `
+                <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/80 text-amber-900 text-[11.5px] font-black">
+                  <span>${sigEsc(sigState.simCustomer)} 가정의 행복을 기원합니다</span>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- 좌측 따뜻한 약속 말풍선 & SNS QR -->
+            <div class="relative z-20 px-9 mb-auto mt-4 max-w-[270px]">
+              <div class="p-4 rounded-2xl bg-white shadow-md border border-amber-100 relative">
+                <div class="text-[13px] font-black mb-1 text-slate-800">
+                  ${sigEsc(c.bannerTitle)}
+                </div>
+                <p class="text-[11.5px] leading-relaxed text-slate-600 whitespace-pre-line font-medium">
+                  ${sigEsc(c.promiseBody)}
+                </p>
+              </div>
+
+              <div class="mt-4">
+                ${buildSnsQrStackHtml(sigState.sns)}
+              </div>
+            </div>
+
+            <!-- 우측 인물 누끼 레이어 -->
+            ${buildCutoutPersonHtml(sigState.person, 'right: 14px; bottom: 44px; width: 330px; height: 530px;')}
+
+            ${buildOfficialFooterBarHtml(sigState.footer)}
+          </div>
+        `;
+      }
+
+      bindPersonCanvasDrag();
+    }
+
+    // =========================================================================
+    // SWITCH MASTER CATEGORY: [⭐ 실전 세일즈 (4종)] vs [🏛️ 기본형 보증서 (10종)]
+    // =========================================================================
+    function setMasterCategory(cat) {
+      currentMasterCategory = cat;
+      const btnSig = document.getElementById('btnMasterCatSig');
+      const btnBasic = document.getElementById('btnMasterCatBasic');
+      const secSig = document.getElementById('sectionSignatureThemes');
+      const secBasic = document.getElementById('sectionBasicThemes');
+      const standardA4 = canvasInner.querySelector('.a4-page');
+
+      if (cat === 'signature') {
+        if (btnSig) btnSig.classList.add('active');
+        if (btnBasic) btnBasic.classList.remove('active');
+        if (secSig) secSig.style.display = 'block';
+        if (secBasic) secBasic.style.display = 'none';
+
+        if (standardA4) standardA4.style.display = 'none';
+        
+        let sigWrap = document.getElementById('sigCoverWrapper');
+        if (!sigWrap) {
+          sigWrap = document.createElement('div');
+          sigWrap.id = 'sigCoverWrapper';
+          sigWrap.style.width = '1240px';
+          sigWrap.style.height = '1754px';
+          sigWrap.style.position = 'relative';
+          sigWrap.style.overflow = 'hidden';
+          sigWrap.style.background = '#ffffff';
+          sigWrap.innerHTML = `<div id="a4PaperCanvas" class="sig-a4-sheet" style="transform: scale(2.0840336);"></div>`;
+          canvasInner.appendChild(sigWrap);
+        } else {
+          sigWrap.style.display = 'block';
+        }
+        renderSignatureCover(activeSignatureType);
+      } else {
+        if (btnSig) btnSig.classList.remove('active');
+        if (btnBasic) btnBasic.classList.add('active');
+        if (secSig) secSig.style.display = 'none';
+        if (secBasic) secBasic.style.display = 'block';
+
+        const sigWrap = document.getElementById('sigCoverWrapper');
+        if (sigWrap) sigWrap.style.display = 'none';
+        if (standardA4) standardA4.style.display = 'flex';
+        applyTemplate(currentTemplateIndex);
+      }
+      fitA4ToScreen();
+    }
+
+    function selectSignatureTheme(type) {
+      activeSignatureType = type;
+      sigState.activeType = type;
+      ['A', 'B', 'C', 'D'].forEach(t => {
+        const card = document.getElementById('sigCard_' + t);
+        if (card) card.classList.toggle('active', t === type);
+      });
+      const badge = document.getElementById('currSigThemeBadge');
+      if (badge) {
+        const names = { A: 'BEST 시그니처 A', B: '매거진 B', C: 'VIP 다크골드 C', D: '가족사랑 D' };
+        badge.textContent = names[type] || ('시그니처 ' + type);
+      }
+      renderSignatureCover(type);
+    }
+
+    function updateSigColors() {
+      const main = document.getElementById('inpSigMainColor').value;
+      const accent = document.getElementById('inpSigAccentColor').value;
+      document.getElementById('txtSigMainColor').textContent = main;
+      document.getElementById('txtSigAccentColor').textContent = accent;
+      sigState.mainColor = main;
+      sigState.accentColor = accent;
+      renderSignatureCover();
+    }
+
+    // =========================================================================
+    // AI CUTOUT & KEYER ENGINES
+    // =========================================================================
+    function loadImageElement(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+
+    async function getMediaPipeSegmenter() {
+      if (mpSegmenterInstance) return mpSegmenterInstance;
+      const visionModule = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14');
+      const { ImageSegmenter, FilesetResolver } = visionModule;
+      const vision = await FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
+      );
+      mpSegmenterInstance = await ImageSegmenter.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite',
+          delegate: 'GPU'
+        },
+        runningMode: 'IMAGE',
+        outputCategoryMask: false,
+        outputConfidenceMasks: true
+      });
+      return mpSegmenterInstance;
+    }
+
+    function performSmartStudioBorderKeying(img, tolerance = 36) {
+      const maxDim = 1000;
+      let w = img.naturalWidth || img.width;
+      let h = img.naturalHeight || img.height;
+      if (w > maxDim || h > maxDim) {
+        const ratio = Math.min(maxDim / w, maxDim / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+
+      const cv = document.createElement('canvas');
+      cv.width = w;
+      cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      const samplePts = [
+        [2, 2], [w - 3, 2], [Math.floor(w * 0.15), 2], [Math.floor(w * 0.85), 2],
+        [2, Math.floor(h * 0.35)], [w - 3, Math.floor(h * 0.35)]
+      ];
+      const bgRefs = samplePts.map(([sx, sy]) => {
+        const idx = (sy * w + sx) * 4;
+        return [d[idx], d[idx + 1], d[idx + 2]];
+      });
+
+      const colorDist = (r, g, b) => {
+        let minD = 999;
+        for (const [br, bg, bb] of bgRefs) {
+          const dist = Math.sqrt((r - br) ** 2 + (g - bg) ** 2 + (b - bb) ** 2);
+          if (dist < minD) minD = dist;
+        }
+        return minD;
+      };
+
+      const visited = new Uint8Array(w * h);
+      const isBgMask = new Uint8Array(w * h);
+      const queue = new Int32Array(w * h);
+      let qHead = 0, qTail = 0;
+
+      const pushSeed = (x, y) => {
+        const p = y * w + x;
+        if (visited[p]) return;
+        const i4 = p * 4;
+        if (colorDist(d[i4], d[i4 + 1], d[i4 + 2]) <= tolerance * 1.45) {
+          visited[p] = 1;
+          isBgMask[p] = 1;
+          queue[qTail++] = p;
+        }
+      };
+
+      for (let x = 0; x < w; x++) pushSeed(x, 0);
+      for (let y = 0; y < h; y++) {
+        pushSeed(0, y);
+        pushSeed(w - 1, y);
+      }
+
+      while (qHead < qTail) {
+        const cur = queue[qHead++];
+        const cx = cur % w;
+        const cy = (cur / w) | 0;
+
+        const neighbors = [
+          [cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]
+        ];
+        for (const [nx, ny] of neighbors) {
+          if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+          const np = ny * w + nx;
+          if (!visited[np]) {
+            visited[np] = 1;
+            const n4 = np * 4;
+            if (colorDist(d[n4], d[n4 + 1], d[n4 + 2]) <= tolerance) {
+              isBgMask[np] = 1;
+              queue[qTail++] = np;
+            }
+          }
+        }
+      }
+
+      for (let p = 0; p < w * h; p++) {
+        if (isBgMask[p]) {
+          d[p * 4 + 3] = 0;
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      return cv.toDataURL('image/png');
+    }
+
+    async function runAiPersonCutout() {
+      const btn = document.getElementById('btnRunAiCutout');
+      const progWrap = document.getElementById('aiProgressWrap');
+      const progBar = document.getElementById('aiProgressBar');
+      const progTxt = document.getElementById('aiProgressText');
+      const badge = document.getElementById('cutoutStatusBadge');
+
+      btn.disabled = true;
+      if (progWrap) progWrap.style.display = 'block';
+      if (progBar) progBar.style.width = '25%';
+      if (progTxt) progTxt.innerText = 'AI 인물 윤곽선 세그멘테이션 엔진 로딩 중...';
+      if (badge) badge.innerText = '분석중...';
+
+      try {
+        const img = await loadImageElement(sigState.person.originalUrl);
+        if (progBar) progBar.style.width = '60%';
+        if (progTxt) progTxt.innerText = '사진에서 인물과 배경을 정밀 분리하는 중...';
+
+        let cutoutDataUrl = '';
+        try {
+          const segmenter = await getMediaPipeSegmenter();
+          const result = segmenter.segment(img);
+          const confMasks = result.confidenceMasks;
+          if (confMasks && confMasks.length > 0) {
+            const maskFloat = confMasks[0].getAsFloat32Array();
+            const w = img.naturalWidth || img.width;
+            const h = img.naturalHeight || img.height;
+
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = w;
+            offCanvas.height = h;
+            const ctx = offCanvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const px = imgData.data;
+
+            for (let i = 0; i < maskFloat.length; i++) {
+              const prob = maskFloat[i];
+              let alpha = 0;
+              if (prob > 0.62) alpha = 255;
+              else if (prob > 0.28) alpha = Math.round(((prob - 0.28) / 0.34) * 255);
+              px[i * 4 + 3] = Math.min(px[i * 4 + 3], alpha);
+            }
+            ctx.putImageData(imgData, 0, 0);
+            cutoutDataUrl = offCanvas.toDataURL('image/png');
+            sigState.person.lastMethod = 'ai';
+          }
+        } catch (aiErr) {
+          console.warn('[AI Cutout] MediaPipe fallback to smart border keyer:', aiErr);
+          cutoutDataUrl = performSmartStudioBorderKeying(img, 38);
+          sigState.person.lastMethod = 'keyer-fallback';
+        }
+
+        if (!cutoutDataUrl) {
+          cutoutDataUrl = performSmartStudioBorderKeying(img, 38);
+          sigState.person.lastMethod = 'keyer-fallback';
+        }
+
+        sigState.person.displayUrl = cutoutDataUrl;
+        sigState.person.mode = 'cutout';
+        customPhotoSrc = cutoutDataUrl;
+
+        canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(el => el.src = cutoutDataUrl);
+
+        if (progBar) progBar.style.width = '100%';
+        if (progTxt) progTxt.innerText = 'AI 누끼 배경 제거 완료!';
+        if (badge) {
+          badge.innerText = 'AI 분리완료';
+          badge.style.background = '#dcfce7';
+          badge.style.color = '#15803d';
+        }
+        renderSignatureCover();
+      } catch (err) {
+        console.error('Cutout error:', err);
+        alert('인물 누끼 처리 중 오류가 발생했습니다: ' + err.message);
+        if (badge) badge.innerText = '오류';
+      } finally {
+        btn.disabled = false;
+        setTimeout(() => {
+          if (progWrap) progWrap.style.display = 'none';
+        }, 1500);
+      }
+    }
+
+    async function runInstantStudioKeyer() {
+      const badge = document.getElementById('cutoutStatusBadge');
+      if (badge) badge.innerText = '키어 적용중...';
+      try {
+        const img = await loadImageElement(sigState.person.originalUrl);
+        const keyed = performSmartStudioBorderKeying(img, 40);
+        sigState.person.displayUrl = keyed;
+        sigState.person.mode = 'cutout';
+        sigState.person.lastMethod = 'keyer';
+        customPhotoSrc = keyed;
+        canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(el => el.src = keyed);
+        if (badge) {
+          badge.innerText = '키어 완료';
+          badge.style.background = '#e0f2fe';
+          badge.style.color = '#0369a1';
+        }
+        renderSignatureCover();
+      } catch (e) {
+        alert('스튜디오 키어 실행 실패: ' + e.message);
+      }
+    }
+
+    function restoreOriginalPhoto() {
+      sigState.person.displayUrl = sigState.person.originalUrl;
+      customPhotoSrc = sigState.person.originalUrl;
+      canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(el => el.src = customPhotoSrc);
+      const badge = document.getElementById('cutoutStatusBadge');
+      if (badge) {
+        badge.innerText = '원본 복원됨';
+        badge.style.background = '#f1f5f9';
+        badge.style.color = '#475569';
+      }
+      renderSignatureCover();
+    }
+
+    function handlePortraitUpload(ev) {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const url = e.target.result;
+        sigState.person.originalUrl = url;
+        sigState.person.displayUrl = url;
+        customPhotoSrc = url;
+        canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = url);
+        const badge = document.getElementById('cutoutStatusBadge');
+        if (badge) {
+          badge.innerText = '사진 업로드됨';
+          badge.style.background = '#fef3c7';
+          badge.style.color = '#b45309';
+        }
+        renderSignatureCover();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setPhotoDisplayMode(mode) {
+      sigState.person.mode = mode;
+      document.getElementById('btnPhotoModeCutout').classList.toggle('active', mode === 'cutout');
+      document.getElementById('btnPhotoModeFullBg').classList.toggle('active', mode === 'fullbg');
+      renderSignatureCover();
+    }
+
+    function onPersonTransformInput() {
+      const scale = parseInt(document.getElementById('rangePersonScale').value) || 100;
+      const fade = parseInt(document.getElementById('rangePersonFade').value) || 0;
+      const x = parseInt(document.getElementById('rangePersonX').value) || 0;
+      const y = parseInt(document.getElementById('rangePersonY').value) || 0;
+      const flipX = document.getElementById('chkPersonFlipX').checked;
+      const shadow = document.getElementById('chkPersonShadow').checked;
+
+      sigState.person.scale = scale;
+      sigState.person.bottomFade = fade;
+      sigState.person.x = x;
+      sigState.person.y = y;
+      sigState.person.flipX = flipX;
+      sigState.person.shadow = shadow;
+
+      document.getElementById('txtPersonScale').textContent = scale + '%';
+      document.getElementById('txtPersonFade').textContent = fade + '%';
+      document.getElementById('txtPersonX').textContent = x + 'px';
+      document.getElementById('txtPersonY').textContent = y + 'px';
+
+      renderSignatureCover();
+    }
+
+    function resetPersonTransform() {
+      document.getElementById('rangePersonScale').value = 100;
+      document.getElementById('rangePersonFade').value = 8;
+      document.getElementById('rangePersonX').value = 0;
+      document.getElementById('rangePersonY').value = 0;
+      document.getElementById('chkPersonFlipX').checked = false;
+      document.getElementById('chkPersonShadow').checked = true;
+      onPersonTransformInput();
+    }
+
+    function onEmblemInputsChange() {
+      sigState.logos.topShow = document.getElementById('chkShowEmblem').checked;
+      sigState.logos.emblemSub = document.getElementById('inpEmblemSub').value;
+      sigState.logos.emblemMain = document.getElementById('inpEmblemMain').value;
+      const size = parseInt(document.getElementById('rangeEmblemSize').value) || 225;
+      sigState.logos.botSize = size;
+      document.getElementById('txtEmblemSize').textContent = size + 'px';
+      renderSignatureCover();
+    }
+
+    function onSnsInputsChange() {
+      sigState.sns.instaShow = document.getElementById('chkShowInsta').checked;
+      sigState.sns.instaUrl = document.getElementById('inpInstaUrl').value;
+      sigState.sns.blogShow = document.getElementById('chkShowBlog').checked;
+      sigState.sns.blogUrl = document.getElementById('inpBlogUrl').value;
+      sigState.sns.kakaoShow = document.getElementById('chkShowKakao').checked;
+      sigState.sns.kakaoUrl = document.getElementById('inpKakaoUrl').value;
+      renderSignatureCover();
+    }
+
+    function bindPersonCanvasDrag() {
+      const layer = document.querySelector('#a4PaperCanvas .draggable-person-layer');
+      if (!layer) return;
+
+      let dragging = false, moved = false, sx = 0, sy = 0, origX = 0, origY = 0;
+
+      layer.addEventListener('pointerdown', ev => {
+        dragging = true;
+        moved = false;
+        sx = ev.clientX;
+        sy = ev.clientY;
+        origX = sigState.person.x || 0;
+        origY = sigState.person.y || 0;
+        layer.setPointerCapture(ev.pointerId);
+      });
+
+      layer.addEventListener('pointermove', ev => {
+        if (!dragging) return;
+        moved = true;
+        const currentZoom = currentCanvasZoom || 0.8;
+        const dx = (ev.clientX - sx) / (currentZoom * 2.084);
+        const dy = (ev.clientY - sy) / (currentZoom * 2.084);
+        sigState.person.x = Math.round(origX + dx);
+        sigState.person.y = Math.round(origY + dy);
+
+        const rangeX = document.getElementById('rangePersonX');
+        const rangeY = document.getElementById('rangePersonY');
+        if (rangeX) rangeX.value = sigState.person.x;
+        if (rangeY) rangeY.value = sigState.person.y;
+        const txtX = document.getElementById('txtPersonX');
+        const txtY = document.getElementById('txtPersonY');
+        if (txtX) txtX.textContent = sigState.person.x + 'px';
+        if (txtY) txtY.textContent = sigState.person.y + 'px';
+
+        layer.style.transform = `translate(${sigState.person.x}px, ${sigState.person.y}px)`;
+      });
+
+      const endDrag = ev => {
+        if (!dragging) return;
+        dragging = false;
+        try { layer.releasePointerCapture(ev.pointerId); } catch(e) {}
+      };
+      layer.addEventListener('pointerup', endDrag);
+      layer.addEventListener('pointercancel', endDrag);
+    }
+
+    // =========================================================================
+    // ★ SUPABASE CLOUD LIBRARY INTEGRATION ★
+    // =========================================================================
+    async function getActiveSupabaseClient() {
+      if (window.sb) return window.sb;
+      if (window.parent && window.parent.sb) return window.parent.sb;
+      if (typeof initSupabaseConfigOnly === 'function') {
+        return await initSupabaseConfigOnly();
+      }
+      return null;
+    }
+
+    async function saveCoverToLibrary() {
+      const inp = document.getElementById('inpLibraryTitle');
+      const title = (inp && inp.value.trim()) ? inp.value.trim() : (`보장분석 표지 ${new Date().toLocaleDateString('ko-KR')}`);
+
+      let thumbDataUrl = '';
+      try {
+        const targetEl = (currentMasterCategory === 'signature')
+          ? document.getElementById('a4PaperCanvas')
+          : canvasPage;
+        if (targetEl) {
+          const cv = await html2canvas(targetEl, { scale: 0.18, useCORS: true, backgroundColor: '#ffffff' });
+          thumbDataUrl = cv.toDataURL('image/jpeg', 0.65);
+        }
+      } catch (cvErr) {
+        console.warn('Thumbnail generation warning:', cvErr);
+      }
+
+      const item = {
+        id: 'cov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+        title: title,
+        category: currentMasterCategory,
+        themeId: (currentMasterCategory === 'signature') ? activeSignatureType : currentTemplateIndex,
+        sigState: JSON.parse(JSON.stringify(sigState)),
+        basicIndex: currentTemplateIndex,
+        thumbnail: thumbDataUrl,
+        updatedAt: new Date().toISOString()
+      };
+
+      try {
+        let list = JSON.parse(localStorage.getItem('weracle_a4_cover_library_v2') || '[]');
+        list.unshift(item);
+        if (list.length > 25) list = list.slice(0, 25);
+        localStorage.setItem('weracle_a4_cover_library_v2', JSON.stringify(list));
+        savedCloudLibrary = list;
+      } catch (lsErr) {
+        console.warn('LocalStorage save error:', lsErr);
+      }
+
+      try {
+        const sbClient = await getActiveSupabaseClient();
+        const myProf = getMyProfile();
+        const userId = myProf ? (myProf.id || (window.currentUser && window.currentUser.id)) : null;
+
+        if (sbClient && userId) {
+          const { data: profData } = await sbClient
+            .from('profiles')
+            .select('settings')
+            .eq('id', userId)
+            .single();
+
+          const curSettings = (profData && profData.settings) || {};
+          let cloudCovers = Array.isArray(curSettings.bojang_covers) ? curSettings.bojang_covers : [];
+          cloudCovers.unshift(item);
+          if (cloudCovers.length > 20) cloudCovers = cloudCovers.slice(0, 20);
+
+          await sbClient
+            .from('profiles')
+            .update({ settings: { ...curSettings, bojang_covers: cloudCovers } })
+            .eq('id', userId);
+
+          console.log('[Supabase Cloud] Successfully saved cover to profiles.settings.bojang_covers!');
+        }
+      } catch (cloudErr) {
+        console.warn('[Supabase Cloud] Save exception (cached locally):', cloudErr);
+      }
+
+      if (inp) inp.value = '';
+      alert(`🎉 '${title}' 디자인이 내 보관함에 안전하게 저장되었습니다!`);
+      renderLibraryList();
+    }
+
+    async function loadCoversFromCloud() {
+      try {
+        const localData = JSON.parse(localStorage.getItem('weracle_a4_cover_library_v2') || '[]');
+        if (localData && localData.length > 0) {
+          savedCloudLibrary = localData;
+          renderLibraryList();
+        }
+      } catch (e) {}
+
+      try {
+        const sbClient = await getActiveSupabaseClient();
+        const myProf = getMyProfile();
+        const userId = myProf ? (myProf.id || (window.currentUser && window.currentUser.id)) : null;
+
+        if (sbClient && userId) {
+          const { data: profData, error } = await sbClient
+            .from('profiles')
+            .select('settings')
+            .eq('id', userId)
+            .single();
+
+          if (!error && profData && profData.settings && Array.isArray(profData.settings.bojang_covers)) {
+            savedCloudLibrary = profData.settings.bojang_covers;
+            localStorage.setItem('weracle_a4_cover_library_v2', JSON.stringify(savedCloudLibrary));
+            renderLibraryList();
+            console.log('[Supabase Cloud] Loaded', savedCloudLibrary.length, 'covers from cloud profile!');
+          }
+        }
+      } catch (err) {
+        console.warn('[Supabase Cloud] Fetch warning:', err);
+      }
+    }
+
+    function renderLibraryList() {
+      const container = document.getElementById('libraryCardsList');
+      if (!container) return;
+
+      if (!savedCloudLibrary || savedCloudLibrary.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px 10px; color: #64748b; font-size: 13px;">
+            <i class="fa-solid fa-folder-closed" style="font-size: 32px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>
+            저장된 표지가 없습니다.<br>위에서 현재 디자인을 저장해 보세요!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = savedCloudLibrary.map((item, idx) => {
+        const dateStr = item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('ko-KR') : '';
+        const badgeTxt = (item.category === 'signature') ? (`⭐ 시그니처 ${item.themeId}`) : (`🏛️ 기본형 #${item.themeId + 1}`);
+        const thumbSrc = item.thumbnail || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="85" fill="%23334155"><rect width="100%" height="100%"/><text x="50%" y="50%" fill="%23ffffff" font-size="10" text-anchor="middle">A4</text></svg>';
+
+        return `
+          <div class="library-item-card">
+            <img src="${thumbSrc}" class="library-thumb" alt="표지 썸네일" />
+            <div class="library-info">
+              <div class="library-title" title="${sigEsc(item.title)}">${sigEsc(item.title)}</div>
+              <div class="library-meta">
+                <span class="badge-auto" style="background:#0284c7; color:#ffffff; font-size:10px; padding:1px 6px;">${badgeTxt}</span>
+                <span>${dateStr}</span>
+              </div>
+              <div class="library-actions">
+                <button type="button" class="btn-lib-apply" onclick="applyLibraryCover('${item.id}')">
+                  <i class="fa-solid fa-check"></i> 불러오기
+                </button>
+                <button type="button" class="btn-lib-del" onclick="deleteLibraryCover('${item.id}')">
+                  <i class="fa-solid fa-trash-can"></i> 삭제
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function applyLibraryCover(id) {
+      const item = savedCloudLibrary.find(x => x.id === id);
+      if (!item) return;
+
+      if (item.category === 'signature') {
+        setMasterCategory('signature');
+        if (item.sigState) {
+          Object.assign(sigState, item.sigState);
+        }
+        selectSignatureTheme(item.themeId || 'A');
+      } else {
+        setMasterCategory('basic');
+        applyTemplate(item.basicIndex !== undefined ? item.basicIndex : item.themeId);
+      }
+      alert(`✅ '${item.title}' 표지 디자인을 성공적으로 불러왔습니다!`);
+    }
+
+    async function deleteLibraryCover(id) {
+      if (!confirm('정말 이 디자인을 보관함에서 삭제하시겠습니까?')) return;
+      savedCloudLibrary = savedCloudLibrary.filter(x => x.id !== id);
+      localStorage.setItem('weracle_a4_cover_library_v2', JSON.stringify(savedCloudLibrary));
+      renderLibraryList();
+
+      try {
+        const sbClient = await getActiveSupabaseClient();
+        const myProf = getMyProfile();
+        const userId = myProf ? (myProf.id || (window.currentUser && window.currentUser.id)) : null;
+
+        if (sbClient && userId) {
+          const { data: profData } = await sbClient.from('profiles').select('settings').eq('id', userId).single();
+          const curSettings = (profData && profData.settings) || {};
+          await sbClient.from('profiles').update({
+            settings: { ...curSettings, bojang_covers: savedCloudLibrary }
+          }).eq('id', userId);
+        }
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // UPGRADED window.getCoverCanvas FOR PDF DOWNLOAD INTEGRATION
+    // =========================================================================
+    const originalGetCoverCanvas = window.getCoverCanvas;
+    window.getCoverCanvas = async function(extractedData) {
+      let customClient = (typeof extractedData === 'string') ? extractedData : (extractedData ? extractedData.clientName : null);
+      if (customClient) {
+        sigState.simCustomer = customClient;
+      }
+
+      if (currentMasterCategory === 'signature') {
+        renderSignatureCover();
+        const paper = document.getElementById('a4PaperCanvas');
+        if (!paper) return null;
+
+        const origTransform = paper.style.transform;
+        paper.style.transform = 'none';
+
+        try {
+          const canvas = await html2canvas(paper, {
+            scale: 2.0840336,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            logging: false
+          });
+          paper.style.transform = origTransform;
+          return canvas;
+        } catch (err) {
+          console.error('[Signature getCoverCanvas] Error:', err);
+          paper.style.transform = origTransform;
+          return null;
+        }
+      } else {
+        if (typeof originalGetCoverCanvas === 'function') {
+          return await originalGetCoverCanvas(extractedData);
+        }
+        return null;
+      }
+    };
+
+
     const TEMPLATES = [{"file":"01_코퍼레이트_다크차콜_정통공식문서.html","pngFile":"01_코퍼레이트_다크차콜_정통공식문서.png","num":"01","name":"코퍼레이트 다크차콜 정통공식문서","themeId":"corporate","themeName":"신뢰 & 정통 코퍼레이트 보증서","themeBadge":"🏛️ 코퍼레이트","themeIcon":"fa-building-columns","themeColor":"#1E293B","themeFolderDisplay":"1_신뢰_정통코퍼레이트 (3종)","css":"\n    \n    \n    .a4-page {\n      width: 1240px;\n      height: 1754px;\n      position: relative;\n      overflow: hidden;\n      background: #1e293b;\n      color: #ffffff;\n      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.5);\n      padding: 70px 80px;\n      display: flex;\n      flex-direction: column;\n      justify-content: space-between;\n      box-sizing: border-box;\n    }\n    .top-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      border-bottom: 1px solid rgba(255,255,255,0.12);\n      padding-bottom: 24px;\n    }\n    .corp-badge {\n      font-size: 17px;\n      font-weight: 800;\n      color: #94a3b8;\n      letter-spacing: 3px;\n    }\n    .main-hero {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .hero-title {\n      font-size: 72px;\n      font-weight: 900;\n      letter-spacing: -2px;\n      color: #ffffff;\n      line-height: 1.15;\n    }\n    .hero-title-accent {\n      color: #38bdf8;\n    }\n    .hero-underline {\n      width: 140px;\n      height: 6px;\n      background: #38bdf8;\n      margin: 18px auto 0;\n      border-radius: 3px;\n    }\n    .greeting-box {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .greeting-client {\n      font-size: 40px;\n      font-weight: 800;\n      color: #ffffff;\n    }\n    .greeting-client b {\n      color: #38bdf8;\n      font-weight: 900;\n    }\n    .greeting-sub {\n      font-size: 26px;\n      font-weight: 600;\n      color: #cbd5e1;\n      margin-top: 8px;\n    }\n    .content-card {\n      background: #0f172a;\n      border: 1px solid #334155;\n      border-radius: 24px;\n      padding: 36px 44px;\n      display: grid;\n      grid-template-columns: 360px 1fr;\n      gap: 36px;\n      align-items: center;\n      box-shadow: 0 15px 35px rgba(0,0,0,0.4);\n      margin: 20px 0;\n    }\n    .card-photo {\n      height: 440px;\n      border-radius: 16px;\n      overflow: hidden;\n      border: 1px solid #334155;\n    }\n    .card-photo img {\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n    .bojang-checklist-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 14px;\n    }\n    .chk-item {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      background: rgba(30, 41, 59, 0.9);\n      border: 1px solid rgba(56, 189, 248, 0.25);\n      border-radius: 14px;\n      padding: 16px 18px;\n      font-size: 19px;\n      font-weight: 700;\n      color: #f1f5f9;\n      box-shadow: 0 4px 12px rgba(0,0,0,0.2);\n    }\n    .chk-icon {\n      color: #38bdf8;\n      font-size: 22px;\n    }\n    .bojang-data-widget {\n      background: rgba(15, 23, 42, 0.95);\n      border: 1px solid rgba(56, 189, 248, 0.35);\n      border-radius: 16px;\n      padding: 18px 24px;\n      margin: 16px 0;\n      width: 100%;\n      box-sizing: border-box;\n    }\n    .data-widget-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 12px;\n      padding-bottom: 8px;\n      border-bottom: 1px solid rgba(255,255,255,0.1);\n    }\n    .data-chip-tag {\n      background: #0284c7;\n      color: #ffffff;\n      font-size: 12px;\n      font-weight: 800;\n      padding: 3px 10px;\n      border-radius: 6px;\n    }\n    .data-date-tag { font-size: 12px; color: #94a3b8; }\n    .data-kpi-grid {\n      display: grid;\n      grid-template-columns: 1fr 1.3fr 1.5fr;\n      gap: 14px;\n      align-items: center;\n    }\n    .kpi-cell { display: flex; flex-direction: column; gap: 3px; }\n    .kpi-label { font-size: 12px; color: #94a3b8; font-weight: 600; }\n    .kpi-val { font-size: 20px; font-weight: 900; color: #ffffff; display: flex; align-items: baseline; gap: 3px; }\n    .kpi-val span { font-size: 13px; color: #38bdf8; font-weight: 700; }\n    .kpi-val-status { display: flex; gap: 5px; margin-top: 2px; }\n    .status-pill { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 5px; }\n    .st-ok { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }\n    .st-warn { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }\n    .st-miss { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }\n\n    .bojang-contact-pill {\n      background: #0f172a;\n      border: 1px solid #334155;\n      color: #f1f5f9;\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n      padding: 14px 36px;\n      border-radius: 40px;\n      font-size: 19px;\n      font-weight: 700;\n      margin: 10px auto;\n    }\n    .bojang-contact-pill b { color: #38bdf8; }\n    .contact-pill-divider { color: #475569; }\n\n    .bojang-slogan-box {\n      background: rgba(255, 255, 255, 0.05);\n      border-left: 4px solid #38bdf8;\n      border-radius: 0 10px 10px 0;\n      padding: 10px 16px;\n      margin: 10px 0;\n    }\n    .slogan-title { font-size: 12px; font-weight: 800; color: #38bdf8; margin-bottom: 2px; }\n    .slogan-desc { font-size: 14px; font-weight: 600; color: #cbd5e1; }\n\n    .official-footer-bar {\n      background: #0f172a;\n      border: 1px solid #334155;\n      border-radius: 14px;\n      padding: 16px 28px;\n      font-size: 13px;\n      color: #94a3b8;\n      display: flex;\n      flex-direction: column;\n      gap: 5px;\n      margin-top: 10px;\n    }\n    .footer-row-meta { display: flex; flex-wrap: wrap; gap: 14px 22px; }\n    .footer-item b { color: #ffffff; }\n    .footer-row-address { font-size: 12px; color: #64748b; }\n    .bojang-disclaimer-note {\n      font-size: 12px;\n      color: #64748b;\n      text-align: center;\n      margin-top: 8px;\n    }\n    ","html":"\n  <div class=\"a4-page\">\n    <div class=\"top-header\">\n      <span class=\"corp-badge\">OFFICIAL ENTERPRISE AUDIT</span>\n      <img src=\"images/보답화니_로고.png\" style=\"height: 65px; object-fit: contain; display: block;\" data-slot=\"logo\">\n    </div>\n\n    <div class=\"main-hero\">\n      <h1 class=\"hero-title\" data-slot=\"title\">\n        보장분석 <span class=\"hero-title-accent\">보고서</span>\n      </h1>\n      <div class=\"hero-underline\"></div>\n      <div class=\"greeting-box\" data-slot=\"greeting\">\n        <div class=\"greeting-client\"><b class=\"val-client\">조진주</b> 님을 위해</div>\n        <div class=\"greeting-sub\">꼼꼼하게 준비했습니다.</div>\n      </div>\n    </div>\n\n    <div class=\"content-card\">\n      <div class=\"card-photo\">\n        <img src=\"images/consultant_model.jpg\" data-slot=\"image\">\n      </div>\n      <div>\n        <div style=\"font-size:14px; font-weight:800; color:#38bdf8; letter-spacing:1px; margin-bottom:12px;\">\n          <i class=\"fa-solid fa-list-check mr-1\"></i> 핵심 보장분석 목차\n        </div>\n        <div class=\"bojang-checklist-grid\" data-slot=\"checklist\">\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 계약리스트 분석</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 가입담보 상세</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 담보 종합 진단</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 진단 현황</span></div>\n        </div>\n\n        <div class=\"bojang-data-widget\" data-slot=\"metrics\">\n          <div class=\"data-widget-header\">\n            <span class=\"data-chip-tag\"><i class=\"fa-solid fa-chart-simple mr-1\"></i> 전산 보장분석 요약</span>\n            <span class=\"data-date-tag\">한국신용정보원 집적 기준</span>\n          </div>\n          <div class=\"data-kpi-grid\">\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">정상 계약건수</span>\n              <span class=\"kpi-val\"><b class=\"val-contracts\">15</b><span>건</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">총 월 납입보험료</span>\n              <span class=\"kpi-val\"><b class=\"val-premium\">420,548</b><span>원</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">보장 진단 현황</span>\n              <div class=\"kpi-val-status\">\n                <span class=\"status-pill st-ok\">충분 <b class=\"val-st-ok\">23</b></span>\n                <span class=\"status-pill st-warn\">부족 <b class=\"val-st-warn\">8</b></span>\n                <span class=\"status-pill st-miss\">미가입 <b class=\"val-st-miss\">6</b></span>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"bojang-slogan-box\" data-slot=\"slogan\">\n          <div class=\"slogan-title\"><i class=\"fa-solid fa-quote-left mr-1\"></i> 보험으로 보답하는 보답화니</div>\n          <p class=\"slogan-desc val-slogan\">\"보험다운 보험을 권하고, 정직하고 좋은 보험으로 고객님 신뢰에 보답드리겠습니다\"</p>\n        </div>\n      </div>\n    </div>\n\n    <div style=\"text-align:center;\">\n      <div class=\"bojang-contact-pill\" data-slot=\"contact\">\n        <span><i class=\"fa-solid fa-user-tie mr-1\"></i> 담당자: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"contact-pill-divider\">|</span>\n        <span><i class=\"fa-solid fa-phone mr-1\"></i> 연락처: <b class=\"val-phone\">010-1234-5678</b></span>\n      </div>\n    </div>\n\n    <div class=\"official-footer-bar\" data-slot=\"footer\">\n      <div class=\"footer-row-meta\">\n        <span class=\"footer-item item-company\" data-key=\"company\">❚ 소속: <b class=\"val-company\">위라클랩</b></span>\n        <span class=\"footer-item item-advisor\" data-key=\"advisor\">❚ 담당: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"footer-item item-sabun\" data-key=\"sabun\">❚ 사번: <b class=\"val-sabun\">2532055</b></span>\n        <span class=\"footer-item item-phone\" data-key=\"phone\">❚ 핸드폰: <b class=\"val-phone\">010-1234-5678</b></span>\n        <span class=\"footer-item item-tel\" data-key=\"tel\">❚ 대표번호: <b class=\"val-tel\">1588-1234</b></span>\n        <span class=\"footer-item item-fax\" data-key=\"fax\">❚ FAX: <b class=\"val-fax\">02-123-4567</b></span>\n      </div>\n      <div class=\"footer-row-address\">\n        <span class=\"footer-item item-address\" data-key=\"address\">❚ 주소: <b class=\"val-address\">서울특별시 종로구 57, 6층 위라클본랩</b></span>\n      </div>\n    </div>\n\n    <div class=\"bojang-disclaimer-note\" data-slot=\"disclaimer\">\n      * 본 보고서는 한국신용정보원에 집적된 계약 정보를 바탕으로 고객님의 보장내역을 정밀 분석·정리한 자료입니다.\n    </div>\n  </div>\n"},{"file":"02_코퍼레이트_스틸그레이_테크.html","pngFile":"02_코퍼레이트_스틸그레이_테크.png","num":"02","name":"코퍼레이트 스틸그레이 테크","themeId":"corporate","themeName":"신뢰 & 정통 코퍼레이트 보증서","themeBadge":"🏛️ 코퍼레이트","themeIcon":"fa-building-columns","themeColor":"#475569","themeFolderDisplay":"1_신뢰_정통코퍼레이트 (3종)","css":"\n    \n    \n    .a4-page {\n      width: 1240px;\n      height: 1754px;\n      position: relative;\n      overflow: hidden;\n      background: #f1f5f9;\n      color: #0f172a;\n      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.25);\n      padding: 70px 80px;\n      display: flex;\n      flex-direction: column;\n      justify-content: space-between;\n      box-sizing: border-box;\n    }\n    .top-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      border-bottom: 2px solid #cbd5e1;\n      padding-bottom: 24px;\n    }\n    .corp-badge {\n      font-size: 17px;\n      font-weight: 800;\n      color: #475569;\n      letter-spacing: 2.5px;\n    }\n    .main-hero {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .hero-title {\n      font-size: 72px;\n      font-weight: 900;\n      letter-spacing: -2px;\n      color: #0f172a;\n      line-height: 1.15;\n    }\n    .hero-title-accent {\n      color: #0284c7;\n    }\n    .hero-underline {\n      width: 140px;\n      height: 6px;\n      background: #0284c7;\n      margin: 18px auto 0;\n      border-radius: 3px;\n    }\n    .greeting-box {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .greeting-client {\n      font-size: 40px;\n      font-weight: 800;\n      color: #0f172a;\n    }\n    .greeting-client b {\n      color: #0284c7;\n      font-weight: 900;\n    }\n    .greeting-sub {\n      font-size: 26px;\n      font-weight: 600;\n      color: #475569;\n      margin-top: 8px;\n    }\n    .content-card {\n      background: #ffffff;\n      border: 1px solid #cbd5e1;\n      border-radius: 24px;\n      padding: 36px 44px;\n      display: grid;\n      grid-template-columns: 360px 1fr;\n      gap: 36px;\n      align-items: center;\n      box-shadow: 0 15px 35px rgba(0,0,0,0.06);\n      margin: 20px 0;\n    }\n    .card-photo {\n      height: 440px;\n      border-radius: 16px;\n      overflow: hidden;\n      border: 1px solid #e2e8f0;\n    }\n    .card-photo img {\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n    .bojang-checklist-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 14px;\n    }\n    .chk-item {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      background: #f8fafc;\n      border: 1px solid #e2e8f0;\n      border-radius: 14px;\n      padding: 16px 18px;\n      font-size: 19px;\n      font-weight: 700;\n      color: #1e293b;\n      box-shadow: 0 2px 8px rgba(0,0,0,0.03);\n    }\n    .chk-icon {\n      color: #0284c7;\n      font-size: 22px;\n    }\n    .bojang-data-widget {\n      background: #f8fafc;\n      border: 1px solid #cbd5e1;\n      border-radius: 16px;\n      padding: 18px 24px;\n      margin: 16px 0;\n      width: 100%;\n      box-sizing: border-box;\n    }\n    .data-widget-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 12px;\n      padding-bottom: 8px;\n      border-bottom: 1px solid #e2e8f0;\n    }\n    .data-chip-tag {\n      background: #0284c7;\n      color: #ffffff;\n      font-size: 12px;\n      font-weight: 800;\n      padding: 3px 10px;\n      border-radius: 6px;\n    }\n    .data-date-tag { font-size: 12px; color: #64748b; }\n    .data-kpi-grid {\n      display: grid;\n      grid-template-columns: 1fr 1.3fr 1.5fr;\n      gap: 14px;\n      align-items: center;\n    }\n    .kpi-cell { display: flex; flex-direction: column; gap: 3px; }\n    .kpi-label { font-size: 12px; color: #64748b; font-weight: 600; }\n    .kpi-val { font-size: 20px; font-weight: 900; color: #0f172a; display: flex; align-items: baseline; gap: 3px; }\n    .kpi-val span { font-size: 13px; color: #0284c7; font-weight: 700; }\n    .kpi-val-status { display: flex; gap: 5px; margin-top: 2px; }\n    .status-pill { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 5px; }\n    .st-ok { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }\n    .st-warn { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }\n    .st-miss { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }\n\n    .bojang-contact-pill {\n      background: #ffffff;\n      border: 1px solid #cbd5e1;\n      color: #1e293b;\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n      padding: 14px 36px;\n      border-radius: 40px;\n      font-size: 19px;\n      font-weight: 700;\n      margin: 10px auto;\n      box-shadow: 0 4px 12px rgba(0,0,0,0.04);\n    }\n    .bojang-contact-pill b { color: #0284c7; }\n    .contact-pill-divider { color: #94a3b8; }\n\n    .bojang-slogan-box {\n      background: #ffffff;\n      border-left: 4px solid #0284c7;\n      border-radius: 0 10px 10px 0;\n      padding: 10px 16px;\n      margin: 10px 0;\n      border-top: 1px solid #e2e8f0;\n      border-right: 1px solid #e2e8f0;\n      border-bottom: 1px solid #e2e8f0;\n    }\n    .slogan-title { font-size: 12px; font-weight: 800; color: #0284c7; margin-bottom: 2px; }\n    .slogan-desc { font-size: 14px; font-weight: 600; color: #334155; }\n\n    .official-footer-bar {\n      background: #1e293b;\n      border: 1px solid #334155;\n      border-radius: 14px;\n      padding: 16px 28px;\n      font-size: 13px;\n      color: #cbd5e1;\n      display: flex;\n      flex-direction: column;\n      gap: 5px;\n      margin-top: 10px;\n    }\n    .footer-row-meta { display: flex; flex-wrap: wrap; gap: 14px 22px; }\n    .footer-item b { color: #ffffff; }\n    .footer-row-address { font-size: 12px; color: #94a3b8; }\n    .bojang-disclaimer-note {\n      font-size: 12px;\n      color: #64748b;\n      text-align: center;\n      margin-top: 8px;\n    }\n    ","html":"\n  <div class=\"a4-page\">\n    <div class=\"top-header\">\n      <span class=\"corp-badge\">EXECUTIVE TECH AUDIT</span>\n      <img src=\"images/보답화니_로고.png\" style=\"height: 65px; object-fit: contain; display: block;\" data-slot=\"logo\">\n    </div>\n\n    <div class=\"main-hero\">\n      <h1 class=\"hero-title\" data-slot=\"title\">\n        보장분석 <span class=\"hero-title-accent\">보고서</span>\n      </h1>\n      <div class=\"hero-underline\"></div>\n      <div class=\"greeting-box\" data-slot=\"greeting\">\n        <div class=\"greeting-client\"><b class=\"val-client\">조진주</b> 님을 위해</div>\n        <div class=\"greeting-sub\">꼼꼼하게 준비했습니다.</div>\n      </div>\n    </div>\n\n    <div class=\"content-card\">\n      <div class=\"card-photo\">\n        <img src=\"images/consultant_model.jpg\" data-slot=\"image\">\n      </div>\n      <div>\n        <div style=\"font-size:14px; font-weight:800; color:#0284c7; letter-spacing:1px; margin-bottom:12px;\">\n          <i class=\"fa-solid fa-list-check mr-1\"></i> 핵심 보장분석 목차\n        </div>\n        <div class=\"bojang-checklist-grid\" data-slot=\"checklist\">\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 계약리스트 분석</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 가입담보 상세</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 담보 종합 진단</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 진단 현황</span></div>\n        </div>\n\n        <div class=\"bojang-data-widget\" data-slot=\"metrics\">\n          <div class=\"data-widget-header\">\n            <span class=\"data-chip-tag\"><i class=\"fa-solid fa-chart-simple mr-1\"></i> 전산 보장분석 요약</span>\n            <span class=\"data-date-tag\">한국신용정보원 집적 기준</span>\n          </div>\n          <div class=\"data-kpi-grid\">\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">정상 계약건수</span>\n              <span class=\"kpi-val\"><b class=\"val-contracts\">15</b><span>건</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">총 월 납입보험료</span>\n              <span class=\"kpi-val\"><b class=\"val-premium\">420,548</b><span>원</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">보장 진단 현황</span>\n              <div class=\"kpi-val-status\">\n                <span class=\"status-pill st-ok\">충분 <b class=\"val-st-ok\">23</b></span>\n                <span class=\"status-pill st-warn\">부족 <b class=\"val-st-warn\">8</b></span>\n                <span class=\"status-pill st-miss\">미가입 <b class=\"val-st-miss\">6</b></span>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"bojang-slogan-box\" data-slot=\"slogan\">\n          <div class=\"slogan-title\"><i class=\"fa-solid fa-quote-left mr-1\"></i> 보험으로 보답하는 보답화니</div>\n          <p class=\"slogan-desc val-slogan\">\"보험다운 보험을 권하고, 정직하고 좋은 보험으로 고객님 신뢰에 보답드리겠습니다\"</p>\n        </div>\n      </div>\n    </div>\n\n    <div style=\"text-align:center;\">\n      <div class=\"bojang-contact-pill\" data-slot=\"contact\">\n        <span><i class=\"fa-solid fa-user-tie mr-1\"></i> 담당자: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"contact-pill-divider\">|</span>\n        <span><i class=\"fa-solid fa-phone mr-1\"></i> 연락처: <b class=\"val-phone\">010-1234-5678</b></span>\n      </div>\n    </div>\n\n    <div class=\"official-footer-bar\" data-slot=\"footer\">\n      <div class=\"footer-row-meta\">\n        <span class=\"footer-item item-company\" data-key=\"company\">❚ 소속: <b class=\"val-company\">위라클랩</b></span>\n        <span class=\"footer-item item-advisor\" data-key=\"advisor\">❚ 담당: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"footer-item item-sabun\" data-key=\"sabun\">❚ 사번: <b class=\"val-sabun\">2532055</b></span>\n        <span class=\"footer-item item-phone\" data-key=\"phone\">❚ 핸드폰: <b class=\"val-phone\">010-1234-5678</b></span>\n        <span class=\"footer-item item-tel\" data-key=\"tel\">❚ 대표번호: <b class=\"val-tel\">1588-1234</b></span>\n        <span class=\"footer-item item-fax\" data-key=\"fax\">❚ FAX: <b class=\"val-fax\">02-123-4567</b></span>\n      </div>\n      <div class=\"footer-row-address\">\n        <span class=\"footer-item item-address\" data-key=\"address\">❚ 주소: <b class=\"val-address\">서울특별시 종로구 57, 6층 위라클본랩</b></span>\n      </div>\n    </div>\n\n    <div class=\"bojang-disclaimer-note\" data-slot=\"disclaimer\">\n      * 본 보고서는 한국신용정보원에 집적된 계약 정보를 바탕으로 고객님의 보장내역을 정밀 분석·정리한 자료입니다.\n    </div>\n  </div>\n"},{"file":"03_오피셜보증서_그린골드_시니어헤리티지.html","pngFile":"03_오피셜보증서_그린골드_시니어헤리티지.png","num":"03","name":"오피셜보증서 그린골드 시니어헤리티지","themeId":"corporate","themeName":"신뢰 & 정통 코퍼레이트 보증서","themeBadge":"🏛️ 코퍼레이트","themeIcon":"fa-certificate","themeColor":"#064e3b","themeFolderDisplay":"1_신뢰_정통코퍼레이트 (3종)","css":"\n    \n    \n    .a4-page {\n      width: 1240px;\n      height: 1754px;\n      position: relative;\n      overflow: hidden;\n      background: #064e3b;\n      color: #fef3c7;\n      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.6);\n      padding: 70px 80px;\n      display: flex;\n      flex-direction: column;\n      justify-content: space-between;\n      box-sizing: border-box;\n      border: 8px solid #b58d3d;\n    }\n    .inner-border {\n      position: absolute;\n      top: 15px; left: 15px; right: 15px; bottom: 15px;\n      border: 2px solid rgba(181, 141, 61, 0.4);\n      pointer-events: none;\n    }\n    .top-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      border-bottom: 1px solid rgba(181, 141, 61, 0.4);\n      padding-bottom: 24px;\n    }\n    .corp-badge {\n      font-family: 'Cinzel', serif;\n      font-size: 18px;\n      font-weight: 700;\n      color: #b58d3d;\n      letter-spacing: 3px;\n    }\n    .main-hero {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .hero-title {\n      font-family: 'Noto Serif KR', serif;\n      font-size: 70px;\n      font-weight: 900;\n      letter-spacing: -1px;\n      color: #ffffff;\n      line-height: 1.15;\n    }\n    .hero-title-accent {\n      color: #f59e0b;\n    }\n    .hero-underline {\n      width: 140px;\n      height: 5px;\n      background: #b58d3d;\n      margin: 18px auto 0;\n      border-radius: 2px;\n    }\n    .greeting-box {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .greeting-client {\n      font-family: 'Noto Serif KR', serif;\n      font-size: 38px;\n      font-weight: 800;\n      color: #fef3c7;\n    }\n    .greeting-client b {\n      color: #f59e0b;\n      font-weight: 900;\n    }\n    .greeting-sub {\n      font-size: 25px;\n      font-weight: 600;\n      color: #cbd5e1;\n      margin-top: 8px;\n    }\n    .content-card {\n      background: rgba(2, 44, 34, 0.85);\n      border: 1px solid rgba(181, 141, 61, 0.5);\n      border-radius: 24px;\n      padding: 36px 44px;\n      display: grid;\n      grid-template-columns: 340px 1fr;\n      gap: 36px;\n      align-items: center;\n      box-shadow: 0 15px 35px rgba(0,0,0,0.5);\n      margin: 20px 0;\n    }\n    .card-photo {\n      height: 440px;\n      border-radius: 16px;\n      overflow: hidden;\n      border: 2px solid #b58d3d;\n    }\n    .card-photo img {\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n    .bojang-checklist-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 14px;\n    }\n    .chk-item {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      background: rgba(6, 78, 59, 0.9);\n      border: 1px solid rgba(181, 141, 61, 0.4);\n      border-radius: 14px;\n      padding: 16px 18px;\n      font-size: 19px;\n      font-weight: 700;\n      color: #fef3c7;\n    }\n    .chk-icon {\n      color: #f59e0b;\n      font-size: 22px;\n    }\n    .bojang-data-widget {\n      background: rgba(2, 44, 34, 0.95);\n      border: 1px solid rgba(181, 141, 61, 0.5);\n      border-radius: 16px;\n      padding: 18px 24px;\n      margin: 16px 0;\n      width: 100%;\n      box-sizing: border-box;\n    }\n    .data-widget-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 12px;\n      padding-bottom: 8px;\n      border-bottom: 1px solid rgba(181, 141, 61, 0.3);\n    }\n    .data-chip-tag {\n      background: #b58d3d;\n      color: #022c22;\n      font-size: 12px;\n      font-weight: 800;\n      padding: 3px 10px;\n      border-radius: 6px;\n    }\n    .data-date-tag { font-size: 12px; color: #a7f3d0; }\n    .data-kpi-grid {\n      display: grid;\n      grid-template-columns: 1fr 1.3fr 1.5fr;\n      gap: 14px;\n      align-items: center;\n    }\n    .kpi-cell { display: flex; flex-direction: column; gap: 3px; }\n    .kpi-label { font-size: 12px; color: #a7f3d0; font-weight: 600; }\n    .kpi-val { font-size: 20px; font-weight: 900; color: #ffffff; display: flex; align-items: baseline; gap: 3px; }\n    .kpi-val span { font-size: 13px; color: #f59e0b; font-weight: 700; }\n    .kpi-val-status { display: flex; gap: 5px; margin-top: 2px; }\n    .status-pill { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 5px; }\n    .st-ok { background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.4); }\n    .st-warn { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }\n    .st-miss { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }\n\n    .bojang-contact-pill {\n      background: rgba(2, 44, 34, 0.9);\n      border: 1px solid #b58d3d;\n      color: #fef3c7;\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n      padding: 14px 36px;\n      border-radius: 40px;\n      font-size: 19px;\n      font-weight: 700;\n      margin: 10px auto;\n    }\n    .bojang-contact-pill b { color: #f59e0b; }\n    .contact-pill-divider { color: #b58d3d; }\n\n    .bojang-slogan-box {\n      background: rgba(181, 141, 61, 0.1);\n      border-left: 4px solid #b58d3d;\n      border-radius: 0 10px 10px 0;\n      padding: 10px 16px;\n      margin: 10px 0;\n    }\n    .slogan-title { font-size: 12px; font-weight: 800; color: #f59e0b; margin-bottom: 2px; }\n    .slogan-desc { font-size: 14px; font-weight: 600; color: #fef3c7; }\n\n    .official-footer-bar {\n      background: #022c22;\n      border: 1px solid #b58d3d;\n      border-radius: 14px;\n      padding: 16px 28px;\n      font-size: 13px;\n      color: #cbd5e1;\n      display: flex;\n      flex-direction: column;\n      gap: 5px;\n      margin-top: 10px;\n    }\n    .footer-row-meta { display: flex; flex-wrap: wrap; gap: 14px 22px; }\n    .footer-item b { color: #fef3c7; }\n    .footer-row-address { font-size: 12px; color: #a7f3d0; }\n    .bojang-disclaimer-note {\n      font-size: 12px;\n      color: #a7f3d0;\n      text-align: center;\n      margin-top: 8px;\n    }\n    ","html":"\n  <div class=\"a4-page\">\n    <div class=\"inner-border\"></div>\n    <div class=\"top-header\">\n      <span class=\"corp-badge\">HERITAGE OFFICIAL TRUST</span>\n      <img src=\"images/보답화니_로고.png\" style=\"height: 65px; object-fit: contain; display: block;\" data-slot=\"logo\">\n    </div>\n\n    <div class=\"main-hero\">\n      <h1 class=\"hero-title\" data-slot=\"title\">\n        보장분석 <span class=\"hero-title-accent\">보고서</span>\n      </h1>\n      <div class=\"hero-underline\"></div>\n      <div class=\"greeting-box\" data-slot=\"greeting\">\n        <div class=\"greeting-client\"><b class=\"val-client\">조진주</b> 님을 위해</div>\n        <div class=\"greeting-sub\">꼼꼼하게 준비했습니다.</div>\n      </div>\n    </div>\n\n    <div class=\"content-card\">\n      <div class=\"card-photo\">\n        <img src=\"images/consultant_model.jpg\" data-slot=\"image\">\n      </div>\n      <div>\n        <div style=\"font-size:14px; font-weight:800; color:#f59e0b; letter-spacing:1px; margin-bottom:12px;\">\n          <i class=\"fa-solid fa-list-check mr-1\"></i> 핵심 보장분석 목차\n        </div>\n        <div class=\"bojang-checklist-grid\" data-slot=\"checklist\">\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 계약리스트 분석</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 가입담보 상세</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 담보 종합 진단</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 진단 현황</span></div>\n        </div>\n\n        <div class=\"bojang-data-widget\" data-slot=\"metrics\">\n          <div class=\"data-widget-header\">\n            <span class=\"data-chip-tag\"><i class=\"fa-solid fa-chart-simple mr-1\"></i> 전산 보장분석 요약</span>\n            <span class=\"data-date-tag\">한국신용정보원 집적 기준</span>\n          </div>\n          <div class=\"data-kpi-grid\">\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">정상 계약건수</span>\n              <span class=\"kpi-val\"><b class=\"val-contracts\">15</b><span>건</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">총 월 납입보험료</span>\n              <span class=\"kpi-val\"><b class=\"val-premium\">420,548</b><span>원</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">보장 진단 현황</span>\n              <div class=\"kpi-val-status\">\n                <span class=\"status-pill st-ok\">충분 <b class=\"val-st-ok\">23</b></span>\n                <span class=\"status-pill st-warn\">부족 <b class=\"val-st-warn\">8</b></span>\n                <span class=\"status-pill st-miss\">미가입 <b class=\"val-st-miss\">6</b></span>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"bojang-slogan-box\" data-slot=\"slogan\">\n          <div class=\"slogan-title\"><i class=\"fa-solid fa-quote-left mr-1\"></i> 보험으로 보답하는 보답화니</div>\n          <p class=\"slogan-desc val-slogan\">\"보험다운 보험을 권하고, 정직하고 좋은 보험으로 고객님 신뢰에 보답드리겠습니다\"</p>\n        </div>\n      </div>\n    </div>\n\n    <div style=\"text-align:center;\">\n      <div class=\"bojang-contact-pill\" data-slot=\"contact\">\n        <span><i class=\"fa-solid fa-user-tie mr-1\"></i> 담당자: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"contact-pill-divider\">|</span>\n        <span><i class=\"fa-solid fa-phone mr-1\"></i> 연락처: <b class=\"val-phone\">010-1234-5678</b></span>\n      </div>\n    </div>\n\n    <div class=\"official-footer-bar\" data-slot=\"footer\">\n      <div class=\"footer-row-meta\">\n        <span class=\"footer-item item-company\" data-key=\"company\">❚ 소속: <b class=\"val-company\">위라클랩</b></span>\n        <span class=\"footer-item item-advisor\" data-key=\"advisor\">❚ 담당: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"footer-item item-sabun\" data-key=\"sabun\">❚ 사번: <b class=\"val-sabun\">2532055</b></span>\n        <span class=\"footer-item item-phone\" data-key=\"phone\">❚ 핸드폰: <b class=\"val-phone\">010-1234-5678</b></span>\n        <span class=\"footer-item item-tel\" data-key=\"tel\">❚ 대표번호: <b class=\"val-tel\">1588-1234</b></span>\n        <span class=\"footer-item item-fax\" data-key=\"fax\">❚ FAX: <b class=\"val-fax\">02-123-4567</b></span>\n      </div>\n      <div class=\"footer-row-address\">\n        <span class=\"footer-item item-address\" data-key=\"address\">❚ 주소: <b class=\"val-address\">서울특별시 종로구 57, 6층 위라클본랩</b></span>\n      </div>\n    </div>\n\n    <div class=\"bojang-disclaimer-note\" data-slot=\"disclaimer\">\n      * 본 보고서는 한국신용정보원에 집적된 계약 정보를 바탕으로 고객님의 보장내역을 정밀 분석·정리한 자료입니다.\n    </div>\n  </div>\n"},{"file":"04_경제매거진_2단칼럼_심층기사.html","pngFile":"04_경제매거진_2단칼럼_심층기사.png","num":"04","name":"경제매거진 2단칼럼 심층기사","themeId":"magazine","themeName":"경제매거진 & 트렌드 리포트","themeBadge":"📰 매거진","themeIcon":"fa-newspaper","themeColor":"#1e3a8a","themeFolderDisplay":"2_경제매거진_스페셜 (2종)","css":"\n    \n    \n    .a4-page {\n      width: 1240px;\n      height: 1754px;\n      position: relative;\n      overflow: hidden;\n      background: #ffffff;\n      color: #0f172a;\n      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.25);\n      padding: 70px 80px;\n      display: flex;\n      flex-direction: column;\n      justify-content: space-between;\n      box-sizing: border-box;\n    }\n    .top-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      border-bottom: 3px solid #0f172a;\n      padding-bottom: 20px;\n    }\n    .corp-badge {\n      font-size: 16px;\n      font-weight: 900;\n      color: #dc2626;\n      letter-spacing: 2px;\n    }\n    .main-hero {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .hero-title {\n      font-size: 72px;\n      font-weight: 900;\n      letter-spacing: -2px;\n      color: #0f172a;\n      line-height: 1.15;\n    }\n    .hero-title-accent {\n      color: #2563eb;\n    }\n    .hero-underline {\n      width: 140px;\n      height: 6px;\n      background: #2563eb;\n      margin: 18px auto 0;\n      border-radius: 3px;\n    }\n    .greeting-box {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .greeting-client {\n      font-size: 40px;\n      font-weight: 800;\n      color: #0f172a;\n    }\n    .greeting-client b {\n      color: #2563eb;\n      font-weight: 900;\n    }\n    .greeting-sub {\n      font-size: 26px;\n      font-weight: 600;\n      color: #475569;\n      margin-top: 8px;\n    }\n    .content-card {\n      background: #f8fafc;\n      border: 1px solid #cbd5e1;\n      border-radius: 24px;\n      padding: 36px 44px;\n      display: grid;\n      grid-template-columns: 360px 1fr;\n      gap: 36px;\n      align-items: center;\n      box-shadow: 0 15px 35px rgba(0,0,0,0.05);\n      margin: 20px 0;\n    }\n    .card-photo {\n      height: 440px;\n      border-radius: 16px;\n      overflow: hidden;\n      border: 1px solid #cbd5e1;\n    }\n    .card-photo img {\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n    .bojang-checklist-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 14px;\n    }\n    .chk-item {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      background: #ffffff;\n      border: 1px solid #cbd5e1;\n      border-radius: 14px;\n      padding: 16px 18px;\n      font-size: 19px;\n      font-weight: 700;\n      color: #0f172a;\n      box-shadow: 0 2px 6px rgba(0,0,0,0.03);\n    }\n    .chk-icon {\n      color: #2563eb;\n      font-size: 22px;\n    }\n    .bojang-data-widget {\n      background: #ffffff;\n      border: 1px solid #cbd5e1;\n      border-radius: 16px;\n      padding: 18px 24px;\n      margin: 16px 0;\n      width: 100%;\n      box-sizing: border-box;\n    }\n    .data-widget-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 12px;\n      padding-bottom: 8px;\n      border-bottom: 1px solid #e2e8f0;\n    }\n    .data-chip-tag {\n      background: #2563eb;\n      color: #ffffff;\n      font-size: 12px;\n      font-weight: 800;\n      padding: 3px 10px;\n      border-radius: 6px;\n    }\n    .data-date-tag { font-size: 12px; color: #64748b; }\n    .data-kpi-grid {\n      display: grid;\n      grid-template-columns: 1fr 1.3fr 1.5fr;\n      gap: 14px;\n      align-items: center;\n    }\n    .kpi-cell { display: flex; flex-direction: column; gap: 3px; }\n    .kpi-label { font-size: 12px; color: #64748b; font-weight: 600; }\n    .kpi-val { font-size: 20px; font-weight: 900; color: #0f172a; display: flex; align-items: baseline; gap: 3px; }\n    .kpi-val span { font-size: 13px; color: #2563eb; font-weight: 700; }\n    .kpi-val-status { display: flex; gap: 5px; margin-top: 2px; }\n    .status-pill { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 5px; }\n    .st-ok { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }\n    .st-warn { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }\n    .st-miss { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }\n\n    .bojang-contact-pill {\n      background: #f8fafc;\n      border: 1px solid #cbd5e1;\n      color: #0f172a;\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n      padding: 14px 36px;\n      border-radius: 40px;\n      font-size: 19px;\n      font-weight: 700;\n      margin: 10px auto;\n      box-shadow: 0 4px 12px rgba(0,0,0,0.03);\n    }\n    .bojang-contact-pill b { color: #2563eb; }\n    .contact-pill-divider { color: #cbd5e1; }\n\n    .bojang-slogan-box {\n      background: #f8fafc;\n      border-left: 4px solid #2563eb;\n      border-radius: 0 10px 10px 0;\n      padding: 10px 16px;\n      margin: 10px 0;\n      border-top: 1px solid #e2e8f0;\n      border-right: 1px solid #e2e8f0;\n      border-bottom: 1px solid #e2e8f0;\n    }\n    .slogan-title { font-size: 12px; font-weight: 800; color: #2563eb; margin-bottom: 2px; }\n    .slogan-desc { font-size: 14px; font-weight: 600; color: #334155; }\n\n    .official-footer-bar {\n      background: #0f172a;\n      border: 1px solid #334155;\n      border-radius: 14px;\n      padding: 16px 28px;\n      font-size: 13px;\n      color: #cbd5e1;\n      display: flex;\n      flex-direction: column;\n      gap: 5px;\n      margin-top: 10px;\n    }\n    .footer-row-meta { display: flex; flex-wrap: wrap; gap: 14px 22px; }\n    .footer-item b { color: #ffffff; }\n    .footer-row-address { font-size: 12px; color: #94a3b8; }\n    .bojang-disclaimer-note {\n      font-size: 12px;\n      color: #64748b;\n      text-align: center;\n      margin-top: 8px;\n    }\n    ","html":"\n  <div class=\"a4-page\">\n    <div class=\"top-header\">\n      <span class=\"corp-badge\">SPECIAL ECONOMIC REPORT</span>\n      <img src=\"images/보답화니_로고.png\" style=\"height: 65px; object-fit: contain; display: block;\" data-slot=\"logo\">\n    </div>\n\n    <div class=\"main-hero\">\n      <h1 class=\"hero-title\" data-slot=\"title\">\n        보장분석 <span class=\"hero-title-accent\">보고서</span>\n      </h1>\n      <div class=\"hero-underline\"></div>\n      <div class=\"greeting-box\" data-slot=\"greeting\">\n        <div class=\"greeting-client\"><b class=\"val-client\">조진주</b> 님을 위해</div>\n        <div class=\"greeting-sub\">꼼꼼하게 준비했습니다.</div>\n      </div>\n    </div>\n\n    <div class=\"content-card\">\n      <div class=\"card-photo\">\n        <img src=\"images/consultant_model.jpg\" data-slot=\"image\">\n      </div>\n      <div>\n        <div style=\"font-size:14px; font-weight:800; color:#2563eb; letter-spacing:1px; margin-bottom:12px;\">\n          <i class=\"fa-solid fa-list-check mr-1\"></i> 핵심 보장분석 목차\n        </div>\n        <div class=\"bojang-checklist-grid\" data-slot=\"checklist\">\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 계약리스트 분석</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 가입담보 상세</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 담보 종합 진단</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 진단 현황</span></div>\n        </div>\n\n        <div class=\"bojang-data-widget\" data-slot=\"metrics\">\n          <div class=\"data-widget-header\">\n            <span class=\"data-chip-tag\"><i class=\"fa-solid fa-chart-simple mr-1\"></i> 전산 보장분석 요약</span>\n            <span class=\"data-date-tag\">한국신용정보원 집적 기준</span>\n          </div>\n          <div class=\"data-kpi-grid\">\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">정상 계약건수</span>\n              <span class=\"kpi-val\"><b class=\"val-contracts\">15</b><span>건</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">총 월 납입보험료</span>\n              <span class=\"kpi-val\"><b class=\"val-premium\">420,548</b><span>원</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">보장 진단 현황</span>\n              <div class=\"kpi-val-status\">\n                <span class=\"status-pill st-ok\">충분 <b class=\"val-st-ok\">23</b></span>\n                <span class=\"status-pill st-warn\">부족 <b class=\"val-st-warn\">8</b></span>\n                <span class=\"status-pill st-miss\">미가입 <b class=\"val-st-miss\">6</b></span>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"bojang-slogan-box\" data-slot=\"slogan\">\n          <div class=\"slogan-title\"><i class=\"fa-solid fa-quote-left mr-1\"></i> 보험으로 보답하는 보답화니</div>\n          <p class=\"slogan-desc val-slogan\">\"보험다운 보험을 권하고, 정직하고 좋은 보험으로 고객님 신뢰에 보답드리겠습니다\"</p>\n        </div>\n      </div>\n    </div>\n\n    <div style=\"text-align:center;\">\n      <div class=\"bojang-contact-pill\" data-slot=\"contact\">\n        <span><i class=\"fa-solid fa-user-tie mr-1\"></i> 담당자: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"contact-pill-divider\">|</span>\n        <span><i class=\"fa-solid fa-phone mr-1\"></i> 연락처: <b class=\"val-phone\">010-1234-5678</b></span>\n      </div>\n    </div>\n\n    <div class=\"official-footer-bar\" data-slot=\"footer\">\n      <div class=\"footer-row-meta\">\n        <span class=\"footer-item item-company\" data-key=\"company\">❚ 소속: <b class=\"val-company\">위라클랩</b></span>\n        <span class=\"footer-item item-advisor\" data-key=\"advisor\">❚ 담당: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"footer-item item-sabun\" data-key=\"sabun\">❚ 사번: <b class=\"val-sabun\">2532055</b></span>\n        <span class=\"footer-item item-phone\" data-key=\"phone\">❚ 핸드폰: <b class=\"val-phone\">010-1234-5678</b></span>\n        <span class=\"footer-item item-tel\" data-key=\"tel\">❚ 대표번호: <b class=\"val-tel\">1588-1234</b></span>\n        <span class=\"footer-item item-fax\" data-key=\"fax\">❚ FAX: <b class=\"val-fax\">02-123-4567</b></span>\n      </div>\n      <div class=\"footer-row-address\">\n        <span class=\"footer-item item-address\" data-key=\"address\">❚ 주소: <b class=\"val-address\">서울특별시 종로구 57, 6층 위라클본랩</b></span>\n      </div>\n    </div>\n\n    <div class=\"bojang-disclaimer-note\" data-slot=\"disclaimer\">\n      * 본 보고서는 한국신용정보원에 집적된 계약 정보를 바탕으로 고객님의 보장내역을 정밀 분석·정리한 자료입니다.\n    </div>\n  </div>\n"},{"file":"05_경제매거진_뉴욕타임스_에디션.html","pngFile":"05_경제매거진_뉴욕타임스_에디션.png","num":"05","name":"경제매거진 뉴욕타임스 에디션","themeId":"magazine","themeName":"경제매거진 & 트렌드 리포트","themeBadge":"📰 매거진","themeIcon":"fa-book-open","themeColor":"#b45309","themeFolderDisplay":"2_경제매거진_스페셜 (2종)","css":"\n    \n    \n    .a4-page {\n      width: 1240px;\n      height: 1754px;\n      position: relative;\n      overflow: hidden;\n      background: #fdfbf7;\n      color: #111827;\n      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.25);\n      padding: 70px 80px;\n      display: flex;\n      flex-direction: column;\n      justify-content: space-between;\n      box-sizing: border-box;\n      border: 1px solid #d1d5db;\n    }\n    .top-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      border-bottom: 2px solid #111827;\n      padding-bottom: 20px;\n    }\n    .corp-badge {\n      font-family: 'Cinzel', serif;\n      font-size: 18px;\n      font-weight: 800;\n      color: #111827;\n      letter-spacing: 2px;\n    }\n    .main-hero {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .hero-title {\n      font-family: 'Noto Serif KR', serif;\n      font-size: 72px;\n      font-weight: 900;\n      letter-spacing: -2px;\n      color: #111827;\n      line-height: 1.15;\n    }\n    .hero-title-accent {\n      color: #b45309;\n    }\n    .hero-underline {\n      width: 140px;\n      height: 5px;\n      background: #b45309;\n      margin: 18px auto 0;\n      border-radius: 2px;\n    }\n    .greeting-box {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .greeting-client {\n      font-family: 'Noto Serif KR', serif;\n      font-size: 40px;\n      font-weight: 800;\n      color: #111827;\n    }\n    .greeting-client b {\n      color: #b45309;\n      font-weight: 900;\n    }\n    .greeting-sub {\n      font-size: 26px;\n      font-weight: 600;\n      color: #4b5563;\n      margin-top: 8px;\n    }\n    .content-card {\n      background: #ffffff;\n      border: 1px solid #d1d5db;\n      border-radius: 24px;\n      padding: 36px 44px;\n      display: grid;\n      grid-template-columns: 360px 1fr;\n      gap: 36px;\n      align-items: center;\n      box-shadow: 0 15px 35px rgba(0,0,0,0.04);\n      margin: 20px 0;\n    }\n    .card-photo {\n      height: 440px;\n      border-radius: 16px;\n      overflow: hidden;\n      border: 1px solid #d1d5db;\n    }\n    .card-photo img {\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n    .bojang-checklist-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 14px;\n    }\n    .chk-item {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      background: #fdfbf7;\n      border: 1px solid #e5e7eb;\n      border-radius: 14px;\n      padding: 16px 18px;\n      font-size: 19px;\n      font-weight: 700;\n      color: #111827;\n      box-shadow: 0 2px 6px rgba(0,0,0,0.02);\n    }\n    .chk-icon {\n      color: #b45309;\n      font-size: 22px;\n    }\n    .bojang-data-widget {\n      background: #fdfbf7;\n      border: 1px solid #d1d5db;\n      border-radius: 16px;\n      padding: 18px 24px;\n      margin: 16px 0;\n      width: 100%;\n      box-sizing: border-box;\n    }\n    .data-widget-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 12px;\n      padding-bottom: 8px;\n      border-bottom: 1px solid #e5e7eb;\n    }\n    .data-chip-tag {\n      background: #b45309;\n      color: #ffffff;\n      font-size: 12px;\n      font-weight: 800;\n      padding: 3px 10px;\n      border-radius: 6px;\n    }\n    .data-date-tag { font-size: 12px; color: #6b7280; }\n    .data-kpi-grid {\n      display: grid;\n      grid-template-columns: 1fr 1.3fr 1.5fr;\n      gap: 14px;\n      align-items: center;\n    }\n    .kpi-cell { display: flex; flex-direction: column; gap: 3px; }\n    .kpi-label { font-size: 12px; color: #6b7280; font-weight: 600; }\n    .kpi-val { font-size: 20px; font-weight: 900; color: #111827; display: flex; align-items: baseline; gap: 3px; }\n    .kpi-val span { font-size: 13px; color: #b45309; font-weight: 700; }\n    .kpi-val-status { display: flex; gap: 5px; margin-top: 2px; }\n    .status-pill { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 5px; }\n    .st-ok { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }\n    .st-warn { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }\n    .st-miss { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }\n\n    .bojang-contact-pill {\n      background: #ffffff;\n      border: 1px solid #d1d5db;\n      color: #111827;\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n      padding: 14px 36px;\n      border-radius: 40px;\n      font-size: 19px;\n      font-weight: 700;\n      margin: 10px auto;\n      box-shadow: 0 4px 12px rgba(0,0,0,0.03);\n    }\n    .bojang-contact-pill b { color: #b45309; }\n    .contact-pill-divider { color: #9ca3af; }\n\n    .bojang-slogan-box {\n      background: #fdfbf7;\n      border-left: 4px solid #b45309;\n      border-radius: 0 10px 10px 0;\n      padding: 10px 16px;\n      margin: 10px 0;\n      border-top: 1px solid #e5e7eb;\n      border-right: 1px solid #e5e7eb;\n      border-bottom: 1px solid #e5e7eb;\n    }\n    .slogan-title { font-size: 12px; font-weight: 800; color: #b45309; margin-bottom: 2px; }\n    .slogan-desc { font-size: 14px; font-weight: 600; color: #374151; }\n\n    .official-footer-bar {\n      background: #111827;\n      border: 1px solid #374151;\n      border-radius: 14px;\n      padding: 16px 28px;\n      font-size: 13px;\n      color: #cbd5e1;\n      display: flex;\n      flex-direction: column;\n      gap: 5px;\n      margin-top: 10px;\n    }\n    .footer-row-meta { display: flex; flex-wrap: wrap; gap: 14px 22px; }\n    .footer-item b { color: #ffffff; }\n    .footer-row-address { font-size: 12px; color: #9ca3af; }\n    .bojang-disclaimer-note {\n      font-size: 12px;\n      color: #6b7280;\n      text-align: center;\n      margin-top: 8px;\n    }\n    ","html":"\n  <div class=\"a4-page\">\n    <div class=\"top-header\">\n      <span class=\"corp-badge\">THE CHRONICLE FINANCIAL AUDIT</span>\n      <img src=\"images/보답화니_로고.png\" style=\"height: 65px; object-fit: contain; display: block;\" data-slot=\"logo\">\n    </div>\n\n    <div class=\"main-hero\">\n      <h1 class=\"hero-title\" data-slot=\"title\">\n        보장분석 <span class=\"hero-title-accent\">보고서</span>\n      </h1>\n      <div class=\"hero-underline\"></div>\n      <div class=\"greeting-box\" data-slot=\"greeting\">\n        <div class=\"greeting-client\"><b class=\"val-client\">조진주</b> 님을 위해</div>\n        <div class=\"greeting-sub\">꼼꼼하게 준비했습니다.</div>\n      </div>\n    </div>\n\n    <div class=\"content-card\">\n      <div class=\"card-photo\">\n        <img src=\"images/consultant_model.jpg\" data-slot=\"image\">\n      </div>\n      <div>\n        <div style=\"font-size:14px; font-weight:800; color:#b45309; letter-spacing:1px; margin-bottom:12px;\">\n          <i class=\"fa-solid fa-list-check mr-1\"></i> 핵심 보장분석 목차\n        </div>\n        <div class=\"bojang-checklist-grid\" data-slot=\"checklist\">\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 계약리스트 분석</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 가입담보 상세</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 담보 종합 진단</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 진단 현황</span></div>\n        </div>\n\n        <div class=\"bojang-data-widget\" data-slot=\"metrics\">\n          <div class=\"data-widget-header\">\n            <span class=\"data-chip-tag\"><i class=\"fa-solid fa-chart-simple mr-1\"></i> 전산 보장분석 요약</span>\n            <span class=\"data-date-tag\">한국신용정보원 집적 기준</span>\n          </div>\n          <div class=\"data-kpi-grid\">\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">정상 계약건수</span>\n              <span class=\"kpi-val\"><b class=\"val-contracts\">15</b><span>건</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">총 월 납입보험료</span>\n              <span class=\"kpi-val\"><b class=\"val-premium\">420,548</b><span>원</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">보장 진단 현황</span>\n              <div class=\"kpi-val-status\">\n                <span class=\"status-pill st-ok\">충분 <b class=\"val-st-ok\">23</b></span>\n                <span class=\"status-pill st-warn\">부족 <b class=\"val-st-warn\">8</b></span>\n                <span class=\"status-pill st-miss\">미가입 <b class=\"val-st-miss\">6</b></span>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"bojang-slogan-box\" data-slot=\"slogan\">\n          <div class=\"slogan-title\"><i class=\"fa-solid fa-quote-left mr-1\"></i> 보험으로 보답하는 보답화니</div>\n          <p class=\"slogan-desc val-slogan\">\"보험다운 보험을 권하고, 정직하고 좋은 보험으로 고객님 신뢰에 보답드리겠습니다\"</p>\n        </div>\n      </div>\n    </div>\n\n    <div style=\"text-align:center;\">\n      <div class=\"bojang-contact-pill\" data-slot=\"contact\">\n        <span><i class=\"fa-solid fa-user-tie mr-1\"></i> 담당자: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"contact-pill-divider\">|</span>\n        <span><i class=\"fa-solid fa-phone mr-1\"></i> 연락처: <b class=\"val-phone\">010-1234-5678</b></span>\n      </div>\n    </div>\n\n    <div class=\"official-footer-bar\" data-slot=\"footer\">\n      <div class=\"footer-row-meta\">\n        <span class=\"footer-item item-company\" data-key=\"company\">❚ 소속: <b class=\"val-company\">위라클랩</b></span>\n        <span class=\"footer-item item-advisor\" data-key=\"advisor\">❚ 담당: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"footer-item item-sabun\" data-key=\"sabun\">❚ 사번: <b class=\"val-sabun\">2532055</b></span>\n        <span class=\"footer-item item-phone\" data-key=\"phone\">❚ 핸드폰: <b class=\"val-phone\">010-1234-5678</b></span>\n        <span class=\"footer-item item-tel\" data-key=\"tel\">❚ 대표번호: <b class=\"val-tel\">1588-1234</b></span>\n        <span class=\"footer-item item-fax\" data-key=\"fax\">❚ FAX: <b class=\"val-fax\">02-123-4567</b></span>\n      </div>\n      <div class=\"footer-row-address\">\n        <span class=\"footer-item item-address\" data-key=\"address\">❚ 주소: <b class=\"val-address\">서울특별시 종로구 57, 6층 위라클본랩</b></span>\n      </div>\n    </div>\n\n    <div class=\"bojang-disclaimer-note\" data-slot=\"disclaimer\">\n      * 본 보고서는 한국신용정보원에 집적된 계약 정보를 바탕으로 고객님의 보장내역을 정밀 분석·정리한 자료입니다.\n    </div>\n  </div>\n"},{"file":"06_VIP골드_다크모노그램.html","pngFile":"06_VIP골드_다크모노그램.png","num":"06","name":"VIP골드 다크모노그램","themeId":"vip_gold","themeName":"VIP 프레스티지 & 모노그램 골드","themeBadge":"👑 VIP 골드","themeIcon":"fa-crown","themeColor":"#0a0a0a","themeFolderDisplay":"3_VIP골드_프레스티지 (1종)","css":"\n    \n    \n    .a4-page {\n      width: 1240px;\n      height: 1754px;\n      position: relative;\n      overflow: hidden;\n      background: #09090b;\n      color: #ffffff;\n      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8);\n      padding: 70px 80px;\n      display: flex;\n      flex-direction: column;\n      justify-content: space-between;\n      box-sizing: border-box;\n      border: 1px solid #27272a;\n    }\n    .top-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      border-bottom: 1px solid #27272a;\n      padding-bottom: 24px;\n    }\n    .corp-badge {\n      font-family: 'Cinzel', serif;\n      font-size: 18px;\n      font-weight: 700;\n      color: #f59e0b;\n      letter-spacing: 3px;\n    }\n    .main-hero {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .hero-title {\n      font-size: 72px;\n      font-weight: 900;\n      letter-spacing: -2px;\n      color: #ffffff;\n      line-height: 1.15;\n    }\n    .hero-title-accent {\n      color: #f59e0b;\n    }\n    .hero-underline {\n      width: 140px;\n      height: 6px;\n      background: linear-gradient(90deg, #d97706, #fbbf24);\n      margin: 18px auto 0;\n      border-radius: 3px;\n    }\n    .greeting-box {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .greeting-client {\n      font-size: 40px;\n      font-weight: 800;\n      color: #ffffff;\n    }\n    .greeting-client b {\n      color: #f59e0b;\n      font-weight: 900;\n    }\n    .greeting-sub {\n      font-size: 26px;\n      font-weight: 600;\n      color: #a1a1aa;\n      margin-top: 8px;\n    }\n    .content-card {\n      background: #18181b;\n      border: 1px solid #27272a;\n      border-radius: 24px;\n      padding: 36px 44px;\n      display: grid;\n      grid-template-columns: 360px 1fr;\n      gap: 36px;\n      align-items: center;\n      box-shadow: 0 15px 35px rgba(0,0,0,0.5);\n      margin: 20px 0;\n    }\n    .card-photo {\n      height: 440px;\n      border-radius: 16px;\n      overflow: hidden;\n      border: 1px solid #3f3f46;\n    }\n    .card-photo img {\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n    .bojang-checklist-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 14px;\n    }\n    .chk-item {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      background: #27272a;\n      border: 1px solid #3f3f46;\n      border-radius: 14px;\n      padding: 16px 18px;\n      font-size: 19px;\n      font-weight: 700;\n      color: #f4f4f5;\n    }\n    .chk-icon {\n      color: #f59e0b;\n      font-size: 22px;\n    }\n    .bojang-data-widget {\n      background: #18181b;\n      border: 1px solid #3f3f46;\n      border-radius: 16px;\n      padding: 18px 24px;\n      margin: 16px 0;\n      width: 100%;\n      box-sizing: border-box;\n    }\n    .data-widget-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 12px;\n      padding-bottom: 8px;\n      border-bottom: 1px solid #27272a;\n    }\n    .data-chip-tag {\n      background: #f59e0b;\n      color: #09090b;\n      font-size: 12px;\n      font-weight: 800;\n      padding: 3px 10px;\n      border-radius: 6px;\n    }\n    .data-date-tag { font-size: 12px; color: #a1a1aa; }\n    .data-kpi-grid {\n      display: grid;\n      grid-template-columns: 1fr 1.3fr 1.5fr;\n      gap: 14px;\n      align-items: center;\n    }\n    .kpi-cell { display: flex; flex-direction: column; gap: 3px; }\n    .kpi-label { font-size: 12px; color: #a1a1aa; font-weight: 600; }\n    .kpi-val { font-size: 20px; font-weight: 900; color: #ffffff; display: flex; align-items: baseline; gap: 3px; }\n    .kpi-val span { font-size: 13px; color: #f59e0b; font-weight: 700; }\n    .kpi-val-status { display: flex; gap: 5px; margin-top: 2px; }\n    .status-pill { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 5px; }\n    .st-ok { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }\n    .st-warn { background: rgba(234, 88, 12, 0.2); color: #fb923c; border: 1px solid rgba(234, 88, 12, 0.4); }\n    .st-miss { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }\n\n    .bojang-contact-pill {\n      background: #18181b;\n      border: 1px solid #3f3f46;\n      color: #ffffff;\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n      padding: 14px 36px;\n      border-radius: 40px;\n      font-size: 19px;\n      font-weight: 700;\n      margin: 10px auto;\n    }\n    .bojang-contact-pill b { color: #f59e0b; }\n    .contact-pill-divider { color: #52525b; }\n\n    .bojang-slogan-box {\n      background: #27272a;\n      border-left: 4px solid #f59e0b;\n      border-radius: 0 10px 10px 0;\n      padding: 10px 16px;\n      margin: 10px 0;\n    }\n    .slogan-title { font-size: 12px; font-weight: 800; color: #f59e0b; margin-bottom: 2px; }\n    .slogan-desc { font-size: 14px; font-weight: 600; color: #e4e4e7; }\n\n    .official-footer-bar {\n      background: #18181b;\n      border: 1px solid #27272a;\n      border-radius: 14px;\n      padding: 16px 28px;\n      font-size: 13px;\n      color: #a1a1aa;\n      display: flex;\n      flex-direction: column;\n      gap: 5px;\n      margin-top: 10px;\n    }\n    .footer-row-meta { display: flex; flex-wrap: wrap; gap: 14px 22px; }\n    .footer-item b { color: #ffffff; }\n    .footer-row-address { font-size: 12px; color: #71717a; }\n    .bojang-disclaimer-note {\n      font-size: 12px;\n      color: #71717a;\n      text-align: center;\n      margin-top: 8px;\n    }\n    ","html":"\n  <div class=\"a4-page\">\n    <div class=\"top-header\">\n      <span class=\"corp-badge\">VIP CONFIDENTIAL PORTFOLIO</span>\n      <img src=\"images/보답화니_로고.png\" style=\"height: 65px; object-fit: contain; display: block;\" data-slot=\"logo\">\n    </div>\n\n    <div class=\"main-hero\">\n      <h1 class=\"hero-title\" data-slot=\"title\">\n        보장분석 <span class=\"hero-title-accent\">보고서</span>\n      </h1>\n      <div class=\"hero-underline\"></div>\n      <div class=\"greeting-box\" data-slot=\"greeting\">\n        <div class=\"greeting-client\"><b class=\"val-client\">조진주</b> 님을 위해</div>\n        <div class=\"greeting-sub\">꼼꼼하게 준비했습니다.</div>\n      </div>\n    </div>\n\n    <div class=\"content-card\">\n      <div class=\"card-photo\">\n        <img src=\"images/consultant_model.jpg\" data-slot=\"image\">\n      </div>\n      <div>\n        <div style=\"font-size:14px; font-weight:800; color:#f59e0b; letter-spacing:1px; margin-bottom:12px;\">\n          <i class=\"fa-solid fa-list-check mr-1\"></i> 핵심 보장분석 목차\n        </div>\n        <div class=\"bojang-checklist-grid\" data-slot=\"checklist\">\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 계약리스트 분석</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 가입담보 상세</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 담보 종합 진단</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 진단 현황</span></div>\n        </div>\n\n        <div class=\"bojang-data-widget\" data-slot=\"metrics\">\n          <div class=\"data-widget-header\">\n            <span class=\"data-chip-tag\"><i class=\"fa-solid fa-chart-simple mr-1\"></i> 전산 보장분석 요약</span>\n            <span class=\"data-date-tag\">한국신용정보원 집적 기준</span>\n          </div>\n          <div class=\"data-kpi-grid\">\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">정상 계약건수</span>\n              <span class=\"kpi-val\"><b class=\"val-contracts\">15</b><span>건</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">총 월 납입보험료</span>\n              <span class=\"kpi-val\"><b class=\"val-premium\">420,548</b><span>원</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">보장 진단 현황</span>\n              <div class=\"kpi-val-status\">\n                <span class=\"status-pill st-ok\">충분 <b class=\"val-st-ok\">23</b></span>\n                <span class=\"status-pill st-warn\">부족 <b class=\"val-st-warn\">8</b></span>\n                <span class=\"status-pill st-miss\">미가입 <b class=\"val-st-miss\">6</b></span>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"bojang-slogan-box\" data-slot=\"slogan\">\n          <div class=\"slogan-title\"><i class=\"fa-solid fa-quote-left mr-1\"></i> 보험으로 보답하는 보답화니</div>\n          <p class=\"slogan-desc val-slogan\">\"보험다운 보험을 권하고, 정직하고 좋은 보험으로 고객님 신뢰에 보답드리겠습니다\"</p>\n        </div>\n      </div>\n    </div>\n\n    <div style=\"text-align:center;\">\n      <div class=\"bojang-contact-pill\" data-slot=\"contact\">\n        <span><i class=\"fa-solid fa-user-tie mr-1\"></i> 담당자: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"contact-pill-divider\">|</span>\n        <span><i class=\"fa-solid fa-phone mr-1\"></i> 연락처: <b class=\"val-phone\">010-1234-5678</b></span>\n      </div>\n    </div>\n\n    <div class=\"official-footer-bar\" data-slot=\"footer\">\n      <div class=\"footer-row-meta\">\n        <span class=\"footer-item item-company\" data-key=\"company\">❚ 소속: <b class=\"val-company\">위라클랩</b></span>\n        <span class=\"footer-item item-advisor\" data-key=\"advisor\">❚ 담당: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"footer-item item-sabun\" data-key=\"sabun\">❚ 사번: <b class=\"val-sabun\">2532055</b></span>\n        <span class=\"footer-item item-phone\" data-key=\"phone\">❚ 핸드폰: <b class=\"val-phone\">010-1234-5678</b></span>\n        <span class=\"footer-item item-tel\" data-key=\"tel\">❚ 대표번호: <b class=\"val-tel\">1588-1234</b></span>\n        <span class=\"footer-item item-fax\" data-key=\"fax\">❚ FAX: <b class=\"val-fax\">02-123-4567</b></span>\n      </div>\n      <div class=\"footer-row-address\">\n        <span class=\"footer-item item-address\" data-key=\"address\">❚ 주소: <b class=\"val-address\">서울특별시 종로구 57, 6층 위라클본랩</b></span>\n      </div>\n    </div>\n\n    <div class=\"bojang-disclaimer-note\" data-slot=\"disclaimer\">\n      * 본 보고서는 한국신용정보원에 집적된 계약 정보를 바탕으로 고객님의 보장내역을 정밀 분석·정리한 자료입니다.\n    </div>\n  </div>\n"},{"file":"07_파스텔모던_소프트라벤더.html","pngFile":"07_파스텔모던_소프트라벤더.png","num":"07","name":"파스텔모던 소프트라벤더","themeId":"pastel","themeName":"파스텔 & 감성 라이프 솔루션","themeBadge":"🌸 파스텔","themeIcon":"fa-heart","themeColor":"#7c3aed","themeFolderDisplay":"4_파스텔모던_라이프 (3종)","css":"\n    \n    \n    .a4-page {\n      width: 1240px;\n      height: 1754px;\n      position: relative;\n      overflow: hidden;\n      background: #f5f3ff;\n      color: #1e1b4b;\n      box-shadow: 0 25px 60px -15px rgba(124, 58, 237, 0.15);\n      padding: 70px 80px;\n      display: flex;\n      flex-direction: column;\n      justify-content: space-between;\n      box-sizing: border-box;\n    }\n    .top-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      border-bottom: 2px solid #ddd6fe;\n      padding-bottom: 24px;\n    }\n    .corp-badge {\n      font-size: 17px;\n      font-weight: 800;\n      color: #7c3aed;\n      letter-spacing: 2px;\n    }\n    .main-hero {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .hero-title {\n      font-size: 72px;\n      font-weight: 900;\n      letter-spacing: -2px;\n      color: #1e1b4b;\n      line-height: 1.15;\n    }\n    .hero-title-accent {\n      color: #7c3aed;\n    }\n    .hero-underline {\n      width: 140px;\n      height: 6px;\n      background: #7c3aed;\n      margin: 18px auto 0;\n      border-radius: 3px;\n    }\n    .greeting-box {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .greeting-client {\n      font-size: 40px;\n      font-weight: 800;\n      color: #1e1b4b;\n    }\n    .greeting-client b {\n      color: #7c3aed;\n      font-weight: 900;\n    }\n    .greeting-sub {\n      font-size: 26px;\n      font-weight: 600;\n      color: #6b21a8;\n      margin-top: 8px;\n    }\n    .content-card {\n      background: #ffffff;\n      border: 1px solid #ddd6fe;\n      border-radius: 24px;\n      padding: 36px 44px;\n      display: grid;\n      grid-template-columns: 360px 1fr;\n      gap: 36px;\n      align-items: center;\n      box-shadow: 0 15px 35px rgba(124, 58, 237, 0.08);\n      margin: 20px 0;\n    }\n    .card-photo {\n      height: 440px;\n      border-radius: 16px;\n      overflow: hidden;\n      border: 1px solid #ddd6fe;\n    }\n    .card-photo img {\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n    .bojang-checklist-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 14px;\n    }\n    .chk-item {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      background: #fbfbfe;\n      border: 1px solid #ede9fe;\n      border-radius: 14px;\n      padding: 16px 18px;\n      font-size: 19px;\n      font-weight: 700;\n      color: #3b0764;\n    }\n    .chk-icon {\n      color: #7c3aed;\n      font-size: 22px;\n    }\n    .bojang-data-widget {\n      background: #fbfbfe;\n      border: 1px solid #ddd6fe;\n      border-radius: 16px;\n      padding: 18px 24px;\n      margin: 16px 0;\n      width: 100%;\n      box-sizing: border-box;\n    }\n    .data-widget-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 12px;\n      padding-bottom: 8px;\n      border-bottom: 1px solid #ede9fe;\n    }\n    .data-chip-tag {\n      background: #7c3aed;\n      color: #ffffff;\n      font-size: 12px;\n      font-weight: 800;\n      padding: 3px 10px;\n      border-radius: 6px;\n    }\n    .data-date-tag { font-size: 12px; color: #8b5cf6; }\n    .data-kpi-grid {\n      display: grid;\n      grid-template-columns: 1fr 1.3fr 1.5fr;\n      gap: 14px;\n      align-items: center;\n    }\n    .kpi-cell { display: flex; flex-direction: column; gap: 3px; }\n    .kpi-label { font-size: 12px; color: #6b21a8; font-weight: 600; }\n    .kpi-val { font-size: 20px; font-weight: 900; color: #1e1b4b; display: flex; align-items: baseline; gap: 3px; }\n    .kpi-val span { font-size: 13px; color: #7c3aed; font-weight: 700; }\n    .kpi-val-status { display: flex; gap: 5px; margin-top: 2px; }\n    .status-pill { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 5px; }\n    .st-ok { background: #ede9fe; color: #7c3aed; border: 1px solid #ddd6fe; }\n    .st-warn { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }\n    .st-miss { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }\n\n    .bojang-contact-pill {\n      background: #ffffff;\n      border: 1px solid #ddd6fe;\n      color: #1e1b4b;\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n      padding: 14px 36px;\n      border-radius: 40px;\n      font-size: 19px;\n      font-weight: 700;\n      margin: 10px auto;\n      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);\n    }\n    .bojang-contact-pill b { color: #7c3aed; }\n    .contact-pill-divider { color: #c4b5fd; }\n\n    .bojang-slogan-box {\n      background: #fbfbfe;\n      border-left: 4px solid #7c3aed;\n      border-radius: 0 10px 10px 0;\n      padding: 10px 16px;\n      margin: 10px 0;\n      border-top: 1px solid #ede9fe;\n      border-right: 1px solid #ede9fe;\n      border-bottom: 1px solid #ede9fe;\n    }\n    .slogan-title { font-size: 12px; font-weight: 800; color: #7c3aed; margin-bottom: 2px; }\n    .slogan-desc { font-size: 14px; font-weight: 600; color: #4c1d95; }\n\n    .official-footer-bar {\n      background: #2e1065;\n      border: 1px solid #4c1d95;\n      border-radius: 14px;\n      padding: 16px 28px;\n      font-size: 13px;\n      color: #e9d5ff;\n      display: flex;\n      flex-direction: column;\n      gap: 5px;\n      margin-top: 10px;\n    }\n    .footer-row-meta { display: flex; flex-wrap: wrap; gap: 14px 22px; }\n    .footer-item b { color: #ffffff; }\n    .footer-row-address { font-size: 12px; color: #c4b5fd; }\n    .bojang-disclaimer-note {\n      font-size: 12px;\n      color: #7c3aed;\n      text-align: center;\n      margin-top: 8px;\n    }\n    ","html":"\n  <div class=\"a4-page\">\n    <div class=\"top-header\">\n      <span class=\"corp-badge\">LAVENDER SERENITY AUDIT</span>\n      <img src=\"images/보답화니_로고.png\" style=\"height: 65px; object-fit: contain; display: block;\" data-slot=\"logo\">\n    </div>\n\n    <div class=\"main-hero\">\n      <h1 class=\"hero-title\" data-slot=\"title\">\n        보장분석 <span class=\"hero-title-accent\">보고서</span>\n      </h1>\n      <div class=\"hero-underline\"></div>\n      <div class=\"greeting-box\" data-slot=\"greeting\">\n        <div class=\"greeting-client\"><b class=\"val-client\">조진주</b> 님을 위해</div>\n        <div class=\"greeting-sub\">꼼꼼하게 준비했습니다.</div>\n      </div>\n    </div>\n\n    <div class=\"content-card\">\n      <div class=\"card-photo\">\n        <img src=\"images/consultant_model.jpg\" data-slot=\"image\">\n      </div>\n      <div>\n        <div style=\"font-size:14px; font-weight:800; color:#7c3aed; letter-spacing:1px; margin-bottom:12px;\">\n          <i class=\"fa-solid fa-list-check mr-1\"></i> 핵심 보장분석 목차\n        </div>\n        <div class=\"bojang-checklist-grid\" data-slot=\"checklist\">\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 계약리스트 분석</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 가입담보 상세</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 담보 종합 진단</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 진단 현황</span></div>\n        </div>\n\n        <div class=\"bojang-data-widget\" data-slot=\"metrics\">\n          <div class=\"data-widget-header\">\n            <span class=\"data-chip-tag\"><i class=\"fa-solid fa-chart-simple mr-1\"></i> 전산 보장분석 요약</span>\n            <span class=\"data-date-tag\">한국신용정보원 집적 기준</span>\n          </div>\n          <div class=\"data-kpi-grid\">\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">정상 계약건수</span>\n              <span class=\"kpi-val\"><b class=\"val-contracts\">15</b><span>건</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">총 월 납입보험료</span>\n              <span class=\"kpi-val\"><b class=\"val-premium\">420,548</b><span>원</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">보장 진단 현황</span>\n              <div class=\"kpi-val-status\">\n                <span class=\"status-pill st-ok\">충분 <b class=\"val-st-ok\">23</b></span>\n                <span class=\"status-pill st-warn\">부족 <b class=\"val-st-warn\">8</b></span>\n                <span class=\"status-pill st-miss\">미가입 <b class=\"val-st-miss\">6</b></span>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"bojang-slogan-box\" data-slot=\"slogan\">\n          <div class=\"slogan-title\"><i class=\"fa-solid fa-quote-left mr-1\"></i> 보험으로 보답하는 보답화니</div>\n          <p class=\"slogan-desc val-slogan\">\"보험다운 보험을 권하고, 정직하고 좋은 보험으로 고객님 신뢰에 보답드리겠습니다\"</p>\n        </div>\n      </div>\n    </div>\n\n    <div style=\"text-align:center;\">\n      <div class=\"bojang-contact-pill\" data-slot=\"contact\">\n        <span><i class=\"fa-solid fa-user-tie mr-1\"></i> 담당자: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"contact-pill-divider\">|</span>\n        <span><i class=\"fa-solid fa-phone mr-1\"></i> 연락처: <b class=\"val-phone\">010-1234-5678</b></span>\n      </div>\n    </div>\n\n    <div class=\"official-footer-bar\" data-slot=\"footer\">\n      <div class=\"footer-row-meta\">\n        <span class=\"footer-item item-company\" data-key=\"company\">❚ 소속: <b class=\"val-company\">위라클랩</b></span>\n        <span class=\"footer-item item-advisor\" data-key=\"advisor\">❚ 담당: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"footer-item item-sabun\" data-key=\"sabun\">❚ 사번: <b class=\"val-sabun\">2532055</b></span>\n        <span class=\"footer-item item-phone\" data-key=\"phone\">❚ 핸드폰: <b class=\"val-phone\">010-1234-5678</b></span>\n        <span class=\"footer-item item-tel\" data-key=\"tel\">❚ 대표번호: <b class=\"val-tel\">1588-1234</b></span>\n        <span class=\"footer-item item-fax\" data-key=\"fax\">❚ FAX: <b class=\"val-fax\">02-123-4567</b></span>\n      </div>\n      <div class=\"footer-row-address\">\n        <span class=\"footer-item item-address\" data-key=\"address\">❚ 주소: <b class=\"val-address\">서울특별시 종로구 57, 6층 위라클본랩</b></span>\n      </div>\n    </div>\n\n    <div class=\"bojang-disclaimer-note\" data-slot=\"disclaimer\">\n      * 본 보고서는 한국신용정보원에 집적된 계약 정보를 바탕으로 고객님의 보장내역을 정밀 분석·정리한 자료입니다.\n    </div>\n  </div>\n"},{"file":"08_파스텔모던_웜오트밀_스칸디.html","pngFile":"08_파스텔모던_웜오트밀_스칸디.png","num":"08","name":"파스텔모던 웜오트밀 스칸디","themeId":"pastel","themeName":"파스텔 & 감성 라이프 솔루션","themeBadge":"🌸 파스텔","themeIcon":"fa-leaf","themeColor":"#b25838","themeFolderDisplay":"4_파스텔모던_라이프 (3종)","css":"\n    \n    \n    .a4-page {\n      width: 1240px;\n      height: 1754px;\n      position: relative;\n      overflow: hidden;\n      background: #faf8f5;\n      color: #3d362e;\n      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.15);\n      padding: 70px 80px;\n      display: flex;\n      flex-direction: column;\n      justify-content: space-between;\n      box-sizing: border-box;\n    }\n    .top-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      border-bottom: 2px solid #e7e2da;\n      padding-bottom: 24px;\n    }\n    .corp-badge {\n      font-size: 17px;\n      font-weight: 800;\n      color: #847563;\n      letter-spacing: 2px;\n    }\n    .main-hero {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .hero-title {\n      font-size: 72px;\n      font-weight: 900;\n      letter-spacing: -2px;\n      color: #3d362e;\n      line-height: 1.15;\n    }\n    .hero-title-accent {\n      color: #b25838;\n    }\n    .hero-underline {\n      width: 140px;\n      height: 6px;\n      background: #b25838;\n      margin: 18px auto 0;\n      border-radius: 3px;\n    }\n    .greeting-box {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .greeting-client {\n      font-size: 40px;\n      font-weight: 800;\n      color: #3d362e;\n    }\n    .greeting-client b {\n      color: #b25838;\n      font-weight: 900;\n    }\n    .greeting-sub {\n      font-size: 26px;\n      font-weight: 600;\n      color: #706355;\n      margin-top: 8px;\n    }\n    .content-card {\n      background: #ffffff;\n      border: 1px solid #e7e2da;\n      border-radius: 24px;\n      padding: 36px 44px;\n      display: grid;\n      grid-template-columns: 360px 1fr;\n      gap: 36px;\n      align-items: center;\n      box-shadow: 0 15px 35px rgba(0,0,0,0.04);\n      margin: 20px 0;\n    }\n    .card-photo {\n      height: 440px;\n      border-radius: 16px;\n      overflow: hidden;\n      border: 1px solid #e7e2da;\n    }\n    .card-photo img {\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n    .bojang-checklist-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 14px;\n    }\n    .chk-item {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      background: #faf8f5;\n      border: 1px solid #ede8e1;\n      border-radius: 14px;\n      padding: 16px 18px;\n      font-size: 19px;\n      font-weight: 700;\n      color: #3d362e;\n    }\n    .chk-icon {\n      color: #b25838;\n      font-size: 22px;\n    }\n    .bojang-data-widget {\n      background: #faf8f5;\n      border: 1px solid #e7e2da;\n      border-radius: 16px;\n      padding: 18px 24px;\n      margin: 16px 0;\n      width: 100%;\n      box-sizing: border-box;\n    }\n    .data-widget-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 12px;\n      padding-bottom: 8px;\n      border-bottom: 1px solid #ede8e1;\n    }\n    .data-chip-tag {\n      background: #b25838;\n      color: #ffffff;\n      font-size: 12px;\n      font-weight: 800;\n      padding: 3px 10px;\n      border-radius: 6px;\n    }\n    .data-date-tag { font-size: 12px; color: #847563; }\n    .data-kpi-grid {\n      display: grid;\n      grid-template-columns: 1fr 1.3fr 1.5fr;\n      gap: 14px;\n      align-items: center;\n    }\n    .kpi-cell { display: flex; flex-direction: column; gap: 3px; }\n    .kpi-label { font-size: 12px; color: #847563; font-weight: 600; }\n    .kpi-val { font-size: 20px; font-weight: 900; color: #3d362e; display: flex; align-items: baseline; gap: 3px; }\n    .kpi-val span { font-size: 13px; color: #b25838; font-weight: 700; }\n    .kpi-val-status { display: flex; gap: 5px; margin-top: 2px; }\n    .status-pill { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 5px; }\n    .st-ok { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }\n    .st-warn { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }\n    .st-miss { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }\n\n    .bojang-contact-pill {\n      background: #ffffff;\n      border: 1px solid #e7e2da;\n      color: #3d362e;\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n      padding: 14px 36px;\n      border-radius: 40px;\n      font-size: 19px;\n      font-weight: 700;\n      margin: 10px auto;\n      box-shadow: 0 4px 12px rgba(0,0,0,0.03);\n    }\n    .bojang-contact-pill b { color: #b25838; }\n    .contact-pill-divider { color: #d6cebf; }\n\n    .bojang-slogan-box {\n      background: #faf8f5;\n      border-left: 4px solid #b25838;\n      border-radius: 0 10px 10px 0;\n      padding: 10px 16px;\n      margin: 10px 0;\n      border-top: 1px solid #ede8e1;\n      border-right: 1px solid #ede8e1;\n      border-bottom: 1px solid #ede8e1;\n    }\n    .slogan-title { font-size: 12px; font-weight: 800; color: #b25838; margin-bottom: 2px; }\n    .slogan-desc { font-size: 14px; font-weight: 600; color: #5a4f44; }\n\n    .official-footer-bar {\n      background: #3d362e;\n      border: 1px solid #5a4f44;\n      border-radius: 14px;\n      padding: 16px 28px;\n      font-size: 13px;\n      color: #ede8e1;\n      display: flex;\n      flex-direction: column;\n      gap: 5px;\n      margin-top: 10px;\n    }\n    .footer-row-meta { display: flex; flex-wrap: wrap; gap: 14px 22px; }\n    .footer-item b { color: #ffffff; }\n    .footer-row-address { font-size: 12px; color: #c8beaf; }\n    .bojang-disclaimer-note {\n      font-size: 12px;\n      color: #847563;\n      text-align: center;\n      margin-top: 8px;\n    }\n    ","html":"\n  <div class=\"a4-page\">\n    <div class=\"top-header\">\n      <span class=\"corp-badge\">SCANDI HARMONY AUDIT</span>\n      <img src=\"images/보답화니_로고.png\" style=\"height: 65px; object-fit: contain; display: block;\" data-slot=\"logo\">\n    </div>\n\n    <div class=\"main-hero\">\n      <h1 class=\"hero-title\" data-slot=\"title\">\n        보장분석 <span class=\"hero-title-accent\">보고서</span>\n      </h1>\n      <div class=\"hero-underline\"></div>\n      <div class=\"greeting-box\" data-slot=\"greeting\">\n        <div class=\"greeting-client\"><b class=\"val-client\">조진주</b> 님을 위해</div>\n        <div class=\"greeting-sub\">꼼꼼하게 준비했습니다.</div>\n      </div>\n    </div>\n\n    <div class=\"content-card\">\n      <div class=\"card-photo\">\n        <img src=\"images/consultant_model.jpg\" data-slot=\"image\">\n      </div>\n      <div>\n        <div style=\"font-size:14px; font-weight:800; color:#b25838; letter-spacing:1px; margin-bottom:12px;\">\n          <i class=\"fa-solid fa-list-check mr-1\"></i> 핵심 보장분석 목차\n        </div>\n        <div class=\"bojang-checklist-grid\" data-slot=\"checklist\">\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 계약리스트 분석</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 가입담보 상세</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 담보 종합 진단</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 진단 현황</span></div>\n        </div>\n\n        <div class=\"bojang-data-widget\" data-slot=\"metrics\">\n          <div class=\"data-widget-header\">\n            <span class=\"data-chip-tag\"><i class=\"fa-solid fa-chart-simple mr-1\"></i> 전산 보장분석 요약</span>\n            <span class=\"data-date-tag\">한국신용정보원 집적 기준</span>\n          </div>\n          <div class=\"data-kpi-grid\">\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">정상 계약건수</span>\n              <span class=\"kpi-val\"><b class=\"val-contracts\">15</b><span>건</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">총 월 납입보험료</span>\n              <span class=\"kpi-val\"><b class=\"val-premium\">420,548</b><span>원</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">보장 진단 현황</span>\n              <div class=\"kpi-val-status\">\n                <span class=\"status-pill st-ok\">충분 <b class=\"val-st-ok\">23</b></span>\n                <span class=\"status-pill st-warn\">부족 <b class=\"val-st-warn\">8</b></span>\n                <span class=\"status-pill st-miss\">미가입 <b class=\"val-st-miss\">6</b></span>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"bojang-slogan-box\" data-slot=\"slogan\">\n          <div class=\"slogan-title\"><i class=\"fa-solid fa-quote-left mr-1\"></i> 보험으로 보답하는 보답화니</div>\n          <p class=\"slogan-desc val-slogan\">\"보험다운 보험을 권하고, 정직하고 좋은 보험으로 고객님 신뢰에 보답드리겠습니다\"</p>\n        </div>\n      </div>\n    </div>\n\n    <div style=\"text-align:center;\">\n      <div class=\"bojang-contact-pill\" data-slot=\"contact\">\n        <span><i class=\"fa-solid fa-user-tie mr-1\"></i> 담당자: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"contact-pill-divider\">|</span>\n        <span><i class=\"fa-solid fa-phone mr-1\"></i> 연락처: <b class=\"val-phone\">010-1234-5678</b></span>\n      </div>\n    </div>\n\n    <div class=\"official-footer-bar\" data-slot=\"footer\">\n      <div class=\"footer-row-meta\">\n        <span class=\"footer-item item-company\" data-key=\"company\">❚ 소속: <b class=\"val-company\">위라클랩</b></span>\n        <span class=\"footer-item item-advisor\" data-key=\"advisor\">❚ 담당: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"footer-item item-sabun\" data-key=\"sabun\">❚ 사번: <b class=\"val-sabun\">2532055</b></span>\n        <span class=\"footer-item item-phone\" data-key=\"phone\">❚ 핸드폰: <b class=\"val-phone\">010-1234-5678</b></span>\n        <span class=\"footer-item item-tel\" data-key=\"tel\">❚ 대표번호: <b class=\"val-tel\">1588-1234</b></span>\n        <span class=\"footer-item item-fax\" data-key=\"fax\">❚ FAX: <b class=\"val-fax\">02-123-4567</b></span>\n      </div>\n      <div class=\"footer-row-address\">\n        <span class=\"footer-item item-address\" data-key=\"address\">❚ 주소: <b class=\"val-address\">서울특별시 종로구 57, 6층 위라클본랩</b></span>\n      </div>\n    </div>\n\n    <div class=\"bojang-disclaimer-note\" data-slot=\"disclaimer\">\n      * 본 보고서는 한국신용정보원에 집적된 계약 정보를 바탕으로 고객님의 보장내역을 정밀 분석·정리한 자료입니다.\n    </div>\n  </div>\n"},{"file":"09_파스텔모던_스카이블루_에어.html","pngFile":"09_파스텔모던_스카이블루_에어.png","num":"09","name":"파스텔모던 스카이블루 에어","themeId":"pastel","themeName":"파스텔 & 감성 라이프 솔루션","themeBadge":"🌸 파스텔","themeIcon":"fa-wind","themeColor":"#0284c7","themeFolderDisplay":"4_파스텔모던_라이프 (3종)","css":"\n    \n    \n    .a4-page {\n      width: 1240px;\n      height: 1754px;\n      position: relative;\n      overflow: hidden;\n      background: #f0f9ff;\n      color: #0f172a;\n      box-shadow: 0 25px 60px -15px rgba(2, 132, 199, 0.15);\n      padding: 70px 80px;\n      display: flex;\n      flex-direction: column;\n      justify-content: space-between;\n      box-sizing: border-box;\n    }\n    .top-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      border-bottom: 2px solid #bae6fd;\n      padding-bottom: 24px;\n    }\n    .corp-badge {\n      font-size: 17px;\n      font-weight: 800;\n      color: #0284c7;\n      letter-spacing: 2px;\n    }\n    .main-hero {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .hero-title {\n      font-size: 72px;\n      font-weight: 900;\n      letter-spacing: -2px;\n      color: #0f172a;\n      line-height: 1.15;\n    }\n    .hero-title-accent {\n      color: #0284c7;\n    }\n    .hero-underline {\n      width: 140px;\n      height: 6px;\n      background: #0284c7;\n      margin: 18px auto 0;\n      border-radius: 3px;\n    }\n    .greeting-box {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .greeting-client {\n      font-size: 40px;\n      font-weight: 800;\n      color: #0f172a;\n    }\n    .greeting-client b {\n      color: #0284c7;\n      font-weight: 900;\n    }\n    .greeting-sub {\n      font-size: 26px;\n      font-weight: 600;\n      color: #0369a1;\n      margin-top: 8px;\n    }\n    .content-card {\n      background: #ffffff;\n      border: 1px solid #bae6fd;\n      border-radius: 24px;\n      padding: 36px 44px;\n      display: grid;\n      grid-template-columns: 360px 1fr;\n      gap: 36px;\n      align-items: center;\n      box-shadow: 0 15px 35px rgba(2, 132, 199, 0.08);\n      margin: 20px 0;\n    }\n    .card-photo {\n      height: 440px;\n      border-radius: 16px;\n      overflow: hidden;\n      border: 1px solid #bae6fd;\n    }\n    .card-photo img {\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n    .bojang-checklist-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 14px;\n    }\n    .chk-item {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      background: #f8fafc;\n      border: 1px solid #e0f2fe;\n      border-radius: 14px;\n      padding: 16px 18px;\n      font-size: 19px;\n      font-weight: 700;\n      color: #0c4a6e;\n    }\n    .chk-icon {\n      color: #0284c7;\n      font-size: 22px;\n    }\n    .bojang-data-widget {\n      background: #f8fafc;\n      border: 1px solid #bae6fd;\n      border-radius: 16px;\n      padding: 18px 24px;\n      margin: 16px 0;\n      width: 100%;\n      box-sizing: border-box;\n    }\n    .data-widget-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 12px;\n      padding-bottom: 8px;\n      border-bottom: 1px solid #e0f2fe;\n    }\n    .data-chip-tag {\n      background: #0284c7;\n      color: #ffffff;\n      font-size: 12px;\n      font-weight: 800;\n      padding: 3px 10px;\n      border-radius: 6px;\n    }\n    .data-date-tag { font-size: 12px; color: #0284c7; }\n    .data-kpi-grid {\n      display: grid;\n      grid-template-columns: 1fr 1.3fr 1.5fr;\n      gap: 14px;\n      align-items: center;\n    }\n    .kpi-cell { display: flex; flex-direction: column; gap: 3px; }\n    .kpi-label { font-size: 12px; color: #0369a1; font-weight: 600; }\n    .kpi-val { font-size: 20px; font-weight: 900; color: #0f172a; display: flex; align-items: baseline; gap: 3px; }\n    .kpi-val span { font-size: 13px; color: #0284c7; font-weight: 700; }\n    .kpi-val-status { display: flex; gap: 5px; margin-top: 2px; }\n    .status-pill { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 5px; }\n    .st-ok { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }\n    .st-warn { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }\n    .st-miss { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }\n\n    .bojang-contact-pill {\n      background: #ffffff;\n      border: 1px solid #bae6fd;\n      color: #0f172a;\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n      padding: 14px 36px;\n      border-radius: 40px;\n      font-size: 19px;\n      font-weight: 700;\n      margin: 10px auto;\n      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);\n    }\n    .bojang-contact-pill b { color: #0284c7; }\n    .contact-pill-divider { color: #bae6fd; }\n\n    .bojang-slogan-box {\n      background: #f8fafc;\n      border-left: 4px solid #0284c7;\n      border-radius: 0 10px 10px 0;\n      padding: 10px 16px;\n      margin: 10px 0;\n      border-top: 1px solid #e0f2fe;\n      border-right: 1px solid #e0f2fe;\n      border-bottom: 1px solid #e0f2fe;\n    }\n    .slogan-title { font-size: 12px; font-weight: 800; color: #0284c7; margin-bottom: 2px; }\n    .slogan-desc { font-size: 14px; font-weight: 600; color: #075985; }\n\n    .official-footer-bar {\n      background: #0c4a6e;\n      border: 1px solid #075985;\n      border-radius: 14px;\n      padding: 16px 28px;\n      font-size: 13px;\n      color: #e0f2fe;\n      display: flex;\n      flex-direction: column;\n      gap: 5px;\n      margin-top: 10px;\n    }\n    .footer-row-meta { display: flex; flex-wrap: wrap; gap: 14px 22px; }\n    .footer-item b { color: #ffffff; }\n    .footer-row-address { font-size: 12px; color: #bae6fd; }\n    .bojang-disclaimer-note {\n      font-size: 12px;\n      color: #0284c7;\n      text-align: center;\n      margin-top: 8px;\n    }\n    ","html":"\n  <div class=\"a4-page\">\n    <div class=\"top-header\">\n      <span class=\"corp-badge\">PURE SKY AIR AUDIT</span>\n      <img src=\"images/보답화니_로고.png\" style=\"height: 65px; object-fit: contain; display: block;\" data-slot=\"logo\">\n    </div>\n\n    <div class=\"main-hero\">\n      <h1 class=\"hero-title\" data-slot=\"title\">\n        보장분석 <span class=\"hero-title-accent\">보고서</span>\n      </h1>\n      <div class=\"hero-underline\"></div>\n      <div class=\"greeting-box\" data-slot=\"greeting\">\n        <div class=\"greeting-client\"><b class=\"val-client\">조진주</b> 님을 위해</div>\n        <div class=\"greeting-sub\">꼼꼼하게 준비했습니다.</div>\n      </div>\n    </div>\n\n    <div class=\"content-card\">\n      <div class=\"card-photo\">\n        <img src=\"images/consultant_model.jpg\" data-slot=\"image\">\n      </div>\n      <div>\n        <div style=\"font-size:14px; font-weight:800; color:#0284c7; letter-spacing:1px; margin-bottom:12px;\">\n          <i class=\"fa-solid fa-list-check mr-1\"></i> 핵심 보장분석 목차\n        </div>\n        <div class=\"bojang-checklist-grid\" data-slot=\"checklist\">\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 계약리스트 분석</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 가입담보 상세</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 담보 종합 진단</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 진단 현황</span></div>\n        </div>\n\n        <div class=\"bojang-data-widget\" data-slot=\"metrics\">\n          <div class=\"data-widget-header\">\n            <span class=\"data-chip-tag\"><i class=\"fa-solid fa-chart-simple mr-1\"></i> 전산 보장분석 요약</span>\n            <span class=\"data-date-tag\">한국신용정보원 집적 기준</span>\n          </div>\n          <div class=\"data-kpi-grid\">\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">정상 계약건수</span>\n              <span class=\"kpi-val\"><b class=\"val-contracts\">15</b><span>건</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">총 월 납입보험료</span>\n              <span class=\"kpi-val\"><b class=\"val-premium\">420,548</b><span>원</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">보장 진단 현황</span>\n              <div class=\"kpi-val-status\">\n                <span class=\"status-pill st-ok\">충분 <b class=\"val-st-ok\">23</b></span>\n                <span class=\"status-pill st-warn\">부족 <b class=\"val-st-warn\">8</b></span>\n                <span class=\"status-pill st-miss\">미가입 <b class=\"val-st-miss\">6</b></span>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"bojang-slogan-box\" data-slot=\"slogan\">\n          <div class=\"slogan-title\"><i class=\"fa-solid fa-quote-left mr-1\"></i> 보험으로 보답하는 보답화니</div>\n          <p class=\"slogan-desc val-slogan\">\"보험다운 보험을 권하고, 정직하고 좋은 보험으로 고객님 신뢰에 보답드리겠습니다\"</p>\n        </div>\n      </div>\n    </div>\n\n    <div style=\"text-align:center;\">\n      <div class=\"bojang-contact-pill\" data-slot=\"contact\">\n        <span><i class=\"fa-solid fa-user-tie mr-1\"></i> 담당자: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"contact-pill-divider\">|</span>\n        <span><i class=\"fa-solid fa-phone mr-1\"></i> 연락처: <b class=\"val-phone\">010-1234-5678</b></span>\n      </div>\n    </div>\n\n    <div class=\"official-footer-bar\" data-slot=\"footer\">\n      <div class=\"footer-row-meta\">\n        <span class=\"footer-item item-company\" data-key=\"company\">❚ 소속: <b class=\"val-company\">위라클랩</b></span>\n        <span class=\"footer-item item-advisor\" data-key=\"advisor\">❚ 담당: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"footer-item item-sabun\" data-key=\"sabun\">❚ 사번: <b class=\"val-sabun\">2532055</b></span>\n        <span class=\"footer-item item-phone\" data-key=\"phone\">❚ 핸드폰: <b class=\"val-phone\">010-1234-5678</b></span>\n        <span class=\"footer-item item-tel\" data-key=\"tel\">❚ 대표번호: <b class=\"val-tel\">1588-1234</b></span>\n        <span class=\"footer-item item-fax\" data-key=\"fax\">❚ FAX: <b class=\"val-fax\">02-123-4567</b></span>\n      </div>\n      <div class=\"footer-row-address\">\n        <span class=\"footer-item item-address\" data-key=\"address\">❚ 주소: <b class=\"val-address\">서울특별시 종로구 57, 6층 위라클본랩</b></span>\n      </div>\n    </div>\n\n    <div class=\"bojang-disclaimer-note\" data-slot=\"disclaimer\">\n      * 본 보고서는 한국신용정보원에 집적된 계약 정보를 바탕으로 고객님의 보장내역을 정밀 분석·정리한 자료입니다.\n    </div>\n  </div>\n"},{"file":"10_선셋그라디언트_라이프웨이브.html","pngFile":"10_선셋그라디언트_라이프웨이브.png","num":"10","name":"선셋그라디언트 라이프웨이브","themeId":"gradient","themeName":"선셋 그라디언트 & 모던 웨이브","themeBadge":"🌅 선셋 웨이브","themeIcon":"fa-sun","themeColor":"#ea580c","themeFolderDisplay":"5_선셋_그라디언트 (1종)","css":"\n    \n    \n    .a4-page {\n      width: 1240px;\n      height: 1754px;\n      position: relative;\n      overflow: hidden;\n      background: linear-gradient(160deg, #fff7ed 0%, #ffedd5 50%, #fed7aa 100%);\n      color: #431407;\n      box-shadow: 0 25px 60px -15px rgba(234, 88, 12, 0.25);\n      padding: 70px 80px;\n      display: flex;\n      flex-direction: column;\n      justify-content: space-between;\n      box-sizing: border-box;\n    }\n    .top-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      border-bottom: 2px solid #fed7aa;\n      padding-bottom: 24px;\n    }\n    .corp-badge {\n      font-size: 17px;\n      font-weight: 800;\n      color: #c2410c;\n      letter-spacing: 2px;\n    }\n    .main-hero {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .hero-title {\n      font-size: 72px;\n      font-weight: 900;\n      letter-spacing: -2px;\n      color: #431407;\n      line-height: 1.15;\n    }\n    .hero-title-accent {\n      color: #ea580c;\n    }\n    .hero-underline {\n      width: 140px;\n      height: 6px;\n      background: #ea580c;\n      margin: 18px auto 0;\n      border-radius: 3px;\n    }\n    .greeting-box {\n      margin-top: 25px;\n      text-align: center;\n    }\n    .greeting-client {\n      font-size: 40px;\n      font-weight: 800;\n      color: #431407;\n    }\n    .greeting-client b {\n      color: #ea580c;\n      font-weight: 900;\n    }\n    .greeting-sub {\n      font-size: 26px;\n      font-weight: 600;\n      color: #9a3412;\n      margin-top: 8px;\n    }\n    .content-card {\n      background: rgba(255, 255, 255, 0.85);\n      backdrop-filter: blur(12px);\n      border: 1px solid #fdba74;\n      border-radius: 24px;\n      padding: 36px 44px;\n      display: grid;\n      grid-template-columns: 360px 1fr;\n      gap: 36px;\n      align-items: center;\n      box-shadow: 0 15px 35px rgba(234, 88, 12, 0.1);\n      margin: 20px 0;\n    }\n    .card-photo {\n      height: 440px;\n      border-radius: 16px;\n      overflow: hidden;\n      border: 1px solid #fdba74;\n    }\n    .card-photo img {\n      width: 100%;\n      height: 100%;\n      object-fit: cover;\n    }\n    .bojang-checklist-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 14px;\n    }\n    .chk-item {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      background: rgba(255, 247, 237, 0.95);\n      border: 1px solid #fed7aa;\n      border-radius: 14px;\n      padding: 16px 18px;\n      font-size: 19px;\n      font-weight: 700;\n      color: #431407;\n    }\n    .chk-icon {\n      color: #ea580c;\n      font-size: 22px;\n    }\n    .bojang-data-widget {\n      background: rgba(255, 247, 237, 0.95);\n      border: 1px solid #fdba74;\n      border-radius: 16px;\n      padding: 18px 24px;\n      margin: 16px 0;\n      width: 100%;\n      box-sizing: border-box;\n    }\n    .data-widget-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 12px;\n      padding-bottom: 8px;\n      border-bottom: 1px solid #fed7aa;\n    }\n    .data-chip-tag {\n      background: #ea580c;\n      color: #ffffff;\n      font-size: 12px;\n      font-weight: 800;\n      padding: 3px 10px;\n      border-radius: 6px;\n    }\n    .data-date-tag { font-size: 12px; color: #9a3412; }\n    .data-kpi-grid {\n      display: grid;\n      grid-template-columns: 1fr 1.3fr 1.5fr;\n      gap: 14px;\n      align-items: center;\n    }\n    .kpi-cell { display: flex; flex-direction: column; gap: 3px; }\n    .kpi-label { font-size: 12px; color: #9a3412; font-weight: 600; }\n    .kpi-val { font-size: 20px; font-weight: 900; color: #431407; display: flex; align-items: baseline; gap: 3px; }\n    .kpi-val span { font-size: 13px; color: #ea580c; font-weight: 700; }\n    .kpi-val-status { display: flex; gap: 5px; margin-top: 2px; }\n    .status-pill { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 5px; }\n    .st-ok { background: #ffedd5; color: #ea580c; border: 1px solid #fed7aa; }\n    .st-warn { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }\n    .st-miss { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }\n\n    .bojang-contact-pill {\n      background: rgba(255, 255, 255, 0.95);\n      border: 1px solid #fdba74;\n      color: #431407;\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n      padding: 14px 36px;\n      border-radius: 40px;\n      font-size: 19px;\n      font-weight: 700;\n      margin: 10px auto;\n      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.1);\n    }\n    .bojang-contact-pill b { color: #ea580c; }\n    .contact-pill-divider { color: #fdba74; }\n\n    .bojang-slogan-box {\n      background: rgba(255, 247, 237, 0.95);\n      border-left: 4px solid #ea580c;\n      border-radius: 0 10px 10px 0;\n      padding: 10px 16px;\n      margin: 10px 0;\n      border-top: 1px solid #fed7aa;\n      border-right: 1px solid #fed7aa;\n      border-bottom: 1px solid #fed7aa;\n    }\n    .slogan-title { font-size: 12px; font-weight: 800; color: #ea580c; margin-bottom: 2px; }\n    .slogan-desc { font-size: 14px; font-weight: 600; color: #7c2d12; }\n\n    .official-footer-bar {\n      background: #7c2d12;\n      border: 1px solid #9a3412;\n      border-radius: 14px;\n      padding: 16px 28px;\n      font-size: 13px;\n      color: #ffedd5;\n      display: flex;\n      flex-direction: column;\n      gap: 5px;\n      margin-top: 10px;\n    }\n    .footer-row-meta { display: flex; flex-wrap: wrap; gap: 14px 22px; }\n    .footer-item b { color: #ffffff; }\n    .footer-row-address { font-size: 12px; color: #fed7aa; }\n    .bojang-disclaimer-note {\n      font-size: 12px;\n      color: #9a3412;\n      text-align: center;\n      margin-top: 8px;\n    }\n    ","html":"\n  <div class=\"a4-page\">\n    <div class=\"top-header\">\n      <span class=\"corp-badge\">SUNSET HARMONY LIFE AUDIT</span>\n      <img src=\"images/보답화니_로고.png\" style=\"height: 65px; object-fit: contain; display: block;\" data-slot=\"logo\">\n    </div>\n\n    <div class=\"main-hero\">\n      <h1 class=\"hero-title\" data-slot=\"title\">\n        보장분석 <span class=\"hero-title-accent\">보고서</span>\n      </h1>\n      <div class=\"hero-underline\"></div>\n      <div class=\"greeting-box\" data-slot=\"greeting\">\n        <div class=\"greeting-client\"><b class=\"val-client\">조진주</b> 님을 위해</div>\n        <div class=\"greeting-sub\">꼼꼼하게 준비했습니다.</div>\n      </div>\n    </div>\n\n    <div class=\"content-card\">\n      <div class=\"card-photo\">\n        <img src=\"images/consultant_model.jpg\" data-slot=\"image\">\n      </div>\n      <div>\n        <div style=\"font-size:14px; font-weight:800; color:#ea580c; letter-spacing:1px; margin-bottom:12px;\">\n          <i class=\"fa-solid fa-list-check mr-1\"></i> 핵심 보장분석 목차\n        </div>\n        <div class=\"bojang-checklist-grid\" data-slot=\"checklist\">\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 계약리스트 분석</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 가입담보 상세</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">전체 담보 종합 진단</span></div>\n          <div class=\"chk-item\"><i class=\"fa-solid fa-square-check chk-icon\"></i> <span class=\"chk-text\">상품별 진단 현황</span></div>\n        </div>\n\n        <div class=\"bojang-data-widget\" data-slot=\"metrics\">\n          <div class=\"data-widget-header\">\n            <span class=\"data-chip-tag\"><i class=\"fa-solid fa-chart-simple mr-1\"></i> 전산 보장분석 요약</span>\n            <span class=\"data-date-tag\">한국신용정보원 집적 기준</span>\n          </div>\n          <div class=\"data-kpi-grid\">\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">정상 계약건수</span>\n              <span class=\"kpi-val\"><b class=\"val-contracts\">15</b><span>건</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">총 월 납입보험료</span>\n              <span class=\"kpi-val\"><b class=\"val-premium\">420,548</b><span>원</span></span>\n            </div>\n            <div class=\"kpi-cell\">\n              <span class=\"kpi-label\">보장 진단 현황</span>\n              <div class=\"kpi-val-status\">\n                <span class=\"status-pill st-ok\">충분 <b class=\"val-st-ok\">23</b></span>\n                <span class=\"status-pill st-warn\">부족 <b class=\"val-st-warn\">8</b></span>\n                <span class=\"status-pill st-miss\">미가입 <b class=\"val-st-miss\">6</b></span>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"bojang-slogan-box\" data-slot=\"slogan\">\n          <div class=\"slogan-title\"><i class=\"fa-solid fa-quote-left mr-1\"></i> 보험으로 보답하는 보답화니</div>\n          <p class=\"slogan-desc val-slogan\">\"보험다운 보험을 권하고, 정직하고 좋은 보험으로 고객님 신뢰에 보답드리겠습니다\"</p>\n        </div>\n      </div>\n    </div>\n\n    <div style=\"text-align:center;\">\n      <div class=\"bojang-contact-pill\" data-slot=\"contact\">\n        <span><i class=\"fa-solid fa-user-tie mr-1\"></i> 담당자: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"contact-pill-divider\">|</span>\n        <span><i class=\"fa-solid fa-phone mr-1\"></i> 연락처: <b class=\"val-phone\">010-1234-5678</b></span>\n      </div>\n    </div>\n\n    <div class=\"official-footer-bar\" data-slot=\"footer\">\n      <div class=\"footer-row-meta\">\n        <span class=\"footer-item item-company\" data-key=\"company\">❚ 소속: <b class=\"val-company\">위라클랩</b></span>\n        <span class=\"footer-item item-advisor\" data-key=\"advisor\">❚ 담당: <b class=\"val-advisor\">ㅇㅇㅇ 팀장</b></span>\n        <span class=\"footer-item item-sabun\" data-key=\"sabun\">❚ 사번: <b class=\"val-sabun\">2532055</b></span>\n        <span class=\"footer-item item-phone\" data-key=\"phone\">❚ 핸드폰: <b class=\"val-phone\">010-1234-5678</b></span>\n        <span class=\"footer-item item-tel\" data-key=\"tel\">❚ 대표번호: <b class=\"val-tel\">1588-1234</b></span>\n        <span class=\"footer-item item-fax\" data-key=\"fax\">❚ FAX: <b class=\"val-fax\">02-123-4567</b></span>\n      </div>\n      <div class=\"footer-row-address\">\n        <span class=\"footer-item item-address\" data-key=\"address\">❚ 주소: <b class=\"val-address\">서울특별시 종로구 57, 6층 위라클본랩</b></span>\n      </div>\n    </div>\n\n    <div class=\"bojang-disclaimer-note\" data-slot=\"disclaimer\">\n      * 본 보고서는 한국신용정보원에 집적된 계약 정보를 바탕으로 고객님의 보장내역을 정밀 분석·정리한 자료입니다.\n    </div>\n  </div>\n"}];
     const THEME_SWATCHES = [{"id":"01","file":"01_코퍼레이트_다크차콜_정통공식문서.html","name":"다크 차콜","desc":"차콜블랙 & 스카이","bg":"#1e293b","accent":"#38bdf8","cardBg":"#0f172a","isDark":true,"pledgeBg":"rgba(30, 41, 59, 0.7)","pledgeText":"#f1f5f9","pledgeBorder":"rgba(56, 189, 248, 0.25)","sealColor":"#ef4444"},{"id":"02","file":"02_코퍼레이트_스틸그레이_테크.html","name":"스틸 그레이","desc":"라이트그레이 & 코발트","bg":"#f1f5f9","accent":"#0284c7","cardBg":"#ffffff","isDark":false,"pledgeBg":"#ffffff","pledgeText":"#0f172a","pledgeBorder":"#cbd5e1","sealColor":"#ef4444"},{"id":"03","file":"03_오피셜보증서_그린골드_시니어헤리티지.html","name":"그린 골드","desc":"딥에메랄드 & 앤틱골드","bg":"#064e3b","accent":"#f59e0b","cardBg":"#022c22","isDark":true,"pledgeBg":"rgba(2, 44, 34, 0.85)","pledgeText":"#fef3c7","pledgeBorder":"rgba(245, 158, 11, 0.35)","sealColor":"#f59e0b"},{"id":"04","file":"04_경제매거진_2단칼럼_심층기사.html","name":"클래식 네이비","desc":"화이트 & 로열블루","bg":"#ffffff","accent":"#2563eb","cardBg":"#f8fafc","isDark":false,"pledgeBg":"#ffffff","pledgeText":"#0f172a","pledgeBorder":"#cbd5e1","sealColor":"#ef4444"},{"id":"05","file":"05_경제매거진_뉴욕타임스_에디션.html","name":"빈티지 페이퍼","desc":"올드신문 & 앰버","bg":"#fdfbf7","accent":"#b45309","cardBg":"#f5f0e6","isDark":false,"pledgeBg":"#fdfbf7","pledgeText":"#292524","pledgeBorder":"#d6d3d1","sealColor":"#b45309"},{"id":"06","file":"06_VIP골드_다크모노그램.html","name":"VIP 블랙골드","desc":"옵시디언 & 리치골드","bg":"#09090b","accent":"#f59e0b","cardBg":"#18181b","isDark":true,"pledgeBg":"rgba(24, 24, 27, 0.95)","pledgeText":"#fafafa","pledgeBorder":"rgba(245, 158, 11, 0.3)","sealColor":"#f59e0b"},{"id":"07","file":"07_파스텔모던_소프트라벤더.html","name":"소프트 라벤더","desc":"파스텔연보라 & 바이올렛","bg":"#f5f3ff","accent":"#7c3aed","cardBg":"#ffffff","isDark":false,"pledgeBg":"#ffffff","pledgeText":"#1e1b4b","pledgeBorder":"#ddd6fe","sealColor":"#7c3aed"},{"id":"08","file":"08_파스텔모던_웜오트밀_스칸디.html","name":"웜 오트밀","desc":"내추럴베이지 & 브릭","bg":"#faf8f5","accent":"#b25838","cardBg":"#ffffff","isDark":false,"pledgeBg":"#ffffff","pledgeText":"#292524","pledgeBorder":"#e7e2da","sealColor":"#b25838"},{"id":"09","file":"09_파스텔모던_스카이블루_에어.html","name":"스카이 블루","desc":"에어리스카이 & 네이비","bg":"#f0f9ff","accent":"#0284c7","cardBg":"#ffffff","isDark":false,"pledgeBg":"#ffffff","pledgeText":"#0f172a","pledgeBorder":"#bae6fd","sealColor":"#0284c7"},{"id":"10","file":"10_선셋그라디언트_라이프웨이브.html","name":"선셋 웨이브","desc":"선셋코랄 & 핑크로즈","bg":"linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)","accent":"#f43f5e","cardBg":"rgba(255, 255, 255, 0.9)","isDark":false,"pledgeBg":"rgba(255, 255, 255, 0.9)","pledgeText":"#1c1917","pledgeBorder":"#fecdd3","sealColor":"#f43f5e"}];
     const themeSwatches = THEME_SWATCHES;

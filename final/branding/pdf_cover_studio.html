@@ -3583,13 +3583,13 @@
           <i class="fa-solid fa-i-cursor"></i> 화면 클릭 즉시 편집 지원
         </span>
         <span style="color:rgba(255,255,255,0.25);">|</span>
-        <span id="currentViewModeLabel" style="font-size:11.5px; font-weight:700; color:#38bdf8;">좌우 여백없이 맞춤 (100%)</span>
+        <span id="currentViewModeLabel" style="font-size:11.5px; font-weight:700; color:#38bdf8;">한 화면 전체보기 (A4 맞춤)</span>
         <div style="display:flex; gap:6px; margin-left:4px;">
-          <button type="button" class="filter-btn active" id="btnFitWidth" onclick="setViewMode('fitWidth')">
-            <i class="fa-solid fa-arrows-left-right"></i> 좌우 꽉차게
+          <button type="button" class="filter-btn active" id="btnFitScreen" onclick="setViewMode('fitScreen')">
+            <i class="fa-solid fa-expand"></i> A4 전체보기
           </button>
-          <button type="button" class="filter-btn" id="btnFitScreen" onclick="setViewMode('fitScreen')">
-            <i class="fa-solid fa-expand"></i> 전체보기
+          <button type="button" class="filter-btn" id="btnFitWidth" onclick="setViewMode('fitWidth')">
+            <i class="fa-solid fa-arrows-left-right"></i> 좌우 꽉차게
           </button>
         </div>
       </div>
@@ -5086,7 +5086,7 @@
     let currentTemplateIndex = 0;
     let customLogoSrc = null;
     let customPhotoSrc = null;
-    let currentViewMode = 'fitWidth';
+    let currentViewMode = 'fitScreen';
     let currentVisualMode = 'photo'; // 'photo' vs 'pledge'
     let currentPledgeColorTone = 'auto';
 
@@ -5114,7 +5114,7 @@
       if (mode === 'fitWidth') {
         label.textContent = '좌우 여백없이 맞춤 (100%)';
       } else {
-        label.textContent = '한 화면 전체보기 (세로 맞춤)';
+        label.textContent = '한 화면 전체보기 (A4 맞춤)';
       }
 
       previewCanvasArea.scrollTop = 0;
@@ -5252,12 +5252,9 @@
 
     // Precise A4 Scale Calculation Engine: EXACT Zero Left/Right Margins, No Cutoffs
     function fitA4ToScreen() {
-      if (isPreviewMode) {
-        currentViewMode = 'fitWidth';
-      }
       if (!previewCanvasArea || !a4Container || !a4Sheet) return;
 
-      const availW = previewCanvasArea.clientWidth; // Exactly fits width with ZERO margin on left & right
+      const availW = previewCanvasArea.clientWidth;
       const availH = previewCanvasArea.clientHeight;
 
       if (availW <= 0 || availH <= 0) return;
@@ -5265,7 +5262,7 @@
       let scale = 1;
 
       if (currentViewMode === 'fitWidth') {
-        // 좌우 여백없이 오른쪽 화면 너비에 완벽하게 꽉 맞춤!
+        // 좌우 꽉차게 확대 모드
         scale = availW / 1240;
         
         const targetW = Math.floor(1240 * scale);
@@ -5278,9 +5275,10 @@
         a4Sheet.style.transformOrigin = '0 0';
         a4Sheet.style.transform = 'scale(' + scale + ')';
       } else {
-        // 한 화면에 상하좌우 전체가 다 보이도록 스케일링
-        const padY = 54;
-        const scaleW = availW / 1240;
+        // A4 규격에 딱 맞춰 상하좌우 한눈에 쏙 들어오게 스케일링 (기본 권장)
+        const padY = isPreviewMode ? 10 : 70;
+        const padX = isPreviewMode ? 10 : 40;
+        const scaleW = (availW - padX) / 1240;
         const scaleH = (availH - padY) / 1754;
         scale = Math.min(scaleW, scaleH);
 

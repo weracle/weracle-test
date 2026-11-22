@@ -34,6 +34,11 @@ function updatePartnersTabVisibility() {
 // ==========================================================================
 const SALES_INSIGHT_VIDEOS = [
   {
+    title: "위라클매니지먼트 보험설계사 기획사",
+    subtitle: "보험설계사의 가치와 성장을 위한 위라클 공식 소개 영상",
+    url: "https://www.youtube.com/watch?v=bSl--FrNKyY"
+  },
+  {
     title: "설계사 세일즈 화법 & 실전 클로징 노하우",
     subtitle: "고객의 거절을 극복하고 계약 체결로 이끄는 핵심 화법",
     url: "https://www.youtube.com/watch?v=ScMzIvxBSi4"
@@ -41,11 +46,6 @@ const SALES_INSIGHT_VIDEOS = [
   {
     title: "상령일 도래 고객 맞춤 보장분석 공략법",
     subtitle: "보험료 인상 전 골든타임 리모델링 성공 전략",
-    url: "https://www.youtube.com/watch?v=ScMzIvxBSi4"
-  },
-  {
-    title: "신계약 창출을 위한 고객 DB 터치 프로세스",
-    subtitle: "기계약자 추가 업셀링 및 충성 고객 소개 유치 기법",
     url: "https://www.youtube.com/watch?v=ScMzIvxBSi4"
   }
 ];

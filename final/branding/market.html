@@ -5746,33 +5746,97 @@
       renderAdminPrintOptionRows();
     }
 
-    // 색상 옵션 관리
+    // 색상 옵션 관리 (파일 업로드 및 일괄 등록 지원)
     function renderAdminColorRows() {
       const container = document.getElementById('adminColorRowsContainer');
       if (!container) return;
       container.innerHTML = '';
 
       if (adminColorList.length === 0) {
-        container.innerHTML = '<span style="font-size:12px; color:#64748b;">등록된 색상 옵션이 없습니다. (+ 색상 추가를 눌러 옵션을 등록하세요)</span>';
+        container.innerHTML = '<div style="padding: 14px; text-align: center; background: #fff; border-radius: 8px; border: 1px dashed #d8b4fe; color: #86198f; font-size: 12.5px; font-weight: 600;">등록된 색상 옵션이 없습니다. 상단의 <b>[+ 색상 추가]</b> 또는 <b>[📷 사진 파일로 일괄 추가]</b>를 눌러 등록하세요.</div>';
         return;
       }
 
       adminColorList.forEach((col, idx) => {
         const row = document.createElement('div');
-        row.style.cssText = 'display: flex; gap: 8px; align-items: center; background: #fff; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0;';
+        row.style.cssText = 'display: flex; gap: 8px; align-items: center; background: #fff; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.03);';
+        
+        const hasImg = !!col.image;
+        const isDataUrl = hasImg && col.image.startsWith('data:image');
+        const imgDisplayText = isDataUrl ? '[업로드된 사진 파일]' : (col.image || '');
+
         row.innerHTML = `
-          <span style="font-weight: 700; font-size: 12px; color: #64748b; width: 45px;">색상 ${idx + 1}</span>
-          <input type="text" value="${col.name}" placeholder="색상명" onchange="adminColorList[${idx}].name = this.value" style="width: 80px; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px; font-weight: 700;">
-          <input type="color" value="${col.colorCode || '#2563eb'}" onchange="adminColorList[${idx}].colorCode = this.value" style="width: 36px; height: 32px; border: none; background: transparent; cursor: pointer;">
-          <input type="text" value="${col.image}" placeholder="이미지 파일 경로" onchange="adminColorList[${idx}].image = this.value" style="flex: 1; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 11.5px; color: #334155;">
-          <button type="button" onclick="adminRemoveColorRow(${idx})" style="background: #fee2e2; color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: bold;">✕</button>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-weight: 800; font-size: 12px; color: #64748b; width: 44px; white-space: nowrap;">색상 ${idx + 1}</span>
+            <input type="text" value="${col.name || ''}" placeholder="색상명 (예: 네이비)" onchange="adminColorList[${idx}].name = this.value" style="width: 105px; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px; font-weight: 700;">
+            <input type="color" value="${col.colorCode || '#2563eb'}" onchange="adminColorList[${idx}].colorCode = this.value" title="색상 칩 컬러 선택" style="width: 34px; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0; background: transparent; cursor: pointer;">
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 240px;">
+            <!-- 사진 미리보기 썸네일 -->
+            <div style="width: 34px; height: 34px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="${hasImg ? '색상 이미지 미리보기' : '사진 없음'}">
+              ${hasImg ? `<img src="${col.image}" style="width: 100%; height: 100%; object-fit: cover;">` : `<span style="font-size: 15px; color: #94a3b8;">📷</span>`}
+            </div>
+
+            <!-- 파일 선택 인풋 & 버튼 -->
+            <input type="file" id="adminColorFileInput_${idx}" accept="image/*" style="display:none;" onchange="handleAdminColorFileInput(${idx}, this)">
+            <button type="button" onclick="document.getElementById('adminColorFileInput_${idx}').click()" style="height: 34px; padding: 0 10px; font-size: 12px; font-weight: 700; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+              <span>📁 사진 업로드</span>
+            </button>
+
+            <!-- 경로 직접 입력 또는 업로드 상태 표시 -->
+            <input type="text" value="${imgDisplayText}" placeholder="사진 파일 업로드 또는 이미지 경로" onchange="if (!this.value.startsWith('[업로드')) { adminColorList[${idx}].image = this.value; renderAdminColorRows(); }" style="flex: 1; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 11.5px; color: #334155; min-width: 100px;">
+          </div>
+
+          <button type="button" onclick="adminRemoveColorRow(${idx})" title="색상 삭제" style="background: #fee2e2; color: #dc2626; border: none; width: 32px; height: 34px; border-radius: 6px; cursor: pointer; font-weight: bold; flex-shrink: 0;">✕</button>
         `;
         container.appendChild(row);
       });
     }
 
+    function handleAdminColorFileInput(idx, input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          if (!adminColorList[idx]) return;
+          adminColorList[idx].image = e.target.result;
+          if (!adminColorList[idx].name || adminColorList[idx].name === '신규색상') {
+            const fileName = file.name.replace(/\.[^/.]+$/, '').trim();
+            if (fileName) adminColorList[idx].name = fileName;
+          }
+          renderAdminColorRows();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleAdminColorBatchInput(input) {
+      if (input.files && input.files.length > 0) {
+        const files = Array.from(input.files);
+        let loadedCount = 0;
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const fileName = file.name.replace(/\.[^/.]+$/, '').trim() || '색상';
+            adminColorList.push({
+              name: fileName,
+              colorCode: '#2563eb',
+              image: e.target.result
+            });
+            loadedCount++;
+            if (loadedCount === files.length) {
+              renderAdminColorRows();
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+        input.value = '';
+      }
+    }
+
     function adminAddColorRow() {
-      adminColorList.push({ name: "신규색상", colorCode: "#2563eb", image: "branding_img/KakaoTalk_20261109_105448276.jpg" });
+      adminColorList.push({ name: "", colorCode: "#2563eb", image: "" });
       renderAdminColorRows();
     }
 
@@ -6874,14 +6938,20 @@
 
           <!-- 색상 옵션 관리 (빈 상태 시작, + 색상 추가) -->
           <div style="background: #fdf4ff; border: 1.5px solid #f0abfc; border-radius: 10px; padding: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
               <div>
                 <span style="font-weight: 800; font-size: 14px; color: #86198f;">🎨 색상 옵션 관리</span>
-                <p style="font-size: 12px; color: #a21caf; margin: 2px 0 0;">색상명과 해당 색상 이미지를 등록하면 상세페이지에서 클릭 시 대표 이미지가 바뀝니다.</p>
+                <p style="font-size: 12px; color: #a21caf; margin: 2px 0 0;">색상별 사진 파일을 파일 업로드 또는 직접 입력하여 등록할 수 있습니다.</p>
               </div>
-              <button type="button" onclick="adminAddColorRow()" style="background: #a21caf; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
-                + 색상 추가
-              </button>
+              <div style="display: flex; gap: 8px;">
+                <input type="file" id="adminColorBatchFileInput" accept="image/*" multiple style="display:none;" onchange="handleAdminColorBatchInput(this)">
+                <button type="button" onclick="document.getElementById('adminColorBatchFileInput').click()" style="background: #fdf4ff; color: #86198f; border: 1.5px solid #d8b4fe; padding: 6px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                  <span>📷 사진 파일로 일괄 추가</span>
+                </button>
+                <button type="button" onclick="adminAddColorRow()" style="background: #a21caf; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
+                  + 색상 추가
+                </button>
+              </div>
             </div>
             <div id="adminColorRowsContainer" style="display: flex; flex-direction: column; gap: 8px;">
               <!-- 동적 색상 행 -->

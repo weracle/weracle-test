@@ -4001,6 +4001,19 @@
     }
 
     function buildSignatureEmblemHtml(subTxt, mainTxt, size = 180, isLight = false) {
+      const regLogo = getRegisteredLogoSrc();
+      if (regLogo) {
+        // [등록된 로고가 있을 때]: 등록된 실제 회사/지점 로고를 정배율로 깨끗하게 노출
+        const scale = size / 160;
+        const safeSrc = regLogo.includes('"') ? regLogo.replace(/"/g, '&quot;') : regLogo;
+        return `
+          <div class="inline-flex items-center justify-end select-none" style="transform: scale(${scale}); transform-origin: right center;">
+            <img src="${safeSrc}" alt="등록된 로고" class="max-h-[56px] max-w-[210px] object-contain drop-shadow-sm" style="display: block;" />
+          </div>
+        `;
+      }
+
+      // 등록된 로고가 없을 때: 기본 시그니처 엠블럼 노출
       const scale = size / 220;
       return `
         <div class="inline-flex items-center gap-3.5 select-none" style="transform: scale(${scale}); transform-origin: left center;">
@@ -4224,11 +4237,7 @@
 
             ${buildCutoutPersonHtml(sigState.person, 'right: 4px; bottom: 42px; width: 360px; height: 570px;')}
 
-            ${sigState.logos.botSize ? `
-              <div class="absolute right-7 bottom-[54px] z-20 pointer-events-none">
-                ${buildSignatureEmblemHtml(sigState.logos.emblemSub, sigState.logos.emblemMain, sigState.logos.botSize)}
-              </div>
-            ` : ''}
+
 
             ${buildOfficialFooterBarHtml(sigState.footer)}
           </div>
@@ -5732,10 +5741,8 @@
             ctx.drawImage(img, 0, 0, w, h);
             customLogoSrc = cv.toDataURL('image/png');
             toggleLogo(true);
-            canvasPage.querySelectorAll('img[data-slot="logo"], #sheetLogoImg').forEach(imgEl => {
-              imgEl.src = customLogoSrc;
-              imgEl.style.display = 'block';
-            });
+            try { localStorage.setItem('user_logo', customLogoSrc); } catch(e) {}
+            applyRegisteredLogoToAll(customLogoSrc);
           };
           img.src = e.target.result;
         };
@@ -6033,27 +6040,89 @@
       makeSheetElementsDirectlyEditable();
     }
 
+    // =========================================================================
+    // ★ REGISTERED LOGO RESOLVER & PROPAGATOR ★
+    // Resolves registered logo from Supabase Profile, parent window, or localStorage
+    // and propagates to BOTH Theme 01 and Themes 02 ~ 05 (Signature Themes)
+    // =========================================================================
+    function getRegisteredLogoSrc() {
+      // 1. In-memory customLogoSrc if set and not default WERACLE placeholder
+      if (customLogoSrc && !customLogoSrc.includes('PHN2ZyB4bWxucz') && customLogoSrc.length > 20) {
+        return customLogoSrc;
+      }
+
+      // 2. Profile object (parent or cached)
+      const myProfile = getMyProfile();
+      if (myProfile) {
+        if (myProfile.logo_url && myProfile.logo_url.length > 5) return myProfile.logo_url;
+        if (myProfile.company_logo && myProfile.company_logo.length > 5) return myProfile.company_logo;
+        if (myProfile.logo && myProfile.logo.length > 5) return myProfile.logo;
+      }
+
+      // 3. Parent window globalLogoImage
+      try {
+        if (window.parent && window.parent.globalLogoImage && window.parent.globalLogoImage.src && window.parent.globalLogoImage.src.length > 20) {
+          return window.parent.globalLogoImage.src;
+        }
+      } catch(e) {}
+      if (window.globalLogoImage && window.globalLogoImage.src && window.globalLogoImage.src.length > 20) {
+        return window.globalLogoImage.src;
+      }
+
+      // 4. Saved cover config
+      try {
+        const raw = localStorage.getItem('weracle_bojang_cover_config');
+        if (raw) {
+          const cfg = JSON.parse(raw);
+          if (cfg && cfg.logoSrc && !cfg.logoSrc.includes('PHN2ZyB4bWxucz') && cfg.logoSrc.length > 20) {
+            return cfg.logoSrc;
+          }
+        }
+      } catch(e) {}
+
+      // 5. Direct localStorage keys
+      const storageKeys = ['user_logo', 'weracle_user_logo', 'company_logo', 'weracle_logo', 'logoUrl'];
+      for (const k of storageKeys) {
+        try {
+          const val = localStorage.getItem(k);
+          if (val && val.length > 20 && !val.includes('PHN2ZyB4bWxucz')) {
+            return val;
+          }
+        } catch(e) {}
+      }
+
+      return customLogoSrc || null;
+    }
+
+    function applyRegisteredLogoToAll(logoSrc) {
+      const regLogo = logoSrc || getRegisteredLogoSrc();
+      if (!regLogo) return;
+
+      customLogoSrc = regLogo;
+
+      // Propagate to Theme 01 (Official Guarantee)
+      document.querySelectorAll('img[data-slot="logo"], #sheetLogoBox img').forEach(img => {
+        img.src = regLogo;
+        img.style.display = 'block';
+      });
+
+      // Propagate to Themes 02 ~ 05 (Signature Dynamic Themes)
+      if (currentMasterThemeId && currentMasterThemeId !== '01') {
+        renderSignatureCover(activeSignatureType);
+      }
+    }
+
     // Sync MyPage Registered Logo & Profile
     function syncMyPageProfile() {
       const myProfile = getMyProfile();
 
-      // 1. Check MyPage Registered Logo
-      let myLogo = null;
-      if (myProfile && myProfile.logo_url) {
-        myLogo = myProfile.logo_url;
+      // 1. Check & Apply Registered Logo
+      const regLogo = getRegisteredLogoSrc();
+      if (regLogo) {
+        applyRegisteredLogoToAll(regLogo);
       } else {
-        myLogo = localStorage.getItem('user_logo') || localStorage.getItem('weracle_user_logo');
-      }
-
-      if (myLogo) {
-        customLogoSrc = myLogo;
-        canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(img => {
-          img.src = myLogo;
-          img.style.display = 'block';
-        });
-      } else {
-        canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(img => {
-          if (!img.src || img.src.includes('보답화니') || img.src === window.location.href || img.getAttribute('src') === '') {
+        document.querySelectorAll('img[data-slot="logo"], #sheetLogoBox img').forEach(img => {
+          if (!img.src || img.src === window.location.href || img.getAttribute('src') === '') {
             img.style.display = 'none';
           }
         });
@@ -6314,14 +6383,13 @@
     window.addEventListener('message', function(e) {
       if (!e.data) return;
       if (e.data.type === 'setLogo' && e.data.data) {
-        customLogoSrc = e.data.data;
-        canvasPage.querySelectorAll('img[data-slot="logo"]').forEach(img => {
-          img.src = e.data.data;
-          img.style.display = 'block';
-        });
+        applyRegisteredLogoToAll(e.data.data);
       }
       if (e.data.type === 'setProfile' && e.data.data) {
         applyProfileData(e.data.data);
+        if (e.data.data.logo_url) {
+          applyRegisteredLogoToAll(e.data.data.logo_url);
+        }
       }
     });
 
@@ -6722,6 +6790,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       initCoreDomElements();
+      applyRegisteredLogoToAll();
       try {
         selectMasterTheme('01');
         loadCoversFromCloud();

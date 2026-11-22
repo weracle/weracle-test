@@ -283,7 +283,7 @@ function renderPromoSlide() {
 
   area.innerHTML = `
     <div style="width:100%; height:100%; position:relative; cursor:pointer;" onclick="${item.link && item.link !== '#' ? `window.open('${item.link}', '_blank')` : ''}">
-      <img src="${item.src}" alt="${item.title}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\\'promo-placeholder\\\'><div style=\\\'font-size:26px;\\\'>📢</div><div class=\\\'promo-placeholder-title\\\'>${escapeHtml(item.title)}</div><div class=\\\'promo-placeholder-desc\\\'>지점 및 본부 주요 시책 & 공지사항 (${currentPromoIdx + 1}/${PROMO_IMAGES.length})</div><div style=\\\'font-size:11px; color:#0284c7; font-weight:600;\\\'>이미지 파일: ${item.src}</div></div>';" style="width:100%; height:100%; object-fit:cover; border-radius:10px;">
+      <img src="${item.src}" alt="${item.title}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\\'promo-placeholder\\\'><div style=\\\'font-size:26px;\\\'>📢</div><div class=\\\'promo-placeholder-title\\\'>${escapeHtml(item.title)}</div><div class=\\\'promo-placeholder-desc\\\'>지점 및 본부 주요 시책 & 공지사항 (${currentPromoIdx + 1}/${PROMO_IMAGES.length})</div><div style=\\\'font-size:11px; color:#0284c7; font-weight:600;\\\'>광고&amp;제휴 문의 연락처: 대표전화번호 010-4606-5189</div></div>';" style="width:100%; height:100%; object-fit:cover; border-radius:10px;">
     </div>
   `;
 }

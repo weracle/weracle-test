@@ -3872,8 +3872,8 @@
 
           <div style="margin-top: 10px;">
             <div style="display: flex; align-items: baseline; gap: 8px;">
-              <span class="kurly-discount-rate" id="detailDiscountRate">20%</span>
-              <span class="kurly-price-val" id="kurlyProductPrice">3,915원</span>
+              <span class="kurly-discount-rate" id="detailDiscountRate">16%</span>
+              <span class="kurly-price-val" id="kurlyProductPrice">3,780원</span>
               <span class="kurly-price-orig" id="detailOrigPrice">4,500원</span>
               <span style="font-size: 12px; color: #64748b; font-weight: 600;">(부가세 별도 / 인쇄비 포함)</span>
             </div>
@@ -3940,7 +3940,7 @@
               </tr>
               <tr>
                 <th>적용단가</th>
-                <td style="font-weight: 800; color: #1e293b; font-size: 12.5px;" id="quoteUnitPrice">3,900 원</td>
+                <td style="font-weight: 800; color: #1e293b; font-size: 12.5px;" id="quoteUnitPrice">3,780 원</td>
               </tr>
               <tr>
                 <th>주문금액</th>
@@ -3951,11 +3951,11 @@
               </tr>
               <tr>
                 <th>부가세</th>
-                <td style="font-weight: 700; color: #475569; font-size: 12.5px;" id="quoteVatPrice">62,400 원</td>
+                <td style="font-weight: 700; color: #475569; font-size: 12.5px;" id="quoteVatPrice">45,360 원</td>
               </tr>
               <tr class="quote-total-row">
                 <th>총합계금액</th>
-                <td id="quoteTotalPrice">686,400 원</td>
+                <td id="quoteTotalPrice">498,960 원</td>
               </tr>
             </table>
             </div>
@@ -4229,7 +4229,7 @@
     // WERACLE SHOP - v9 정밀 통합 제어 스크립트
     // ========================================================
 
-    const STORAGE_KEY = 'weracle_shop_v13_design';
+    const STORAGE_KEY = 'weracle_shop_v14_weraclemarket';
     const POLICY_STORAGE_KEY = 'weracle_shop_policy_v13';
 
     // 공통 안내 이미지 (배송, 결제, 교환환불)
@@ -4332,20 +4332,35 @@
     };
 
     function loadProducts() {
+      let prods = Object.assign({}, DEFAULT_PRODUCTS);
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        let saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) {
+          saved = localStorage.getItem('weracle_shop_v13_design') || localStorage.getItem('weracle_shop_v12_design');
+        }
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (Object.keys(parsed).length > 0) return parsed;
+          if (parsed && typeof parsed === 'object') {
+            Object.keys(parsed).forEach(k => {
+              if (k !== 'item1') {
+                prods[k] = parsed[k]; // 신규 등록된 상품 유지
+              }
+            });
+          }
         }
       } catch(e) {}
-      return Object.assign({}, DEFAULT_PRODUCTS);
+      // item1은 weraclemarket.com 실제 단가 데이터로 항상 최신화 보장
+      prods.item1 = Object.assign({}, DEFAULT_PRODUCTS.item1);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(prods));
+      } catch(e) {}
+      return prods;
     }
 
     loadPolicyImages();
     let products = loadProducts();
     let currentItem = products.item1;
-    let quoteQty = 160;
+    let quoteQty = 120;
     let currentCategory = 'all';
 
     const CATEGORY_MAP = {
@@ -6656,7 +6671,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                   <div>
                     <label style="font-size: 12px; font-weight: 700; color: #475569; display: block;">판매가 (원) <span style="color:#ef4444;">*</span></label>
-                    <input type="number" id="adminProdPrice" placeholder="판매가 입력 (예: 3900)" required style="width: 100%; height: 40px; margin-top: 4px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 10px;">
+                    <input type="number" id="adminProdPrice" placeholder="판매가 입력 (예: 3780)" required style="width: 100%; height: 40px; margin-top: 4px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 10px;">
                   </div>
                   <div>
                     <label style="font-size: 12px; font-weight: 700; color: #475569; display: block;">정상가 (원)</label>

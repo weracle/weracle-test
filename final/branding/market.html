@@ -3799,10 +3799,16 @@
           <span>&gt;</span>
           <span class="current" id="kurlyBreadcrumbTitle">[1:1 각인제작] 프리미엄 사피아노 가죽 보험증권 전달 바인더</span>
         </div>
-        <button type="button" class="kurly-btn-back" onclick="showMainCatalogView()">
-          <span>←</span>
-          <span>전체 상품 목록으로 돌아가기</span>
-        </button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <!-- 관리자 전용 등록창 팝업 수정 버튼 -->
+          <button type="button" id="adminEditProductBtn" onclick="openProductEditModal(currentDetailItemId)" style="display: none; height: 34px; padding: 0 14px; font-size: 12.5px; font-weight: 800; border-radius: 8px; border: 1.5px solid #2563eb; background: #eff6ff; color: #1e40af; cursor: pointer; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(37,99,235,0.15);">
+            <span>✏️ 상품 정보·단가 수정</span>
+          </button>
+          <button type="button" class="kurly-btn-back" onclick="showMainCatalogView()">
+            <span>←</span>
+            <span>전체 상품 목록으로 돌아가기</span>
+          </button>
+        </div>
       </div>
 
       <!-- 상단 2열 상품 정보 및 주문 패널 (컬리 정석 레이아웃) -->
@@ -3995,22 +4001,17 @@
            ==================================================== -->
       <div class="tab-pane active" id="kurlyPane0">
         
-        <!-- 상세페이지 콘텐츠 관리 바 (관리자에게만 노출) -->
-        <div id="detailAdminBar" style="display: none; justify-content: space-between; align-items: center; background: #eff6ff; border: 1.5px dashed #93c5fd; border-radius: 12px; padding: 14px 20px; margin-bottom: 24px;">
-          <div>
-            <span style="font-weight: 800; font-size: 14px; color: #1e40af;">📸 상세페이지 콘텐츠 관리</span>
-            <span style="font-size: 12px; color: #3b82f6; margin-left: 8px;">실물 이미지와 텍스트 설명 블록을 원하는 만큼 추가할 수 있습니다.</span>
+        <!-- 상세페이지 관리자 전용 안내 및 등록창 수정 바 -->
+        <div id="detailAdminBar" style="display: none; justify-content: space-between; align-items: center; background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 12px; padding: 12px 18px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 18px;">👑</span>
+            <span style="font-weight: 800; font-size: 13.5px; color: #1e40af;">관리자 모드</span>
+            <span style="font-size: 12.5px; color: #3b82f6;">임의 인라인 수정 대신, 우측 [상품 수정창 열기] 버튼을 누르면 단가표, 옵션, 상세 이미지 등 모든 정보를 팝업창에서 깔끔하게 수정할 수 있습니다.</span>
           </div>
-          <div style="display: flex; gap: 8px;">
-            <input type="file" id="detailGalleryAddInput" accept="image/*" multiple style="display:none;" onchange="handleAddDetailImages(this)">
-            <button type="button" class="btn-primary" style="padding: 7px 14px; font-size: 12.5px; font-weight: 800; background: #2563eb; color: #fff; border: none; border-radius: 7px; cursor: pointer;" onclick="document.getElementById('detailGalleryAddInput').click()">
-              + 📸 이미지 추가
-            </button>
-            <button type="button" class="btn-primary" style="padding: 7px 14px; font-size: 12.5px; font-weight: 800; background: #0f172a; color: #fff; border: none; border-radius: 7px; cursor: pointer;" onclick="promptAddDetailText()">
-              + 📝 텍스트 추가
-            </button>
-          </div>
-        </div>
+          <button type="button" onclick="openProductEditModal(currentDetailItemId)" style="padding: 8px 16px; font-size: 13px; font-weight: 800; background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+            <span>✏️ 상품 수정창 열기</span>
+          </button>
+        </div></div>
 
         <!-- 동적 상세 콘텐츠 영역 (이미지 + 텍스트 블록 순서대로 렌더링) -->
         <div id="detailGalleryImages" style="display: flex; flex-direction: column; gap: 20px; align-items: center; margin-bottom: 36px;">
@@ -4481,10 +4482,16 @@
                   ${origPriceStr ? `<span class="card-price-original">${origPriceStr}</span>` : ''}
                 </div>
 
-                <button class="card-order-btn" onclick="event.stopPropagation(); showProductDetailPage('${p.id || key}');" style="margin-top:8px;">
-                  <span>상세보기 & 주문</span>
-                  <span>→</span>
-                </button>
+                <div style="display: flex; gap: 6px; margin-top: 8px;">
+                  <button class="card-order-btn" onclick="event.stopPropagation(); showProductDetailPage('${p.id || key}');" style="flex: 1;">
+                    <span>상세보기 & 주문</span>
+                    <span>→</span>
+                  </button>
+                  ${isUserAdmin() ? `
+                  <button type="button" onclick="event.stopPropagation(); openProductEditModal('${p.id || key}');" style="padding: 0 12px; height: 38px; font-size: 12px; font-weight: 800; border-radius: 10px; border: 1.5px solid #2563eb; color: #1e40af; background: #eff6ff; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap;" title="상품 정보 및 단가 수정">
+                    ✏️ 수정
+                  </button>` : ''}
+                </div>
               </div>
             </div>
           </div>
@@ -4900,16 +4907,20 @@
         const detailPage = document.getElementById('productDetailPageView');
         if (detailPage) detailPage.style.display = 'block';
 
-        // 관리자/일반 사용자 UI 동적 토글 재확인
+        // 관리자 전용 UI: 인라인 지저분한 수정 대신 명시적 [수정창 열기] 버튼 제공
         const isAdminUser = isUserAdmin();
+        const editBtn = document.getElementById('adminEditProductBtn');
+        if (editBtn) editBtn.style.display = isAdminUser ? 'inline-flex' : 'none';
         const dAdminBar = document.getElementById('detailAdminBar');
         if (dAdminBar) dAdminBar.style.display = isAdminUser ? 'flex' : 'none';
+
+        // 슬라이더 위의 단순 편집 툴바는 숨겨서 고객 화면처럼 깨끗하게 유지
         const sliderAdminBar = document.getElementById('adminSliderToolbar');
-        if (sliderAdminBar) sliderAdminBar.style.display = isAdminUser ? 'flex' : 'none';
+        if (sliderAdminBar) sliderAdminBar.style.display = 'none';
         const slideBadge = document.getElementById('adminSlideBadge');
-        if (slideBadge) slideBadge.style.display = isAdminUser ? 'inline-flex' : 'none';
+        if (slideBadge) slideBadge.style.display = 'none';
         document.querySelectorAll('.policy-edit-btn').forEach(btn => {
-          btn.style.display = isAdminUser ? 'inline-flex' : 'none';
+          btn.style.display = 'none';
         });
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -5376,7 +5387,104 @@
       modal.style.display = 'none';
     }
 
+    // 관리자 수정 모드 타겟 상품 ID (신규 등록 시 null)
+    let editingProductId = null;
+
+    function openProductEditModal(productId) {
+      if (!isUserAdmin()) {
+        alert('🔒 관리자(본사) 권한이 있는 계정만 상품을 수정할 수 있습니다.');
+        return;
+      }
+      const item = products[productId] || DEFAULT_PRODUCTS[productId] || products.item1;
+      if (!item) {
+        alert('수정할 상품 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      editingProductId = productId;
+
+      // 모달 타이틀 및 안내문 수정
+      const modalTitle = document.getElementById('adminRegModalTitle');
+      if (modalTitle) modalTitle.innerText = '✏️ 상품 정보 및 단가표 수정';
+
+      const modalSub = document.getElementById('adminRegModalSubtitle');
+      if (modalSub) modalSub.innerText = '[' + item.title + '] 상품의 기본 정보, 대표 사진, 수량별 단가표, 옵션 및 상세 블록을 수정합니다.';
+
+      const submitBtn = document.getElementById('adminRegSubmitBtn');
+      if (submitBtn) submitBtn.innerText = '✓ 수정 내용 저장하기 (즉시 쇼핑몰 반영)';
+
+      // 1. 탭 0 기본 정보 데이터 채우기
+      const titleEl = document.getElementById('adminProdTitle');
+      if (titleEl) titleEl.value = item.title || '';
+
+      const summaryEl = document.getElementById('adminProdSummary');
+      if (summaryEl) summaryEl.value = item.summary || '';
+
+      const priceEl = document.getElementById('adminProdPrice');
+      if (priceEl) priceEl.value = item.price || 3780;
+
+      const origEl = document.getElementById('adminProdOrigPrice');
+      if (origEl) origEl.value = item.originalPrice || '';
+
+      const catSelect = document.getElementById('adminProdCategory');
+      if (catSelect) catSelect.value = item.category || 'binder';
+
+      // 대표 썸네일 세팅
+      adminThumbImages = (item.thumbs && item.thumbs.length > 0) ? item.thumbs.slice() : [(item.thumb || 'branding_img/KakaoTalk_20261109_105448276.jpg')];
+      regThumbSlideIdx = 0;
+      updateRegThumbSlider();
+
+      // 2. 탭 1 단가표 & 옵션 데이터 채우기
+      const bqInp = document.getElementById('adminProdBaseQty');
+      if (bqInp) bqInp.value = item.baseQty || 120;
+
+      const mqInp = document.getElementById('adminProdMinQty');
+      if (mqInp) mqInp.value = item.minQty || 30;
+
+      adminTierList = getItemTierList(item);
+      renderAdminTierRows();
+
+      adminPrintOptionList = (item.printOptions && item.printOptions.length > 0) 
+        ? JSON.parse(JSON.stringify(item.printOptions))
+        : [
+            { name: "박인쇄 1면", price: 150 },
+            { name: "박인쇄 2면", price: 250 },
+            { name: "실크인쇄 1도", price: 350 },
+            { name: "인쇄 없음 (무지 / 빠른 출고)", price: 0 }
+          ];
+      renderAdminPrintOptionRows();
+
+      adminColorList = (item.colorOptions && item.colorOptions.length > 0)
+        ? JSON.parse(JSON.stringify(item.colorOptions))
+        : [];
+      renderAdminColorRows();
+
+      // 3. 탭 2 상세 블록 채우기
+      adminDetailBlocksList = (item.detailBlocks && item.detailBlocks.length > 0)
+        ? JSON.parse(JSON.stringify(item.detailBlocks))
+        : (item.gallery ? item.gallery.map(g => ({ type: 'image', src: g })) : []);
+      renderAdminDetailBlocksList();
+
+      switchProductRegTab(0);
+      openModalInView('productRegisterModal');
+    }
+
     function openProductRegisterModal(initialCategory) {
+      if (!isUserAdmin()) {
+        alert('🔒 관리자(본사) 권한이 있는 계정만 신규 상품을 등록할 수 있습니다.');
+        return;
+      }
+      editingProductId = null;
+
+      const modalTitle = document.getElementById('adminRegModalTitle');
+      if (modalTitle) modalTitle.innerText = '새 상품 등록';
+
+      const modalSub = document.getElementById('adminRegModalSubtitle');
+      if (modalSub) modalSub.innerText = '기본 정보, 대표 사진, 옵션, 상세 이미지 및 공통 배송·결제·교환 안내를 설정하세요.';
+
+      const submitBtn = document.getElementById('adminRegSubmitBtn');
+      if (submitBtn) submitBtn.innerText = '📝 상품 등록하기 (즉시 쇼핑몰 반영)';
+
       if (!isUserAdmin()) {
         alert('🔒 관리자(본사) 권한이 있는 계정만 신규 상품을 등록할 수 있습니다.');
         return;
@@ -5772,7 +5880,8 @@
 
       const originalPrice = parseInt(origVal) || Math.round(price * 1.15);
       const discountRate = originalPrice > price ? Math.round((1 - price / originalPrice) * 100) + '%' : '0%';
-      const newId = 'item_' + Date.now();
+      const isEditing = !!editingProductId;
+      const targetId = isEditing ? editingProductId : ('item_' + Date.now());
 
       const tagText = CATEGORY_MAP[category] ? CATEGORY_MAP[category].tag : '📁 개인 브랜딩 상품';
 
@@ -5824,8 +5933,8 @@
         tiersMap['t' + t.qty] = t.price;
       });
 
-      const newProduct = {
-        id: newId,
+      const targetProduct = {
+        id: targetId,
         title: title,
         tag: tagText,
         category: category,
@@ -5845,13 +5954,22 @@
         detailBlocks: detailBlocks
       };
 
-      products[newId] = newProduct;
+      products[targetId] = targetProduct;
+      if (targetId === 'item1') {
+        DEFAULT_PRODUCTS.item1 = Object.assign({}, targetProduct);
+      }
       saveProductsToStorage();
 
       closeProductRegisterModal();
       renderProductGrid();
-      showProductDetailPage(newId);
-      alert('신규 상품이 등록되었습니다! 새 상품 상세페이지로 이동합니다.');
+
+      if (currentDetailItemId === targetId) {
+        showProductDetailPage(targetId);
+      } else if (!isEditing) {
+        showProductDetailPage(targetId);
+      }
+      alert(isEditing ? ('✓ [' + title + '] 상품 정보 및 단가표가 성공적으로 수정되었습니다.') : ('신규 상품이 등록되었습니다! 새 상품 상세페이지로 이동합니다.'));
+      editingProductId = null;
     }
 
     // ========================================================
@@ -5992,7 +6110,7 @@
       if (editToggleBtn) editToggleBtn.style.display = isAdmin ? 'inline-flex' : 'none';
       if (detailAdminBar) detailAdminBar.style.display = (isAdmin && shopEditModeEnabled) ? 'flex' : 'none';
       const sliderAdminBar = document.getElementById('adminSliderToolbar');
-      if (sliderAdminBar) sliderAdminBar.style.display = (isAdmin && shopEditModeEnabled) ? 'flex' : 'none';
+      if (sliderAdminBar) sliderAdminBar.style.display = 'none';
       const slideBadge = document.getElementById('adminSlideBadge');
       if (slideBadge) slideBadge.style.display = (isAdmin && shopEditModeEnabled) ? 'inline-flex' : 'none';
 
@@ -6586,8 +6704,8 @@
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 26px;">📦</span>
           <div>
-            <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0;">새 상품 등록</h2>
-            <p style="font-size: 12.5px; color: #64748b; margin: 2px 0 0;">기본 정보, 대표 사진, 옵션, 상세 이미지 및 공통 배송·결제·교환 안내를 설정하세요.</p>
+            <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0;" id="adminRegModalTitle">새 상품 등록</h2>
+            <p style="font-size: 12.5px; color: #64748b; margin: 2px 0 0;" id="adminRegModalSubtitle">기본 정보, 대표 사진, 옵션, 상세 이미지 및 공통 배송·결제·교환 안내를 설정하세요.</p>
           </div>
         </div>
         <button type="button" class="sheet-close-btn" style="position: static; font-size: 22px; cursor: pointer; background: none; border: none; font-weight: bold; color: #64748b;" onclick="closeProductRegisterModal()">✕</button>
@@ -6865,7 +6983,7 @@
         <!-- 하단 등록 및 취소 버튼 -->
         <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
           <button type="button" class="btn-outline" style="height: 44px; padding: 0 20px; font-weight: 700; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff;" onclick="closeProductRegisterModal()">취소</button>
-          <button type="submit" class="btn-primary" style="height: 44px; padding: 0 32px; font-weight: 800; font-size: 15px; background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer;">
+          <button type="submit" id="adminRegSubmitBtn" class="btn-primary" style="height: 44px; padding: 0 32px; font-weight: 800; font-size: 15px; background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer;">
             📝 상품 등록하기 (즉시 쇼핑몰 반영)
           </button>
         </div>

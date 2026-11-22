@@ -1150,6 +1150,30 @@
       overflow: hidden;
     }
 
+    
+    /* ★ MASTER THEME VISIBILITY RULES (theme-mode-basic vs theme-mode-signature) ★ */
+    #canvasInner.theme-mode-basic .a4-page {
+      display: flex !important;
+    }
+    #canvasInner.theme-mode-basic #sigCoverWrapper {
+      display: none !important;
+    }
+
+    #canvasInner.theme-mode-signature .a4-page {
+      display: none !important;
+    }
+    #canvasInner.theme-mode-signature #sigCoverWrapper {
+      display: block !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 1240px !important;
+      height: 1754px !important;
+      background: #ffffff !important;
+      overflow: hidden !important;
+      z-index: 10 !important;
+    }
+
     /* Dynamic CSS slot */
     
   /* Perfect A4 Print & Download Proportion: Fills A4 Canvas with Zero Awkward Voids */
@@ -3492,8 +3516,6 @@
 
         </div>
 
-      </div>
-
 
         <!-- ================= TAB 4: 내 보관함 (Supabase 프로필 클라우드 저장소) ================= -->
         <div class="tab-pane" id="libraryTab">
@@ -3576,7 +3598,7 @@
       <div class="preview-canvas-area" id="previewCanvasArea">
         <div id="a4Container">
           <div id="a4Sheet">
-            <div id="canvasInner">
+            <div id="canvasInner" class="theme-mode-basic" style="position: relative; width: 1240px; height: 1754px;">
               
   <div class="a4-page">
     <!-- Top Header: Logo on Left, Enterprise Verification Badges on Right -->
@@ -3788,8 +3810,9 @@
   </div>
 
   <!-- Signature Covers Wrapper (Themes 02 ~ 05: A, B, C, D) -->
-  <div id="sigCoverWrapper" style="display: none; width: 1240px; height: 1754px; position: relative; overflow: hidden; background: #ffffff;">
-    <div id="a4PaperCanvas" class="sig-a4-sheet" style="transform: scale(2.0840336); transform-origin: top left; width: 595px; height: 842px;"></div>
+  <!-- Signature Covers Wrapper (Themes 02 ~ 05: A, B, C, D) -->
+  <div id="sigCoverWrapper" style="display: none; position: absolute; top: 0; left: 0; width: 1240px; height: 1754px; overflow: hidden; background: #ffffff; z-index: 10;">
+    <div id="a4PaperCanvas" class="sig-a4-sheet" style="position: absolute; top: 0; left: 0; width: 595px; height: 842px; transform: scale(2.0840336); transform-origin: top left;"></div>
   </div>
 
             </div>
@@ -4102,7 +4125,7 @@
       const isFullBg = sigState.person.mode === 'fullbg';
 
       // [타입 B: 매거진 풀화보형 (테마 03)]
-      if (sigState.activeType === 'B' || isFullBg) {
+      if (sigState.activeType === 'B') {
         canvas.innerHTML = `
           <div class="w-full h-full flex flex-col justify-between relative text-white overflow-hidden bg-slate-900" style="width: 595px; height: 842px;">
             ${buildFullBleedBgHtml(`linear-gradient(180deg, rgba(15,23,42,0.72) 0%, rgba(15,23,42,0.18) 42%, rgba(15,23,42,0.88) 84%, #09111e 100%)`)}
@@ -4425,10 +4448,14 @@
       if (themeId === '01') {
         // Theme 01: Basic Official Guarantee Theme
         currentMasterCategory = 'basic';
+        if (canvasInner) {
+          canvasInner.classList.remove('theme-mode-signature');
+          canvasInner.classList.add('theme-mode-basic');
+        }
         if (basicSec) basicSec.style.display = 'block';
         if (sigSec) sigSec.style.display = 'none';
-        if (standardA4) standardA4.style.display = 'flex';
-        if (sigWrap) sigWrap.style.display = 'none';
+        if (standardA4) standardA4.style.setProperty('display', 'flex', 'important');
+        if (sigWrap) sigWrap.style.setProperty('display', 'none', 'important');
         applyTemplate(currentTemplateIndex || 0);
       } else {
         // Themes 02 ~ 05: Signature Themes
@@ -4437,10 +4464,22 @@
         activeSignatureType = typeMap[themeId] || 'A';
         sigState.activeType = activeSignatureType;
 
+        if (canvasInner) {
+          canvasInner.classList.remove('theme-mode-basic');
+          canvasInner.classList.add('theme-mode-signature');
+        }
         if (basicSec) basicSec.style.display = 'none';
         if (sigSec) sigSec.style.display = 'block';
-        if (standardA4) standardA4.style.display = 'none';
-        if (sigWrap) sigWrap.style.display = 'block';
+        if (standardA4) standardA4.style.setProperty('display', 'none', 'important');
+        if (sigWrap) {
+          sigWrap.style.setProperty('display', 'block', 'important');
+          sigWrap.style.setProperty('position', 'absolute', 'important');
+          sigWrap.style.setProperty('top', '0', 'important');
+          sigWrap.style.setProperty('left', '0', 'important');
+          sigWrap.style.setProperty('width', '1240px', 'important');
+          sigWrap.style.setProperty('height', '1754px', 'important');
+          sigWrap.style.setProperty('z-index', '10', 'important');
+        }
 
         renderSignatureCover(activeSignatureType);
       }

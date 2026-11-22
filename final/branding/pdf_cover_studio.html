@@ -2519,89 +2519,172 @@
       <div class="sidebar-scroll-content">
 
         <!-- ================= TAB 1: 디자인 테마 & 10대 비주얼 컬러 에디션 ================= -->
+        
+        <!-- ================= TAB 1: 디자인 테마 & 컬러 에디션 ================= -->
         <div class="tab-pane active" id="colorTab">
 
-          <!-- Top Master Category Switcher: [⭐ 실전 세일즈 (4종)] vs [🏛️ 기본형 (보증서 10종)] -->
-          <div class="master-category-bar">
-            <button type="button" class="master-cat-btn active" id="btnMasterCatSig" onclick="setMasterCategory('signature')">
-              <i class="fa-solid fa-star" style="color:#f59e0b;"></i>
-              <span>실전 세일즈 (4종)</span>
-            </button>
-            <button type="button" class="master-cat-btn" id="btnMasterCatBasic" onclick="setMasterCategory('basic')">
-              <i class="fa-solid fa-file-shield"></i>
-              <span>기본형 보증서 (10종)</span>
-            </button>
+          <!-- 1. Master Theme Selection Box with Dropdown Drawer -->
+          <div class="selected-theme-container" style="margin-bottom: 12px;">
+            <div class="selected-theme-header-row">
+              <div class="selected-theme-info">
+                <span class="selected-theme-tag"><i class="fa-solid fa-layer-group"></i> 적용 중인 테마</span>
+                <div class="selected-theme-title">
+                  <span class="theme-num-badge" id="currThemeNumBadge">01</span>
+                  <span id="selectedMasterThemeName">정통 공식 보고서형 (기본형 보증서)</span>
+                </div>
+                <div class="selected-theme-sub" id="selectedMasterThemeDesc">2단 대칭형 레이아웃 & 4대 목차 및 KPI 요약</div>
+              </div>
+              <button type="button" class="btn-theme-dropdown" onclick="toggleThemeListDropdown()" id="btnThemeDropdown">
+                <span>테마 목록</span>
+                <i class="fa-solid fa-chevron-down" id="themeDropdownIcon"></i>
+              </button>
+            </div>
+
+            <!-- Expandable Theme List Drawer (5 Themes) -->
+            <div class="theme-list-drawer" id="themeListDrawer" style="display: none;">
+              <!-- Theme 01 -->
+              <div class="theme-drawer-item active" id="drawerItem_01" data-theme-id="01" onclick="selectMasterTheme('01')">
+                <div class="drawer-item-icon"><i class="fa-solid fa-file-contract"></i></div>
+                <div class="drawer-item-content">
+                  <div class="drawer-item-top">
+                    <span class="drawer-item-name">테마 01. 정통 공식 보고서형 (기본형 보증서)</span>
+                    <span class="drawer-item-badge active"><i class="fa-solid fa-check"></i> 사용 중</span>
+                  </div>
+                  <div class="drawer-item-desc">신뢰감 높은 2단 대칭형 레이아웃 & 전산 KPI 보장분석 요약</div>
+                </div>
+              </div>
+
+              <!-- Theme 02 -->
+              <div class="theme-drawer-item" id="drawerItem_02" data-theme-id="02" onclick="selectMasterTheme('02')">
+                <div class="drawer-item-icon"><i class="fa-solid fa-crown" style="color:#f59e0b;"></i></div>
+                <div class="drawer-item-content">
+                  <div class="drawer-item-top">
+                    <span class="drawer-item-name">테마 02. ⭐ 시그니처 사선 누끼형 (보답화니 에디션)</span>
+                    <span class="drawer-item-badge" style="background:#f59e0b; color:#0f172a; font-weight:900;">BEST 추천</span>
+                  </div>
+                  <div class="drawer-item-desc">네이비 사선 배너 + 골드 타이틀 & 다짐 + 대형 인물 누끼 + 3D 엠블럼 + 3단 SNS QR</div>
+                </div>
+              </div>
+
+              <!-- Theme 03 -->
+              <div class="theme-drawer-item" id="drawerItem_03" data-theme-id="03" onclick="selectMasterTheme('03')">
+                <div class="drawer-item-icon"><i class="fa-solid fa-camera-retro" style="color:#38bdf8;"></i></div>
+                <div class="drawer-item-content">
+                  <div class="drawer-item-top">
+                    <span class="drawer-item-name">테마 03. 📸 매거진 풀화보형 (풀배경)</span>
+                    <span class="drawer-item-badge" style="background:#0284c7; color:#ffffff;">에디토리얼</span>
+                  </div>
+                  <div class="drawer-item-desc">전면 고화질 인물 화보 + 다크 글래스모피즘 오버레이 + 대형 헤드라인 + 하단 SNS QR</div>
+                </div>
+              </div>
+
+              <!-- Theme 04 -->
+              <div class="theme-drawer-item" id="drawerItem_04" data-theme-id="04" onclick="selectMasterTheme('04')">
+                <div class="drawer-item-icon"><i class="fa-solid fa-gem" style="color:#eab308;"></i></div>
+                <div class="drawer-item-content">
+                  <div class="drawer-item-top">
+                    <span class="drawer-item-name">테마 04. 🏛️ VIP 법인·CEO 다크골드형</span>
+                    <span class="drawer-item-badge" style="background:#eab308; color:#0f172a; font-weight:900;">VIP / CEO</span>
+                  </div>
+                  <div class="drawer-item-desc">다크 네이비 & 골드 보더 프레임 + 경영 리스크 & 보장자산 진단서 + CEO 헌정 박스</div>
+                </div>
+              </div>
+
+              <!-- Theme 05 -->
+              <div class="theme-drawer-item" id="drawerItem_05" data-theme-id="05" onclick="selectMasterTheme('05')">
+                <div class="drawer-item-icon"><i class="fa-solid fa-heart" style="color:#ec4899;"></i></div>
+                <div class="drawer-item-content">
+                  <div class="drawer-item-top">
+                    <span class="drawer-item-name">테마 05. 🌸 가족·자녀 감성 아치형</span>
+                    <span class="drawer-item-badge" style="background:#ec4899; color:#ffffff;">패밀리케어</span>
+                  </div>
+                  <div class="drawer-item-desc">부드러운 아치 프레임 + 웜톤 파스텔 배경 + 우리 가족 통합 보장분석 + 약속 말풍선</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- SECTION A: 실전 세일즈 시그니처 4종 그리드 (보답화니 에디션) -->
-          <div id="sectionSignatureThemes" style="display: block;">
-            <div class="form-section-title" style="margin-bottom: 10px;">
-              <span><i class="fa-solid fa-sparkles" style="color:#f59e0b;"></i> 실전 세일즈 시그니처 표지 (4종)</span>
-              <span class="badge-auto" id="currSigThemeBadge" style="background:#f59e0b; color:#0f172a; font-weight:900;">BEST 시그니처 A</span>
-            </div>
-
-            <div class="sig-theme-grid">
-              <!-- Sig A: 보답화니 사선 누끼형 -->
-              <div class="sig-theme-card active" id="sigCard_A" onclick="selectSignatureTheme('A')">
-                <div class="sig-card-header">
-                  <span class="sig-card-title">
-                    <i class="fa-solid fa-crown" style="color:#f59e0b;"></i>
-                    ⭐ 시그니처 사선 누끼형 (보답화니)
-                  </span>
-                  <span class="sig-card-badge">BEST 추천</span>
-                </div>
-                <div class="sig-card-desc">
-                  딥네이비 사선 배너 + 골드 타이틀 & 다짐 + 대형 인물 누끼 레이어 + 3D 캐릭터 엠블럼 + 3단 SNS 세로 QR 스택
-                </div>
+          <!-- Quick 5-Theme Visual Cards (All themes in one unified view!) -->
+          <div class="form-section-title" style="margin-bottom: 8px;">
+            <span><i class="fa-solid fa-palette"></i> 5대 보장분석 마스터 테마 (클릭하여 즉시 적용)</span>
+          </div>
+          <div class="sig-theme-grid" style="margin-bottom: 16px;">
+            <!-- Theme 01 Card -->
+            <div class="sig-theme-card active" id="quickThemeCard_01" onclick="selectMasterTheme('01')">
+              <div class="sig-card-header">
+                <span class="sig-card-title">
+                  <i class="fa-solid fa-file-contract" style="color:#38bdf8;"></i>
+                  01. 정통 공식 보고서형 (기본형 보증서)
+                </span>
+                <span class="sig-card-badge">기본 마스터</span>
               </div>
-
-              <!-- Sig B: 매거진 풀화보형 -->
-              <div class="sig-theme-card" id="sigCard_B" onclick="selectSignatureTheme('B')">
-                <div class="sig-card-header">
-                  <span class="sig-card-title">
-                    <i class="fa-solid fa-camera-retro" style="color:#38bdf8;"></i>
-                    📸 매거진 풀화보형 (풀배경)
-                  </span>
-                  <span class="sig-card-badge">에디토리얼</span>
-                </div>
-                <div class="sig-card-desc">
-                  전면 고화질 인물 화보 + 다크 글래스모피즘 그라데이션 오버레이 + 대형 헤드라인 + 하단 SNS QR 카드
-                </div>
-              </div>
-
-              <!-- Sig C: VIP 법인·CEO 다크골드형 -->
-              <div class="sig-theme-card" id="sigCard_C" onclick="selectSignatureTheme('C')">
-                <div class="sig-card-header">
-                  <span class="sig-card-title">
-                    <i class="fa-solid fa-gem" style="color:#eab308;"></i>
-                    🏛️ VIP 법인·CEO 다크골드형
-                  </span>
-                  <span class="sig-card-badge">VIP / CEO</span>
-                </div>
-                <div class="sig-card-desc">
-                  다크 네이비 & 골드 보더 프레임 + 경영 리스크 & 보장자산 진단서 + CEO 헌정 박스 + 파트너 다짐
-                </div>
-              </div>
-
-              <!-- Sig D: 가족·자녀 감성 아치형 -->
-              <div class="sig-theme-card" id="sigCard_D" onclick="selectSignatureTheme('D')">
-                <div class="sig-card-header">
-                  <span class="sig-card-title">
-                    <i class="fa-solid fa-heart" style="color:#ec4899;"></i>
-                    🌸 가족·자녀 감성 아치형
-                  </span>
-                  <span class="sig-card-badge">패밀리케어</span>
-                </div>
-                <div class="sig-card-desc">
-                  부드러운 아치 프레임 + 웜톤 파스텔 배경 + 우리 가족 통합 보장분석 + 따뜻한 약속 말풍선 & QR
-                </div>
+              <div class="sig-card-desc">
+                신뢰감 높은 2단 대칭형 레이아웃 & 4대 목차 및 전산 KPI 보장분석 요약 (10대 컬러 지원)
               </div>
             </div>
 
-            <!-- Signature Brand Color Adjustments -->
-            <div class="form-card" style="margin-top: 14px; background: #1e293b; border: 1px solid #334155;">
+            <!-- Theme 02 Card -->
+            <div class="sig-theme-card" id="quickThemeCard_02" onclick="selectMasterTheme('02')">
+              <div class="sig-card-header">
+                <span class="sig-card-title">
+                  <i class="fa-solid fa-crown" style="color:#f59e0b;"></i>
+                  02. ⭐ 시그니처 사선 누끼형 (보답화니)
+                </span>
+                <span class="sig-card-badge" style="background:#f59e0b; color:#0f172a;">BEST 추천</span>
+              </div>
+              <div class="sig-card-desc">
+                딥네이비 사선 배너 + 골드 타이틀 & 다짐 + 대형 인물 누끼 + 3D 캐릭터 엠블럼 + 3단 SNS QR 스택
+              </div>
+            </div>
+
+            <!-- Theme 03 Card -->
+            <div class="sig-theme-card" id="quickThemeCard_03" onclick="selectMasterTheme('03')">
+              <div class="sig-card-header">
+                <span class="sig-card-title">
+                  <i class="fa-solid fa-camera-retro" style="color:#38bdf8;"></i>
+                  03. 📸 매거진 풀화보형 (풀배경)
+                </span>
+                <span class="sig-card-badge">에디토리얼</span>
+              </div>
+              <div class="sig-card-desc">
+                전면 고화질 인물 화보 + 다크 글래스모피즘 그라데이션 오버레이 + 대형 에디토리얼 헤드라인 + 하단 다짐 카드
+              </div>
+            </div>
+
+            <!-- Theme 04 Card -->
+            <div class="sig-theme-card" id="quickThemeCard_04" onclick="selectMasterTheme('04')">
+              <div class="sig-card-header">
+                <span class="sig-card-title">
+                  <i class="fa-solid fa-gem" style="color:#eab308;"></i>
+                  04. 🏛️ VIP 법인·CEO 다크골드형
+                </span>
+                <span class="sig-card-badge" style="background:#eab308; color:#0f172a;">VIP / CEO</span>
+              </div>
+              <div class="sig-card-desc">
+                다크 네이비 & 골드 보더 프레임 + 경영 리스크 & 보장자산 진단서 + CEO 헌정 박스 + 파트너 다짐
+              </div>
+            </div>
+
+            <!-- Theme 05 Card -->
+            <div class="sig-theme-card" id="quickThemeCard_05" onclick="selectMasterTheme('05')">
+              <div class="sig-card-header">
+                <span class="sig-card-title">
+                  <i class="fa-solid fa-heart" style="color:#ec4899;"></i>
+                  05. 🌸 가족·자녀 감성 아치형
+                </span>
+                <span class="sig-card-badge" style="background:#ec4899; color:#ffffff;">패밀리케어</span>
+              </div>
+              <div class="sig-card-desc">
+                부드러운 아치 프레임 + 웜톤 파스텔 배경 + 우리 가족 통합 보장분석 + 따뜻한 약속 말풍선 & QR
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION: 시그니처 테마 전용 브랜드 컬러 튜닝 (02 ~ 05 선택 시 노출) -->
+          <div id="sectionSigColors" style="display: none; margin-bottom: 16px;">
+            <div class="form-card" style="background: #1e293b; border: 1.5px solid #0284c7;">
               <div class="form-section-title" style="color: #38bdf8; border-bottom: 1px solid #334155;">
-                <span><i class="fa-solid fa-palette"></i> 시그니처 브랜드 컬러 튜닝</span>
+                <span><i class="fa-solid fa-palette"></i> 시그니처 브랜드 컬러 실시간 커스텀</span>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
                 <div>
@@ -2612,7 +2695,7 @@
                   </div>
                 </div>
                 <div>
-                  <label style="font-size: 11.5px; font-weight: 700; color: #94a3b8; display: block; margin-bottom: 4px;">포인트 액센트 골드</label>
+                  <label style="font-size: 11.5px; font-weight: 700; color: #94a3b8; display: block; margin-bottom: 4px;">포인트 골드 액센트</label>
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <input type="color" id="inpSigAccentColor" value="#f59e0b" oninput="updateSigColors()" style="width: 38px; height: 32px; border: none; border-radius: 6px; cursor: pointer; background: transparent;">
                     <span id="txtSigAccentColor" style="font-size: 12px; font-family: monospace; color: #cbd5e1;">#f59e0b</span>
@@ -2622,69 +2705,9 @@
             </div>
           </div>
 
-          <!-- SECTION B: 기존 기본형 (10대 추천 디자인 배색 에디션) 컨테이너 래퍼 시작 -->
-          <div id="sectionBasicThemes" style="display: none;">
+          <!-- SECTION: 기본형 01 테마 전용 10대 추천 디자인 배색 에디션 컨테이너 -->
+          <div id="sectionBasicColors" style="display: block;">
 
-
-          <!-- Selected Master Theme Display + Dropdown Drawer -->
-          <div class="selected-theme-container">
-            <div class="selected-theme-header-row">
-              <div class="selected-theme-info">
-                <span class="selected-theme-tag"><i class="fa-solid fa-layer-group"></i> 적용 중인 테마</span>
-                <div class="selected-theme-title">
-                  <span class="theme-num-badge">01</span>
-                  <span id="selectedMasterThemeName">정통 공식 보고서형</span>
-                </div>
-                <div class="selected-theme-sub" id="selectedMasterThemeDesc">2단 대칭형 레이아웃 & 4대 목차 및 KPI 요약</div>
-              </div>
-              <button type="button" class="btn-theme-dropdown" onclick="toggleThemeListDropdown()" id="btnThemeDropdown">
-                <span>테마 목록</span>
-                <i class="fa-solid fa-chevron-down" id="themeDropdownIcon"></i>
-              </button>
-            </div>
-
-            <!-- Expandable Theme List Drawer -->
-            <div class="theme-list-drawer" id="themeListDrawer" style="display: none;">
-              <!-- Theme 01 -->
-              <div class="theme-drawer-item active" id="drawerItem_01" onclick="selectMasterTheme('01')">
-                <div class="drawer-item-icon"><i class="fa-solid fa-file-contract"></i></div>
-                <div class="drawer-item-content">
-                  <div class="drawer-item-top">
-                    <span class="drawer-item-name">테마 01. 정통 공식 보고서형</span>
-                    <span class="drawer-item-badge active"><i class="fa-solid fa-check"></i> 사용 중</span>
-                  </div>
-                  <div class="drawer-item-desc">2단 대칭 레이아웃 & 전산 KPI 보장분석 요약</div>
-                </div>
-              </div>
-
-              <!-- Theme 02 -->
-              <div class="theme-drawer-item upcoming" id="drawerItem_02" onclick="selectMasterTheme('02')">
-                <div class="drawer-item-icon"><i class="fa-solid fa-newspaper"></i></div>
-                <div class="drawer-item-content">
-                  <div class="drawer-item-top">
-                    <span class="drawer-item-name">테마 02. 프리미엄 매거진형</span>
-                    <span class="drawer-item-badge upcoming">오픈 예정</span>
-                  </div>
-                  <div class="drawer-item-desc">심층 금융 매거진 & 2단 칼럼 감성 에디토리얼</div>
-                </div>
-              </div>
-
-              <!-- Theme 03 -->
-              <div class="theme-drawer-item upcoming" id="drawerItem_03" onclick="selectMasterTheme('03')">
-                <div class="drawer-item-icon"><i class="fa-solid fa-chart-pie"></i></div>
-                <div class="drawer-item-content">
-                  <div class="drawer-item-top">
-                    <span class="drawer-item-name">테마 03. 미니멀 인포그래픽형</span>
-                    <span class="drawer-item-badge upcoming">오픈 예정</span>
-                  </div>
-                  <div class="drawer-item-desc">젊은 고객층을 위한 감각적인 카드형 보장 현황</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 10대 추천 컬러 에디션 Visual Gallery -->
-          <div class="form-card" id="themeColorsSection">
             <div class="form-section-title">
               <span><i class="fa-solid fa-palette"></i> 10대 추천 디자인 배색 에디션</span>
               <span class="badge-auto" id="currThemeDisplay">다크 차콜</span>
@@ -3743,6 +3766,11 @@
           </div>
         </div>
 
+              <!-- Signature Covers Wrapper (Themes 02 ~ 05: A, B, C, D) -->
+              <div id="sigCoverWrapper" style="display: none; width: 1240px; height: 1754px; position: relative; overflow: hidden; background: #ffffff;">
+                <div id="a4PaperCanvas" class="sig-a4-sheet" style="transform: scale(2.0840336); transform-origin: top left;"></div>
+              </div>
+
         <!-- Slogan Philosophy Box (Clean 4-sided Border: NO left colored bar) -->
         <div class="bojang-slogan-box" data-slot="slogan">
           <div class="slogan-title"><i class="fa-solid fa-quote-left mr-1"></i> 고객 중심 전문 컨설팅</div>
@@ -3834,9 +3862,25 @@
   <script>
 
     // =========================================================================
-    // ★ [WERACLE UNIFIED SIGNATURE ENGINE] ★
+    // ★ CORE DOM ELEMENT REFERENCES (INITIALIZED AT VERY TOP) ★
     // =========================================================================
-    let currentMasterCategory = 'signature'; // 'signature' | 'basic'
+    let a4Sheet, canvasInner, canvasPage, sigCoverWrapper, a4PaperCanvas;
+
+    function initCoreDomElements() {
+      a4Sheet = document.getElementById('a4Sheet');
+      canvasInner = document.getElementById('canvasInner');
+      if (canvasInner) {
+        canvasPage = canvasInner.querySelector('.a4-page');
+        sigCoverWrapper = document.getElementById('sigCoverWrapper');
+        a4PaperCanvas = document.getElementById('a4PaperCanvas');
+      }
+    }
+
+    // =========================================================================
+    // ★ [WERACLE UNIFIED 5-THEME SIGNATURE ENGINE] ★
+    // =========================================================================
+    let currentMasterThemeId = '01'; // '01' | '02' | '03' | '04' | '05'
+    let currentMasterCategory = 'basic'; // 'basic' | 'signature'
     let activeSignatureType = 'A'; // 'A' | 'B' | 'C' | 'D'
 
     function createCleanSuitCutoutSvgDataUrl() {
@@ -3930,7 +3974,7 @@
       accentColor: '#f59e0b',
       person: {
         visible: true,
-        mode: 'cutout', // 'cutout' | 'fullbg'
+        mode: 'cutout',
         originalUrl: createCleanSuitCutoutSvgDataUrl(),
         displayUrl: createCleanSuitCutoutSvgDataUrl(),
         scale: 100,
@@ -4099,9 +4143,10 @@
     }
 
     // =========================================================================
-    // RENDER SIGNATURE A4 CANVAS
+    // RENDER SIGNATURE A4 CANVAS (Themes 02 ~ 05)
     // =========================================================================
     function renderSignatureCover(type) {
+      initCoreDomElements();
       if (type) sigState.activeType = type;
       activeSignatureType = sigState.activeType;
       
@@ -4113,15 +4158,12 @@
       const accent = sigState.accentColor;
       const isFullBg = sigState.person.mode === 'fullbg';
 
-      // =====================================================================
-      // [타입 B: 매거진 풀화보형]
-      // =====================================================================
+      // [타입 B: 매거진 풀화보형 (테마 03)]
       if (sigState.activeType === 'B' || isFullBg) {
         canvas.innerHTML = `
           <div class="w-full h-full flex flex-col justify-between relative text-white overflow-hidden bg-slate-900" style="width: 595px; height: 842px;">
             ${buildFullBleedBgHtml(`linear-gradient(180deg, rgba(15,23,42,0.72) 0%, rgba(15,23,42,0.18) 42%, rgba(15,23,42,0.88) 84%, #09111e 100%)`)}
 
-            <!-- 상단 헤더 & 로고 -->
             <div class="relative z-20 px-9 pt-8 flex items-start justify-between">
               <div>
                 <div class="text-[13px] font-extrabold tracking-wider uppercase mb-2" style="color:${accent};">
@@ -4142,7 +4184,6 @@
               ` : ''}
             </div>
 
-            <!-- 하단 다짐 카드 + SNS QR + 엠블럼 -->
             <div class="relative z-20 mt-auto px-9 pb-5 space-y-4">
               <div class="rounded-2xl p-5 backdrop-blur-md border border-white/20 shadow-2xl" style="background: linear-gradient(135deg, ${main}dd 0%, rgba(15,23,42,0.9) 100%);">
                 <div class="text-[18px] font-black tracking-tight mb-2 text-white flex items-center justify-between">
@@ -4168,22 +4209,17 @@
           </div>
         `;
       }
-      // =====================================================================
-      // ★ [타입 A: 시그니처 사선 누끼형 (보답화니)]
-      // =====================================================================
+      // [타입 A: 시그니처 사선 누끼형 (테마 02)]
       else if (sigState.activeType === 'A') {
         canvas.innerHTML = `
           <div class="w-full h-full flex flex-col justify-between relative overflow-hidden" style="width: 595px; height: 842px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 48%, #f4f7fb 100%);">
 
-            <!-- 배경 기하학 도형 1: 우측 연회색 사선 셰이프 -->
             <div class="absolute inset-0 pointer-events-none z-0"
                  style="background: #dfe5ec; clip-path: polygon(100% 28%, 42% 43%, 100% 72%); opacity: 0.85;"></div>
 
-            <!-- 배경 기하학 도형 2: 좌측 시그니처 딥 네이비 사선 삼각 배너 (핵심 디자인) -->
             <div class="absolute inset-0 pointer-events-none z-10"
                  style="background: ${main}; clip-path: polygon(0% 37%, 63% 56%, 0% 75%); box-shadow: 0 12px 30px rgba(17,63,103,0.25);"></div>
 
-            <!-- 상단 영역: 우측 상단 로고 + 좌측 상단 서브/메인 타이틀 -->
             <div class="relative z-20 px-9 pt-8 flex items-start justify-between">
               <div class="max-w-[340px]">
                 <div class="text-[13px] font-extrabold tracking-wider uppercase mb-2" style="color:${main};">
@@ -4207,7 +4243,6 @@
               ` : ''}
             </div>
 
-            <!-- 좌측 네이비 사선 배너 내부 텍스트 (골드 이름 + 화이트 다짐 문구) -->
             <div class="absolute left-9 bottom-[225px] z-20 max-w-[275px] text-white pointer-events-none">
               <div class="text-[21px] font-black tracking-tight mb-2 flex items-center gap-2" style="color:${accent};">
                 <span>${sigEsc(c.bannerTitle)}</span>
@@ -4217,40 +4252,32 @@
               </p>
             </div>
 
-            <!-- 좌측 하단 SNS QR 코드 3단 세로 스택 (인스타 / 블로그 / 카톡채널) -->
             <div class="absolute left-9 bottom-[54px] z-20">
               ${buildSnsQrStackHtml(sigState.sns)}
             </div>
 
-            <!-- 우측 대형 인물 누끼 레이어 (마우스 드래그 & 크기 조절 가능) -->
             ${buildCutoutPersonHtml(sigState.person, 'right: 4px; bottom: 42px; width: 360px; height: 570px;')}
 
-            <!-- 하단 중앙~우측 대형 시그니처 캐릭터·브랜드 엠블럼 (인물 앞 레이어) -->
             ${sigState.logos.botSize ? `
               <div class="absolute right-7 bottom-[54px] z-20 pointer-events-none">
                 ${buildSignatureEmblemHtml(sigState.logos.emblemSub, sigState.logos.emblemMain, sigState.logos.botSize)}
               </div>
             ` : ''}
 
-            <!-- 최하단 설계사 공식 8항목 스펙 바 -->
             ${buildOfficialFooterBarHtml(sigState.footer)}
           </div>
         `;
       }
-      // =====================================================================
-      // [타입 C: VIP 법인·CEO 다크골드형]
-      // =====================================================================
+      // [타입 C: VIP 법인·CEO 다크골드형 (테마 04)]
       else if (sigState.activeType === 'C') {
         canvas.innerHTML = `
           <div class="w-full h-full flex flex-col justify-between relative overflow-hidden text-white"
                style="width: 595px; height: 842px; background: radial-gradient(circle at 78% 38%, #1e4976 0%, ${main} 45%, #07111f 100%);">
 
-            <!-- 골드 프레임 라인 -->
             <div class="absolute inset-4 border pointer-events-none z-10" style="border-color:${accent}44;"></div>
             <div class="absolute right-[-60px] top-[180px] w-[380px] h-[380px] rounded-full pointer-events-none z-0"
                  style="background: radial-gradient(circle, ${accent}28 0%, transparent 70%);"></div>
 
-            <!-- 상단 헤더 -->
             <div class="relative z-20 px-9 pt-8 flex items-start justify-between">
               <div>
                 <span class="sig-serif-en text-[11px] font-bold tracking-[0.25em] block mb-2" style="color:${accent};">
@@ -4274,7 +4301,6 @@
               ` : ''}
             </div>
 
-            <!-- 좌측 VIP 헌정 & 다짐 박스 -->
             <div class="relative z-20 px-9 mb-auto mt-6 max-w-[280px]">
               <div class="p-4 rounded-xl border border-white/15 bg-white/5 backdrop-blur-md">
                 <div class="text-[13px] font-extrabold mb-1" style="color:${accent};">
@@ -4290,26 +4316,21 @@
               </div>
             </div>
 
-            <!-- 우측 인물 누끼 레이어 -->
             ${buildCutoutPersonHtml(sigState.person, 'right: 6px; bottom: 44px; width: 350px; height: 560px;')}
 
             ${buildOfficialFooterBarHtml(sigState.footer)}
           </div>
         `;
       }
-      // =====================================================================
-      // [타입 D: 가족·자녀 감성 아치형]
-      // =====================================================================
+      // [타입 D: 가족·자녀 감성 아치형 (테마 05)]
       else {
         canvas.innerHTML = `
           <div class="w-full h-full flex flex-col justify-between relative overflow-hidden"
                style="width: 595px; height: 842px; background: #fdfbf7; color: #1e293b;">
 
-            <!-- 우측 하단 따뜻한 아치 배경 도형 -->
             <div class="absolute right-[18px] bottom-[56px] w-[320px] h-[510px] pointer-events-none z-0"
                  style="background: linear-gradient(180deg, ${main}18 0%, ${accent}25 100%); border-radius: 170px 170px 0 0; border: 2px solid ${main}22;"></div>
 
-            <!-- 상단 헤더 -->
             <div class="relative z-20 px-9 pt-8">
               <div class="flex items-center justify-between mb-4">
                 <span class="px-3 py-1 rounded-full text-[11px] font-extrabold" style="background:${accent}25; color:#92400e;">
@@ -4335,7 +4356,6 @@
               ` : ''}
             </div>
 
-            <!-- 좌측 따뜻한 약속 말풍선 & SNS QR -->
             <div class="relative z-20 px-9 mb-auto mt-4 max-w-[270px]">
               <div class="p-4 rounded-2xl bg-white shadow-md border border-amber-100 relative">
                 <div class="text-[13px] font-black mb-1 text-slate-800">
@@ -4351,7 +4371,6 @@
               </div>
             </div>
 
-            <!-- 우측 인물 누끼 레이어 -->
             ${buildCutoutPersonHtml(sigState.person, 'right: 14px; bottom: 44px; width: 330px; height: 530px;')}
 
             ${buildOfficialFooterBarHtml(sigState.footer)}
@@ -4363,66 +4382,124 @@
     }
 
     // =========================================================================
-    // SWITCH MASTER CATEGORY: [⭐ 실전 세일즈 (4종)] vs [🏛️ 기본형 보증서 (10종)]
+    // ★ UNIFIED 5-THEME SELECTOR ENGINE (01 ~ 05) ★
     // =========================================================================
-    function setMasterCategory(cat) {
-      currentMasterCategory = cat;
-      const btnSig = document.getElementById('btnMasterCatSig');
-      const btnBasic = document.getElementById('btnMasterCatBasic');
-      const secSig = document.getElementById('sectionSignatureThemes');
-      const secBasic = document.getElementById('sectionBasicThemes');
-      const standardA4 = canvasInner.querySelector('.a4-page');
-
-      if (cat === 'signature') {
-        if (btnSig) btnSig.classList.add('active');
-        if (btnBasic) btnBasic.classList.remove('active');
-        if (secSig) secSig.style.display = 'block';
-        if (secBasic) secBasic.style.display = 'none';
-
-        if (standardA4) standardA4.style.display = 'none';
-        
-        let sigWrap = document.getElementById('sigCoverWrapper');
-        if (!sigWrap) {
-          sigWrap = document.createElement('div');
-          sigWrap.id = 'sigCoverWrapper';
-          sigWrap.style.width = '1240px';
-          sigWrap.style.height = '1754px';
-          sigWrap.style.position = 'relative';
-          sigWrap.style.overflow = 'hidden';
-          sigWrap.style.background = '#ffffff';
-          sigWrap.innerHTML = `<div id="a4PaperCanvas" class="sig-a4-sheet" style="transform: scale(2.0840336);"></div>`;
-          canvasInner.appendChild(sigWrap);
-        } else {
-          sigWrap.style.display = 'block';
-        }
-        renderSignatureCover(activeSignatureType);
-      } else {
-        if (btnSig) btnSig.classList.remove('active');
-        if (btnBasic) btnBasic.classList.add('active');
-        if (secSig) secSig.style.display = 'none';
-        if (secBasic) secBasic.style.display = 'block';
-
-        const sigWrap = document.getElementById('sigCoverWrapper');
-        if (sigWrap) sigWrap.style.display = 'none';
-        if (standardA4) standardA4.style.display = 'flex';
-        applyTemplate(currentTemplateIndex);
+    const THEME_PACKS = [
+      {
+        id: '01',
+        name: '정통 공식 보고서형 (기본형 보증서)',
+        badge: '기본 마스터',
+        desc: '신뢰감 높은 2단 대칭형 레이아웃 & 4대 목차 및 전산 KPI 보장분석 요약'
+      },
+      {
+        id: '02',
+        name: '⭐ 시그니처 사선 누끼형 (보답화니 에디션)',
+        badge: 'BEST 추천',
+        desc: '네이비 사선 배너 + 골드 타이틀 & 다짐 + 대형 인물 누끼 + 3D 캐릭터 엠블럼 + 3단 SNS QR'
+      },
+      {
+        id: '03',
+        name: '📸 매거진 풀화보형 (풀배경)',
+        badge: '에디토리얼',
+        desc: '전면 고화질 인물 화보 + 다크 글래스모피즘 오버레이 + 대형 헤드라인 + 하단 SNS QR'
+      },
+      {
+        id: '04',
+        name: '🏛️ VIP 법인·CEO 다크골드형',
+        badge: 'VIP / CEO',
+        desc: '다크 네이비 & 골드 보더 프레임 + 경영 리스크 & 보장자산 진단서 + CEO 헌정 박스'
+      },
+      {
+        id: '05',
+        name: '🌸 가족·자녀 감성 아치형',
+        badge: '패밀리케어',
+        desc: '부드러운 아치 프레임 + 웜톤 파스텔 배경 + 우리 가족 통합 보장분석 + 약속 말풍선'
       }
-      fitA4ToScreen();
+    ];
+
+    function toggleThemeListDropdown() {
+      const drawer = document.getElementById('themeListDrawer');
+      const icon = document.getElementById('themeDropdownIcon');
+      if (!drawer) return;
+      const isHidden = (drawer.style.display === 'none' || !drawer.style.display);
+      drawer.style.display = isHidden ? 'block' : 'none';
+      if (icon) {
+        icon.className = isHidden ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
+      }
     }
 
-    function selectSignatureTheme(type) {
-      activeSignatureType = type;
-      sigState.activeType = type;
-      ['A', 'B', 'C', 'D'].forEach(t => {
-        const card = document.getElementById('sigCard_' + t);
-        if (card) card.classList.toggle('active', t === type);
+    function selectMasterTheme(themeId) {
+      initCoreDomElements();
+      currentMasterThemeId = themeId;
+      const pack = THEME_PACKS.find(p => p.id === themeId);
+      if (!pack) return;
+
+      // Update Top Banner
+      const nameEl = document.getElementById('selectedMasterThemeName');
+      if (nameEl) nameEl.textContent = pack.name;
+      const descEl = document.getElementById('selectedMasterThemeDesc');
+      if (descEl) descEl.textContent = pack.desc;
+      const badgeEl = document.getElementById('currThemeNumBadge');
+      if (badgeEl) badgeEl.textContent = themeId;
+
+      // Update Drawer Active Item
+      document.querySelectorAll('.theme-drawer-item').forEach(el => {
+        const isCur = el.getAttribute('data-theme-id') === themeId;
+        el.classList.toggle('active', isCur);
+        const b = el.querySelector('.drawer-item-badge');
+        if (b) {
+          if (isCur) {
+            b.className = 'drawer-item-badge active';
+            b.innerHTML = '<i class="fa-solid fa-check"></i> 사용 중';
+          } else {
+            b.className = 'drawer-item-badge';
+            b.textContent = (el.getAttribute('data-theme-id') === '02') ? 'BEST 추천' : '선택 가능';
+          }
+        }
       });
-      const badge = document.getElementById('currSigThemeBadge');
-      if (badge) {
-        const names = { A: 'BEST 시그니처 A', B: '매거진 B', C: 'VIP 다크골드 C', D: '가족사랑 D' };
-        badge.textContent = names[type] || ('시그니처 ' + type);
+
+      // Update Quick Theme Cards
+      document.querySelectorAll('.sig-theme-card').forEach(c => {
+        c.classList.toggle('active', c.id === 'quickThemeCard_' + themeId);
+      });
+
+      // Close Dropdown Drawer
+      const drawer = document.getElementById('themeListDrawer');
+      if (drawer) drawer.style.display = 'none';
+      const icon = document.getElementById('themeDropdownIcon');
+      if (icon) icon.className = 'fa-solid fa-chevron-down';
+
+      const basicSec = document.getElementById('sectionBasicColors');
+      const sigSec = document.getElementById('sectionSigColors');
+      const standardA4 = canvasInner ? canvasInner.querySelector('.a4-page') : null;
+      const sigWrap = document.getElementById('sigCoverWrapper');
+
+      if (themeId === '01') {
+        // Theme 01: Basic Official Guarantee Theme
+        currentMasterCategory = 'basic';
+        if (basicSec) basicSec.style.display = 'block';
+        if (sigSec) sigSec.style.display = 'none';
+        if (standardA4) standardA4.style.display = 'flex';
+        if (sigWrap) sigWrap.style.display = 'none';
+        applyTemplate(currentTemplateIndex || 0);
+      } else {
+        // Themes 02 ~ 05: Signature Themes
+        currentMasterCategory = 'signature';
+        const typeMap = { '02': 'A', '03': 'B', '04': 'C', '05': 'D' };
+        activeSignatureType = typeMap[themeId] || 'A';
+        sigState.activeType = activeSignatureType;
+
+        if (basicSec) basicSec.style.display = 'none';
+        if (sigSec) sigSec.style.display = 'block';
+        if (standardA4) standardA4.style.display = 'none';
+        if (sigWrap) sigWrap.style.display = 'block';
+
+        renderSignatureCover(activeSignatureType);
       }
-      renderSignatureCover(type);
+
+      if (typeof fitA4ToScreen === 'function') {
+        fitA4ToScreen();
+      }
     }
 
     function updateSigColors() {
@@ -4621,7 +4698,10 @@
         sigState.person.mode = 'cutout';
         customPhotoSrc = cutoutDataUrl;
 
-        canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(el => el.src = cutoutDataUrl);
+        initCoreDomElements();
+        if (canvasPage) {
+          canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(el => el.src = cutoutDataUrl);
+        }
 
         if (progBar) progBar.style.width = '100%';
         if (progTxt) progTxt.innerText = 'AI 누끼 배경 제거 완료!';
@@ -4653,7 +4733,10 @@
         sigState.person.mode = 'cutout';
         sigState.person.lastMethod = 'keyer';
         customPhotoSrc = keyed;
-        canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(el => el.src = keyed);
+        initCoreDomElements();
+        if (canvasPage) {
+          canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(el => el.src = keyed);
+        }
         if (badge) {
           badge.innerText = '키어 완료';
           badge.style.background = '#e0f2fe';
@@ -4668,7 +4751,10 @@
     function restoreOriginalPhoto() {
       sigState.person.displayUrl = sigState.person.originalUrl;
       customPhotoSrc = sigState.person.originalUrl;
-      canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(el => el.src = customPhotoSrc);
+      initCoreDomElements();
+      if (canvasPage) {
+        canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(el => el.src = customPhotoSrc);
+      }
       const badge = document.getElementById('cutoutStatusBadge');
       if (badge) {
         badge.innerText = '원본 복원됨';
@@ -4687,7 +4773,10 @@
         sigState.person.originalUrl = url;
         sigState.person.displayUrl = url;
         customPhotoSrc = url;
-        canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = url);
+        initCoreDomElements();
+        if (canvasPage) {
+          canvasPage.querySelectorAll('img[src*="consultant_model.jpg"], [data-slot="image"]').forEach(img => img.src = url);
+        }
         const badge = document.getElementById('cutoutStatusBadge');
         if (badge) {
           badge.innerText = '사진 업로드됨';
@@ -4778,7 +4867,7 @@
       layer.addEventListener('pointermove', ev => {
         if (!dragging) return;
         moved = true;
-        const currentZoom = currentCanvasZoom || 0.8;
+        const currentZoom = (typeof currentCanvasZoom !== 'undefined' ? currentCanvasZoom : 0.8) || 0.8;
         const dx = (ev.clientX - sx) / (currentZoom * 2.084);
         const dy = (ev.clientY - sy) / (currentZoom * 2.084);
         sigState.person.x = Math.round(origX + dx);
@@ -4806,7 +4895,7 @@
     }
 
     // =========================================================================
-    // ★ SUPABASE CLOUD LIBRARY INTEGRATION ★
+    // ★ SUPABASE CLOUD LIBRARY (profiles.settings.bojang_covers) ★
     // =========================================================================
     async function getActiveSupabaseClient() {
       if (window.sb) return window.sb;
@@ -4818,12 +4907,13 @@
     }
 
     async function saveCoverToLibrary() {
+      initCoreDomElements();
       const inp = document.getElementById('inpLibraryTitle');
       const title = (inp && inp.value.trim()) ? inp.value.trim() : (`보장분석 표지 ${new Date().toLocaleDateString('ko-KR')}`);
 
       let thumbDataUrl = '';
       try {
-        const targetEl = (currentMasterCategory === 'signature')
+        const targetEl = (currentMasterThemeId !== '01')
           ? document.getElementById('a4PaperCanvas')
           : canvasPage;
         if (targetEl) {
@@ -4837,8 +4927,8 @@
       const item = {
         id: 'cov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
         title: title,
-        category: currentMasterCategory,
-        themeId: (currentMasterCategory === 'signature') ? activeSignatureType : currentTemplateIndex,
+        masterThemeId: currentMasterThemeId,
+        themeId: (currentMasterThemeId !== '01') ? activeSignatureType : currentTemplateIndex,
         sigState: JSON.parse(JSON.stringify(sigState)),
         basicIndex: currentTemplateIndex,
         thumbnail: thumbDataUrl,
@@ -4937,7 +5027,8 @@
 
       container.innerHTML = savedCloudLibrary.map((item, idx) => {
         const dateStr = item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('ko-KR') : '';
-        const badgeTxt = (item.category === 'signature') ? (`⭐ 시그니처 ${item.themeId}`) : (`🏛️ 기본형 #${item.themeId + 1}`);
+        const pack = THEME_PACKS.find(p => p.id === item.masterThemeId) || THEME_PACKS[0];
+        const badgeTxt = pack ? pack.badge : '마스터';
         const thumbSrc = item.thumbnail || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="85" fill="%23334155"><rect width="100%" height="100%"/><text x="50%" y="50%" fill="%23ffffff" font-size="10" text-anchor="middle">A4</text></svg>';
 
         return `
@@ -4967,16 +5058,14 @@
       const item = savedCloudLibrary.find(x => x.id === id);
       if (!item) return;
 
-      if (item.category === 'signature') {
-        setMasterCategory('signature');
-        if (item.sigState) {
-          Object.assign(sigState, item.sigState);
-        }
-        selectSignatureTheme(item.themeId || 'A');
-      } else {
-        setMasterCategory('basic');
-        applyTemplate(item.basicIndex !== undefined ? item.basicIndex : item.themeId);
+      const targetThemeId = item.masterThemeId || (item.category === 'signature' ? '02' : '01');
+      if (item.sigState) {
+        Object.assign(sigState, item.sigState);
       }
+      if (item.basicIndex !== undefined && typeof currentTemplateIndex !== 'undefined') {
+        currentTemplateIndex = item.basicIndex;
+      }
+      selectMasterTheme(targetThemeId);
       alert(`✅ '${item.title}' 표지 디자인을 성공적으로 불러왔습니다!`);
     }
 
@@ -5006,12 +5095,13 @@
     // =========================================================================
     const originalGetCoverCanvas = window.getCoverCanvas;
     window.getCoverCanvas = async function(extractedData) {
+      initCoreDomElements();
       let customClient = (typeof extractedData === 'string') ? extractedData : (extractedData ? extractedData.clientName : null);
       if (customClient) {
         sigState.simCustomer = customClient;
       }
 
-      if (currentMasterCategory === 'signature') {
+      if (currentMasterThemeId !== '01') {
         renderSignatureCover();
         const paper = document.getElementById('a4PaperCanvas');
         if (!paper) return null;
@@ -5055,9 +5145,9 @@
 
     const previewCanvasArea = document.getElementById('previewCanvasArea');
     const a4Container = document.getElementById('a4Container');
-    const a4Sheet = document.getElementById('a4Sheet');
-    const canvasInner = document.getElementById('canvasInner');
-    const canvasPage = canvasInner.querySelector('.a4-page');
+    a4Sheet = document.getElementById('a4Sheet');
+    canvasInner = document.getElementById('canvasInner');
+    canvasPage = canvasInner ? canvasInner.querySelector('.a4-page') : null;
 
     // Tab Switching
     function switchSidebarTab(tabId, btn) {
@@ -6061,69 +6151,6 @@
     // ==========================================
     // [MASTER THEME PACKS REGISTRY & FRAMEWORK]
     // ==========================================
-    const THEME_PACKS = [
-      {
-        id: '01',
-        name: '정통 공식 보고서형',
-        badge: '기본 마스터',
-        desc: '신뢰감 높은 2단 대칭형 레이아웃 & 4대 목차 및 전산 KPI 보장분석 요약',
-        swatches: themeSwatches
-      },
-      {
-        id: '02',
-        name: '프리미엄 매거진 에디토리얼형',
-        badge: '추가 예정',
-        desc: '심층 금융 매거진 & 2단 칼럼 감성의 고품격 에디토리얼 디자인',
-        isUpcoming: true
-      },
-      {
-        id: '03',
-        name: '미니멀 인포그래픽형',
-        badge: '추가 예정',
-        desc: '젊은 고객층을 위한 감각적인 파스텔 비주얼 & 카드형 보장 현황',
-        isUpcoming: true
-      }
-    ];
-
-    let currentMasterThemeId = '01';
-
-    function toggleThemeListDropdown() {
-      const drawer = document.getElementById('themeListDrawer');
-      const icon = document.getElementById('themeDropdownIcon');
-      if (!drawer) return;
-      const isHidden = (drawer.style.display === 'none' || drawer.style.display === '');
-      drawer.style.display = isHidden ? 'flex' : 'none';
-      if (icon) {
-        icon.className = isHidden ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
-      }
-    }
-
-    function selectMasterTheme(themeId) {
-      const pack = THEME_PACKS.find(p => p.id === themeId);
-      if (!pack) return;
-
-      if (pack.isUpcoming) {
-        alert('📢 [' + pack.name + '] 테마는 곧 추가될 예정입니다! \n' + '현재는 [테마 01: 정통 공식 보고서형]이 기본 적용되어 있습니다.');
-        return;
-      }
-
-      currentMasterThemeId = themeId;
-      document.querySelectorAll('.theme-drawer-item').forEach(c => {
-        c.classList.toggle('active', c.id === 'drawerItem_' + themeId);
-      });
-
-      const nameEl = document.getElementById('selectedMasterThemeName');
-      if (nameEl) nameEl.textContent = pack.name;
-      const descEl = document.getElementById('selectedMasterThemeDesc');
-      if (descEl) descEl.textContent = pack.desc;
-
-      // Close drawer after selection
-      const drawer = document.getElementById('themeListDrawer');
-      if (drawer) drawer.style.display = 'none';
-      const icon = document.getElementById('themeDropdownIcon');
-      if (icon) icon.className = 'fa-solid fa-chevron-down';
-    }
-
     // ==========================================
     // [DIRECT WYSIWYG CLICK-TO-EDIT ENGINE]
     // ==========================================
@@ -6581,7 +6608,141 @@
       return resCanvas;
     };
 
+    
+    // =========================================================================
+    // ACTION FOOTER BUTTONS: SAVE & APPLY, HIGH-RES DOWNLOAD, PRINT
+    // =========================================================================
+    async function saveCoverConfig() {
+      const btn = document.getElementById('btnSaveApply');
+      const origHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...';
+        btn.disabled = true;
+      }
+
+      try {
+        const myProfile = getMyProfile();
+        const userKey = getUserStorageKey(myProfile);
+
+        const cfg = {
+          masterThemeId: currentMasterThemeId,
+          themeIdx: typeof currentTemplateIndex !== 'undefined' ? currentTemplateIndex : 0,
+          themeName: (currentMasterThemeId === '01')
+            ? (TEMPLATES[currentTemplateIndex] ? TEMPLATES[currentTemplateIndex].name : '기본 보증서')
+            : (THEME_PACKS.find(p => p.id === currentMasterThemeId) ? THEME_PACKS.find(p => p.id === currentMasterThemeId).name : '시그니처 표지'),
+          activeSignatureType: activeSignatureType,
+          sigState: sigState,
+          visualMode: typeof currentVisualMode !== 'undefined' ? currentVisualMode : 'photo',
+          photoSrc: customPhotoSrc,
+          logoSrc: customLogoSrc,
+          timestamp: Date.now()
+        };
+
+        localStorage.setItem(userKey, JSON.stringify(cfg));
+        localStorage.setItem('weracle_bojang_cover_config', JSON.stringify(cfg));
+
+        try {
+          const sbClient = await getActiveSupabaseClient();
+          const userId = myProfile ? (myProfile.id || (window.currentUser && window.currentUser.id)) : null;
+          if (sbClient && userId) {
+            const { data: profData } = await sbClient.from('profiles').select('settings').eq('id', userId).single();
+            const curSettings = (profData && profData.settings) || {};
+            await sbClient.from('profiles').update({
+              settings: { ...curSettings, active_cover_config: cfg }
+            }).eq('id', userId);
+            console.log('[Supabase Cloud] Active cover config updated in profile!');
+          }
+        } catch(e) {
+          console.warn('[Supabase Sync Warning]', e);
+        }
+
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> 저장 및 즉시 적용 완료!';
+          btn.style.background = 'linear-gradient(135deg, #059669, #047857)';
+        }
+
+        try {
+          if (window.parent && window.parent.updatePreviewCoverBadge) {
+            window.parent.updatePreviewCoverBadge();
+          }
+        } catch(e) {}
+
+        setTimeout(() => {
+          if (btn) {
+            btn.innerHTML = origHtml;
+            btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            btn.disabled = false;
+          }
+        }, 2000);
+
+        alert('✅ 현재 표지 디자인이 저장되었으며, 보장분석 PDF 다운로드 표지로 즉시 적용되었습니다!');
+      } catch(err) {
+        console.error('saveCoverConfig error:', err);
+        if (btn) {
+          btn.innerHTML = origHtml;
+          btn.disabled = false;
+        }
+        alert('설정 저장 중 오류가 발생했습니다: ' + err.message);
+      }
+    }
+
+    async function downloadCoverImage() {
+      initCoreDomElements();
+      try {
+        let targetEl;
+        let scaleVal = 1;
+        if (currentMasterThemeId !== '01') {
+          targetEl = document.getElementById('a4PaperCanvas');
+          scaleVal = 2.0840336;
+        } else {
+          targetEl = canvasPage;
+          scaleVal = 1;
+        }
+        if (!targetEl) return;
+
+        const origTransform = (currentMasterThemeId !== '01') ? targetEl.style.transform : a4Sheet.style.transform;
+        if (currentMasterThemeId !== '01') {
+          targetEl.style.transform = 'none';
+        } else {
+          a4Sheet.style.transform = 'none';
+        }
+
+        const cv = await html2canvas(targetEl, {
+          scale: scaleVal,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
+
+        if (currentMasterThemeId !== '01') {
+          targetEl.style.transform = origTransform;
+        } else {
+          a4Sheet.style.transform = origTransform;
+        }
+
+        const link = document.createElement('a');
+        link.download = `위라클_보장분석표지_${currentMasterThemeId}_${Date.now()}.png`;
+        link.href = cv.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        alert('고화질 표지 저장 중 오류: ' + err.message);
+      }
+    }
+
+    function printCover() {
+      window.print();
+    }
+
+
     window.addEventListener('DOMContentLoaded', () => {
+      initCoreDomElements();
+      try {
+        selectMasterTheme('01');
+        loadCoversFromCloud();
+      } catch(e) {
+        console.warn('Init warning:', e);
+      }
+
       loadCoverConfig();
       fitA4ToScreen();
       initDirectDragResize();

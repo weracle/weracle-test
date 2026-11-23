@@ -11733,230 +11733,719 @@ window.deleteCustomerData = async function() {
 
 
 // ==========================================
-// 15. Profile Family Management (Modal)
 // ==========================================
-window.openFamilyManageModal = function(rootId, rootName) {
-    const escRoot = String(rootId).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
-    
-    document.getElementById('fm-modal-title').innerText = `[${rootName}] 가족 관리`;
-    document.getElementById('fm-current-root-id').value = String(rootId).trim();
-    document.getElementById('fm-search-input').value = "";
-    document.getElementById('fm-search-results').innerHTML = "";
-    
-    // Load current members: root + sub-members
-    const familyMembers = (window.globalCustomerData || []).filter(c => {
-        const cId = String(c["고객번호"] || c["ID"] || "").trim();
-        return cId === String(rootId).trim() || famSubRegex.test(cId);
-    });
-    
-    let html = "";
-    if (familyMembers.length <= 1) {
-        html = `<div style="color:#64748b; font-size:13.5px; padding:20px; background:#f8fafc; border-radius:10px; border:1.5px dashed #cbd5e1; text-align:center; line-height:1.6;">
-            현재 연동된 다른 가족 구성원이 없습니다.<br>
-            <span style="font-size:12px; color:#94a3b8; font-weight:500;">아래 [다른 고객 검색하여 가족으로 묶기]에서 가족 구성원을 검색하여 편입할 수 있습니다.</span>
-        </div>`;
-    } else {
-        familyMembers.forEach(fm => {
-            const fmId = String(fm["고객번호"] || fm["ID"] || "").trim();
-            const fmName = fm["고객명"] || "이름없음";
-            let fmRel = fm["가족사항"] || fm["가족_관계"] || "가족";
-            if (fmId === String(rootId).trim()) fmRel = "계약자(본인)";
-            else if (fmRel.includes("(")) fmRel = fmRel.split("(")[0];
-            
-            let btnHtml = "";
-            if (fmId !== String(rootId).trim()) {
-                btnHtml = `<button type="button" onclick="window.unlinkFamilyMember('${fmId}', '${fmName.replace(/'/g, "\\'")}')" style="background:#fef2f2; color:#ef4444; border:1px solid #fca5a5; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">분리(독립)</button>`;
-            } else {
-                btnHtml = `<span style="font-size:12px; color:#3b82f6; background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; font-weight:700; padding:4px 8px;">가족 대표 (본인)</span>`;
+// 15. Modern Visual Family Drag & Drop Controller
+// ==========================================
+(function() {
+    let fmLeftFamily = { rootId: null, name: '', head: null, members: [] };
+    let fmNewFamily = { rootId: null, name: '새 가족', head: null, members: [] };
+    let fmRightFamily = null;
+    let fmUnlinkedPool = [];
+    let isNewBoxOpen = false;
+    let draggedInfo = null;
+    let fmOrigSnapshot = null;
+    let tempRootCounter = 0;
+
+    function getNextAllocatedRootId() {
+        let maxId = 0;
+        (window.globalCustomerData || []).forEach(c => {
+            let idVal = c["고객번호"] || c["사업자번호"] || c["ID"];
+            if (idVal) {
+                let numStr = String(idVal).split('-')[0].replace(/\D/g, '');
+                if (numStr) {
+                    let n = parseInt(numStr, 10);
+                    if (!isNaN(n) && n > maxId) maxId = n;
+                }
             }
-
-            html += `<div style="display:flex; justify-content:space-between; align-items:center; background:white; border:1px solid #e2e8f0; padding:12px 16px; border-radius:8px;">
-                <div>
-                    <div style="font-weight:700; color:#0f172a; font-size:14px;">${fmName} <span style="font-size:12px; color:#64748b; font-weight:500; margin-left:6px;">(${fmRel})</span></div>
-                    <div style="font-size:12px; color:#94a3b8; margin-top:2px;">고객번호: <strong>${fmId}</strong></div>
-                </div>
-                ${btnHtml}
-            </div>`;
         });
+        if (tempRootCounter < maxId) tempRootCounter = maxId;
+        tempRootCounter += 1;
+        return tempRootCounter;
     }
-    document.getElementById('fm-current-members').innerHTML = html;
-    
-    const modal = document.getElementById('family-manage-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-        modal.classList.add('active');
-        modal.scrollTop = 0;
-    }
-};
 
-window.searchCustomerForFamily = function() {
-    const keyword = document.getElementById('fm-search-input').value.trim();
-    const resultDiv = document.getElementById('fm-search-results');
-    const rootId = document.getElementById('fm-current-root-id').value.trim();
-    
-    if (keyword.length < 1) {
-        resultDiv.innerHTML = '<div style="color:#ef4444; font-size:13px; font-weight:600;">검색어를 입력해주세요.</div>';
-        return;
-    }
-    
-    const escRoot = rootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
-    const cleanKeyword = keyword.replace(/\D/g, '');
-    
-    const results = (window.globalCustomerData || []).filter(c => {
+    function makePersonObj(c, relOverride) {
+        if (!c) return null;
         const cId = String(c["고객번호"] || c["ID"] || "").trim();
-        const name = String(c["고객명"] || c["이름"] || c["대표자명"] || "").trim();
-        const phone = String(c["폰번호"] || c["대표자폰번호"] || "").trim();
-        const cleanPhone = phone.replace(/\D/g, '');
+        const name = String(c["고객명"] || c["이름"] || c["대표자명"] || "고객").trim();
+        const phone = String(c["폰번호"] || c["대표자폰번호"] || c["휴대폰"] || "-").trim();
+        let rel = relOverride || c["가족사항"] || c["가족_관계"] || "가족";
+        if (rel.includes("(")) rel = rel.split("(")[0].trim();
+        if (!cId.includes('-') && (!rel || rel === '가족')) rel = "본인";
+        return {
+            id: cId,
+            origId: cId,
+            name: name,
+            phone: phone,
+            rel: rel,
+            origRel: rel,
+            clientObj: c
+        };
+    }
 
-        // Exclude current family members
-        if (cId === rootId || famSubRegex.test(cId)) return false;
-        return name.includes(keyword) || (cleanKeyword.length >= 2 && cleanPhone.includes(cleanKeyword));
-    });
-    
-    if (results.length === 0) {
-        resultDiv.innerHTML = '<div style="color:#64748b; font-size:13px; padding:12px; text-align:center;">검색 결과가 없습니다.</div>';
-        return;
+    function getFamilyBySide(side) {
+        if (side === 'left') return fmLeftFamily;
+        if (side === 'new') return fmNewFamily;
+        if (side === 'right') return fmRightFamily;
+        return null;
     }
-    
-    let html = "";
-    results.forEach(c => {
-        const cId = String(c["고객번호"] || c["ID"] || "").trim();
-        const name = c["고객명"] || c["이름"] || c["대표자명"] || "고객";
-        const phone = c["폰번호"] || c["대표자폰번호"] || "-";
-        html += `<div style="display:flex; justify-content:space-between; align-items:center; background:white; border:1px solid #e2e8f0; padding:10px 14px; border-radius:8px;">
-            <div>
-                <div style="font-weight:700; color:#0f172a; font-size:13px;">${name} <span style="font-size:12px; color:#64748b; font-weight:500;">(${phone})</span></div>
-                <div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">현재 고객번호: <strong>${cId}</strong></div>
-            </div>
-            <button type="button" onclick="window.linkCustomerToFamily('${cId}', '${name.replace(/'/g, "\\'")}')" style="background:#e0e7ff; color:#4f46e5; border:1px solid #c7d2fe; padding:6px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#c7d2fe'" onmouseout="this.style.background='#e0e7ff'"><i class="fa-solid fa-link"></i> 이 가족으로 묶기</button>
-        </div>`;
-    });
-    resultDiv.innerHTML = html;
-};
 
-window.linkCustomerToFamily = async function(targetCustId, targetName) {
-    const rootId = document.getElementById('fm-current-root-id').value.trim();
-    if (!rootId) {
-        alert("가족 대표 고객번호를 찾을 수 없습니다.");
-        return;
+    function extractPerson(family, id) {
+        if (!family) return null;
+        if (family.head && (family.head.id === id || family.head.origId === id)) {
+            const h = family.head;
+            family.head = null;
+            return h;
+        }
+        if (family.members) {
+            const idx = family.members.findIndex(m => m.id === id || m.origId === id);
+            if (idx !== -1) {
+                return family.members.splice(idx, 1)[0];
+            }
+        }
+        return null;
     }
-    
-    // 0. 새 가족 대표 고객 정보 조회
-    const rootClient = (window.globalCustomerData || []).find(c => String(c["고객번호"] || c["ID"] || "").trim() === rootId);
-    const rootName = rootClient ? (rootClient["고객명"] || rootClient["이름"] || rootClient["대표자명"] || rootId) : rootId;
-    
-    const cleanTargetId = String(targetCustId).trim();
-    const isSubMember = cleanTargetId.includes('-'); // 예: 10-1
-    
-    // 1. 대상 고객 밑에 딸린 하위 가족 구성원이 있는지 확인 (예: 10번 고객인데 10-1, 10-2가 있는 경우)
-    const escTarget = cleanTargetId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const subRegex = new RegExp('^' + escTarget + '-\\d+(?:-\\d+)*$');
-    const attachedMembers = (window.globalCustomerData || []).filter(c => {
-        const cid = String(c["고객번호"] || c["ID"] || "").trim();
-        return subRegex.test(cid);
-    });
-    
-    let bringAllTogether = false;
-    
-    // Case A: 딸린 가족 구성원이 있는 대표 고객인 경우 -> 일괄 편입 안내
-    if (attachedMembers.length > 0) {
-        const memberNames = attachedMembers.map(m => (m["고객명"] || m["이름"] || m["대표자명"] || "가족") + "(" + (m["고객번호"] || "") + ")").join(', ');
-        const confirmMsg = `⚠️ [${targetName}] 고객에게 딸린 가족 ${attachedMembers.length}명이 있습니다.\n` +
-            `• 기존 구성원: ${memberNames}\n\n` +
-            `가족 구성원들도 함께 [${rootName}(${rootId}번)] 가족으로 다 같이 데려올까요?\n\n` +
-            `[확인] : ${targetName} 및 가족 ${attachedMembers.length}명 전체 일괄 편입\n` +
-            `[취소] : 작업 중단 (기존 가족 안전 유지)`;
-            
-        if (!confirm(confirmMsg)) {
-            return;
+
+    function recalc(family) {
+        if (!family) return;
+        if (family.head) {
+            if (family.rootId) {
+                family.head.id = family.rootId;
+            }
+            family.head.rel = '본인';
         }
-        bringAllTogether = true;
-    } 
-    // Case B: 이미 다른 가족의 서브 구성원(-1 등)인 경우 -> 기존 연동 해제 후 편입 안내
-    else if (isSubMember) {
-        const oldRootId = cleanTargetId.split('-')[0];
-        const oldRootClient = (window.globalCustomerData || []).find(c => String(c["고객번호"] || c["ID"] || "").trim() === oldRootId);
-        const oldRootName = oldRootClient ? (oldRootClient["고객명"] || oldRootClient["이름"] || oldRootClient["대표자명"] || oldRootId) : oldRootId;
-        
-        const confirmMsg = `⚠️ [${targetName}] 고객은 이미 [${oldRootName}(${oldRootId}번)] 가족의 구성원으로 등록되어 있습니다.\n\n` +
-            `기존 가족과의 연동을 풀고, [${rootName}(${rootId}번)] 가족으로 새롭게 맺을까요?`;
-            
-        if (!confirm(confirmMsg)) {
-            return;
-        }
-    }
-    
-    // 2. 가족 관계 입력
-    const relation = prompt(`[${targetName}] 고객의 가족 관계를 입력해주세요 (예: 배우자, 자녀, 부모 등):`, "배우자");
-    if (relation === null) return;
-    const chosenRel = relation.trim() || "가족";
-    
-    // 3. 새 가족(rootId)의 최대 서브 번호 계산 (없으면 0 -> 1부터 순차 채번)
-    let maxSub = 0;
-    const escRoot = rootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp('^' + escRoot + '-(\\d+)');
-    
-    (window.globalCustomerData || []).forEach(c => {
-        let idVal = String(c["고객번호"] || c["사업자번호"] || c["ID"] || "").trim();
-        const m = idVal.match(regex);
-        if (m) {
-            let sub = parseInt(m[1], 10);
-            if (!isNaN(sub) && sub > maxSub) maxSub = sub;
-        }
-    });
-    
-    const updates = [];
-    maxSub += 1;
-    const newTargetId = `${rootId}-${maxSub}`;
-    updates.push({
-        oldId: cleanTargetId,
-        newId: newTargetId,
-        newRelation: chosenRel
-    });
-    
-    // 딸린 가족도 함께 데려오는 경우 순차적으로 번호 부여 (예: 5-2, 5-3...)
-    if (bringAllTogether && attachedMembers.length > 0) {
-        attachedMembers.forEach(mem => {
-            maxSub += 1;
-            const memOldId = String(mem["고객번호"] || mem["ID"] || "").trim();
-            const memNewId = `${rootId}-${maxSub}`;
-            const memRel = mem["가족사항"] || "가족";
-            updates.push({
-                oldId: memOldId,
-                newId: memNewId,
-                newRelation: memRel
+        if (family.members) {
+            family.members.forEach((m, idx) => {
+                if (family.rootId) {
+                    m.id = family.rootId + '-' + (idx + 1);
+                }
+                if (m.rel === '본인' || !m.rel) {
+                    m.rel = '가족';
+                }
             });
-        });
+        }
     }
-    
-    let summaryMsg = `[${targetName}] 가족 편입 완료`;
-    if (updates.length > 1) {
-        summaryMsg = `[${targetName}] 외 가족 ${updates.length - 1}명 일괄 편입 완료`;
-    }
-    
-    await updateMultipleCustomerIdsInSheet(updates, summaryMsg);
-};
 
-window.unlinkFamilyMember = async function(targetCustId, targetName) {
-    if(!confirm(`[${targetName}] (고객번호: ${targetCustId}) 고객을 이 가족에서 분리하여 독립시키겠습니까?\n새로운 독립 고객번호가 순차 부여됩니다.`)) return;
-    
-    let maxId = 0;
-    (window.globalCustomerData || []).forEach(c => {
-        let idVal = c["고객번호"] || c["사업자번호"] || c["ID"];
-        if(idVal) {
-            let numStr = String(idVal).split('-')[0].replace(/\D/g, '');
-            if(numStr) {
-                let n = parseInt(numStr, 10);
-                if(!isNaN(n) && n > maxId) maxId = n;
+    window.openFamilyManageModal = function(rootId, rootName) {
+        rootId = String(rootId || '').trim();
+        if (!rootId) {
+            alert("가족 대표 고객번호를 찾을 수 없습니다.");
+            return;
+        }
+        const baseRootId = rootId.split('-')[0];
+        const allClients = window.globalCustomerData || [];
+        const escRoot = baseRootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
+        
+        let rootClient = allClients.find(c => String(c["고객번호"] || c["ID"] || "").trim() === baseRootId);
+        let subClients = allClients.filter(c => famSubRegex.test(String(c["고객번호"] || c["ID"] || "").trim()));
+        
+        if (!rootClient && subClients.length > 0) {
+            rootClient = subClients.shift();
+        }
+        
+        const effectiveName = rootName || (rootClient ? (rootClient["고객명"] || rootClient["이름"] || baseRootId) : baseRootId);
+        
+        fmLeftFamily = {
+            rootId: baseRootId,
+            name: effectiveName + ' 가족',
+            head: rootClient ? makePersonObj(rootClient, '본인') : null,
+            members: subClients.map(c => makePersonObj(c))
+        };
+        
+        fmNewFamily = { rootId: null, name: '새 가족', head: null, members: [] };
+        fmRightFamily = null;
+        fmUnlinkedPool = [];
+        isNewBoxOpen = false;
+        tempRootCounter = 0;
+        
+        fmOrigSnapshot = JSON.parse(JSON.stringify({
+            left: {
+                rootId: fmLeftFamily.rootId,
+                name: fmLeftFamily.name,
+                head: fmLeftFamily.head,
+                members: fmLeftFamily.members
+            }
+        }));
+        
+        const rootInput = document.getElementById('fm-current-root-id');
+        if (rootInput) rootInput.value = baseRootId;
+        
+        const titleEl = document.getElementById('fmModalTitle');
+        if (titleEl) titleEl.innerText = '[' + effectiveName + '] 가족 관리';
+        
+        const searchInput = document.getElementById('fmTargetSearchInput');
+        if (searchInput) searchInput.value = '';
+        const searchDrop = document.getElementById('fmSearchDropdown');
+        if (searchDrop) searchDrop.style.display = 'none';
+        
+        window.fmUpdateLayoutState();
+        window.fmRenderAll();
+        
+        const modal = document.getElementById('family-manage-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.classList.add('active');
+        }
+    };
+
+    window.closeFamilyManageModal = function() {
+        const modal = document.getElementById('family-manage-modal');
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('active');
+        }
+        const searchDrop = document.getElementById('fmSearchDropdown');
+        if (searchDrop) searchDrop.style.display = 'none';
+    };
+
+    window.fmOpenNewHouseBox = function() {
+        isNewBoxOpen = true;
+        window.fmUpdateLayoutState();
+    };
+
+    window.fmCloseNewHouseBox = function() {
+        if (fmNewFamily.head || (fmNewFamily.members && fmNewFamily.members.length > 0)) {
+            if (!confirm("새 가족 구성원에 고객이 있습니다. 분리 보관함으로 이동하고 닫으시겠습니까?")) {
+                return;
+            }
+            if (fmNewFamily.head) {
+                const h = fmNewFamily.head;
+                h.id = String(getNextAllocatedRootId());
+                h.rel = '본인';
+                fmUnlinkedPool.push(h);
+                fmNewFamily.head = null;
+            }
+            while (fmNewFamily.members && fmNewFamily.members.length > 0) {
+                const m = fmNewFamily.members.shift();
+                m.id = String(getNextAllocatedRootId());
+                m.rel = '본인';
+                fmUnlinkedPool.push(m);
             }
         }
-    });
-    const newId = String(maxId + 1);
-    
-    await updateCustomerIdInSheet(targetCustId, newId, `[${targetName}] 가족 분리 완료 (독립 번호: ${newId})`, "본인");
-};
+        isNewBoxOpen = false;
+        window.fmUpdateLayoutState();
+        window.fmRenderAll();
+    };
+
+    window.fmUpdateLayoutState = function() {
+        const modalCard = document.getElementById('mainModalCard');
+        const bodyLayout = document.getElementById('modalBodyLayout');
+        const newBox = document.getElementById('newFamilyBox');
+        const btnOpen = document.getElementById('btnOpenNewHouse');
+
+        if (!modalCard || !bodyLayout || !newBox || !btnOpen) return;
+
+        if (isNewBoxOpen) {
+            modalCard.classList.remove('is-two-col');
+            bodyLayout.className = 'modal-body layout-with-new';
+            newBox.style.display = 'flex';
+            btnOpen.style.display = 'none';
+        } else {
+            modalCard.classList.add('is-two-col');
+            bodyLayout.className = 'modal-body layout-without-new';
+            newBox.style.display = 'none';
+            btnOpen.style.display = 'flex';
+        }
+    };
+
+    window.fmRenderAll = function() {
+        window.fmRenderLeft();
+        window.fmRenderNewBox();
+        window.fmRenderRight();
+        window.fmRenderUnlinkedPool();
+    };
+
+    window.fmRenderLeft = function() {
+        const title = document.getElementById('leftTitle');
+        const badge = document.getElementById('leftBadge');
+        const headSlot = document.getElementById('leftHeadSlot');
+        const membersSlot = document.getElementById('leftMembersSlot');
+        if (!title || !badge || !headSlot || !membersSlot) return;
+
+        title.innerText = fmLeftFamily.name || '기존 가족';
+        const total = (fmLeftFamily.head ? 1 : 0) + (fmLeftFamily.members ? fmLeftFamily.members.length : 0);
+        badge.innerText = total + '인';
+
+        if (fmLeftFamily.head) {
+            headSlot.innerHTML = window.fmRenderPersonCard(fmLeftFamily.head, 'left', true);
+        } else {
+            headSlot.innerHTML = '<div class="slot-empty-msg">대표자를 드래그하여 배치</div>';
+        }
+
+        if (fmLeftFamily.members && fmLeftFamily.members.length > 0) {
+            membersSlot.innerHTML = fmLeftFamily.members.map(m => window.fmRenderPersonCard(m, 'left', false)).join('');
+        } else {
+            membersSlot.innerHTML = '<div class="slot-empty-msg">가족원을 드래그하여 배치</div>';
+        }
+    };
+
+    window.fmRenderNewBox = function() {
+        const badge = document.getElementById('newBadge');
+        const headSlot = document.getElementById('newHeadSlot');
+        const membersSlot = document.getElementById('newMembersSlot');
+        if (!badge || !headSlot || !membersSlot) return;
+
+        const total = (fmNewFamily.head ? 1 : 0) + (fmNewFamily.members ? fmNewFamily.members.length : 0);
+        badge.innerText = total > 0 ? (total + '인') : '신규';
+
+        if (fmNewFamily.head) {
+            headSlot.innerHTML = window.fmRenderPersonCard(fmNewFamily.head, 'new', true);
+        } else {
+            headSlot.innerHTML = '<div class="slot-empty-msg">대표자를 드래그하여 배치</div>';
+        }
+
+        if (fmNewFamily.members && fmNewFamily.members.length > 0) {
+            membersSlot.innerHTML = fmNewFamily.members.map(m => window.fmRenderPersonCard(m, 'new', false)).join('');
+        } else {
+            membersSlot.innerHTML = '<div class="slot-empty-msg">가족원을 드래그하여 배치</div>';
+        }
+    };
+
+    window.fmRenderRight = function() {
+        const title = document.getElementById('rightTitle');
+        const badge = document.getElementById('rightBadge');
+        const headSlot = document.getElementById('rightHeadSlot');
+        const membersSlot = document.getElementById('rightMembersSlot');
+        if (!title || !badge || !headSlot || !membersSlot) return;
+
+        if (!fmRightFamily) {
+            title.innerText = '검색 가족';
+            badge.innerText = '미선택';
+            headSlot.innerHTML = '<div class="slot-empty-msg">상단에서 고객을 검색하세요</div>';
+            membersSlot.innerHTML = '<div class="slot-empty-msg">검색 시 가족원이 표시됩니다</div>';
+            return;
+        }
+
+        title.innerText = fmRightFamily.name || '검색 가족';
+        const total = (fmRightFamily.head ? 1 : 0) + (fmRightFamily.members ? fmRightFamily.members.length : 0);
+        badge.innerText = total + '인';
+
+        if (fmRightFamily.head) {
+            headSlot.innerHTML = window.fmRenderPersonCard(fmRightFamily.head, 'right', true);
+        } else {
+            headSlot.innerHTML = '<div class="slot-empty-msg">대표 없음</div>';
+        }
+
+        if (fmRightFamily.members && fmRightFamily.members.length > 0) {
+            membersSlot.innerHTML = fmRightFamily.members.map(m => window.fmRenderPersonCard(m, 'right', false)).join('');
+        } else {
+            membersSlot.innerHTML = '<div class="slot-empty-msg">가족원 없음</div>';
+        }
+    };
+
+    window.fmRenderUnlinkedPool = function() {
+        const countBadge = document.getElementById('unlinkCountBadge');
+        const track = document.getElementById('unlinkChipsTrack');
+        if (!countBadge || !track) return;
+
+        countBadge.innerText = fmUnlinkedPool.length;
+
+        if (fmUnlinkedPool.length === 0) {
+            track.innerHTML = '<span class="pool-empty-hint">분리할 고객을 여기로 던지거나 [분리] 클릭</span>';
+            return;
+        }
+
+        track.innerHTML = fmUnlinkedPool.map(p => {
+            const safeName = (p.name || '고객').replace(/'/g, "\\'");
+            const safeId = String(p.id).replace(/'/g, "\\'");
+            return `
+                <div class="unlink-chip" draggable="true"
+                     ondragstart="window.fmDragStart(event, '${safeId}', 'unlink', false)"
+                     ondragend="window.fmDragEnd(event)">
+                    <span class="chip-name">${p.name}</span>
+                    <span class="chip-id">#${p.id}</span>
+                    <button type="button" class="btn-rejoin" onclick="window.fmRejoinToLeft('${safeId}')" title="기존 가족으로 복귀">
+                        <i class="fa-solid fa-arrow-left"></i> 합류
+                    </button>
+                </div>
+            `;
+        }).join('');
+    };
+
+    window.fmRenderPersonCard = function(p, side, isHead) {
+        if (!p) return '';
+        const safeName = (p.name || '고객').replace(/'/g, "\\'");
+        const safeId = String(p.id).replace(/'/g, "\\'");
+        const badgeClass = isHead ? 'badge-rel-head' : 'badge-rel-sub';
+        const displayRel = p.rel || (isHead ? '본인' : '가족');
+
+        return `
+            <div class="person-card ${isHead ? 'is-head-card' : ''}"
+                 draggable="true"
+                 ondragstart="window.fmDragStart(event, '${safeId}', '${side}', ${isHead})"
+                 ondragend="window.fmDragEnd(event)">
+                <div class="person-meta">
+                    <span class="person-name">${p.name}</span>
+                    <span class="person-id">${p.id}</span>
+                </div>
+                <div class="person-actions">
+                    <span class="badge-rel ${badgeClass}" onclick="window.fmCycleRel('${side}', '${safeId}')" title="클릭하여 관계 변경">
+                        ${displayRel} <i class="fa-solid fa-angle-down" style="font-size:9px; margin-left:2px;"></i>
+                    </span>
+                    <button type="button" class="btn-unlink-action" onclick="window.fmDoUnlink('${side}', '${safeId}')" title="분리">
+                        분리
+                    </button>
+                </div>
+            </div>
+        `;
+    };
+
+    window.fmOnSearchCustomer = function(val) {
+        const drop = document.getElementById('fmSearchDropdown');
+        if (!drop) return;
+        val = String(val || '').trim();
+        if (val.length < 1) {
+            drop.style.display = 'none';
+            return;
+        }
+
+        const cleanVal = val.replace(/\D/g, '');
+        const allClients = window.globalCustomerData || [];
+
+        const activeIds = new Set();
+        if (fmLeftFamily.head) activeIds.add(String(fmLeftFamily.head.origId).trim());
+        (fmLeftFamily.members || []).forEach(m => activeIds.add(String(m.origId).trim()));
+        if (fmNewFamily.head) activeIds.add(String(fmNewFamily.head.origId).trim());
+        (fmNewFamily.members || []).forEach(m => activeIds.add(String(m.origId).trim()));
+        fmUnlinkedPool.forEach(u => activeIds.add(String(u.origId).trim()));
+
+        const matches = allClients.filter(c => {
+            const cId = String(c["고객번호"] || c["ID"] || "").trim();
+            if (activeIds.has(cId)) return false;
+
+            const name = String(c["고객명"] || c["이름"] || c["대표자명"] || "").trim();
+            const phone = String(c["폰번호"] || c["대표자폰번호"] || c["휴대폰"] || "").replace(/\D/g, '');
+
+            return name.includes(val) || cId.includes(val) || (cleanVal.length >= 2 && phone.includes(cleanVal));
+        });
+
+        if (matches.length === 0) {
+            drop.innerHTML = '<div class="search-item" style="color:#94a3b8; text-align:center; padding:10px;">검색 결과가 없습니다.</div>';
+            drop.style.display = 'block';
+            return;
+        }
+
+        const grouped = {};
+        matches.forEach(c => {
+            const cId = String(c["고객번호"] || c["ID"] || "").trim();
+            const baseRoot = cId.split('-')[0];
+            if (!grouped[baseRoot]) grouped[baseRoot] = [];
+            grouped[baseRoot].push(c);
+        });
+
+        let html = '';
+        Object.keys(grouped).slice(0, 8).forEach(rootId => {
+            const rootClient = allClients.find(c => String(c["고객번호"] || c["ID"] || "").trim() === rootId) || grouped[rootId][0];
+            const rootName = rootClient["고객명"] || rootClient["이름"] || rootId;
+            const count = allClients.filter(c => {
+                const id = String(c["고객번호"] || c["ID"] || "").trim();
+                return id === rootId || id.startsWith(rootId + '-');
+            }).length;
+
+            html += `
+                <div class="search-item" onclick="window.selectFmSearchFamily('${rootId}')">
+                    <div>
+                        <span class="search-item-name">${rootName}</span>
+                        <span class="search-item-id">#${rootId}</span>
+                    </div>
+                    <span class="search-item-fam">${count}인 세대</span>
+                </div>
+            `;
+        });
+
+        drop.innerHTML = html;
+        drop.style.display = 'block';
+    };
+
+    window.selectFmSearchFamily = function(rootId) {
+        const drop = document.getElementById('fmSearchDropdown');
+        if (drop) drop.style.display = 'none';
+
+        const allClients = window.globalCustomerData || [];
+        const escRoot = rootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
+
+        let rootClient = allClients.find(c => String(c["고객번호"] || c["ID"] || "").trim() === rootId);
+        let subClients = allClients.filter(c => famSubRegex.test(String(c["고객번호"] || c["ID"] || "").trim()));
+
+        if (!rootClient && subClients.length > 0) {
+            rootClient = subClients.shift();
+        }
+
+        const rootName = rootClient ? (rootClient["고객명"] || rootClient["이름"] || rootId) : rootId;
+
+        fmRightFamily = {
+            rootId: rootId,
+            name: rootName + ' 가족',
+            head: rootClient ? makePersonObj(rootClient, '본인') : null,
+            members: subClients.map(c => makePersonObj(c))
+        };
+
+        recalc(fmRightFamily);
+        window.fmRenderRight();
+    };
+
+    window.fmDragStart = function(e, id, fromSide, isHead) {
+        draggedInfo = { id, fromSide, isHead };
+        if (e.target && e.target.classList) {
+            e.target.classList.add('dragging');
+        }
+        if (e.dataTransfer) {
+            e.dataTransfer.setData('text/plain', id);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+    };
+
+    window.fmDragEnd = function(e) {
+        document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    };
+
+    window.fmDragOverHandler = function(e) {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        e.currentTarget.classList.add('drag-over');
+    };
+
+    window.fmDragLeaveHandler = function(e) {
+        e.currentTarget.classList.remove('drag-over');
+    };
+
+    window.fmDoUnlink = function(side, id) {
+        const fam = getFamilyBySide(side);
+        if (!fam) return;
+        const p = extractPerson(fam, id);
+        if (!p) return;
+
+        if (!fam.head && fam.members && fam.members.length > 0) {
+            fam.head = fam.members.shift();
+            fam.head.rel = '본인';
+        }
+        recalc(fam);
+
+        const newRootId = String(getNextAllocatedRootId());
+        p.id = newRootId;
+        p.rel = '본인';
+        fmUnlinkedPool.push(p);
+
+        window.fmRenderAll();
+    };
+
+    window.fmDropToUnlinkPool = function(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+        if (!draggedInfo) return;
+        const { id, fromSide } = draggedInfo;
+        draggedInfo = null;
+
+        if (fromSide === 'unlink') return;
+
+        window.fmDoUnlink(fromSide, id);
+    };
+
+    window.fmRejoinToLeft = function(id) {
+        const idx = fmUnlinkedPool.findIndex(p => p.id === id || p.origId === id);
+        if (idx === -1) return;
+        const [p] = fmUnlinkedPool.splice(idx, 1);
+
+        if (!fmLeftFamily.head) {
+            p.rel = '본인';
+            fmLeftFamily.head = p;
+        } else {
+            if (p.origRel && p.origRel !== '본인') {
+                p.rel = p.origRel;
+            } else {
+                p.rel = '가족';
+            }
+            fmLeftFamily.members.push(p);
+        }
+        recalc(fmLeftFamily);
+        window.fmRenderAll();
+    };
+
+    window.fmDropHandler = function(e, toSide, slotType) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+        if (!draggedInfo) return;
+
+        const { id, fromSide } = draggedInfo;
+        draggedInfo = null;
+
+        let p = null;
+        if (fromSide === 'unlink') {
+            const idx = fmUnlinkedPool.findIndex(x => x.id === id || x.origId === id);
+            if (idx !== -1) [p] = fmUnlinkedPool.splice(idx, 1);
+        } else {
+            const fromFam = getFamilyBySide(fromSide);
+            if (fromFam) {
+                p = extractPerson(fromFam, id);
+                if (!fromFam.head && fromFam.members && fromFam.members.length > 0) {
+                    fromFam.head = fromFam.members.shift();
+                    fromFam.head.rel = '본인';
+                }
+                recalc(fromFam);
+            }
+        }
+
+        if (!p) {
+            window.fmRenderAll();
+            return;
+        }
+
+        const toFam = getFamilyBySide(toSide);
+        if (!toFam) {
+            window.fmRenderAll();
+            return;
+        }
+
+        if (toSide === 'new' && !toFam.rootId) {
+            toFam.rootId = String(getNextAllocatedRootId());
+        }
+
+        if (slotType === 'head') {
+            if (toFam.head) {
+                const oldHead = toFam.head;
+                oldHead.rel = '배우자';
+                toFam.members.unshift(oldHead);
+            }
+            p.rel = '본인';
+            toFam.head = p;
+        } else {
+            p.rel = (p.rel === '본인' || !p.rel) ? '가족' : p.rel;
+            toFam.members.push(p);
+        }
+
+        recalc(toFam);
+        window.fmRenderAll();
+    };
+
+    window.fmCycleRel = function(side, id) {
+        const fam = getFamilyBySide(side);
+        if (!fam) return;
+        const target = (fam.head && (fam.head.id === id || fam.head.origId === id)) ? fam.head : (fam.members || []).find(m => m.id === id || m.origId === id);
+        if (!target) return;
+
+        const relList = ['배우자', '자녀', '부모', '형제', '가족'];
+        const currIdx = relList.indexOf(target.rel);
+        const nextRel = relList[(currIdx + 1) % relList.length];
+        target.rel = nextRel;
+
+        if (side === 'left') window.fmRenderLeft();
+        else if (side === 'new') window.fmRenderNewBox();
+        else if (side === 'right') window.fmRenderRight();
+    };
+
+    window.fmResetAll = function() {
+        if (!fmOrigSnapshot) return;
+        if (!confirm("가족 구성을 초기 상태로 되돌리시겠습니까?")) return;
+
+        window.openFamilyManageModal(fmOrigSnapshot.left.rootId);
+    };
+
+    window.fmSaveAndApply = async function() {
+        if (!fmLeftFamily.head && fmLeftFamily.members && fmLeftFamily.members.length > 0) {
+            fmLeftFamily.head = fmLeftFamily.members.shift();
+            fmLeftFamily.head.rel = '본인';
+            recalc(fmLeftFamily);
+        }
+        if (fmNewFamily.members && fmNewFamily.members.length > 0 && !fmNewFamily.head) {
+            fmNewFamily.head = fmNewFamily.members.shift();
+            fmNewFamily.head.rel = '본인';
+            recalc(fmNewFamily);
+        }
+
+        const updates = [];
+        function checkPerson(p, targetNewId, targetRel) {
+            if (!p) return;
+            const oldId = String(p.origId || '').trim();
+            const newId = String(targetNewId || '').trim();
+            const oldRel = String(p.origRel || '').trim();
+            const newRel = String(targetRel || '가족').trim();
+
+            if (oldId !== newId || oldRel !== newRel) {
+                updates.push({
+                    oldId: oldId,
+                    newId: newId,
+                    newRelation: newRel,
+                    name: p.name,
+                    clientObj: p.clientObj
+                });
+            }
+        }
+
+        // Left family
+        if (fmLeftFamily.head) {
+            checkPerson(fmLeftFamily.head, fmLeftFamily.rootId, '본인');
+        }
+        (fmLeftFamily.members || []).forEach((m, idx) => {
+            checkPerson(m, fmLeftFamily.rootId + '-' + (idx + 1), m.rel);
+        });
+
+        // New family
+        if (fmNewFamily.head) {
+            const actualNewRoot = String(getNextAllocatedRootId());
+            checkPerson(fmNewFamily.head, actualNewRoot, '본인');
+            (fmNewFamily.members || []).forEach((m, idx) => {
+                checkPerson(m, actualNewRoot + '-' + (idx + 1), m.rel);
+            });
+        }
+
+        // Unlinked pool
+        fmUnlinkedPool.forEach(u => {
+            const actualUnlinkedRoot = String(getNextAllocatedRootId());
+            checkPerson(u, actualUnlinkedRoot, '본인');
+        });
+
+        // Right family
+        if (fmRightFamily && fmRightFamily.head) {
+            checkPerson(fmRightFamily.head, fmRightFamily.rootId, '본인');
+            (fmRightFamily.members || []).forEach((m, idx) => {
+                checkPerson(m, fmRightFamily.rootId + '-' + (idx + 1), m.rel);
+            });
+        }
+
+        if (updates.length === 0) {
+            alert("변경된 가족 구성 내용이 없습니다.");
+            return;
+        }
+
+        const summaryList = updates.map(u => '• ' + u.name + ': ' + u.oldId + ' ➔ ' + u.newId + ' (' + u.newRelation + ')').join('\n');
+        if (!confirm('다음 ' + updates.length + '명의 가족 정보 변경사항을 구글 시트 및 CRM에 반영하시겠습니까?\n\n' + summaryList)) {
+            return;
+        }
+
+        if (typeof updateMultipleCustomerIdsInSheet === 'function') {
+            await updateMultipleCustomerIdsInSheet(updates, '가족 구성 변경 완료');
+        } else {
+            console.warn('updateMultipleCustomerIdsInSheet function not found');
+        }
+
+        window.closeFamilyManageModal();
+
+        if (typeof window.renderTable === 'function') {
+            window.renderTable();
+        }
+        if (typeof window.openProfileModal === 'function' && fmLeftFamily.head) {
+            const p = document.getElementById('profileModal');
+            if (p && (p.classList.contains('show') || p.style.display === 'flex' || p.style.display === 'block')) {
+                window.openProfileModal(fmLeftFamily.head.id);
+            }
+        }
+    };
+
+    // Backward compatibility shortcuts
+    window.searchCustomerForFamily = function() {
+        const input = document.getElementById('fmTargetSearchInput');
+        if (input) window.fmOnSearchCustomer(input.value);
+    };
+    window.linkCustomerToFamily = async function(targetCustId, targetName) {
+        window.openFamilyManageModal(targetCustId, targetName);
+    };
+    window.unlinkFamilyMember = async function(targetCustId, targetName) {
+        window.openFamilyManageModal(targetCustId, targetName);
+    };
+
+})();
 
 async function updateMultipleCustomerIdsInSheet(updates, successMsg) {
     if (!updates || updates.length === 0) return;
@@ -11977,13 +12466,17 @@ async function updateMultipleCustomerIdsInSheet(updates, successMsg) {
 
         for (const item of updates) {
             const cleanOldId = String(item.oldId).trim();
-            const targetIdx = (window.globalCustomerData || []).findIndex(c => String(c["고객번호"] || c["사업자번호"] || c["ID"]).trim() === cleanOldId);
-            if (targetIdx === -1) {
+            let targetClient = item.clientObj;
+            if (!targetClient) {
+                const targetIdx = (window.globalCustomerData || []).findIndex(c => String(c["고객번호"] || c["사업자번호"] || c["ID"]).trim() === cleanOldId);
+                if (targetIdx !== -1) {
+                    targetClient = window.globalCustomerData[targetIdx];
+                }
+            }
+            if (!targetClient) {
                 console.warn(`고객번호 [${item.oldId}] 데이터를 찾을 수 없어 건너뜁니다.`);
                 continue;
             }
-            
-            const targetClient = window.globalCustomerData[targetIdx];
             const rNum = targetClient.rowNumber;
             const sName = targetClient.sheetName || "weraclecrm";
 

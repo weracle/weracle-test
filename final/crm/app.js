@@ -5303,7 +5303,7 @@ window.addPetRow = function(data) {
         <div style="display:flex; gap:8px; align-items:center; width:100%;">
             <div style="flex:1; display:flex; align-items:center; gap:6px;">
                 <span style="font-size:11.5px; color:#64748b; font-weight:600; white-space:nowrap;"><i class="fa-regular fa-calendar"></i> 생년월일:</span>
-                <input type="date" class="form-input pet-birth-input" value="${(pet.birth || '').replace(/"/g, '&quot;')}" style="flex:1; padding:6px 8px; font-size:12px; border-radius:6px; background:#fff;">
+                <input type="text" class="form-input pet-birth-input" maxlength="10" placeholder="YYYY-MM-DD" value="${(pet.birth || '').replace(/"/g, '&quot;')}" oninput="autoHyphenDate(this)" style="flex:1; padding:6px 8px; font-size:12px; border-radius:6px; background:#fff;">
             </div>
             <div style="flex:1; display:flex; align-items:center; gap:6px;">
                 <span style="font-size:11.5px; color:#64748b; font-weight:600; white-space:nowrap;"><i class="fa-solid fa-palette"></i> 모색:</span>
@@ -5659,11 +5659,28 @@ if(val.length < 5) target.value = val;
 else target.value = val.substring(0,4) + '-' + val.substring(4,6);
 }
 function autoHyphenDate(target) {
-let val = target.value.replace(/[^0-9]/g, '');
-if (val.length < 5) target.value = val;
-else if (val.length < 7) target.value = val.substring(0, 4) + '-' + val.substring(4);
-else target.value = val.substring(0, 4) + '-' + val.substring(4, 6) + '-' + val.substring(6, 8);
+    if (!target) return;
+    let cursor = target.selectionStart;
+    let oldVal = target.value;
+    let val = oldVal.replace(/[^0-9]/g, '');
+    if (val.length > 8) val = val.substring(0, 8);
+    let newVal = val;
+    if (val.length < 5) {
+        newVal = val;
+    } else if (val.length < 7) {
+        newVal = val.substring(0, 4) + '-' + val.substring(4);
+    } else {
+        newVal = val.substring(0, 4) + '-' + val.substring(4, 6) + '-' + val.substring(6, 8);
+    }
+    if (oldVal !== newVal) {
+        target.value = newVal;
+        if (cursor !== null && cursor !== undefined) {
+            let adj = newVal.length - oldVal.length;
+            target.setSelectionRange(cursor + adj, cursor + adj);
+        }
+    }
 }
+window.autoHyphenDate = autoHyphenDate;
 function updateAddButtonsVisibility() {
     let anyChecked = false;
     const entries = document.querySelectorAll('.insurance-entry');
@@ -5752,11 +5769,11 @@ function addAlrilRow(btn) {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 시작일</label>
-                    <input type="date" name="알릴_시작일" max="9999-12-31" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <input type="text" name="알릴_시작일" maxlength="10" placeholder="YYYY-MM-DD" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
                 </div>
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 종료일</label>
-                    <input type="date" name="알릴_종료일" max="9999-12-31" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <input type="text" name="알릴_종료일" maxlength="10" placeholder="YYYY-MM-DD" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
                 </div>
             </div>
             <div class="input-field" style="margin:0;">
@@ -7389,7 +7406,7 @@ div.innerHTML = `
 
             <div class="ins-tab-content detail-content" style="display:none;">
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; align-items: end; margin-bottom:15px;">
-                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">체결일</label><input type="date" name="체결일" max="9999-12-31" value="${dateVal}" onchange="if(window.calcRenewalDate) calcRenewalDate(this, ${insCount});" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
+                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">체결일</label><input type="text" name="체결일" maxlength="10" placeholder="YYYY-MM-DD" value="${dateVal}" oninput="autoHyphenDate(this); if(window.calcRenewalDate) calcRenewalDate(this, ${insCount});" onchange="if(window.calcRenewalDate) calcRenewalDate(this, ${insCount});" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
                     <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">납입기간</label>
                         <select name="납입기간" style="width:100%; padding:8px; border-radius:4px; border:1px solid #cbd5e1; font-size:13px;">
                             <option value="">선택</option>
@@ -7402,7 +7419,7 @@ div.innerHTML = `
                             ${['1년만기','3년만기','5년만기','7년만기','10년만기','15년만기','20년만기','25년만기','30년만기','80세만기','90세만기','100세만기'].map(d => '<option value="' + d + '" ' + (expireDateVal === d ? "selected" : "") + '>' + d + '</option>').join('')}
                         </select>
                     </div>
-                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">갱신일</label><input type="date" name="갱신일" max="9999-12-31" id="renewal-date-${insCount}" value="${renewalDateVal}" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
+                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">갱신일</label><input type="text" name="갱신일" maxlength="10" placeholder="YYYY-MM-DD" id="renewal-date-${insCount}" value="${renewalDateVal}" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
                 </div>
 
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 5px;">
@@ -7561,8 +7578,8 @@ div.innerHTML = `
 
             <div class="ins-tab-content detail-content" style="display:none;">
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-items: end; margin-bottom:15px;">
-                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">책임개시일</label><input type="date" name="책임개시일" max="9999-12-31" value="${data && data.책임개시일 ? data.책임개시일 : (data && data.체결일 ? data.체결일 : '')}" onchange="calcRenewalDate(this, 'renewal-${insCount}')" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
-                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">갱신일</label><input type="date" name="갱신일" max="9999-12-31" id="renewal-${insCount}" value="${data && data.갱신일 ? data.갱신일 : ''}" readonly style="padding:8px; font-size:13px; background:#f8fafc; color:#64748b; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
+                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">책임개시일</label><input type="text" name="책임개시일" maxlength="10" placeholder="YYYY-MM-DD" value="${data && data.책임개시일 ? data.책임개시일 : (data && data.체결일 ? data.체결일 : '')}" oninput="autoHyphenDate(this); calcRenewalDate(this, 'renewal-${insCount}')" onchange="calcRenewalDate(this, 'renewal-${insCount}')" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
+                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">갱신일</label><input type="text" name="갱신일" maxlength="10" placeholder="YYYY-MM-DD" id="renewal-${insCount}" value="${data && data.갱신일 ? data.갱신일 : ''}" readonly style="padding:8px; font-size:13px; background:#f8fafc; color:#64748b; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
                 </div>
 
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 5px; margin-bottom: 15px;">
@@ -7643,11 +7660,11 @@ area.appendChild(div);
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 시작일</label>
-                    <input type="date" name="알릴_시작일" max="9999-12-31" value="${startDateVal}" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <input type="text" name="알릴_시작일" maxlength="10" placeholder="YYYY-MM-DD" value="${startDateVal}" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
                 </div>
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 종료일</label>
-                    <input type="date" name="알릴_종료일" max="9999-12-31" value="${endDateVal}" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <input type="text" name="알릴_종료일" maxlength="10" placeholder="YYYY-MM-DD" value="${endDateVal}" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
                 </div>
             </div>
             <div class="input-field" style="margin:0;">
@@ -7696,11 +7713,11 @@ area.appendChild(div);
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 시작일</label>
-                    <input type="date" name="알릴_시작일" max="9999-12-31" value="" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <input type="text" name="알릴_시작일" maxlength="10" placeholder="YYYY-MM-DD" value="" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
                 </div>
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 종료일</label>
-                    <input type="date" name="알릴_종료일" max="9999-12-31" value="" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <input type="text" name="알릴_종료일" maxlength="10" placeholder="YYYY-MM-DD" value="" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
                 </div>
             </div>
             <div class="input-field" style="margin:0;">

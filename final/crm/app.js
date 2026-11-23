@@ -11738,6 +11738,8 @@ window.deleteCustomerData = async function() {
 // ==========================================
 // 15. Modern Visual Family Drag & Drop Controller
 // ==========================================
+// 15. Modern Visual Family Drag & Drop Controller
+// ==========================================
 (function() {
     let leftFamily = { rootId: null, name: '', head: null, members: [] };
     let newFamily = { rootId: null, name: '새 가족', head: null, members: [] };
@@ -11746,9 +11748,8 @@ window.deleteCustomerData = async function() {
     let isNewBoxOpen = false;
     let draggedInfo = null;
     let origSnapshot = null;
-    let tempRootCounter = 0;
 
-    function getNextAllocatedRootId() {
+    function getMaxDbRootId() {
         let maxId = 0;
         (window.globalCustomerData || []).forEach(c => {
             let idVal = c["고객번호"] || c["사업자번호"] || c["ID"];
@@ -11760,9 +11761,36 @@ window.deleteCustomerData = async function() {
                 }
             }
         });
-        if (tempRootCounter < maxId) tempRootCounter = maxId;
-        tempRootCounter += 1;
-        return tempRootCounter;
+        return maxId;
+    }
+
+    function refreshAllAllocatedIds() {
+        let nextAllocId = getMaxDbRootId() + 1;
+
+        // 1. If newFamily has a head (newly formed family)
+        if (newFamily.head) {
+            newFamily.rootId = String(nextAllocId++);
+            newFamily.head.id = newFamily.rootId;
+            newFamily.head.relation = '본인';
+            if (newFamily.members) {
+                newFamily.members.forEach((m, idx) => {
+                    m.id = newFamily.rootId + '-' + (idx + 1);
+                    if (m.relation === '본인' || !m.relation) m.relation = '가족';
+                });
+            }
+        } else {
+            newFamily.rootId = null;
+        }
+
+        // 2. Each person in unlinkedList gets strictly sequential nextAllocId (no gaps)
+        unlinkedList.forEach(u => {
+            u.id = String(nextAllocId++);
+            u.relation = '본인';
+        });
+
+        // 3. Recalc left and right families (members: -1, -2, -3...)
+        recalc(leftFamily);
+        if (rightFamily) recalc(rightFamily);
     }
 
     function makePersonObj(c, relOverride) {
@@ -11865,7 +11893,6 @@ window.deleteCustomerData = async function() {
         rightFamily = null;
         unlinkedList = [];
         isNewBoxOpen = false;
-        tempRootCounter = 0;
 
         origSnapshot = JSON.parse(JSON.stringify({
             left: {
@@ -11888,6 +11915,7 @@ window.deleteCustomerData = async function() {
         if (searchDrop) searchDrop.classList.remove('open');
 
         window.updateLayoutState();
+        refreshAllAllocatedIds();
         window.renderAll();
 
         const modal = document.getElementById('family-manage-modal');
@@ -11920,20 +11948,19 @@ window.deleteCustomerData = async function() {
             }
             if (newFamily.head) {
                 const h = newFamily.head;
-                h.id = String(getNextAllocatedRootId());
                 h.relation = '본인';
                 unlinkedList.push(h);
                 newFamily.head = null;
             }
             while (newFamily.members && newFamily.members.length > 0) {
                 const m = newFamily.members.shift();
-                m.id = String(getNextAllocatedRootId());
                 m.relation = '본인';
                 unlinkedList.push(m);
             }
         }
         isNewBoxOpen = false;
         window.updateLayoutState();
+        refreshAllAllocatedIds();
         window.renderAll();
     };
 
@@ -12113,7 +12140,6 @@ window.deleteCustomerData = async function() {
         const cleanQ = q.replace(/\D/g, '');
         const allClients = window.globalCustomerData || [];
 
-        // Exclude active IDs
         const activeIds = new Set();
         if (leftFamily.head) activeIds.add(String(leftFamily.head.origId).trim());
         (leftFamily.members || []).forEach(m => activeIds.add(String(m.origId).trim()));
@@ -12179,7 +12205,7 @@ window.deleteCustomerData = async function() {
 
         const allClients = window.globalCustomerData || [];
         const escRoot = rootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
+        const famSubRegex = new RegExp('^' + escRoot + '-\d+(?:-\d+)*$');
 
         let rootClient = allClients.find(c => String(c["고객번호"] || c["ID"] || "").trim() === rootId);
         let subClients = allClients.filter(c => famSubRegex.test(String(c["고객번호"] || c["ID"] || "").trim()));
@@ -12202,7 +12228,7 @@ window.deleteCustomerData = async function() {
             input.value = rootName + ' (' + rootId + ')';
         }
 
-        recalc(rightFamily);
+        refreshAllAllocatedIds();
         window.renderRight();
     };
 
@@ -12242,13 +12268,11 @@ window.deleteCustomerData = async function() {
             fam.head = fam.members.shift();
             fam.head.relation = '본인';
         }
-        recalc(fam);
 
-        const newRootId = String(getNextAllocatedRootId());
-        p.id = newRootId;
         p.relation = '본인';
         unlinkedList.push(p);
 
+        refreshAllAllocatedIds();
         window.renderAll();
     };
 
@@ -12273,14 +12297,11 @@ window.deleteCustomerData = async function() {
             p.relation = '본인';
             leftFamily.head = p;
         } else {
-            if (p.origRel && p.origRel !== '본인') {
-                p.relation = p.origRel;
-            } else {
-                p.relation = '가족';
-            }
+            p.relation = (p.origRel && p.origRel !== '본인') ? p.origRel : '가족';
             leftFamily.members.push(p);
         }
-        recalc(leftFamily);
+
+        refreshAllAllocatedIds();
         window.renderAll();
     };
 
@@ -12304,23 +12325,20 @@ window.deleteCustomerData = async function() {
                     fromFam.head = fromFam.members.shift();
                     fromFam.head.relation = '본인';
                 }
-                recalc(fromFam);
             }
         }
 
         if (!p) {
+            refreshAllAllocatedIds();
             window.renderAll();
             return;
         }
 
         const toFam = getFamilyBySide(toSide);
         if (!toFam) {
+            refreshAllAllocatedIds();
             window.renderAll();
             return;
-        }
-
-        if (toSide === 'new' && !toFam.rootId) {
-            toFam.rootId = String(getNextAllocatedRootId());
         }
 
         if (slotType === 'head') {
@@ -12336,7 +12354,7 @@ window.deleteCustomerData = async function() {
             toFam.members.push(p);
         }
 
-        recalc(toFam);
+        refreshAllAllocatedIds();
         window.renderAll();
     };
 
@@ -12364,16 +12382,8 @@ window.deleteCustomerData = async function() {
     };
 
     window.saveAndApply = async function() {
-        if (!leftFamily.head && leftFamily.members && leftFamily.members.length > 0) {
-            leftFamily.head = leftFamily.members.shift();
-            leftFamily.head.relation = '본인';
-            recalc(leftFamily);
-        }
-        if (newFamily.members && newFamily.members.length > 0 && !newFamily.head) {
-            newFamily.head = newFamily.members.shift();
-            newFamily.head.relation = '본인';
-            recalc(newFamily);
-        }
+        // Guaranteed strictly compact re-indexing right before save
+        refreshAllAllocatedIds();
 
         const updates = [];
         function checkPerson(p, targetNewId, targetRel) {
@@ -12396,32 +12406,30 @@ window.deleteCustomerData = async function() {
 
         // Left family
         if (leftFamily.head) {
-            checkPerson(leftFamily.head, leftFamily.rootId, '본인');
+            checkPerson(leftFamily.head, leftFamily.head.id, '본인');
         }
-        (leftFamily.members || []).forEach((m, idx) => {
-            checkPerson(m, leftFamily.rootId + '-' + (idx + 1), m.relation);
+        (leftFamily.members || []).forEach(m => {
+            checkPerson(m, m.id, m.relation);
         });
 
         // New family
         if (newFamily.head) {
-            const actualNewRoot = newFamily.rootId || newFamily.head.id || String(getNextAllocatedRootId());
-            checkPerson(newFamily.head, actualNewRoot, '본인');
-            (newFamily.members || []).forEach((m, idx) => {
-                checkPerson(m, actualNewRoot + '-' + (idx + 1), m.relation);
+            checkPerson(newFamily.head, newFamily.head.id, '본인');
+            (newFamily.members || []).forEach(m => {
+                checkPerson(m, m.id, m.relation);
             });
         }
 
         // Unlinked list
         unlinkedList.forEach(u => {
-            const actualUnlinkedRoot = u.id || String(getNextAllocatedRootId());
-            checkPerson(u, actualUnlinkedRoot, '본인');
+            checkPerson(u, u.id, '본인');
         });
 
         // Right family
         if (rightFamily && rightFamily.head) {
-            checkPerson(rightFamily.head, rightFamily.rootId, '본인');
-            (rightFamily.members || []).forEach((m, idx) => {
-                checkPerson(m, rightFamily.rootId + '-' + (idx + 1), m.relation);
+            checkPerson(rightFamily.head, rightFamily.head.id, '본인');
+            (rightFamily.members || []).forEach(m => {
+                checkPerson(m, m.id, m.relation);
             });
         }
 

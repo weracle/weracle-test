@@ -11736,14 +11736,16 @@ window.deleteCustomerData = async function() {
 // ==========================================
 // 15. Modern Visual Family Drag & Drop Controller
 // ==========================================
+// 15. Modern Visual Family Drag & Drop Controller
+// ==========================================
 (function() {
-    let fmLeftFamily = { rootId: null, name: '', head: null, members: [] };
-    let fmNewFamily = { rootId: null, name: '새 가족', head: null, members: [] };
-    let fmRightFamily = null;
-    let fmUnlinkedPool = [];
+    let leftFamily = { rootId: null, name: '', head: null, members: [] };
+    let newFamily = { rootId: null, name: '새 가족', head: null, members: [] };
+    let rightFamily = null;
+    let unlinkedList = [];
     let isNewBoxOpen = false;
     let draggedInfo = null;
-    let fmOrigSnapshot = null;
+    let origSnapshot = null;
     let tempRootCounter = 0;
 
     function getNextAllocatedRootId() {
@@ -11768,24 +11770,31 @@ window.deleteCustomerData = async function() {
         const cId = String(c["고객번호"] || c["ID"] || "").trim();
         const name = String(c["고객명"] || c["이름"] || c["대표자명"] || "고객").trim();
         const phone = String(c["폰번호"] || c["대표자폰번호"] || c["휴대폰"] || "-").trim();
+        let gender = c["성별"] || (c["주민번호"] && (c["주민번호"].includes('-2') || c["주민번호"].includes('-4')) ? '여' : '남');
+        let age = c["나이"] || c["만나이"] || c["상령일나이"] || "";
+        if (age && String(age).includes('세')) age = String(age).replace('세', '');
+
         let rel = relOverride || c["가족사항"] || c["가족_관계"] || "가족";
         if (rel.includes("(")) rel = rel.split("(")[0].trim();
         if (!cId.includes('-') && (!rel || rel === '가족')) rel = "본인";
+
         return {
             id: cId,
             origId: cId,
             name: name,
             phone: phone,
-            rel: rel,
+            gender: gender,
+            age: age,
+            relation: rel,
             origRel: rel,
             clientObj: c
         };
     }
 
     function getFamilyBySide(side) {
-        if (side === 'left') return fmLeftFamily;
-        if (side === 'new') return fmNewFamily;
-        if (side === 'right') return fmRightFamily;
+        if (side === 'left') return leftFamily;
+        if (side === 'new') return newFamily;
+        if (side === 'right') return rightFamily;
         return null;
     }
 
@@ -11811,15 +11820,15 @@ window.deleteCustomerData = async function() {
             if (family.rootId) {
                 family.head.id = family.rootId;
             }
-            family.head.rel = '본인';
+            family.head.relation = '본인';
         }
         if (family.members) {
             family.members.forEach((m, idx) => {
                 if (family.rootId) {
                     m.id = family.rootId + '-' + (idx + 1);
                 }
-                if (m.rel === '본인' || !m.rel) {
-                    m.rel = '가족';
+                if (m.relation === '본인' || !m.relation) {
+                    m.relation = '가족';
                 }
             });
         }
@@ -11835,52 +11844,52 @@ window.deleteCustomerData = async function() {
         const allClients = window.globalCustomerData || [];
         const escRoot = baseRootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const famSubRegex = new RegExp('^' + escRoot + '-\\d+(?:-\\d+)*$');
-        
+
         let rootClient = allClients.find(c => String(c["고객번호"] || c["ID"] || "").trim() === baseRootId);
         let subClients = allClients.filter(c => famSubRegex.test(String(c["고객번호"] || c["ID"] || "").trim()));
-        
+
         if (!rootClient && subClients.length > 0) {
             rootClient = subClients.shift();
         }
-        
+
         const effectiveName = rootName || (rootClient ? (rootClient["고객명"] || rootClient["이름"] || baseRootId) : baseRootId);
-        
-        fmLeftFamily = {
+
+        leftFamily = {
             rootId: baseRootId,
             name: effectiveName + ' 가족',
             head: rootClient ? makePersonObj(rootClient, '본인') : null,
             members: subClients.map(c => makePersonObj(c))
         };
-        
-        fmNewFamily = { rootId: null, name: '새 가족', head: null, members: [] };
-        fmRightFamily = null;
-        fmUnlinkedPool = [];
+
+        newFamily = { rootId: null, name: '새 가족', head: null, members: [] };
+        rightFamily = null;
+        unlinkedList = [];
         isNewBoxOpen = false;
         tempRootCounter = 0;
-        
-        fmOrigSnapshot = JSON.parse(JSON.stringify({
+
+        origSnapshot = JSON.parse(JSON.stringify({
             left: {
-                rootId: fmLeftFamily.rootId,
-                name: fmLeftFamily.name,
-                head: fmLeftFamily.head,
-                members: fmLeftFamily.members
+                rootId: leftFamily.rootId,
+                name: leftFamily.name,
+                head: leftFamily.head,
+                members: leftFamily.members
             }
         }));
-        
+
         const rootInput = document.getElementById('fm-current-root-id');
         if (rootInput) rootInput.value = baseRootId;
-        
+
         const titleEl = document.getElementById('fmModalTitle');
         if (titleEl) titleEl.innerText = '[' + effectiveName + '] 가족 관리';
-        
-        const searchInput = document.getElementById('fmTargetSearchInput');
+
+        const searchInput = document.getElementById('targetSearchInput');
         if (searchInput) searchInput.value = '';
-        const searchDrop = document.getElementById('fmSearchDropdown');
-        if (searchDrop) searchDrop.style.display = 'none';
-        
-        window.fmUpdateLayoutState();
-        window.fmRenderAll();
-        
+        const searchDrop = document.getElementById('searchDropdown');
+        if (searchDrop) searchDrop.classList.remove('open');
+
+        window.updateLayoutState();
+        window.renderAll();
+
         const modal = document.getElementById('family-manage-modal');
         if (modal) {
             modal.style.display = 'flex';
@@ -11895,40 +11904,40 @@ window.deleteCustomerData = async function() {
             modal.style.display = 'none';
             modal.classList.remove('active');
         }
-        const searchDrop = document.getElementById('fmSearchDropdown');
-        if (searchDrop) searchDrop.style.display = 'none';
+        const searchDrop = document.getElementById('searchDropdown');
+        if (searchDrop) searchDrop.classList.remove('open');
     };
 
-    window.fmOpenNewHouseBox = function() {
+    window.openNewHouseBox = function() {
         isNewBoxOpen = true;
-        window.fmUpdateLayoutState();
+        window.updateLayoutState();
     };
 
-    window.fmCloseNewHouseBox = function() {
-        if (fmNewFamily.head || (fmNewFamily.members && fmNewFamily.members.length > 0)) {
+    window.closeNewHouseBox = function() {
+        if (newFamily.head || (newFamily.members && newFamily.members.length > 0)) {
             if (!confirm("새 가족 구성원에 고객이 있습니다. 분리 보관함으로 이동하고 닫으시겠습니까?")) {
                 return;
             }
-            if (fmNewFamily.head) {
-                const h = fmNewFamily.head;
+            if (newFamily.head) {
+                const h = newFamily.head;
                 h.id = String(getNextAllocatedRootId());
-                h.rel = '본인';
-                fmUnlinkedPool.push(h);
-                fmNewFamily.head = null;
+                h.relation = '본인';
+                unlinkedList.push(h);
+                newFamily.head = null;
             }
-            while (fmNewFamily.members && fmNewFamily.members.length > 0) {
-                const m = fmNewFamily.members.shift();
+            while (newFamily.members && newFamily.members.length > 0) {
+                const m = newFamily.members.shift();
                 m.id = String(getNextAllocatedRootId());
-                m.rel = '본인';
-                fmUnlinkedPool.push(m);
+                m.relation = '본인';
+                unlinkedList.push(m);
             }
         }
         isNewBoxOpen = false;
-        window.fmUpdateLayoutState();
-        window.fmRenderAll();
+        window.updateLayoutState();
+        window.renderAll();
     };
 
-    window.fmUpdateLayoutState = function() {
+    window.updateLayoutState = function() {
         const modalCard = document.getElementById('mainModalCard');
         const bodyLayout = document.getElementById('modalBodyLayout');
         const newBox = document.getElementById('newFamilyBox');
@@ -11949,180 +11958,182 @@ window.deleteCustomerData = async function() {
         }
     };
 
-    window.fmRenderAll = function() {
-        window.fmRenderLeft();
-        window.fmRenderNewBox();
-        window.fmRenderRight();
-        window.fmRenderUnlinkedPool();
+    window.renderAll = function() {
+        window.renderLeft();
+        window.renderNewBox();
+        window.renderRight();
+        window.renderUnlinkedPool();
     };
 
-    window.fmRenderLeft = function() {
+    window.renderLeft = function() {
         const title = document.getElementById('leftTitle');
         const badge = document.getElementById('leftBadge');
         const headSlot = document.getElementById('leftHeadSlot');
         const membersSlot = document.getElementById('leftMembersSlot');
         if (!title || !badge || !headSlot || !membersSlot) return;
 
-        title.innerText = fmLeftFamily.name || '기존 가족';
-        const total = (fmLeftFamily.head ? 1 : 0) + (fmLeftFamily.members ? fmLeftFamily.members.length : 0);
+        title.innerText = leftFamily.name || '기존 가족';
+        const total = (leftFamily.head ? 1 : 0) + (leftFamily.members ? leftFamily.members.length : 0);
         badge.innerText = total + '인';
 
-        if (fmLeftFamily.head) {
-            headSlot.innerHTML = window.fmRenderPersonCard(fmLeftFamily.head, 'left', true);
+        if (leftFamily.head) {
+            headSlot.innerHTML = window.renderPersonCard(leftFamily.head, 'left', true);
         } else {
-            headSlot.innerHTML = '<div class="slot-empty-msg">대표자를 드래그하여 배치</div>';
+            headSlot.innerHTML = '<span class="placeholder-text">대표자를 드래그하여 배치</span>';
         }
 
-        if (fmLeftFamily.members && fmLeftFamily.members.length > 0) {
-            membersSlot.innerHTML = fmLeftFamily.members.map(m => window.fmRenderPersonCard(m, 'left', false)).join('');
+        if (leftFamily.members && leftFamily.members.length > 0) {
+            membersSlot.innerHTML = leftFamily.members.map(m => window.renderPersonCard(m, 'left', false)).join('');
         } else {
-            membersSlot.innerHTML = '<div class="slot-empty-msg">가족원을 드래그하여 배치</div>';
+            membersSlot.innerHTML = '<span class="placeholder-text">가족원을 드래그하여 배치</span>';
         }
     };
 
-    window.fmRenderNewBox = function() {
+    window.renderNewBox = function() {
         const badge = document.getElementById('newBadge');
         const headSlot = document.getElementById('newHeadSlot');
         const membersSlot = document.getElementById('newMembersSlot');
         if (!badge || !headSlot || !membersSlot) return;
 
-        const total = (fmNewFamily.head ? 1 : 0) + (fmNewFamily.members ? fmNewFamily.members.length : 0);
+        const total = (newFamily.head ? 1 : 0) + (newFamily.members ? newFamily.members.length : 0);
         badge.innerText = total > 0 ? (total + '인') : '신규';
 
-        if (fmNewFamily.head) {
-            headSlot.innerHTML = window.fmRenderPersonCard(fmNewFamily.head, 'new', true);
+        if (newFamily.head) {
+            headSlot.innerHTML = window.renderPersonCard(newFamily.head, 'new', true);
         } else {
-            headSlot.innerHTML = '<div class="slot-empty-msg">대표자를 드래그하여 배치</div>';
+            headSlot.innerHTML = '<span class="placeholder-text">대표자를 드래그하여 배치</span>';
         }
 
-        if (fmNewFamily.members && fmNewFamily.members.length > 0) {
-            membersSlot.innerHTML = fmNewFamily.members.map(m => window.fmRenderPersonCard(m, 'new', false)).join('');
+        if (newFamily.members && newFamily.members.length > 0) {
+            membersSlot.innerHTML = newFamily.members.map(m => window.renderPersonCard(m, 'new', false)).join('');
         } else {
-            membersSlot.innerHTML = '<div class="slot-empty-msg">가족원을 드래그하여 배치</div>';
+            membersSlot.innerHTML = '<span class="placeholder-text">가족원을 드래그하여 배치</span>';
         }
     };
 
-    window.fmRenderRight = function() {
+    window.renderRight = function() {
         const title = document.getElementById('rightTitle');
         const badge = document.getElementById('rightBadge');
         const headSlot = document.getElementById('rightHeadSlot');
         const membersSlot = document.getElementById('rightMembersSlot');
         if (!title || !badge || !headSlot || !membersSlot) return;
 
-        if (!fmRightFamily) {
+        if (!rightFamily) {
             title.innerText = '검색 가족';
             badge.innerText = '미선택';
-            headSlot.innerHTML = '<div class="slot-empty-msg">상단에서 고객을 검색하세요</div>';
-            membersSlot.innerHTML = '<div class="slot-empty-msg">검색 시 가족원이 표시됩니다</div>';
+            headSlot.innerHTML = '<span class="placeholder-text">상단에서 고객을 검색하세요</span>';
+            membersSlot.innerHTML = '<span class="placeholder-text">검색 시 가족원이 표시됩니다</span>';
             return;
         }
 
-        title.innerText = fmRightFamily.name || '검색 가족';
-        const total = (fmRightFamily.head ? 1 : 0) + (fmRightFamily.members ? fmRightFamily.members.length : 0);
+        title.innerText = rightFamily.name || '검색 가족';
+        const total = (rightFamily.head ? 1 : 0) + (rightFamily.members ? rightFamily.members.length : 0);
         badge.innerText = total + '인';
 
-        if (fmRightFamily.head) {
-            headSlot.innerHTML = window.fmRenderPersonCard(fmRightFamily.head, 'right', true);
+        if (rightFamily.head) {
+            headSlot.innerHTML = window.renderPersonCard(rightFamily.head, 'right', true);
         } else {
-            headSlot.innerHTML = '<div class="slot-empty-msg">대표 없음</div>';
+            headSlot.innerHTML = '<span class="placeholder-text">대표 없음</span>';
         }
 
-        if (fmRightFamily.members && fmRightFamily.members.length > 0) {
-            membersSlot.innerHTML = fmRightFamily.members.map(m => window.fmRenderPersonCard(m, 'right', false)).join('');
+        if (rightFamily.members && rightFamily.members.length > 0) {
+            membersSlot.innerHTML = rightFamily.members.map(m => window.renderPersonCard(m, 'right', false)).join('');
         } else {
-            membersSlot.innerHTML = '<div class="slot-empty-msg">가족원 없음</div>';
+            membersSlot.innerHTML = '<span class="placeholder-text">가족원 없음</span>';
         }
     };
 
-    window.fmRenderUnlinkedPool = function() {
+    window.renderUnlinkedPool = function() {
         const countBadge = document.getElementById('unlinkCountBadge');
         const track = document.getElementById('unlinkChipsTrack');
         if (!countBadge || !track) return;
 
-        countBadge.innerText = fmUnlinkedPool.length;
+        countBadge.innerText = unlinkedList.length;
 
-        if (fmUnlinkedPool.length === 0) {
-            track.innerHTML = '<span class="pool-empty-hint">분리할 고객을 여기로 던지거나 [분리] 클릭</span>';
+        if (unlinkedList.length === 0) {
+            track.innerHTML = '<span class="unlink-empty-hint">없음 (카드를 여기로 던지거나 [분리]를 누르세요)</span>';
             return;
         }
 
-        track.innerHTML = fmUnlinkedPool.map(p => {
-            const safeName = (p.name || '고객').replace(/'/g, "\\'");
-            const safeId = String(p.id).replace(/'/g, "\\'");
+        track.innerHTML = unlinkedList.map(p => {
+            const isFemale = (p.gender === '여');
+            const avClass = isFemale ? 'av-pink' : 'av-blue';
+
             return `
-                <div class="unlink-chip" draggable="true"
-                     ondragstart="window.fmDragStart(event, '${safeId}', 'unlink', false)"
-                     ondragend="window.fmDragEnd(event)">
-                    <span class="chip-name">${p.name}</span>
-                    <span class="chip-id">#${p.id}</span>
-                    <button type="button" class="btn-rejoin" onclick="window.fmRejoinToLeft('${safeId}')" title="기존 가족으로 복귀">
-                        <i class="fa-solid fa-arrow-left"></i> 합류
-                    </button>
+                <div class="unlink-person-chip" draggable="true"
+                     ondragstart="window.dragStart(event, '${p.id}', 'unlinked', false)"
+                     ondragend="window.dragEnd(event)">
+                    <div class="p-av ${avClass}"><i class="fa-solid fa-user"></i></div>
+                    <strong class="chip-name">${p.name}</strong>
+                    <span class="chip-new-id">ID: ${p.id}</span>
+                    <span style="font-size:9px; color:#64748b;">${p.gender || '-'}, ${p.age ? p.age + '세' : '-'}</span>
+                    <button type="button" class="btn-chip-rejoin" onclick="window.rejoinToLeft('${p.id}')">◀ 합류</button>
                 </div>
             `;
         }).join('');
     };
 
-    window.fmRenderPersonCard = function(p, side, isHead) {
-        if (!p) return '';
-        const safeName = (p.name || '고객').replace(/'/g, "\\'");
-        const safeId = String(p.id).replace(/'/g, "\\'");
-        const badgeClass = isHead ? 'badge-rel-head' : 'badge-rel-sub';
-        const displayRel = p.rel || (isHead ? '본인' : '가족');
+    window.renderPersonCard = function(p, side, isHead) {
+        const isFemale = (p.gender === '여');
+        const avClass = isFemale ? 'av-pink' : 'av-blue';
 
         return `
-            <div class="person-card ${isHead ? 'is-head-card' : ''}"
-                 draggable="true"
-                 ondragstart="window.fmDragStart(event, '${safeId}', '${side}', ${isHead})"
-                 ondragend="window.fmDragEnd(event)">
-                <div class="person-meta">
-                    <span class="person-name">${p.name}</span>
-                    <span class="person-id">${p.id}</span>
+            <div class="person-item" draggable="true"
+                 ondragstart="window.dragStart(event, '${p.id}', '${side}', ${isHead})"
+                 ondragend="window.dragEnd(event)">
+                <div class="p-left">
+                    <div class="p-av ${avClass}"><i class="fa-solid ${isHead ? 'fa-user-tie' : 'fa-user'}"></i></div>
+                    <div style="min-width:0;">
+                        <div class="p-name-row">
+                            <strong>${p.name}</strong>
+                            <span class="p-id-tag">${p.id}</span>
+                        </div>
+                        <div class="p-sub-text">${p.gender || '-'}, ${p.age ? p.age + '세' : '-'}</div>
+                    </div>
                 </div>
-                <div class="person-actions">
-                    <span class="badge-rel ${badgeClass}" onclick="window.fmCycleRel('${side}', '${safeId}')" title="클릭하여 관계 변경">
-                        ${displayRel} <i class="fa-solid fa-angle-down" style="font-size:9px; margin-left:2px;"></i>
-                    </span>
-                    <button type="button" class="btn-unlink-action" onclick="window.fmDoUnlink('${side}', '${safeId}')" title="분리">
-                        분리
-                    </button>
+                <div class="p-right">
+                    ${!isHead ? `
+                        <button type="button" class="rel-btn" onclick="window.cycleRel('${side}', '${p.id}')">${p.relation || '가족'} ▾</button>
+                        <button type="button" class="btn-unlink-mini" onclick="window.doUnlink('${side}', '${p.id}')">분리</button>
+                    ` : `<span style="font-size:9px; font-weight:800; color:#16a34a; padding:1px 4px;">대표</span>`}
                 </div>
             </div>
         `;
     };
 
-    window.fmOnSearchCustomer = function(val) {
-        const drop = document.getElementById('fmSearchDropdown');
-        if (!drop) return;
-        val = String(val || '').trim();
-        if (val.length < 1) {
-            drop.style.display = 'none';
+    window.onSearchCustomer = function(val) {
+        const dd = document.getElementById('searchDropdown');
+        if (!dd) return;
+        const q = String(val || '').trim().toLowerCase();
+        if (!q) {
+            dd.classList.remove('open');
             return;
         }
 
-        const cleanVal = val.replace(/\D/g, '');
+        const cleanQ = q.replace(/\D/g, '');
         const allClients = window.globalCustomerData || [];
 
+        // Exclude active IDs
         const activeIds = new Set();
-        if (fmLeftFamily.head) activeIds.add(String(fmLeftFamily.head.origId).trim());
-        (fmLeftFamily.members || []).forEach(m => activeIds.add(String(m.origId).trim()));
-        if (fmNewFamily.head) activeIds.add(String(fmNewFamily.head.origId).trim());
-        (fmNewFamily.members || []).forEach(m => activeIds.add(String(m.origId).trim()));
-        fmUnlinkedPool.forEach(u => activeIds.add(String(u.origId).trim()));
+        if (leftFamily.head) activeIds.add(String(leftFamily.head.origId).trim());
+        (leftFamily.members || []).forEach(m => activeIds.add(String(m.origId).trim()));
+        if (newFamily.head) activeIds.add(String(newFamily.head.origId).trim());
+        (newFamily.members || []).forEach(m => activeIds.add(String(m.origId).trim()));
+        unlinkedList.forEach(u => activeIds.add(String(u.origId).trim()));
 
         const matches = allClients.filter(c => {
             const cId = String(c["고객번호"] || c["ID"] || "").trim();
             if (activeIds.has(cId)) return false;
 
-            const name = String(c["고객명"] || c["이름"] || c["대표자명"] || "").trim();
+            const name = String(c["고객명"] || c["이름"] || c["대표자명"] || "").trim().toLowerCase();
             const phone = String(c["폰번호"] || c["대표자폰번호"] || c["휴대폰"] || "").replace(/\D/g, '');
 
-            return name.includes(val) || cId.includes(val) || (cleanVal.length >= 2 && phone.includes(cleanVal));
+            return name.includes(q) || cId.includes(q) || (cleanQ.length >= 2 && phone.includes(cleanQ));
         });
 
         if (matches.length === 0) {
-            drop.innerHTML = '<div class="search-item" style="color:#94a3b8; text-align:center; padding:10px;">검색 결과가 없습니다.</div>';
-            drop.style.display = 'block';
+            dd.innerHTML = '<div style="padding:6px; font-size:10.5px; color:#94a3b8; text-align:center;">결과 없음</div>';
+            dd.classList.add('open');
             return;
         }
 
@@ -12143,24 +12154,28 @@ window.deleteCustomerData = async function() {
                 return id === rootId || id.startsWith(rootId + '-');
             }).length;
 
+            const firstMatch = grouped[rootId][0];
+            const p = makePersonObj(firstMatch);
+            const tag = count === 1 ? '1인' : rootName + ' 가족 (' + count + '인)';
+
             html += `
-                <div class="search-item" onclick="window.selectFmSearchFamily('${rootId}')">
+                <div class="search-dropdown-item" onclick="window.selectSearchFamily('${rootId}')">
                     <div>
-                        <span class="search-item-name">${rootName}</span>
-                        <span class="search-item-id">#${rootId}</span>
+                        <strong style="font-size:11px;">${p.name}</strong> (${p.id})
+                        <span style="font-size:9.5px; color:#64748b; margin-left:3px;">${p.gender || '-'}, ${p.age ? p.age + '세' : ''}</span>
                     </div>
-                    <span class="search-item-fam">${count}인 세대</span>
+                    <span style="font-size:9.5px; font-weight:700; color:#7c3aed;">${tag}</span>
                 </div>
             `;
         });
 
-        drop.innerHTML = html;
-        drop.style.display = 'block';
+        dd.innerHTML = html;
+        dd.classList.add('open');
     };
 
-    window.selectFmSearchFamily = function(rootId) {
-        const drop = document.getElementById('fmSearchDropdown');
-        if (drop) drop.style.display = 'none';
+    window.selectSearchFamily = function(rootId) {
+        const dd = document.getElementById('searchDropdown');
+        if (dd) dd.classList.remove('open');
 
         const allClients = window.globalCustomerData || [];
         const escRoot = rootId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -12175,18 +12190,23 @@ window.deleteCustomerData = async function() {
 
         const rootName = rootClient ? (rootClient["고객명"] || rootClient["이름"] || rootId) : rootId;
 
-        fmRightFamily = {
+        rightFamily = {
             rootId: rootId,
             name: rootName + ' 가족',
             head: rootClient ? makePersonObj(rootClient, '본인') : null,
             members: subClients.map(c => makePersonObj(c))
         };
 
-        recalc(fmRightFamily);
-        window.fmRenderRight();
+        const input = document.getElementById('targetSearchInput');
+        if (input && rootClient) {
+            input.value = rootName + ' (' + rootId + ')';
+        }
+
+        recalc(rightFamily);
+        window.renderRight();
     };
 
-    window.fmDragStart = function(e, id, fromSide, isHead) {
+    window.dragStart = function(e, id, fromSide, isHead) {
         draggedInfo = { id, fromSide, isHead };
         if (e.target && e.target.classList) {
             e.target.classList.add('dragging');
@@ -12197,22 +12217,22 @@ window.deleteCustomerData = async function() {
         }
     };
 
-    window.fmDragEnd = function(e) {
+    window.dragEnd = function(e) {
         document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
         document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
     };
 
-    window.fmDragOverHandler = function(e) {
+    window.dragOverHandler = function(e) {
         e.preventDefault();
         if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
         e.currentTarget.classList.add('drag-over');
     };
 
-    window.fmDragLeaveHandler = function(e) {
+    window.dragLeaveHandler = function(e) {
         e.currentTarget.classList.remove('drag-over');
     };
 
-    window.fmDoUnlink = function(side, id) {
+    window.doUnlink = function(side, id) {
         const fam = getFamilyBySide(side);
         if (!fam) return;
         const p = extractPerson(fam, id);
@@ -12220,51 +12240,51 @@ window.deleteCustomerData = async function() {
 
         if (!fam.head && fam.members && fam.members.length > 0) {
             fam.head = fam.members.shift();
-            fam.head.rel = '본인';
+            fam.head.relation = '본인';
         }
         recalc(fam);
 
         const newRootId = String(getNextAllocatedRootId());
         p.id = newRootId;
-        p.rel = '본인';
-        fmUnlinkedPool.push(p);
+        p.relation = '본인';
+        unlinkedList.push(p);
 
-        window.fmRenderAll();
+        window.renderAll();
     };
 
-    window.fmDropToUnlinkPool = function(e) {
+    window.dropToUnlinkPool = function(e) {
         e.preventDefault();
         e.currentTarget.classList.remove('drag-over');
         if (!draggedInfo) return;
         const { id, fromSide } = draggedInfo;
         draggedInfo = null;
 
-        if (fromSide === 'unlink') return;
+        if (fromSide === 'unlinked') return;
 
-        window.fmDoUnlink(fromSide, id);
+        window.doUnlink(fromSide, id);
     };
 
-    window.fmRejoinToLeft = function(id) {
-        const idx = fmUnlinkedPool.findIndex(p => p.id === id || p.origId === id);
+    window.rejoinToLeft = function(id) {
+        const idx = unlinkedList.findIndex(p => p.id === id || p.origId === id);
         if (idx === -1) return;
-        const [p] = fmUnlinkedPool.splice(idx, 1);
+        const [p] = unlinkedList.splice(idx, 1);
 
-        if (!fmLeftFamily.head) {
-            p.rel = '본인';
-            fmLeftFamily.head = p;
+        if (!leftFamily.head) {
+            p.relation = '본인';
+            leftFamily.head = p;
         } else {
             if (p.origRel && p.origRel !== '본인') {
-                p.rel = p.origRel;
+                p.relation = p.origRel;
             } else {
-                p.rel = '가족';
+                p.relation = '가족';
             }
-            fmLeftFamily.members.push(p);
+            leftFamily.members.push(p);
         }
-        recalc(fmLeftFamily);
-        window.fmRenderAll();
+        recalc(leftFamily);
+        window.renderAll();
     };
 
-    window.fmDropHandler = function(e, toSide, slotType) {
+    window.dropHandler = function(e, toSide, slotType) {
         e.preventDefault();
         e.currentTarget.classList.remove('drag-over');
         if (!draggedInfo) return;
@@ -12273,29 +12293,29 @@ window.deleteCustomerData = async function() {
         draggedInfo = null;
 
         let p = null;
-        if (fromSide === 'unlink') {
-            const idx = fmUnlinkedPool.findIndex(x => x.id === id || x.origId === id);
-            if (idx !== -1) [p] = fmUnlinkedPool.splice(idx, 1);
+        if (fromSide === 'unlinked') {
+            const idx = unlinkedList.findIndex(x => x.id === id || x.origId === id);
+            if (idx !== -1) [p] = unlinkedList.splice(idx, 1);
         } else {
             const fromFam = getFamilyBySide(fromSide);
             if (fromFam) {
                 p = extractPerson(fromFam, id);
                 if (!fromFam.head && fromFam.members && fromFam.members.length > 0) {
                     fromFam.head = fromFam.members.shift();
-                    fromFam.head.rel = '본인';
+                    fromFam.head.relation = '본인';
                 }
                 recalc(fromFam);
             }
         }
 
         if (!p) {
-            window.fmRenderAll();
+            window.renderAll();
             return;
         }
 
         const toFam = getFamilyBySide(toSide);
         if (!toFam) {
-            window.fmRenderAll();
+            window.renderAll();
             return;
         }
 
@@ -12306,53 +12326,53 @@ window.deleteCustomerData = async function() {
         if (slotType === 'head') {
             if (toFam.head) {
                 const oldHead = toFam.head;
-                oldHead.rel = '배우자';
+                oldHead.relation = '배우자';
                 toFam.members.unshift(oldHead);
             }
-            p.rel = '본인';
+            p.relation = '본인';
             toFam.head = p;
         } else {
-            p.rel = (p.rel === '본인' || !p.rel) ? '가족' : p.rel;
+            p.relation = (p.relation === '본인' || !p.relation) ? '가족' : p.relation;
             toFam.members.push(p);
         }
 
         recalc(toFam);
-        window.fmRenderAll();
+        window.renderAll();
     };
 
-    window.fmCycleRel = function(side, id) {
+    window.cycleRel = function(side, id) {
         const fam = getFamilyBySide(side);
         if (!fam) return;
         const target = (fam.head && (fam.head.id === id || fam.head.origId === id)) ? fam.head : (fam.members || []).find(m => m.id === id || m.origId === id);
         if (!target) return;
 
         const relList = ['배우자', '자녀', '부모', '형제', '가족'];
-        const currIdx = relList.indexOf(target.rel);
+        const currIdx = relList.indexOf(target.relation);
         const nextRel = relList[(currIdx + 1) % relList.length];
-        target.rel = nextRel;
+        target.relation = nextRel;
 
-        if (side === 'left') window.fmRenderLeft();
-        else if (side === 'new') window.fmRenderNewBox();
-        else if (side === 'right') window.fmRenderRight();
+        if (side === 'left') window.renderLeft();
+        else if (side === 'new') window.renderNewBox();
+        else if (side === 'right') window.renderRight();
     };
 
-    window.fmResetAll = function() {
-        if (!fmOrigSnapshot) return;
+    window.resetAll = function() {
+        if (!origSnapshot) return;
         if (!confirm("가족 구성을 초기 상태로 되돌리시겠습니까?")) return;
 
-        window.openFamilyManageModal(fmOrigSnapshot.left.rootId);
+        window.openFamilyManageModal(origSnapshot.left.rootId);
     };
 
-    window.fmSaveAndApply = async function() {
-        if (!fmLeftFamily.head && fmLeftFamily.members && fmLeftFamily.members.length > 0) {
-            fmLeftFamily.head = fmLeftFamily.members.shift();
-            fmLeftFamily.head.rel = '본인';
-            recalc(fmLeftFamily);
+    window.saveAndApply = async function() {
+        if (!leftFamily.head && leftFamily.members && leftFamily.members.length > 0) {
+            leftFamily.head = leftFamily.members.shift();
+            leftFamily.head.relation = '본인';
+            recalc(leftFamily);
         }
-        if (fmNewFamily.members && fmNewFamily.members.length > 0 && !fmNewFamily.head) {
-            fmNewFamily.head = fmNewFamily.members.shift();
-            fmNewFamily.head.rel = '본인';
-            recalc(fmNewFamily);
+        if (newFamily.members && newFamily.members.length > 0 && !newFamily.head) {
+            newFamily.head = newFamily.members.shift();
+            newFamily.head.relation = '본인';
+            recalc(newFamily);
         }
 
         const updates = [];
@@ -12375,33 +12395,33 @@ window.deleteCustomerData = async function() {
         }
 
         // Left family
-        if (fmLeftFamily.head) {
-            checkPerson(fmLeftFamily.head, fmLeftFamily.rootId, '본인');
+        if (leftFamily.head) {
+            checkPerson(leftFamily.head, leftFamily.rootId, '본인');
         }
-        (fmLeftFamily.members || []).forEach((m, idx) => {
-            checkPerson(m, fmLeftFamily.rootId + '-' + (idx + 1), m.rel);
+        (leftFamily.members || []).forEach((m, idx) => {
+            checkPerson(m, leftFamily.rootId + '-' + (idx + 1), m.relation);
         });
 
         // New family
-        if (fmNewFamily.head) {
+        if (newFamily.head) {
             const actualNewRoot = String(getNextAllocatedRootId());
-            checkPerson(fmNewFamily.head, actualNewRoot, '본인');
-            (fmNewFamily.members || []).forEach((m, idx) => {
-                checkPerson(m, actualNewRoot + '-' + (idx + 1), m.rel);
+            checkPerson(newFamily.head, actualNewRoot, '본인');
+            (newFamily.members || []).forEach((m, idx) => {
+                checkPerson(m, actualNewRoot + '-' + (idx + 1), m.relation);
             });
         }
 
-        // Unlinked pool
-        fmUnlinkedPool.forEach(u => {
+        // Unlinked list
+        unlinkedList.forEach(u => {
             const actualUnlinkedRoot = String(getNextAllocatedRootId());
             checkPerson(u, actualUnlinkedRoot, '본인');
         });
 
         // Right family
-        if (fmRightFamily && fmRightFamily.head) {
-            checkPerson(fmRightFamily.head, fmRightFamily.rootId, '본인');
-            (fmRightFamily.members || []).forEach((m, idx) => {
-                checkPerson(m, fmRightFamily.rootId + '-' + (idx + 1), m.rel);
+        if (rightFamily && rightFamily.head) {
+            checkPerson(rightFamily.head, rightFamily.rootId, '본인');
+            (rightFamily.members || []).forEach((m, idx) => {
+                checkPerson(m, rightFamily.rootId + '-' + (idx + 1), m.relation);
             });
         }
 
@@ -12426,18 +12446,18 @@ window.deleteCustomerData = async function() {
         if (typeof window.renderTable === 'function') {
             window.renderTable();
         }
-        if (typeof window.openProfileModal === 'function' && fmLeftFamily.head) {
+        if (typeof window.openProfileModal === 'function' && leftFamily.head) {
             const p = document.getElementById('profileModal');
             if (p && (p.classList.contains('show') || p.style.display === 'flex' || p.style.display === 'block')) {
-                window.openProfileModal(fmLeftFamily.head.id);
+                window.openProfileModal(leftFamily.head.id);
             }
         }
     };
 
     // Backward compatibility shortcuts
     window.searchCustomerForFamily = function() {
-        const input = document.getElementById('fmTargetSearchInput');
-        if (input) window.fmOnSearchCustomer(input.value);
+        const input = document.getElementById('targetSearchInput');
+        if (input) window.onSearchCustomer(input.value);
     };
     window.linkCustomerToFamily = async function(targetCustId, targetName) {
         window.openFamilyManageModal(targetCustId, targetName);

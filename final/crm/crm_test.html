@@ -2372,7 +2372,7 @@ window.addEventListener('error', function(e) {
 </div>
 
 
-<script src="app.js?v=20261123_latest"></script>
+<script src="app.js?v=20261123_v3_family"></script>
   <script src="familyTabsLogic.js?v=20261123_latest"></script>
   <script src="crm_speed_center.js?v=20261111_status"></script>
   <script src="crm_smart_reg.js?v=20261111_status"></script>
@@ -3342,6 +3342,9 @@ function execDaumPostcode(targetId) {
 <!-- ============================================================== -->
 <!-- Modern Visual Family Management Modal (Compact 3-Box Board)   -->
 <!-- ============================================================== -->
+<!-- ============================================================== -->
+<!-- Modern Visual Family Management Modal (Compact 3-Box Board)   -->
+<!-- ============================================================== -->
 <style id="family-manage-modal-styles">
 
 #family-manage-modal {
@@ -3792,14 +3795,14 @@ function execDaumPostcode(targetId) {
         <div class="modal-header">
             <h2><i class="fa-solid fa-users" style="color:#38bdf8;"></i> <span id="fmModalTitle">가족 관리</span></h2>
             <div class="header-actions">
-                <button type="button" class="btn-toggle-new-box" id="btnOpenNewHouse" onclick="window.fmOpenNewHouseBox()">
+                <button type="button" class="btn-toggle-new-box" id="btnOpenNewHouse" onclick="openNewHouseBox()" style="display:flex;">
                     <i class="fa-solid fa-plus"></i> 새 가족 열기
                 </button>
                 <button type="button" class="header-close-btn" onclick="window.closeFamilyManageModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
 
-        <!-- 2. 본문 3단 레이아웃 -->
+        <!-- 2. 본문 3단 레이아웃 (기존가족 260px | 새가족 260px | 검색가족 275px) -->
         <div class="modal-body layout-without-new" id="modalBodyLayout">
             
             <!-- [1] 기존 가족창 -->
@@ -3814,13 +3817,13 @@ function execDaumPostcode(targetId) {
                 <div class="box-content">
                     <div>
                         <div class="slot-label"><i class="fa-solid fa-crown" style="color:#16a34a;"></i> 대표</div>
-                        <div class="head-slot" id="leftHeadSlot" ondragover="window.fmDragOverHandler(event)" ondragleave="window.fmDragLeaveHandler(event)" ondrop="window.fmDropHandler(event, 'left', 'head')">
+                        <div class="head-slot" id="leftHeadSlot" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)" ondrop="dropHandler(event, 'left', 'head')">
                             <!-- JS -->
                         </div>
                     </div>
                     <div style="flex:1; display:flex; flex-direction:column;">
                         <div class="slot-label"><i class="fa-solid fa-user-group" style="color:#2563eb;"></i> 가족원</div>
-                        <div class="members-slot" id="leftMembersSlot" ondragover="window.fmDragOverHandler(event)" ondragleave="window.fmDragLeaveHandler(event)" ondrop="window.fmDropHandler(event, 'left', 'member')">
+                        <div class="members-slot" id="leftMembersSlot" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)" ondrop="dropHandler(event, 'left', 'member')">
                             <!-- JS -->
                         </div>
                     </div>
@@ -3836,7 +3839,7 @@ function execDaumPostcode(targetId) {
                     </span>
                     <div style="display:flex; align-items:center; gap:4px;">
                         <span class="box-badge badge-green" id="newBadge">신규</span>
-                        <button type="button" class="btn-box-close" onclick="window.fmCloseNewHouseBox()" title="닫기">
+                        <button type="button" class="btn-box-close" onclick="closeNewHouseBox()" title="닫기">
                             <i class="fa-solid fa-xmark"></i> 닫기
                         </button>
                     </div>
@@ -3844,13 +3847,13 @@ function execDaumPostcode(targetId) {
                 <div class="box-content">
                     <div>
                         <div class="slot-label" style="color:#1e40af;"><i class="fa-solid fa-crown" style="color:#2563eb;"></i> 대표</div>
-                        <div class="head-slot" id="newHeadSlot" style="background:#f0f9ff; border-color:#93c5fd;" ondragover="window.fmDragOverHandler(event)" ondragleave="window.fmDragLeaveHandler(event)" ondrop="window.fmDropHandler(event, 'new', 'head')">
+                        <div class="head-slot" id="newHeadSlot" style="background:#f0f9ff; border-color:#93c5fd;" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)" ondrop="dropHandler(event, 'new', 'head')">
                             <!-- JS -->
                         </div>
                     </div>
                     <div style="flex:1; display:flex; flex-direction:column;">
                         <div class="slot-label" style="color:#1e40af;"><i class="fa-solid fa-user-group" style="color:#2563eb;"></i> 가족원</div>
-                        <div class="members-slot" id="newMembersSlot" style="background:#f8fafc; border-color:#bfdbfe;" ondragover="window.fmDragOverHandler(event)" ondragleave="window.fmDragLeaveHandler(event)" ondrop="window.fmDropHandler(event, 'new', 'member')">
+                        <div class="members-slot" id="newMembersSlot" style="background:#f8fafc; border-color:#bfdbfe;" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)" ondrop="dropHandler(event, 'new', 'member')">
                             <!-- JS -->
                         </div>
                     </div>
@@ -3862,8 +3865,8 @@ function execDaumPostcode(targetId) {
                 <!-- 검색창 -->
                 <div class="search-area">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="fmTargetSearchInput" placeholder="고객 검색 (이름, 번호)..." oninput="window.fmOnSearchCustomer(this.value)">
-                    <div class="search-dropdown" id="fmSearchDropdown"></div>
+                    <input type="text" id="targetSearchInput" placeholder="고객 검색 (이름, 번호)..." oninput="onSearchCustomer(this.value)">
+                    <div class="search-dropdown" id="searchDropdown"></div>
                 </div>
 
                 <!-- 검색된 가족 박스 -->
@@ -3878,13 +3881,13 @@ function execDaumPostcode(targetId) {
                     <div class="box-content">
                         <div>
                             <div class="slot-label"><i class="fa-solid fa-crown" style="color:#7c3aed;"></i> 대표</div>
-                            <div class="head-slot" id="rightHeadSlot" style="background:#faf5ff; border-color:#d8b4fe;" ondragover="window.fmDragOverHandler(event)" ondragleave="window.fmDragLeaveHandler(event)" ondrop="window.fmDropHandler(event, 'right', 'head')">
+                            <div class="head-slot" id="rightHeadSlot" style="background:#faf5ff; border-color:#d8b4fe;" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)" ondrop="dropHandler(event, 'right', 'head')">
                                 <!-- JS -->
                             </div>
                         </div>
                         <div style="flex:1; display:flex; flex-direction:column;">
                             <div class="slot-label"><i class="fa-solid fa-user-group" style="color:#7c3aed;"></i> 가족원</div>
-                            <div class="members-slot" id="rightMembersSlot" ondragover="window.fmDragOverHandler(event)" ondragleave="window.fmDragLeaveHandler(event)" ondrop="window.fmDropHandler(event, 'right', 'member')">
+                            <div class="members-slot" id="rightMembersSlot" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)" ondrop="dropHandler(event, 'right', 'member')">
                                 <!-- JS -->
                             </div>
                         </div>
@@ -3896,7 +3899,7 @@ function execDaumPostcode(targetId) {
 
         <!-- 3. 분리 고객 바 -->
         <div class="unlink-pool-bar" id="unlinkPoolBar"
-             ondragover="window.fmDragOverHandler(event)" ondragleave="window.fmDragLeaveHandler(event)" ondrop="window.fmDropToUnlinkPool(event)">
+             ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)" ondrop="dropToUnlinkPool(event)">
             <span class="unlink-pool-title">
                 <i class="fa-solid fa-scissors"></i> 분리 고객 <span class="unlink-count-badge" id="unlinkCountBadge">0</span>
             </span>
@@ -3907,8 +3910,8 @@ function execDaumPostcode(targetId) {
 
         <!-- 4. 풋터 -->
         <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="window.fmResetAll()">초기화</button>
-            <button type="button" class="btn-save" onclick="window.fmSaveAndApply()">가족 구성 저장</button>
+            <button type="button" class="btn-cancel" onclick="resetAll()">초기화</button>
+            <button type="button" class="btn-save" onclick="saveAndApply()">저장 및 반영</button>
         </div>
 
     </div>

@@ -11884,6 +11884,7 @@ window.deleteCustomerData = async function() {
         const modal = document.getElementById('family-manage-modal');
         if (modal) {
             modal.style.display = 'flex';
+            modal.style.zIndex = '200005';
             modal.classList.add('active');
         }
     };

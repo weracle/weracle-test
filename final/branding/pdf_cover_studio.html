@@ -6735,7 +6735,12 @@
             const cv = await window.getCoverCanvas(summary);
             console.log('[Studio Iframe] getCoverCanvas completed, cv:', !!cv);
             if (cv) {
-              const dataUrl = cv.toDataURL('image/png');
+              let dataUrl = null;
+              try {
+                dataUrl = cv.toDataURL('image/png');
+              } catch(taintErr) {
+                console.warn('[Studio Iframe] toDataURL tainted canvas warning:', taintErr);
+              }
               if (window.parent && window.parent !== window) {
                 window.parent.postMessage({
                   type: 'RESPONSE_COVER_CANVAS',
@@ -7245,6 +7250,16 @@
     // Supports both Theme 01 (Official Guarantee) and Themes 02~05 (Signature Dynamic Covers)
     window.getCoverCanvas = async function(extractedData) {
       initCoreDomElements();
+
+      // If active coverConfig is passed inside extractedData, apply it directly first
+      if (extractedData && extractedData.coverConfig) {
+        try {
+          applyCoverConfigDirectly(extractedData.coverConfig);
+        } catch(cfgErr) {
+          console.warn('[getCoverCanvas] applyCoverConfigDirectly warning:', cfgErr);
+        }
+      }
+
       let customClient = (typeof extractedData === 'string') ? extractedData : (extractedData ? extractedData.clientName : null);
 
       const a4Cont = document.getElementById('a4Container');
@@ -7257,11 +7272,24 @@
         a4Cont.style.overflow = 'visible';
       }
 
+      const standardA4 = canvasInner ? canvasInner.querySelector('.a4-page') : null;
+      const sigWrap = document.getElementById('sigCoverWrapper');
+
       try {
         if (currentMasterThemeId !== '01') {
           // --- THEMES 02 ~ 05: SIGNATURE THEMES ---
+          if (sigWrap) sigWrap.style.setProperty('display', 'block', 'important');
+          if (standardA4) standardA4.style.setProperty('display', 'none', 'important');
+
           if (customClient) {
             sigState.simCustomer = customClient;
+          }
+          if (typeof extractedData === 'object' && extractedData) {
+            if (extractedData.contracts) sigState.contracts = extractedData.contracts;
+            if (extractedData.premium) sigState.premium = extractedData.premium;
+            if (extractedData.stOk !== undefined && extractedData.stOk !== null) sigState.stOk = String(extractedData.stOk);
+            if (extractedData.stWarn !== undefined && extractedData.stWarn !== null) sigState.stWarn = String(extractedData.stWarn);
+            if (extractedData.stMiss !== undefined && extractedData.stMiss !== null) sigState.stMiss = String(extractedData.stMiss);
           }
           renderSignatureCover(activeSignatureType);
           const paper = document.getElementById('a4PaperCanvas');
@@ -7276,7 +7304,8 @@
             const canvas = await html2canvas(paper, {
               scale: 2.0840336, // Exact 1240 x 1754 A4 resolution
               useCORS: true,
-              allowTaint: false,
+              allowTaint: true,
+              imageTimeout: 5000,
               backgroundColor: '#ffffff',
               logging: false
             });
@@ -7291,6 +7320,9 @@
           }
         } else {
           // --- THEME 01: STANDARD OFFICIAL GUARANTEE THEME ---
+          if (standardA4) standardA4.style.setProperty('display', 'flex', 'important');
+          if (sigWrap) sigWrap.style.setProperty('display', 'none', 'important');
+
           const origTransform = a4Sheet ? a4Sheet.style.transform : 'none';
           if (a4Sheet) a4Sheet.style.transform = 'none';
 
@@ -7329,7 +7361,8 @@
             resCanvas = await html2canvas(canvasPage, {
               scale: 1, // exact 1240 x 1754
               useCORS: true,
-              allowTaint: false,
+              allowTaint: true,
+              imageTimeout: 5000,
               backgroundColor: null,
               logging: false
             });
@@ -7364,9 +7397,6 @@
           a4Cont.style.width = origContW;
           a4Cont.style.height = origContH;
           a4Cont.style.overflow = origContOverflow;
-        }
-        if (typeof fitA4ToScreen === 'function') {
-          fitA4ToScreen();
         }
       }
     };

@@ -2270,58 +2270,68 @@
 
     // Reliable Cover Canvas Request Engine (supporting both direct JS call and file:// cross-origin postMessage bridge)
     async function requestCoverCanvasFromPreview(summary, timeoutMs = 8000) {
-        const previewFrame = document.getElementById('bojangCoverPreviewFrame');
+        const previewFrame = document.getElementById("bojangCoverPreviewFrame");
         if (!previewFrame || !previewFrame.contentWindow) return null;
 
-        // 1. Try direct call first if same-origin & accessible
+        // 1. Try direct call first if same-origin & accessible (bypasses any canvas tainting/export restrictions!)
         try {
-            if (typeof previewFrame.contentWindow.getCoverCanvas === 'function') {
+            if (typeof previewFrame.contentWindow.getCoverCanvas === "function") {
                 const directCanvas = await previewFrame.contentWindow.getCoverCanvas(summary);
-                if (directCanvas) return directCanvas;
+                if (directCanvas && directCanvas.width > 0 && directCanvas.height > 0) {
+                    console.log("[Direct getCoverCanvas SUCCESS]:", directCanvas.width, "x", directCanvas.height);
+                    return directCanvas;
+                }
             }
         } catch(secErr) {
-            console.warn('[Direct getCoverCanvas blocked, switching to postMessage bridge]:', secErr);
+            console.warn("[Direct getCoverCanvas blocked or error, switching to postMessage bridge]:", secErr);
         }
 
         // 2. Reliable cross-origin / file-protocol postMessage bridge
-        const requestId = 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        const requestId = "req_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
         return new Promise((resolve) => {
             let timer = null;
 
             function onMsg(e) {
-                if (e.data && e.data.type === 'RESPONSE_COVER_CANVAS' && e.data.requestId === requestId) {
-                    window.removeEventListener('message', onMsg);
+                if (e.data && e.data.type === "RESPONSE_COVER_CANVAS" && e.data.requestId === requestId) {
+                    window.removeEventListener("message", onMsg);
                     if (timer) clearTimeout(timer);
                     if (e.data.dataUrl) {
                         const img = new Image();
                         img.onload = function() {
-                            const offscreen = document.createElement('canvas');
+                            const offscreen = document.createElement("canvas");
                             offscreen.width = img.width || e.data.width || 1240;
                             offscreen.height = img.height || e.data.height || 1754;
-                            const octx = offscreen.getContext('2d');
+                            const octx = offscreen.getContext("2d");
                             octx.drawImage(img, 0, 0);
                             resolve(offscreen);
                         };
                         img.onerror = function() { resolve(null); };
                         img.src = e.data.dataUrl;
                     } else {
+                        // Even if dataUrl is null (e.g. tainted canvas in postMessage), try direct element read if accessible
+                        try {
+                            if (typeof previewFrame.contentWindow.getCoverCanvas === "function") {
+                                previewFrame.contentWindow.getCoverCanvas(summary).then(c => resolve(c)).catch(() => resolve(null));
+                                return;
+                            }
+                        } catch(err) {}
                         resolve(null);
                     }
                 }
             }
 
             timer = setTimeout(() => {
-                window.removeEventListener('message', onMsg);
-                console.warn('[requestCoverCanvasFromPreview] postMessage timeout');
+                window.removeEventListener("message", onMsg);
+                console.warn("[requestCoverCanvasFromPreview] postMessage timeout");
                 resolve(null);
             }, timeoutMs);
 
-            window.addEventListener('message', onMsg);
+            window.addEventListener("message", onMsg);
             previewFrame.contentWindow.postMessage({
-                type: 'REQUEST_COVER_CANVAS',
+                type: "REQUEST_COVER_CANVAS",
                 requestId: requestId,
                 summary: summary
-            }, '*');
+            }, "*");
         });
     }
 
@@ -2337,13 +2347,18 @@
                 // [WERACLE VIP 맞춤 표지 엔진] 사용자가 설정/저장한 표지를 1페이지에 우선 렌더링
                 let customCoverRendered = false;
                 let wasCoverHidden = false;
-                const docCoverEl = document.getElementById('tabCoverDoc');
+                const docCoverEl = document.getElementById("tabCoverDoc");
                 try {
-                    const previewFrame = document.getElementById('bojangCoverPreviewFrame');
+                    const previewFrame = document.getElementById("bojangCoverPreviewFrame");
                     
-                    // 최대 2초간 iframe 준비 대기
+                    // 최대 3초간 iframe 및 getCoverCanvas 함수 준비 대기
                     let attempts = 0;
-                    while ((!previewFrame || !previewFrame.contentWindow) && attempts < 20) {
+                    while (attempts < 30) {
+                        if (previewFrame && previewFrame.contentWindow) {
+                            try {
+                                if (typeof previewFrame.contentWindow.getCoverCanvas === "function") break;
+                            } catch(e) {}
+                        }
                         await new Promise(r => setTimeout(r, 100));
                         attempts++;
                     }
@@ -2351,11 +2366,14 @@
                     if (previewFrame && previewFrame.contentWindow) {
                         // 최신 활성 표지 설정을 iframe에 즉시 동기화
                         const curCfg = getStoredBojangCoverConfig();
-                        if (curCfg && previewFrame.contentWindow.applyCoverConfigDirectly) {
-                            try {
+                        try {
+                            if (typeof previewFrame.contentWindow.applyCoverConfigDirectly === "function" && curCfg) {
                                 previewFrame.contentWindow.applyCoverConfigDirectly(curCfg);
-                            } catch(e) {}
-                        }
+                            }
+                        } catch(e) {}
+                        try {
+                            previewFrame.contentWindow.postMessage({ type: "APPLY_COVER_CONFIG", config: curCfg }, "*");
+                        } catch(e) {}
 
                         // [실제 업로드 데이터 동적 추출 엔진]
                         // 업로드된 전산 원본 PDF의 실제 데이터(고객명, 계약건수, 합계보험료, 충분/부족/미가입 진단수치)를 완벽 집계
@@ -2365,7 +2383,8 @@
                             premium: null,
                             stOk: null,
                             stWarn: null,
-                            stMiss: null
+                            stMiss: null,
+                            coverConfig: curCfg
                         };
 
                         // 1) 전체 분석 페이지의 실제 진단 현황(충분, 부족, 미가입) 합산
@@ -2375,9 +2394,9 @@
                             if (pageData.targetStatuses && pageData.targetStatuses.length > 0) {
                                 foundStatuses = true;
                                 for (let st of pageData.targetStatuses) {
-                                    if (st.text === '충분') totalOk++;
-                                    else if (st.text === '부족') totalWarn++;
-                                    else if (st.text === '미가입') totalMiss++;
+                                    if (st.text === "충분") totalOk++;
+                                    else if (st.text === "부족") totalWarn++;
+                                    else if (st.text === "미가입") totalMiss++;
                                 }
                             }
                         }
@@ -2420,51 +2439,56 @@
                         }
 
                         // 탭이 숨겨져 있어도 캡처 가능하도록 임시 가시화 (visibility: hidden 금지, 화면 밖 배치)
-                        if (docCoverEl && (docCoverEl.style.display === 'none')) {
+                        if (docCoverEl && (docCoverEl.style.display === "none")) {
                             wasCoverHidden = true;
-                            docCoverEl.style.position = 'fixed';
-                            docCoverEl.style.left = '-9999px';
-                            docCoverEl.style.top = '0';
-                            docCoverEl.style.zIndex = '-9999';
-                            docCoverEl.style.display = 'flex';
-                            docCoverEl.style.visibility = 'visible';
-                            docCoverEl.style.opacity = '1';
+                            docCoverEl.style.position = "fixed";
+                            docCoverEl.style.left = "-9999px";
+                            docCoverEl.style.top = "0";
+                            docCoverEl.style.zIndex = "-9999";
+                            docCoverEl.style.display = "flex";
+                            docCoverEl.style.visibility = "visible";
+                            docCoverEl.style.opacity = "1";
                         }
 
                         // 고객명 실시간 알림
                         if (dynamicSummary.clientName && previewFrame.contentWindow) {
                             try {
                                 previewFrame.contentWindow.postMessage({
-                                    type: 'UPDATE_CLIENT_NAME',
+                                    type: "UPDATE_CLIENT_NAME",
                                     clientName: dynamicSummary.clientName
-                                }, '*');
+                                }, "*");
                             } catch(e) {}
                         }
 
-                        console.log('[WERACLE 표지 데이터 추출 결과]:', dynamicSummary);
+                        // Iframe DOM 및 스타일 리플로우 대기
+                        await new Promise(r => setTimeout(r, 200));
+
+                        console.log("[WERACLE 표지 데이터 추출 결과]:", dynamicSummary);
                         window.currentDynamicSummary = dynamicSummary;
                         if (dynamicSummary && dynamicSummary.clientName) { window.detectedClientName = dynamicSummary.clientName; }
                         const coverCanvas = await requestCoverCanvasFromPreview(dynamicSummary);
-                        if (coverCanvas) {
+                        if (coverCanvas && coverCanvas.width > 0 && coverCanvas.height > 0) {
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
                             ctx.drawImage(coverCanvas, 0, 0, canvas.width, canvas.height);
                             customCoverRendered = true;
+                            console.log("[WERACLE VIP 맞춤 표지 1페이지 렌더링 성공!] 크기:", coverCanvas.width, "x", coverCanvas.height);
+                        } else {
+                            console.warn("[WERACLE VIP 맞춤 표지] coverCanvas 반환 실패, 대체 표지 렌더러 가동");
                         }
                     }
                 } catch(coverErr) {
-                    console.warn('[VIP 표지 연동] 커스텀 렌더링 예외 발생, 기본 전산 드로잉으로 안전 전환:', coverErr);
+                    console.warn("[VIP 표지 연동] 커스텀 렌더링 예외 발생:", coverErr);
                 } finally {
                     if (wasCoverHidden && docCoverEl) {
-                        docCoverEl.style.display = 'none';
-                        docCoverEl.style.position = '';
-                        docCoverEl.style.left = '';
-                        docCoverEl.style.top = '';
-                        docCoverEl.style.zIndex = '';
-                        docCoverEl.style.visibility = '';
-                        docCoverEl.style.opacity = '';
+                        docCoverEl.style.display = "none";
+                        docCoverEl.style.position = "";
+                        docCoverEl.style.left = "";
+                        docCoverEl.style.top = "";
+                        docCoverEl.style.zIndex = "";
+                        docCoverEl.style.visibility = "";
+                        docCoverEl.style.opacity = "";
                     }
                 }
-
                 if (!customCoverRendered) {
 
                 // V71: 사용자 요청 디자인 완전 반영 (메시지형 레이아웃)
@@ -2611,9 +2635,16 @@
                     }
                 }
                 
-                // 정보가 없을 경우 기본 템플릿용 텍스트
-                if (!consName) consName = "OOO";
-                if (!consPhone) consPhone = "000-0000-0000";
+                // 정보가 없을 경우 최신 보관함 설정 및 프로필로부터 안전 복구
+                const curSavedCfg = getStoredBojangCoverConfig() || {};
+                let userProf = null;
+                try { userProf = JSON.parse(localStorage.getItem("cached_profile") || localStorage.getItem("user_profile") || "null"); } catch(e) {}
+                if (!consName) {
+                    consName = curSavedCfg.advisor || (userProf && userProf.name ? (userProf.name + (userProf.position ? (" " + userProf.position) : " 팀장")) : "담당 컨설턴트");
+                }
+                if (!consPhone) {
+                    consPhone = curSavedCfg.phone || (userProf && userProf.phone ? userProf.phone : "010-0000-0000");
+                }
 
                 // 6. 사용자 요청 레이아웃 설정
                 let logoH = 0, logoW = 0, logoMargin = 80 * s; // 타이틀과 로고 사이 간격 넓힘
@@ -3397,7 +3428,7 @@ function applyActiveCoverToPreview() {
     let targetCoverId = (cfg && cfg.activeCoverId) ? cfg.activeCoverId : null;
 
     if (!targetCoverId) {
-        targetCoverId = 'preset_theme_02';
+        targetCoverId = (library.length > 0 && library[0].id) ? library[0].id : 'preset_theme_02';
     }
 
     let item = library.find(x => x.id === targetCoverId) || PRESET_VIP_COVERS.find(x => x.id === targetCoverId);
@@ -3406,16 +3437,21 @@ function applyActiveCoverToPreview() {
         targetCoverId = item.id;
     }
 
-    if (item) {
-        cfg = Object.assign({}, cfg || {}, item, {
-            activeCoverId: item.id,
-            coverTitle: item.title,
-            masterThemeId: item.masterThemeId || (item.category === 'signature' ? '02' : '01'),
-            themeIdx: item.basicIndex !== undefined ? item.basicIndex : (item.themeIdx !== undefined ? item.themeIdx : 0),
-            activeSignatureType: item.themeId || item.activeSignatureType || 'A',
-            timestamp: Date.now()
-        });
-        setStoredBojangCoverConfig(cfg);
+    // Only re-merge preset/library if cfg does not exist or targetCoverId changed
+    if (!cfg || cfg.activeCoverId !== targetCoverId) {
+        if (item) {
+            const mergedSig = Object.assign({}, (item.sigState || {}), (cfg && cfg.sigState ? cfg.sigState : {}));
+            cfg = Object.assign({}, item, cfg || {}, {
+                activeCoverId: item.id,
+                coverTitle: item.title,
+                masterThemeId: item.masterThemeId || (item.category === 'signature' ? '02' : '01'),
+                themeIdx: item.basicIndex !== undefined ? item.basicIndex : (item.themeIdx !== undefined ? item.themeIdx : 0),
+                activeSignatureType: item.themeId || item.activeSignatureType || 'A',
+                sigState: mergedSig,
+                timestamp: Date.now()
+            });
+            setStoredBojangCoverConfig(cfg);
+        }
     }
 
     // Dynamic Upgrade: Replace any old placeholder profile data with active user profile
@@ -3437,10 +3473,10 @@ function applyActiveCoverToPreview() {
         if (myProfile.name && (!cfg.advisor || cfg.advisor.includes('박보환') || cfg.advisor.includes('ㅇㅇㅇ'))) {
             cfg.advisor = myProfile.name + (myProfile.position ? (' ' + myProfile.position) : ' 팀장');
         }
-        if (myProfile.phone && (!cfg.phone || cfg.phone === '010-1234-5678')) {
+        if (myProfile.phone && (!cfg.phone || cfg.phone === '010-1234-5678' || cfg.phone.includes('1234-5678'))) {
             cfg.phone = myProfile.phone;
         }
-        if (myProfile.company && (!cfg.company || cfg.company === '위라클랩')) {
+        if (myProfile.company && (!cfg.company || cfg.company === '위라클랩' || cfg.company.includes('위라클'))) {
             cfg.company = myProfile.company;
         }
         if (myProfile.logo_url) {
@@ -3452,17 +3488,12 @@ function applyActiveCoverToPreview() {
         }
     }
 
-    const sel = document.getElementById('coverLibrarySelect');
-    if (sel && targetCoverId) {
-        sel.value = targetCoverId;
-    }
-
     updatePreviewCoverBadge();
 
     const pFrame = document.getElementById('bojangCoverPreviewFrame');
     if (pFrame && pFrame.contentWindow && cfg) {
         try {
-            if (pFrame.contentWindow.applyCoverConfigDirectly) {
+            if (typeof pFrame.contentWindow.applyCoverConfigDirectly === 'function') {
                 pFrame.contentWindow.applyCoverConfigDirectly(cfg);
             }
         } catch(e) {}

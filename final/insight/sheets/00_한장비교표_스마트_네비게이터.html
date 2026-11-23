@@ -20,7 +20,7 @@
     }
 
     .container {
-      max-width: 960px;
+      max-width: 980px;
       margin: 0 auto;
     }
 
@@ -57,7 +57,7 @@
     /* 2. Search Box */
     .search-box {
       position: relative;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .search-input {
@@ -92,7 +92,7 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
-      margin-bottom: 28px;
+      margin-bottom: 16px;
     }
 
     .cat-btn {
@@ -140,12 +140,86 @@
       color: #ffffff;
     }
 
+    /* 3.5 Sub-Category Chips Bar */
+    .sub-nav-container {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      flex-wrap: wrap;
+    }
+
+    .sub-nav-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .sub-chips-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sub-chip {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .sub-chip:hover {
+      background: #e2e8f0;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+
+    .sub-chip.active {
+      background: #0284c7;
+      border-color: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+    }
+
+    .sub-chip .chip-count {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.07);
+    }
+
+    .sub-chip.active .chip-count {
+      background: rgba(255,255,255,0.25);
+      color: #ffffff;
+    }
+
     /* 4. List Section */
     .list-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       padding-bottom: 8px;
       border-bottom: 2px solid #0f172a;
     }
@@ -334,69 +408,106 @@
       flex-direction: column;
       box-shadow: 0 20px 40px rgba(0,0,0,0.3);
       overflow: hidden;
+      animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .modal-header {
+    @keyframes modalPop {
+      0% { opacity: 0; transform: scale(0.97); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-head {
+      padding: 14px 20px;
       background: #0f172a;
       color: #ffffff;
-      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+    }
+
+    .modal-head-left {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 12px;
     }
 
-    .modal-title {
-      font-size: 15px;
+    .modal-head-badge {
+      background: #0284c7;
+      color: #ffffff;
+      font-size: 12px;
       font-weight: 800;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      padding: 3px 8px;
+      border-radius: 6px;
     }
 
-    .modal-actions {
+    .modal-head-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .modal-head-actions {
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
     .modal-btn {
-      background: rgba(255, 255, 255, 0.15);
-      border: none;
-      color: #ffffff;
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #475569;
+      font-size: 12.5px;
+      font-weight: 700;
       padding: 6px 12px;
       border-radius: 6px;
-      font-size: 12px;
-      font-weight: 700;
       cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.15s;
     }
 
-    .modal-btn:hover { background: rgba(255, 255, 255, 0.25); }
+    .modal-btn:hover {
+      background: #334155;
+      color: #ffffff;
+    }
 
-    .modal-close { background: #ef4444; }
-    .modal-close:hover { background: #dc2626; }
+    .modal-close-btn {
+      background: #ef4444;
+      border-color: #ef4444;
+      color: #ffffff;
+    }
+
+    .modal-close-btn:hover {
+      background: #dc2626;
+    }
 
     .modal-body {
       flex: 1;
-      width: 100%;
-      height: 100%;
       background: #f8fafc;
+      overflow: hidden;
+      position: relative;
     }
 
     .modal-iframe {
       width: 100%;
       height: 100%;
       border: none;
-      display: block;
     }
 
     @media (max-width: 768px) {
-      .category-grid { grid-template-columns: repeat(2, 1fr); }
-      .row-hint { display: none; }
+      .category-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .sheet-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .row-right {
+        align-self: flex-end;
+      }
     }
   </style>
 </head>
@@ -404,62 +515,71 @@
 
 <div class="container">
 
-  <!-- Header -->
-  <div class="header">
+  <!-- 1. Header -->
+  <header class="header">
     <div class="header-logo">
-      <i class="fa-solid fa-shapes"></i> WERACLE INSIGHT
+      <i class="fa-solid fa-bolt"></i> WERACLE INSIGHT
     </div>
-    <h1 class="header-title">한장비교표 빠른 찾기</h1>
-    <p class="header-sub">카테고리를 누르시면 찾으시는 내용의 힌트와 함께 바로 열립니다</p>
-  </div>
+    <h1 class="header-title">한장비교표 70종 빠른 찾기</h1>
+    <p class="header-sub">원하시는 보장 주제나 카테고리를 선택하시면 필요한 비교표를 바로 찾아드립니다.</p>
+  </header>
 
-  <!-- Search -->
+  <!-- 2. Search -->
   <div class="search-box">
     <i class="fa-solid fa-magnifying-glass search-icon"></i>
-    <input type="text" id="searchInput" class="search-input" placeholder="담보명, 번호(예: 63), 키워드(예: 355, 간병인, 레켐비, 70세, 홀인원) 검색..." autocomplete="off">
+    <input 
+      type="text" 
+      id="searchInput" 
+      class="search-input" 
+      placeholder="표 번호, 상품명, 키워드 검색 (예: 65, 355 간병인, 레켐비, 7년 연금, 자부상...)"
+      autocomplete="off"
+    />
   </div>
 
-  <!-- 8 Clean Category Buttons -->
-  <div class="category-grid" id="categoryGrid">
-    <!-- JS Render -->
+  <!-- 3. Category Buttons -->
+  <div class="category-grid" id="categoryGrid"></div>
+
+  <!-- 3.5 Sub-category Filter Bar -->
+  <div class="sub-nav-container" id="subNavContainer">
+    <div class="sub-nav-label">
+      <i class="fa-solid fa-layer-group"></i> 세부 주제:
+    </div>
+    <div class="sub-chips-bar" id="subChipsBar"></div>
   </div>
 
-  <!-- List Section -->
+  <!-- 4. List Section -->
   <div class="list-section">
     <div class="list-header">
       <div class="list-title" id="listTitle">
-        <span>🩺</span> <span>간병인 · 입원 · 요양 비교표</span>
+        <!-- Dynamic Title -->
       </div>
-      <div class="list-count" id="listCount">총 10개</div>
+      <div class="list-count" id="listCount">0개</div>
     </div>
 
-    <!-- The Clean Rows List with Natural '이런 표' Hints -->
-    <div class="sheet-list" id="sheetList">
-      <!-- JS Render -->
-    </div>
+    <div class="sheet-list" id="sheetList"></div>
   </div>
 
 </div>
 
-<!-- Modal Live Viewer -->
+<!-- Modal Viewer -->
 <div class="modal-overlay" id="modalViewer" onclick="closeViewerOutside(event)">
   <div class="modal-card">
-    <div class="modal-header">
-      <div class="modal-title">
-        <span id="modalNumBadge" style="background:#0284c7; padding:2px 6px; border-radius:4px; font-size:11px;">표 63</span>
-        <span id="modalTitleText">8090 간병인 한도 비교</span>
+    <div class="modal-head">
+      <div class="modal-head-left">
+        <span class="modal-head-badge" id="modalNumBadge">표 00</span>
+        <span class="modal-head-title" id="modalTitleText">비교표 이름</span>
       </div>
-      <div class="modal-actions">
-        <a id="modalNewTabBtn" href="#" target="_blank" class="modal-btn">
+      <div class="modal-head-actions">
+        <a href="#" target="_blank" class="modal-btn" id="modalNewTabBtn">
           <i class="fa-solid fa-arrow-up-right-from-square"></i> 새 창으로
         </a>
-        <button class="modal-btn modal-close" onclick="closeViewer()">
+        <button class="modal-btn modal-close-btn" onclick="closeViewer()">
           <i class="fa-solid fa-xmark"></i> 닫기
         </button>
       </div>
     </div>
     <div class="modal-body">
-      <iframe id="modalIframe" class="modal-iframe" src="" loading="lazy"></iframe>
+      <iframe src="" class="modal-iframe" id="modalIframe"></iframe>
     </div>
   </div>
 </div>
@@ -467,11 +587,15 @@
 <script>
   const ITEMS = [{"num":"65","cat":"care","icon":"🩺","title":"간병인 사용일당 비교 (손보)","hint":"손해보험사의 3.5.5 간편 유병자 기준 간병인 사용일당 한도를 비교한 표","file":"65_간병인 사용일당 비교 (손보·간편 3.5.5).html","tag":"손보 · 간편355"},{"num":"66","cat":"care","icon":"🩺","title":"간병인 사용일당 비교 (손보)","hint":"손해보험사의 건강체(표준체) 기준 간병인 사용일당 한도를 비교한 표","file":"66_간병인 사용일당 비교 (손보·표준체).html","tag":"손보 · 표준체"},{"num":"67","cat":"care","icon":"🩺","title":"간병인 사용일당 비교 (생보)","hint":"생명보험사의 3.5.5 간편 유병자 기준 간병인 사용일당 한도를 비교한 표","file":"67_간병인 사용일당 비교 (생보·간편 3.5.5).html","tag":"생보 · 간편355"},{"num":"68","cat":"care","icon":"🩺","title":"간병인 사용일당 비교 (생보)","hint":"생명보험사의 건강체(표준체) 기준 간병인 사용일당 한도를 비교한 표","file":"68_간병인 사용일당 비교 (생보·표준체).html","tag":"생보 · 표준체"},{"num":"62","cat":"care","icon":"🩺","title":"간병인지원 입원일당 비교 (손보)","hint":"간병인을 직접 병원에 파견해 주는 간병인지원 입원일당을 손보사별로 비교한 표","file":"62_간병인지원 비교 (손보).html","tag":"간병인 직접파견"},{"num":"63","cat":"care","icon":"🩺","title":"8090 간병인 한도 비교 (손보·생보)","hint":"80세~90세 고령자(355 유병자)의 간병인 일당 한도를 손보/생보 전수 비교한 표","file":"63_8090 간병인 한도 비교 (손보·355 유병자).html","tag":"80~90세 고령자 특화"},{"num":"64","cat":"care","icon":"🩺","title":"어린이 간병인 사용일당 비교 (손보)","hint":"태아 및 0세 신생아/어린이의 간병인 사용일당 가입한도를 손보사별로 비교한 표","file":"64_어린이 간병인 사용일당 비교 (손보·0세).html","tag":"0세 어린이/태아"},{"num":"61","cat":"care","icon":"🏥","title":"상급종합병원 입원일당 한도 비교","hint":"상급종합병원 1인실 및 2~3인실 입원 시 나오는 입원일당 한도를 전수 비교한 표","file":"61_상급종합병원 입원일당 한도 비교 (1인실·2~3인실·4~5인실).html","tag":"상급종합 1인실"},{"num":"69","cat":"care","icon":"🧓","title":"장기요양보장 비교 (손보)","hint":"장기요양 1~5등급 판정 시 재가/시설급여 보장금액을 손해보험사별로 비교한 표","file":"69_장기요양보장 비교 (손보).html","tag":"손보 · 1~5등급 재가/시설"},{"num":"70","cat":"care","icon":"🧓","title":"장기요양보장 비교 (생보)","hint":"장기요양 1~5등급 판정 시 재가/시설급여 보장금액을 생명보험사별로 비교한 표","file":"70_장기요양보장 비교 (생보).html","tag":"생보 · 1~5등급 재가/시설"},{"num":"03","cat":"diag","icon":"🧠","title":"뇌혈관 진단비 비교 (생보)","hint":"생명보험사의 3.5.5 간편 유병자 기준 뇌혈관질환 진단비 한도를 비교한 표","file":"03_뇌혈관 진단비 비교 (생보·간편 3.5.5).html","tag":"생보 · 간편355"},{"num":"04","cat":"diag","icon":"🧠","title":"뇌혈관 진단비 비교 (생보)","hint":"생명보험사의 건강체(표준체) 기준 뇌혈관질환 진단비 한도를 비교한 표","file":"04_뇌혈관 진단비 비교 (생보·표준체).html","tag":"생보 · 표준체"},{"num":"05","cat":"diag","icon":"🧠","title":"뇌혈관 진단비 비교 (손보)","hint":"손해보험사의 3.5.5 간편 유병자 기준 뇌혈관질환 진단비 한도를 비교한 표","file":"05_뇌혈관 진단비 비교 (손보·간편 3.5.5).html","tag":"손보 · 간편355"},{"num":"06","cat":"diag","icon":"🧠","title":"뇌혈관 진단비 비교 (손보)","hint":"손해보험사의 건강체(표준체) 기준 뇌혈관질환 진단비 한도를 비교한 표","file":"06_뇌혈관 진단비 비교 (손보·표준체).html","tag":"손보 · 표준체"},{"num":"07","cat":"diag","icon":"🎗️","title":"암 진단비 바로보장 비교 (손보)","hint":"손해보험사 중 90일 면책기간이나 1년 감액 없이 가입 즉시 100% 주는 암보험을 비교한 표","file":"07_암 진단비 삭감·면책 없는 바로보장 (손보).html","tag":"손보 · 면책/감액 없음"},{"num":"08","cat":"diag","icon":"🎗️","title":"암 진단비 바로보장 비교 (생보)","hint":"생명보험사 중 90일 면책기간이나 1년 감액 없이 가입 즉시 100% 주는 암보험을 비교한 표","file":"08_암 진단비 삭감·면책 없는 바로보장 (생보).html","tag":"생보 · 면책/감액 없음"},{"num":"09","cat":"diag","icon":"⚡","title":"바로보장 2대(뇌·심) 진단비 성인기준","hint":"성인 기준으로 감액기간 없이 가입 첫날부터 100% 지급되는 뇌·심장질환 진단비를 비교한 표","file":"09_바로보장 2대(뇌·심) 진단비 성인기준.html","tag":"2대 즉시보장"},{"num":"10","cat":"diag","icon":"⚡","title":"바로보장 암 진단비 성인기준","hint":"성인 기준으로 삭감/감액 없이 가입 즉시 100% 지급되는 암 진단비 전수를 비교한 표","file":"10_바로보장 암 진단비 성인기준.html","tag":"암 즉시보장"},{"num":"01","cat":"diag","icon":"💊","title":"표적치매약물치료비(레켐비) 비교 (손보)","hint":"손해보험사의 신약 레켐비 표적치매 약물치료비 가입한도와 보장조건을 비교한 표","file":"01_표적치매약물치료비(레켐비) 비교 (손보).html","tag":"손보 · 레켐비 신약"},{"num":"02","cat":"diag","icon":"💊","title":"표적치매약물치료비(레켐비) 비교 (생보)","hint":"생명보험사의 신약 레켐비 표적치매 약물치료비 가입한도와 보장조건을 비교한 표","file":"02_표적치매약물치료비(레켐비) 비교 (생보).html","tag":"생보 · 레켐비 신약"},{"num":"11","cat":"treat","icon":"📋","title":"순환계질환 주요치료비 보장범위 & 질병코드","hint":"I20~I69 순환계 핵심 질병코드와 각 치료비 담보의 적용 기준을 알기 쉽게 정리한 가이드 표","file":"11_순환계질환 주요치료비 보장범위 및 질병코드 정리.html","tag":"질병코드 정리"},{"num":"12","cat":"treat","icon":"💉","title":"2대 순환계 주요치료비 비교 (생보)","hint":"생명보험사의 뇌혈관 및 허혈성/순환계 주요치료비(수술/혈전용해 등) 보장한도를 비교한 표","file":"12_2대 순환계 주요치료비 비교 (생보).html","tag":"생보 순환계"},{"num":"13","cat":"treat","icon":"💉","title":"2대 순환계 주요치료비 비교 (손보)","hint":"손해보험사의 뇌혈관 및 허혈성/순환계 주요치료비(수술/혈전용해 등) 보장한도를 비교한 표","file":"13_2대 순환계 주요치료비 비교 (손보).html","tag":"손보 순환계"},{"num":"19","cat":"treat","icon":"💉","title":"암주요치료비 비교 (생보)","hint":"생명보험사의 종합병원 암주요치료비 연간 지급한도와 보장기간을 비교한 표","file":"19_암주요치료비 비교 (생보).html","tag":"생보 암치료비"},{"num":"20","cat":"treat","icon":"💉","title":"암주요치료비 비교 (손보)","hint":"손해보험사의 종합병원 암주요치료비 연간 지급한도와 보장기간을 비교한 표","file":"20_암주요치료비 비교 (손보).html","tag":"손보 암치료비"},{"num":"18","cat":"treat","icon":"💵","title":"선지급 암치료비 비교 (생보)","hint":"암 치료비 영수증을 끊기 전에 진단 즉시 먼저 지원금을 지급해 주는 생보사 상품을 비교한 표","file":"18_선지급 암치료비 비교 (생보).html","tag":"선지급 치료비"},{"num":"21","cat":"treat","icon":"🎯","title":"통합 항암약물방사선 치료 특약 (손보)","hint":"손해보험사의 표적항암, 면역항암, 세기조절방사선 치료를 묶어서 보장하는 특약을 비교한 표","file":"21_통합 항암약물방사선 치료 특약 비교 (손보).html","tag":"표적/면역항암"},{"num":"16","cat":"treat","icon":"⚛️","title":"항암방사선 중입자치료비 비교","hint":"수천만 원대 비급여 중입자치료 및 양성자치료 보장금액을 보험사별로 비교한 표","file":"16_항암방사선 중입자치료비 비교.html","tag":"중입자치료"},{"num":"22","cat":"treat","icon":"🧬","title":"통합암 및 통합전이암 비교 (손보)","hint":"암 부위별로 각각 돈을 따로 주는 손해보험사 다회 지급 통합암/전이암 특약을 비교한 표","file":"22_통합암 및 통합전이암 비교 (손보).html","tag":"손보 통합암"},{"num":"23","cat":"treat","icon":"🧬","title":"통합암 및 통합전이암 비교 (생보)","hint":"암 부위별로 각각 돈을 따로 주는 생명보험사 다회 지급 통합암/전이암 특약을 비교한 표","file":"23_통합암 및 통합전이암 비교 (생보).html","tag":"생보 통합암"},{"num":"15","cat":"treat","icon":"💼","title":"암생활비 보험사 비교","hint":"암에 걸렸을 때 치료와 요양을 위해 매달 생활비를 정기적으로 지급하는 상품을 비교한 표","file":"15_암생활비 보험사 비교.html","tag":"매월 생활비"},{"num":"17","cat":"treat","icon":"🩺","title":"주요치료 생활비 (복합치료) 비교","hint":"암, 뇌, 심장 질환으로 복합적인 집중치료를 받을 때 매달 나오는 생활비를 비교한 표","file":"17_주요치료 생활비(복합치료) 비교.html","tag":"복합치료 생활비"},{"num":"14","cat":"treat","icon":"♿","title":"암 후유장해 3~100% 비교","hint":"암 수술이나 절제로 인해 영구적인 후유장해가 남았을 때 보장해 주는 담보를 비교한 표","file":"14_암 후유장해 3~100퍼센트 비교.html","tag":"암 후유장해"},{"num":"24","cat":"driver","icon":"🚗","title":"교통사고처리지원금 및 변호사선임비용","hint":"운전자보험 3대 핵심 비용담보(교사처 2억~2.5억, 변선비 5천, 벌금)를 손보사별로 비교한 표","file":"24_교통사고처리지원금 및 변호사선임비용 비교.html","tag":"운전자 3대비용"},{"num":"26","cat":"driver","icon":"🚗","title":"운전자보험 고연령(70세 이상) 비용담보","hint":"70세부터 90세까지 고령 운전자의 교사처, 변선비 현물급부 및 벌금 한도를 비교한 표","file":"26_운전자보험 고연령(70세 이상) 비용담보 비교.html","tag":"70세이상 고령운전자"},{"num":"28","cat":"driver","icon":"🩹","title":"운전자 자동차부상치료비 (14급)","hint":"가장 흔한 접촉사고 14급 부상 시 나오는 자부상 보장금액을 손보사별로 비교한 표","file":"28_운전자 자부상(14급) 가입한도 비교.html","tag":"자부상 14급"},{"num":"27","cat":"driver","icon":"🚕","title":"영업용(택시 등) 운전자 자부상 비교","hint":"개인택시, 법인택시 및 영업용 차량 운전자를 위한 자부상 가입한도를 비교한 표","file":"27_영업용(택시 등) 운전자 자부상 비교.html","tag":"영업용 택시"},{"num":"25","cat":"driver","icon":"🛵","title":"이륜차 운전자보험 비교","hint":"배달용(유상/비유상) 및 출퇴근 가정용 오토바이 운전자의 비용담보 한도를 비교한 표","file":"25_이륜차 운전자보험 비교.html","tag":"오토바이 배달"},{"num":"29","cat":"driver","icon":"🏥","title":"상해통합주요치료비 비교 (11월 초)","hint":"상해 사고로 인한 입원/수술/치료비를 묶어서 지급하는 상해통합치료비 11월 초 기준 비교표","file":"29_상해통합주요치료비 가입한도 비교 (11월 초).html","tag":"상해치료비 초순"},{"num":"30","cat":"driver","icon":"🏥","title":"상해통합주요치료비 비교 (11월 중순)","hint":"상해치료비 개정안이 반영된 손보사별 최신 가입한도 비교표 (11월 중순 기준)","file":"30_상해통합주요치료비 가입한도 비교 (11월 중순).html","tag":"상해치료비 중순"},{"num":"32","cat":"simple","icon":"🛡️","title":"간편보험(유병자) 원수사별 라인업 현황","hint":"3.1.5부터 3.10.5까지 손보사·생보사 전 사의 유병자 간편보험 라인업을 한눈에 정리한 표","file":"32_간편보험(유병자) 원수사별 라인업 현황 (손·생보).html","tag":"3.N.5 라인업 전수"},{"num":"31","cat":"simple","icon":"📋","title":"초간편보험 알릴의무 비교 (5년 이내 암)","hint":"단 1개 질문만 묻거나 5년 내 암 이력만 확인하고 가입시켜 주는 초간편 보험을 비교한 표","file":"31_초간편보험 알릴의무 비교 (5년 이내 암).html","tag":"초간편 1개고지"},{"num":"33","cat":"simple","icon":"🩺","title":"원수사별 분리심사 운영 현황","hint":"암이나 뇌/심장 기왕력자가 있을 때 특정 부위만 떼어내서 가입시켜 주는 분리심사 지침 비교표","file":"33_원수사별 분리심사 운영 현황.html","tag":"분리심사 지침"},{"num":"34","cat":"simple","icon":"📉","title":"유병자 고·당·지 고지할인 비교 (손보)","hint":"고혈압, 당뇨, 고지혈증 약을 먹고 있어도 건강고지로 보험료를 할인해 주는 손보사 비교표","file":"34_유병자 고·당·지 고지할인 비교 (손보).html","tag":"손보 고당지할인"},{"num":"35","cat":"simple","icon":"📉","title":"유병자 고·당·지 고지할인 비교 (생보)","hint":"고혈압, 당뇨, 고지혈증 약을 먹고 있어도 건강고지로 보험료를 할인해 주는 생보사 비교표","file":"35_유병자 고·당·지 고지할인 비교 (생보).html","tag":"생보 고당지할인"},{"num":"36","cat":"simple","icon":"🔄","title":"80세·90세 만기 무사고 전환 비교","hint":"유병자 가입 후 병원에 안 가면 매년 더 저렴한 일반/표준 요율로 자동 전환해 주는 제도 비교표","file":"36_80세·90세 만기 무사고 전환 비교.html","tag":"무사고 전환할인"},{"num":"37","cat":"surgery","icon":"🔪","title":"질병수술·종수술 감액 & 연계조건 (손보)","hint":"손해보험사의 질병수술비(All Risk) 및 1~5종 수술비 감액기간과 필수 연계조건을 비교한 표","file":"37_질병수술·종수술 감액 및 연계조건 비교 (손보).html","tag":"손보 수술비"},{"num":"38","cat":"surgery","icon":"🔪","title":"질병수술·종수술 감액 & 연계조건 (생보)","hint":"생명보험사의 질병수술비(All Risk) 및 1~5종 수술비 감액기간과 필수 연계조건을 비교한 표","file":"38_질병수술·종수술 감액 및 연계조건 비교 (생보).html","tag":"생보 수술비"},{"num":"39","cat":"annuity","icon":"📈","title":"7년 100% 연금보험 비교","hint":"납입 시작 후 딱 7년만 지나면 원금 100%가 확정 보장되는 연금보험을 비교한 표","file":"39_7년 100퍼센트 연금보험 비교.html","tag":"7년 100% 원금보장"},{"num":"40","cat":"annuity","icon":"🛡️","title":"최저연금보증형 연금보험 비교","hint":"금리가 떨어져도 평생 최저 연금액을 복리나 단리로 끝까지 보증해 주는 상품을 비교한 표","file":"40_최저연금보증형 연금보험 비교.html","tag":"최저보증 일반연금"},{"num":"41","cat":"annuity","icon":"📊","title":"최저연금보증형 변액연금보험 비교","hint":"펀드 주가가 폭락해도 연금개시 시점에는 원금 이상을 최저 보증해 주는 변액연금을 비교한 표","file":"41_최저연금보증형 변액연금보험 비교.html","tag":"최저보증 변액연금"},{"num":"42","cat":"annuity","icon":"💵","title":"연금·종신보험 일시납 상품 비교","hint":"목돈을 한 번에 넣어두고 굴리는 일시납 연금보험 및 일시납 종신보험의 환급률을 비교한 표","file":"42_연금·종신보험 일시납 상품 비교.html","tag":"일시납 목돈거치"},{"num":"44","cat":"annuity","icon":"👔","title":"경영인 정기보험 (CEO 플랜) 비교","hint":"법인 CEO 퇴직금 재원과 보장자산을 마련하는 경영인 정기보험 11개사의 환급률을 비교한 표","file":"44_경영인 정기보험 비교.html","tag":"CEO 경영인정기"},{"num":"43","cat":"annuity","icon":"⏳","title":"정기보험 비교 (일반/간편)","hint":"종신보험보다 저렴하게 일정 기간 사망보장을 받는 정기보험의 일반형과 간편형을 비교한 표","file":"43_정기보험 비교.html","tag":"가성비 사망보장"},{"num":"47","cat":"annuity","icon":"🏛️","title":"상속 종신보험 비교","hint":"상속세 납부 재원을 마련하기 위해 해약환급금을 줄이고 보험료를 낮춘 상속 종신보험 비교표","file":"47_상속 종신보험 비교.html","tag":"상속세 재원마련"},{"num":"46","cat":"annuity","icon":"👴","title":"상속 종신보험 납기별 최고가입나이","hint":"나이가 많으신 부모님도 5년/10년/20년 납으로 가입할 수 있는 회사별 최고 연령을 비교한 표","file":"46_상속 종신보험 납입기간별 최고가입나이 비교.html","tag":"고연령 상속가입"},{"num":"48","cat":"annuity","icon":"💵","title":"단기납 달러종신 비교 (메트라이프 3년납)","hint":"안전자산인 미국 달러(USD)로 적립하고 3년 만에 완납하는 달러 종신보험을 비교한 표","file":"48_단기납 달러종신 비교 (메트라이프 3년납).html","tag":"달러 3년완납"},{"num":"51","cat":"annuity","icon":"⚡","title":"단기납 종신보험 비교 (5년납)","hint":"5년만 딱 납입하고 거치하여 높은 환급률을 만드는 5년 단기완납 종신보험을 비교한 표","file":"51_단기납 종신보험 비교 (5년납).html","tag":"5년 단기납"},{"num":"50","cat":"annuity","icon":"⚡","title":"단기납 종신보험 비교 (7년납)","hint":"가장 많이 찾는 7년납 완료 후 10년 시점의 해약환급률과 보너스를 회사별로 비교한 표","file":"50_단기납 종신보험 비교 (7년납).html","tag":"7년 단기납 (인기)"},{"num":"49","cat":"annuity","icon":"⚡","title":"단기납 종신보험 비교 (10년납)","hint":"10년 완납 시점의 환급률과 장기 유지보너스 혜택을 보험사별로 비교한 표","file":"49_단기납 종신보험 비교 (10년납).html","tag":"10년 단기납"},{"num":"45","cat":"annuity","icon":"🏥","title":"선지급 종신보험 비교","hint":"사망하기 전이라도 중대 질병이나 치매에 걸리면 사망보험금을 미리 선지급해 주는 표","file":"45_선지급 종신보험 비교.html","tag":"선지급 종신"},{"num":"54","cat":"life_spec","icon":"🏥","title":"단독실손 의료비보험 가입여부 비교","hint":"다른 보험 없이 실손의료비만 단독으로 가입할 수 있는지 손보/생보 32개사를 전수 비교한 표","file":"54_단독실손 의료비보험 가입여부 비교 (손보).html","tag":"단독실손 32개사"},{"num":"56","cat":"life_spec","icon":"🦷","title":"치아보험 비교 (손보)","hint":"손해보험사의 임플란트 및 크라운 치료비 무제한 여부와 감액기간을 비교한 표","file":"56_치아보험 비교 (손보).html","tag":"치아보험 (손보)"},{"num":"57","cat":"life_spec","icon":"🦷","title":"치아보험 비교 (생보)","hint":"생명보험사의 임플란트 및 크라운 치료비 무제한 여부와 감액기간을 비교한 표","file":"57_치아보험 비교 (생보).html","tag":"치아보험 (생보)"},{"num":"58","cat":"life_spec","icon":"💊","title":"고고당대통 진단비 비교 (손보)","hint":"손보사의 5대 만성질환(고혈압, 고지혈증, 당뇨, 대상포진, 통풍) 진단비 한도를 비교한 표","file":"58_고고당대통(고혈압·당뇨·통풍) 진단비 비교 (손보).html","tag":"만성질환 (손보)"},{"num":"59","cat":"life_spec","icon":"💊","title":"고고당대통 진단비 비교 (생보)","hint":"생보사의 5대 만성질환(고혈압, 고지혈증, 당뇨, 대상포진, 통풍) 진단비 한도를 비교한 표","file":"59_고고당대통(고혈압·당뇨·통풍) 진단비 비교 (생보).html","tag":"만성질환 (생보)"},{"num":"55","cat":"life_spec","icon":"👶","title":"태아보험 주요 담보별 현황 비교","hint":"선천이상수술비, 저체중아출생, 신생아질병입원일당 등 태아 필수 담보를 비교한 표","file":"55_태아보험 주요 담보별 현황 비교.html","tag":"태아 필수담보"},{"num":"52","cat":"life_spec","icon":"⛳","title":"골프(홀인원) 보험사별 담보 비교","hint":"골프 라운딩 중 홀인원 축하비용과 골프용품 파손/도난, 배상책임 한도를 비교한 표","file":"52_골프(홀인원) 보험사별 담보 비교.html","tag":"홀인원 축하비"},{"num":"53","cat":"life_spec","icon":"💧","title":"주택화재보험 급배수누출손해 비교","hint":"아파트나 주택 누수 사고 시 배관 수리비와 아랫집 피해 보상 자기부담금을 비교한 표","file":"53_주택화재보험 급배수누출손해 담보 비교.html","tag":"아파트 누수사고"},{"num":"60","cat":"life_spec","icon":"🦵","title":"무릎관절증 및 질병후유장해 비교","hint":"인공관절 치환수술 및 퇴행성 무릎관절증으로 인한 후유장해 보장금액을 비교한 표","file":"60_무릎관절증 및 질병후유장해 비교.html","tag":"무릎 인공관절"}];
   const CATEGORIES = [{"id":"care","name":"간병인 · 입원 · 요양","icon":"🩺"},{"id":"diag","name":"암 · 뇌 · 심장 (3대)","icon":"🎗️"},{"id":"treat","name":"치료비 · 생활비 · 암","icon":"💉"},{"id":"driver","name":"운전자 · 상해 · 교통","icon":"🚗"},{"id":"simple","name":"유병자(간편) · 심사","icon":"🛡️"},{"id":"surgery","name":"질병수술 · 1~5종","icon":"🔪"},{"id":"annuity","name":"연금 · 종신 · 정기","icon":"💰"},{"id":"life_spec","name":"실손 · 생활 · 치아","icon":"🏠"}];
+  const SUB_CATEGORIES = {"care":[{"id":"all","name":"전체"},{"id":"care_use","name":"간병인 사용일당","nums":["65","66","67","68"]},{"id":"care_supp","name":"간병인지원 (파견)","nums":["62"]},{"id":"care_target","name":"8090고령자 · 0세태아","nums":["63","64"]},{"id":"hosp_room","name":"상급종합 1인실 입원","nums":["61"]},{"id":"ltc","name":"장기요양 1~5등급","nums":["69","70"]}],"diag":[{"id":"all","name":"전체"},{"id":"diag_brain","name":"뇌혈관 진단비","nums":["03","04","05","06"]},{"id":"diag_direct","name":"바로보장 (면책·감액 없음)","nums":["07","08","09","10"]},{"id":"diag_dementia","name":"표적치매 (레켐비)","nums":["01","02"]}],"treat":[{"id":"all","name":"전체"},{"id":"treat_circ","name":"2대 순환계 주요치료비","nums":["11","12","13"]},{"id":"treat_cancer","name":"암 주요치료비 & 통합암","nums":["19","20","23"]},{"id":"treat_radio","name":"항암방사선 · 중입자/양성자","nums":["16","17"]},{"id":"treat_living","name":"암 생활비 & 선지급","nums":["14","15","18"]},{"id":"treat_cardio","name":"부정맥 · 심부전 진단비","nums":["21","22"]}],"driver":[{"id":"all","name":"전체"},{"id":"driver_traffic","name":"운전자 3대비용 · 동승자","nums":["24","25","26","27"]},{"id":"driver_injury","name":"자부상 & 상해치료비","nums":["28","29","30"]}],"simple":[{"id":"all","name":"전체"},{"id":"simple_355","name":"초경증 3.10.5 vs 3.5.5","nums":["34","35"]},{"id":"simple_review","name":"심사유형별 인수기준 · 예외질환","nums":["31","32","33"]},{"id":"simple_convert","name":"무사고 자동 전환할인","nums":["36"]}],"surgery":[{"id":"all","name":"전체"},{"id":"surgery_nonlife","name":"손해보험사 질병·종수술비","nums":["37"]},{"id":"surgery_life","name":"생명보험사 질병·종수술비","nums":["38"]}],"annuity":[{"id":"all","name":"전체"},{"id":"ann_pension","name":"연금보험 (7년100% · 최저보증)","nums":["39","40","41"]},{"id":"ann_lump","name":"일시납 목돈거치 (연금·종신)","nums":["42"]},{"id":"ann_term","name":"정기보험 (일반/간편 · CEO플랜)","nums":["43","44"]},{"id":"ann_inherit","name":"상속 종신보험","nums":["46","47"]},{"id":"ann_short","name":"단기납 종신 (5·7·10년 · 달러)","nums":["48","49","50","51"]},{"id":"ann_pre","name":"선지급 종신보험","nums":["45"]}],"life_spec":[{"id":"all","name":"전체"},{"id":"life_silson","name":"단독실손 의료비 (32개사)","nums":["54"]},{"id":"life_dental","name":"치아보험 (손보/생보)","nums":["56","57"]},{"id":"life_chronic","name":"5대 만성질환 (고고당대통)","nums":["58","59"]},{"id":"life_baby","name":"태아보험 필수담보","nums":["55"]},{"id":"life_living","name":"생활특화 (골프 · 화재누수 · 무릎)","nums":["52","53","60"]}]};
 
   let currentCategory = 'care';
+  let currentSubCategory = 'all';
   let searchQuery = '';
 
   const categoryGrid = document.getElementById('categoryGrid');
+  const subNavContainer = document.getElementById('subNavContainer');
+  const subChipsBar = document.getElementById('subChipsBar');
   const sheetList = document.getElementById('sheetList');
   const listTitle = document.getElementById('listTitle');
   const listCount = document.getElementById('listCount');
@@ -485,10 +609,12 @@
 
   function init() {
     renderCategories();
+    renderSubCategories();
     renderList();
 
     searchInput.addEventListener('input', (e) => {
       searchQuery = e.target.value.trim().toLowerCase();
+      renderSubCategories();
       renderList();
     });
 
@@ -503,7 +629,7 @@
     categoryGrid.innerHTML = '';
     CATEGORIES.forEach(c => {
       const btn = document.createElement('div');
-      btn.className = 'cat-btn' + (c.id === currentCategory ? ' active' : '');
+      btn.className = 'cat-btn' + (c.id === currentCategory && !searchQuery ? ' active' : '');
       btn.onclick = () => selectCategory(c.id);
 
       btn.innerHTML = `
@@ -516,9 +642,42 @@
 
   function selectCategory(catId) {
     currentCategory = catId;
+    currentSubCategory = 'all';
     searchQuery = '';
     searchInput.value = '';
     renderCategories();
+    renderSubCategories();
+    renderList();
+  }
+
+  function renderSubCategories() {
+    if (searchQuery) {
+      subNavContainer.style.display = 'none';
+      return;
+    }
+    subNavContainer.style.display = 'flex';
+    subChipsBar.innerHTML = '';
+
+    const subs = SUB_CATEGORIES[currentCategory] || [];
+    const catItems = ITEMS.filter(it => it.cat === currentCategory);
+
+    subs.forEach(sub => {
+      const count = sub.id === 'all' ? catItems.length : sub.nums.length;
+      const chip = document.createElement('div');
+      chip.className = 'sub-chip' + (sub.id === currentSubCategory ? ' active' : '');
+      chip.onclick = () => selectSubCategory(sub.id);
+
+      chip.innerHTML = `
+        <span>${sub.name}</span>
+        <span class="chip-count">${count}</span>
+      `;
+      subChipsBar.appendChild(chip);
+    });
+  }
+
+  function selectSubCategory(subId) {
+    currentSubCategory = subId;
+    renderSubCategories();
     renderList();
   }
 
@@ -534,9 +693,15 @@
       );
       listTitle.innerHTML = `<i class="fa-solid fa-magnifying-glass" style="color:#0284c7;"></i> "${searchQuery}" 검색 결과`;
     } else {
-      filtered = filtered.filter(it => it.cat === currentCategory);
       const catObj = CATEGORIES.find(c => c.id === currentCategory);
-      listTitle.innerHTML = `<span>${catObj.icon}</span> <span>${catObj.name} 비교표</span>`;
+      if (currentSubCategory === 'all') {
+        filtered = filtered.filter(it => it.cat === currentCategory);
+        listTitle.innerHTML = `<span>${catObj.icon}</span> <span>${catObj.name} 전체</span>`;
+      } else {
+        const subObj = SUB_CATEGORIES[currentCategory].find(s => s.id === currentSubCategory);
+        filtered = filtered.filter(it => it.cat === currentCategory && subObj.nums.includes(it.num));
+        listTitle.innerHTML = `<span>${catObj.icon}</span> <span>${catObj.name}</span> <i class="fa-solid fa-angle-right" style="font-size:12px;color:#94a3b8;margin:0 4px;"></i> <span style="color:#0284c7;">${subObj.name}</span>`;
+      }
     }
 
     listCount.innerText = '총 ' + filtered.length + '개';
@@ -584,7 +749,11 @@
   }
 
   function getSheetUrl(filename) {
-    return './' + encodeURIComponent(filename);
+    const isInside = location.pathname.includes('한장비교표_71종') || 
+                     location.pathname.includes('sheets') || 
+                     location.pathname.includes('00_');
+    const prefix = isInside ? './' : './';
+    return prefix + encodeURIComponent(filename);
   }
 
   function openViewer(num, title, filename) {
@@ -613,6 +782,5 @@
 
   window.addEventListener('DOMContentLoaded', init);
 </script>
-
 </body>
 </html>

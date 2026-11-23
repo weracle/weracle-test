@@ -93,113 +93,60 @@ function initFamilyTabs(baseId, baseLabel) {
         el.remove();
     });
 
-    const isNew = !window.isEditMode;
-    if(isNew) { document.body.classList.add('mode-new'); } else { document.body.classList.remove('mode-new'); }
-
     const mainWrapper = document.createElement('div');
     mainWrapper.className = 'sian-main-wrapper';
     mainWrapper.style.padding = '0'; mainWrapper.style.display = 'flex'; mainWrapper.style.flex = '1'; mainWrapper.style.overflow = 'hidden'; mainWrapper.style.width = '100%'; mainWrapper.style.boxSizing = 'border-box';
     
     const defaultSubmit = form.querySelector('button[type="submit"]');
     if (defaultSubmit && defaultSubmit.parentElement) {
-        defaultSubmit.parentElement.style.display = isNew ? 'none' : 'flex';
+        defaultSubmit.parentElement.style.display = 'flex';
     }
     
-    // Hide injected edit-save buttons in New Registration Mode
     const editSaveBtns = form.querySelectorAll('.edit-save-btn');
     editSaveBtns.forEach(btn => {
-        btn.style.display = isNew ? 'none' : 'flex';
+        btn.style.display = 'flex';
     });
 
-    if (isNew) {
-        mainWrapper.style.flexDirection = 'row';
-        mainWrapper.style.background = '#f8fafc';
-        
-        const isSingle = (window.wizardMode === 'single');
-        const famSidebar = document.createElement('div');
-        famSidebar.id = 'tier-1-tabs';
-        famSidebar.className = 'family-sidebar-wizard';
-        famSidebar.style.width = '240px'; famSidebar.style.minWidth = '240px'; famSidebar.style.background = '#ffffff'; famSidebar.style.borderRight = '1px solid #e2e8f0'; famSidebar.style.padding = '20px 10px'; famSidebar.style.display = isSingle ? 'none' : 'flex'; famSidebar.style.flexDirection = 'column'; famSidebar.style.gap = '8px'; famSidebar.style.position = 'relative'; famSidebar.style.overflowY = 'auto';
-
-        const rightArea = document.createElement('div');
-        rightArea.style.flex = '1'; rightArea.style.display = 'flex'; rightArea.style.flexDirection = 'column'; rightArea.style.overflow = 'hidden';
-
-        const stepper = document.createElement('div');
-        stepper.id = 'tier-2-tabs';
-        stepper.className = 'stepper-wizard';
-        stepper.style.display = 'flex'; stepper.style.padding = '12px 24px'; stepper.style.background = '#ffffff'; stepper.style.borderBottom = '1px solid #e2e8f0'; stepper.style.gap = '16px'; stepper.style.alignItems = 'center';
-        
-        const catData = [
-            { id: 1, name: "1차 정보", desc: "기본 인적사항" },
-            { id: 2, name: "터치인사이트", desc: "고객 관심사 분석" },
-            { id: 3, name: "보험 가입 내역", desc: "보장 분석 및 관리" }
-        ];
-        
-        catData.forEach(cat => {
-            const stepBtn = document.createElement('div');
-            stepBtn.className = 'nav-item step-item';
-            stepBtn.setAttribute('data-cat', cat.id);
-            stepBtn.style.flex = '1'; stepBtn.style.padding = '10px 16px'; stepBtn.style.borderRadius = '12px'; stepBtn.style.border = '1px solid #e2e8f0'; stepBtn.style.background = '#f8fafc'; stepBtn.style.cursor = 'pointer'; stepBtn.style.display = 'flex'; stepBtn.style.flexDirection = 'column'; stepBtn.style.gap = '4px'; stepBtn.style.transition = '0.2s';
-            stepBtn.innerHTML = '<div style="font-size:11px; font-weight:800; color:#94a3b8;" class="step-num">STEP ' + cat.id + '</div><div style="font-size:14px; font-weight:800; color:#1e293b;" class="step-title">' + cat.name + '</div>';
-            stepBtn.onclick = () => { if (typeof window.switchCategoryTab === 'function') window.switchCategoryTab(cat.id); };
-            stepper.appendChild(stepBtn);
-        });
-
-        const formWrapper = document.createElement('div');
-        formWrapper.style.flex = '1'; formWrapper.style.overflow = 'hidden'; formWrapper.style.display = 'flex'; formWrapper.style.flexDirection = 'column';
-        
-        const bottomNav = document.createElement('div');
-        bottomNav.id = 'wizard-bottom-nav';
-        bottomNav.style.padding = '12px 24px'; bottomNav.style.background = '#ffffff'; bottomNav.style.borderTop = '1px solid #e2e8f0'; bottomNav.style.display = 'flex'; bottomNav.style.justifyContent = 'space-between'; bottomNav.style.alignItems = 'center'; bottomNav.style.flexShrink = '0'; bottomNav.style.position = 'sticky'; bottomNav.style.bottom = '0'; bottomNav.style.zIndex = '20'; bottomNav.style.borderRadius = '0 0 20px 0';
-
-        form.parentNode.insertBefore(mainWrapper, form);
-        mainWrapper.appendChild(famSidebar);
-        mainWrapper.appendChild(rightArea);
-        rightArea.appendChild(stepper);
-        rightArea.appendChild(formWrapper);
-        formWrapper.appendChild(form);
-        rightArea.appendChild(bottomNav);
-
-    } else {
-        mainWrapper.style.flexDirection = 'column';
-        
-        const tabContainer = document.createElement('div');
-        tabContainer.id = 'tier-1-tabs';
-        tabContainer.className = 'family-tabs';
-        tabContainer.style.position = 'relative';
+    // 최신 통합 상단 가로 탭 레이아웃 (시안 8-5) 단일화 (예전 회색 위저드 분기 영구 제거)
+    mainWrapper.style.flexDirection = 'column';
+    mainWrapper.style.background = '#ffffff';
     
-        const containerWrapper = document.createElement('div');
-        containerWrapper.className = 'sian-container'; containerWrapper.style.display = 'flex'; containerWrapper.style.flex = '1'; containerWrapper.style.background = 'white'; containerWrapper.style.border = '1px solid #cbd5e1'; containerWrapper.style.borderTop = 'none'; containerWrapper.style.overflow = 'hidden';
+    const tabContainer = document.createElement('div');
+    tabContainer.id = 'tier-1-tabs';
+    tabContainer.className = 'family-tabs';
+    tabContainer.style.position = 'relative';
+
+    const containerWrapper = document.createElement('div');
+    containerWrapper.className = 'sian-container'; containerWrapper.style.display = 'flex'; containerWrapper.style.flex = '1'; containerWrapper.style.background = 'white'; containerWrapper.style.border = '1px solid #cbd5e1'; containerWrapper.style.borderTop = 'none'; containerWrapper.style.overflow = 'hidden';
+
+    const catContainer = document.createElement('div');
+    catContainer.id = 'tier-2-tabs';
+    catContainer.className = 'sidebar'; catContainer.style.width = '220px'; catContainer.style.minWidth = '220px'; catContainer.style.background = '#ffffff'; catContainer.style.borderRight = '1px solid #e2e8f0'; catContainer.style.padding = '20px 10px'; catContainer.style.boxSizing = 'border-box'; catContainer.style.flexShrink = '0'; catContainer.style.display = 'flex'; catContainer.style.flexDirection = 'column'; catContainer.style.gap = '5px';
     
-        const catContainer = document.createElement('div');
-        catContainer.id = 'tier-2-tabs';
-        catContainer.className = 'sidebar'; catContainer.style.width = '220px'; catContainer.style.minWidth = '220px'; catContainer.style.background = '#ffffff'; catContainer.style.borderRight = '1px solid #e2e8f0'; catContainer.style.padding = '20px 10px'; catContainer.style.boxSizing = 'border-box'; catContainer.style.flexShrink = '0'; catContainer.style.display = 'flex'; catContainer.style.flexDirection = 'column'; catContainer.style.gap = '5px';
-        
-        const catData = [
-            { id: 1, name: "1차 정보", icon: "fa-user" },
-            { id: 2, name: "터치인사이트", icon: "fa-chart-pie" },
-            { id: 3, name: "보험 가입 내역", icon: "fa-shield-halved" }
-        ];
-        
-        catData.forEach(cat => {
-            const btn = document.createElement('div');
-            btn.className = 'nav-item'; btn.style.padding = '14px 20px'; btn.style.color = '#475569'; btn.style.fontSize = '15px'; btn.style.fontWeight = '700'; btn.style.cursor = 'pointer'; btn.style.borderRadius = '8px'; btn.style.display = 'flex'; btn.style.justifyContent = 'space-between'; btn.style.alignItems = 'center';
-            btn.setAttribute('data-cat', cat.id);
-            btn.innerHTML = '<div style="display:flex; align-items:center; gap:8px;"><i class="fa-solid ' + cat.icon + '" style="color:#94a3b8; width:16px;"></i> ' + cat.name + '</div><i class="fa-solid fa-chevron-right" style="font-size:11px; color:#cbd5e1;"></i>';
-            btn.onclick = () => { if (typeof window.switchCategoryTab === 'function') window.switchCategoryTab(cat.id); };
-            catContainer.appendChild(btn);
-        });
+    const catData = [
+        { id: 1, name: "1차 정보", icon: "fa-user" },
+        { id: 2, name: "터치인사이트", icon: "fa-chart-pie" },
+        { id: 3, name: "보험 가입 내역", icon: "fa-shield-halved" }
+    ];
     
-        const contentWrapper = document.createElement('div');
-        contentWrapper.className = 'content'; contentWrapper.style.padding = '0'; contentWrapper.style.flex = '1'; contentWrapper.style.display = 'flex'; contentWrapper.style.flexDirection = 'column'; contentWrapper.style.overflow = 'hidden'; contentWrapper.style.minWidth = '0';
-    
-        form.parentNode.insertBefore(mainWrapper, form);
-        mainWrapper.appendChild(tabContainer);
-        mainWrapper.appendChild(containerWrapper);
-        containerWrapper.appendChild(catContainer);
-        containerWrapper.appendChild(contentWrapper);
-        contentWrapper.appendChild(form);
-    }
+    catData.forEach(cat => {
+        const btn = document.createElement('div');
+        btn.className = 'nav-item'; btn.style.padding = '14px 20px'; btn.style.color = '#475569'; btn.style.fontSize = '15px'; btn.style.fontWeight = '700'; btn.style.cursor = 'pointer'; btn.style.borderRadius = '8px'; btn.style.display = 'flex'; btn.style.justifyContent = 'space-between'; btn.style.alignItems = 'center';
+        btn.setAttribute('data-cat', cat.id);
+        btn.innerHTML = '<div style="display:flex; align-items:center; gap:8px;"><i class="fa-solid ' + cat.icon + '" style="color:#94a3b8; width:16px;"></i> ' + cat.name + '</div><i class="fa-solid fa-chevron-right" style="font-size:11px; color:#cbd5e1;"></i>';
+        btn.onclick = () => { if (typeof window.switchCategoryTab === 'function') window.switchCategoryTab(cat.id); };
+        catContainer.appendChild(btn);
+    });
+
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'content'; contentWrapper.style.padding = '0'; contentWrapper.style.flex = '1'; contentWrapper.style.display = 'flex'; contentWrapper.style.flexDirection = 'column'; contentWrapper.style.overflow = 'hidden'; contentWrapper.style.minWidth = '0';
+
+    form.parentNode.insertBefore(mainWrapper, form);
+    mainWrapper.appendChild(tabContainer);
+    mainWrapper.appendChild(containerWrapper);
+    containerWrapper.appendChild(catContainer);
+    containerWrapper.appendChild(contentWrapper);
+    contentWrapper.appendChild(form);
 
     renderFamilyTabs();
     if (typeof window.upgradeAllInsurancesToSmartUI === 'function') window.upgradeAllInsurancesToSmartUI();
@@ -211,44 +158,18 @@ function renderFamilyTabs() {
     const t1 = document.getElementById('tier-1-tabs');
     if (!t1) return;
     
-    const isNew = !window.isEditMode;
-    const isSingle = (window.wizardMode === 'single');
+    document.body.classList.remove('mode-new'); 
+    t1.style.display = '';
     
-    if (isNew && isSingle) {
-        t1.style.display = 'none';
-        if (typeof window.renderWizardBottomNav === 'function') window.renderWizardBottomNav();
-        return;
-    }
-    
-    if(isNew) { 
-        document.body.classList.add('mode-new'); 
-        t1.style.display = 'flex';
-    } else { 
-        document.body.classList.remove('mode-new'); 
-        t1.style.display = '';
-    }
     let html = '';
-    
-    if (isNew) {
-        html += '<div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:12px; padding-left:10px;">가족 목록</div>';
-        window.familyState.forEach(f => {
-            const isActive = f.id === window.activeFamilyId;
-            const activeStyle = isActive ? "background:#eff6ff; border-color:#3b82f6; color:#1e40af;" : "background:#ffffff; border-color:#e2e8f0; color:#475569;";
-            html += "<div onclick=\"switchFamilyTab('" + f.id + "')\" style=\"padding:14px 16px; border-radius:10px; border:1px solid; margin-bottom:8px; cursor:pointer; font-weight:700; transition:0.2s; " + activeStyle + "\">";
-            html += (f.isRoot ? '' : '') + ' ' + f.label;
-            html += "</div>";
-        });
-        html += "<div onclick=\"addFamilyTab()\" style=\"padding:14px 16px; border-radius:10px; border:1px dashed #cbd5e1; background:#f8fafc; color:#64748b; cursor:pointer; font-weight:700; text-align:center; transition:0.2s;\" onmouseover=\"this.style.background='#f1f5f9'\" onmouseout=\"this.style.background='#f8fafc'\"><i class=\"fa-solid fa-plus\"></i> 가족 구성원 추가</div>";
-    } else {
-        window.familyState.forEach(f => {
-            const activeClass = f.id === window.activeFamilyId ? " active" : "";
-            html += "<div class=\"fam-tab" + activeClass + "\" onclick=\"switchFamilyTab('" + f.id + "')\">";
-            html += (f.isRoot ? '' : '') + ' ' + f.label;
-            html += "</div>";
-        });
-        html += "<div class=\"fam-tab fam-tab-add\" onclick=\"addFamilyTab()\">가족 추가</div>";
-        html += "<button type=\"button\" onclick=\"if(typeof closeRegModal === 'function') closeRegModal()\" style=\"position: absolute; right: 15px; bottom: 10px; width: 30px; height: 30px; background:white; border:1px solid #cbd5e1; border-radius:6px; font-size:14px; color:#64748b; cursor:pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition:0.2s;\" onmouseover=\"this.style.color='#ef4444'; this.style.borderColor='#ef4444';\" onmouseout=\"this.style.color='#64748b'; this.style.borderColor='#cbd5e1';\"><i class=\"fa-solid fa-xmark\"></i></button>";
-    }
+    window.familyState.forEach(f => {
+        const activeClass = f.id === window.activeFamilyId ? " active" : "";
+        html += "<div class=\"fam-tab" + activeClass + "\" onclick=\"switchFamilyTab('" + f.id + "')\">";
+        html += (f.isRoot ? '' : '') + ' ' + f.label;
+        html += "</div>";
+    });
+    html += "<div class=\"fam-tab fam-tab-add\" onclick=\"addFamilyTab()\">가족 추가</div>";
+    html += "<button type=\"button\" onclick=\"if(typeof closeRegModal === 'function') closeRegModal()\" style=\"position: absolute; right: 15px; bottom: 10px; width: 30px; height: 30px; background:white; border:1px solid #cbd5e1; border-radius:6px; font-size:14px; color:#64748b; cursor:pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition:0.2s;\" onmouseover=\"this.style.color='#ef4444'; this.style.borderColor='#ef4444';\" onmouseout=\"this.style.color='#64748b'; this.style.borderColor='#cbd5e1';\"><i class=\"fa-solid fa-xmark\"></i></button>";
     t1.innerHTML = html;
     if (typeof window.renderWizardBottomNav === 'function') window.renderWizardBottomNav();
 }
@@ -1177,7 +1098,7 @@ window.submitFamilyForm = async function(e) {
         window.isEditMode = true;
         window.editTargetId = activeF.data["고객번호"];
     } else {
-        window.isEditMode = false;
+        window.isEditMode = true;
         window.editTargetId = null;
     }
 

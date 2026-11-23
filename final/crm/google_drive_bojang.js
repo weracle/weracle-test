@@ -512,8 +512,9 @@
                 '</div>';
             }
         },
-        // 12. WERACLE 전용 모달 PDF 뷰어
+        // 12. WERACLE 전용 모달 PDF 뷰어 (가로 스크롤 없는 와이드 확장 화면)
         currentViewerBlobUrl: null,
+        isViewerFullscreen: false,
 
         closePdfViewer: function() {
             const modal = document.getElementById('weraclePdfViewerModal');
@@ -528,6 +529,28 @@
             }
         },
 
+        toggleViewerFullscreen: function() {
+            const card = document.getElementById('weracleViewerCard');
+            const icon = document.getElementById('weracleViewerExpandIcon');
+            if (!card) return;
+            this.isViewerFullscreen = !this.isViewerFullscreen;
+            if (this.isViewerFullscreen) {
+                card.style.maxWidth = '100vw';
+                card.style.width = '100vw';
+                card.style.height = '100vh';
+                card.style.maxHeight = '100vh';
+                card.style.borderRadius = '0';
+                if (icon) icon.className = 'fa-solid fa-compress';
+            } else {
+                card.style.maxWidth = '1600px';
+                card.style.width = '96vw';
+                card.style.height = '96vh';
+                card.style.maxHeight = '96vh';
+                card.style.borderRadius = '16px';
+                if (icon) icon.className = 'fa-solid fa-expand';
+            }
+        },
+
         openPdfViewer: async function(fileId, fileName, webViewLink) {
             fileName = fileName || '보장분석_리포트.pdf';
             webViewLink = webViewLink || ('https://drive.google.com/file/d/' + fileId + '/view');
@@ -536,12 +559,12 @@
             if (!modal) {
                 modal = document.createElement('div');
                 modal.id = 'weraclePdfViewerModal';
-                modal.style.cssText = 'position:fixed; inset:0; z-index:200000; background:rgba(15,23,42,0.78); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;';
+                modal.style.cssText = 'position:fixed; inset:0; z-index:200000; background:rgba(15,23,42,0.82); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:10px; box-sizing:border-box;';
                 
                 modal.innerHTML = `
-                    <div style="background:#ffffff; border-radius:18px; width:100%; max-width:1080px; height:94vh; max-height:94vh; display:flex; flex-direction:column; box-shadow:0 25px 60px -15px rgba(0,0,0,0.4); overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
+                    <div id="weracleViewerCard" style="background:#ffffff; border-radius:16px; width:96vw; max-width:1600px; height:96vh; max-height:96vh; display:flex; flex-direction:column; box-shadow:0 25px 60px -15px rgba(0,0,0,0.5); overflow:hidden; border:1px solid rgba(255,255,255,0.2); transition:all 0.2s ease;">
                         <!-- Modal Top Header -->
-                        <div style="padding:14px 20px; background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#ffffff; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; flex-shrink:0;">
+                        <div style="padding:12px 20px; background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#ffffff; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; flex-shrink:0;">
                             <div style="display:flex; align-items:center; gap:12px; min-width:0;">
                                 <div style="width:36px; height:36px; border-radius:10px; background:rgba(2,132,199,0.25); color:#38bdf8; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; border:1px solid rgba(56,189,248,0.3);">
                                     <i class="fa-solid fa-file-pdf"></i>
@@ -553,13 +576,16 @@
                                     <div style="font-size:11.5px; color:#94a3b8; display:flex; align-items:center; gap:6px;">
                                         <span>WERACLE 프리미엄 리포트 뷰어</span>
                                         <span style="display:inline-block; width:3px; height:3px; border-radius:50%; background:#64748b;"></span>
-                                        <span style="color:#38bdf8; font-weight:700;">전용 고해상도 모드</span>
+                                        <span style="color:#38bdf8; font-weight:700;">가로 맞춤 고해상도 모드</span>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Action Buttons -->
                             <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                                <button type="button" onclick="GoogleDriveBojang.toggleViewerFullscreen()" title="전체화면 전환" style="background:rgba(255,255,255,0.08); color:#f8fafc; border:1px solid rgba(255,255,255,0.15); padding:7px 11px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+                                    <i id="weracleViewerExpandIcon" class="fa-solid fa-expand"></i> <span>화면확장</span>
+                                </button>
                                 <a id="weracleViewerDownloadBtn" href="#" target="_blank" download style="background:rgba(255,255,255,0.1); color:#f8fafc; border:1px solid rgba(255,255,255,0.15); text-decoration:none; padding:7px 13px; border-radius:8px; font-size:12.5px; font-weight:700; display:inline-flex; align-items:center; gap:5px; transition:0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
                                     <i class="fa-solid fa-download"></i> 다운로드
                                 </a>
@@ -573,7 +599,7 @@
                         </div>
 
                         <!-- Viewer Content Container -->
-                        <div id="weracleViewerBody" style="flex:1; width:100%; height:100%; position:relative; background:#334155; display:flex; align-items:center; justify-content:center;">
+                        <div id="weracleViewerBody" style="flex:1; width:100%; height:100%; position:relative; background:#2a2e33; overflow:hidden;">
                             <!-- Spinner while loading -->
                             <div id="weracleViewerLoading" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#0f172a; color:#ffffff; z-index:2;">
                                 <div style="font-size:40px; margin-bottom:12px; color:#38bdf8;">
@@ -583,11 +609,11 @@
                                     리포트를 불러오는 중입니다...
                                 </div>
                                 <div style="font-size:12px; color:#94a3b8;">
-                                    고해상도 PDF 데이터를 안전하게 복호화하고 있습니다.
+                                    고해상도 PDF 데이터를 가로 맞춤으로 렌더링하고 있습니다.
                                 </div>
                             </div>
 
-                            <iframe id="weraclePdfViewerFrame" src="about:blank" style="width:100%; height:100%; border:none; background:#525659;"></iframe>
+                            <iframe id="weraclePdfViewerFrame" src="about:blank" style="width:100%; height:100%; border:none; display:block; background:#2a2e33;" allowfullscreen></iframe>
                         </div>
                     </div>
                 `;
@@ -620,6 +646,19 @@
             const driveLink = document.getElementById('weracleViewerDriveLink');
             if (driveLink) driveLink.href = webViewLink;
 
+            // Reset fullscreen state if was toggled
+            const card = document.getElementById('weracleViewerCard');
+            const icon = document.getElementById('weracleViewerExpandIcon');
+            this.isViewerFullscreen = false;
+            if (card) {
+                card.style.maxWidth = '1600px';
+                card.style.width = '96vw';
+                card.style.height = '96vh';
+                card.style.maxHeight = '96vh';
+                card.style.borderRadius = '16px';
+            }
+            if (icon) icon.className = 'fa-solid fa-expand';
+
             // Show Modal & Spinner
             modal.style.display = 'flex';
             const loadingEl = document.getElementById('weracleViewerLoading');
@@ -644,7 +683,8 @@
                         const blob = await resp.blob();
                         const pdfBlob = new Blob([blob], { type: 'application/pdf' });
                         this.currentViewerBlobUrl = URL.createObjectURL(pdfBlob);
-                        iframe.src = this.currentViewerBlobUrl + '#toolbar=1&navpanes=0';
+                        // view=FitH & zoom=page-width ensures PDF page expands to container width with NO horizontal scroll!
+                        iframe.src = this.currentViewerBlobUrl + '#view=FitH&zoom=page-width&toolbar=1&navpanes=0';
                         if (loadingEl) {
                             setTimeout(() => { loadingEl.style.display = 'none'; }, 400);
                         }

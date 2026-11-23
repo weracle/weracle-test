@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WERACLE 한장비교표 스마트 네비게이터 (가이드형 목차)</title>
+  <title>WERACLE 한장비교표 스마트 네비게이터</title>
   
   <!-- Pretendard & FontAwesome -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
@@ -24,6 +24,8 @@
       --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
       --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
       --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius-xl: 20px;
       --radius-lg: 16px;
       --radius-md: 12px;
       --radius-sm: 8px;
@@ -37,308 +39,421 @@
       color: var(--text-main);
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Container */
     .app-container {
-      max-width: 1400px;
+      max-width: 1360px;
+      width: 100%;
       margin: 0 auto;
-      padding: 32px 24px 80px;
+      padding: 32px 24px 60px;
+      flex: 1;
     }
 
-    /* 1. Header */
-    .hero-header {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      border-radius: var(--radius-lg);
-      padding: 40px 36px;
-      color: #ffffff;
-      box-shadow: var(--shadow-lg);
-      margin-bottom: 32px;
-      position: relative;
-      overflow: hidden;
+    /* Top Global Nav Bar */
+    .top-global-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
     }
 
-    .hero-header::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 450px;
-      height: 450px;
-      background: radial-gradient(circle, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0) 70%);
-      pointer-events: none;
+    .brand-logo-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
     }
 
-    .brand-badge {
+    .brand-logo-badge {
+      background: #0f172a;
+      color: #38bdf8;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .brand-logo-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .top-quick-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-nav-home {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: #334155;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(8px);
+      transition: all 0.15s;
+    }
+
+    .btn-nav-home:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    /* ========================================================== */
+    /* VIEW 1: HOME LAUNCHPAD (딱 큼직한 버튼들만 있는 첫 화면)       */
+    /* ========================================================== */
+    #homeView {
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .home-hero {
+      text-align: center;
+      padding: 36px 20px 32px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .home-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #e0f2fe;
+      color: #0369a1;
       padding: 6px 14px;
       border-radius: 9999px;
       font-size: 13px;
-      font-weight: 700;
-      color: #38bdf8;
-      margin-bottom: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .hero-title {
-      font-size: 32px;
       font-weight: 800;
-      letter-spacing: -0.8px;
+      margin-bottom: 16px;
+    }
+
+    .home-hero-title {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: #0f172a;
       margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+      line-height: 1.25;
     }
 
-    .hero-desc {
+    .home-hero-title span {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .home-hero-desc {
       font-size: 16px;
-      color: #94a3b8;
-      max-width: 760px;
+      color: #64748b;
       margin-bottom: 28px;
-      font-weight: 400;
     }
 
-    /* Search Bar */
-    .search-wrap {
+    /* Home Search Bar */
+    .home-search-wrap {
+      max-width: 580px;
+      margin: 0 auto 40px;
       position: relative;
-      max-width: 640px;
     }
 
-    .search-input {
+    .home-search-input {
       width: 100%;
       padding: 16px 20px 16px 52px;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.95);
+      border-radius: 9999px;
+      border: 2px solid #cbd5e1;
+      background: #ffffff;
       color: #0f172a;
       font-size: 15px;
       font-weight: 600;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transition: all 0.2s ease;
+      box-shadow: var(--shadow-md);
+      transition: all 0.2s;
       outline: none;
     }
 
-    .search-input:focus {
-      background: #ffffff;
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.3);
+    .home-search-input:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.2);
     }
 
-    .search-icon {
+    .home-search-icon {
       position: absolute;
-      left: 20px;
+      left: 22px;
       top: 50%;
       transform: translateY(-50%);
       color: #64748b;
       font-size: 17px;
     }
 
-    .search-clear {
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: #e2e8f0;
-      border: none;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: #475569;
-      font-size: 12px;
-    }
-
-    /* Stats Quick Bar */
-    .stats-bar {
-      display: flex;
-      gap: 20px;
-      margin-top: 24px;
-      flex-wrap: wrap;
-    }
-
-    .stat-pill {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.08);
-      padding: 8px 14px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      color: #e2e8f0;
-    }
-
-    .stat-pill strong {
-      color: #38bdf8;
-      font-weight: 700;
-    }
-
-    /* 2. Emoji Category Selector (Hero Cards) */
-    .section-title-wrap {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .section-title {
-      font-size: 20px;
-      font-weight: 800;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .category-grid {
+    /* 8 Large Emoji Launchpad Buttons */
+    .launchpad-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
-      gap: 12px;
-      margin-bottom: 28px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-top: 10px;
     }
 
-    .category-card {
-      background: var(--card-bg);
+    .launch-btn {
+      background: #ffffff;
       border: 2px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px 14px;
+      border-radius: var(--radius-xl);
+      padding: 32px 24px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 14px;
+      box-shadow: var(--shadow-sm);
       position: relative;
       user-select: none;
     }
 
-    .category-card:hover {
-      border-color: #93c5fd;
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+    .launch-btn:hover {
+      border-color: #38bdf8;
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-xl);
+      background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
     }
 
-    .category-card.active {
-      border-color: var(--primary-accent);
-      background: #f0f9ff;
-      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
-    }
-
-    .category-card .cat-emoji {
-      font-size: 32px;
+    .launch-emoji {
+      font-size: 54px;
       line-height: 1;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));
+      transition: transform 0.2s;
     }
 
-    .category-card .cat-name {
-      font-size: 13.5px;
+    .launch-btn:hover .launch-emoji {
+      transform: scale(1.12);
+    }
+
+    .launch-title {
+      font-size: 18px;
       font-weight: 800;
-      color: var(--text-main);
+      color: #0f172a;
       line-height: 1.3;
+      letter-spacing: -0.4px;
     }
 
-    .category-card .cat-count {
-      font-size: 11px;
-      font-weight: 700;
-      background: #e2e8f0;
-      color: #475569;
-      padding: 2px 8px;
+    .launch-desc {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.4;
+      text-align: center;
+      max-width: 240px;
+    }
+
+    .launch-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #f1f5f9;
+      color: #0369a1;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 12px;
       border-radius: 9999px;
-      transition: all 0.2s;
+      border: 1px solid #e2e8f0;
+      margin-top: 4px;
     }
 
-    .category-card.active .cat-count {
-      background: var(--primary-accent);
+    .launch-btn:hover .launch-badge {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+
+    /* ========================================================== */
+    /* VIEW 2: CATEGORY DETAIL & GUIDE VIEW (클릭 후 들어간 화면)      */
+    /* ========================================================== */
+    #detailView {
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    /* Compact Mini Navigation Bar at Top of Detail View */
+    .mini-cat-nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mini-cat-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #475569;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .mini-cat-btn:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+
+    .mini-cat-btn.active {
+      background: #0f172a;
+      border-color: #0f172a;
       color: #ffffff;
     }
 
-    /* 3. Guide Sub-Filter Panel */
-    .guide-panel {
+    /* Detail Banner Header */
+    .detail-hero-banner {
       background: #ffffff;
       border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .detail-hero-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .detail-hero-icon {
+      font-size: 42px;
+      line-height: 1;
+      background: #f0f9ff;
+      width: 72px;
+      height: 72px;
       border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #bae6fd;
+    }
+
+    .detail-hero-title-group h2 {
+      font-size: 24px;
+      font-weight: 900;
+      color: #0f172a;
+      margin-bottom: 4px;
+      letter-spacing: -0.5px;
+    }
+
+    .detail-hero-title-group p {
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .btn-back-home {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+
+    .btn-back-home:hover {
+      background: #e2e8f0;
+      transform: translateX(-3px);
+    }
+
+    /* Guide Sub-Filter Chips */
+    .guide-box {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
       padding: 20px 24px;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
       box-shadow: var(--shadow-sm);
     }
 
-    .guide-banner-head {
+    .guide-box-header {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #0284c7;
       margin-bottom: 14px;
     }
 
-    .guide-banner-head .guide-badge {
-      background: #e0f2fe;
-      color: #0369a1;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 800;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .guide-banner-head .guide-text {
-      font-size: 14.5px;
-      font-weight: 700;
-      color: #1e293b;
-    }
-
-    .sub-filter-chips {
+    .sub-chips-wrap {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
 
-    .filter-chip {
-      background: #f1f5f9;
+    .sub-chip {
+      background: #ffffff;
       border: 1px solid #cbd5e1;
       border-radius: 9999px;
-      padding: 6px 14px;
+      padding: 8px 16px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       color: #475569;
       cursor: pointer;
       transition: all 0.15s;
       user-select: none;
     }
 
-    .filter-chip:hover {
-      background: #e2e8f0;
+    .sub-chip:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
       color: #0f172a;
     }
 
-    .filter-chip.active {
+    .sub-chip.active {
       background: #0284c7;
       border-color: #0284c7;
       color: #ffffff;
-      box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
     }
 
-    /* 4. Sheets Grid */
-    .results-meta {
-      font-size: 14px;
-      color: var(--text-sub);
-      margin-bottom: 16px;
+    /* Detail Sheets Grid */
+    .detail-meta-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: #475569;
     }
 
-    .results-meta strong {
-      color: var(--primary-accent);
+    .detail-meta-bar strong {
+      color: #0284c7;
     }
 
     .sheet-cards-grid {
@@ -357,11 +472,11 @@
       justify-content: space-between;
       gap: 14px;
       transition: all 0.2s ease;
-      position: relative;
+      box-shadow: var(--shadow-sm);
     }
 
     .sheet-card:hover {
-      border-color: #93c5fd;
+      border-color: #38bdf8;
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);
     }
@@ -384,9 +499,7 @@
       flex-shrink: 0;
     }
 
-    .card-info {
-      flex: 1;
-    }
+    .card-info { flex: 1; }
 
     .card-title {
       font-size: 15.5px;
@@ -421,7 +534,6 @@
     .badge-손보생보 { background: #f3e8ff; color: #7e22ce; }
     .badge-common { background: #f1f5f9; color: #475569; }
 
-    /* Card Actions */
     .card-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -431,7 +543,7 @@
     }
 
     .btn-action {
-      padding: 8px 12px;
+      padding: 9px 12px;
       border-radius: var(--radius-sm);
       font-size: 12.5px;
       font-weight: 700;
@@ -465,35 +577,33 @@
       color: #0f172a;
     }
 
-    /* 5. Live Modal Viewer */
+    /* Modal Viewer */
     .viewer-modal {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(4px);
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(5px);
       z-index: 9999;
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 20px;
     }
 
-    .viewer-modal.open {
-      display: flex;
-    }
+    .viewer-modal.open { display: flex; }
 
     .viewer-content {
       background: #ffffff;
       width: 100%;
-      max-width: 1320px;
-      height: 94vh;
+      max-width: 1340px;
+      height: 95vh;
       border-radius: var(--radius-lg);
       display: flex;
       flex-direction: column;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
       overflow: hidden;
       animation: modalFadeIn 0.2s ease-out;
     }
@@ -560,18 +670,14 @@
       transition: all 0.15s;
     }
 
-    .viewer-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
-    }
+    .viewer-btn:hover { background: rgba(255, 255, 255, 0.25); }
 
     .viewer-close {
       background: #ef4444;
       border-color: #ef4444;
     }
 
-    .viewer-close:hover {
-      background: #dc2626;
-    }
+    .viewer-close:hover { background: #dc2626; }
 
     .viewer-body {
       flex: 1;
@@ -588,112 +694,125 @@
       display: block;
     }
 
-    /* Empty State */
-    .empty-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 60px 20px;
-      background: #ffffff;
-      border: 1px dashed var(--border);
-      border-radius: var(--radius-md);
-      color: var(--text-sub);
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .empty-state i {
-      font-size: 40px;
-      color: #cbd5e1;
-      margin-bottom: 12px;
+    @media (max-width: 1024px) {
+      .launchpad-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .app-container { padding: 16px; }
-      .hero-header { padding: 24px 20px; }
-      .hero-title { font-size: 24px; }
-      .category-grid { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 640px) {
+      .launchpad-grid { grid-template-columns: 1fr; }
       .sheet-cards-grid { grid-template-columns: 1fr; }
-      .viewer-content { height: 100vh; border-radius: 0; }
+      .home-hero-title { font-size: 26px; }
+      .detail-hero-banner { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
 <body>
 
 <div class="app-container">
-  
-  <!-- 1. Header Hero -->
-  <header class="hero-header">
-    <div class="brand-badge">
-      <span>❖</span>
-      <span>WERACLE INSIGHT · SMART NAVIGATOR</span>
-    </div>
-    <h1 class="hero-title">
-      <span>한장비교표 70종 스마트 네비게이터</span>
-    </h1>
-    <p class="hero-desc">
-      원하는 담보의 이모티콘을 클릭하면 세부 가이드와 함께 손보·생보·유병자·표준체 비교표가 즉시 정렬됩니다.
-    </p>
 
-    <!-- 실시간 스마트 검색 -->
-    <div class="search-wrap">
-      <i class="fa-solid fa-magnifying-glass search-icon"></i>
-      <input type="text" id="searchInput" class="search-input" placeholder="담보명, 번호(예: 63), 보험사, 키워드(예: 355, 간병인, 레켐비) 검색..." autocomplete="off">
-      <button id="searchClearBtn" class="search-clear" onclick="clearSearch()"><i class="fa-solid fa-xmark"></i></button>
+  <!-- Top Global Header -->
+  <header class="top-global-bar">
+    <div class="brand-logo-group" onclick="showHomeView()">
+      <div class="brand-logo-badge">
+        <i class="fa-solid fa-shapes"></i> WERACLE INSIGHT
+      </div>
+      <div class="brand-logo-title">한장비교표 스마트 네비게이터</div>
     </div>
-
-    <!-- Quick Stats -->
-    <div class="stats-bar">
-      <div class="stat-pill"><i class="fa-solid fa-layer-group"></i> 전체 <strong>70종</strong> 비교표 완비</div>
-      <div class="stat-pill"><i class="fa-solid fa-hospital-user"></i> <strong>손보·생보</strong> 전수 비교</div>
-      <div class="stat-pill"><i class="fa-solid fa-calendar-check"></i> 최신 <strong>2026.11 기준</strong> 반영</div>
-      <div class="stat-pill"><i class="fa-solid fa-bolt"></i> <strong>원클릭 실시간 프리뷰</strong> 지원</div>
+    <div class="top-quick-actions">
+      <button class="btn-nav-home" onclick="showHomeView()">
+        <i class="fa-solid fa-house"></i> 첫화면(홈)
+      </button>
     </div>
   </header>
 
-  <!-- 2. Emoji Category Grid (8대 핵심 카테고리) -->
-  <div class="section-title-wrap">
-    <h2 class="section-title">
-      <i class="fa-solid fa-cubes" style="color: #0284c7;"></i>
-      <span>담보 카테고리 선택</span>
-    </h2>
-    <span style="font-size: 13px; color: #64748b; font-weight: 600;">아이콘을 누르면 세부 가이드가 펼쳐집니다</span>
-  </div>
+  <!-- ======================================================== -->
+  <!-- 1. HOME VIEW : 딱 8개 큼직한 이모티콘 버튼만 있는 깔끔한 첫화면  -->
+  <!-- ======================================================== -->
+  <main id="homeView">
+    <div class="home-hero">
+      <div class="home-hero-badge">
+        <i class="fa-solid fa-circle-check"></i> 70종 비교표 완비 · 원클릭 가이드
+      </div>
+      <h1 class="home-hero-title">
+        어떤 담보를 <span>비교</span>해 드릴까요?
+      </h1>
+      <p class="home-hero-desc">
+        원하시는 보장 테마를 누르시면 가이드 리스트와 세부 비교표가 바로 연결됩니다.
+      </p>
 
-  <div class="category-grid" id="categoryGrid">
-    <!-- JS render -->
-  </div>
+      <!-- 홈 화면 통합 검색 -->
+      <div class="home-search-wrap">
+        <i class="fa-solid fa-magnifying-glass home-search-icon"></i>
+        <input type="text" id="homeSearchInput" class="home-search-input" placeholder="담보명, 번호(예: 63), 키워드(예: 355, 간병인, 레켐비) 빠른 검색..." autocomplete="off">
+      </div>
+    </div>
 
-  <!-- 3. Dynamic Guide & Sub-Filter Panel -->
-  <div class="guide-panel" id="guidePanel">
-    <div class="guide-banner-head">
-      <span class="guide-badge" id="guideBadge"><i class="fa-solid fa-lightbulb"></i> 가이드</span>
-      <span class="guide-text" id="guideTitle">원하시는 세부 유형을 선택하세요</span>
+    <!-- 딱 8개 대형 카테고리 런치패드 버튼들 -->
+    <div class="launchpad-grid" id="launchpadGrid">
+      <!-- JS Render -->
     </div>
-    <div class="sub-filter-chips" id="subFilterChips">
-      <!-- JS render -->
-    </div>
-  </div>
+  </main>
 
-  <!-- 4. Result Count & Meta -->
-  <div class="results-meta">
-    <div>
-      <span id="currentFilterLabel" style="font-weight: 700; color: #0f172a;">전체 보기</span> : 
-      총 <strong id="resultCount">70</strong>개의 한장비교표
-    </div>
-    <div>
-      <button onclick="resetAllFilters()" style="background: none; border: none; color: #64748b; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-        <i class="fa-solid fa-rotate-left"></i> 초기화
+  <!-- ======================================================== -->
+  <!-- 2. DETAIL VIEW : 버튼을 누르고 들어가면 나오는 가이드 & 표 목록 -->
+  <!-- ======================================================== -->
+  <main id="detailView">
+    
+    <!-- 상단 8대 카테고리 미니 퀵 전환 바 -->
+    <nav class="mini-cat-nav" id="miniCatNav">
+      <!-- JS Render -->
+    </nav>
+
+    <!-- 카테고리 대표 헤더 배너 -->
+    <div class="detail-hero-banner">
+      <div class="detail-hero-left">
+        <div class="detail-hero-icon" id="detailCatIcon">🩺</div>
+        <div class="detail-hero-title-group">
+          <h2 id="detailCatTitle">간병인 · 입원 · 장기요양</h2>
+          <p id="detailCatDesc">간병인 사용일당(손보/생보), 지원일당, 8090 고령자 특화, 상급종합 1인실, 장기요양</p>
+        </div>
+      </div>
+      <button class="btn-back-home" onclick="showHomeView()">
+        <i class="fa-solid fa-arrow-left"></i> 첫화면(카테고리 전체)
       </button>
     </div>
-  </div>
 
-  <!-- 5. Sheet Cards Grid -->
-  <div class="sheet-cards-grid" id="sheetCardsGrid">
-    <!-- JS render -->
-  </div>
+    <!-- 가이드 서브 필터 칩 박스 -->
+    <div class="guide-box" id="guideBox">
+      <div class="guide-box-header">
+        <i class="fa-solid fa-lightbulb"></i>
+        <span id="guidePromptText">원하시는 보장 유형을 선택하세요 (가이드)</span>
+      </div>
+      <div class="sub-chips-wrap" id="subChipsWrap">
+        <!-- JS Render -->
+      </div>
+    </div>
+
+    <!-- 결과 카운트 & 메타 -->
+    <div class="detail-meta-bar">
+      <div>
+        선택된 비교표: 총 <strong id="detailCount">0</strong>개
+      </div>
+      <div style="font-size: 13px; color: #64748b;">
+        <i class="fa-solid fa-computer-mouse"></i> [바로보기]를 누르면 이 화면에서 표가 즉시 로드됩니다.
+      </div>
+    </div>
+
+    <!-- 비교표 카드 그리드 -->
+    <div class="sheet-cards-grid" id="detailCardsGrid">
+      <!-- JS Render -->
+    </div>
+
+  </main>
 
 </div>
 
-<!-- 6. Modal Viewer (Live Preview) -->
+<!-- 3. LIVE MODAL VIEWER (실시간 팝업 뷰어) -->
 <div class="viewer-modal" id="viewerModal" onclick="closeViewerOutside(event)">
   <div class="viewer-content">
     <div class="viewer-header">
@@ -718,22 +837,24 @@
 
 <script>
   const SHEETS_DATA = [{"num":"61","title":"상급종합병원 입원일당 한도 비교 (1인실·2~3인실·4~5인실)","file":"61_상급종합병원 입원일당 한도 비교 (1인실·2~3인실·4~5인실).html","cat":"care","sub":"inpatient","badge":"입원일당","compType":"손보/생보","desc":"상급종합병원 1인실, 2~3인실, 4~5인실 병실유형별 최대 가입한도 전수 비교"},{"num":"62","title":"간병인지원 비교 (손보)","file":"62_간병인지원 비교 (손보).html","cat":"care","sub":"support","badge":"간병인지원","compType":"손보","desc":"간병인 직접 파견 지원 입원일당 한도 및 갱신주기 비교"},{"num":"63","title":"8090 간병인 한도 비교 (손보·355 유병자)","file":"63_8090 간병인 한도 비교 (손보·355 유병자).html","cat":"care","sub":"senior","badge":"8090 고령자","compType":"손보/생보","desc":"81~90세 및 76~80세 고령층 간병인 사용일당 한도 및 생보 7개사 비교"},{"num":"64","title":"어린이 간병인 사용일당 비교 (손보·0세)","file":"64_어린이 간병인 사용일당 비교 (손보·0세).html","cat":"care","sub":"child","badge":"0세 어린이","compType":"손보","desc":"태아/0세 어린이 기준 간병인 사용일당 요양병원 및 일반병원 한도"},{"num":"65","title":"간병인 사용일당 비교 (손보·간편 3.5.5)","file":"65_간병인 사용일당 비교 (손보·간편 3.5.5).html","cat":"care","sub":"care_nonlife","badge":"간편 3.5.5","compType":"손보","desc":"손해보험사 3.5.5 간편심사 유병자 기준 간병인 사용일당 비교"},{"num":"66","title":"간병인 사용일당 비교 (손보·표준체)","file":"66_간병인 사용일당 비교 (손보·표준체).html","cat":"care","sub":"care_nonlife","badge":"표준체","compType":"손보","desc":"손해보험사 건강체(표준체) 기준 간병인 사용일당 비교"},{"num":"67","title":"간병인 사용일당 비교 (생보·간편 3.5.5)","file":"67_간병인 사용일당 비교 (생보·간편 3.5.5).html","cat":"care","sub":"care_life","badge":"간편 3.5.5","compType":"생보","desc":"생명보험사 3.5.5 간편심사 유병자 기준 간병인 사용일당 비교"},{"num":"68","title":"간병인 사용일당 비교 (생보·표준체)","file":"68_간병인 사용일당 비교 (생보·표준체).html","cat":"care","sub":"care_life","badge":"표준체","compType":"생보","desc":"생명보험사 건강체(표준체) 기준 간병인 사용일당 비교"},{"num":"69","title":"장기요양보장 비교 (손보)","file":"69_장기요양보장 비교 (손보).html","cat":"care","sub":"ltc","badge":"장기요양","compType":"손보","desc":"장기요양 등급별(1~5등급) 재가급여 및 시설급여 지원금 비교 (손보)"},{"num":"70","title":"장기요양보장 비교 (생보)","file":"70_장기요양보장 비교 (생보).html","cat":"care","sub":"ltc","badge":"장기요양","compType":"생보","desc":"장기요양 등급별(1~5등급) 재가급여 및 시설급여 지원금 비교 (생보)"},{"num":"01","title":"표적치매약물치료비(레켐비) 비교 (손보)","file":"01_표적치매약물치료비(레켐비) 비교 (손보).html","cat":"diag","sub":"dementia","badge":"레켐비","compType":"손보","desc":"치매 치료제 레켐비 표적치매약물치료비 가입한도 및 조건 비교"},{"num":"02","title":"표적치매약물치료비(레켐비) 비교 (생보)","file":"02_표적치매약물치료비(레켐비) 비교 (생보).html","cat":"diag","sub":"dementia","badge":"레켐비","compType":"생보","desc":"생명보험사 표적치매약물치료비(레켐비) 가입한도 및 조건 비교"},{"num":"03","title":"뇌혈관 진단비 비교 (생보·간편 3.5.5)","file":"03_뇌혈관 진단비 비교 (생보·간편 3.5.5).html","cat":"diag","sub":"brain","badge":"간편 3.5.5","compType":"생보","desc":"생보사 간편 3.5.5 뇌혈관질환 진단비 한도 및 보험료 비교"},{"num":"04","title":"뇌혈관 진단비 비교 (생보·표준체)","file":"04_뇌혈관 진단비 비교 (생보·표준체).html","cat":"diag","sub":"brain","badge":"표준체","compType":"생보","desc":"생보사 표준체 뇌혈관질환 진단비 한도 및 인수조건 비교"},{"num":"05","title":"뇌혈관 진단비 비교 (손보·간편 3.5.5)","file":"05_뇌혈관 진단비 비교 (손보·간편 3.5.5).html","cat":"diag","sub":"brain","badge":"간편 3.5.5","compType":"손보","desc":"손보사 간편 3.5.5 뇌혈관질환 진단비 한도 및 감액조건 비교"},{"num":"06","title":"뇌혈관 진단비 비교 (손보·표준체)","file":"06_뇌혈관 진단비 비교 (손보·표준체).html","cat":"diag","sub":"brain","badge":"표준체","compType":"손보","desc":"손보사 표준체 뇌혈관질환 진단비 한도 및 감액조건 비교"},{"num":"07","title":"암 진단비 삭감·면책 없는 바로보장 (손보)","file":"07_암 진단비 삭감·면책 없는 바로보장 (손보).html","cat":"diag","sub":"baro","badge":"바로보장","compType":"손보","desc":"90일 면책/1년 감액 없는 가입 즉시 100% 암 진단비 (손보)"},{"num":"08","title":"암 진단비 삭감·면책 없는 바로보장 (생보)","file":"08_암 진단비 삭감·면책 없는 바로보장 (생보).html","cat":"diag","sub":"baro","badge":"바로보장","compType":"생보","desc":"90일 면책/1년 감액 없는 가입 즉시 100% 암 진단비 (생보)"},{"num":"09","title":"바로보장 2대(뇌·심) 진단비 성인기준","file":"09_바로보장 2대(뇌·심) 진단비 성인기준.html","cat":"diag","sub":"baro","badge":"바로보장 2대","compType":"손보/생보","desc":"감액기간 없이 즉시 보장되는 뇌·심장질환 진단비 비교"},{"num":"10","title":"바로보장 암 진단비 성인기준","file":"10_바로보장 암 진단비 성인기준.html","cat":"diag","sub":"baro","badge":"바로보장 암","compType":"손보/생보","desc":"성인 기준 면책/감액 없는 즉시보장 암 진단비 전수 비교"},{"num":"11","title":"순환계질환 주요치료비 보장범위 및 질병코드 정리","file":"11_순환계질환 주요치료비 보장범위 및 질병코드 정리.html","cat":"treat","sub":"circ","badge":"질병코드","compType":"가이드","desc":"I20~I69 순환계 핵심 질병코드 및 치료비 적용 범위 총정리"},{"num":"12","title":"2대 순환계 주요치료비 비교 (생보)","file":"12_2대 순환계 주요치료비 비교 (생보).html","cat":"treat","sub":"circ","badge":"2대 순환계","compType":"생보","desc":"생보사 순환계질환 주요치료비(수술/혈전용해 등) 한도 비교"},{"num":"13","title":"2대 순환계 주요치료비 비교 (손보)","file":"13_2대 순환계 주요치료비 비교 (손보).html","cat":"treat","sub":"circ","badge":"2대 순환계","compType":"손보","desc":"손보사 순환계질환 주요치료비(수술/혈전용해 등) 한도 비교"},{"num":"14","title":"암 후유장해 3~100% 비교","file":"14_암 후유장해 3~100퍼센트 비교.html","cat":"treat","sub":"special","badge":"암 후유장해","compType":"손보/생보","desc":"질병후유장해와 구별되는 암 직접 원인 후유장해 담보 비교"},{"num":"15","title":"암생활비 보험사 비교","file":"15_암생활비 보험사 비교.html","cat":"treat","sub":"special","badge":"생활비","compType":"손보/생보","desc":"암 진단 후 매월 지급되는 암 생활자금 보장금액 비교"},{"num":"16","title":"항암방사선 중입자치료비 비교","file":"16_항암방사선 중입자치료비 비교.html","cat":"treat","sub":"special","badge":"중입자치료","compType":"손보/생보","desc":"고액 비급여 중입자치료 및 양성자치료 담보 한도 비교"},{"num":"17","title":"주요치료 생활비(복합치료) 비교","file":"17_주요치료 생활비(복합치료) 비교.html","cat":"treat","sub":"special","badge":"복합치료","compType":"손보/생보","desc":"암/뇌/심 복합치료 시 매월 정기 지급되는 주요치료 생활비"},{"num":"18","title":"선지급 암치료비 비교 (생보)","file":"18_선지급 암치료비 비교 (생보).html","cat":"treat","sub":"cancer","badge":"선지급","compType":"생보","desc":"치료비 발생 전 즉시 선지급되는 암치료 지원금"},{"num":"19","title":"암주요치료비 비교 (생보)","file":"19_암주요치료비 비교 (생보).html","cat":"treat","sub":"cancer","badge":"암주요치료비","compType":"생보","desc":"생보사 종합병원 암주요치료비 연간 지급한도 및 보장기간"},{"num":"20","title":"암주요치료비 비교 (손보)","file":"20_암주요치료비 비교 (손보).html","cat":"treat","sub":"cancer","badge":"암주요치료비","compType":"손보","desc":"손보사 종합병원 암주요치료비 연간 지급한도 및 보장기간"},{"num":"21","title":"통합 항암약물방사선 치료 특약 비교 (손보)","file":"21_통합 항암약물방사선 치료 특약 비교 (손보).html","cat":"treat","sub":"cancer","badge":"항암방사선","compType":"손보","desc":"표적항암/면역항암/세기조절방사선 통합 보장 담보 비교"},{"num":"22","title":"통합암 및 통합전이암 비교 (손보)","file":"22_통합암 및 통합전이암 비교 (손보).html","cat":"treat","sub":"group_cancer","badge":"통합전이암","compType":"손보","desc":"손보사 부위별 다회 지급 통합암 및 전이암 특약 전수 비교"},{"num":"23","title":"통합암 및 통합전이암 비교 (생보)","file":"23_통합암 및 통합전이암 비교 (생보).html","cat":"treat","sub":"group_cancer","badge":"통합전이암","compType":"생보","desc":"생보사 부위별 다회 지급 통합암 및 전이암 특약 전수 비교"},{"num":"24","title":"교통사고처리지원금 및 변호사선임비용 비교","file":"24_교통사고처리지원금 및 변호사선임비용 비교.html","cat":"driver","sub":"driver_core","badge":"교사처/변선비","compType":"손보","desc":"운전자 3대 핵심비용(교사처, 변선비, 벌금) 최신 가입한도 비교"},{"num":"25","title":"이륜차 운전자보험 비교","file":"25_이륜차 운전자보험 비교.html","cat":"driver","sub":"driver_spec","badge":"이륜차","compType":"손보","desc":"유상/비유상/가정용 오토바이 배달 및 출퇴근 운전자보험 비교"},{"num":"26","title":"운전자보험 고연령(70세 이상) 비용담보 비교","file":"26_운전자보험 고연령(70세 이상) 비용담보 비교.html","cat":"driver","sub":"driver_core","badge":"70세이상 고연령","compType":"손보","desc":"70~80세/90세 고령 운전자 교사처, 변선비 현물급부 조건 비교"},{"num":"27","title":"영업용(택시 등) 운전자 자부상 비교","file":"27_영업용(택시 등) 운전자 자부상 비교.html","cat":"driver","sub":"jabusang","badge":"영업용 택시","compType":"손보","desc":"개인/법인 택시 및 영업용 운전자 자동차부상치료비 비교"},{"num":"28","title":"운전자 자부상(14급) 가입한도 비교","file":"28_운전자 자부상(14급) 가입한도 비교.html","cat":"driver","sub":"jabusang","badge":"자부상 14급","compType":"손보","desc":"가장 빈번한 접촉사고 14급 기준 자동차부상치료비 한도 비교"},{"num":"29","title":"상해통합주요치료비 가입한도 비교 (11월 초)","file":"29_상해통합주요치료비 가입한도 비교 (11월 초).html","cat":"driver","sub":"trauma","badge":"상해통합","compType":"손보","desc":"상해 입원/수술/치료 통합 보장한도 비교 (11월 초 기준)"},{"num":"30","title":"상해통합주요치료비 가입한도 비교 (11월 중순)","file":"30_상해통합주요치료비 가입한도 비교 (11월 중순).html","cat":"driver","sub":"trauma","badge":"상해통합","compType":"손보","desc":"상해 입원/수술/치료 통합 보장한도 비교 (11월 중순 개정 기준)"},{"num":"31","title":"초간편보험 알릴의무 비교 (5년 이내 암)","file":"31_초간편보험 알릴의무 비교 (5년 이내 암).html","cat":"simple","sub":"simple_duty","badge":"초간편 알릴의무","compType":"손보/생보","desc":"1개 질문 또는 5년 내 암만 묻는 초간편 고지사항 비교"},{"num":"32","title":"간편보험(유병자) 원수사별 라인업 현황 (손·생보)","file":"32_간편보험(유병자) 원수사별 라인업 현황 (손·생보).html","cat":"simple","sub":"simple_lineup","badge":"3.N.5 라인업","compType":"손보/생보","desc":"3.1.5부터 3.10.5까지 각 사별 간편 유병자 상품군 전수 비교"},{"num":"33","title":"원수사별 분리심사 운영 현황","file":"33_원수사별 분리심사 운영 현황.html","cat":"simple","sub":"simple_underwrite","badge":"분리심사","compType":"손보/생보","desc":"암/뇌심 기왕력자 부위별 분리심사 및 예외질환 운영표"},{"num":"34","title":"유병자 고·당·지 고지할인 비교 (손보)","file":"34_유병자 고·당·지 고지할인 비교 (손보).html","cat":"simple","sub":"simple_discount","badge":"고당지 할인","compType":"손보","desc":"고혈압/당뇨/고지혈증 약물 복용자 건강고지 할인율 비교 (손보)"},{"num":"35","title":"유병자 고·당·지 고지할인 비교 (생보)","file":"35_유병자 고·당·지 고지할인 비교 (생보).html","cat":"simple","sub":"simple_discount","badge":"고당지 할인","compType":"생보","desc":"고혈압/당뇨/고지혈증 약물 복용자 건강고지 할인율 비교 (생보)"},{"num":"36","title":"80세·90세 만기 무사고 전환 비교","file":"36_80세·90세 만기 무사고 전환 비교.html","cat":"simple","sub":"simple_discount","badge":"무사고 전환","compType":"손보","desc":"무사고 시 표준체 또는 저렴한 요율로 단계적 전환되는 제도"},{"num":"37","title":"질병수술·종수술 감액 및 연계조건 비교 (손보)","file":"37_질병수술·종수술 감액 및 연계조건 비교 (손보).html","cat":"surgery","sub":"surgery_nonlife","badge":"손보 수술비","compType":"손보","desc":"손보사 All Risk 질병수술비 및 1~5종 수술비 감액·연계조건"},{"num":"38","title":"질병수술·종수술 감액 및 연계조건 비교 (생보)","file":"38_질병수술·종수술 감액 및 연계조건 비교 (생보).html","cat":"surgery","sub":"surgery_life","badge":"생보 수술비","compType":"생보","desc":"생보사 All Risk 질병수술비 및 1~5종 수술비 감액·연계조건"},{"num":"39","title":"7년 100% 연금보험 비교","file":"39_7년 100퍼센트 연금보험 비교.html","cat":"annuity","sub":"pension","badge":"7년 100%","compType":"생보","desc":"7년 경과 시 100% 원금 보장 연금보험 환급률 비교"},{"num":"40","title":"최저연금보증형 연금보험 비교","file":"40_최저연금보증형 연금보험 비교.html","cat":"annuity","sub":"pension","badge":"최저보증 연금","compType":"생보","desc":"투자손실에도 최저 단리/복리 연금액이 확정 보증되는 연금"},{"num":"41","title":"최저연금보증형 변액연금보험 비교","file":"41_최저연금보증형 변액연금보험 비교.html","cat":"annuity","sub":"pension","badge":"변액 최저보증","compType":"생보","desc":"변액 펀드 수익률과 무관하게 연금개시 시점 원금+보증"},{"num":"42","title":"연금·종신보험 일시납 상품 비교","file":"42_연금·종신보험 일시납 상품 비교.html","cat":"annuity","sub":"pension","badge":"일시납","compType":"생보","desc":"목돈 일시 예치형 연금 및 종신보험 환급률·공시이율 비교"},{"num":"43","title":"정기보험 비교","file":"43_정기보험 비교.html","cat":"annuity","sub":"term","badge":"일반/간편 정기","compType":"생보","desc":"가성비 사망보장 정기보험 일반심사형 및 간편심사형 비교"},{"num":"44","title":"경영인 정기보험 비교","file":"44_경영인 정기보험 비교.html","cat":"annuity","sub":"term","badge":"경영인정기 (CEO)","compType":"생보","desc":"법인 CEO 플랜 예정이율, 환급률, 옵션 전수 비교 (11개사)"},{"num":"45","title":"선지급 종신보험 비교","file":"45_선지급 종신보험 비교.html","cat":"annuity","sub":"wholelife","badge":"선지급 종신","compType":"생보","desc":"중대 질병 또는 장기요양 발생 시 사망보험금을 미리 선지급"},{"num":"46","title":"상속 종신보험 납입기간별 최고가입나이 비교","file":"46_상속 종신보험 납입기간별 최고가입나이 비교.html","cat":"annuity","sub":"wholelife","badge":"상속 최고나이","compType":"생보","desc":"상속세 재원 마련 종신보험 납기별(5/10/20년) 가입가능 나이"},{"num":"47","title":"상속 종신보험 비교","file":"47_상속 종신보험 비교.html","cat":"annuity","sub":"wholelife","badge":"안심상속","compType":"생보","desc":"해약환급금미지급형 가성비 상속 종신보험 보험료 및 환급률"},{"num":"48","title":"단기납 달러종신 비교 (메트라이프 3년납)","file":"48_단기납 달러종신 비교 (메트라이프 3년납).html","cat":"annuity","sub":"short_wholelife","badge":"달러종신 3년납","compType":"생보","desc":"달러(USD) 자산 축적 및 3년 단기완납 종신보험 비교"},{"num":"49","title":"단기납 종신보험 비교 (10년납)","file":"49_단기납 종신보험 비교 (10년납).html","cat":"annuity","sub":"short_wholelife","badge":"단기납 10년","compType":"생보","desc":"10년납 완료 시점 해약환급률 및 완납 후 유지 보너스"},{"num":"50","title":"단기납 종신보험 비교 (7년납)","file":"50_단기납 종신보험 비교 (7년납).html","cat":"annuity","sub":"short_wholelife","badge":"단기납 7년","compType":"생보","desc":"가장 인기 있는 7년납 종신보험 원금 도달 및 10년 환급률"},{"num":"51","title":"단기납 종신보험 비교 (5년납)","file":"51_단기납 종신보험 비교 (5년납).html","cat":"annuity","sub":"short_wholelife","badge":"단기납 5년","compType":"생보","desc":"초단기 5년 완납 종신보험 환급률 추이 및 비교"},{"num":"52","title":"골프(홀인원) 보험사별 담보 비교","file":"52_골프(홀인원) 보험사별 담보 비교.html","cat":"life_spec","sub":"casualty","badge":"골프(홀인원)","compType":"손보","desc":"홀인원 축하비용, 골프용품손해, 배상책임 한도 비교"},{"num":"53","title":"주택화재보험 급배수누출손해 담보 비교","file":"53_주택화재보험 급배수누출손해 담보 비교.html","cat":"life_spec","sub":"casualty","badge":"누수/급배수","compType":"손보","desc":"아파트 및 주택 누수사고 급배수설비누출손해 자기부담금 비교"},{"num":"54","title":"단독실손 의료비보험 가입여부 비교 (손보)","file":"54_단독실손 의료비보험 가입여부 비교 (손보).html","cat":"life_spec","sub":"silson","badge":"단독실손","compType":"손보/생보","desc":"손보 및 생보 32개사 단독실손 청약 가능여부 및 방문진단 기준"},{"num":"55","title":"태아보험 주요 담보별 현황 비교","file":"55_태아보험 주요 담보별 현황 비교.html","cat":"life_spec","sub":"baby","badge":"태아보험","compType":"손보","desc":"선천이상수술, 저체중아출생, 신생아질병입원일당 담보"},{"num":"56","title":"치아보험 비교 (손보)","file":"56_치아보험 비교 (손보).html","cat":"life_spec","sub":"dental","badge":"치아(손보)","compType":"손보","desc":"임플란트/크라운 무제한 여부 및 감액/면책기간 (손보)"},{"num":"57","title":"치아보험 비교 (생보)","file":"57_치아보험 비교 (생보).html","cat":"life_spec","sub":"dental","badge":"치아(생보)","compType":"생보","desc":"임플란트/크라운 무제한 여부 및 감액/면책기간 (생보)"},{"num":"58","title":"고고당대통(고혈압·당뇨·통풍) 진단비 비교 (손보)","file":"58_고고당대통(고혈압·당뇨·통풍) 진단비 비교 (손보).html","cat":"life_spec","sub":"chronic","badge":"고고당대통","compType":"손보","desc":"만성질환(고혈압/고지혈/당뇨/대상포진/통풍) 진단비 (손보)"},{"num":"59","title":"고고당대통(고혈압·당뇨·통풍) 진단비 비교 (생보)","file":"59_고고당대통(고혈압·당뇨·통풍) 진단비 비교 (생보).html","cat":"life_spec","sub":"chronic","badge":"고고당대통","compType":"생보","desc":"만성질환(고혈압/고지혈/당뇨/대상포진/통풍) 진단비 (생보)"},{"num":"60","title":"무릎관절증 및 질병후유장해 비교","file":"60_무릎관절증 및 질병후유장해 비교.html","cat":"life_spec","sub":"chronic","badge":"무릎관절/장해","compType":"손보/생보","desc":"인공관절수술 및 무릎관절증 관련 질병후유장해 비교"}];
-  const CATEGORIES_DATA = [{"id":"all","name":"전체 보기","icon":"📑","count":70,"desc":"한장비교표 70종 전체 목록을 한눈에 탐색합니다."},{"id":"care","name":"간병인 · 입원 · 장기요양","icon":"🩺","count":10,"desc":"간병인 사용일당(손보/생보), 지원일당, 8090 고령자 특화, 상급종합 1인실, 장기요양","subFilters":[{"id":"all","label":"전체 (10)"},{"id":"care_nonlife","label":"간병인 사용일당 [손보]","filterKey":"sub","filterVal":"care_nonlife"},{"id":"care_life","label":"간병인 사용일당 [생보]","filterKey":"sub","filterVal":"care_life"},{"id":"support","label":"간병인 지원일당 [손보]","filterKey":"sub","filterVal":"support"},{"id":"senior","label":"고령자(8090) 간병인","filterKey":"sub","filterVal":"senior"},{"id":"child","label":"어린이(0세) 간병인","filterKey":"sub","filterVal":"child"},{"id":"inpatient","label":"상급종합병원 1인실","filterKey":"sub","filterVal":"inpatient"},{"id":"ltc","label":"장기요양 (1~5등급)","filterKey":"sub","filterVal":"ltc"}]},{"id":"diag","name":"암 · 뇌 · 심장 (3대 진단비)","icon":"🎗️","count":10,"desc":"뇌혈관 진단비(간편/표준체), 암 바로보장(삭감/면책 없음), 레켐비 표적치매","subFilters":[{"id":"all","label":"전체 (10)"},{"id":"brain","label":"뇌혈관 진단비","filterKey":"sub","filterVal":"brain"},{"id":"baro","label":"바로보장 (면책/감액 없음)","filterKey":"sub","filterVal":"baro"},{"id":"dementia","label":"표적치매 (레켐비)","filterKey":"sub","filterVal":"dementia"}]},{"id":"treat","name":"주요치료비 · 복합치료 · 생활비","icon":"💉","count":13,"desc":"2대 순환계 및 암 주요치료비, 중입자치료, 통합암/전이암, 암생활비","subFilters":[{"id":"all","label":"전체 (13)"},{"id":"circ","label":"2대 순환계 치료비","filterKey":"sub","filterVal":"circ"},{"id":"cancer","label":"암 주요치료비","filterKey":"sub","filterVal":"cancer"},{"id":"group_cancer","label":"통합암 / 전이암","filterKey":"sub","filterVal":"group_cancer"},{"id":"special","label":"중입자/생활비/후유장해","filterKey":"sub","filterVal":"special"}]},{"id":"driver","name":"운전자 · 상해 · 교통비용","icon":"🚗","count":7,"desc":"교사처/변선비, 자부상 14급, 이륜차, 고연령 70세+, 영업용 택시, 상해통합치료","subFilters":[{"id":"all","label":"전체 (7)"},{"id":"driver_core","label":"교사처 · 변선비 · 벌금","filterKey":"sub","filterVal":"driver_core"},{"id":"jabusang","label":"자동차부상치료비 (자부상)","filterKey":"sub","filterVal":"jabusang"},{"id":"driver_spec","label":"이륜차 운전자","filterKey":"sub","filterVal":"driver_spec"},{"id":"trauma","label":"상해통합치료비","filterKey":"sub","filterVal":"trauma"}]},{"id":"simple","name":"유병자(간편) · 인수심사 · 할인","icon":"🛡️","count":6,"desc":"초간편 알릴의무, 원수사별 라인업 전수비교, 분리심사, 고당지 할인, 무사고 전환","subFilters":[{"id":"all","label":"전체 (6)"},{"id":"simple_lineup","label":"3.N.5 간편 라인업","filterKey":"sub","filterVal":"simple_lineup"},{"id":"simple_duty","label":"초간편 알릴의무","filterKey":"sub","filterVal":"simple_duty"},{"id":"simple_underwrite","label":"원수사별 분리심사","filterKey":"sub","filterVal":"simple_underwrite"},{"id":"simple_discount","label":"고당지할인 · 무사고전환","filterKey":"sub","filterVal":"simple_discount"}]},{"id":"surgery","name":"수술비 (질병수술 · 1~5종)","icon":"🔪","count":2,"desc":"질병수술(All Risk) 및 1~5종 수술비 감액·면책기간, 연계조건 전수비교","subFilters":[{"id":"all","label":"전체 (2)"},{"id":"surgery_nonlife","label":"손해보험사 수술비","filterKey":"sub","filterVal":"surgery_nonlife"},{"id":"surgery_life","label":"생명보험사 수술비","filterKey":"sub","filterVal":"surgery_life"}]},{"id":"annuity","name":"연금 · 저축 · 정기 · 종신","icon":"💰","count":13,"desc":"7년 100% 연금, 최저보증, 일시납, 경영인정기, 상속종신, 단기납(5/7/10년), 달러종신","subFilters":[{"id":"all","label":"전체 (13)"},{"id":"pension","label":"연금 · 저축 · 일시납","filterKey":"sub","filterVal":"pension"},{"id":"term","label":"정기보험 · 경영인(CEO)","filterKey":"sub","filterVal":"term"},{"id":"short_wholelife","label":"단기납 종신 (5/7/10년/달러)","filterKey":"sub","filterVal":"short_wholelife"},{"id":"wholelife","label":"상속 종신 · 선지급","filterKey":"sub","filterVal":"wholelife"}]},{"id":"life_spec","name":"생활배상 · 실손 · 특화담보","icon":"🏠","count":9,"desc":"단독실손, 골프(홀인원), 누수화재, 태아보험, 치아보험, 고고당대통, 무릎관절","subFilters":[{"id":"all","label":"전체 (9)"},{"id":"silson","label":"단독실손 의료비","filterKey":"sub","filterVal":"silson"},{"id":"casualty","label":"골프(홀인원) · 누수화재","filterKey":"sub","filterVal":"casualty"},{"id":"baby","label":"태아보험 주요담보","filterKey":"sub","filterVal":"baby"},{"id":"dental","label":"치아보험 (손보/생보)","filterKey":"sub","filterVal":"dental"},{"id":"chronic","label":"고고당대통 · 관절/장해","filterKey":"sub","filterVal":"chronic"}]}];
+  const CATEGORIES_DATA = [{"id":"care","name":"간병인 · 입원 · 장기요양","icon":"🩺","count":10,"desc":"간병인 사용일당(손보/생보), 지원일당, 8090 고령자 특화, 상급종합 1인실, 장기요양","subFilters":[{"id":"all","label":"전체 (10)"},{"id":"care_nonlife","label":"간병인 사용일당 [손보]","filterKey":"sub","filterVal":"care_nonlife"},{"id":"care_life","label":"간병인 사용일당 [생보]","filterKey":"sub","filterVal":"care_life"},{"id":"support","label":"간병인 지원일당 [손보]","filterKey":"sub","filterVal":"support"},{"id":"senior","label":"고령자(8090) 간병인","filterKey":"sub","filterVal":"senior"},{"id":"child","label":"어린이(0세) 간병인","filterKey":"sub","filterVal":"child"},{"id":"inpatient","label":"상급종합병원 1인실","filterKey":"sub","filterVal":"inpatient"},{"id":"ltc","label":"장기요양 (1~5등급)","filterKey":"sub","filterVal":"ltc"}]},{"id":"diag","name":"암 · 뇌 · 심장 (3대 진단비)","icon":"🎗️","count":10,"desc":"뇌혈관 진단비(간편/표준체), 암 바로보장(삭감/면책 없음), 레켐비 표적치매","subFilters":[{"id":"all","label":"전체 (10)"},{"id":"brain","label":"뇌혈관 진단비","filterKey":"sub","filterVal":"brain"},{"id":"baro","label":"바로보장 (면책/감액 없음)","filterKey":"sub","filterVal":"baro"},{"id":"dementia","label":"표적치매 (레켐비)","filterKey":"sub","filterVal":"dementia"}]},{"id":"treat","name":"주요치료비 · 복합치료 · 생활비","icon":"💉","count":13,"desc":"2대 순환계 및 암 주요치료비, 중입자치료, 통합암/전이암, 암생활비","subFilters":[{"id":"all","label":"전체 (13)"},{"id":"circ","label":"2대 순환계 치료비","filterKey":"sub","filterVal":"circ"},{"id":"cancer","label":"암 주요치료비","filterKey":"sub","filterVal":"cancer"},{"id":"group_cancer","label":"통합암 / 전이암","filterKey":"sub","filterVal":"group_cancer"},{"id":"special","label":"중입자/생활비/후유장해","filterKey":"sub","filterVal":"special"}]},{"id":"driver","name":"운전자 · 상해 · 교통비용","icon":"🚗","count":7,"desc":"교사처/변선비, 자부상 14급, 이륜차, 고연령 70세+, 영업용 택시, 상해통합치료","subFilters":[{"id":"all","label":"전체 (7)"},{"id":"driver_core","label":"교사처 · 변선비 · 벌금","filterKey":"sub","filterVal":"driver_core"},{"id":"jabusang","label":"자동차부상치료비 (자부상)","filterKey":"sub","filterVal":"jabusang"},{"id":"driver_spec","label":"이륜차 운전자","filterKey":"sub","filterVal":"driver_spec"},{"id":"trauma","label":"상해통합치료비","filterKey":"sub","filterVal":"trauma"}]},{"id":"simple","name":"유병자(간편) · 인수심사 · 할인","icon":"🛡️","count":6,"desc":"초간편 알릴의무, 원수사별 라인업 전수비교, 분리심사, 고당지 할인, 무사고 전환","subFilters":[{"id":"all","label":"전체 (6)"},{"id":"simple_lineup","label":"3.N.5 간편 라인업","filterKey":"sub","filterVal":"simple_lineup"},{"id":"simple_duty","label":"초간편 알릴의무","filterKey":"sub","filterVal":"simple_duty"},{"id":"simple_underwrite","label":"원수사별 분리심사","filterKey":"sub","filterVal":"simple_underwrite"},{"id":"simple_discount","label":"고당지할인 · 무사고전환","filterKey":"sub","filterVal":"simple_discount"}]},{"id":"surgery","name":"수술비 (질병수술 · 1~5종)","icon":"🔪","count":2,"desc":"질병수술(All Risk) 및 1~5종 수술비 감액·면책기간, 연계조건 전수비교","subFilters":[{"id":"all","label":"전체 (2)"},{"id":"surgery_nonlife","label":"손해보험사 수술비","filterKey":"sub","filterVal":"surgery_nonlife"},{"id":"surgery_life","label":"생명보험사 수술비","filterKey":"sub","filterVal":"surgery_life"}]},{"id":"annuity","name":"연금 · 저축 · 정기 · 종신","icon":"💰","count":13,"desc":"7년 100% 연금, 최저보증, 일시납, 경영인정기, 상속종신, 단기납(5/7/10년), 달러종신","subFilters":[{"id":"all","label":"전체 (13)"},{"id":"pension","label":"연금 · 저축 · 일시납","filterKey":"sub","filterVal":"pension"},{"id":"term","label":"정기보험 · 경영인(CEO)","filterKey":"sub","filterVal":"term"},{"id":"short_wholelife","label":"단기납 종신 (5/7/10년/달러)","filterKey":"sub","filterVal":"short_wholelife"},{"id":"wholelife","label":"상속 종신 · 선지급","filterKey":"sub","filterVal":"wholelife"}]},{"id":"life_spec","name":"생활배상 · 실손 · 특화담보","icon":"🏠","count":9,"desc":"단독실손, 골프(홀인원), 누수화재, 태아보험, 치아보험, 고고당대통, 무릎관절","subFilters":[{"id":"all","label":"전체 (9)"},{"id":"silson","label":"단독실손 의료비","filterKey":"sub","filterVal":"silson"},{"id":"casualty","label":"골프(홀인원) · 누수화재","filterKey":"sub","filterVal":"casualty"},{"id":"baby","label":"태아보험 주요담보","filterKey":"sub","filterVal":"baby"},{"id":"dental","label":"치아보험 (손보/생보)","filterKey":"sub","filterVal":"dental"},{"id":"chronic","label":"고고당대통 · 관절/장해","filterKey":"sub","filterVal":"chronic"}]}]; // 8대 카테고리만
 
-  let currentCat = 'care'; // 기본으로 사용자가 질문한 '간병인'을 직관적으로 열어둠!
-  let currentSub = 'all';
-  let searchQuery = '';
+  let activeCatId = null;
+  let activeSubId = 'all';
+  let activeSearchQuery = '';
 
-  // DOM Elements
-  const categoryGrid = document.getElementById('categoryGrid');
-  const guideTitle = document.getElementById('guideTitle');
-  const guideBadge = document.getElementById('guideBadge');
-  const subFilterChips = document.getElementById('subFilterChips');
-  const sheetCardsGrid = document.getElementById('sheetCardsGrid');
-  const resultCount = document.getElementById('resultCount');
-  const currentFilterLabel = document.getElementById('currentFilterLabel');
-  const searchInput = document.getElementById('searchInput');
-  const searchClearBtn = document.getElementById('searchClearBtn');
+  // Elements
+  const homeView = document.getElementById('homeView');
+  const detailView = document.getElementById('detailView');
+  const launchpadGrid = document.getElementById('launchpadGrid');
+  const miniCatNav = document.getElementById('miniCatNav');
+  const detailCatIcon = document.getElementById('detailCatIcon');
+  const detailCatTitle = document.getElementById('detailCatTitle');
+  const detailCatDesc = document.getElementById('detailCatDesc');
+  const subChipsWrap = document.getElementById('subChipsWrap');
+  const detailCardsGrid = document.getElementById('detailCardsGrid');
+  const detailCount = document.getElementById('detailCount');
+  const homeSearchInput = document.getElementById('homeSearchInput');
 
   // Modal
   const viewerModal = document.getElementById('viewerModal');
@@ -742,17 +863,23 @@
   const modalBadge = document.getElementById('modalBadge');
   const modalOpenNewTabBtn = document.getElementById('modalOpenNewTabBtn');
 
-  // Init
   function init() {
-    renderCategories();
-    renderSubFilters();
-    renderSheets();
+    renderHomeLaunchpad();
+    renderMiniNav();
 
-    // Search event
-    searchInput.addEventListener('input', (e) => {
-      searchQuery = e.target.value.trim().toLowerCase();
-      searchClearBtn.style.display = searchQuery ? 'flex' : 'none';
-      renderSheets();
+    // Home Search
+    homeSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const query = homeSearchInput.value.trim();
+        if (query) {
+          activeSearchQuery = query;
+          // Open first matching category or 'care'
+          const found = SHEETS_DATA.find(s => 
+            s.title.includes(query) || s.desc.includes(query) || s.num.includes(query)
+          );
+          openCategory(found ? found.cat : 'care');
+        }
+      }
     });
 
     // ESC to close modal
@@ -763,112 +890,116 @@
     });
   }
 
-  // Render 8 Emoji Categories
-  function renderCategories() {
-    categoryGrid.innerHTML = '';
+  // 1. Render Home 8 Buttons
+  function renderHomeLaunchpad() {
+    launchpadGrid.innerHTML = '';
     CATEGORIES_DATA.forEach(cat => {
-      const card = document.createElement('div');
-      card.className = 'category-card' + (cat.id === currentCat ? ' active' : '');
-      card.onclick = () => selectCategory(cat.id);
+      const btn = document.createElement('div');
+      btn.className = 'launch-btn';
+      btn.onclick = () => openCategory(cat.id);
 
-      card.innerHTML = `
-        <div class="cat-emoji">${cat.icon}</div>
-        <div class="cat-name">${cat.name}</div>
-        <div class="cat-count">${cat.count}종</div>
+      btn.innerHTML = `
+        <div class="launch-emoji">${cat.icon}</div>
+        <div class="launch-title">${cat.name}</div>
+        <div class="launch-desc">${cat.desc}</div>
+        <div class="launch-badge">${cat.count}종 비교표 바로보기 <i class="fa-solid fa-chevron-right" style="font-size:10px;"></i></div>
       `;
-      categoryGrid.appendChild(card);
+      launchpadGrid.appendChild(btn);
     });
   }
 
-  // Select Category
-  function selectCategory(catId) {
-    currentCat = catId;
-    currentSub = 'all';
-    renderCategories();
-    renderSubFilters();
-    renderSheets();
+  // 2. Open Category (Transition to Detail View)
+  function openCategory(catId) {
+    activeCatId = catId;
+    activeSubId = 'all';
+
+    homeView.style.display = 'none';
+    detailView.style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    updateDetailView();
   }
 
-  // Render Sub-Guide Filter Chips
-  function renderSubFilters() {
-    const catObj = CATEGORIES_DATA.find(c => c.id === currentCat);
-    subFilterChips.innerHTML = '';
+  // 3. Back to Home (딱 버튼만 있는 화면으로 복귀)
+  function showHomeView() {
+    activeCatId = null;
+    activeSubId = 'all';
+    activeSearchQuery = '';
+    homeSearchInput.value = '';
 
-    if (!catObj || !catObj.subFilters) {
-      document.getElementById('guidePanel').style.display = 'none';
-      return;
-    }
+    detailView.style.display = 'none';
+    homeView.style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
-    document.getElementById('guidePanel').style.display = 'block';
-    guideBadge.innerHTML = `<i class="fa-solid fa-lightbulb"></i> ${catObj.icon} ${catObj.name}`;
-    guideTitle.innerText = catObj.desc || '원하시는 세부 유형을 선택하세요';
+  // 4. Update Detail View (Header + Sub Chips + Cards)
+  function updateDetailView() {
+    const cat = CATEGORIES_DATA.find(c => c.id === activeCatId) || CATEGORIES_DATA[0];
 
-    catObj.subFilters.forEach(sub => {
-      const chip = document.createElement('div');
-      chip.className = 'filter-chip' + (sub.id === currentSub ? ' active' : '');
-      chip.innerText = sub.label;
-      chip.onclick = () => selectSubFilter(sub.id);
-      subFilterChips.appendChild(chip);
+    // Update Header
+    detailCatIcon.innerText = cat.icon;
+    detailCatTitle.innerText = cat.name;
+    detailCatDesc.innerText = cat.desc;
+
+    // Update Mini Nav
+    const miniBtns = miniCatNav.querySelectorAll('.mini-cat-btn');
+    miniBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.cat === cat.id);
     });
-  }
 
-  // Select Sub-Filter
-  function selectSubFilter(subId) {
-    currentSub = subId;
-    renderSubFilters();
-    renderSheets();
-  }
-
-  // Render Sheets Cards
-  function renderSheets() {
-    let filtered = SHEETS_DATA;
-
-    // Category filter
-    if (currentCat !== 'all') {
-      filtered = filtered.filter(s => s.cat === currentCat);
+    // Render Sub-Guide Chips
+    subChipsWrap.innerHTML = '';
+    if (cat.subFilters && cat.subFilters.length > 0) {
+      document.getElementById('guideBox').style.display = 'block';
+      cat.subFilters.forEach(sub => {
+        const chip = document.createElement('div');
+        chip.className = 'sub-chip' + (sub.id === activeSubId ? ' active' : '');
+        chip.innerText = sub.label;
+        chip.onclick = () => {
+          activeSubId = sub.id;
+          updateDetailView();
+        };
+        subChipsWrap.appendChild(chip);
+      });
+    } else {
+      document.getElementById('guideBox').style.display = 'none';
     }
 
-    // Sub filter
-    if (currentSub !== 'all') {
-      filtered = filtered.filter(s => s.sub === currentSub);
+    // Filter Cards
+    let filtered = SHEETS_DATA.filter(s => s.cat === cat.id);
+    if (activeSubId !== 'all') {
+      filtered = filtered.filter(s => s.sub === activeSubId);
     }
-
-    // Search query filter
-    if (searchQuery) {
+    if (activeSearchQuery) {
+      const q = activeSearchQuery.toLowerCase();
       filtered = filtered.filter(s => 
-        s.num.includes(searchQuery) ||
-        s.title.toLowerCase().includes(searchQuery) ||
-        s.desc.toLowerCase().includes(searchQuery) ||
-        (s.compType && s.compType.toLowerCase().includes(searchQuery)) ||
-        (s.badge && s.badge.toLowerCase().includes(searchQuery))
+        s.num.includes(q) || s.title.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q)
       );
     }
 
-    resultCount.innerText = filtered.length;
-    const catObj = CATEGORIES_DATA.find(c => c.id === currentCat);
-    currentFilterLabel.innerText = catObj ? `${catObj.icon} ${catObj.name}` : '전체 목록';
+    detailCount.innerText = filtered.length;
+    renderDetailCards(filtered);
+  }
 
-    sheetCardsGrid.innerHTML = '';
+  // 5. Render Detail Cards
+  function renderDetailCards(list) {
+    detailCardsGrid.innerHTML = '';
 
-    if (filtered.length === 0) {
-      sheetCardsGrid.innerHTML = `
-        <div class="empty-state">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <p style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">조건에 일치하는 비교표가 없습니다.</p>
-          <p style="font-size: 13px;">다른 검색어나 상단 카테고리를 선택해보세요.</p>
+    if (list.length === 0) {
+      detailCardsGrid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 12px; color: #64748b;">
+          <i class="fa-solid fa-circle-exclamation" style="font-size: 36px; color: #94a3b8; margin-bottom: 12px;"></i>
+          <p style="font-weight: 700; font-size: 15px;">해당 조건에 일치하는 비교표가 없습니다.</p>
         </div>
       `;
       return;
     }
 
-    filtered.forEach(s => {
+    list.forEach(s => {
       const card = document.createElement('div');
       card.className = 'sheet-card';
-
-      // resolve path: prefer relative ./ if exists, fallback to final/insight/sheets/
       const sheetUrl = getSheetUrl(s.file);
 
-      // Badge style
       let compBadgeClass = 'badge-common';
       if (s.compType === '손보') compBadgeClass = 'badge-손보';
       else if (s.compType === '생보') compBadgeClass = 'badge-생보';
@@ -895,18 +1026,29 @@
           </a>
         </div>
       `;
+      detailCardsGrid.appendChild(card);
+    });
+  }
 
-      sheetCardsGrid.appendChild(card);
+  // 6. Mini Navigation at top of Detail View
+  function renderMiniNav() {
+    miniCatNav.innerHTML = '';
+    CATEGORIES_DATA.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'mini-cat-btn';
+      btn.dataset.cat = c.id;
+      btn.innerHTML = `<span>${c.icon}</span> <span>${c.name.split(' ')[0]}</span>`;
+      btn.onclick = () => openCategory(c.id);
+      miniCatNav.appendChild(btn);
     });
   }
 
   // Path resolver
   function getSheetUrl(filename) {
-    // Check if in desktop root or subfolder
     return './' + encodeURIComponent(filename);
   }
 
-  // Open Live Preview Modal
+  // Viewer Modal
   function openViewer(num, title, filename) {
     modalBadge.innerText = '표 ' + num;
     modalTitle.innerText = title;
@@ -919,7 +1061,6 @@
     document.body.style.overflow = 'hidden';
   }
 
-  // Close Live Preview Modal
   function closeViewer() {
     viewerModal.classList.remove('open');
     modalIframe.src = '';
@@ -932,29 +1073,10 @@
     }
   }
 
-  // Search clear
-  function clearSearch() {
-    searchInput.value = '';
-    searchQuery = '';
-    searchClearBtn.style.display = 'none';
-    renderSheets();
-  }
-
-  // Reset all
-  function resetAllFilters() {
-    currentCat = 'all';
-    currentSub = 'all';
-    clearSearch();
-    renderCategories();
-    renderSubFilters();
-    renderSheets();
-  }
-
   function escapeHtml(str) {
     return str.replace(/'/g, "\\'");
   }
 
-  // Run
   window.addEventListener('DOMContentLoaded', init);
 </script>
 

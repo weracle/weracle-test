@@ -11936,6 +11936,18 @@ window.deleteCustomerData = async function() {
         if (searchDrop) searchDrop.classList.remove('open');
     };
 
+    if (!window._fmEscListenerAttached) {
+        window._fmEscListenerAttached = true;
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' || e.key === 'Esc') {
+                const modal = document.getElementById('family-manage-modal');
+                if (modal && (modal.classList.contains('active') || modal.style.display === 'flex')) {
+                    window.closeFamilyManageModal();
+                }
+            }
+        });
+    }
+
     window.openNewHouseBox = function() {
         isNewBoxOpen = true;
         window.updateLayoutState();

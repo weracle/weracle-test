@@ -2372,7 +2372,7 @@ window.addEventListener('error', function(e) {
 </div>
 
 
-<script src="app.js?v=20261123_v4_gapless"></script>
+<script src="app.js?v=20261123_v5_closefix"></script>
   <script src="familyTabsLogic.js?v=20261123_latest"></script>
   <script src="crm_speed_center.js?v=20261111_status"></script>
   <script src="crm_smart_reg.js?v=20261111_status"></script>
@@ -3417,14 +3417,26 @@ function execDaumPostcode(targetId) {
         }#family-manage-modal .btn-toggle-new-box:hover {
             background: #1d4ed8;
         }#family-manage-modal .header-close-btn {
-            background: none;
-            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.16);
             color: #94a3b8;
-            font-size: 17px;
+            font-size: 16px;
             cursor: pointer;
-            padding: 2px 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            padding: 0;
+            line-height: 1;
+            margin-left: 6px;
         }#family-manage-modal .header-close-btn:hover {
-            color: #ffffff;
+            background: #ef4444 !important;
+            border-color: #ef4444 !important;
+            color: #ffffff !important;
+            transform: scale(1.06);
         }/* 본문 3단 레이아웃 */
 #family-manage-modal .modal-body {
             padding: 12px 14px 8px;
@@ -3798,7 +3810,7 @@ function execDaumPostcode(targetId) {
                 <button type="button" class="btn-toggle-new-box" id="btnOpenNewHouse" onclick="openNewHouseBox()" style="display:flex;">
                     <i class="fa-solid fa-plus"></i> 새 가족 열기
                 </button>
-                <button type="button" class="header-close-btn" onclick="window.closeFamilyManageModal()"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" class="header-close-btn" onclick="if(typeof window.closeFamilyManageModal==='function') window.closeFamilyManageModal(); else document.getElementById('family-manage-modal').style.display='none';" title="가족 관리 닫기 (Esc)" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
 
@@ -3910,8 +3922,11 @@ function execDaumPostcode(targetId) {
 
         <!-- 4. 풋터 -->
         <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="resetAll()">초기화</button>
-            <button type="button" class="btn-save" onclick="saveAndApply()">저장 및 반영</button>
+            <button type="button" class="btn-cancel" onclick="resetAll()" title="변경 취소 및 초기 상태로 되돌리기">초기화</button>
+            <div style="display:flex; gap:8px;">
+                <button type="button" class="btn-cancel" onclick="window.closeFamilyManageModal()" style="color:#64748b; background:#f1f5f9; border-color:#cbd5e1;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">닫기</button>
+                <button type="button" class="btn-save" onclick="saveAndApply()">저장 및 반영</button>
+            </div>
         </div>
 
     </div>

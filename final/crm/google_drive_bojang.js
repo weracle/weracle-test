@@ -513,9 +513,118 @@
                 '</div>';
             }
         },
-        // 12. WERACLE 전용 모달 PDF 뷰어 (가로 스크롤 없는 와이드 확장 화면)
+        // 12. WERACLE 전용 모달 PDF 뷰어 (가로 스크롤 없는 와이드 확장 화면 & 퀵 네비게이션)
         currentViewerBlobUrl: null,
         isViewerFullscreen: false,
+        viewerCurrentPage: 1,
+        viewerTotalPages: 4,
+
+        updateViewerPageBadge: function() {
+            const curEl = document.getElementById('weracleViewerCurrentPageText');
+            const totEl = document.getElementById('weracleViewerTotalPageText');
+            if (curEl) curEl.textContent = this.viewerCurrentPage || 1;
+            if (totEl) {
+                if (this.viewerTotalPages && this.viewerTotalPages > 0) {
+                    totEl.textContent = ' / ' + this.viewerTotalPages + 'P';
+                } else {
+                    totEl.textContent = 'P';
+                }
+            }
+        },
+
+        viewerScrollToTop: function() {
+            const iframe = document.getElementById('weraclePdfViewerFrame');
+            this.viewerCurrentPage = 1;
+            this.updateViewerPageBadge();
+
+            // 1. Try direct DOM scroll
+            try {
+                if (iframe && iframe.contentWindow && iframe.contentWindow.scrollTo) {
+                    iframe.contentWindow.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } catch(e) {}
+
+            // 2. Hash-based PDF open parameter navigation
+            if (iframe) {
+                if (this.currentViewerBlobUrl) {
+                    iframe.src = this.currentViewerBlobUrl + '#page=1&view=FitH&zoom=page-width&toolbar=1';
+                } else if (iframe.src) {
+                    const base = iframe.src.split('#')[0];
+                    iframe.src = base + '#page=1';
+                }
+            }
+        },
+
+        viewerScrollToBottom: function() {
+            const iframe = document.getElementById('weraclePdfViewerFrame');
+            const targetPage = this.viewerTotalPages || 10;
+            this.viewerCurrentPage = targetPage;
+            this.updateViewerPageBadge();
+
+            // 1. Try direct DOM scroll to bottom
+            try {
+                if (iframe && iframe.contentWindow && iframe.contentDocument && iframe.contentDocument.body) {
+                    iframe.contentWindow.scrollTo({ top: iframe.contentDocument.body.scrollHeight, behavior: 'smooth' });
+                }
+            } catch(e) {}
+
+            // 2. Hash-based PDF open parameter navigation to last page
+            if (iframe) {
+                if (this.currentViewerBlobUrl) {
+                    iframe.src = this.currentViewerBlobUrl + '#page=' + targetPage + '&view=FitH&zoom=page-width&toolbar=1';
+                } else if (iframe.src) {
+                    const base = iframe.src.split('#')[0];
+                    iframe.src = base + '#page=' + targetPage;
+                }
+            }
+        },
+
+        viewerScrollUp: function() {
+            const iframe = document.getElementById('weraclePdfViewerFrame');
+            this.viewerCurrentPage = Math.max(1, (this.viewerCurrentPage || 1) - 1);
+            this.updateViewerPageBadge();
+
+            // 1. Try direct DOM scrollBy
+            try {
+                if (iframe && iframe.contentWindow && iframe.contentWindow.scrollBy) {
+                    iframe.contentWindow.scrollBy({ top: -window.innerHeight * 0.75, behavior: 'smooth' });
+                }
+            } catch(e) {}
+
+            // 2. Hash-based PDF open parameter navigation
+            if (iframe) {
+                if (this.currentViewerBlobUrl) {
+                    iframe.src = this.currentViewerBlobUrl + '#page=' + this.viewerCurrentPage + '&view=FitH&zoom=page-width&toolbar=1';
+                } else if (iframe.src) {
+                    const base = iframe.src.split('#')[0];
+                    iframe.src = base + '#page=' + this.viewerCurrentPage;
+                }
+            }
+        },
+
+        viewerScrollDown: function() {
+            const iframe = document.getElementById('weraclePdfViewerFrame');
+            const maxP = this.viewerTotalPages || 10;
+            this.viewerCurrentPage = Math.min(maxP, (this.viewerCurrentPage || 1) + 1);
+            this.updateViewerPageBadge();
+
+            // 1. Try direct DOM scrollBy
+            try {
+                if (iframe && iframe.contentWindow && iframe.contentWindow.scrollBy) {
+                    iframe.contentWindow.scrollBy({ top: window.innerHeight * 0.75, behavior: 'smooth' });
+                }
+            } catch(e) {}
+
+            // 2. Hash-based PDF open parameter navigation
+            if (iframe) {
+                if (this.currentViewerBlobUrl) {
+                    iframe.src = this.currentViewerBlobUrl + '#page=' + this.viewerCurrentPage + '&view=FitH&zoom=page-width&toolbar=1';
+                } else if (iframe.src) {
+                    const base = iframe.src.split('#')[0];
+                    iframe.src = base + '#page=' + this.viewerCurrentPage;
+                }
+            }
+        },
 
         closePdfViewer: function() {
             const modal = document.getElementById('weraclePdfViewerModal');
@@ -615,6 +724,36 @@
                             </div>
 
                             <iframe id="weraclePdfViewerFrame" src="about:blank" style="width:100%; height:100%; border:none; display:block; background:#2a2e33;" allowfullscreen></iframe>
+
+                            <!-- Right-side Quick Navigation Dock (스크롤 맨위로/맨아래로 우측 편의기능) -->
+                            <div id="weracleViewerNavDock" style="position:absolute; right:20px; top:50%; transform:translateY(-50%); z-index:20; display:flex; flex-direction:column; align-items:center; gap:8px; background:rgba(15,23,42,0.85); backdrop-filter:blur(10px); padding:10px 8px; border-radius:30px; border:1px solid rgba(255,255,255,0.18); box-shadow:0 15px 35px rgba(0,0,0,0.5); user-select:none; transition:opacity 0.2s ease;">
+                                <!-- 맨 위로 -->
+                                <button type="button" onclick="GoogleDriveBojang.viewerScrollToTop()" title="맨 위로 (첫 페이지)" style="width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, rgba(2,132,199,0.3) 0%, rgba(56,189,248,0.15) 100%); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; font-size:13px; transition:all 0.15s ease; box-shadow:0 4px 12px rgba(2,132,199,0.25);" onmouseover="this.style.transform='scale(1.1)'; this.style.background='rgba(56,189,248,0.35)'; this.style.color='#ffffff';" onmouseout="this.style.transform='scale(1)'; this.style.background='linear-gradient(135deg, rgba(2,132,199,0.3) 0%, rgba(56,189,248,0.15) 100%)'; this.style.color='#38bdf8';">
+                                    <i class="fa-solid fa-angles-up"></i>
+                                    <span style="font-size:8.5px; font-weight:900; margin-top:1px; letter-spacing:-0.2px;">TOP</span>
+                                </button>
+
+                                <!-- 위로 이동 -->
+                                <button type="button" onclick="GoogleDriveBojang.viewerScrollUp()" title="위로 이동 (이전 페이지)" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.08); color:#f8fafc; border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; transition:all 0.15s ease;" onmouseover="this.style.transform='scale(1.1)'; this.style.background='rgba(255,255,255,0.22)';" onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(255,255,255,0.08)';">
+                                    <i class="fa-solid fa-chevron-up"></i>
+                                </button>
+
+                                <!-- 페이지 표시 인디케이터 배지 -->
+                                <div id="weracleViewerPageBadge" style="min-width:38px; padding:3px 6px; border-radius:8px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; font-size:10.5px; font-weight:800; text-align:center;">
+                                    <span id="weracleViewerCurrentPageText" style="color:#38bdf8;">1</span><span id="weracleViewerTotalPageText" style="font-size:9.5px; color:#64748b;">P</span>
+                                </div>
+
+                                <!-- 아래로 이동 -->
+                                <button type="button" onclick="GoogleDriveBojang.viewerScrollDown()" title="아래로 이동 (다음 페이지)" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.08); color:#f8fafc; border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; transition:all 0.15s ease;" onmouseover="this.style.transform='scale(1.1)'; this.style.background='rgba(255,255,255,0.22)';" onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(255,255,255,0.08)';">
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                </button>
+
+                                <!-- 맨 아래로 -->
+                                <button type="button" onclick="GoogleDriveBojang.viewerScrollToBottom()" title="맨 아래로 (마지막 페이지)" style="width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg, rgba(2,132,199,0.3) 0%, rgba(56,189,248,0.15) 100%); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; font-size:13px; transition:all 0.15s ease; box-shadow:0 4px 12px rgba(2,132,199,0.25);" onmouseover="this.style.transform='scale(1.1)'; this.style.background='rgba(56,189,248,0.35)'; this.style.color='#ffffff';" onmouseout="this.style.transform='scale(1)'; this.style.background='linear-gradient(135deg, rgba(2,132,199,0.3) 0%, rgba(56,189,248,0.15) 100%)'; this.style.color='#38bdf8';">
+                                    <span style="font-size:8.5px; font-weight:900; margin-bottom:1px; letter-spacing:-0.2px;">END</span>
+                                    <i class="fa-solid fa-angles-down"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -626,10 +765,19 @@
                     }
                 });
 
-                // Close on ESC key
+                // Keyboard Shortcuts when modal is active (ESC, Home, End, PageUp, PageDown)
                 document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    if (modal.style.display !== 'flex') return;
+                    if (e.key === 'Escape') {
                         GoogleDriveBojang.closePdfViewer();
+                    } else if (e.key === 'Home') {
+                        GoogleDriveBojang.viewerScrollToTop();
+                    } else if (e.key === 'End') {
+                        GoogleDriveBojang.viewerScrollToBottom();
+                    } else if (e.key === 'PageUp') {
+                        GoogleDriveBojang.viewerScrollUp();
+                    } else if (e.key === 'PageDown') {
+                        GoogleDriveBojang.viewerScrollDown();
                     }
                 });
 
@@ -682,10 +830,28 @@
                     });
                     if (resp.ok) {
                         const blob = await resp.blob();
+                        
+                        // Parse page count from PDF binary header/catalog
+                        try {
+                            const sampleText = await blob.slice(0, 150000).text();
+                            const countMatch = sampleText.match(/\/Count\s+(\d+)/);
+                            if (countMatch && parseInt(countMatch[1]) > 0 && parseInt(countMatch[1]) < 300) {
+                                this.viewerTotalPages = parseInt(countMatch[1]);
+                            } else {
+                                const pageMatches = sampleText.match(/\/Type\s*\/Page(?!\w)/g);
+                                if (pageMatches && pageMatches.length > 0) this.viewerTotalPages = pageMatches.length;
+                                else this.viewerTotalPages = 4;
+                            }
+                        } catch(e) {
+                            this.viewerTotalPages = 4;
+                        }
+                        this.viewerCurrentPage = 1;
+                        this.updateViewerPageBadge();
+
                         const pdfBlob = new Blob([blob], { type: 'application/pdf' });
                         this.currentViewerBlobUrl = URL.createObjectURL(pdfBlob);
                         // view=FitH & zoom=page-width ensures PDF page expands to container width with NO horizontal scroll!
-                        iframe.src = this.currentViewerBlobUrl + '#view=FitH&zoom=page-width&toolbar=1&navpanes=0';
+                        iframe.src = this.currentViewerBlobUrl + '#page=1&view=FitH&zoom=page-width&toolbar=1&navpanes=0';
                         if (loadingEl) {
                             setTimeout(() => { loadingEl.style.display = 'none'; }, 400);
                         }

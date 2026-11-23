@@ -13,6 +13,7 @@
     <script src="https://apis.google.com/js/api.js" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
+    <script src="google_drive_bojang.js"></script>
     <script src="../최종업로드용_버셀/config.js" onerror="this.remove()"></script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4284,8 +4285,12 @@ window.renderMobileCustomerCards = function(list, fType, fVal) {
                         '터치인사이트' +
                     '</button>' +
                     '<button id="card-' + i + '-tab-btn-ins" onclick="window.setCardTab(' + i + ', \'ins\')" ' +
-                            'style="flex:1.2; padding:8px 2px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; border:none; background:#e2e8f0; color:#475569; transition:all 0.15s;">' +
+                            'style="flex:1.1; padding:8px 2px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:none; background:#e2e8f0; color:#475569; transition:all 0.15s;">' +
                         '보험가입내역 (' + insCount + '건)' +
+                    '</button>' +
+                    '<button id="card-' + i + '-tab-btn-bojang" onclick="window.setCardTab(' + i + ', \'bojang\')" ' +
+                            'style="flex:1; padding:8px 2px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:none; background:#e2e8f0; color:#475569; transition:all 0.15s;">' +
+                        '보장분석' +
                     '</button>' +
                 '</div>' +
 
@@ -4340,6 +4345,11 @@ window.renderMobileCustomerCards = function(list, fType, fVal) {
                     insSubTabsHtml +
                     insSlotsHtml +
                 '</div>' +
+
+                '<!-- Tab Pane 4: 보장분석 -->' +
+                '<div id="card-' + i + '-pane-bojang" style="display:none;" data-customer-uid="' + id + '" data-customer-name="' + (c.고객명 || '') + '">' +
+                    '<div id="card-' + i + '-bojang-content" style="padding:10px 0;"></div>' +
+                '</div>' +
             '</div>' +
         '</div>';
     }).join('');
@@ -4372,7 +4382,7 @@ window.toggleMobileCustomerDetail = function(idx) {
 
 // Switch Card Main Tabs (1차 정보, 터치인사이트, 보험가입내역)
 window.setCardTab = function(cIdx, tab) {
-    const tabs = ['info', 'touch', 'ins'];
+    const tabs = ['info', 'touch', 'ins', 'bojang'];
     tabs.forEach(function(t) {
         const pane = document.getElementById('card-' + cIdx + '-pane-' + t);
         const btn = document.getElementById('card-' + cIdx + '-tab-btn-' + t);
@@ -4391,6 +4401,15 @@ window.setCardTab = function(cIdx, tab) {
             }
         }
     });
+
+    if (tab === 'bojang') {
+        const bojangPane = document.getElementById('card-' + cIdx + '-pane-bojang');
+        if (bojangPane && typeof GoogleDriveBojang !== 'undefined') {
+            const uid = bojangPane.getAttribute('data-customer-uid');
+            const name = bojangPane.getAttribute('data-customer-name');
+            GoogleDriveBojang.renderBojangTab('card-' + cIdx + '-bojang-content', uid, name);
+        }
+    }
 };
 
 // Switch Insurance Sub-tabs (1번, 2번, 3번 ...)

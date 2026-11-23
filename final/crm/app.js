@@ -8865,6 +8865,16 @@ window.switchProfileTab = function(btn, tabId) {
     if (target) {
         target.style.display = 'block';
     }
+
+    if (tabId === 'tab-bojang' && typeof GoogleDriveBojang !== 'undefined') {
+        const bojangArea = target.querySelector('[id^="pf-bojang-"]');
+        if (bojangArea) {
+            const uid = bojangArea.id.replace('pf-bojang-', '');
+            const nameEl = container.querySelector('h2');
+            const name = nameEl ? nameEl.textContent.trim() : '';
+            GoogleDriveBojang.renderBojangTab(bojangArea, uid, name);
+        }
+    }
 };
 
 window.generateInsListHtml = function(client) {
@@ -9112,6 +9122,7 @@ window.generateProfileHtml = function(client) {
             <button onclick="switchProfileTab(this, 'tab-basic')" class="profile-tab-btn" style="background:none; border:none; border-bottom:3px solid #3b82f6; color:#3b82f6; font-weight:800; font-size:16px; padding:12px 4px; cursor:pointer; transition:0.2s;">기본정보(1차정보)</button>
             <button onclick="switchProfileTab(this, 'tab-touch')" class="profile-tab-btn" style="background:none; border:none; border-bottom:3px solid transparent; color:#64748b; font-weight:600; font-size:16px; padding:12px 4px; cursor:pointer; transition:0.2s;">터치인사이트</button>
             <button onclick="switchProfileTab(this, 'tab-ins')" class="profile-tab-btn" style="background:none; border:none; border-bottom:3px solid transparent; color:#64748b; font-weight:600; font-size:16px; padding:12px 4px; cursor:pointer; transition:0.2s;">보험가입내역</button>
+            <button onclick="switchProfileTab(this, 'tab-bojang')" class="profile-tab-btn" style="background:none; border:none; border-bottom:3px solid transparent; color:#64748b; font-weight:600; font-size:16px; padding:12px 4px; cursor:pointer; transition:0.2s;">보장분석</button>
         </div>
 
         <!-- Tab Content: Basic Info -->
@@ -9190,6 +9201,13 @@ window.generateProfileHtml = function(client) {
             <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); min-height: 300px;">
                 <h3 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 24px 0;"><i class="fa-solid fa-file-contract" style="color:#3b82f6; margin-right:8px;"></i> 보험 가입내역</h3>
                 <div>` + insHtml + `</div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Bojang -->
+        <div id="tab-bojang" class="profile-tab-content" style="display:none; animation: fadeIn 0.3s ease;">
+            <div id="pf-bojang-` + (client['고객번호'] || client['사업자번호'] || client['ID'] || '0') + `" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); min-height: 300px;">
+                <!-- GoogleDriveBojang will render here -->
             </div>
         </div>
         

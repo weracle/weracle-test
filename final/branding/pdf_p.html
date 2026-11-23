@@ -1590,6 +1590,8 @@
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="../crm/google_drive_bojang.js"></script>
 </head>
 <body>
 
@@ -1601,7 +1603,116 @@
 <div class="overlay" id="successOverlay">
     <div class="spinner-emoji" style="animation: none; font-size: 80px;">🎉</div>
     <div class="loading-text" style="animation: none; background: var(--weracle-navy); -webkit-background-clip: text;">제작 완료!<br><span style="font-size:18px; color:#555; display:block; margin-top:10px;">브랜딩 PDF 파일이 기기에 즉시 다운로드되었습니다.</span></div>
-    <button class="back-btn" onclick="resetApp()">처음으로 돌아가기</button>
+    
+    <!-- 구글 드라이브 고객 폴더 저장 옵션 -->
+    <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 380px; align-items: stretch;">
+        <button type="button" id="btnSaveToDriveFromSuccess" onclick="openDriveCustomerPicker()" style="background: linear-gradient(135deg, #1a73e8, #0d47a1); color: #fff; padding: 14px 18px; font-size: 15px; font-weight: 800; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 14px rgba(26,115,232,0.35); display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.15s, box-shadow 0.15s;">
+            <i class="fa-brands fa-google-drive" style="font-size: 18px;"></i>
+            <span>고객 구글 드라이브(CRM)에 자동 저장</span>
+        </button>
+        <button class="back-btn" onclick="resetApp()" style="margin-top: 0; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">처음으로 돌아가기</button>
+    </div>
+</div>
+
+<!-- ============================================================================== -->
+<!-- [WERACLE] 구글 드라이브 고객 폴더 저장 & CRM 연동 모달 -->
+<!-- ============================================================================== -->
+<div class="overlay" id="driveCustomerPickerModal" style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); z-index: 100000; display: none; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #ffffff; border-radius: 20px; width: 100%; max-width: 580px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; animation: popIn 0.25s ease;">
+        <!-- Header -->
+        <div style="padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 42px; height: 42px; border-radius: 10px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                    <i class="fa-brands fa-google-drive"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a;">고객 구글 드라이브 연동 저장</h3>
+                    <p style="margin: 3px 0 0 0; font-size: 12px; color: #64748b;">고객 전용 드라이브 폴더에 PDF를 보관하고 CRM에 자동 기록합니다.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeDriveCustomerPicker()" style="background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; padding: 4px 8px; border-radius: 6px;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div id="drivePickerBody" style="padding: 20px 24px; overflow-y: auto; flex: 1;">
+            <!-- Auto-detected Banner -->
+            <div id="driveAutoDetectBanner" style="display: none; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                    <span style="font-size: 13px; color: #1e40af; font-weight: 700;">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="color: #2563eb; margin-right: 6px;"></i>
+                        PDF 감지 고객: <b id="driveDetectedClientNameText" style="color: #1d4ed8; font-size: 14px;">-</b>
+                    </span>
+                    <button type="button" onclick="applyDetectedCustomerMatch()" style="background: #2563eb; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                        추천 선택
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search input -->
+            <div style="position: relative; margin-bottom: 14px;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 14px;"></i>
+                <input type="text" id="driveCustomerSearchInput" placeholder="고객명, 연락처, 고객번호(UID) 검색..." oninput="onDriveCustomerSearch(this.value)"
+                       style="width: 100%; box-sizing: border-box; padding: 11px 14px 11px 38px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13.5px; outline: none; transition: border-color 0.2s;"
+                       onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#cbd5e1'">
+            </div>
+
+            <!-- Customer List -->
+            <div style="margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #64748b; display: flex; justify-content: space-between;">
+                <span>저장할 대상 고객을 선택하세요</span>
+                <span id="driveCustomerCountBadge">총 0명</span>
+            </div>
+            <div id="driveCustomerListContainer" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+                <!-- Customer Cards populated by JS -->
+            </div>
+        </div>
+
+        <!-- Progress / Result View (Hidden initially) -->
+        <div id="drivePickerProgressView" style="display: none; padding: 40px 24px; text-align: center; flex: 1; flex-direction: column; align-items: center; justify-content: center;">
+            <div id="driveProgressSpinner" style="font-size: 48px; margin-bottom: 16px;">
+                <i class="fa-solid fa-circle-notch fa-spin" style="color: #2563eb;"></i>
+            </div>
+            <h4 id="driveProgressTitle" style="margin: 0 0 10px 0; font-size: 17px; font-weight: 800; color: #0f172a;">구글 드라이브 연동 중...</h4>
+            <p id="driveProgressStep" style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5;">Step 1: 고객 폴더를 확인하고 있습니다...</p>
+        </div>
+
+        <!-- Result View (Hidden initially) -->
+        <div id="drivePickerResultView" style="display: none; padding: 32px 24px; text-align: center; flex: 1; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="font-size: 56px; margin-bottom: 12px;">🎉</div>
+            <h4 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 800; color: #0f172a;">구글 드라이브 저장 완료!</h4>
+            <p id="driveResultDesc" style="margin: 0 0 20px 0; font-size: 13px; color: #475569; line-height: 1.5;">
+                고객 전용 폴더에 보장분석 리포트가 안전하게 업로드되었습니다.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 320px;">
+                <a id="btnDriveViewUploaded" href="#" target="_blank" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 11px 16px; border-radius: 10px; font-size: 13.5px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa-brands fa-google-drive"></i> 구글 드라이브에서 열기
+                </a>
+                <a href="../crm/crm_test.html" target="_blank" style="background: #2563eb; color: #ffffff; padding: 11px 16px; border-radius: 10px; font-size: 13.5px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa-solid fa-users"></i> 고객관리(CRM) 바로가기
+                </a>
+                <button type="button" onclick="closeDriveCustomerPicker()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 4px;">
+                    창 닫기
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer / Action Area -->
+        <div id="drivePickerFooter" style="padding: 16px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+            <div id="driveSelectedCustomerPreview" style="font-size: 13px; color: #64748b; font-weight: 600;">
+                선택된 고객 없음
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="button" onclick="closeDriveCustomerPicker()" style="background: #ffffff; border: 1px solid #cbd5e1; color: #475569; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+                    취소
+                </button>
+                <button type="button" id="btnExecuteDriveUpload" onclick="executeDriveUpload()" disabled style="background: #cbd5e1; border: none; color: #94a3b8; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: not-allowed; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>구글 드라이브에 저장</span>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="page-wrapper">
@@ -2323,6 +2434,8 @@
                         }
 
                         console.log('[WERACLE 표지 데이터 추출 결과]:', dynamicSummary);
+                        window.currentDynamicSummary = dynamicSummary;
+                        if (dynamicSummary && dynamicSummary.clientName) { window.detectedClientName = dynamicSummary.clientName; }
                         const coverCanvas = await requestCoverCanvasFromPreview(dynamicSummary);
                         if (coverCanvas) {
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2745,7 +2858,12 @@
             await new Promise(r => setTimeout(r, 20)); 
         }
         
-        pdf.save('나만의_보장분석결과.pdf');
+        let pdfBlob = pdf.output('blob');
+        window.lastGeneratedPdfBlob = pdfBlob;
+        const custName = (window.currentDynamicSummary && window.currentDynamicSummary.clientName) ? window.currentDynamicSummary.clientName : (window.detectedClientName || '고객');
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        window.lastGeneratedPdfFilename = '보장분석_' + custName + '_' + dateStr + '.pdf';
+        pdf.save(window.lastGeneratedPdfFilename);
         
         hideLoading();
         showSuccess();
@@ -3559,6 +3677,277 @@ window.addEventListener('storage', function(e) {
         applyActiveCoverToPreview();
     }
 });
+</script>
+
+
+<script>
+// ==============================================================================
+// [WERACLE] 구글 드라이브 고객 폴더 저장 모달 컨트롤러
+// ==============================================================================
+let drivePickerCustomers = [];
+let driveSelectedCustomer = null;
+
+function openDriveCustomerPicker() {
+    const modal = document.getElementById('driveCustomerPickerModal');
+    if (!modal) return;
+    
+    // Reset views
+    document.getElementById('drivePickerBody').style.display = 'block';
+    document.getElementById('drivePickerFooter').style.display = 'flex';
+    document.getElementById('drivePickerProgressView').style.display = 'none';
+    document.getElementById('drivePickerResultView').style.display = 'none';
+    
+    // Load customers from CRM cache
+    drivePickerCustomers = (typeof GoogleDriveBojang !== 'undefined') ? GoogleDriveBojang.getCachedCustomers() : [];
+    
+    // Auto-detect client name banner
+    const detectedName = (window.currentDynamicSummary && window.currentDynamicSummary.clientName) || window.detectedClientName || '';
+    const banner = document.getElementById('driveAutoDetectBanner');
+    const bannerText = document.getElementById('driveDetectedClientNameText');
+    if (detectedName && detectedName !== '고객') {
+        if (banner) banner.style.display = 'block';
+        if (bannerText) bannerText.textContent = detectedName;
+    } else {
+        if (banner) banner.style.display = 'none';
+    }
+    
+    // Initial Render
+    driveSelectedCustomer = null;
+    updateDriveSelectedCustomerUI();
+    renderDriveCustomerList(drivePickerCustomers);
+    
+    // Show modal
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    
+    // Auto match if detected name matches any customer
+    if (detectedName && detectedName !== '고객') {
+        applyDetectedCustomerMatch(detectedName);
+    }
+}
+
+function closeDriveCustomerPicker() {
+    const modal = document.getElementById('driveCustomerPickerModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+    }
+}
+
+function onDriveCustomerSearch(query) {
+    query = (query || '').trim().toLowerCase();
+    if (!query) {
+        renderDriveCustomerList(drivePickerCustomers);
+        return;
+    }
+    const filtered = drivePickerCustomers.filter(c => {
+        const name = String(c['고객명'] || c['대표자명'] || '').toLowerCase();
+        const phone = String(c['핸드폰'] || c['폰번호'] || c['연락처'] || '').replace(/-/g, '');
+        const uid = String(c['고객번호'] || c['사업자번호'] || c['ID'] || c['UID'] || '').toLowerCase();
+        return name.includes(query) || phone.includes(query.replace(/-/g, '')) || uid.includes(query);
+    });
+    renderDriveCustomerList(filtered);
+}
+
+function renderDriveCustomerList(list) {
+    const container = document.getElementById('driveCustomerListContainer');
+    const badge = document.getElementById('driveCustomerCountBadge');
+    if (!container) return;
+    
+    if (badge) badge.textContent = '총 ' + (list ? list.length : 0) + '명';
+    
+    if (!list || list.length === 0) {
+        container.innerHTML = '<div style="padding: 30px 10px; text-align: center; color: #94a3b8; font-size: 13px;">' +
+            '<i class="fa-solid fa-user-slash" style="font-size: 24px; margin-bottom: 8px; display: block; color: #cbd5e1;"></i>' +
+            '일치하는 고객이 없습니다.' +
+        '</div>';
+        return;
+    }
+    
+    const detectedName = (window.currentDynamicSummary && window.currentDynamicSummary.clientName) || window.detectedClientName || '';
+    
+    let html = '';
+    list.forEach((c, idx) => {
+        const uid = String(c['고객번호'] || c['사업자번호'] || c['ID'] || c['UID'] || '-');
+        const name = String(c['고객명'] || c['대표자명'] || '이름없음');
+        const phone = String(c['핸드폰'] || c['폰번호'] || c['연락처'] || '-');
+        const status = String(c['상태'] || c['고객상태'] || '-');
+        
+        const isSelected = driveSelectedCustomer && (driveSelectedCustomer.uid === uid);
+        const isMatched = (detectedName && name.includes(detectedName));
+        
+        const borderStyle = isSelected ? 'border: 2px solid #2563eb; background: #eff6ff;' : (isMatched ? 'border: 1px solid #93c5fd; background: #f0fdf4;' : 'border: 1px solid #e2e8f0; background: #ffffff;');
+        
+        html += '<div onclick="selectDriveCustomer(' + idx + ')" style="' + borderStyle + ' border-radius: 10px; padding: 10px 14px; cursor: pointer; transition: all 0.15s; display: flex; justify-content: space-between; align-items: center;" onmouseover="if(!' + isSelected + ') this.style.borderColor=\'#94a3b8\'" onmouseout="if(!' + isSelected + ') this.style.borderColor=\'' + (isMatched ? '#93c5fd' : '#e2e8f0') + '\'">' +
+            '<div style="display: flex; align-items: center; gap: 10px;">' +
+                '<div style="width: 32px; height: 32px; border-radius: 50%; background: ' + (isSelected ? '#2563eb' : '#f1f5f9') + '; color: ' + (isSelected ? '#fff' : '#64748b') + '; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800;">' +
+                    (isSelected ? '<i class="fa-solid fa-check"></i>' : name.slice(0, 1)) +
+                '</div>' +
+                '<div>' +
+                    '<div style="font-size: 13.5px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">' +
+                        '<span>' + name + '</span>' +
+                        '<span style="font-size: 11px; font-weight: 700; color: #2563eb; background: #dbeafe; padding: 2px 6px; border-radius: 4px;">' + status + '</span>' +
+                        (isMatched ? '<span style="font-size: 10.5px; font-weight: 800; color: #16a34a; background: #dcfce7; padding: 2px 6px; border-radius: 4px;"><i class="fa-solid fa-star"></i> 추천</span>' : '') +
+                    '</div>' +
+                    '<div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">' +
+                        'UID: ' + uid + ' | ' + phone +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+            '<button type="button" style="background: ' + (isSelected ? '#2563eb' : '#f8fafc') + '; color: ' + (isSelected ? '#fff' : '#475569') + '; border: 1px solid ' + (isSelected ? '#2563eb' : '#cbd5e1') + '; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">' +
+                (isSelected ? '선택됨' : '선택') +
+            '</button>' +
+        '</div>';
+    });
+    
+    container.innerHTML = html;
+}
+
+function selectDriveCustomer(index) {
+    const list = drivePickerCustomers;
+    if (list && list[index]) {
+        const c = list[index];
+        driveSelectedCustomer = {
+            uid: String(c['고객번호'] || c['사업자번호'] || c['ID'] || c['UID'] || '-'),
+            name: String(c['고객명'] || c['대표자명'] || '고객'),
+            phone: String(c['핸드폰'] || c['폰번호'] || c['연락처'] || '-')
+        };
+        updateDriveSelectedCustomerUI();
+        renderDriveCustomerList(drivePickerCustomers);
+    }
+}
+
+function applyDetectedCustomerMatch(suggestedName) {
+    const targetName = suggestedName || (window.currentDynamicSummary && window.currentDynamicSummary.clientName) || window.detectedClientName || '';
+    if (!targetName) return;
+    
+    const match = drivePickerCustomers.find(c => {
+        const n = String(c['고객명'] || c['대표자명'] || '');
+        return n && (n.includes(targetName) || targetName.includes(n));
+    });
+    
+    if (match) {
+        driveSelectedCustomer = {
+            uid: String(match['고객번호'] || match['사업자번호'] || match['ID'] || match['UID'] || '-'),
+            name: String(match['고객명'] || match['대표자명'] || '고객'),
+            phone: String(match['핸드폰'] || match['폰번호'] || match['연락처'] || '-')
+        };
+        updateDriveSelectedCustomerUI();
+        renderDriveCustomerList(drivePickerCustomers);
+    }
+}
+
+function updateDriveSelectedCustomerUI() {
+    const preview = document.getElementById('driveSelectedCustomerPreview');
+    const btn = document.getElementById('btnExecuteDriveUpload');
+    
+    if (driveSelectedCustomer) {
+        if (preview) {
+            preview.innerHTML = '선택된 고객: <b style="color:#2563eb; font-size:13.5px;">' + driveSelectedCustomer.name + '</b> <span style="font-size:11.5px; color:#64748b;">(UID: ' + driveSelectedCustomer.uid + ')</span>';
+        }
+        if (btn) {
+            btn.disabled = false;
+            btn.style.background = '#2563eb';
+            btn.style.color = '#ffffff';
+            btn.style.cursor = 'pointer';
+        }
+    } else {
+        if (preview) {
+            preview.innerHTML = '<span style="color:#94a3b8;">저장할 고객을 목록에서 선택하세요</span>';
+        }
+        if (btn) {
+            btn.disabled = true;
+            btn.style.background = '#cbd5e1';
+            btn.style.color = '#94a3b8';
+            btn.style.cursor = 'not-allowed';
+        }
+    }
+}
+
+async function executeDriveUpload() {
+    if (!driveSelectedCustomer) {
+        alert('저장할 고객을 먼저 선택해 주세요.');
+        return;
+    }
+    
+    const pdfBlob = window.lastGeneratedPdfBlob;
+    if (!pdfBlob) {
+        alert('먼저 보장분석 PDF 파일 제작을 완료해 주세요.');
+        return;
+    }
+    
+    let token = GoogleDriveBojang.getAccessToken();
+    if (!token) {
+        GoogleDriveBojang.requestGoogleAuth(function(newToken) {
+            if (newToken) {
+                executeDriveUpload();
+            }
+        });
+        return;
+    }
+    
+    // Switch to progress view
+    document.getElementById('drivePickerBody').style.display = 'none';
+    document.getElementById('drivePickerFooter').style.display = 'none';
+    const progressView = document.getElementById('drivePickerProgressView');
+    progressView.style.display = 'flex';
+    
+    const stepEl = document.getElementById('driveProgressStep');
+    const titleEl = document.getElementById('driveProgressTitle');
+    
+    try {
+        // Step 1: 고객 폴더 생성/확인
+        if (titleEl) titleEl.textContent = '구글 드라이브 폴더 연동 중...';
+        if (stepEl) stepEl.textContent = 'Step 1/3: [' + driveSelectedCustomer.name + '] 님의 [보장분석] 폴더를 확인하고 있습니다...';
+        
+        const folderId = await GoogleDriveBojang.ensureCustomerBojangFolder(driveSelectedCustomer.uid, driveSelectedCustomer.name, token);
+        
+        // Step 2: PDF 업로드
+        if (titleEl) titleEl.textContent = '보장분석 PDF 파일 업로드 중...';
+        if (stepEl) stepEl.textContent = 'Step 2/3: Google Drive 고객 폴더에 문서를 전송하고 있습니다...';
+        
+        const fileName = window.lastGeneratedPdfFilename || ('보장분석_' + driveSelectedCustomer.name + '_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '.pdf');
+        const uploadResult = await GoogleDriveBojang.uploadPdfToDrive(folderId, fileName, pdfBlob, token);
+        
+        // Step 3: Google Sheets CRM 기록
+        if (titleEl) titleEl.textContent = 'CRM 보장분석 이력 기록 중...';
+        if (stepEl) stepEl.textContent = 'Step 3/3: 스프레드시트 [보장분석_이력] 시트에 저장 정보를 기록하고 있습니다...';
+        
+        const summaryText = GoogleDriveBojang.formatDynamicSummary(window.currentDynamicSummary);
+        await GoogleDriveBojang.recordToGoogleSheet({
+            customerUid: driveSelectedCustomer.uid,
+            customerName: driveSelectedCustomer.name,
+            phone: driveSelectedCustomer.phone,
+            fileName: fileName,
+            webViewLink: uploadResult.webViewLink,
+            summaryText: summaryText,
+            coverTitle: '맞춤 표지 테마',
+            fileId: uploadResult.fileId
+        }, token);
+        
+        // Success View
+        progressView.style.display = 'none';
+        const resultView = document.getElementById('drivePickerResultView');
+        resultView.style.display = 'flex';
+        
+        const descEl = document.getElementById('driveResultDesc');
+        if (descEl) {
+            descEl.innerHTML = '<b>' + driveSelectedCustomer.name + '</b> 님의 [위라클_고객관리 > ' + driveSelectedCustomer.name + ' > 보장분석] 폴더에 업로드되었으며, 고객관리(CRM)와 안전하게 연동되었습니다.';
+        }
+        
+        const btnView = document.getElementById('btnDriveViewUploaded');
+        if (btnView && uploadResult.webViewLink) {
+            btnView.href = uploadResult.webViewLink;
+        }
+        
+    } catch(err) {
+        console.error('[executeDriveUpload Error]:', err);
+        progressView.style.display = 'none';
+        document.getElementById('drivePickerBody').style.display = 'block';
+        document.getElementById('drivePickerFooter').style.display = 'flex';
+        alert('구글 드라이브 저장 중 오류가 발생했습니다: ' + (err.message || err));
+    }
+}
 </script>
 
 </body>

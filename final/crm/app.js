@@ -5303,7 +5303,11 @@ window.addPetRow = function(data) {
         <div style="display:flex; gap:8px; align-items:center; width:100%;">
             <div style="flex:1; display:flex; align-items:center; gap:6px;">
                 <span style="font-size:11.5px; color:#64748b; font-weight:600; white-space:nowrap;"><i class="fa-regular fa-calendar"></i> 생년월일:</span>
-                <input type="text" class="form-input pet-birth-input" maxlength="10" placeholder="YYYY-MM-DD" value="${(pet.birth || '').replace(/"/g, '&quot;')}" oninput="autoHyphenDate(this)" style="flex:1; padding:6px 8px; font-size:12px; border-radius:6px; background:#fff;">
+                <div style="position:relative; flex:1; display:flex; align-items:center;">
+    <input type="text" class="form-input pet-birth-input" maxlength="10" placeholder="YYYY-MM-DD" value="${(pet.birth || '').replace(/"/g, '&quot;')}" oninput="autoHyphenDate(this)" style="width:100%; box-sizing:border-box; padding:6px 26px 6px 8px; font-size:12px; border-radius:6px; background:#fff; border:1px solid #cbd5e1;">
+    <input type="date" tabindex="-1" style="position:absolute; right:4px; width:20px; height:20px; opacity:0; cursor:pointer; z-index:2;" onchange="const txt = this.previousElementSibling; txt.value = this.value; txt.dispatchEvent(new Event('input'));">
+    <i class="fa-regular fa-calendar" style="position:absolute; right:6px; color:#64748b; font-size:12px; pointer-events:none; z-index:1;"></i>
+</div>
             </div>
             <div style="flex:1; display:flex; align-items:center; gap:6px;">
                 <span style="font-size:11.5px; color:#64748b; font-weight:600; white-space:nowrap;"><i class="fa-solid fa-palette"></i> 모색:</span>
@@ -5769,11 +5773,19 @@ function addAlrilRow(btn) {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 시작일</label>
-                    <input type="text" name="알릴_시작일" maxlength="10" placeholder="YYYY-MM-DD" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <div style="position:relative; width:100%; display:flex; align-items:center;">
+    <input type="text" name="알릴_시작일" maxlength="10" placeholder="YYYY-MM-DD" oninput="autoHyphenDate(this)" style="padding:8px 32px 8px 8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+    <input type="date" tabindex="-1" style="position:absolute; right:4px; width:24px; height:24px; opacity:0; cursor:pointer; z-index:2;" onchange="const txt = this.previousElementSibling; txt.value = this.value; txt.dispatchEvent(new Event('input'));">
+    <i class="fa-regular fa-calendar" style="position:absolute; right:8px; color:#64748b; font-size:14px; pointer-events:none; z-index:1;"></i>
+</div>
                 </div>
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 종료일</label>
-                    <input type="text" name="알릴_종료일" maxlength="10" placeholder="YYYY-MM-DD" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <div style="position:relative; width:100%; display:flex; align-items:center;">
+    <input type="text" name="알릴_종료일" maxlength="10" placeholder="YYYY-MM-DD" oninput="autoHyphenDate(this)" style="padding:8px 32px 8px 8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+    <input type="date" tabindex="-1" style="position:absolute; right:4px; width:24px; height:24px; opacity:0; cursor:pointer; z-index:2;" onchange="const txt = this.previousElementSibling; txt.value = this.value; txt.dispatchEvent(new Event('input'));">
+    <i class="fa-regular fa-calendar" style="position:absolute; right:8px; color:#64748b; font-size:14px; pointer-events:none; z-index:1;"></i>
+</div>
                 </div>
             </div>
             <div class="input-field" style="margin:0;">
@@ -7406,7 +7418,11 @@ div.innerHTML = `
 
             <div class="ins-tab-content detail-content" style="display:none;">
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; align-items: end; margin-bottom:15px;">
-                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">체결일</label><input type="text" name="체결일" maxlength="10" placeholder="YYYY-MM-DD" value="${dateVal}" oninput="autoHyphenDate(this); if(window.calcRenewalDate) calcRenewalDate(this, ${insCount});" onchange="if(window.calcRenewalDate) calcRenewalDate(this, ${insCount});" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
+                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">체결일</label><div style="position:relative; width:100%; display:flex; align-items:center;">
+    <input type="text" name="체결일" maxlength="10" placeholder="YYYY-MM-DD" value="${dateVal}" oninput="autoHyphenDate(this); if(window.calcRenewalDate) calcRenewalDate(this, ${insCount});" onchange="if(window.calcRenewalDate) calcRenewalDate(this, ${insCount});" style="padding:8px 32px 8px 8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+    <input type="date" tabindex="-1" style="position:absolute; right:4px; width:24px; height:24px; opacity:0; cursor:pointer; z-index:2;" onchange="const txt = this.previousElementSibling; txt.value = this.value; txt.dispatchEvent(new Event('input')); txt.dispatchEvent(new Event('change'));">
+    <i class="fa-regular fa-calendar" style="position:absolute; right:8px; color:#64748b; font-size:14px; pointer-events:none; z-index:1;"></i>
+</div></div>
                     <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">납입기간</label>
                         <select name="납입기간" style="width:100%; padding:8px; border-radius:4px; border:1px solid #cbd5e1; font-size:13px;">
                             <option value="">선택</option>
@@ -7419,7 +7435,11 @@ div.innerHTML = `
                             ${['1년만기','3년만기','5년만기','7년만기','10년만기','15년만기','20년만기','25년만기','30년만기','80세만기','90세만기','100세만기'].map(d => '<option value="' + d + '" ' + (expireDateVal === d ? "selected" : "") + '>' + d + '</option>').join('')}
                         </select>
                     </div>
-                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">갱신일</label><input type="text" name="갱신일" maxlength="10" placeholder="YYYY-MM-DD" id="renewal-date-${insCount}" value="${renewalDateVal}" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
+                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">갱신일</label><div style="position:relative; width:100%; display:flex; align-items:center;">
+    <input type="text" name="갱신일" maxlength="10" placeholder="YYYY-MM-DD" id="renewal-date-${insCount}" value="${renewalDateVal}" oninput="autoHyphenDate(this)" style="padding:8px 32px 8px 8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+    <input type="date" tabindex="-1" style="position:absolute; right:4px; width:24px; height:24px; opacity:0; cursor:pointer; z-index:2;" onchange="const txt = this.previousElementSibling; txt.value = this.value; txt.dispatchEvent(new Event('input')); txt.dispatchEvent(new Event('change'));">
+    <i class="fa-regular fa-calendar" style="position:absolute; right:8px; color:#64748b; font-size:14px; pointer-events:none; z-index:1;"></i>
+</div></div>
                 </div>
 
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 5px;">
@@ -7578,7 +7598,11 @@ div.innerHTML = `
 
             <div class="ins-tab-content detail-content" style="display:none;">
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-items: end; margin-bottom:15px;">
-                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">책임개시일</label><input type="text" name="책임개시일" maxlength="10" placeholder="YYYY-MM-DD" value="${data && data.책임개시일 ? data.책임개시일 : (data && data.체결일 ? data.체결일 : '')}" oninput="autoHyphenDate(this); calcRenewalDate(this, 'renewal-${insCount}')" onchange="calcRenewalDate(this, 'renewal-${insCount}')" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
+                    <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">책임개시일</label><div style="position:relative; width:100%; display:flex; align-items:center;">
+    <input type="text" name="책임개시일" maxlength="10" placeholder="YYYY-MM-DD" value="${data && data.책임개시일 ? data.책임개시일 : (data && data.체결일 ? data.체결일 : '')}" oninput="autoHyphenDate(this); calcRenewalDate(this, 'renewal-${insCount}')" onchange="calcRenewalDate(this, 'renewal-${insCount}')" style="padding:8px 32px 8px 8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+    <input type="date" tabindex="-1" style="position:absolute; right:4px; width:24px; height:24px; opacity:0; cursor:pointer; z-index:2;" onchange="const txt = this.previousElementSibling; txt.value = this.value; txt.dispatchEvent(new Event('input')); txt.dispatchEvent(new Event('change'));">
+    <i class="fa-regular fa-calendar" style="position:absolute; right:8px; color:#64748b; font-size:14px; pointer-events:none; z-index:1;"></i>
+</div></div>
                     <div class="input-field" style="margin:0;"><label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">갱신일</label><input type="text" name="갱신일" maxlength="10" placeholder="YYYY-MM-DD" id="renewal-${insCount}" value="${data && data.갱신일 ? data.갱신일 : ''}" readonly style="padding:8px; font-size:13px; background:#f8fafc; color:#64748b; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;"></div>
                 </div>
 
@@ -7660,11 +7684,19 @@ area.appendChild(div);
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 시작일</label>
-                    <input type="text" name="알릴_시작일" maxlength="10" placeholder="YYYY-MM-DD" value="${startDateVal}" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <div style="position:relative; width:100%; display:flex; align-items:center;">
+    <input type="text" name="알릴_시작일" maxlength="10" placeholder="YYYY-MM-DD" value="${startDateVal}" oninput="autoHyphenDate(this)" style="padding:8px 32px 8px 8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+    <input type="date" tabindex="-1" style="position:absolute; right:4px; width:24px; height:24px; opacity:0; cursor:pointer; z-index:2;" onchange="const txt = this.previousElementSibling; txt.value = this.value; txt.dispatchEvent(new Event('input'));">
+    <i class="fa-regular fa-calendar" style="position:absolute; right:8px; color:#64748b; font-size:14px; pointer-events:none; z-index:1;"></i>
+</div>
                 </div>
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 종료일</label>
-                    <input type="text" name="알릴_종료일" maxlength="10" placeholder="YYYY-MM-DD" value="${endDateVal}" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <div style="position:relative; width:100%; display:flex; align-items:center;">
+    <input type="text" name="알릴_종료일" maxlength="10" placeholder="YYYY-MM-DD" value="${endDateVal}" oninput="autoHyphenDate(this)" style="padding:8px 32px 8px 8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+    <input type="date" tabindex="-1" style="position:absolute; right:4px; width:24px; height:24px; opacity:0; cursor:pointer; z-index:2;" onchange="const txt = this.previousElementSibling; txt.value = this.value; txt.dispatchEvent(new Event('input'));">
+    <i class="fa-regular fa-calendar" style="position:absolute; right:8px; color:#64748b; font-size:14px; pointer-events:none; z-index:1;"></i>
+</div>
                 </div>
             </div>
             <div class="input-field" style="margin:0;">
@@ -7713,11 +7745,19 @@ area.appendChild(div);
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 시작일</label>
-                    <input type="text" name="알릴_시작일" maxlength="10" placeholder="YYYY-MM-DD" value="" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <div style="position:relative; width:100%; display:flex; align-items:center;">
+    <input type="text" name="알릴_시작일" maxlength="10" placeholder="YYYY-MM-DD" value="" oninput="autoHyphenDate(this)" style="padding:8px 32px 8px 8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+    <input type="date" tabindex="-1" style="position:absolute; right:4px; width:24px; height:24px; opacity:0; cursor:pointer; z-index:2;" onchange="const txt = this.previousElementSibling; txt.value = this.value; txt.dispatchEvent(new Event('input'));">
+    <i class="fa-regular fa-calendar" style="position:absolute; right:8px; color:#64748b; font-size:14px; pointer-events:none; z-index:1;"></i>
+</div>
                 </div>
                 <div class="input-field" style="margin:0;">
                     <label style="font-size:12px; margin-bottom:4px; font-weight:700; display:block;">치료 종료일</label>
-                    <input type="text" name="알릴_종료일" maxlength="10" placeholder="YYYY-MM-DD" value="" oninput="autoHyphenDate(this)" style="padding:8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+                    <div style="position:relative; width:100%; display:flex; align-items:center;">
+    <input type="text" name="알릴_종료일" maxlength="10" placeholder="YYYY-MM-DD" value="" oninput="autoHyphenDate(this)" style="padding:8px 32px 8px 8px; font-size:13px; width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:4px;">
+    <input type="date" tabindex="-1" style="position:absolute; right:4px; width:24px; height:24px; opacity:0; cursor:pointer; z-index:2;" onchange="const txt = this.previousElementSibling; txt.value = this.value; txt.dispatchEvent(new Event('input'));">
+    <i class="fa-regular fa-calendar" style="position:absolute; right:8px; color:#64748b; font-size:14px; pointer-events:none; z-index:1;"></i>
+</div>
                 </div>
             </div>
             <div class="input-field" style="margin:0;">

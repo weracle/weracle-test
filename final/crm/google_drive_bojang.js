@@ -479,8 +479,15 @@
                         '</div>';
                     }
 
-                    reportsHtml += '<div style="display:flex; gap:6px; justify-content:flex-end;">';
-                    if (rep.webViewLink) {
+                    reportsHtml += '<div style="display:flex; gap:6px; justify-content:flex-end; align-items:center;">';
+                    if (rep.fileId) {
+                        const repNameEsc = (rep.fileName || '보장분석_리포트.pdf').replace(/'/g, "\\'");
+                        const repLinkEsc = (rep.webViewLink || '').replace(/'/g, "\\'");
+                        reportsHtml += '<button type="button" onclick="GoogleDriveBojang.openPdfViewer(\'' + rep.fileId + '\', \'' + repNameEsc + '\', \'' + repLinkEsc + '\')" ' +
+                           'style="background:linear-gradient(135deg, #1d4ed8, #2563eb); color:#ffffff; border:none; padding:7px 14px; border-radius:7px; font-size:12.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(37,99,235,0.25); transition:all 0.15s;">' +
+                            '<i class="fa-solid fa-eye"></i> 리포트 바로보기' +
+                        '</button>';
+                    } else if (rep.webViewLink) {
                         reportsHtml += '<a href="' + rep.webViewLink + '" target="_blank" ' +
                            'style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; text-decoration:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px;">' +
                             '<i class="fa-brands fa-google-drive"></i> 드라이브에서 열기' +
@@ -504,6 +511,156 @@
                     '<span style="font-size:11.5px; color:#b91c1c;">' + (e.message || e) + '</span>' +
                 '</div>';
             }
+        },
+        // 12. WERACLE 전용 모달 PDF 뷰어
+        currentViewerBlobUrl: null,
+
+        closePdfViewer: function() {
+            const modal = document.getElementById('weraclePdfViewerModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            const iframe = document.getElementById('weraclePdfViewerFrame');
+            if (iframe) iframe.src = 'about:blank';
+            if (this.currentViewerBlobUrl) {
+                try { URL.revokeObjectURL(this.currentViewerBlobUrl); } catch(e) {}
+                this.currentViewerBlobUrl = null;
+            }
+        },
+
+        openPdfViewer: async function(fileId, fileName, webViewLink) {
+            fileName = fileName || '보장분석_리포트.pdf';
+            webViewLink = webViewLink || ('https://drive.google.com/file/d/' + fileId + '/view');
+
+            let modal = document.getElementById('weraclePdfViewerModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'weraclePdfViewerModal';
+                modal.style.cssText = 'position:fixed; inset:0; z-index:200000; background:rgba(15,23,42,0.78); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;';
+                
+                modal.innerHTML = `
+                    <div style="background:#ffffff; border-radius:18px; width:100%; max-width:1080px; height:94vh; max-height:94vh; display:flex; flex-direction:column; box-shadow:0 25px 60px -15px rgba(0,0,0,0.4); overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
+                        <!-- Modal Top Header -->
+                        <div style="padding:14px 20px; background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#ffffff; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; flex-shrink:0;">
+                            <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                                <div style="width:36px; height:36px; border-radius:10px; background:rgba(2,132,199,0.25); color:#38bdf8; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; border:1px solid rgba(56,189,248,0.3);">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </div>
+                                <div style="min-width:0;">
+                                    <div id="weracleViewerTitle" style="font-size:15px; font-weight:800; color:#f8fafc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                        보장분석 리포트
+                                    </div>
+                                    <div style="font-size:11.5px; color:#94a3b8; display:flex; align-items:center; gap:6px;">
+                                        <span>WERACLE 프리미엄 리포트 뷰어</span>
+                                        <span style="display:inline-block; width:3px; height:3px; border-radius:50%; background:#64748b;"></span>
+                                        <span style="color:#38bdf8; font-weight:700;">전용 고해상도 모드</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                                <a id="weracleViewerDownloadBtn" href="#" target="_blank" download style="background:rgba(255,255,255,0.1); color:#f8fafc; border:1px solid rgba(255,255,255,0.15); text-decoration:none; padding:7px 13px; border-radius:8px; font-size:12.5px; font-weight:700; display:inline-flex; align-items:center; gap:5px; transition:0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                                    <i class="fa-solid fa-download"></i> 다운로드
+                                </a>
+                                <a id="weracleViewerDriveLink" href="#" target="_blank" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); text-decoration:none; padding:7px 11px; border-radius:8px; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:5px; transition:0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                                    <i class="fa-brands fa-google-drive"></i> 원본 드라이브
+                                </a>
+                                <button type="button" onclick="GoogleDriveBojang.closePdfViewer()" style="background:none; border:none; color:#94a3b8; font-size:20px; padding:6px 10px; cursor:pointer; border-radius:8px; transition:0.15s; margin-left:4px;" onmouseover="this.style.color='#ffffff'; this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.color='#94a3b8'; this.style.background='none'">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Viewer Content Container -->
+                        <div id="weracleViewerBody" style="flex:1; width:100%; height:100%; position:relative; background:#334155; display:flex; align-items:center; justify-content:center;">
+                            <!-- Spinner while loading -->
+                            <div id="weracleViewerLoading" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#0f172a; color:#ffffff; z-index:2;">
+                                <div style="font-size:40px; margin-bottom:12px; color:#38bdf8;">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                </div>
+                                <div style="font-size:15px; font-weight:800; color:#f8fafc; margin-bottom:4px;">
+                                    리포트를 불러오는 중입니다...
+                                </div>
+                                <div style="font-size:12px; color:#94a3b8;">
+                                    고해상도 PDF 데이터를 안전하게 복호화하고 있습니다.
+                                </div>
+                            </div>
+
+                            <iframe id="weraclePdfViewerFrame" src="about:blank" style="width:100%; height:100%; border:none; background:#525659;"></iframe>
+                        </div>
+                    </div>
+                `;
+
+                // Close on backdrop click
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        GoogleDriveBojang.closePdfViewer();
+                    }
+                });
+
+                // Close on ESC key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && modal.style.display === 'flex') {
+                        GoogleDriveBojang.closePdfViewer();
+                    }
+                });
+
+                document.body.appendChild(modal);
+            }
+
+            // Update Header info
+            const titleEl = document.getElementById('weracleViewerTitle');
+            if (titleEl) titleEl.textContent = fileName;
+            
+            const downloadUrl = fileId ? ('https://drive.google.com/uc?export=download&id=' + fileId) : webViewLink;
+            const dlBtn = document.getElementById('weracleViewerDownloadBtn');
+            if (dlBtn) dlBtn.href = downloadUrl;
+            
+            const driveLink = document.getElementById('weracleViewerDriveLink');
+            if (driveLink) driveLink.href = webViewLink;
+
+            // Show Modal & Spinner
+            modal.style.display = 'flex';
+            const loadingEl = document.getElementById('weracleViewerLoading');
+            if (loadingEl) loadingEl.style.display = 'flex';
+            const iframe = document.getElementById('weraclePdfViewerFrame');
+
+            // Free previous blob if exists
+            if (this.currentViewerBlobUrl) {
+                try { URL.revokeObjectURL(this.currentViewerBlobUrl); } catch(e) {}
+                this.currentViewerBlobUrl = null;
+            }
+
+            const token = this.getAccessToken();
+
+            // Try fetching raw PDF via Drive API
+            if (token && fileId) {
+                try {
+                    const resp = await fetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    if (resp.ok) {
+                        const blob = await resp.blob();
+                        const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+                        this.currentViewerBlobUrl = URL.createObjectURL(pdfBlob);
+                        iframe.src = this.currentViewerBlobUrl + '#toolbar=1&navpanes=0';
+                        if (loadingEl) {
+                            setTimeout(() => { loadingEl.style.display = 'none'; }, 400);
+                        }
+                        return;
+                    }
+                } catch(fetchErr) {
+                    console.warn('[openPdfViewer fetch error, falling back to preview]:', fetchErr);
+                }
+            }
+
+            // Fallback: Google Drive clean preview embed
+            iframe.src = 'https://drive.google.com/file/d/' + fileId + '/preview';
+            iframe.onload = function() {
+                if (loadingEl) loadingEl.style.display = 'none';
+            };
+            setTimeout(() => { if (loadingEl) loadingEl.style.display = 'none'; }, 2000);
         }
     };
 

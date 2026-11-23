@@ -1685,13 +1685,18 @@
                 고객 전용 폴더에 보장분석 리포트가 안전하게 업로드되었습니다.
             </p>
             <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 320px;">
-                <a id="btnDriveViewUploaded" href="#" target="_blank" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 11px 16px; border-radius: 10px; font-size: 13.5px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    <i class="fa-brands fa-google-drive"></i> 구글 드라이브에서 열기
-                </a>
-                <a href="../crm/crm_test.html" target="_blank" style="background: #2563eb; color: #ffffff; padding: 11px 16px; border-radius: 10px; font-size: 13.5px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    <i class="fa-solid fa-users"></i> 고객관리(CRM) 바로가기
-                </a>
-                <button type="button" onclick="closeDriveCustomerPicker()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 4px;">
+                <button type="button" id="btnDriveViewUploaded" onclick="openUploadedViewer()" style="background: linear-gradient(135deg, #1d4ed8, #2563eb); color: #ffffff; border: none; padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 8px rgba(37,99,235,0.25);">
+                    <i class="fa-solid fa-eye"></i> 리포트 바로보기
+                </button>
+                <div style="display: flex; gap: 8px;">
+                    <a id="btnDriveViewDriveLink" href="#" target="_blank" style="flex: 1; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 9px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <i class="fa-brands fa-google-drive"></i> 원본 드라이브
+                    </a>
+                    <a href="../crm/crm_test.html" target="_blank" style="flex: 1; background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; padding: 9px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <i class="fa-solid fa-users"></i> 고객관리(CRM)
+                    </a>
+                </div>
+                <button type="button" onclick="closeDriveCustomerPicker()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 8px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; margin-top: 2px;">
                     창 닫기
                 </button>
             </div>
@@ -3726,6 +3731,14 @@ function openDriveCustomerPicker() {
     }
 }
 
+
+function openUploadedViewer() {
+    closeDriveCustomerPicker();
+    if (window.lastUploadedResult && window.lastUploadedResult.fileId && typeof GoogleDriveBojang !== 'undefined') {
+        GoogleDriveBojang.openPdfViewer(window.lastUploadedResult.fileId, window.lastUploadedFileName, window.lastUploadedResult.webViewLink);
+    }
+}
+
 function closeDriveCustomerPicker() {
     const modal = document.getElementById('driveCustomerPickerModal');
     if (modal) {
@@ -3935,9 +3948,11 @@ async function executeDriveUpload() {
             descEl.innerHTML = '<b>' + driveSelectedCustomer.name + '</b> 님의 [위라클_고객관리 > ' + driveSelectedCustomer.name + ' > 보장분석] 폴더에 업로드되었으며, 고객관리(CRM)와 안전하게 연동되었습니다.';
         }
         
-        const btnView = document.getElementById('btnDriveViewUploaded');
-        if (btnView && uploadResult.webViewLink) {
-            btnView.href = uploadResult.webViewLink;
+        window.lastUploadedResult = uploadResult;
+        window.lastUploadedFileName = fileName;
+        const driveLinkEl = document.getElementById('btnDriveViewDriveLink');
+        if (driveLinkEl && uploadResult.webViewLink) {
+            driveLinkEl.href = uploadResult.webViewLink;
         }
         
     } catch(err) {

@@ -12404,7 +12404,7 @@ window.deleteCustomerData = async function() {
 
         // New family
         if (newFamily.head) {
-            const actualNewRoot = String(getNextAllocatedRootId());
+            const actualNewRoot = newFamily.rootId || newFamily.head.id || String(getNextAllocatedRootId());
             checkPerson(newFamily.head, actualNewRoot, '본인');
             (newFamily.members || []).forEach((m, idx) => {
                 checkPerson(m, actualNewRoot + '-' + (idx + 1), m.relation);
@@ -12413,7 +12413,7 @@ window.deleteCustomerData = async function() {
 
         // Unlinked list
         unlinkedList.forEach(u => {
-            const actualUnlinkedRoot = String(getNextAllocatedRootId());
+            const actualUnlinkedRoot = u.id || String(getNextAllocatedRootId());
             checkPerson(u, actualUnlinkedRoot, '본인');
         });
 

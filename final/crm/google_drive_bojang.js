@@ -479,22 +479,23 @@
                         '</div>';
                     }
 
-                    reportsHtml += '<div style="display:flex; gap:6px; justify-content:flex-end; align-items:center;">';
+                    reportsHtml += '<div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; align-items:center;">';
                     if (rep.fileId) {
                         const repNameEsc = (rep.fileName || '보장분석_리포트.pdf').replace(/'/g, "\\'");
                         const repLinkEsc = (rep.webViewLink || '').replace(/'/g, "\\'");
                         reportsHtml += '<button type="button" onclick="GoogleDriveBojang.openPdfViewer(\'' + rep.fileId + '\', \'' + repNameEsc + '\', \'' + repLinkEsc + '\')" ' +
-                           'style="background:linear-gradient(135deg, #1d4ed8, #2563eb); color:#ffffff; border:none; padding:7px 14px; border-radius:7px; font-size:12.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(37,99,235,0.25); transition:all 0.15s;">' +
+                           'style="background:linear-gradient(135deg, #1d4ed8, #2563eb); color:#ffffff; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 2px 4px rgba(37,99,235,0.2); transition:all 0.15s;" onmouseover="this.style.opacity=\'0.95\'" onmouseout="this.style.opacity=\'1\'">' +
                             '<i class="fa-solid fa-eye"></i> 리포트 바로보기' +
                         '</button>';
-                    } else if (rep.webViewLink) {
+                    }
+                    if (rep.webViewLink) {
                         reportsHtml += '<a href="' + rep.webViewLink + '" target="_blank" ' +
-                           'style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; text-decoration:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px;">' +
-                            '<i class="fa-brands fa-google-drive"></i> 드라이브에서 열기' +
+                           'style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; text-decoration:none; padding:6px 11px; border-radius:6px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px; transition:all 0.15s;" onmouseover="this.style.background=\'#dbeafe\'" onmouseout="this.style.background=\'#eff6ff\'">' +
+                            '<i class="fa-brands fa-google-drive"></i> 구글드라이브에서 보기' +
                         '</a>';
                     }
                     reportsHtml += '<a href="' + downloadUrl + '" target="_blank" download ' +
-                           'style="background:#f8fafc; color:#475569; border:1px solid #cbd5e1; text-decoration:none; padding:6px 10px; border-radius:6px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:4px;">' +
+                           'style="background:#f8fafc; color:#475569; border:1px solid #cbd5e1; text-decoration:none; padding:6px 10px; border-radius:6px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:4px; transition:all 0.15s;" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'#f8fafc\'">' +
                             '<i class="fa-solid fa-download"></i> 다운로드' +
                         '</a>' +
                     '</div>' +

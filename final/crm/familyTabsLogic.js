@@ -377,7 +377,6 @@ function saveCurrentFormToState() {
         target.insHtml = editableEntries.map(e => e.outerHTML).join('');
     }
     
-    target.data = { ...(target.data || {}), ...dataObj };
     if (typeof window.getPetSerializedData === 'function') {
         const petSer = window.getPetSerializedData();
         dataObj['반려동물'] = petSer.species;
@@ -387,6 +386,7 @@ function saveCurrentFormToState() {
         dataObj['동물모색'] = petSer.colors;
         dataObj['동물성별'] = petSer.genders;
     }
+    target.data = { ...(target.data || {}), ...dataObj };
     if (typeof window.getPetRowsData === 'function') {
         target.petData = window.getPetRowsData();
     }

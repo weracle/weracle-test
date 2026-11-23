@@ -1915,9 +1915,9 @@ function getCrmHeaders(sheetType) {
 }
 
 function getCrmEndCol(sheetType) {
-    if (sheetType === "보험관리") return "AC";
-    if (sheetType === "corporatecrm" || sheetType === "사업자고객") return "AC";
-    return "AA";
+    if (sheetType === "보험관리") return "AZ";
+    if (sheetType === "corporatecrm" || sheetType === "사업자고객") return "AZ";
+    return "AZ";
 }
 
 // 구글 드라이브 내 전용 시트 검색 및 생성
@@ -4314,6 +4314,9 @@ function loadCustomerForFamily(task) {
                 curTarget.data['반려동물'] = petSer.species;
                 curTarget.data['동물이름'] = petSer.names;
                 curTarget.data['코드'] = petSer.codes;
+                curTarget.data['동물생일'] = petSer.births;
+                curTarget.data['동물모색'] = petSer.colors;
+                curTarget.data['동물성별'] = petSer.genders;
             }
         }
     }
@@ -5197,13 +5200,13 @@ window.restorePetRowsFromData = function(petData) {
 window.parsePetData = function(speciesRaw, namesRaw, codesRaw, birthsRaw, colorsRaw, gendersRaw) {
     if (!speciesRaw && !namesRaw && !codesRaw && !birthsRaw && !colorsRaw && !gendersRaw) return [];
     const splitMulti = (str) => {
-        if (!str) return [];
+        if (!str && str !== 0) return [];
         const s = String(str).trim();
         if (s.includes(',')) {
-            return s.split(',').map(item => item.trim()).filter(Boolean);
+            return s.split(',').map(item => item.trim());
         }
         if (s.includes('/')) {
-            return s.split('/').map(item => item.trim()).filter(Boolean);
+            return s.split('/').map(item => item.trim());
         }
         return [s];
     };
@@ -5290,10 +5293,10 @@ window.addPetRow = function(data) {
             <input type="text" class="form-input pet-name-input" value="${(pet.name || '').replace(/"/g, '&quot;')}" placeholder="이름 (예: 뽀삐)" style="flex:1; padding:7px 10px; font-size:12.5px; border-radius:6px; background:#fff;">
             <select class="form-input pet-gender-select" style="flex:0 0 115px; padding:7px 8px; font-size:12px; border-radius:6px; background:#f8fafc;">
                 <option value="" ${!pet.gender ? 'selected' : ''}>성별 선택</option>
-                <option value="남아" ${pet.gender === '남아' ? 'selected' : ''}>남아 ♂</option>
-                <option value="여아" ${pet.gender === '여아' ? 'selected' : ''}>여아 ♀</option>
-                <option value="중성화(남)" ${pet.gender === '중성화(남)' ? 'selected' : ''}>중성화(남)</option>
-                <option value="중성화(여)" ${pet.gender === '중성화(여)' ? 'selected' : ''}>중성화(여)</option>
+                <option value="남아" ${(pet.gender === '남아' || pet.gender === '남' || pet.gender === '수컷') ? 'selected' : ''}>남아 ♂</option>
+                <option value="여아" ${(pet.gender === '여아' || pet.gender === '여' || pet.gender === '암컷') ? 'selected' : ''}>여아 ♀</option>
+                <option value="중성화(남)" ${(pet.gender === '중성화(남)' || pet.gender === '중성화남') ? 'selected' : ''}>중성화(남)</option>
+                <option value="중성화(여)" ${(pet.gender === '중성화(여)' || pet.gender === '중성화여') ? 'selected' : ''}>중성화(여)</option>
             </select>
             <button type="button" onclick="window.removePetRow(this)" title="삭제" style="flex:0 0 38px; height:34px; border:1px solid #fee2e2; background:#fef2f2; color:#ef4444; border-radius:6px; cursor:pointer; font-size:12px; display:inline-flex; align-items:center; justify-content:center; transition:0.15s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
                 <i class="fa-solid fa-trash-can"></i>
@@ -5370,40 +5373,7 @@ window.restorePetRows = function(client) {
     }
 };
 
-window.restorePetRows = function(client) {
-    const petCb = document.getElementById('has-pet-cb');
-    const list = document.getElementById('pet-rows-list');
-    if (list) list.innerHTML = '';
-    
-    if (!client) {
-        if (petCb) {
-            petCb.checked = false;
-            window.handlePetToggle(false);
-        }
-        return;
-    }
-    
-    const sRaw = client['반려동물'] || '';
-    const nRaw = client['동물이름'] || '';
-    const cRaw = client['코드'] || '';
-    
-    const pets = window.parsePetData(sRaw, nRaw, cRaw);
-    const hasAny = (pets.length > 0) || (sRaw && sRaw !== '무' && sRaw !== '없음' && sRaw !== '-' && sRaw !== 'x');
-    
-    if (petCb) {
-        petCb.checked = hasAny;
-        window.handlePetToggle(hasAny);
-    }
-    
-    if (hasAny && list) {
-        list.innerHTML = '';
-        if (pets.length > 0) {
-            pets.forEach(p => window.addPetRow(p));
-        } else {
-            window.addPetRow();
-        }
-    }
-};
+
 
 window.renderPetProfileHtml = function(client) {
     if (!client) return '<span style="color:#94a3b8; font-weight:500;">-</span>';

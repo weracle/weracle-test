@@ -5946,11 +5946,12 @@ window.openDynamicList = function(type, val) {
         if (target.includes('management/management') || (menuName === '위라클' && subName === '파트너스')) {
             if (isFamily) return true;
             if (!isLogged) {
-                alert('위라클 파트너스는 승인된 식구 및 관리자 전용 서비스입니다.\n로그인 후 이용해 주세요.');
+                alert('[🔒 서비스 이용 권한 안내]\n\n[위라클 파트너스]는 승인된 식구 및 관리자 전용 서비스입니다.\n로그인 후 이용해 주세요.');
                 openAuthModal('login');
                 return false;
             }
-            alert('[등급 안내]\n\n위라클 파트너스는 승인된 위라클 식구(family) 및 관리자 전용 서비스입니다.\n(현재 등급: ' + (p.user_grade || '일반') + ')');
+            const currentGrade = (p.user_grade === 'vip' ? 'VIP' : (p.user_grade || '일반회원'));
+            alert('[🔒 서비스 이용 권한 안내]\n\n죄송합니다. [위라클 파트너스]는 승인된 식구(family) 및 관리자 전용 서비스입니다.\n(회원님의 현재 등급: ' + currentGrade + ')\n\n서비스 이용 권한 부여는 담당 관리자에게 문의해 주세요.');
             return false;
         }
 
@@ -5975,13 +5976,14 @@ window.openDynamicList = function(type, val) {
 
         if (isVipRequired) {
             if (isVip) return true;
+            const serviceTitle = subName || menuName || '해당';
             if (!isLogged) {
-                alert('로그인이 필요한 서비스입니다.\n로그인 후 이용해 주세요.');
+                alert('[🔒 서비스 이용 권한 안내]\n\n[' + serviceTitle + ']은 로그인이 필요한 서비스입니다.\n로그인 후 이용해 주세요.');
                 openAuthModal('login');
                 return false;
             }
-            const serviceTitle = subName || menuName || '해당';
-            alert('[등급 안내]\n\n[' + serviceTitle + '] 서비스는 VIP 등급 이상 전용 서비스입니다.\n(현재 등급: ' + (p.user_grade || '일반회원') + ')\n\n등급 업그레이드 또는 관리자에게 문의해 주세요.');
+            const currentGrade = (p.user_grade === 'basic' || !p.user_grade ? '일반회원' : p.user_grade);
+            alert('[🔒 서비스 이용 권한 안내]\n\n죄송합니다. [' + serviceTitle + ']은 VIP 회원 이상 이용 가능한 서비스입니다.\n(회원님의 현재 등급: ' + currentGrade + ')\n\n서비스 이용 권한 부여 및 등급 승급은 담당 관리자에게 문의해 주세요.');
             return false;
         }
 

@@ -2411,39 +2411,61 @@ function addDaysToDateStr(dateStr, days) {
 }
 
 async function findOrCreateDashboardSubCalendar(token) {
-  const listRes = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  if (!listRes.ok) throw new Error('구글 캘린더 목록을 불러오지 못했습니다. (' + listRes.status + ')');
-  const listData = await listRes.json();
-  const found = (listData.items || []).find(cal => cal.summary === D_CALENDAR_NAME || cal.summary === `[Weracle CRM] 고객알림`);
-  if (found) return found.id;
+  try {
+    const listRes = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (listRes.ok) {
+      const listData = await listRes.json();
+      const found = (listData.items || []).find(cal => cal.summary === D_CALENDAR_NAME || cal.summary === `[Weracle CRM] 고객알림`);
+      if (found) return found.id;
 
-  const createRes = await fetch('https://www.googleapis.com/calendar/v3/calendars', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      summary: D_CALENDAR_NAME,
-      description: D_CALENDAR_DESC,
-      timeZone: 'Asia/Seoul'
-    })
-  });
-  if (!createRes.ok) throw new Error('전용 고객알림 캘린더를 생성하지 못했습니다. (' + createRes.status + ')');
-  const newCal = await createRes.json();
-  return newCal.id;
+      const createRes = await fetch('https://www.googleapis.com/calendar/v3/calendars', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          summary: D_CALENDAR_NAME,
+          description: D_CALENDAR_DESC,
+          timeZone: 'Asia/Seoul'
+        })
+      });
+      if (createRes.ok) {
+        const newCal = await createRes.json();
+        return newCal.id;
+      }
+    }
+  } catch(e) {
+    console.warn("Sub-calendar check exception, falling back to primary:", e);
+  }
+
+  // 구글 OAuth 권한이 '기본 캘린더 일정(calendar.events)'만 허용되어 있거나 403인 경우,
+  // 에러 없이 사용자의 기본 캘린더('primary')로 즉시 안전하게 폴백하여 동기화 진행!
+  console.log("[Calendar Sync] Secondary calendar not accessible (403/restricted scope). Using 'primary' calendar.");
+  return 'primary';
 }
 
-async function fetchSubCalendarExistingEvents(calendarId, token) {
-  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?maxResults=2500&singleEvents=true`;
-  const res = await fetch(url, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.items || [];
+async function fetchSubCalendarExistingEvents(calendarId, token, targetYear, targetMonth) {
+  let url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?maxResults=2500&singleEvents=true`;
+  if (calendarId === 'primary' && targetYear && targetMonth) {
+    const y = parseInt(targetYear, 10);
+    const m = parseInt(targetMonth, 10) - 1;
+    const startIso = new Date(y, m, 1, 0, 0, 0).toISOString();
+    const endIso = new Date(y, m + 1, 1, 23, 59, 59).toISOString();
+    url += `&timeMin=${encodeURIComponent(startIso)}&timeMax=${encodeURIComponent(endIso)}`;
+  }
+  try {
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.items || [];
+  } catch(e) {
+    return [];
+  }
 }
 
 function downloadDashboardIcsNow() {
@@ -2525,11 +2547,12 @@ async function executeDashboardCalendarSync() {
   if (progContainer) progContainer.style.display = 'block';
 
   try {
-    if (progText) progText.innerText = '전용 고객 캘린더 확인 중...';
+    if (progText) progText.innerText = '캘린더 확인 중...';
     const calendarId = await findOrCreateDashboardSubCalendar(token);
+    const isSubCal = (calendarId !== 'primary');
 
     if (progText) progText.innerText = '기존 등록된 일정 조회 중...';
-    const existingEvents = await fetchSubCalendarExistingEvents(calendarId, token);
+    const existingEvents = await fetchSubCalendarExistingEvents(calendarId, token, dSyncState.year, dSyncState.month);
     const existingMap = new Map();
     existingEvents.forEach(e => {
       const privKey = e.extendedProperties?.private?.crmKey;
@@ -2571,8 +2594,10 @@ async function executeDashboardCalendarSync() {
       }
 
       const crmKey = `${ev.type}_${ev.name}_${ev.fullDate}_${ev.phone || ''}`;
+      const prefix = isSubCal ? '' : '[위라클] ';
+      const summaryText = `${prefix}${ev.title}${ev.phone ? ' - ' + ev.phone : ''}`;
       const payload = {
-        summary: `${ev.title}${ev.phone ? ' - ' + ev.phone : ''}`,
+        summary: summaryText,
         description: `[대시보드 고객 알림]\n• 고객명: ${ev.name}\n• 연락처: ${ev.phone || '-'}\n• 상품명: ${ev.prod || '-'}\n• 세부내용: ${ev.note || '-'}`,
         start: { date: ev.fullDate },
         end: { date: addDaysToDateStr(ev.fullDate, 1) },
@@ -2587,7 +2612,7 @@ async function executeDashboardCalendarSync() {
         }
       };
 
-      const existingEventId = existingMap.get(crmKey) || existingMap.get(`${payload.summary}_${ev.fullDate}`);
+      const existingEventId = existingMap.get(crmKey) || existingMap.get(`${summaryText}_${ev.fullDate}`) || existingMap.get(`${ev.title}_${ev.fullDate}`);
       let evUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
       let method = 'POST';
 
@@ -2597,7 +2622,7 @@ async function executeDashboardCalendarSync() {
       }
 
       try {
-        await fetch(evUrl, {
+        const resp = await fetch(evUrl, {
           method: method,
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -2605,7 +2630,11 @@ async function executeDashboardCalendarSync() {
           },
           body: JSON.stringify(payload)
         });
-        syncedCount++;
+        if (resp.ok) {
+          syncedCount++;
+        } else {
+          console.warn('Single event sync error:', resp.status, ev.title);
+        }
       } catch(netErr) {
         console.warn('Dashboard single event sync fail:', ev.title, netErr);
       }
@@ -2615,7 +2644,12 @@ async function executeDashboardCalendarSync() {
     if (progBar) progBar.style.width = '100%';
     if (progPercent) progPercent.innerText = '100%';
 
-    alert(`✅ [${D_CALENDAR_NAME}] 캘린더에 총 ${syncedCount}개의 일정이 성공적으로 등록되었습니다!\n\n구글 캘린더나 스마트폰 캘린더 앱에서 '[${D_CALENDAR_NAME}]' 체크박스를 끄면 언제든 숨길 수 있습니다.`);
+    if (isSubCal) {
+      alert(`✅ [${D_CALENDAR_NAME}] 전용 캘린더에 총 ${syncedCount}개의 일정이 성공적으로 등록되었습니다!\n\n구글 캘린더나 스마트폰 캘린더 앱에서 '[${D_CALENDAR_NAME}]' 체크박스를 끄면 언제든 숨길 수 있습니다.`);
+    } else {
+      alert(`✅ 구글 캘린더에 총 ${syncedCount}개의 고객 일정이 성공적으로 등록되었습니다!\n\n※ 기본 캘린더에 '[위라클]' 태그와 함께 스마트폰 알림이 자동 등록되었습니다.\n(체크박스로 켜고 끌 수 있는 전용 보조 캘린더 생성을 원하실 경우, 추후 구글 연동 권한 갱신 시 자동 지원됩니다.)`);
+    }
+
     closeDashboardCalendarSyncModal();
     if (typeof fetchGoogleCalendarEvents === 'function') {
       fetchGoogleCalendarEvents();

@@ -829,25 +829,67 @@
           list.innerHTML += htmlStr; 
       }
   }
-    const compressImage = async (file) => { 
+  // [지능형 동적 적응 압축 헬퍼: 첨부 장수에 따라 해상도와 품질을 자동 배분하여 Vercel 4.5MB 한계 돌파]
+  const compressImage = async (file, totalCount = 1) => { 
     return new Promise((resolve) => { 
-      if (!file.type.startsWith('image/')) { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve({ name: file.name, data: reader.result.split(',')[1] }); return; } 
-      const reader = new FileReader(); reader.readAsDataURL(file); 
+      if (!file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve({ name: file.name, data: reader.result.split(',')[1] });
+        return;
+      } 
+      const reader = new FileReader();
+      reader.readAsDataURL(file); 
       reader.onload = (event) => { 
-        const img = new Image(); img.src = event.target.result; 
+        const img = new Image();
+        img.src = event.target.result; 
         img.onload = () => { 
-          const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; const max_size = 1200; 
-          if (width > max_size || height > max_size) { if (width > height) { height *= max_size / width; width = max_size; } else { width *= max_size / height; height = max_size; } } 
-          canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); 
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.7); resolve({ name: file.name, data: dataUrl.split(',')[1] }); 
-        }; 
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // 첨부 장수별 동적 해상도 및 품질 자동 책정 (15장 이상 대량 첨부도 Vercel 4.5MB 제한에 걸리지 않도록 안전 최적화)
+          let max_size = 1200;
+          let quality = 0.72;
+          if (totalCount > 14) {
+            max_size = 800;
+            quality = 0.52;
+          } else if (totalCount > 7) {
+            max_size = 900;
+            quality = 0.58;
+          } else if (totalCount > 3) {
+            max_size = 1000;
+            quality = 0.65;
+          }
+          
+          if (width > max_size || height > max_size) {
+            if (width > height) {
+              height = Math.round(height * (max_size / width));
+              width = max_size;
+            } else {
+              width = Math.round(width * (max_size / height));
+              height = max_size;
+            }
+          } 
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height); 
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve({ name: file.name, data: dataUrl.split(',')[1] }); 
+        };
+        img.onerror = () => {
+          resolve({ name: file.name, data: (event.target.result || '').split(',')[1] });
+        };
       }; 
     }); 
   };
  
 
-  // [PDF 첨부파일 고해상도(2x) 이미지 자동 렌더링 헬퍼]
-  async function convertPdfToImages(file) {
+  // [PDF 첨부파일 고해상도 이미지 자동 렌더링 헬퍼]
+  async function convertPdfToImages(file, totalCount = 1) {
     if (typeof window.pdfjsLib === 'undefined') {
       await new Promise((resolve, reject) => {
         const s = document.createElement('script');
@@ -864,9 +906,12 @@
     const loadingTask = window.pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
     const pdf = await loadingTask.promise;
     const pages = [];
+    const scale = totalCount > 10 ? 1.5 : 2.0;
+    const quality = totalCount > 14 ? 0.55 : (totalCount > 7 ? 0.65 : 0.85);
+
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
       const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 2.0 });
+      const viewport = page.getViewport({ scale: scale });
       const canvas = document.createElement('canvas');
       canvas.width = viewport.width;
       canvas.height = viewport.height;
@@ -874,7 +919,7 @@
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
       pages.push({
         name: `${file.name} (${pageNum}p)`,
         data: dataUrl.split(',')[1]
@@ -883,14 +928,15 @@
     return pages;
   }
 
-  // 모든 첨부파일(JPG/PNG + PDF 다중페이지)을 jsPDF 완벽 호환 고화질 JPEG 이미지 배열로 정규화
+  // 모든 첨부파일(JPG/PNG + PDF 다중페이지)을 jsPDF 완벽 호환 지능형 고화질 JPEG 이미지 배열로 정규화
   async function processAllAttachedFiles(files) {
     const results = [];
+    const totalCount = files ? files.length : 1;
     for (const file of files) {
       const isPdf = file.type === 'application/pdf' || (file.name && file.name.toLowerCase().endsWith('.pdf'));
       if (isPdf) {
         try {
-          const pdfPages = await convertPdfToImages(file);
+          const pdfPages = await convertPdfToImages(file, totalCount);
           if (pdfPages && pdfPages.length > 0) {
             results.push(...pdfPages);
             continue;
@@ -899,7 +945,7 @@
           console.warn('[PDF.js 변환 경고, 일반 이미지 압축으로 폴백]', e);
         }
       }
-      const imgObj = await compressImage(file);
+      const imgObj = await compressImage(file, totalCount);
       results.push(imgObj);
     }
     return results;

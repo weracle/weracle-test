@@ -234,10 +234,10 @@ function getGlobalInsuranceList(client, includeInsured = false) {
                 const myIdStr = String(client['고객번호'] || client['ID'] || '');
                 const myRootId = myIdStr.split('-')[0];
                 
-                if (myRootId && myName) {
+                if (myName) {
                     const otherCustomers = globalCustomerData.filter(c => {
                         const cid = String(c['고객번호'] || c['ID'] || '');
-                        return cid !== myIdStr && cid.split('-')[0] === myRootId;
+                        return cid !== myIdStr;
                     });
                     
                     otherCustomers.forEach(fm => {
@@ -297,6 +297,11 @@ function getGlobalInsuranceList(client, includeInsured = false) {
                                     let finalObj = {
                                         ...d,
                                         피보험자: fmInsured,
+                                        contractorId: String(fm['고객번호'] || fm['ID'] || '').trim(),
+                                        contractorName: fmContractorDisplay,
+                                        sourceCustomerId: String(fm['고객번호'] || fm['ID'] || '').trim(),
+                                        sourceCustomerName: String(fm['고객명'] || fm['이름'] || fm['대표자명'] || '').trim(),
+                                        isExternalContractor: myRootId ? (String(fm['고객번호'] || fm['ID'] || '').trim().split('-')[0] !== myRootId) : true,
                                         계약자: fmContractorDisplay,
                                         company: fm['보험' + i + '_사명'] || fm['차_보험사'] || d['보험사명'] || d['차_보험사명'] || d['company'] || '',
                                         product: fm['보험' + i + '_상품명'] || fm['차_상품명'] || d['상품명'] || d['차_상품명'] || d['product'] || '',
@@ -4386,7 +4391,7 @@ function loadCustomerForFamily(task) {
 
     // 피보험자로 가입된 가족 계약은 조회용 미러링 카드로 추가
     if (typeof window.appendMirroredInsurances === 'function') {
-        const curTab = window.familyState ? window.familyState.find(f => f.id === String(custId)) : null;
+        const curTab = (window.familyState && window.familyState.find(f => f.id === String(custId))) || { id: String(custId), label: client["고객명"] || "본인", data: client };
         if (curTab) {
             window.appendMirroredInsurances(curTab);
         }
@@ -8949,6 +8954,25 @@ window.generateInsListHtml = function(client) {
 
                     const contractor = ins['계약자'] || ins['차_계약자'] || '-';
                     const insured = ins['피보험자'] || ins['차_피보험자'] || ins['기본피보험자'] || ins['차_기본피보험자'] || '-';
+                    
+                    const myClientName = String(client['고객명'] || client['이름'] || client['대표자명'] || '').trim();
+                    const cleanNameStr = (s) => String(s || '').replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, '');
+                    const isSameAsClient = cleanNameStr(contractor) === cleanNameStr(myClientName) || contractor === '본인' || contractor === '-';
+                    
+                    let contractorDisplayHtml = contractor;
+                    if (!isSameAsClient && contractor) {
+                        let targetCId = ins.contractorId || ins.sourceCustomerId || '';
+                        if (!targetCId && typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData)) {
+                            const found = globalCustomerData.find(c => cleanNameStr(c['고객명'] || c['이름'] || c['대표자명']) === cleanNameStr(contractor));
+                            if (found) targetCId = String(found['고객번호'] || found['ID'] || '');
+                        }
+                        
+                        if (targetCId) {
+                            contractorDisplayHtml = `${contractor} <button type="button" onclick="event.stopPropagation(); window.navigateToContractor('${targetCId}', '${contractor}')" style="margin-left:6px; padding:2px 8px; font-size:11px; font-weight:700; color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; cursor:pointer;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'"><i class="fa-solid fa-arrow-up-right-from-square"></i> 계약자 관리창으로 이동</button>`;
+                        } else {
+                            contractorDisplayHtml = `${contractor} <span style="color:#64748b; font-size:11px; margin-left:4px; font-weight:normal;">(미등록 외부인)</span>`;
+                        }
+                    }
                     const carNo = ins['차량번호'] || ins['차_차량번호'] || ins['\uCC28\uB7C9\uBC88\uD638'] || '-';
                     const detailUsage = ins['상세용도'] || ins['이륜차용도'] || ins['차_상세용도'] || '-';
                     const respDate = ins['책임개시일'] || ins['\uCC45\uC784\uAC1C\uC2DC\uC77C'] || ins['체결일'] || '-';
@@ -8995,7 +9019,7 @@ window.generateInsListHtml = function(client) {
                     if (isAuto) {
                         gridHtml = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 13px; color: #475569;">' +
                                     '<div><strong>보험사:</strong> ' + comp + '</div>' +
-                                    '<div><strong>계약자:</strong> ' + contractor + '</div>' +
+                                    '<div><strong>계약자:</strong> ' + contractorDisplayHtml + '</div>' +
                                     '<div><strong>피보험자:</strong> ' + insured + '</div>' +
                                     '<div><strong>차량번호:</strong> ' + carNo + '</div>' +
                                     '<div><strong>만기(갱신):</strong> ' + dateStr + '</div>' +
@@ -9004,7 +9028,7 @@ window.generateInsListHtml = function(client) {
                     } else {
                         gridHtml = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; font-size: 13px; color: #475569;">' +
                                     '<div><strong>보험사:</strong> ' + comp + '</div>' +
-                                    '<div><strong>계약자:</strong> ' + contractor + '</div>' +
+                                    '<div><strong>계약자:</strong> ' + contractorDisplayHtml + '</div>' +
                                     '<div><strong>피보험자:</strong> ' + insured + '</div>' +
                                     '<div><strong>만기일:</strong> ' + manGi + '</div>' +
                                     '<div><strong>갱신일:</strong> ' + gaengSin + '</div>' +
@@ -9268,6 +9292,41 @@ window.generateProfileHtml = function(client) {
 
 
 
+
+window.navigateToContractor = function(contractorId, contractorName) {
+    if (!contractorId) {
+        if (typeof showCustomAlert === 'function') {
+            showCustomAlert("알림", "계약자의 고객 식별 정보를 찾을 수 없습니다.");
+        } else {
+            alert("계약자의 고객 식별 정보를 찾을 수 없습니다.");
+        }
+        return;
+    }
+    
+    const targetId = String(contractorId).trim();
+    const cName = contractorName || targetId;
+    
+    if (typeof window.closeProfile === 'function') window.closeProfile();
+    else if (typeof closeProfile === 'function') closeProfile();
+    
+    if (typeof window.closeRegModal === 'function') window.closeRegModal();
+    else if (typeof closeRegModal === 'function') closeRegModal();
+    
+    setTimeout(() => {
+        if (typeof openEditMode === 'function') {
+            openEditMode(targetId, 'detail');
+            setTimeout(() => {
+                if (typeof showStep === 'function') showStep(3);
+                if (typeof switchCategoryTab === 'function') switchCategoryTab(3);
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert("계약자 관리창 이동 완료", `계약자 [${cName}] 고객님의 보험가입내역 화면으로 이동했습니다.\n여기서 해당 계약의 수정 및 관리를 진행하실 수 있습니다.`);
+                }
+            }, 200);
+        } else {
+            alert("고객 관리 모듈(openEditMode)을 찾을 수 없습니다.");
+        }
+    }, 200);
+};
 
   window.openProfile = function(idStr) {
     const modal = document.getElementById("profileModal");

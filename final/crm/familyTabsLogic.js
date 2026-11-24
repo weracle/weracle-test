@@ -310,13 +310,14 @@ window.isClientContractorOfInsurance = function(ins, clientOrTab) {
     const myName = clean(data['고객명'] || data['이름'] || data['대표자명'] || (clientOrTab && clientOrTab.label) || '');
     const myId = String(data['고객번호'] || (clientOrTab && clientOrTab.id) || '').trim();
 
-    let cName = clean(ins['계약자'] || ins['차_계약자'] || '');
-    let cId = String(ins['계약자_id'] || ins['차_계약자_id'] || '').trim();
+    let cName = clean(ins['계약자'] || ins['차_계약자'] || ins.contractorName || '');
+    let cId = String(ins['계약자_id'] || ins['차_계약자_id'] || ins.contractorId || ins.sourceCustomerId || '').trim();
 
     if (!cName || cName === '본인') return true;
     if (cId && myId && cId === myId) return true;
     if (cName && myName && cName === myName) return true;
 
+    // 1. Check familyState
     if (window.familyState && window.familyState.length > 0) {
         const otherContractor = window.familyState.find(f => {
             if (f.id === (clientOrTab && clientOrTab.id)) return false;
@@ -331,6 +332,22 @@ window.isClientContractorOfInsurance = function(ins, clientOrTab) {
         }
     }
 
+    // 2. Check globalCustomerData for registered external contractor
+    if (typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData)) {
+        const registeredExtContractor = globalCustomerData.find(c => {
+            const cid = String(c['고객번호'] || c['ID'] || '').trim();
+            if (cid === myId) return false;
+            const cCustName = clean(c['고객명'] || c['이름'] || c['대표자명'] || '');
+            if (cId && cid && cId === cid) return true;
+            if (cName && cCustName && cName === cCustName) return true;
+            return false;
+        });
+        if (registeredExtContractor) {
+            return false;
+        }
+    }
+
+    // 3. Unregistered outsider -> can and must be edited directly in insured's form!
     return true;
 };
 
@@ -782,118 +799,72 @@ function appendMirroredInsurances(targetTab) {
     
     // Always clear existing mirrored entries first to prevent duplicate stacking
     insArea.querySelectorAll('.mirrored-entry').forEach(el => el.remove());
-    
-    if (!window.familyState || window.familyState.length <= 1) return;
     if (!targetTab) return;
     
     const clean = (s) => String(s || '').replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, '');
-    const myName = clean(targetTab.data['고객명'] || targetTab.data['이름'] || targetTab.label || '');
-    const myId = String(targetTab.data['고객번호'] || targetTab.id || '').trim();
-    const myDisplayName = (targetTab.data && targetTab.data['고객명']) || targetTab.label || '본인';
+    const myName = clean((targetTab.data && (targetTab.data['고객명'] || targetTab.data['이름'])) || targetTab.label || '');
+    const myId = String((targetTab.data && targetTab.data['고객번호']) || targetTab.id || '').trim();
+    const myDisplayName = (targetTab.data && (targetTab.data['고객명'] || targetTab.data['이름'])) || targetTab.label || '본인';
     
     let mirroredCards = [];
     const seenKeys = new Set();
+    const familyIds = new Set();
     
-    window.familyState.forEach(f => {
-        if (f.id === targetTab.id) return;
-        
-        const fDisplayName = (f.data && f.data['고객명']) || f.label || '가족';
-        const fId = String((f.data && f.data['고객번호']) || f.id || '').trim();
-        
-        let candidateList = [];
-        
-        // 1. Gather from f.insHtml if populated
-        if (f.insHtml) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = f.insHtml;
-            const entries = tempDiv.querySelectorAll('.insurance-entry:not(.mirrored-entry)');
-            entries.forEach(entry => {
-                const isCar = !!entry.querySelector('input[name="보험종류"][value="자동차보험"]') || !!entry.querySelector('[id^="ins-car-"]:not([style*="display: none"])');
-                const prefix = isCar ? '차_' : '';
-                const activeType = isCar ? '자동차보험' : '장기보험';
-                
-                const cInp = entry.querySelector('input[name="' + prefix + '계약자"]');
-                const iInp = entry.querySelector('input[name="' + prefix + '피보험자"]');
-                const cIdInp = entry.querySelector('input[name="' + prefix + '계약자_id"]');
-                const iIdInp = entry.querySelector('input[name="' + prefix + '피보험자_id"]');
-                
-                let cN = cInp ? (cInp.getAttribute('value') || cInp.value || '') : '';
-                let iN = iInp ? (iInp.getAttribute('value') || iInp.value || '') : '';
-                let cI = cIdInp ? (cIdInp.getAttribute('value') || cIdInp.value || '') : '';
-                let iI = iIdInp ? (iIdInp.getAttribute('value') || iIdInp.value || '') : '';
-                
-                const cPill = entry.querySelector('.smart-ins-group[data-target$="계약자"] .ins-pill-btn.active');
-                if (cPill) {
-                    if (cPill.dataset.name) cN = cPill.dataset.name;
-                    if (cPill.dataset.id) cI = cPill.dataset.id;
-                }
-                const iPill = entry.querySelector('.smart-ins-group[data-target$="피보험자"] .ins-pill-btn.active');
-                if (iPill) {
-                    if (iPill.dataset.name) iN = iPill.dataset.name;
-                    if (iPill.dataset.id) iI = iPill.dataset.id;
-                }
-                
-                if (!cN || cN === '본인' || cN === '계약자') { cN = fDisplayName; cI = fId; }
-                if (!iN || iN === '본인' || iN === '피보험자') { iN = fDisplayName; iI = fId; }
-                
-                const compEl = entry.querySelector('select[name="' + prefix + '보험사명"], input[name="' + prefix + '보험사명"]');
-                const prodEl = entry.querySelector('input[name="' + prefix + '상품명"]');
-                const premEl = entry.querySelector('input[name="' + prefix + '보험료"]');
-                const payEl = entry.querySelector('select[name="' + prefix + '결제방식"], input[name="' + prefix + '결제방식"]');
-                const startEl = entry.querySelector('input[name="' + prefix + '체결일"], input[name="' + prefix + '책임개시일"]');
-                const endEl = entry.querySelector('input[name="' + prefix + '만기일"]');
-                
-                const company = (compEl ? (compEl.getAttribute('value') || compEl.value || '') : '').trim();
-                const product = (prodEl ? (prodEl.getAttribute('value') || prodEl.value || '') : '').trim();
-                
-                // Skip empty or dummy cards
-                if (!company && !product) return;
-                
-                candidateList.push({
-                    activeType: activeType,
-                    contractorName: cN,
-                    contractorId: cI || fId,
-                    insuredName: iN,
-                    insuredId: iI,
-                    company: company,
-                    product: product,
-                    premium: premEl ? (premEl.getAttribute('value') || premEl.value || '') : '',
-                    paymentMethod: payEl ? (payEl.getAttribute('value') || payEl.value || '') : '',
-                    startDate: startEl ? (startEl.getAttribute('value') || startEl.value || '') : '',
-                    expireDate: endEl ? (endEl.getAttribute('value') || endEl.value || '') : '',
-                    sourceTabId: f.id,
-                    sourceTabName: fDisplayName
-                });
-            });
-        } else {
-            // 2. Only gather from f.data if f.insHtml was not populated yet
-            let dbList = [];
-            if (f.data && f.data['가입내역']) {
-                try {
-                    dbList = typeof f.data['가입내역'] === 'string' ? JSON.parse(f.data['가입내역']) : f.data['가입내역'];
-                } catch(e) {}
-            }
-            if ((!Array.isArray(dbList) || dbList.length === 0) && f.data && Array.isArray(f.data['보험가입리스트'])) {
-                dbList = f.data['보험가입리스트'];
-            }
-            if (Array.isArray(dbList)) {
-                dbList.forEach(item => {
-                    const isCar = (item['보험종류'] === '자동차보험' || !!item['차_보험사명'] || !!item['차_보험사']);
+    // 1. Gather from familyState (Family members)
+    if (window.familyState && Array.isArray(window.familyState)) {
+        window.familyState.forEach(f => {
+            const fCid = String((f.data && f.data['고객번호']) || f.id || '').trim();
+            if (fCid) familyIds.add(fCid);
+            if (f.id === targetTab.id) return;
+            
+            const fDisplayName = (f.data && f.data['고객명']) || f.label || '가족';
+            const fId = String((f.data && f.data['고객번호']) || f.id || '').trim();
+            
+            let candidateList = [];
+            
+            // 1-1. Gather from f.insHtml if populated
+            if (f.insHtml) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = f.insHtml;
+                const entries = tempDiv.querySelectorAll('.insurance-entry:not(.mirrored-entry)');
+                entries.forEach(entry => {
+                    const isCar = !!entry.querySelector('input[name="보험종류"][value="자동차보험"]') || !!entry.querySelector('[id^="ins-car-"]:not([style*="display: none"])');
                     const prefix = isCar ? '차_' : '';
                     const activeType = isCar ? '자동차보험' : '장기보험';
                     
-                    let cN = item['계약자'] || item['차_계약자'] || '';
-                    let iN = item['피보험자'] || item['차_피보험자'] || item['기본피보험자'] || '';
-                    let cI = item['계약자_id'] || item['차_계약자_id'] || '';
-                    let iI = item['피보험자_id'] || item['차_피보험자_id'] || '';
+                    const cInp = entry.querySelector('input[name="' + prefix + '계약자"]');
+                    const iInp = entry.querySelector('input[name="' + prefix + '피보험자"]');
+                    const cIdInp = entry.querySelector('input[name="' + prefix + '계약자_id"]');
+                    const iIdInp = entry.querySelector('input[name="' + prefix + '피보험자_id"]');
+                    
+                    let cN = cInp ? (cInp.getAttribute('value') || cInp.value || '') : '';
+                    let iN = iInp ? (iInp.getAttribute('value') || iInp.value || '') : '';
+                    let cI = cIdInp ? (cIdInp.getAttribute('value') || cIdInp.value || '') : '';
+                    let iI = iIdInp ? (iIdInp.getAttribute('value') || iIdInp.value || '') : '';
+                    
+                    const cPill = entry.querySelector('.smart-ins-group[data-target$="계약자"] .ins-pill-btn.active');
+                    if (cPill) {
+                        if (cPill.dataset.name) cN = cPill.dataset.name;
+                        if (cPill.dataset.id) cI = cPill.dataset.id;
+                    }
+                    const iPill = entry.querySelector('.smart-ins-group[data-target$="피보험자"] .ins-pill-btn.active');
+                    if (iPill) {
+                        if (iPill.dataset.name) iN = iPill.dataset.name;
+                        if (iPill.dataset.id) iI = iPill.dataset.id;
+                    }
                     
                     if (!cN || cN === '본인' || cN === '계약자') { cN = fDisplayName; cI = fId; }
                     if (!iN || iN === '본인' || iN === '피보험자') { iN = fDisplayName; iI = fId; }
                     
-                    const company = (item[prefix + '보험사명'] || item[prefix + '보험사'] || item['보험사명'] || item['company'] || '').trim();
-                    const product = (item[prefix + '상품명'] || item['상품명'] || item['product'] || '').trim();
+                    const compEl = entry.querySelector('select[name="' + prefix + '보험사명"], input[name="' + prefix + '보험사명"]');
+                    const prodEl = entry.querySelector('input[name="' + prefix + '상품명"]');
+                    const premEl = entry.querySelector('input[name="' + prefix + '보험료"]');
+                    const payEl = entry.querySelector('select[name="' + prefix + '결제방식"], input[name="' + prefix + '결제방식"]');
+                    const startEl = entry.querySelector('input[name="' + prefix + '체결일"], input[name="' + prefix + '책임개시일"]');
+                    const endEl = entry.querySelector('input[name="' + prefix + '만기일"]');
                     
-                    // Skip empty or dummy cards
+                    const company = (compEl ? (compEl.getAttribute('value') || compEl.value || '') : '').trim();
+                    const product = (prodEl ? (prodEl.getAttribute('value') || prodEl.value || '') : '').trim();
                     if (!company && !product) return;
                     
                     candidateList.push({
@@ -904,34 +875,154 @@ function appendMirroredInsurances(targetTab) {
                         insuredId: iI,
                         company: company,
                         product: product,
-                        premium: item[prefix + '보험료'] || item['보험료'] || item['premium'] || '',
-                        paymentMethod: item[prefix + '결제방식'] || item['결제방식'] || item['paymentMethod'] || '',
-                        startDate: item[prefix + '체결일'] || item[prefix + '책임개시일'] || item['체결일'] || item['date'] || '',
-                        expireDate: item[prefix + '만기일'] || item['만기일'] || item['expireDate'] || '',
+                        premium: premEl ? (premEl.getAttribute('value') || premEl.value || '') : '',
+                        paymentMethod: payEl ? (payEl.getAttribute('value') || payEl.value || '') : '',
+                        startDate: startEl ? (startEl.getAttribute('value') || startEl.value || '') : '',
+                        expireDate: endEl ? (endEl.getAttribute('value') || endEl.value || '') : '',
                         sourceTabId: f.id,
-                        sourceTabName: fDisplayName
+                        sourceTabName: fDisplayName,
+                        isExternal: false
                     });
                 });
-            }
-        }
-        
-        candidateList.forEach(c => {
-            const cleanC = clean(c.contractorName);
-            const cleanI = clean(c.insuredName);
-            
-            // Strictly match targetTab as insured, and ensure contractor is NOT targetTab
-            const isInsured = (cleanI === myName || (c.insuredId && myId && String(c.insuredId).trim() === myId));
-            const isContractor = (cleanC === myName || (c.contractorId && myId && String(c.contractorId).trim() === myId));
-            
-            if (isInsured && !isContractor) {
-                const uniqueKey = c.company + '_' + c.product + '_' + c.startDate + '_' + c.contractorName;
-                if (!seenKeys.has(uniqueKey)) {
-                    seenKeys.add(uniqueKey);
-                    mirroredCards.push(c);
+            } else {
+                // 1-2. Gather from f.data
+                let dbList = [];
+                if (f.data && f.data['가입내역']) {
+                    try {
+                        dbList = typeof f.data['가입내역'] === 'string' ? JSON.parse(f.data['가입내역']) : f.data['가입내역'];
+                    } catch(e) {}
+                }
+                if ((!Array.isArray(dbList) || dbList.length === 0) && f.data && Array.isArray(f.data['보험가입리스트'])) {
+                    dbList = f.data['보험가입리스트'];
+                }
+                if (Array.isArray(dbList)) {
+                    dbList.forEach(item => {
+                        const isCar = (item['보험종류'] === '자동차보험' || !!item['차_보험사명'] || !!item['차_보험사']);
+                        const prefix = isCar ? '차_' : '';
+                        const activeType = isCar ? '자동차보험' : '장기보험';
+                        
+                        let cN = item['계약자'] || item['차_계약자'] || '';
+                        let iN = item['피보험자'] || item['차_피보험자'] || item['기본피보험자'] || '';
+                        let cI = item['계약자_id'] || item['차_계약자_id'] || '';
+                        let iI = item['피보험자_id'] || item['차_피보험자_id'] || '';
+                        
+                        if (!cN || cN === '본인' || cN === '계약자') { cN = fDisplayName; cI = fId; }
+                        if (!iN || iN === '본인' || iN === '피보험자') { iN = fDisplayName; iI = fId; }
+                        
+                        const company = (item[prefix + '보험사명'] || item[prefix + '보험사'] || item['보험사명'] || item['company'] || '').trim();
+                        const product = (item[prefix + '상품명'] || item['상품명'] || item['product'] || '').trim();
+                        if (!company && !product) return;
+                        
+                        candidateList.push({
+                            activeType: activeType,
+                            contractorName: cN,
+                            contractorId: cI || fId,
+                            insuredName: iN,
+                            insuredId: iI,
+                            company: company,
+                            product: product,
+                            premium: item[prefix + '보험료'] || item['보험료'] || item['premium'] || '',
+                            paymentMethod: item[prefix + '결제방식'] || item['결제방식'] || item['paymentMethod'] || '',
+                            startDate: item[prefix + '체결일'] || item[prefix + '책임개시일'] || item['체결일'] || item['date'] || '',
+                            expireDate: item[prefix + '만기일'] || item['만기일'] || item['expireDate'] || '',
+                            sourceTabId: f.id,
+                            sourceTabName: fDisplayName,
+                            isExternal: false
+                        });
+                    });
                 }
             }
+            
+            candidateList.forEach(c => {
+                const cleanC = clean(c.contractorName);
+                const cleanI = clean(c.insuredName);
+                const isInsured = (cleanI === myName || (c.insuredId && myId && String(c.insuredId).trim() === myId));
+                const isContractor = (cleanC === myName || (c.contractorId && myId && String(c.contractorId).trim() === myId));
+                
+                if (isInsured && !isContractor) {
+                    const uniqueKey = c.company + '_' + c.product + '_' + c.startDate + '_' + c.contractorName;
+                    if (!seenKeys.has(uniqueKey)) {
+                        seenKeys.add(uniqueKey);
+                        mirroredCards.push(c);
+                    }
+                }
+            });
         });
-    });
+    }
+    
+    // 2. Gather from globalCustomerData for registered external contractors
+    if (typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData)) {
+        globalCustomerData.forEach(extC => {
+            const extId = String(extC['고객번호'] || extC['ID'] || '').trim();
+            if (!extId || extId === myId || familyIds.has(extId)) return;
+            
+            const extName = clean(extC['고객명'] || extC['이름'] || extC['대표자명'] || '');
+            const extDisplayName = extC['고객명'] || extC['이름'] || extC['대표자명'] || '외부고객';
+            
+            let extInsList = [];
+            if (typeof getGlobalInsuranceList === 'function') {
+                extInsList = getGlobalInsuranceList(extC, false);
+            }
+            if (!extInsList || extInsList.length === 0) {
+                if (extC['가입내역']) {
+                    try {
+                        extInsList = typeof extC['가입내역'] === 'string' ? JSON.parse(extC['가입내역']) : extC['가입내역'];
+                    } catch(e) {}
+                }
+                if ((!Array.isArray(extInsList) || extInsList.length === 0) && Array.isArray(extC['보험가입리스트'])) {
+                    extInsList = extC['보험가입리스트'];
+                }
+            }
+            
+            if (Array.isArray(extInsList)) {
+                extInsList.forEach(item => {
+                    const isCar = (item['보험종류'] === '자동차보험' || !!item['차_보험사명'] || !!item['차_보험사']);
+                    const prefix = isCar ? '차_' : '';
+                    const activeType = isCar ? '자동차보험' : '장기보험';
+                    
+                    let cN = item['계약자'] || item['차_계약자'] || '';
+                    let iN = item['피보험자'] || item['차_피보험자'] || item['기본피보험자'] || '';
+                    let cI = item['계약자_id'] || item['차_계약자_id'] || item.contractorId || extId;
+                    let iI = item['피보험자_id'] || item['차_피보험자_id'] || '';
+                    
+                    if (!cN || cN === '본인' || cN === '계약자') { cN = extDisplayName; cI = extId; }
+                    
+                    const cleanC = clean(cN);
+                    const cleanI = clean(iN);
+                    
+                    const isInsured = (cleanI === myName || (iI && myId && String(iI).trim() === myId));
+                    const isContractor = (cleanC === myName || (cI && myId && String(cI).trim() === myId));
+                    
+                    if (isInsured && !isContractor) {
+                        const company = (item[prefix + '보험사명'] || item[prefix + '보험사'] || item['보험사명'] || item['company'] || '').trim();
+                        const product = (item[prefix + '상품명'] || item['상품명'] || item['product'] || '').trim();
+                        if (!company && !product) return;
+                        
+                        const uniqueKey = company + '_' + product + '_' + (item[prefix + '체결일'] || item['체결일'] || '') + '_' + cN;
+                        if (!seenKeys.has(uniqueKey)) {
+                            seenKeys.add(uniqueKey);
+                            mirroredCards.push({
+                                activeType: activeType,
+                                contractorName: cN,
+                                contractorId: cI || extId,
+                                insuredName: iN || myDisplayName,
+                                insuredId: iI || myId,
+                                company: company,
+                                product: product,
+                                premium: item[prefix + '보험료'] || item['보험료'] || item['premium'] || '',
+                                paymentMethod: item[prefix + '결제방식'] || item['결제방식'] || item['paymentMethod'] || '',
+                                startDate: item[prefix + '체결일'] || item[prefix + '책임개시일'] || item['체결일'] || item['date'] || '',
+                                expireDate: item[prefix + '만기일'] || item['만기일'] || item['expireDate'] || '',
+                                sourceTabId: '',
+                                sourceTabName: extDisplayName,
+                                isExternal: true
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    }
     
     if (mirroredCards.length === 0) return;
     
@@ -943,13 +1034,30 @@ function appendMirroredInsurances(targetTab) {
             premStr = num ? num.toLocaleString() + '원' : c.premium;
         }
         
-        // Target Step 3: 보험 가입 내역
-        const gotoBtn = c.sourceTabId ? ('<button type="button" onclick="switchFamilyTab(\'' + c.sourceTabId + '\'); if(typeof switchCategoryTab===\'function\') switchCategoryTab(3);" style="background:#ffffff; color:#2563eb; border:1px solid #bfdbfe; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'#ffffff\'"><i class="fa-solid fa-arrow-up-right-from-square"></i> 계약자(' + c.sourceTabName + ') 탭에서 수정하기</button>') : '';
+        let gotoBtn = '';
+        let badgeHtml = '';
+        let noticeHtml = '';
+        
+        if (c.isExternal) {
+            gotoBtn = '<button type="button" onclick="if(typeof window.navigateToContractor===\'function\') window.navigateToContractor(\'' + c.contractorId + '\', \'' + c.contractorName + '\');" style="background:#ffffff; color:#b45309; border:1px solid #fde68a; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.background=\'#fef3c7\'" onmouseout="this.style.background=\'#ffffff\'"><i class="fa-solid fa-arrow-up-right-from-square"></i> 계약자(' + c.contractorName + ') 관리창에서 수정하기</button>';
+            badgeHtml = '<span style="background:#fef3c7; color:#92400e; font-weight:800; font-size:12px; padding:4px 10px; border-radius:12px; border:1px solid #fde68a;"><i class="fa-solid fa-user-tag" style="margin-right:4px;"></i>외부 계약자 가입 보장 (피보험자: ' + myDisplayName + ')</span>';
+            noticeHtml = '<div style="margin-top:10px; padding:8px 12px; background:#fffbeb; border-radius:6px; font-size:12px; color:#92400e; display:flex; align-items:center; gap:6px; border:1px solid #fef3c7;">' +
+                '<i class="fa-solid fa-circle-info" style="color:#f59e0b;"></i>' +
+                '<span>이 계약의 계약자는 별도로 관리되는 외부 등록 고객 <strong>' + c.contractorName + '</strong>님(고객번호: ' + c.contractorId + ')입니다. 계약 내용 변경/수정은 계약자 관리창에서만 안전하게 저장됩니다.</span>' +
+            '</div>';
+        } else {
+            gotoBtn = c.sourceTabId ? ('<button type="button" onclick="switchFamilyTab(\'' + c.sourceTabId + '\'); if(typeof switchCategoryTab===\'function\') switchCategoryTab(3);" style="background:#ffffff; color:#2563eb; border:1px solid #bfdbfe; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'#ffffff\'"><i class="fa-solid fa-arrow-up-right-from-square"></i> 계약자(' + c.sourceTabName + ') 탭에서 수정하기</button>') : '';
+            badgeHtml = '<span style="background:#e0e7ff; color:#3730a3; font-weight:800; font-size:12px; padding:4px 10px; border-radius:12px; border:1px solid #c7d2fe;"><i class="fa-solid fa-shield-heart" style="margin-right:4px;"></i>가족 계약자 가입 보장 (피보험자: ' + myDisplayName + ')</span>';
+            noticeHtml = '<div style="margin-top:10px; padding:8px 12px; background:#eff6ff; border-radius:6px; font-size:12px; color:#1e40af; display:flex; align-items:center; gap:6px;">' +
+                '<i class="fa-solid fa-circle-info" style="color:#3b82f6;"></i>' +
+                '<span>이 계약의 계약자는 <strong>' + c.contractorName + '</strong>님입니다. 계약 내용 변경, 수정, 삭제는 계약자 탭에서만 가능합니다.</span>' +
+            '</div>';
+        }
         
         html += '<div class="form-section-card insurance-entry mirrored-entry" style="background:#f8fafc; border:1.5px dashed #94a3b8; border-radius:12px; padding:18px; margin-bottom:16px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">' +
             '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">' +
                 '<div style="display:flex; align-items:center; gap:8px;">' +
-                    '<span style="background:#e0e7ff; color:#3730a3; font-weight:800; font-size:12px; padding:4px 10px; border-radius:12px; border:1px solid #c7d2fe;"><i class="fa-solid fa-shield-heart" style="margin-right:4px;"></i>계약자 가입 보장 (피보험자: ' + myDisplayName + ')</span>' +
+                    badgeHtml +
                     '<span style="font-size:13px; font-weight:700; color:#475569;">' + c.activeType + '</span>' +
                 '</div>' +
                 '<div>' + gotoBtn + '</div>' +
@@ -976,10 +1084,7 @@ function appendMirroredInsurances(targetTab) {
                     '<span style="font-weight:600; color:#334155;">' + (c.startDate || '-') + ' ~ ' + (c.expireDate || '-') + '</span>' +
                 '</div>' +
             '</div>' +
-            '<div style="margin-top:10px; padding:8px 12px; background:#eff6ff; border-radius:6px; font-size:12px; color:#1e40af; display:flex; align-items:center; gap:6px;">' +
-                '<i class="fa-solid fa-circle-info" style="color:#3b82f6;"></i>' +
-                '<span>이 계약의 계약자는 <strong>' + c.contractorName + '</strong>님입니다. 계약 내용 변경, 수정, 삭제는 계약자 탭에서만 가능합니다.</span>' +
-            '</div>' +
+            noticeHtml +
         '</div>';
     });
     

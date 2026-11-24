@@ -4760,6 +4760,7 @@ profile: window.currentProfile
 }
 
 if (iframe.contentWindow.location.hostname === window.location.hostname || window.location.hostname === '') {
+let lastCalculatedHeight = 0;
 const resizeIframe = () => {
 try {
 const isSubpage = document.querySelector('.main-workspace')?.classList.contains('subpage-viewing') ||
@@ -4771,14 +4772,41 @@ if (isSubpage) {
 const body = iframe.contentWindow.document.body;
 const html = iframe.contentWindow.document.documentElement;
 if (body && html) {
-const height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
-if (height > 100) iframe.style.height = height + 'px';
+    const height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight);
+    if (height > 100 && Math.abs(lastCalculatedHeight - height) > 5) {
+        lastCalculatedHeight = height;
+        iframe.style.height = height + 'px';
+    }
 }
 } catch (e) {}
 };
+window.triggerIframeResize = resizeIframe;
+
+// 1. 로드 후 1회성 보정 (무한 타이머 완전 제거)
 resizeIframe();
-if (window.iframeResizeInterval) clearInterval(window.iframeResizeInterval);
-window.iframeResizeInterval = setInterval(resizeIframe, 500);
+setTimeout(resizeIframe, 300);
+setTimeout(resizeIframe, 1000);
+
+// 2. 기존 무한 타이머 및 옵저버 해제 (CPU 낭비 및 화면 멈춤 차단)
+if (window.iframeResizeInterval) {
+    clearInterval(window.iframeResizeInterval);
+    window.iframeResizeInterval = null;
+}
+if (window.iframeResizeObserver) {
+    try { window.iframeResizeObserver.disconnect(); } catch (e) {}
+    window.iframeResizeObserver = null;
+}
+
+// 3. 브라우저 네이티브 ResizeObserver: 실제 DOM 크기 변경 시에만 비동기로 1회 감지
+try {
+    const docBody = iframe.contentWindow.document.body;
+    if (window.ResizeObserver && docBody) {
+        window.iframeResizeObserver = new ResizeObserver(() => {
+            resizeIframe();
+        });
+        window.iframeResizeObserver.observe(docBody);
+    }
+} catch (e) {}
 }
 } catch (e) {
 console.warn("Iframe same-origin auto-resize skipped (Cross-Origin detected):", e);
@@ -5411,6 +5439,7 @@ function updateProfileUI(user, profile) {
         }
     };
     syncGoogleStatusTick();
+    if (window.googleTimerInterval) clearInterval(window.googleTimerInterval);
     window.googleTimerInterval = setInterval(syncGoogleStatusTick, 1000);
 
 // 모바일 메뉴 시트 로그인 배너 동기화
@@ -6137,6 +6166,9 @@ window.openDynamicList = function(type, val) {
 
         const contentArea = document.querySelector('.pb-content-area');
         if (contentArea) contentArea.classList.remove('subpage-viewing');
+        if (typeof window.triggerIframeResize === 'function') {
+            setTimeout(window.triggerIframeResize, 50);
+        }
 
         const pbTitle = document.getElementById('pbHeaderTitle');
         if (pbTitle) pbTitle.innerText = '대시보드';

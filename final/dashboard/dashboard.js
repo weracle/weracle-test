@@ -1062,6 +1062,9 @@ function renderV3Calendar() {
       grid.appendChild(cell);
     });
   }
+  if (typeof sendResize === 'function' && window.innerWidth <= 900) {
+    sendResize();
+  }
 }
 
 function formatYMD(d) {
@@ -2054,7 +2057,6 @@ window.onload = function() {
   initDashboard();
 };
 if (window.innerWidth <= 900) {
-  setInterval(sendResize, 600);
   setTimeout(sendResize, 150);
 }
 

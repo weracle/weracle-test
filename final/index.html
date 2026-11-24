@@ -1349,12 +1349,25 @@ overflow-y: auto;
 padding: 24px;
 position: relative;
 }
-.pb-content-area.iframe-active { padding: 0 !important; display: flex !important; flex-direction: column !important; }
-#mainFrame {
-width: 100%;
-height: 100%;
-border: none;
-background: transparent;
+.pb-content-area.iframe-active,
+.main-workspace.iframe-active {
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+}
+#mainFrame,
+.iframe-active #mainFrame {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    max-height: 100% !important;
+    flex: 1 !important;
+    border: none !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
 }
 
 #w-sidebar-profile-box { margin: 0 !important; }
@@ -4660,12 +4673,17 @@ if (!iframe) return;
 // 1. 크로스도메인(Vercel 등) 연동을 위한 postMessage 수신 처리
 window.addEventListener('message', (event) => {
 if (event.data && event.data.type === 'CRM_RESIZE') {
-const newHeight = Math.max(800, parseInt(event.data.height));
-const currentHeight = parseInt(iframe.style.height) || 0;
-// 무한 팽창 루프 방지: 높이 차이가 10px 이상 날 때만 반영
-if (Math.abs(currentHeight - newHeight) > 10) {
-iframe.style.height = newHeight + 'px';
-}
+    const isIframeActive = document.querySelector('.main-workspace')?.classList.contains('iframe-active') ||
+                           document.querySelector('.pb-content-area')?.classList.contains('iframe-active');
+    if (isIframeActive) {
+        iframe.style.height = '';
+        return;
+    }
+    const newHeight = Math.max(800, parseInt(event.data.height));
+    const currentHeight = parseInt(iframe.style.height) || 0;
+    if (Math.abs(currentHeight - newHeight) > 10) {
+        iframe.style.height = newHeight + 'px';
+    }
 }
 // 자식 iframe(CRM)에서 세션 요청 신호가 왔을 때 즉시 전송
 else if (event.data && event.data.type === 'CRM_TOKEN_UPDATED') {
@@ -4730,6 +4748,12 @@ profile: window.currentProfile
 if (iframe.contentWindow.location.hostname === window.location.hostname || window.location.hostname === '') {
 const resizeIframe = () => {
 try {
+const isIframeActive = document.querySelector('.main-workspace')?.classList.contains('iframe-active') ||
+                       document.querySelector('.pb-content-area')?.classList.contains('iframe-active');
+if (isIframeActive) {
+    if (iframe.style.height) iframe.style.height = '';
+    return;
+}
 const body = iframe.contentWindow.document.body;
 const html = iframe.contentWindow.document.documentElement;
 if (body && html) {
@@ -5935,6 +5959,7 @@ window.openDynamicList = function(type, val) {
         const frame = document.getElementById('mainFrame');
         if (frame) {
             frame.style.display = 'block';
+            frame.style.height = ''; // Clear legacy inline height
             frame.src = url;
         }
 

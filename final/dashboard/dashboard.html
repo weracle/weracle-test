@@ -219,6 +219,10 @@
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="14" height="14">
             <span id="googleStatusLabel">구글 캘린더 연동하기</span>
           </button>
+          <!-- 고객 일정 캘린더 연동 버튼 -->
+          <button type="button" id="btnSyncDashboardEvents" class="cal-sync-export-btn" onclick="openDashboardCalendarSyncModal()" title="대시보드 필터의 고객 일정(생일, 상령일, 만기, 결제일)을 구글/스마트폰 캘린더로 연동합니다">
+            <i class="fa-solid fa-cloud-arrow-up"></i> 캘린더 알림 연동
+          </button>
           <!-- 일정 추가 버튼 -->
           <button type="button" class="btn-add-schedule" onclick="openScheduleModal()">
             <i class="fa-solid fa-plus"></i> 일정 추가
@@ -552,7 +556,130 @@
   </div>
 </div>
 
+<!-- ==========================================
+     모달 5: 📅 대시보드 고객 일정 캘린더 연동 모달
+     ========================================== -->
+<div id="dashboardSyncModal" class="modal-overlay" style="display:none; z-index:100050;">
+  <div class="modal-content-card" style="max-width:520px; font-family:'Pretendard', sans-serif;">
+    <div class="modal-card-header" style="background:#0f172a; color:#ffffff; border-radius:12px 12px 0 0; padding:14px 20px;">
+      <div style="display:flex; align-items:center; gap:9px;">
+        <div style="width:32px; height:32px; border-radius:8px; background:rgba(16,185,129,0.2); color:#34d399; display:flex; align-items:center; justify-content:center; font-size:16px;">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <div>
+          <h3 style="margin:0; font-size:15px; font-weight:800; color:#f8fafc;">대시보드 일정 캘린더 연동</h3>
+          <div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">[Weracle CRM 고객알림] 전용 캘린더로 안전하게 분리 등록됩니다.</div>
+        </div>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="closeDashboardCalendarSyncModal()" style="color:#cbd5e1;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="modal-card-body" style="padding:18px 20px; display:flex; flex-direction:column; gap:14px; background:#f8fafc; max-height:75vh; overflow-y:auto;">
+      
+      <!-- 대상 연월 선택 -->
+      <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:11px 15px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12.5px; font-weight:700; color:#334155;">대상 월 선택</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" onclick="changeDashboardSyncMonth(-1)" style="padding:3px 8px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:5px; font-size:11px; cursor:pointer;"><i class="fa-solid fa-chevron-left"></i></button>
+          <span id="dSyncCurrentMonthLabel" style="font-size:13.5px; font-weight:800; color:#0f172a; min-width:90px; text-align:center;">2026년 11월</span>
+          <button type="button" onclick="changeDashboardSyncMonth(1)" style="padding:3px 8px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:5px; font-size:11px; cursor:pointer;"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+
+      <!-- 동기화할 카테고리 체크박스 선택 (대시보드 필터와 1:1 매칭) -->
+      <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:13px 15px; display:flex; flex-direction:column; gap:9px;">
+        <div style="font-size:12px; font-weight:800; color:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+          <span>대시보드 필터 항목 선택</span>
+          <span style="font-size:11px; color:#64748b; font-weight:500;">총 <strong id="dSyncTotalCountBadge" style="color:#2563eb;">0</strong>건</span>
+        </div>
+
+        <!-- 1. 생일 -->
+        <label style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="dSyncCheckBirth" checked onchange="toggleDashboardSyncCategory('bday', this.checked)" style="width:15px; height:15px; accent-color:#d97706; cursor:pointer;">
+            <div>
+              <span style="font-size:12.5px; font-weight:800; color:#92400e;">🎂 고객 생일</span>
+              <div style="font-size:10.5px; color:#b45309;">당일 오전 9시 축하 메시지 리마인드 알림</div>
+            </div>
+          </div>
+          <span id="dSyncCountBirth" style="background:#ffffff; color:#b45309; font-weight:800; font-size:11px; padding:2px 7px; border-radius:10px; border:1px solid #fde68a;">0명</span>
+        </label>
+
+        <!-- 2. 상령일 -->
+        <label style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="dSyncCheckSang" checked onchange="toggleDashboardSyncCategory('sang', this.checked)" style="width:15px; height:15px; accent-color:#7c3aed; cursor:pointer;">
+            <div>
+              <span style="font-size:12.5px; font-weight:800; color:#6d28d9;">📈 상령일 (보험나이 인상)</span>
+              <div style="font-size:10.5px; color:#7c3aed;">보험료 인상 7일 전, 3일 전, 당일 알림</div>
+            </div>
+          </div>
+          <span id="dSyncCountSang" style="background:#ffffff; color:#6d28d9; font-weight:800; font-size:11px; padding:2px 7px; border-radius:10px; border:1px solid #ddd6fe;">0명</span>
+        </label>
+
+        <!-- 3. 만기/갱신 -->
+        <label style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="dSyncCheckExpiry" checked onchange="toggleDashboardSyncCategory('expiry', this.checked)" style="width:15px; height:15px; accent-color:#2563eb; cursor:pointer;">
+            <div>
+              <span style="font-size:12.5px; font-weight:800; color:#1e40af;">📑 만기·갱신</span>
+              <div style="font-size:10.5px; color:#2563eb;">만기 30일 전, 14일 전, 3일 전 갱신 리마인드 알림</div>
+            </div>
+          </div>
+          <span id="dSyncCountExpiry" style="background:#ffffff; color:#1e40af; font-weight:800; font-size:11px; padding:2px 7px; border-radius:10px; border:1px solid #bfdbfe;">0건</span>
+        </label>
+
+        <!-- 4. 결제일 -->
+        <label style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="dSyncCheckPay" checked onchange="toggleDashboardSyncCategory('pay', this.checked)" style="width:15px; height:15px; accent-color:#16a34a; cursor:pointer;">
+            <div>
+              <span style="font-size:12.5px; font-weight:800; color:#15803d;">💳 보험 결제일</span>
+              <div style="font-size:10.5px; color:#16a34a;">출금 1일 전, 당일 오전 출금 확인 알림</div>
+            </div>
+          </div>
+          <span id="dSyncCountPay" style="background:#ffffff; color:#15803d; font-weight:800; font-size:11px; padding:2px 7px; border-radius:10px; border:1px solid #bbf7d0;">0건</span>
+        </label>
+      </div>
+
+      <!-- 캘린더 분리 안내 팁 -->
+      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:9px 12px; font-size:11px; color:#1e40af; line-height:1.5; display:flex; gap:7px;">
+        <i class="fa-solid fa-circle-info" style="color:#2563eb; font-size:13px; margin-top:2px;"></i>
+        <div>
+          <strong>체크 하나로 켜고 끄기:</strong> 구글/삼성/아이폰 캘린더 앱 목록에서 <code>[Weracle CRM 고객알림]</code> 체크박스를 풀면 언제든 개인 일정만 볼 수 있고, 다시 체크하면 고객 일정이 즉시 나타납니다.
+        </div>
+      </div>
+
+      <!-- 진행 상태 프로그레스 바 -->
+      <div id="dSyncProgressContainer" style="display:none; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px;">
+        <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; color:#0f172a; margin-bottom:5px;">
+          <span id="dSyncProgressStatusText">동기화 준비 중...</span>
+          <span id="dSyncProgressPercent">0%</span>
+        </div>
+        <div style="height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden;">
+          <div id="dSyncProgressBar" style="width:0%; height:100%; background:#10b981; transition:width 0.2s;"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 풋터 액션 버튼들 -->
+    <div class="modal-card-footer" style="padding:12px 18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <button type="button" onclick="downloadDashboardIcsNow()" class="modal-btn secondary" style="font-size:11.5px; padding:7px 12px;" title="네이버/삼성/애플 캘린더용 파일 다운로드">
+        <i class="fa-solid fa-download"></i> .ics 파일 내보내기
+      </button>
+
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="modal-btn secondary" onclick="closeDashboardCalendarSyncModal()" style="font-size:12px; padding:7px 14px;">닫기</button>
+        <button type="button" id="btnExecuteDashboardSync" class="modal-btn primary" onclick="executeDashboardCalendarSync()" style="background:linear-gradient(135deg, #10b981, #059669); border:none; font-size:12px; padding:7px 16px;">
+          <i class="fa-solid fa-cloud-arrow-up"></i> 구글 캘린더로 즉시 동기화
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 모듈화된 대시보드 스크립트 -->
-<script src="dashboard.js?v=20261116_1428"></script>
+<script src="dashboard.js?v=20261124_cal_v1"></script>
 </body>
 </html>

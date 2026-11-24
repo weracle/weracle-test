@@ -104,6 +104,7 @@ let checkDataInterval = null;
 window.gToken = window.gToken || 
   (parentProfile && parentProfile.google_access_token) || 
   localStorage.getItem('google_access_token') || 
+  localStorage.getItem('g_access_token') || 
   '';
 
 // ==========================================
@@ -2251,12 +2252,17 @@ window.addEventListener('click', (e) => {
   if (e.target === dayModal) {
     closeDayDetailModal();
   }
+  const dSyncModal = document.getElementById('dashboardSyncModal');
+  if (e.target === dSyncModal) {
+    closeDashboardCalendarSyncModal();
+  }
 });
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeInsurerContactsModal();
     closeDayDetailModal();
+    closeDashboardCalendarSyncModal();
   }
 });
 
@@ -2268,3 +2274,365 @@ window.closeDayDetailModal = closeDayDetailModal;
 window.setContactTab = setContactTab;
 window.filterContacts = filterContacts;
 window.copyContactNumber = copyContactNumber;
+
+// ==========================================
+// 7. 대시보드 고객 일정 캘린더 연동 엔진 (crmEventsList -> Google Calendar / .ics)
+// ==========================================
+const D_CALENDAR_NAME = 'Weracle CRM 고객알림';
+const D_CALENDAR_DESC = '대시보드 고객 생일, 상령일, 만기/갱신, 보험 결제일 알림 전용 캘린더입니다. (체크 해제 시 언제든 숨길 수 있습니다)';
+
+let dSyncState = {
+  year: new Date().getFullYear(),
+  month: new Date().getMonth() + 1,
+  include: {
+    bday: true,
+    sang: true,
+    expiry: true,
+    pay: true
+  },
+  isSyncing: false
+};
+
+function getDashboardFilteredEvents() {
+  if (!Array.isArray(crmEventsList) || crmEventsList.length === 0) return [];
+  const targetYear = dSyncState.year;
+  const targetMonthStr = String(dSyncState.month).padStart(2, '0');
+  const targetPrefix = `${targetYear}-${targetMonthStr}`;
+
+  return crmEventsList.filter(ev => {
+    if (!ev || !ev.fullDate || !ev.fullDate.startsWith(targetPrefix)) return false;
+    if (ev.type && !dSyncState.include[ev.type]) return false;
+    return true;
+  });
+}
+
+function updateDashboardSyncModalCounts() {
+  const targetYear = dSyncState.year;
+  const targetMonthStr = String(dSyncState.month).padStart(2, '0');
+  const targetPrefix = `${targetYear}-${targetMonthStr}`;
+
+  const monthEvents = (crmEventsList || []).filter(ev => ev && ev.fullDate && ev.fullDate.startsWith(targetPrefix));
+  const bdayCount = monthEvents.filter(ev => ev.type === 'bday').length;
+  const sangCount = monthEvents.filter(ev => ev.type === 'sang').length;
+  const expiryCount = monthEvents.filter(ev => ev.type === 'expiry').length;
+  const payCount = monthEvents.filter(ev => ev.type === 'pay').length;
+
+  const activeEvents = getDashboardFilteredEvents();
+
+  const labelEl = document.getElementById('dSyncCurrentMonthLabel');
+  if (labelEl) labelEl.innerText = `${targetYear}년 ${dSyncState.month}월`;
+
+  const bdayEl = document.getElementById('dSyncCountBirth');
+  const sangEl = document.getElementById('dSyncCountSang');
+  const expEl = document.getElementById('dSyncCountExpiry');
+  const payEl = document.getElementById('dSyncCountPay');
+  const totalEl = document.getElementById('dSyncTotalCountBadge');
+
+  if (bdayEl) bdayEl.innerText = `${bdayCount}명`;
+  if (sangEl) sangEl.innerText = `${sangCount}명`;
+  if (expEl) expEl.innerText = `${expiryCount}건`;
+  if (payEl) payEl.innerText = `${payCount}건`;
+  if (totalEl) totalEl.innerText = `${activeEvents.length}`;
+}
+
+function openDashboardCalendarSyncModal() {
+  if (typeof currentCalDate !== 'undefined' && currentCalDate instanceof Date) {
+    dSyncState.year = currentCalDate.getFullYear();
+    dSyncState.month = currentCalDate.getMonth() + 1;
+  } else {
+    dSyncState.year = new Date().getFullYear();
+    dSyncState.month = new Date().getMonth() + 1;
+  }
+
+  dSyncState.include.bday = true;
+  dSyncState.include.sang = true;
+  dSyncState.include.expiry = true;
+  dSyncState.include.pay = true;
+
+  const cbBday = document.getElementById('dSyncCheckBirth');
+  const cbSang = document.getElementById('dSyncCheckSang');
+  const cbExp = document.getElementById('dSyncCheckExpiry');
+  const cbPay = document.getElementById('dSyncCheckPay');
+  if (cbBday) cbBday.checked = true;
+  if (cbSang) cbSang.checked = true;
+  if (cbExp) cbExp.checked = true;
+  if (cbPay) cbPay.checked = true;
+
+  updateDashboardSyncModalCounts();
+
+  const modal = document.getElementById('dashboardSyncModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeDashboardCalendarSyncModal() {
+  const modal = document.getElementById('dashboardSyncModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function changeDashboardSyncMonth(delta) {
+  let m = dSyncState.month + delta;
+  let y = dSyncState.year;
+  if (m < 1) { m = 12; y -= 1; }
+  else if (m > 12) { m = 1; y += 1; }
+  dSyncState.year = y;
+  dSyncState.month = m;
+  updateDashboardSyncModalCounts();
+}
+
+function toggleDashboardSyncCategory(cat, checked) {
+  if (dSyncState.include.hasOwnProperty(cat)) {
+    dSyncState.include[cat] = checked;
+  }
+  updateDashboardSyncModalCounts();
+}
+
+async function getDashboardAuthToken() {
+  let tok = window.gToken || 
+            localStorage.getItem('google_access_token') || 
+            localStorage.getItem('g_access_token') || 
+            (typeof parentProfile !== 'undefined' && parentProfile && parentProfile.google_access_token) || 
+            '';
+  if (!tok && window.parent && window.parent !== window) {
+    try {
+      if (typeof window.parent.ensureValidToken === 'function') {
+        tok = await window.parent.ensureValidToken();
+      }
+    } catch(e) {}
+  }
+  return tok;
+}
+
+function addDaysToDateStr(dateStr, days) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+async function findOrCreateDashboardSubCalendar(token) {
+  const listRes = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!listRes.ok) throw new Error('구글 캘린더 목록을 불러오지 못했습니다. (' + listRes.status + ')');
+  const listData = await listRes.json();
+  const found = (listData.items || []).find(cal => cal.summary === D_CALENDAR_NAME || cal.summary === `[Weracle CRM] 고객알림`);
+  if (found) return found.id;
+
+  const createRes = await fetch('https://www.googleapis.com/calendar/v3/calendars', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      summary: D_CALENDAR_NAME,
+      description: D_CALENDAR_DESC,
+      timeZone: 'Asia/Seoul'
+    })
+  });
+  if (!createRes.ok) throw new Error('전용 고객알림 캘린더를 생성하지 못했습니다. (' + createRes.status + ')');
+  const newCal = await createRes.json();
+  return newCal.id;
+}
+
+async function fetchSubCalendarExistingEvents(calendarId, token) {
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?maxResults=2500&singleEvents=true`;
+  const res = await fetch(url, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.items || [];
+}
+
+function downloadDashboardIcsNow() {
+  const events = getDashboardFilteredEvents();
+  if (events.length === 0) {
+    alert('동기화할 대상 고객 일정이 없습니다. 다른 월을 선택하거나 포함 항목을 확인해주세요.');
+    return;
+  }
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Weracle CRM//Dashboard Alert Calendar//KO',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    `X-WR-CALNAME:${D_CALENDAR_NAME}`,
+    'X-WR-TIMEZONE:Asia/Seoul',
+    `X-WR-CALDESC:${D_CALENDAR_DESC}`
+  ];
+
+  events.forEach((ev, idx) => {
+    const uid = `weracle_dash_${idx}_${Date.now()}@weracle.com`;
+    const dtstart = ev.fullDate.replace(/\D/g, '');
+    const dtend = addDaysToDateStr(ev.fullDate, 1).replace(/\D/g, '');
+    const summary = `${ev.title}${ev.phone ? ' - ' + ev.phone : ''}`;
+    const desc = `[대시보드 고객 알림]\n• 고객명: ${ev.name}\n• 연락처: ${ev.phone || '-'}\n• 상품명: ${ev.prod || '-'}\n• 안내: ${ev.note || '-'}`;
+
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:${uid}`);
+    lines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
+    lines.push(`DTSTART;VALUE=DATE:${dtstart}`);
+    lines.push(`DTEND;VALUE=DATE:${dtend}`);
+    lines.push(`SUMMARY:${summary.replace(/,/g, '\\,')}`);
+    lines.push(`DESCRIPTION:${desc.replace(/\n/g, '\\n')}`);
+    lines.push('STATUS:CONFIRMED');
+
+    lines.push('BEGIN:VALARM');
+    lines.push('TRIGGER:-P1D');
+    lines.push('ACTION:DISPLAY');
+    lines.push(`DESCRIPTION:${summary.replace(/,/g, '\\,')}`);
+    lines.push('END:VALARM');
+
+    lines.push('END:VEVENT');
+  });
+
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const filename = `Weracle_고객일정_${dSyncState.year}년${dSyncState.month}월.ics`;
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+async function executeDashboardCalendarSync() {
+  const events = getDashboardFilteredEvents();
+  if (events.length === 0) {
+    alert('선택된 월에 동기화할 대상 고객 일정이 없습니다.');
+    return;
+  }
+
+  const token = await getDashboardAuthToken();
+  if (!token) {
+    const useIcs = confirm('구글 계정 연동 토큰을 확인할 수 없습니다.\n구글 권한 대신 [.ics 캘린더 파일]로 바로 다운로드하여 캘린더 앱에 등록하시겠습니까?');
+    if (useIcs) downloadDashboardIcsNow();
+    return;
+  }
+
+  const btn = document.getElementById('btnExecuteDashboardSync');
+  const progContainer = document.getElementById('dSyncProgressContainer');
+  const progBar = document.getElementById('dSyncProgressBar');
+  const progText = document.getElementById('dSyncProgressStatusText');
+  const progPercent = document.getElementById('dSyncProgressPercent');
+
+  if (btn) btn.disabled = true;
+  if (progContainer) progContainer.style.display = 'block';
+
+  try {
+    if (progText) progText.innerText = '전용 고객 캘린더 확인 중...';
+    const calendarId = await findOrCreateDashboardSubCalendar(token);
+
+    if (progText) progText.innerText = '기존 등록된 일정 조회 중...';
+    const existingEvents = await fetchSubCalendarExistingEvents(calendarId, token);
+    const existingMap = new Map();
+    existingEvents.forEach(e => {
+      const privKey = e.extendedProperties?.private?.crmKey;
+      if (privKey) existingMap.set(privKey, e.id);
+      else if (e.summary && e.start?.date) {
+        existingMap.set(`${e.summary}_${e.start.date}`, e.id);
+      }
+    });
+
+    let syncedCount = 0;
+    const total = events.length;
+
+    for (let i = 0; i < total; i++) {
+      const ev = events[i];
+      if (progText) progText.innerText = `[${i + 1}/${total}] ${ev.title.slice(0, 20)}...`;
+      const pct = Math.round(((i + 1) / total) * 100);
+      if (progBar) progBar.style.width = pct + '%';
+      if (progPercent) progPercent.innerText = pct + '%';
+
+      let reminders = [{ method: 'popup', minutes: 540 }]; // 기본 당일 09시
+      if (ev.type === 'sang') {
+        reminders = [
+          { method: 'popup', minutes: 10080 }, // 7일 전
+          { method: 'popup', minutes: 4320 },  // 3일 전
+          { method: 'popup', minutes: 540 }    // 당일 오전 9시
+        ];
+      } else if (ev.type === 'expiry') {
+        reminders = [
+          { method: 'popup', minutes: 43200 }, // 30일 전
+          { method: 'popup', minutes: 20160 }, // 14일 전
+          { method: 'popup', minutes: 4320 },  // 3일 전
+          { method: 'popup', minutes: 540 }    // 당일 오전 9시
+        ];
+      } else if (ev.type === 'pay') {
+        reminders = [
+          { method: 'popup', minutes: 1440 }, // 1일 전
+          { method: 'popup', minutes: 540 }   // 당일 오전 9시
+        ];
+      }
+
+      const crmKey = `${ev.type}_${ev.name}_${ev.fullDate}_${ev.phone || ''}`;
+      const payload = {
+        summary: `${ev.title}${ev.phone ? ' - ' + ev.phone : ''}`,
+        description: `[대시보드 고객 알림]\n• 고객명: ${ev.name}\n• 연락처: ${ev.phone || '-'}\n• 상품명: ${ev.prod || '-'}\n• 세부내용: ${ev.note || '-'}`,
+        start: { date: ev.fullDate },
+        end: { date: addDaysToDateStr(ev.fullDate, 1) },
+        reminders: {
+          useDefault: false,
+          overrides: reminders
+        },
+        extendedProperties: {
+          private: {
+            crmKey: crmKey
+          }
+        }
+      };
+
+      const existingEventId = existingMap.get(crmKey) || existingMap.get(`${payload.summary}_${ev.fullDate}`);
+      let evUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
+      let method = 'POST';
+
+      if (existingEventId) {
+        evUrl += `/${existingEventId}`;
+        method = 'PUT';
+      }
+
+      try {
+        await fetch(evUrl, {
+          method: method,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        syncedCount++;
+      } catch(netErr) {
+        console.warn('Dashboard single event sync fail:', ev.title, netErr);
+      }
+    }
+
+    if (progText) progText.innerText = `동기화 완료! (총 ${syncedCount}개 일정)`;
+    if (progBar) progBar.style.width = '100%';
+    if (progPercent) progPercent.innerText = '100%';
+
+    alert(`✅ [${D_CALENDAR_NAME}] 캘린더에 총 ${syncedCount}개의 일정이 성공적으로 등록되었습니다!\n\n구글 캘린더나 스마트폰 캘린더 앱에서 '[${D_CALENDAR_NAME}]' 체크박스를 끄면 언제든 숨길 수 있습니다.`);
+    closeDashboardCalendarSyncModal();
+    if (typeof fetchGoogleCalendarEvents === 'function') {
+      fetchGoogleCalendarEvents();
+    }
+  } catch(err) {
+    console.error('Dashboard calendar sync error:', err);
+    alert('캘린더 동기화 중 오류가 발생했습니다: ' + (err.message || err));
+  } finally {
+    if (btn) btn.disabled = false;
+    if (progContainer) progContainer.style.display = 'none';
+  }
+}
+
+window.openDashboardCalendarSyncModal = openDashboardCalendarSyncModal;
+window.closeDashboardCalendarSyncModal = closeDashboardCalendarSyncModal;
+window.changeDashboardSyncMonth = changeDashboardSyncMonth;
+window.toggleDashboardSyncCategory = toggleDashboardSyncCategory;
+window.executeDashboardCalendarSync = executeDashboardCalendarSync;
+window.downloadDashboardIcsNow = downloadDashboardIcsNow;
+

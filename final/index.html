@@ -5291,7 +5291,7 @@ function updateProfileUI(user, profile) {
 
             <!-- 3. 메뉴 리스트 (일관된 구조 & 아이콘) -->
             <div class="dd-section-label">내 업무 & 활동</div>
-            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='card/card_edit.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
+            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); loadSubPage('브랜딩', '디지털 명함', 'card/card_edit.html');" class="pb-dropdown-item">
                 <div class="dd-item-left">
                     <span class="dd-icon-box blue"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" stroke-width="2"/><circle cx="9" cy="10" r="2" stroke-width="2"/><line x1="15" y1="8" x2="17" y2="8" stroke-width="2"/><line x1="15" y1="12" x2="17" y2="12" stroke-width="2"/><line x1="7" y1="16" x2="17" y2="16" stroke-width="2"/></svg></span>
                     <span class="dd-item-text">내 디지털 명함</span>
@@ -5921,7 +5921,87 @@ window.openDynamicList = function(type, val) {
     const navMenuTabs = document.getElementById('navMenuTabs');
     const navColItems = document.querySelectorAll('.nav-col-item');
 
+    // ========================================================
+    // [위라클 페이지별 등급 권한 제어 엔진]
+    // 1. 일반회원 누구나: 대시보드, 영업소식지, 보험영상, 위라클브랜딩, 브랜딩마켓, 구독서비스, 마이페이지
+    // 2. VIP 이상 (VIP, 식구, 관리자): 고객관리(전체), 한장비교표/상세비교표, 영업전략(전체), 디지털명함편집, 광고관리(전체)
+    // 3. 식구 이상 (식구, 관리자): 위라클 파트너스
+    // ========================================================
+    function checkPagePermission(menuName, subName, url) {
+        if (!url || url === 'home' || url === 'dashboard/dashboard.html') return true;
+
+        const p = window.currentProfile;
+        const isLogged = !!(window.currentUser && p);
+        
+        const gradeStr = p ? ((p.user_grade || '') + ',' + (p.access_grades || '') + ',' + (p.role || '')).toLowerCase() : '';
+        const grades = gradeStr.split(',').map(s => s.trim());
+        
+        const isAdmin = p && (grades.includes('manager') || grades.includes('admin') || grades.includes('m') || p.team === '관리자' || p.team === '본사');
+        const isFamily = isAdmin || (p && (grades.includes('family') || grades.includes('식구')));
+        const isVip = isFamily || (p && (grades.includes('vip') || grades.includes('svip')));
+
+        const target = (String(url) + ' ' + String(menuName || '') + ' ' + String(subName || '')).toLowerCase();
+
+        // 1. [식구, 관리자 전용] 위라클 파트너스
+        if (target.includes('management/management') || (menuName === '위라클' && subName === '파트너스')) {
+            if (isFamily) return true;
+            if (!isLogged) {
+                alert('위라클 파트너스는 승인된 식구 및 관리자 전용 서비스입니다.\n로그인 후 이용해 주세요.');
+                openAuthModal('login');
+                return false;
+            }
+            alert('[등급 안내]\n\n위라클 파트너스는 승인된 위라클 식구(family) 및 관리자 전용 서비스입니다.\n(현재 등급: ' + (p.user_grade || '일반') + ')');
+            return false;
+        }
+
+        // 2. [VIP, 식구, 관리자 전용]
+        // - 고객관리 전체 (CRM, 보험금청구, 언더라이팅, 숨은보험금찾기)
+        // - 한장비교표 및 상세비교표
+        // - 영업전략 전체 (타겟관리, 전략플랜, 보장분석, 데일리뉴스)
+        // - 디지털 명함 편집
+        // - 광고관리 전체 (메타광고, 신청 랜딩페이지)
+        const isVipRequired = 
+            target.includes('crm/') || menuName === '고객관리' ||
+            target.includes('claim/') || subName === '보험금 청구' ||
+            target.includes('underwriting/') || subName === '언더라이팅' ||
+            target.includes('hiddenclaim/') || subName === '숨은보험금찾기' ||
+            target.includes('insight/insight_compare') || subName === '한장 비교표' || target.includes('insight/sheets/') ||
+            target.includes('target/') || subName === '타겟 관리' ||
+            target.includes('strategy/') || subName === '전략 플랜' ||
+            target.includes('branding/pdf_p') || subName === '보장 분석' || subName === '보장 브랜딩' ||
+            target.includes('branding/dailynews') || subName === '데일리 뉴스' ||
+            target.includes('card/card_edit') || subName === '디지털 명함' ||
+            target.includes('meta_ads') || target.includes('sns_apply') || menuName === '광고관리';
+
+        if (isVipRequired) {
+            if (isVip) return true;
+            if (!isLogged) {
+                alert('로그인이 필요한 서비스입니다.\n로그인 후 이용해 주세요.');
+                openAuthModal('login');
+                return false;
+            }
+            const serviceTitle = subName || menuName || '해당';
+            alert('[등급 안내]\n\n[' + serviceTitle + '] 서비스는 VIP 등급 이상 전용 서비스입니다.\n(현재 등급: ' + (p.user_grade || '일반회원') + ')\n\n등급 업그레이드 또는 관리자에게 문의해 주세요.');
+            return false;
+        }
+
+        // 3. [일반회원 누구나 허용]
+        // - 대시보드
+        // - 영업 소식지 (insight/insight_news)
+        // - 보험 영상 (insight/video)
+        // - 위라클 브랜딩 (branding/branding.html)
+        // - 브랜딩 마켓 (branding/market.html)
+        // - 구독서비스 (subscription/)
+        // - 마이페이지 (login/mypage)
+        return true;
+    }
+    window.checkPagePermission = checkPagePermission;
+
     function loadSubPage(menuName, subName, url) {
+        if (!checkPagePermission(menuName, subName, url)) {
+            return;
+        }
+
         if (topNav) {
             topNav.classList.remove('open');
             navColItems.forEach(i => i.classList.remove('list--active'));
@@ -5940,23 +6020,6 @@ window.openDynamicList = function(type, val) {
         // 헤더 타이틀 동기화
         const pbTitle = document.getElementById('pbHeaderTitle');
         if (pbTitle) pbTitle.innerText = menuName;
-
-        // [위라클 파트너스 권한 제어: 식구(family) 및 관리자(m 포함)만 접근 허용]
-        if (url && url.includes('management/management.html')) {
-            const p = window.currentProfile;
-            let canAccess = false;
-            if (p) {
-                const gradeStr = ((p.user_grade || '') + ',' + (p.access_grades || '') + ',' + (p.role || '')).toLowerCase();
-                const grades = gradeStr.split(',').map(s => s.trim());
-                if (grades.includes('family') || grades.includes('m') || grades.includes('manager') || grades.includes('admin') || p.team === '관리자' || p.team === '본사') {
-                    canAccess = true;
-                }
-            }
-            if (!canAccess) {
-                alert('위라클 파트너스는 승인된 식구(family) 및 관리자 전용 서비스입니다.\n(일반 계정은 접근이 제한됩니다.)');
-                return;
-            }
-        }
 
         if (url === 'home' || url === '' || !url || url === 'dashboard/dashboard.html') {
             showDashboardHome();
@@ -6077,84 +6140,13 @@ window.openDynamicList = function(type, val) {
     }
 
     function switchNavTab(el, targetUrl) {
-        if (topNav) {
-            topNav.classList.remove('open');
-            navColItems.forEach(i => i.classList.remove('list--active'));
-        }
-
-        navColItems.forEach(t => t.classList.remove('active'));
         const parentItem = el ? el.closest('.nav-col-item') : null;
-        if (parentItem) parentItem.classList.add('active');
-
-        if (targetUrl === 'home') {
-            showDashboardHome();
-            return;
-        }
-
-        const dbHome = document.getElementById('dashboardHome');
-        if (dbHome) dbHome.style.display = 'none';
-        const bSec = document.getElementById('homeBottomSection'); if (bSec) bSec.style.display = 'none';
-        const mHub = document.getElementById('mobileWorkHub');
-        if (mHub) mHub.style.display = 'none';
-
-        const frame = document.getElementById('mainFrame');
-        if (frame) {
-            frame.style.display = 'block';
-            frame.src = targetUrl;
-        }
-
-        const authCont = document.getElementById('w-auth-workspace-container');
-        if (authCont) authCont.style.display = 'none';
-
-        const mainWorkspace = document.querySelector('.main-workspace');
-        if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
-
-        const contentArea = document.querySelector('.pb-content-area');
-        if (contentArea) contentArea.scrollTop = 0;
-        window.scrollTo(0, 0);
+        const name = parentItem ? parentItem.getAttribute('data-tab') : '';
+        loadSubPage(name, name, targetUrl);
     }
 
     function switchNavTabByName(name, url) {
-        if (topNav) {
-            topNav.classList.remove('open');
-            navColItems.forEach(i => i.classList.remove('list--active'));
-        }
-
-        navColItems.forEach(t => {
-            const titleSpan = t.querySelector('.nav-col-tab span');
-            if (titleSpan && titleSpan.innerText.includes(name)) {
-                t.classList.add('active');
-            } else {
-                t.classList.remove('active');
-            }
-        });
-
-        if (url === 'home') {
-            showDashboardHome();
-            return;
-        }
-
-        const dbHome = document.getElementById('dashboardHome');
-        if (dbHome) dbHome.style.display = 'none';
-        const bSec = document.getElementById('homeBottomSection'); if (bSec) bSec.style.display = 'none';
-        const mHub = document.getElementById('mobileWorkHub');
-        if (mHub) mHub.style.display = 'none';
-
-        const frame = document.getElementById('mainFrame');
-        if (frame) {
-            frame.style.display = 'block';
-            frame.src = url;
-        }
-
-        const authCont = document.getElementById('w-auth-workspace-container');
-        if (authCont) authCont.style.display = 'none';
-
-        const mainWorkspace = document.querySelector('.main-workspace');
-        if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
-
-        const contentArea = document.querySelector('.pb-content-area');
-        if (contentArea) contentArea.scrollTop = 0;
-        window.scrollTo(0, 0);
+        loadSubPage(name, name, url);
     }
 
     // 하위 호환성 전역 바인딩

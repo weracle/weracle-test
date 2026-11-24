@@ -2222,7 +2222,7 @@ async function saveClientToServer(clientObj, insRows) {
     window._routedMap = {};
     let routedMap = window._routedMap;
     if (insRows && insRows.length > 0) {
-        const extractPureName = (str) => {
+        const extractPureNameParty = (str) => {
             if (!str) return "";
             let s = String(str).replace(/\s*\([^)]*\)/g, '');
             s = s.replace(/\s+/g, '');
@@ -2236,36 +2236,62 @@ async function saveClientToServer(clientObj, insRows) {
             return s;
         };
 
-        // [CRITICAL FIX] Only store insurances where this client is contractor or insured
-        const extractPureNameParty = (str) => {
-            if (!str) return "";
-            let s = String(str).replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, '');
-            const suffixes = ["본인", "배우자", "자녀", "부", "모", "동생", "형제", "자매", "형님", "대표", "대표자"];
-            for (let suf of suffixes) {
-                if (s.endsWith(suf) && s !== suf) {
-                    s = s.slice(0, -suf.length);
-                    break;
-                }
-            }
-            return s;
-        };
-
         const myNameClean = extractPureNameParty(clientObj["고객명"] || clientObj["대표자명"]);
         const myIdClean = String(clientObj["고객번호"] || "").trim();
 
+        // Check if any insurance has a contractor registered in globalCustomerData (different from current client)
+        const routedContractorLabels = [];
+        (insRows || []).forEach(ins => {
+            const cN = extractPureNameParty(ins["계약자"] || ins["차_계약자"]);
+            const cI = String(ins["계약자_id"] || ins["차_계약자_id"] || ins.contractorId || "").trim();
+            
+            if (cI && cI !== myIdClean && cI !== 'outsider' && typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData)) {
+                const tIdx = globalCustomerData.findIndex(c => String(c["고객번호"] || c["ID"]).trim() === cI);
+                if (tIdx >= 0) {
+                    if (!routedMap[tIdx]) routedMap[tIdx] = [];
+                    routedMap[tIdx].push(ins);
+                    const tName = globalCustomerData[tIdx]["고객명"] || cN;
+                    const label = tName + ' (고객번호: ' + cI + ')';
+                    if (!routedContractorLabels.includes(label)) routedContractorLabels.push(label);
+                    return;
+                }
+            }
+            
+            if (cN && cN !== myNameClean && typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData)) {
+                const tIdx = globalCustomerData.findIndex(c => extractPureNameParty(c["고객명"] || c["이름"] || c["대표자명"]) === cN);
+                if (tIdx >= 0) {
+                    const targetCId = String(globalCustomerData[tIdx]["고객번호"] || globalCustomerData[tIdx]["ID"]).trim();
+                    if (targetCId !== myIdClean) {
+                        ins["계약자_id"] = targetCId;
+                        if (!routedMap[tIdx]) routedMap[tIdx] = [];
+                        routedMap[tIdx].push(ins);
+                        const tName = globalCustomerData[tIdx]["고객명"] || cN;
+                        const label = tName + ' (고객번호: ' + targetCId + ')';
+                        if (!routedContractorLabels.includes(label)) routedContractorLabels.push(label);
+                        return;
+                    }
+                }
+            }
+        });
+
+        // Current client's own insurances (exclude those routed to external registered contractors)
         const myInsRows = (insRows || []).filter(ins => {
+            for (let tIdx in routedMap) {
+                if (routedMap[tIdx].includes(ins)) return false;
+            }
             const cN = extractPureNameParty(ins["계약자"] || ins["차_계약자"]);
             const iN = extractPureNameParty(ins["피보험자"] || ins["차_피보험자"]);
             const cI = String(ins["계약자_id"] || ins["차_계약자_id"] || "").trim();
             const iI = String(ins["피보험자_id"] || ins["차_피보험자_id"] || "").trim();
             
             if (!cN && !iN && !cI && !iI) return true;
-            return cN === myNameClean || iN === myNameClean || cI === myIdClean || iI === myIdClean;
+            return cN === myNameClean || iN === myNameClean || cI === myIdClean || iI === myIdClean || cI === 'outsider';
         });
 
         clientObj["가입내역"] = myInsRows.length > 0 ? JSON.stringify(myInsRows) : "";
         clientObj["보험가입리스트"] = myInsRows;
         
+        // Execute routing to contractor's data and sheet
         for (let tIdx in routedMap) {
             let tClient = globalCustomerData[tIdx];
             let tInsRows = routedMap[tIdx];
@@ -2274,30 +2300,55 @@ async function saveClientToServer(clientObj, insRows) {
             if (typeof tClient["가입내역"] === "string") {
                 try { existingIns = JSON.parse(tClient["가입내역"]); } catch(e){}
             } else if (Array.isArray(tClient["가입내역"])) {
-                existingIns = tClient["가입내역"];
+                existingIns = [...tClient["가입내역"]];
             }
             
-            tInsRows.forEach(ins => existingIns.push(ins));
+            tInsRows.forEach(newIns => {
+                const comp = (newIns['보험사명'] || newIns['차_보험사명'] || newIns['company'] || '').trim();
+                const prod = (newIns['상품명'] || newIns['차_상품명'] || newIns['product'] || '').trim();
+                const insName = (newIns['피보험자'] || newIns['차_피보험자'] || '').trim();
+                
+                const exIdx = existingIns.findIndex(ex => {
+                    const eComp = (ex['보험사명'] || ex['차_보험사명'] || ex['company'] || '').trim();
+                    const eProd = (ex['상품명'] || ex['차_상품명'] || ex['product'] || '').trim();
+                    const eInsName = (ex['피보험자'] || ex['차_피보험자'] || '').trim();
+                    return eComp === comp && eProd === prod && (!insName || eInsName === insName);
+                });
+                
+                if (exIdx >= 0) {
+                    existingIns[exIdx] = { ...existingIns[exIdx], ...newIns };
+                } else {
+                    existingIns.push(newIns);
+                }
+            });
+            
             tClient["가입내역"] = JSON.stringify(existingIns);
             tClient["보험가입리스트"] = existingIns;
             
             let sName = tClient.sheetName || "weraclecrm";
-            let headers = window.getCrmHeaders(sName);
-            let rowData = headers.map(h => tClient[h] !== undefined ? tClient[h] : "");
-            
-            let rNum = tClient.rowNumber;
-            if (rNum) {
-                try {
-                    await gapi.client.sheets.spreadsheets.values.update({
-                        spreadsheetId: (window.spreadsheetId || localStorage.getItem("g_sheet_id")),
-                        range: sName + "!A" + rNum,
-                        valueInputOption: "USER_ENTERED",
-                        resource: { values: [rowData] }
-                    });
-                } catch (e) {
-                    console.error("Routed save failed", e);
+            let headers = (typeof window.getCrmHeaders === 'function') ? window.getCrmHeaders(sName) : [];
+            if (headers.length > 0) {
+                let rowData = headers.map(h => tClient[h] !== undefined ? tClient[h] : "");
+                let rNum = tClient.rowNumber;
+                if (rNum && typeof gapi !== 'undefined' && gapi.client && gapi.client.sheets) {
+                    try {
+                        await gapi.client.sheets.spreadsheets.values.update({
+                            spreadsheetId: (window.spreadsheetId || localStorage.getItem("g_sheet_id")),
+                            range: sName + "!A" + rNum,
+                            valueInputOption: "USER_ENTERED",
+                            resource: { values: [rowData] }
+                        });
+                    } catch (e) {
+                        console.error("Routed save failed", e);
+                    }
                 }
             }
+        }
+        
+        if (routedContractorLabels.length > 0 && typeof showCustomAlert === 'function') {
+            setTimeout(() => {
+                showCustomAlert("계약자 데이터 자동 반영", '계약자 [' + routedContractorLabels.join(', ') + '] 고객님의 계약 정보로 안전하게 전송·반영되었습니다.');
+            }, 600);
         }
     }
     const actualSheetId = localStorage.getItem('g_sheet_id') || spreadsheetId;

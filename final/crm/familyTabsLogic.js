@@ -736,6 +736,7 @@ function buildSmartInsUI(prefix, cVal, cIdVal, iVal, iIdVal, directHtml) {
                 '</div>' +
                 '<div class="outsider-input-wrap" style="display:none; margin-top:8px;">' +
                     '<input type="text" class="real-input" name="' + prefix + '계약자" value="' + cVal + '" placeholder="외부인 이름 입력" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1;">' +
+                    '<div class="outsider-match-badge" style="display:none; margin-top:6px; font-size:12px; font-weight:700; padding:6px 10px; border-radius:6px;"></div>' +
                 '</div>' +
                 '<input type="hidden" class="real-id-input" name="' + prefix + '계약자_id" value="' + cIdVal + '">' +
             '</div>' +
@@ -746,12 +747,66 @@ function buildSmartInsUI(prefix, cVal, cIdVal, iVal, iIdVal, directHtml) {
                 '</div>' +
                 '<div class="outsider-input-wrap" style="display:none; margin-top:8px;">' +
                     '<input type="text" class="real-input" name="' + prefix + '피보험자" value="' + iVal + '" placeholder="외부인 이름 입력" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1;">' +
+                    '<div class="outsider-match-badge" style="display:none; margin-top:6px; font-size:12px; font-weight:700; padding:6px 10px; border-radius:6px;"></div>' +
                 '</div>' +
                 '<input type="hidden" class="real-id-input" name="' + prefix + '피보험자_id" value="' + iIdVal + '">' +
             '</div>' +
         '</div>' +
     '</div>';
 }
+
+
+window.checkOutsiderMatch = function(inputEl) {
+    if (!inputEl) return;
+    const group = inputEl.closest('.smart-ins-group');
+    if (!group) return;
+    const badge = group.querySelector('.outsider-match-badge');
+    const idInput = group.querySelector('.real-id-input');
+    const val = inputEl.value.trim();
+    
+    if (!badge || !idInput) return;
+    if (!val) {
+        badge.style.display = 'none';
+        idInput.value = 'outsider';
+        return;
+    }
+    
+    const clean = (s) => String(s || '').replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, '');
+    const cleanVal = clean(val);
+    
+    let matchedCustomer = null;
+    if (typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData)) {
+        matchedCustomer = globalCustomerData.find(c => {
+            const cName = clean(c['고객명'] || c['이름'] || c['대표자명'] || '');
+            return cName === cleanVal;
+        });
+    }
+    
+    badge.style.display = 'block';
+    if (matchedCustomer) {
+        const cId = String(matchedCustomer['고객번호'] || matchedCustomer['ID'] || '').trim();
+        const cName = matchedCustomer['고객명'] || matchedCustomer['이름'] || matchedCustomer['대표자명'] || val;
+        idInput.value = cId;
+        badge.style.background = '#ecfdf5';
+        badge.style.color = '#065f46';
+        badge.style.border = '1px solid #a7f3d0';
+        badge.innerHTML = '<i class="fa-solid fa-circle-check" style="color:#10b981; margin-right:4px;"></i>CRM 등록 고객: <strong>' + cName + '</strong> (고객번호: ' + cId + ')';
+    } else {
+        idInput.value = 'outsider';
+        badge.style.background = '#f8fafc';
+        badge.style.color = '#64748b';
+        badge.style.border = '1px solid #e2e8f0';
+        badge.innerHTML = '<i class="fa-solid fa-circle-info" style="color:#94a3b8; margin-right:4px;"></i>CRM 미등록 외부인 (현재 고객 창에 저장)';
+    }
+};
+
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.classList.contains('real-input')) {
+        if (typeof window.checkOutsiderMatch === 'function') {
+            window.checkOutsiderMatch(e.target);
+        }
+    }
+});
 
 function initSmartInsPills(card) {
     const groups = card.querySelectorAll('.smart-ins-group');
@@ -788,7 +843,10 @@ function initSmartInsPills(card) {
         if (!matched) {
             const outBtn = group.querySelector('.outsider-btn');
             if (outBtn) outBtn.classList.add('active');
-            if (outsiderWrap) outsiderWrap.style.display = 'block';
+            if (outsiderWrap) {
+                outsiderWrap.style.display = 'block';
+                if (nameInput && typeof window.checkOutsiderMatch === 'function') window.checkOutsiderMatch(nameInput);
+            }
         }
     });
 }
@@ -1108,11 +1166,14 @@ document.addEventListener('click', function(e) {
         
         if (p.classList.contains('outsider-btn')) {
             outsiderWrap.style.display = 'block';
-            idInput.value = '';
+            idInput.value = 'outsider';
             nameInput.value = '';
             nameInput.focus();
+            if (typeof window.checkOutsiderMatch === 'function') window.checkOutsiderMatch(nameInput);
         } else {
             outsiderWrap.style.display = 'none';
+            const b = group.querySelector('.outsider-match-badge');
+            if (b) b.style.display = 'none';
             idInput.value = p.dataset.id;
             nameInput.value = p.dataset.name;
         }

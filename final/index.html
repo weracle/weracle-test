@@ -1349,24 +1349,34 @@ overflow-y: auto;
 padding: 24px;
 position: relative;
 }
-.pb-content-area.iframe-active,
-.main-workspace.iframe-active {
+/* 기본 iframe 활성화 시: 홈 대시보드 및 하단 푸터(homeBottomSection) 정상 스크롤 */
+.pb-content-area.iframe-active {
     padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
+}
+#mainFrame {
+    width: 100%;
+    min-height: 600px;
+    border: none;
+    background: transparent;
+}
+
+/* 서브페이지(고객관리, 청구, 언더라이팅 등) 열람 시: 뷰포트에 100% 핏 & 하단 여백 누수 방지 */
+.main-workspace.subpage-viewing,
+.pb-content-area.subpage-viewing {
     height: 100% !important;
     max-height: 100% !important;
     overflow: hidden !important;
+    padding: 0 !important;
 }
-#mainFrame,
-.iframe-active #mainFrame {
+.subpage-viewing #mainFrame {
     width: 100% !important;
     height: 100% !important;
     min-height: 100% !important;
     max-height: 100% !important;
     flex: 1 !important;
     border: none !important;
-    background: transparent !important;
     box-sizing: border-box !important;
 }
 
@@ -4673,9 +4683,9 @@ if (!iframe) return;
 // 1. 크로스도메인(Vercel 등) 연동을 위한 postMessage 수신 처리
 window.addEventListener('message', (event) => {
 if (event.data && event.data.type === 'CRM_RESIZE') {
-    const isIframeActive = document.querySelector('.main-workspace')?.classList.contains('iframe-active') ||
-                           document.querySelector('.pb-content-area')?.classList.contains('iframe-active');
-    if (isIframeActive) {
+    const isSubpage = document.querySelector('.main-workspace')?.classList.contains('subpage-viewing') ||
+                      document.querySelector('.pb-content-area')?.classList.contains('subpage-viewing');
+    if (isSubpage) {
         iframe.style.height = '';
         return;
     }
@@ -4748,9 +4758,9 @@ profile: window.currentProfile
 if (iframe.contentWindow.location.hostname === window.location.hostname || window.location.hostname === '') {
 const resizeIframe = () => {
 try {
-const isIframeActive = document.querySelector('.main-workspace')?.classList.contains('iframe-active') ||
-                       document.querySelector('.pb-content-area')?.classList.contains('iframe-active');
-if (isIframeActive) {
+const isSubpage = document.querySelector('.main-workspace')?.classList.contains('subpage-viewing') ||
+                  document.querySelector('.pb-content-area')?.classList.contains('subpage-viewing');
+if (isSubpage) {
     if (iframe.style.height) iframe.style.height = '';
     return;
 }
@@ -4853,7 +4863,10 @@ window.openMyPageFromSidebar = function() {
             frame.src = "login/mypage.html?v=" + Date.now();
         }
         const contentArea = document.querySelector('.pb-content-area');
-        if (contentArea) contentArea.scrollTop = 0;
+        if (contentArea) {
+            contentArea.classList.add('subpage-viewing');
+            contentArea.scrollTop = 0;
+        }
         window.scrollTo(0, 0);
     }
     const pb = document.getElementById('pbLoginInfo'); if (pb) pb.classList.remove('open');
@@ -5967,7 +5980,10 @@ window.openDynamicList = function(type, val) {
         if (authCont) authCont.style.display = 'none';
 
         const mainWorkspace = document.querySelector('.main-workspace');
-        if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
+        if (mainWorkspace) {
+            mainWorkspace.classList.add('iframe-active');
+            mainWorkspace.classList.add('subpage-viewing');
+        }
 
         const contentArea = document.querySelector('.pb-content-area');
         if (contentArea) contentArea.scrollTop = 0;
@@ -6042,7 +6058,13 @@ window.openDynamicList = function(type, val) {
         if (authCont) authCont.style.display = 'none';
 
         const mainWorkspace = document.querySelector('.main-workspace');
-        if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
+        if (mainWorkspace) {
+            mainWorkspace.classList.add('iframe-active');
+            mainWorkspace.classList.remove('subpage-viewing');
+        }
+
+        const contentArea = document.querySelector('.pb-content-area');
+        if (contentArea) contentArea.classList.remove('subpage-viewing');
 
         const pbTitle = document.getElementById('pbHeaderTitle');
         if (pbTitle) pbTitle.innerText = '대시보드';

@@ -832,23 +832,20 @@
   // [지능형 동적 적응 압축 헬퍼: 첨부 장수에 따라 해상도와 품질을 자동 배분하여 Vercel 4.5MB 한계 돌파]
   const compressImage = async (file, totalCount = 1) => { 
     return new Promise((resolve) => { 
-      if (!file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve({ name: file.name, data: reader.result.split(',')[1] });
-        return;
-      } 
+      const isImg = (file.type && file.type.startsWith('image/')) || /\.(jpe?g|png|webp|bmp|gif|heic)$/i.test(file.name || '');
       const reader = new FileReader();
-      reader.readAsDataURL(file); 
       reader.onload = (event) => { 
+        if (!isImg) {
+          const res = event.target.result || '';
+          return resolve({ name: file.name, data: res.includes(',') ? res.split(',')[1] : res });
+        }
         const img = new Image();
-        img.src = event.target.result; 
         img.onload = () => { 
           const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
+          let width = img.width || 1200;
+          let height = img.height || 1600;
           
-          // 첨부 장수별 동적 해상도 및 품질 자동 책정 (15장 이상 대량 첨부도 Vercel 4.5MB 제한에 걸리지 않도록 안전 최적화)
+          // 첨부 장수별 동적 해상도 및 품질 자동 책정 (대량 첨부도 메모리 안전 최적화)
           let max_size = 1200;
           let quality = 0.72;
           if (totalCount > 14) {
@@ -881,12 +878,17 @@
           resolve({ name: file.name, data: dataUrl.split(',')[1] }); 
         };
         img.onerror = () => {
-          resolve({ name: file.name, data: (event.target.result || '').split(',')[1] });
+          const res = event.target.result || '';
+          resolve({ name: file.name, data: res.includes(',') ? res.split(',')[1] : res });
         };
-      }; 
+        img.src = event.target.result; 
+      };
+      reader.onerror = () => {
+        resolve({ name: file.name, data: '' });
+      };
+      reader.readAsDataURL(file); 
     }); 
   };
- 
 
   // [PDF 첨부파일 고해상도 이미지 자동 렌더링 헬퍼]
   async function convertPdfToImages(file, totalCount = 1) {
@@ -1374,12 +1376,15 @@
 
         if (payload.attachedFiles && payload.attachedFiles.length > 0) {
             for (let i = 0; i < payload.attachedFiles.length; i++) {
-                if (pagesAdded > 0) doc.addPage();
                 try {
-                    doc.addImage(payload.attachedFiles[i], 'JPEG', 0, 0, 210, 297);
-                    pagesAdded++;
+                    const fileData = payload.attachedFiles[i];
+                    if (fileData && fileData.length > 50) {
+                        if (pagesAdded > 0) doc.addPage();
+                        doc.addImage(fileData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+                        pagesAdded++;
+                    }
                 } catch (e) {
-                    console.error('첨부파일 추가 실패', e);
+                    console.error('첨부파일 추가 실패:', e);
                 }
             }
         }
@@ -1559,22 +1564,80 @@ async function confirmAndSendFax() {
 
   // 4. 실제 서버리스 API 호출 (/api/send-fax)
   try {
+    const payload = {
+      userId: currentUid,
+      receiverNumber: cleanFaxNumber,
+      receiverName: currentTargetCompanyName + ' 보상과',
+      plannerPhone: plannerPhone,
+      plannerName: plannerName,
+      clientName: currentTargetClientName || '고객',
+      companyName: currentTargetCompanyName,
+      callCenter: callCenter,
+      pageCount: pageCount
+    };
+
+    // [Vercel 4.5MB 제한 완전 돌파: 대용량 청구서 Supabase Storage 직업로드 하이브리드 파이프라인]
+    let pdfBlob = null;
+    try {
+      if (currentGeneratedPdfDoc && typeof currentGeneratedPdfDoc.output === 'function') {
+        pdfBlob = currentGeneratedPdfDoc.output('blob');
+      }
+    } catch (bErr) {
+      console.warn('PDF blob 변환 경고:', bErr);
+    }
+
+    const pdfSize = pdfBlob ? pdfBlob.size : (currentGeneratedPdfBase64 ? currentGeneratedPdfBase64.length * 0.75 : 0);
+    console.log('[Claim PDF Size Check]', pdfSize, 'bytes');
+
+    // PDF 크기가 1MB(1,048,576 bytes)를 초과하는 경우, Vercel Payload Too Large(413) 방지를 위해 Supabase Storage에 직접 업로드 후 공개 URL 전달
+    if (pdfBlob && pdfSize > 1024 * 1024) {
+      if (sendBtn) sendBtn.innerText = '대용량 서류 클라우드 전송 중...';
+      try {
+        const cleanTimestamp = Date.now();
+        const randStr = Math.random().toString(36).substring(2, 8);
+        const fileName = `claims/claim_${cleanTimestamp}_${randStr}.pdf`;
+        const uploadUrl = `https://tjohrovsvgnkrlqhjkwt.supabase.co/storage/v1/object/ad_media/${fileName}`;
+
+        const uploadRes = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: {
+            'apikey': 'sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR',
+            'Authorization': 'Bearer sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR',
+            'Content-Type': 'application/pdf',
+            'x-upsert': 'true'
+          },
+          body: pdfBlob
+        });
+
+        if (uploadRes.ok) {
+          payload.pdfUrl = `https://tjohrovsvgnkrlqhjkwt.supabase.co/storage/v1/object/public/ad_media/${fileName}`;
+          console.log('[Claim PDF Direct Upload Success]', payload.pdfUrl);
+        } else {
+          console.warn('[Claim PDF Direct Upload Failed, fallback to base64]', uploadRes.status);
+          payload.pdfBase64 = currentGeneratedPdfBase64;
+        }
+      } catch (uploadErr) {
+        console.warn('[Claim PDF Direct Upload Error, fallback to base64]', uploadErr);
+        payload.pdfBase64 = currentGeneratedPdfBase64;
+      }
+    } else {
+      payload.pdfBase64 = currentGeneratedPdfBase64;
+    }
+
+    if (sendBtn) sendBtn.innerText = '팩스 전송 중...';
+
     const response = await fetch('/api/send-fax', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: currentUid,
-        receiverNumber: cleanFaxNumber,
-        receiverName: currentTargetCompanyName + ' 보상과',
-        pdfBase64: currentGeneratedPdfBase64,
-        plannerPhone: plannerPhone,
-        plannerName: plannerName,
-        clientName: currentTargetClientName || '고객',
-        companyName: currentTargetCompanyName,
-        callCenter: callCenter,
-        pageCount: pageCount
-      })
+      body: JSON.stringify(payload)
     });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      let parsedErr = {};
+      try { parsedErr = JSON.parse(errText); } catch(pe){}
+      throw new Error(parsedErr.message || errText || ('서버 오류 (' + response.status + ')'));
+    }
 
     const result = await response.json();
 
@@ -1640,7 +1703,7 @@ async function confirmAndSendFax() {
     }
   } catch (error) {
     console.error('팩스 통신 오류:', error);
-    alert('팩스 서버와 통신 중 오류가 발생했습니다.\n\nPDF 파일은 기기에 안전하게 저장됩니다.');
+    alert('팩스 서버와 통신 중 오류가 발생했습니다: ' + (error.message || '') + '\n\nPDF 파일은 기기에 안전하게 저장됩니다.');
     downloadCurrentPdf();
     if (sendBtn) {
       sendBtn.innerText = '다시 시도';

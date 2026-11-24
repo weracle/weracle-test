@@ -113,6 +113,81 @@ async function saveFaxMeta(receiptNum, meta) {
   }
 }
 
+// 팩스 전송 가능 횟수 사전 검증
+async function checkUserFaxQuota(userId) {
+  if (!userId) return { allowed: true };
+
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "https://tjohrovsvgnkrlqhjkwt.supabase.co";
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR";
+
+    const res = await fetch(`${url}/rest/v1/profiles?id=eq.${userId}&select=id,user_grade,fax_count`, {
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+    });
+    const users = await res.json();
+    if (!Array.isArray(users) || users.length === 0) return { allowed: true };
+
+    const u = users[0];
+    const grade = (u.user_grade || 'basic').toLowerCase();
+
+    // 관리자(manager, admin) 및 식구(family, svip)는 무제한 전송 허용
+    if (['manager', 'admin', 'family', 'svip'].includes(grade)) {
+      return { allowed: true, unlimited: true, currentCount: u.fax_count ?? 0 };
+    }
+
+    // 일반 및 VIP는 1회 이상 잔여량 필수
+    const currentCount = Number(u.fax_count ?? 0);
+    if (currentCount <= 0) {
+      return {
+        allowed: false,
+        currentCount: 0,
+        message: '보유하신 팩스 전송 가능 횟수(0회)를 모두 소진하셨습니다. 관리자에게 충전을 요청해 주세요.'
+      };
+    }
+
+    return { allowed: true, unlimited: false, currentCount };
+  } catch(e) {
+    console.warn('[checkUserFaxQuota Warning]', e.message);
+    return { allowed: true };
+  }
+}
+
+// 팩스 발송 성공 시 잔여 횟수 1회 자동 차감
+async function deductUserFaxQuota(userId) {
+  if (!userId) return;
+
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "https://tjohrovsvgnkrlqhjkwt.supabase.co";
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR";
+
+    const getRes = await fetch(`${url}/rest/v1/profiles?id=eq.${userId}&select=id,user_grade,fax_count`, {
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+    });
+    const users = await getRes.json();
+    if (!Array.isArray(users) || users.length === 0) return;
+
+    const u = users[0];
+    const grade = (u.user_grade || 'basic').toLowerCase();
+
+    // 관리자/식구는 무제한이므로 차감하지 않고, 일반/VIP만 차감 (원할 경우 전체 차감도 가능)
+    const currentCount = Number(u.fax_count ?? 0);
+    const nextCount = Math.max(0, currentCount - 1);
+
+    await fetch(`${url}/rest/v1/profiles?id=eq.${userId}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': key,
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fax_count: nextCount })
+    });
+    console.log(`[Fax Deduct Success] 유저 ${userId} 팩스 잔여량: ${currentCount} -> ${nextCount}회`);
+  } catch(e) {
+    console.warn('[deductUserFaxQuota Warning]', e.message);
+  }
+}
+
 module.exports = async function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -144,6 +219,7 @@ module.exports = async function handler(req, res) {
       receiverNumber,
       receiverName,
       pdfBase64,
+      pdfUrl,
       senderNumber,
       plannerPhone,
       plannerName,
@@ -153,7 +229,7 @@ module.exports = async function handler(req, res) {
       pageCount
     } = body || {};
 
-    if (!receiverNumber || !pdfBase64) {
+    if (!receiverNumber || (!pdfBase64 && !pdfUrl)) {
       return res.status(400).json({ 
         success: false, 
         message: '필수 전송 정보가 누락되었습니다. (수신번호 또는 PDF 데이터 누락)' 
@@ -162,8 +238,19 @@ module.exports = async function handler(req, res) {
 
     // 파일 생성 (/tmp 경로)
     tempFilePath = path.join(os.tmpdir(), `claim_${Date.now()}_${Math.random().toString(36).substring(7)}.pdf`);
-    const cleanBase64 = pdfBase64.replace(/^data:application\/pdf;base64,/, '').trim();
-    const pdfBuffer = Buffer.from(cleanBase64, 'base64');
+    let pdfBuffer;
+    if (pdfUrl) {
+      console.log('[Fax] Downloading PDF from URL:', pdfUrl);
+      const fetchRes = await fetch(pdfUrl);
+      if (!fetchRes.ok) {
+        throw new Error('스토리지에서 PDF 파일을 가져오지 못했습니다. (HTTP ' + fetchRes.status + ')');
+      }
+      const arrayBuf = await fetchRes.arrayBuffer();
+      pdfBuffer = Buffer.from(arrayBuf);
+    } else {
+      const cleanBase64 = String(pdfBase64).replace(/^data:application\/pdf;base64,/, '').trim();
+      pdfBuffer = Buffer.from(cleanBase64, 'base64');
+    }
     fs.writeFileSync(tempFilePath, pdfBuffer);
 
     const corpNum = process.env.POPBILL_CORP_NUM || '1168180481';

@@ -219,6 +219,7 @@ module.exports = async function handler(req, res) {
       receiverNumber,
       receiverName,
       pdfBase64,
+      pdfUrl,
       senderNumber,
       plannerPhone,
       plannerName,
@@ -228,7 +229,7 @@ module.exports = async function handler(req, res) {
       pageCount
     } = body || {};
 
-    if (!receiverNumber || !pdfBase64) {
+    if (!receiverNumber || (!pdfBase64 && !pdfUrl)) {
       return res.status(400).json({ 
         success: false, 
         message: '필수 전송 정보가 누락되었습니다. (수신번호 또는 PDF 데이터 누락)' 
@@ -237,8 +238,19 @@ module.exports = async function handler(req, res) {
 
     // 파일 생성 (/tmp 경로)
     tempFilePath = path.join(os.tmpdir(), `claim_${Date.now()}_${Math.random().toString(36).substring(7)}.pdf`);
-    const cleanBase64 = pdfBase64.replace(/^data:application\/pdf;base64,/, '').trim();
-    const pdfBuffer = Buffer.from(cleanBase64, 'base64');
+    let pdfBuffer;
+    if (pdfUrl) {
+      console.log('[Fax] Downloading PDF from URL:', pdfUrl);
+      const fetchRes = await fetch(pdfUrl);
+      if (!fetchRes.ok) {
+        throw new Error('스토리지에서 PDF 파일을 가져오지 못했습니다. (HTTP ' + fetchRes.status + ')');
+      }
+      const arrayBuf = await fetchRes.arrayBuffer();
+      pdfBuffer = Buffer.from(arrayBuf);
+    } else {
+      const cleanBase64 = String(pdfBase64).replace(/^data:application\/pdf;base64,/, '').trim();
+      pdfBuffer = Buffer.from(cleanBase64, 'base64');
+    }
     fs.writeFileSync(tempFilePath, pdfBuffer);
 
     const corpNum = process.env.POPBILL_CORP_NUM || '1168180481';

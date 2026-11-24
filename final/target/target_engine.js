@@ -74,13 +74,13 @@ const TargetEngine = (function() {
         return null;
     }
 
-    // 2. 만기일/날짜 파싱 헬퍼 (YYYY-MM-DD, YYYYMMDD, MMDD, 80세만기 등 지원)
-    function parseDateString(dateVal, clientBirth) {
+    // 2. 만기일/날짜 파싱 헬퍼 (YYYY-MM-DD, YYYYMMDD, MMDD, 80세만기, 20년만기 등 지원)
+    function parseDateString(dateVal, clientBirth, startDate) {
         if (!dateVal) return null;
         const str = String(dateVal).trim();
         if (!str || str === '-' || str === 'null' || str === 'undefined') return null;
 
-        // 특수 텍스트 만기 처리 (예: "80세만기", "100세만기", "90세만기")
+        // 특수 텍스트 만기 처리 1: "80세만기", "100세만기", "90세만기" 등 (고객 생년월일 + N세)
         if (str.includes('세만기') && clientBirth && clientBirth.year) {
             const ageMatch = str.match(/(\d{1,3})\s*세만기/);
             if (ageMatch) {
@@ -90,6 +90,34 @@ const TargetEngine = (function() {
                     month: clientBirth.month || 1,
                     day: clientBirth.day || 1
                 };
+            }
+        }
+
+        // 특수 텍스트 만기 처리 2: "10년만기", "20년만기", "1년만기" 등 (체결일 + N년)
+        if (str.includes('년만기')) {
+            const yearMatch = str.match(/(\d{1,2})\s*년만기/);
+            if (yearMatch) {
+                const addYears = parseInt(yearMatch[1], 10);
+                let baseYear = null;
+                let baseMonth = 1;
+                let baseDay = 1;
+
+                if (startDate) {
+                    const sp = (typeof startDate === 'object' && startDate.year) ? startDate : parseDateString(startDate);
+                    if (sp && sp.year) {
+                        baseYear = sp.year;
+                        baseMonth = sp.month || 1;
+                        baseDay = sp.day || 1;
+                    }
+                }
+
+                if (baseYear) {
+                    return {
+                        year: baseYear + addYears,
+                        month: baseMonth,
+                        day: baseDay
+                    };
+                }
             }
         }
 
@@ -132,6 +160,65 @@ const TargetEngine = (function() {
         return null;
     }
 
+    // 2-1. [핵심 엔진 개선] 계약 객체에서 실제 만기 날짜(갱신일 등)를 1순위로 탐색하는 지능형 해석기
+    function resolveContractExpiry(contractObj, clientBirth, clientRoot) {
+        if (!contractObj || typeof contractObj !== 'object') return { parsed: null, raw: '' };
+
+        // 가능한 만기/갱신일 후보 필드 목록
+        const candidates = [
+            contractObj['갱신일'],
+            contractObj['갱신일자'],
+            contractObj['renewalDate'],
+            contractObj['expireDate'],
+            contractObj['만기일자'],
+            contractObj['만기일'],
+            contractObj['만기'],
+            contractObj['종료일'],
+            contractObj['책임종료일']
+        ];
+
+        // 체결일 후보 (년만기 자동 계산 기준점)
+        const startDates = [
+            contractObj['체결일'],
+            contractObj['계약일'],
+            contractObj['책임개시일'],
+            contractObj['가입일'],
+            contractObj['date'],
+            clientRoot ? (clientRoot['체결일'] || clientRoot['계약일']) : null
+        ];
+        let validStart = null;
+        for (let s of startDates) {
+            if (s && String(s).trim()) {
+                const p = parseDateString(s);
+                if (p && p.year) { validStart = p; break; }
+            }
+        }
+
+        // 1순위: '2026-11-28'과 같은 유효한 실제 날짜 우선 파싱 (20년만기 텍스트보다 갱신일 날짜 우선 인식)
+        for (let val of candidates) {
+            if (!val) continue;
+            const s = String(val).trim();
+            if (!s || s === '-' || s.includes('만기')) continue;
+            const parsed = parseDateString(s, clientBirth, validStart);
+            if (parsed && parsed.year) {
+                return { parsed: parsed, raw: s };
+            }
+        }
+
+        // 2순위: 1순위 실제 날짜가 없을 경우, '20년만기', '80세만기' 등 특수 텍스트 만기일 파싱
+        for (let val of candidates) {
+            if (!val) continue;
+            const s = String(val).trim();
+            if (!s || s === '-') continue;
+            const parsed = parseDateString(s, clientBirth, validStart);
+            if (parsed) {
+                return { parsed: parsed, raw: s };
+            }
+        }
+
+        return { parsed: null, raw: '' };
+    }
+
     // 3. 고객의 전체 계약 전수 추출 (가입내역 JSON 배열, 보험1~20_만기일자, 자동차_만기일 등 전수 포괄)
     function extractAllClientContracts(client) {
         if (!client) return [];
@@ -140,57 +227,71 @@ const TargetEngine = (function() {
         const clientBirth = parseClientBirthday(client);
 
         // A. 루트 자동차 만기일 (다양한 필드명 포괄 지원)
-        const autoMat = target['자동차_만기일'] || target['자동차만기일'] || target['차_만기일'] || target['차량_만기일'] || target['차량만기일'] || target['자동차_갱신일'] || target['책임종료일'];
-        if (autoMat) {
-            const parsed = parseDateString(autoMat, clientBirth);
-            if (parsed) {
-                contracts.push({
-                    prodName: String(target['차량번호'] || target['차종'] || target['자동차보험사'] || '자동차보험'),
-                    compName: String(target['차_보험사'] || target['차_보험사명'] || target['자동차보험사'] || ''),
-                    insType: '자동차보험',
-                    expireParsed: parsed,
-                    raw: autoMat
-                });
-            }
+        const autoExpiry = resolveContractExpiry({
+            '만기일': target['자동차_만기일'] || target['자동차만기일'] || target['차_만기일'] || target['차량_만기일'] || target['차량만기일'] || target['자동차_갱신일'] || target['책임종료일'],
+            '갱신일': target['자동차_갱신일'] || target['차_갱신일']
+        }, clientBirth, target);
+
+        if (autoExpiry.parsed) {
+            contracts.push({
+                prodName: String(target['차량번호'] || target['차종'] || target['자동차보험사'] || '자동차보험'),
+                compName: String(target['차_보험사'] || target['차_보험사명'] || target['자동차보험사'] || ''),
+                insType: '자동차보험',
+                expireParsed: autoExpiry.parsed,
+                raw: autoExpiry.raw
+            });
         }
 
-        // B. 루트 일반 만기일 및 상품명
-        const rootMat = target['만기일'] || target['만기일자'] || target['갱신일'] || target['갱신일자'] || target['expireDate'] || target['renewalDate'];
-        if (rootMat) {
-            const parsed = parseDateString(rootMat, clientBirth);
-            if (parsed) {
-                contracts.push({
-                    prodName: String(target['상품명'] || target['대표상품'] || '보험계약'),
-                    compName: String(target['보험사명'] || target['보험사'] || ''),
-                    insType: String(target['보험종류'] || target['구분'] || '장기보험'),
-                    expireParsed: parsed,
-                    raw: rootMat
-                });
-            }
+        // B. 루트 일반 만기일 및 상품명 (실제 갱신일 우선 인식)
+        const rootExpiry = resolveContractExpiry({
+            '만기일': target['만기일'],
+            '만기일자': target['만기일자'],
+            '갱신일': target['갱신일'],
+            '갱신일자': target['갱신일자'],
+            'expireDate': target['expireDate'],
+            'renewalDate': target['renewalDate'],
+            '체결일': target['체결일'] || target['계약일']
+        }, clientBirth, target);
+
+        if (rootExpiry.parsed) {
+            contracts.push({
+                prodName: String(target['상품명'] || target['대표상품'] || '보험계약'),
+                compName: String(target['보험사명'] || target['보험사'] || ''),
+                insType: String(target['보험종류'] || target['구분'] || '장기보험'),
+                expireParsed: rootExpiry.parsed,
+                raw: rootExpiry.raw
+            });
         }
 
         // C. 보험1 ~ 보험20 개별 컬럼 스캔
         for (let i = 1; i <= 20; i++) {
-            const matKey = target[`보험${i}_만기일`] || target[`보험${i}_만기일자`] || target[`보험${i}_갱신일`] || target[`보험${i}_갱신일자`];
             const prodKey = target[`보험${i}_상품명`];
             const compKey = target[`보험${i}_보험사명`] || target[`보험${i}_보험회사`] || target[`보험${i}_사명`];
             const typeKey = target[`보험${i}_보험종류`] || target[`보험${i}_종류`];
             const covKey = target[`보험${i}_가입내역`];
 
-            if (matKey || prodKey || covKey) {
-                const parsed = parseDateString(matKey, clientBirth);
+            const colExpiry = resolveContractExpiry({
+                '만기일': target[`보험${i}_만기일`],
+                '만기일자': target[`보험${i}_만기일자`],
+                '갱신일': target[`보험${i}_갱신일`],
+                '갱신일자': target[`보험${i}_갱신일자`],
+                '체결일': target[`보험${i}_체결일`],
+                '계약일': target[`보험${i}_계약일`]
+            }, clientBirth, target);
+
+            if (colExpiry.parsed || prodKey || covKey) {
                 contracts.push({
                     prodName: String(prodKey || `계약 ${i}`),
                     compName: String(compKey || ''),
                     insType: String(typeKey || '장기보험'),
                     coverage: String(covKey || ''),
-                    expireParsed: parsed,
-                    raw: matKey
+                    expireParsed: colExpiry.parsed,
+                    raw: colExpiry.raw
                 });
             }
         }
 
-        // D. '가입내역' 및 '보험가입리스트' JSON 또는 배열 스캔
+        // D. '가입내역' 및 '보험가입리스트' JSON 또는 배열 스캔 (실제 갱신일 우선 및 년만기 연산 지원)
         let rawList = target['가입내역'] || target['보험가입리스트'] || target['계약목록'] || target['insuranceList'];
         if (rawList) {
             let parsedList = [];
@@ -204,16 +305,15 @@ const TargetEngine = (function() {
             if (Array.isArray(parsedList)) {
                 parsedList.forEach((c, idx) => {
                     if (c && typeof c === 'object') {
-                        const matVal = c['만기일'] || c['만기일자'] || c['expireDate'] || c['갱신일'] || c['갱신일자'] || c['renewalDate'] || c['만기'] || c['종료일'];
-                        const parsed = parseDateString(matVal, clientBirth);
+                        const insExpiry = resolveContractExpiry(c, clientBirth, target);
                         const insType = String(c['보험종류'] || c['종류'] || c['category'] || (c['차종'] || c['차량번호'] ? '자동차보험' : '장기보험'));
                         contracts.push({
                             prodName: String(c['상품명'] || c['product'] || c['증권명'] || c['차량번호'] || `계약 ${idx+1}`),
                             compName: String(c['보험사명'] || c['보험회사'] || c['company'] || c['차_보험사명'] || ''),
                             insType: insType,
                             coverage: typeof c['가입내역'] === 'string' ? c['가입내역'] : JSON.stringify(c['가입내역'] || {}),
-                            expireParsed: parsed,
-                            raw: matVal
+                            expireParsed: insExpiry.parsed,
+                            raw: insExpiry.raw
                         });
                     }
                 });

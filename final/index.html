@@ -3891,9 +3891,9 @@ html.is-mobile-device .mobile-bottom-sheet-wrap.collapsed,
 html.is-mobile-device #mobileBottomSheetWrap.collapsed {
     transform: translateY(calc(100% - 46px)) !important;
 }
-/* 서브페이지 열람 시에만 바텀시트 숨김 */
-html.is-mobile-device .main-workspace.subpage-viewing ~ #mobileBottomSheetWrap,
-html.is-mobile-device .subpage-viewing #mobileBottomSheetWrap {
+/* 서브페이지 열람 시에만 바텀시트 숨김 (첫화면/홈에서는 절대 숨김 금지) */
+html.is-mobile-device .subpage-viewing #mobileBottomSheetWrap,
+html.is-mobile-device #mobileBottomSheetWrap.subpage-hidden {
     display: none !important;
 }
 </style>
@@ -4835,10 +4835,24 @@ return Promise.race([promise, timeout]).finally(() => clearTimeout(id));
 function showDashboard(btn) {
 if (typeof toggleWidget === 'function') toggleWidget(false);
 
+const mainWs = document.querySelector('.main-workspace');
+if (mainWs) {
+    mainWs.classList.add('iframe-active');
+    mainWs.classList.remove('subpage-viewing');
+}
+const contentArea = document.querySelector('.pb-content-area');
+if (contentArea) contentArea.classList.remove('subpage-viewing');
 
-document.querySelector('.main-workspace').classList.add('iframe-active');
-const bSheet = document.getElementById('mobileBottomSheetWrap'); if (bSheet) { bSheet.style.display = 'none'; bSheet.classList.add('subpage-hidden'); }
-        const dbHome = document.getElementById('dashboardHome');
+// 모바일 첫화면에서는 3x3 바텀 시트 메뉴를 반드시 정상 노출
+const bSheet = document.getElementById('mobileBottomSheetWrap');
+if (bSheet) {
+    bSheet.classList.remove('subpage-hidden');
+    if (window.isMobileDevice || window.innerWidth <= 900) {
+        bSheet.style.display = 'block';
+        if (typeof updateMDashSheetUI === 'function') updateMDashSheetUI();
+    }
+}
+const dbHome = document.getElementById('dashboardHome');
 if (dbHome) dbHome.style.display = 'none';
 
 const frame = document.getElementById('mainFrame');
@@ -6353,6 +6367,13 @@ window.openDynamicList = function(type, val) {
         const mHub = document.getElementById('mobileWorkHub');
         if (mHub) mHub.style.display = 'none';
 
+        // 서브페이지 진입 시에만 메인 바텀시트 숨김 (서브페이지 전용 독바/버튼 가림 방지)
+        const bSheet = document.getElementById('mobileBottomSheetWrap');
+        if (bSheet) {
+            bSheet.style.setProperty('display', 'none', 'important');
+            bSheet.classList.add('subpage-hidden');
+        }
+
         const frame = document.getElementById('mainFrame');
         if (frame) {
             frame.style.display = 'block';
@@ -6428,11 +6449,13 @@ window.openDynamicList = function(type, val) {
         const mHub = document.getElementById('mobileWorkHub');
         if (mHub) mHub.style.display = 'none';
         const sheet = document.getElementById('mobileBottomSheetWrap');
-        if (sheet && (window.isMobileDevice || window.innerWidth <= 900)) {
-            sheet.style.display = 'block';
+        if (sheet) {
             sheet.classList.remove('subpage-hidden');
-            isMDashSheetCollapsed = false;
-            updateMDashSheetUI();
+            if (window.isMobileDevice || window.innerWidth <= 900) {
+                sheet.style.display = 'block';
+                isMDashSheetCollapsed = false;
+                if (typeof updateMDashSheetUI === 'function') updateMDashSheetUI();
+            }
         }
 
         const frame = document.getElementById('mainFrame');
@@ -6721,7 +6744,9 @@ window.toggleMobileFullMenu = toggleMobileFullMenu;
     document.addEventListener('DOMContentLoaded', () => {
         const sheet = document.getElementById('mobileBottomSheetWrap');
         if (sheet && (window.isMobileDevice || window.innerWidth <= 900)) {
+            sheet.classList.remove('subpage-hidden');
             sheet.style.display = 'block';
+            isMDashSheetCollapsed = false;
             updateMDashSheetUI();
         }
     });

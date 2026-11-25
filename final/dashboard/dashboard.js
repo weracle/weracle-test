@@ -2692,10 +2692,180 @@ async function executeDashboardCalendarSync() {
   }
 }
 
+function isDashboardCustomerEvent(item) {
+  if (!item) return false;
+  // 1. 설명에 [대시보드 고객 알림] 명시
+  if (item.description && item.description.includes('[대시보드 고객 알림]')) return true;
+  // 2. private 속성에 crmKey 명시
+  if (item.extendedProperties && item.extendedProperties.private && item.extendedProperties.private.crmKey) return true;
+  // 3. 제목이 [위라클] 로 시작하고 고객 알림 카테고리 포함
+  if (item.summary && item.summary.startsWith('[위라클]') && 
+      (item.summary.includes('생일') || item.summary.includes('상령일') || item.summary.includes('만기') || item.summary.includes('결제일'))) {
+    return true;
+  }
+  return false;
+}
+
+async function deleteSyncedDashboardEvents() {
+  const token = await getDashboardAuthToken();
+  if (!token) {
+    alert('구글 계정 연동 토큰이 확인되지 않습니다.\n대시보드 상단의 [구글 캘린더 연동하기] 버튼을 먼저 눌러 로그인한 후 다시 시도해주세요.');
+    return;
+  }
+
+  const btnCancel = document.getElementById('btnCancelDashboardSync');
+  const btnSync = document.getElementById('btnExecuteDashboardSync');
+  const progContainer = document.getElementById('dSyncProgressContainer');
+  const progBar = document.getElementById('dSyncProgressBar');
+  const progText = document.getElementById('dSyncProgressStatusText');
+  const progPercent = document.getElementById('dSyncProgressPercent');
+
+  const confirmMsg = 
+    '현재 연동된 구글 캘린더에서 대시보드가 전송한 고객 일정([대시보드 고객 알림])만 조회하여 안전하게 일괄 삭제합니다.\n\n' +
+    '※ 위라클 파트너스 공식 일정이나 개인 일정은 절대 삭제되지 않고 100% 안전하게 유지됩니다.\n\n' +
+    '대시보드 전송 일정 일괄 취소 및 삭제를 진행하시겠습니까?';
+
+  if (!confirm(confirmMsg)) return;
+
+  if (btnCancel) btnCancel.disabled = true;
+  if (btnSync) btnSync.disabled = true;
+  if (progContainer) progContainer.style.display = 'block';
+
+  try {
+    if (progText) progText.innerText = '캘린더 목록 확인 중...';
+    if (progBar) progBar.style.width = '10%';
+    if (progPercent) progPercent.innerText = '10%';
+
+    // 대상 캘린더 수집 (기본 캘린더 primary 및 보조 캘린더)
+    let calendarIds = ['primary'];
+    try {
+      const listRes = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        const found = (listData.items || []).filter(cal => 
+          cal.summary === D_CALENDAR_NAME || 
+          cal.summary === '[Weracle CRM] 고객알림' ||
+          (cal.summary && cal.summary.includes('Weracle CRM'))
+        );
+        found.forEach(cal => {
+          if (cal.id && !calendarIds.includes(cal.id)) {
+            calendarIds.push(cal.id);
+          }
+        });
+      }
+    } catch(e) {
+      console.warn('Sub-calendar search error:', e);
+    }
+
+    if (progText) progText.innerText = '대시보드 전송 고객 일정 검색 중...';
+    if (progBar) progBar.style.width = '20%';
+    if (progPercent) progPercent.innerText = '20%';
+
+    let eventsToDelete = [];
+    const seenEventKeys = new Set();
+
+    for (const calId of calendarIds) {
+      // 1. Google Calendar API search query '대시보드 고객 알림'
+      try {
+        let qUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events?q=${encodeURIComponent('대시보드 고객 알림')}&maxResults=2500&singleEvents=true`;
+        const qRes = await fetch(qUrl, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (qRes.ok) {
+          const qData = await qRes.json();
+          (qData.items || []).forEach(item => {
+            if (item.id && !seenEventKeys.has(`${calId}_${item.id}`)) {
+              if (isDashboardCustomerEvent(item)) {
+                seenEventKeys.add(`${calId}_${item.id}`);
+                eventsToDelete.push({ calId, id: item.id, summary: item.summary });
+              }
+            }
+          });
+        }
+      } catch(e) {
+        console.warn('Query search failed:', e);
+      }
+
+      // 2. 전체 일정 리스트 조회 (최대 2500개)로 혹시 쿼리에서 누락된 crmKey 일정까지 교차 확인
+      try {
+        let listUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events?maxResults=2500&singleEvents=true`;
+        const listRes = await fetch(listUrl, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (listRes.ok) {
+          const listData = await listRes.json();
+          (listData.items || []).forEach(item => {
+            if (item.id && !seenEventKeys.has(`${calId}_${item.id}`)) {
+              if (isDashboardCustomerEvent(item)) {
+                seenEventKeys.add(`${calId}_${item.id}`);
+                eventsToDelete.push({ calId, id: item.id, summary: item.summary });
+              }
+            }
+          });
+        }
+      } catch(e) {
+        console.warn('List search failed:', e);
+      }
+    }
+
+    if (eventsToDelete.length === 0) {
+      alert('현재 캘린더에서 대시보드가 전송한 고객 일정이 발견되지 않았습니다.\n(이미 삭제되었거나 등록된 고객 일정이 없습니다.)');
+      return;
+    }
+
+    const total = eventsToDelete.length;
+    const finalConfirm = confirm(
+      `대시보드에서 전송된 고객 일정 총 ${total}건이 발견되었습니다.\n\n` +
+      `해당 ${total}건을 구글 캘린더에서 모두 삭제하시겠습니까?\n` +
+      `※ 위라클 파트너스 공식 일정은 안전하게 유지됩니다.`
+    );
+    if (!finalConfirm) return;
+
+    let deletedCount = 0;
+    for (let i = 0; i < total; i++) {
+      const target = eventsToDelete[i];
+      if (progText) progText.innerText = `[삭제 진행 중 ${i + 1}/${total}] ${(target.summary || '').slice(0, 20)}...`;
+      const pct = Math.round(((i + 1) / total) * 100);
+      if (progBar) progBar.style.width = pct + '%';
+      if (progPercent) progPercent.innerText = pct + '%';
+
+      try {
+        const delRes = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(target.calId)}/events/${encodeURIComponent(target.id)}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (delRes.ok || delRes.status === 204 || delRes.status === 404 || delRes.status === 410) {
+          deletedCount++;
+        }
+      } catch(e) {
+        console.warn('Failed to delete event:', target.id, e);
+      }
+    }
+
+    if (progText) progText.innerText = `일괄 삭제 완료! (총 ${deletedCount}건)`;
+    if (progBar) progBar.style.width = '100%';
+    if (progPercent) progPercent.innerText = '100%';
+
+    alert(`총 ${deletedCount}건의 대시보드 고객 일정이 성공적으로 삭제되었습니다!\n\n위라클 파트너스 공식 일정은 안전하게 보존되었습니다.`);
+
+    closeDashboardCalendarSyncModal();
+    if (typeof fetchGoogleCalendarEvents === 'function') {
+      fetchGoogleCalendarEvents();
+    }
+  } catch(err) {
+    console.error('deleteSyncedDashboardEvents error:', err);
+    alert('일정 삭제 처리 중 오류가 발생했습니다: ' + (err.message || err));
+  } finally {
+    if (btnCancel) btnCancel.disabled = false;
+    if (btnSync) btnSync.disabled = false;
+    if (progContainer) progContainer.style.display = 'none';
+  }
+}
+
 window.openDashboardCalendarSyncModal = openDashboardCalendarSyncModal;
 window.closeDashboardCalendarSyncModal = closeDashboardCalendarSyncModal;
 window.changeDashboardSyncMonth = changeDashboardSyncMonth;
 window.toggleDashboardSyncCategory = toggleDashboardSyncCategory;
 window.executeDashboardCalendarSync = executeDashboardCalendarSync;
 window.downloadDashboardIcsNow = downloadDashboardIcsNow;
+window.deleteSyncedDashboardEvents = deleteSyncedDashboardEvents;
+window.isDashboardCustomerEvent = isDashboardCustomerEvent;
 

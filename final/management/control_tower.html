@@ -791,7 +791,7 @@
         </div>
       </div>
       <div style="display: flex; gap: 10px; width: 100%; margin-top: 6px;">
-        <button type="button" class="btn-nav-link" style="flex: 1; height: 42px; justify-content: center;" onclick="location.href='/final/index.html'">
+        <button type="button" class="btn-nav-link" style="flex: 1; height: 42px; justify-content: center;" onclick="returnToMainHome()">
           <i class="fa-solid fa-house"></i> 메인 홈으로
         </button>
         <button type="button" class="btn-nav-link primary" style="flex: 1; height: 42px; justify-content: center;" onclick="openMasterPinPrompt()">
@@ -824,7 +824,7 @@
         <i class="fa-solid fa-key" style="color:#ffffff;"></i>
         <span id="masterKeyText">🔑 DB 마스터키(Secret key) 등록</span>
       </button>
-      <a href="/final/index.html" class="btn-nav-link"><i class="fa-solid fa-house"></i> 메인 홈</a>
+      <a href="javascript:void(0)" onclick="returnToMainHome()" class="btn-nav-link"><i class="fa-solid fa-house"></i> 메인 홈</a>
       <a href="/final/branding/market.html" class="btn-nav-link"><i class="fa-solid fa-bag-shopping"></i> 브랜딩 마켓</a>
       <a href="/final/management/management.html" class="btn-nav-link"><i class="fa-solid fa-calendar-check"></i> 파트너스 출석</a>
       <button class="btn-nav-link primary" onclick="refreshAllTowerData()"><i class="fa-solid fa-rotate"></i> 실시간 새로고침</button>
@@ -1844,14 +1844,14 @@
           if (session && session.user) {
             currentUserSession = session;
             // DB에서 해당 유저의 실제 grade 조회
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${session.user.id}&select=id,email,nickname,user_grade`, {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${session.user.id}&select=id,email,nickname,user_grade,team`, {
               headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
             });
             const users = await res.json();
             if (Array.isArray(users) && users.length > 0) {
               const u = users[0];
               const g = (u.user_grade || '').toLowerCase();
-              if (g === 'manager' || g === 'admin' || g.includes('manager')) {
+              if (g === 'manager' || g === 'admin' || g.includes('manager') || u.team === '관리자' || u.team === '본사' || u.email === 'boheomdapda@gmail.com' || u.email === 'bohwan5189@gmail.com') {
                 verifiedAdminUser = u;
                 setAdminHeaderUI(`${u.nickname || u.email} (관리자)`);
                 return true;
@@ -1911,6 +1911,19 @@
     function setAdminHeaderUI(name) {
       const nameEl = document.getElementById('adminNameText');
       if (nameEl) nameEl.innerText = `${name} 접속 중`;
+    }
+
+    
+    function returnToMainHome() {
+      if (window.top && window.top !== window.self) {
+        if (typeof window.top.showDashboardHome === 'function') {
+          window.top.showDashboardHome();
+          return;
+        }
+        window.top.location.href = '/final/index.html';
+      } else {
+        location.href = '/final/index.html';
+      }
     }
 
     function showAccessDeniedScreen(statusText) {

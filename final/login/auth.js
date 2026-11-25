@@ -65,7 +65,7 @@ async function verifySubscriptionStatus(profile) {
     if (!profile) return profile;
 
     // 공식 관리자/본사 계정은 구독 검증 예외 처리 (영구 manager 권한 보장)
-    if (profile.email && (profile.email === 'boheomdapda@gmail.com' || profile.email.includes('admin') || profile.email.includes('weracle'))) {
+    if (profile.email && (profile.email === 'boheomdapda@gmail.com' || profile.email === 'bohwan5189@gmail.com')) {
         profile.user_grade = 'manager';
         profile.role = 'admin';
         return profile;

@@ -8,6 +8,14 @@
 <script src="weracle_device.js"></script>
 <script src="weracle_modal.js"></script>
 <script>
+    /* iframe 중복 index.html 방지 (헤더 2중 형성 차단) */
+    if (window.top !== window.self) {
+        try {
+            if (window.top.location.hostname === window.location.hostname) {
+                window.top.location.href = window.location.href;
+            }
+        } catch(e) {}
+    }
 // Chrome [Violation] unload 강제 차단 심화 코드
 (function() {
 const originalAddEventListener = EventTarget.prototype.addEventListener;
@@ -5106,16 +5114,11 @@ async function checkSession() {
             let { data: profile } = await window.sb.from('profiles').select('*').eq('id', window.currentUser.id).maybeSingle();
             
             // [공식 관리자 계정(boheomdapda@gmail.com 등) 자동 manager 등급 보장]
-            const isOfficialAdmin = window.currentUser?.email && (
-                window.currentUser.email === 'boheomdapda@gmail.com' || 
-                window.currentUser.email.includes('admin') || 
-                window.currentUser.email.includes('weracle')
-            );
+            const isOfficialAdmin = window.currentUser?.email && (window.currentUser.email === 'boheomdapda@gmail.com' || window.currentUser.email === 'bohwan5189@gmail.com');
             if (profile && isOfficialAdmin && profile.user_grade === 'basic') {
                 profile.user_grade = 'manager';
-                profile.role = 'admin';
                 try {
-                    await window.sb.from('profiles').update({ user_grade: 'manager', role: 'admin' }).eq('id', window.currentUser.id);
+                    await window.sb.from('profiles').update({ user_grade: 'manager' }).eq('id', window.currentUser.id);
                 } catch(e) {}
             }
             
@@ -5411,9 +5414,12 @@ function updateProfileUI(user, profile) {
     }
 
     const displayName = (profile && profile.full_name) ? profile.full_name : (profile && profile.nickname ? profile.nickname : user.email.split('@')[0]);
-    const isOfficialAdminUser = user?.email && (user.email === 'boheomdapda@gmail.com' || user.email.includes('admin') || user.email.includes('weracle'));
-    let grade = (profile && profile.user_grade) ? profile.user_grade : (isOfficialAdminUser ? 'manager' : 'basic');
-    if (isOfficialAdminUser && grade === 'basic') grade = 'manager';
+    const isOfficialAdminUser = user?.email && (user.email === 'boheomdapda@gmail.com' || user.email === 'bohwan5189@gmail.com');
+    const isDbAdmin = profile && (profile.user_grade === 'manager' || profile.user_grade === 'admin' || profile.team === '관리자' || profile.team === '본사');
+    let grade = (profile && profile.user_grade) ? profile.user_grade : 'basic';
+    if (isOfficialAdminUser || isDbAdmin) {
+        grade = 'manager';
+    }
     let badgeStyle = 'badge-user';
     let label = '일반(basic)';
     if(grade === 'manager') { badgeStyle = 'badge-admin'; label = '관리자'; }
@@ -6115,11 +6121,7 @@ window.openDynamicList = function(type, val) {
         const gradeStr = p ? ((p.user_grade || '') + ',' + (p.access_grades || '') + ',' + (p.role || '')).toLowerCase() : '';
         const grades = gradeStr.split(',').map(s => s.trim());
         
-        const isOfficialAdmin = window.currentUser?.email && (
-            window.currentUser.email === 'boheomdapda@gmail.com' || 
-            window.currentUser.email.includes('admin') || 
-            window.currentUser.email.includes('weracle')
-        );
+        const isOfficialAdmin = window.currentUser?.email && (window.currentUser.email === 'boheomdapda@gmail.com' || window.currentUser.email === 'bohwan5189@gmail.com');
         const isAdmin = isOfficialAdmin || (p && (grades.includes('manager') || grades.includes('admin') || grades.includes('m') || p.team === '관리자' || p.team === '본사'));
         const isFamily = isAdmin || (p && (grades.includes('family') || grades.includes('식구')));
         const isVip = isFamily || (p && (grades.includes('vip') || grades.includes('svip')));

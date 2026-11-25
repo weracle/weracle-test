@@ -3082,472 +3082,168 @@
         <!-- ================= TAB 3: 비주얼 & 각오 색상 ================= -->
         <div class="tab-pane" id="profileTab">
 
-          <!-- Left Visual Mode Selection: Photo vs Handwritten Pledge -->
-          <div class="form-card">
-            <div class="form-section-title" style="color:#0284c7; border-bottom: 1px solid #e2e8f0;">
+          <!-- 1. 좌측 비주얼 스타일 선택 (사진형 vs 서약형) -->
+          <div class="form-card" style="margin-bottom: 16px;">
+            <div class="form-section-title" style="color:#0284c7; border-bottom: 1px solid #e2e8f0; margin-bottom: 8px;">
               <span><i class="fa-solid fa-wand-magic-sparkles"></i> 좌측 비주얼 스타일 선택</span>
             </div>
-            <p class="form-subtext">
-              인물 사진형 또는 <b>필기체 각오·서약형(사진 없음)</b>을 자유롭게 선택할 수 있습니다.
+            <p class="form-subtext" style="margin-bottom: 12px;">
+              인물 사진형 또는 <b>신뢰 각오·서약형(사진 없음)</b> 중 원하는 스타일을 선택하세요.
             </p>
 
-            <div class="style-card-grid">
-              <div class="style-card-opt active" id="btnModePhoto" onclick="setVisualMode('photo')">
+            <div class="style-card-grid" style="margin-bottom: 6px;">
+              <div class="style-card-opt active" id="btnModePhoto" onclick="setVisualMode('photo')" style="cursor: pointer;">
                 <i class="fa-solid fa-id-badge"></i>
                 <span>인물 프로필 사진형</span>
               </div>
-              <div class="style-card-opt" id="btnModePledge" onclick="setVisualMode('pledge')">
+              <div class="style-card-opt" id="btnModePledge" onclick="setVisualMode('pledge')" style="cursor: pointer;">
                 <i class="fa-solid fa-feather-pointed"></i>
-                <span>필기체 각오·서약형</span>
+                <span>신뢰 각오·서약형</span>
               </div>
             </div>
+          </div>
 
-            <!-- Photo Fine-Tuning & Size Controls -->
-            
-            <!-- [NEW] AI 자동 인물 누끼 제거 & 스마트 스튜디오 키어 -->
-            <div style="margin-top: 14px; background: #ffffff; border: 1.5px solid #0284c7; border-radius: 14px; padding: 16px; box-shadow: 0 4px 14px rgba(2,132,199,0.08);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 13.5px; font-weight: 850; color: #0284c7; display: flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-wand-magic-sparkles"></i> AI 자동 인물 누끼 & 배경 제거
-                </span>
-                <span class="badge-auto" id="cutoutStatusBadge" style="background: #e0f2fe; color: #0369a1; font-weight: 800; font-size: 11px;">준비 완료</span>
-              </div>
+          <!-- 2. [모드 1: 사진형] 사진 업로드 및 정밀 맞춤 설정 -->
+          <div id="photoControlGroup" class="form-card" style="margin-bottom: 16px; border: 1.5px solid #bae6fd;">
+            <div class="form-section-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <span style="font-size: 13.5px; font-weight: 850; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-camera" style="color: #0284c7;"></i> 프로필 사진 등록 및 조절
+              </span>
+              <span style="font-size: 11px; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 2px 7px; border-radius: 4px;">실시간 반영</span>
+            </div>
 
-              <!-- Upload Portrait File -->
-              <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <label class="btn-action primary" style="flex: 1; height: 38px; font-size: 12.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; background: #0284c7; color: white; border-radius: 8px;">
-                  <i class="fa-solid fa-cloud-arrow-up"></i> 내 사진 파일 선택
-                  <input type="file" id="portraitFileInput" accept="image/*" style="display: none;" onchange="handlePortraitUpload(event)">
+            <!-- 사진 파일 등록 & 복원 버튼 -->
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+              <input type="file" id="photoUploadInput" accept="image/*" style="display: none;" onchange="handlePhotoUpload(this)">
+              <button type="button" class="btn-action primary" onclick="document.getElementById('photoUploadInput').click()" style="flex: 1.4; height: 38px; font-size: 12.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; background: #0284c7; color: white; border: none; border-radius: 8px; box-shadow: 0 2px 6px rgba(2,132,199,0.25);">
+                <i class="fa-solid fa-cloud-arrow-up"></i> 내 사진 직접 올리기
+              </button>
+              <button type="button" class="btn-action secondary" onclick="resetPhotoToDefault()" style="flex: 0.9; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; color: #475569; font-size: 12px; font-weight: 700; cursor: pointer;" title="기본 모델 사진으로 복원">
+                <i class="fa-solid fa-rotate-left"></i> 기본 사진
+              </button>
+            </div>
+
+            <!-- 사진 크기 (정비율 조절) -->
+            <div class="form-row" style="margin-bottom: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label class="form-label" style="margin: 0; font-size: 12.5px; font-weight: 750; color: #334155;">
+                  <i class="fa-solid fa-up-right-and-down-left-from-center mr-1" style="color: #0284c7;"></i> 사진 크기 (정비율 유지)
                 </label>
-                <button type="button" class="btn-action" onclick="restoreOriginalPhoto()" title="원본 사진으로 복원" style="padding: 0 12px; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; color: #475569; font-size: 12px; font-weight: 700; cursor: pointer;">
-                  <i class="fa-solid fa-rotate-left"></i> 복원
-                </button>
+                <span id="photoSizeVal" style="font-size: 12px; font-weight: 850; color: #0284c7; background: #f0f9ff; padding: 2px 8px; border-radius: 5px; border: 1px solid #bae6fd;">100%</span>
               </div>
-
-              <!-- AI Actions Buttons -->
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-                <button type="button" id="btnRunAiCutout" onclick="runAiPersonCutout()" style="height: 40px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 850; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 8px rgba(2,132,199,0.3);">
-                  <i class="fa-solid fa-microchip"></i> AI 딥러닝 누끼
-                </button>
-                <button type="button" onclick="runInstantStudioKeyer()" style="height: 40px; background: #f8fafc; color: #0284c7; border: 1.5px solid #0284c7; border-radius: 8px; font-size: 12.5px; font-weight: 850; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                  <i class="fa-solid fa-bolt"></i> 스마트 스튜디오 키어
-                </button>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="preset-pill-btn" onclick="adjustPhotoSize(-10)" style="padding: 5px 10px; font-weight: 800; font-size: 11px;" title="사진 10% 축소">◀ 작게</button>
+                <input type="range" min="70" max="160" value="100" id="photoSizeRange" oninput="updatePhotoSize(this.value)" style="accent-color: #0284c7; flex: 1;">
+                <button type="button" class="preset-pill-btn" onclick="adjustPhotoSize(10)" style="padding: 5px 10px; font-weight: 800; font-size: 11px;" title="사진 10% 확대">크게 ▶</button>
               </div>
-
-              <!-- AI Progress Bar -->
-              <div id="aiProgressWrap" style="display: none; margin-bottom: 10px;">
-                <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-                  <div id="aiProgressBar" style="width: 0%; height: 100%; background: #0284c7; transition: width 0.3s ease;"></div>
-                </div>
-                <div id="aiProgressText" style="font-size: 11px; color: #64748b; margin-top: 4px; text-align: center; font-weight: 700;">인물 누끼 처리 중...</div>
-              </div>
-
-              <!-- Mode Switcher: 누끼 모드 vs 전체 배경 풀화보 모드 -->
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; background: #f1f5f9; padding: 4px; border-radius: 8px;">
-                <button type="button" id="btnPhotoModeCutout" class="master-cat-btn active" onclick="setPhotoDisplayMode('cutout')" style="font-size: 12px; padding: 6px;">
-                  <i class="fa-solid fa-user-tie"></i> 인물 누끼 모드
-                </button>
-                <button type="button" id="btnPhotoModeFullBg" class="master-cat-btn" onclick="setPhotoDisplayMode('fullbg')" style="font-size: 12px; padding: 6px;">
-                  <i class="fa-solid fa-panorama"></i> 전체 배경 풀화보
-                </button>
-              </div>
-
-              <!-- Sliders: Zoom, Fade, Flip, Position -->
-              <div style="space-y: 8px; font-size: 12px;">
-                <!-- Drag Hint -->
-                <div style="padding: 6px 10px; background: #eff6ff; border-radius: 6px; color: #1d4ed8; font-size: 11.5px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-hand-pointer"></i> 캔버스에서 인물을 마우스로 직접 드래그하여 이동할 수 있습니다!
-                </div>
-
-                <!-- Zoom Slider -->
-                <div style="margin-bottom: 8px;">
-                  <div style="display: flex; justify-content: space-between; font-weight: 700; color: #334155; margin-bottom: 2px;">
-                    <span>인물 크기 확대/축소</span>
-                    <span id="txtPersonScale">100%</span>
-                  </div>
-                  <input type="range" id="rangePersonScale" min="50" max="200" value="100" oninput="onPersonTransformInput()" style="width: 100%;">
-                </div>
-
-                <!-- Bottom Fade Slider -->
-                <div style="margin-bottom: 8px;">
-                  <div style="display: flex; justify-content: space-between; font-weight: 700; color: #334155; margin-bottom: 2px;">
-                    <span>하단 자연스러운 페이드아웃</span>
-                    <span id="txtPersonFade">8%</span>
-                  </div>
-                  <input type="range" id="rangePersonFade" min="0" max="40" value="8" oninput="onPersonTransformInput()" style="width: 100%;">
-                </div>
-
-                <!-- X & Y Fine Tune -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                  <div>
-                    <div style="display: flex; justify-content: space-between; font-weight: 700; color: #334155; margin-bottom: 2px;">
-                      <span>좌우 X</span>
-                      <span id="txtPersonX">0px</span>
-                    </div>
-                    <input type="range" id="rangePersonX" min="-250" max="250" value="0" oninput="onPersonTransformInput()" style="width: 100%;">
-                  </div>
-                  <div>
-                    <div style="display: flex; justify-content: space-between; font-weight: 700; color: #334155; margin-bottom: 2px;">
-                      <span>상하 Y</span>
-                      <span id="txtPersonY">0px</span>
-                    </div>
-                    <input type="range" id="rangePersonY" min="-250" max="250" value="0" oninput="onPersonTransformInput()" style="width: 100%;">
-                  </div>
-                </div>
-
-                <!-- Flip X & Shadow Checkboxes -->
-                <div style="display: flex; gap: 14px; margin-top: 8px; font-weight: 700; color: #334155;">
-                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <input type="checkbox" id="chkPersonFlipX" onchange="onPersonTransformInput()">
-                    <span>좌우 반전 (Flip)</span>
-                  </label>
-                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <input type="checkbox" id="chkPersonShadow" checked onchange="onPersonTransformInput()">
-                    <span>인물 그림자 연출</span>
-                  </label>
-                  <button type="button" onclick="resetPersonTransform()" style="margin-left: auto; background: none; border: none; color: #0284c7; font-size: 11.5px; font-weight: 800; cursor: pointer;">
-                    <i class="fa-solid fa-arrows-rotate"></i> 초기화
-                  </button>
-                </div>
+              <div style="display: flex; gap: 6px; margin-top: 8px;">
+                <button type="button" class="preset-pill-btn" style="flex: 1; font-size: 11px; padding: 4px 0;" onclick="updatePhotoSize(80)">80% 작게</button>
+                <button type="button" class="preset-pill-btn" style="flex: 1; font-size: 11px; padding: 4px 0;" onclick="updatePhotoSize(100)">100% 표준</button>
+                <button type="button" class="preset-pill-btn" style="flex: 1; font-size: 11px; padding: 4px 0;" onclick="updatePhotoSize(120)">120% 크게</button>
+                <button type="button" class="preset-pill-btn" style="flex: 1; font-size: 11px; padding: 4px 0;" onclick="updatePhotoSize(140)">140% 특대</button>
               </div>
             </div>
 
-            <!-- [NEW] 시그니처 3D 캐릭터 & 브랜드 엠블럼 설정 -->
-            <div style="margin-top: 14px; background: #ffffff; border: 1.5px solid #bae6fd; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(2,132,199,0.06);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 13.5px; font-weight: 850; color: #0f172a; display: flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-shield-cat" style="color:#f59e0b;"></i> 시그니처 입체 캐릭터 엠블럼
-                </span>
-                <label style="font-size: 11.5px; font-weight: 800; color: #0284c7; display: flex; align-items: center; gap: 4px; cursor: pointer;">
-                  <input type="checkbox" id="chkShowEmblem" checked onchange="onEmblemInputsChange()">
-                  <span>표시</span>
+            <!-- 얼굴 상하 위치 맞춤 (얼굴 잘림 방지) -->
+            <div class="form-row" style="margin-bottom: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label class="form-label" style="margin: 0; font-size: 12px; font-weight: 700; color: #334155;">
+                  <i class="fa-solid fa-arrows-up-down mr-1" style="color: #0284c7;"></i> 얼굴 상하 위치 (얼굴 잘림 방지)
                 </label>
+                <span id="photoPosYVal" style="font-size: 11.5px; font-weight: 800; color: #0284c7; background: #f0f9ff; padding: 1px 8px; border-radius: 4px; border: 1px solid #bae6fd;">10%</span>
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                <div>
-                  <label style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px;">상단 보조 문구</label>
-                  <input type="text" id="inpEmblemSub" value="보험으로 보답하는" oninput="onEmblemInputsChange()" style="width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px;">
-                </div>
-                <div>
-                  <label style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px;">메인 3D 입체명</label>
-                  <input type="text" id="inpEmblemMain" value="보답화니" oninput="onEmblemInputsChange()" style="width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px; font-weight: 800; color: #113f67;">
-                </div>
-              </div>
-              <div>
-                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 11.5px; color: #475569; margin-bottom: 2px;">
-                  <span>엠블럼 크기</span>
-                  <span id="txtEmblemSize">225px</span>
-                </div>
-                <input type="range" id="rangeEmblemSize" min="120" max="320" value="225" oninput="onEmblemInputsChange()" style="width: 100%;">
+              <input type="range" min="0" max="100" value="10" id="photoPosYRange" oninput="updatePhotoPosY(this.value)" style="accent-color: #0284c7; width: 100%;">
+              <div style="display: flex; gap: 6px; margin-top: 4px;">
+                <button type="button" class="preset-pill-btn" style="flex: 1; font-size: 11px; padding: 3px 6px;" onclick="updatePhotoPosY(10)">▲ 상단(얼굴)</button>
+                <button type="button" class="preset-pill-btn" style="flex: 1; font-size: 11px; padding: 3px 6px;" onclick="updatePhotoPosY(50)">● 중앙 맞춤</button>
+                <button type="button" class="preset-pill-btn" style="flex: 1; font-size: 11px; padding: 3px 6px;" onclick="updatePhotoPosY(80)">▼ 하단(전신)</button>
               </div>
             </div>
 
-            <!-- [NEW] 3단 실시간 SNS QR 코드 스택 설정 -->
-            <div style="margin-top: 14px; background: #ffffff; border: 1.5px solid #bae6fd; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(2,132,199,0.06);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 13.5px; font-weight: 850; color: #0f172a; display: flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-qrcode" style="color:#0284c7;"></i> 3단 실시간 SNS QR 코드 스택
-                </span>
-                <span style="font-size: 11px; color: #64748b; font-weight: 700;">실시간 자동 생성</span>
+            <!-- 모서리 곡률 (라운딩) -->
+            <div class="form-row" style="margin-bottom: 4px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label class="form-label" style="margin: 0; font-size: 12px; font-weight: 700; color: #334155;">
+                  <i class="fa-solid fa-shapes mr-1" style="color: #0284c7;"></i> 모서리 곡률 (라운딩)
+                </label>
+                <span id="photoRadiusVal" style="font-size: 11.5px; font-weight: 800; color: #0284c7; background: #f0f9ff; padding: 1px 8px; border-radius: 4px; border: 1px solid #bae6fd;">16px</span>
               </div>
-              
-              <!-- Insta -->
-              <div style="margin-bottom: 8px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                  <label style="font-size: 11.5px; font-weight: 700; color: #e1306c; display: flex; align-items: center; gap: 4px;">
-                    <i class="fa-brands fa-instagram"></i> 인스타그램 링크
-                  </label>
-                  <label style="font-size: 11px; cursor: pointer; color: #64748b;">
-                    <input type="checkbox" id="chkShowInsta" checked onchange="onSnsInputsChange()"> 표시
-                  </label>
-                </div>
-                <input type="text" id="inpInstaUrl" value="https://instagram.com/weraclelab" oninput="onSnsInputsChange()" placeholder="https://instagram.com/아이디" style="width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px;">
-              </div>
-
-              <!-- Blog -->
-              <div style="margin-bottom: 8px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                  <label style="font-size: 11.5px; font-weight: 700; color: #03c75a; display: flex; align-items: center; gap: 4px;">
-                    <i class="fa-solid fa-blog"></i> 네이버 블로그 링크
-                  </label>
-                  <label style="font-size: 11px; cursor: pointer; color: #64748b;">
-                    <input type="checkbox" id="chkShowBlog" checked onchange="onSnsInputsChange()"> 표시
-                  </label>
-                </div>
-                <input type="text" id="inpBlogUrl" value="https://blog.naver.com/weraclelab" oninput="onSnsInputsChange()" placeholder="https://blog.naver.com/아이디" style="width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px;">
-              </div>
-
-              <!-- Kakao -->
-              <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                  <label style="font-size: 11.5px; font-weight: 700; color: #f59e0b; display: flex; align-items: center; gap: 4px;">
-                    <i class="fa-solid fa-comment"></i> 카카오톡 채널 링크
-                  </label>
-                  <label style="font-size: 11px; cursor: pointer; color: #64748b;">
-                    <input type="checkbox" id="chkShowKakao" checked onchange="onSnsInputsChange()"> 표시
-                  </label>
-                </div>
-                <input type="text" id="inpKakaoUrl" value="https://pf.kakao.com/_weracle" oninput="onSnsInputsChange()" placeholder="https://pf.kakao.com/_채널ID" style="width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px;">
-              </div>
-            </div>
-
-            <div id="photoControlGroup" style="margin-top: 14px; background: #ffffff; border: 1.5px solid #bae6fd; border-radius: 14px; padding: 16px 18px; box-shadow: 0 2px 8px rgba(2,132,199,0.06);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 13.5px; font-weight: 850; color: #0f172a; display: flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-sliders" style="color: #0284c7;"></i> 사진 크기 / 확대 / 위치 정밀 조절
-                </span>
-                <span style="font-size: 11px; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 2px 7px; border-radius: 4px;">실시간 반영</span>
-              </div>
-              <p style="font-size: 12px; color: #64748b; margin: 0 0 14px 0; line-height: 1.4;">사진 프레임 높이, 인물 확대 배율, 얼굴 상하 위치를 자유롭게 조절하여 완벽한 구도를 잡을 수 있습니다.</p>
-
-              <!-- Photo Proportional Size Slider & Quick Step Buttons (Just Like Logo) -->
-              <div class="form-row" style="margin-bottom: 14px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                  <label class="form-label" style="margin:0; font-size:12.5px; font-weight:750; color:#334155;">
-                    <i class="fa-solid fa-camera mr-1" style="color:#0284c7;"></i> 사진 크기 (정비율 조절 · 로고처럼 원본 비율 100% 유지)
-                  </label>
-                  <span id="photoSizeVal" style="font-size:12px; font-weight:850; color:#0284c7; background:#f0f9ff; padding:2px 8px; border-radius:5px; border:1px solid #bae6fd;">100%</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                  <button type="button" class="preset-pill-btn" onclick="adjustPhotoSize(-10)" style="padding:5px 10px; font-weight:800; font-size:11px;" title="사진 10% 축소">◀ 작게</button>
-                  <input type="range" min="70" max="160" value="100" id="photoSizeRange" oninput="updatePhotoSize(this.value)" style="accent-color:#0284c7; flex:1;">
-                  <button type="button" class="preset-pill-btn" onclick="adjustPhotoSize(10)" style="padding:5px 10px; font-weight:800; font-size:11px;" title="사진 10% 확대">크게 ▶</button>
-                </div>
-                <div style="display:flex; gap:6px; margin-top:8px;">
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:4px 0;" onclick="updatePhotoSize(80)">80% 작게</button>
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:4px 0;" onclick="updatePhotoSize(100)">100% 표준</button>
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:4px 0;" onclick="updatePhotoSize(120)">120% 크게</button>
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:4px 0;" onclick="updatePhotoSize(140)">140% 특대</button>
-                </div>
-              </div>
-
-              <!-- Photo Position Y (Face alignment) -->
-              <div class="form-row" style="margin-bottom: 14px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-                  <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">얼굴 상하 위치 맞춤 (얼굴 잘림 방지)</label>
-                  <span id="photoPosYVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">10%</span>
-                </div>
-                <input type="range" min="0" max="100" value="10" id="photoPosYRange" oninput="updatePhotoPosY(this.value)" style="accent-color:#0284c7; width:100%;">
-                <div style="display:flex; gap:6px; margin-top:4px;">
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoPosY(10)">▲ 상단(얼굴)</button>
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoPosY(50)">● 중앙 맞춤</button>
-                  <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updatePhotoPosY(80)">▼ 하단(전신)</button>
-                </div>
-              </div>
-
-              <!-- Photo Border Radius -->
-              <div class="form-row" style="margin-bottom: 14px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-                  <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">모서리 곡률 (라운딩)</label>
-                  <span id="photoRadiusVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">16px</span>
-                </div>
-                <input type="range" min="0" max="32" value="16" id="photoRadiusRange" oninput="updatePhotoRadius(this.value)" style="accent-color:#0284c7; width:100%;">
-              </div>
-
-              <!-- Upload & Reset Buttons -->
-              <div style="display: flex; gap: 8px; margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
-                <button type="button" onclick="document.getElementById('photoUploadInput').click()" style="flex: 1.3; height: 38px; background: #0284c7; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(2,132,199,0.3);">
-                  <i class="fa-solid fa-upload"></i> 내 사진 직접 올리기
-                </button>
-                <button type="button" onclick="resetPhotoToDefault()" style="flex: 0.9; height: 38px; background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
-                  기본 사진 복원
-                </button>
-              </div>
-            </div>
-
-            <!-- Pledge Customization & DIRECT COLOR CONTROLS -->
-            <div id="pledgeControlGroup" style="display:none; margin-top:10px; border-top:1px dashed #bae6fd; padding-top:10px;">
-              
-              <!-- 1. Color Customizer Subcard -->
-              <div class="sub-control-box" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
-                <div class="sub-control-title">
-                  <i class="fa-solid fa-palette"></i>
-                  <span>서약 카드 색상 자유 변경 (배경 / 필기체 / 글자색)</span>
-                </div>
-
-                <!-- A. Quick Tone Buttons -->
-                <div style="margin-bottom:10px;">
-                  <label class="form-label">추천 배색 톤 원클릭 적용</label>
-                  <div class="preset-pill-row">
-                    <button type="button" class="preset-pill-btn active" id="pldColAuto" onclick="setPledgeColorScheme('auto', this)">🎨 테마 연동</button>
-                    <button type="button" class="preset-pill-btn" onclick="setPledgeColorScheme('gold', this)">👑 골드 에디션</button>
-                    <button type="button" class="preset-pill-btn" onclick="setPledgeColorScheme('navy', this)">🏛️ 클래식 네이비</button>
-                    <button type="button" class="preset-pill-btn" onclick="setPledgeColorScheme('cream', this)">📜 크림 파치먼트</button>
-                    <button type="button" class="preset-pill-btn" onclick="setPledgeColorScheme('dark', this)">🌙 다크 차콜</button>
-                  </div>
-                </div>
-
-                <!-- B. Custom Color Pickers: Background, Accent, Text, Seal -->
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:8px;">
-                  
-                  <!-- Card Background Color -->
-                  <div>
-                    <label class="form-label">서약 카드 배경색</label>
-                    <div class="color-picker-row">
-                      <input type="color" class="color-input" id="pledgeBgPicker" value="#1e293b" oninput="updateCustomPledgeBg(this.value)">
-                      <div class="preset-swatches">
-                        <div class="swatch-dot" style="background:#0f172a;" onclick="updateCustomPledgeBg('#0f172a')" title="딥다크"></div>
-                        <div class="swatch-dot" style="background:#064e3b;" onclick="updateCustomPledgeBg('#064e3b')" title="에메랄드"></div>
-                        <div class="swatch-dot" style="background:#fdfbf7;" onclick="updateCustomPledgeBg('#fdfbf7')" title="크림"></div>
-                        <div class="swatch-dot" style="background:#ffffff;" onclick="updateCustomPledgeBg('#ffffff')" title="화이트"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Cursive & Accent Color -->
-                  <div>
-                    <label class="form-label">필기체 & 강조색</label>
-                    <div class="color-picker-row">
-                      <input type="color" class="color-input" id="pledgeAccentPicker" value="#38bdf8" oninput="updateCustomPledgeAccent(this.value)">
-                      <div class="preset-swatches">
-                        <div class="swatch-dot" style="background:#38bdf8;" onclick="updateCustomPledgeAccent('#38bdf8')" title="스카이"></div>
-                        <div class="swatch-dot" style="background:#f59e0b;" onclick="updateCustomPledgeAccent('#f59e0b')" title="골드"></div>
-                        <div class="swatch-dot" style="background:#2563eb;" onclick="updateCustomPledgeAccent('#2563eb')" title="로열블루"></div>
-                        <div class="swatch-dot" style="background:#b45309;" onclick="updateCustomPledgeAccent('#b45309')" title="앰버"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:8px;">
-                  
-                  <!-- Body Text Color -->
-                  <div>
-                    <label class="form-label">각오 본문 글자색</label>
-                    <div class="color-picker-row">
-                      <input type="color" class="color-input" id="pledgeTextPicker" value="#f1f5f9" oninput="updateCustomPledgeText(this.value)">
-                      <div class="preset-swatches">
-                        <div class="swatch-dot" style="background:#ffffff;" onclick="updateCustomPledgeText('#ffffff')" title="화이트"></div>
-                        <div class="swatch-dot" style="background:#fef3c7;" onclick="updateCustomPledgeText('#fef3c7')" title="아이보리"></div>
-                        <div class="swatch-dot" style="background:#0f172a;" onclick="updateCustomPledgeText('#0f172a')" title="다크"></div>
-                        <div class="swatch-dot" style="background:#292524;" onclick="updateCustomPledgeText('#292524')" title="세피아"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Seal Stamp Color -->
-                  <div>
-                    <label class="form-label">공인 인장(도장) 색상</label>
-                    <div class="color-picker-row">
-                      <input type="color" class="color-input" id="pledgeSealPicker" value="#ef4444" oninput="updateCustomPledgeSeal(this.value)">
-                      <div class="preset-swatches">
-                        <div class="swatch-dot" style="background:#ef4444;" onclick="updateCustomPledgeSeal('#ef4444')" title="인주 레드"></div>
-                        <div class="swatch-dot" style="background:#f59e0b;" onclick="updateCustomPledgeSeal('#f59e0b')" title="금박 골드"></div>
-                        <div class="swatch-dot" style="background:#0284c7;" onclick="updateCustomPledgeSeal('#0284c7')" title="청인 블루"></div>
-                        <div class="swatch-dot" style="background:#1e293b;" onclick="updateCustomPledgeSeal('#1e293b')" title="흑인 블랙"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-
-              <!-- 2. Pledge Text Editor -->
-              <div class="form-row">
-                <label class="form-label">서약 / 각오 문구 내용</label>
-                <textarea class="form-textarea" id="inputPledgeText" style="min-height:72px;" oninput="updatePledgeText(this.value)">가입할 때의 달콤한 약속보다,&#10;고객님께 보험금이 필요한 순간&#10;가장 정직하고 든든하게&#10;곁을 지키겠습니다.</textarea>
-              </div>
-              
-              <div class="preset-pill-row">
-                <button type="button" class="preset-pill-btn" onclick="applyPledgePreset(1)">추천 1 (신뢰와 동행)</button>
-                <button type="button" class="preset-pill-btn" onclick="applyPledgePreset(2)">추천 2 (객관적 분석)</button>
-                <button type="button" class="preset-pill-btn" onclick="applyPledgePreset(3)">추천 3 (정직한 진단)</button>
-              </div>
+              <input type="range" min="0" max="32" value="16" id="photoRadiusRange" oninput="updatePhotoRadius(this.value)" style="accent-color: #0284c7; width: 100%;">
             </div>
           </div>
 
-          <!-- Consultant Info -->
-          <div class="form-card">
-            <div class="form-section-title">
-              <span><i class="fa-solid fa-id-card"></i> 담당 컨설턴트 정보 (로그인 계정값)</span>
-            </div>
-            <p class="form-subtext">주소/팩스/대표번호 등 불필요한 번호는 제외하고 핵심 직통 정보만 표시합니다.</p>
-            
-            <div class="form-row">
-              <label class="form-label">담당자 성함 및 직책</label>
-              <input type="text" class="form-input" id="inputAdvisorName" value="담당 설계사" oninput="updateOfficialInfo()">
-            </div>
-            <div class="form-row">
-              <label class="form-label">직통 핸드폰 연락처</label>
-              <input type="text" class="form-input" id="inputAdvisorPhone" value="010-0000-0000" oninput="updateOfficialInfo()">
-            </div>
-            <div class="form-row">
-              <label class="form-label">소속 지사 / 법인명</label>
-              <input type="text" class="form-input" id="inputAdvisorBranch" value="금융보험서비스" oninput="updateOfficialInfo()">
-            </div>
-          </div>
-
-          <!-- Typography & Element Sizing -->
-          <div class="form-card">
-            <div class="form-section-title">
-              <span><i class="fa-solid fa-text-height"></i> 주요 텍스트 크기 조절 (실시간)</span>
-            </div>
-            <!-- Title Size Slider -->
-            <div class="form-row" style="margin-bottom: 12px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-                <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">메인 타이틀 ("보장분석 보고서") 크기</label>
-                <span id="titleSizeVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">78px</span>
-              </div>
-              <input type="range" min="54" max="96" value="78" id="titleSizeRange" oninput="updateTitleSize(this.value)" style="accent-color:#0284c7; width:100%;">
-              <div style="display:flex; gap:6px; margin-top:4px;">
-                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateTitleSize(68)">68px 작게</button>
-                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateTitleSize(78)">78px 기본</button>
-                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateTitleSize(88)">88px 웅장하게</button>
-              </div>
+          <!-- 3. [모드 2: 서약형] 서약 문구 및 배색 톤 프리셋 -->
+          <div id="pledgeControlGroup" class="form-card" style="display: none; margin-bottom: 16px; border: 1.5px solid #bae6fd;">
+            <div class="form-section-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <span style="font-size: 13.5px; font-weight: 850; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-feather-pointed" style="color: #0284c7;"></i> 신뢰 서약·각오 카드 설정
+              </span>
+              <span style="font-size: 11px; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 2px 7px; border-radius: 4px;">실시간 반영</span>
             </div>
 
-            <!-- Greeting Size Slider -->
-            <div class="form-row" style="margin-bottom: 10px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-                <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">고객 인사말 ("OO님을 위해...") 크기</label>
-                <span id="greetingSizeVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">44px</span>
-              </div>
-              <input type="range" min="30" max="56" value="44" id="greetingSizeRange" oninput="updateGreetingSize(this.value)" style="accent-color:#0284c7; width:100%;">
-            </div>
-          </div>
-
-          <!-- Logo Management & Precision Sizing -->
-          <div class="form-card" id="logoControlCard">
-            <div class="form-section-title">
-              <span><i class="fa-solid fa-stamp"></i> 로고 크기 및 표시 설정</span>
-              <label class="field-toggle-label">
-                <input type="checkbox" id="chkShowLogo" checked onchange="toggleLogo(this.checked)">
-                <span>표시</span>
+            <!-- A. 추천 배색 톤 원클릭 적용 -->
+            <div style="margin-bottom: 14px;">
+              <label class="form-label" style="margin-bottom: 6px; font-weight: 750; color: #334155; font-size: 12.5px;">
+                <i class="fa-solid fa-palette mr-1" style="color: #0284c7;"></i> 서약 카드 추천 배색 톤
               </label>
-            </div>
-            
-            <div class="form-row">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <label class="form-label" style="margin:0; font-size:12px; font-weight:700; color:#334155;">로고 높이 크기 조절</label>
-                <span id="logoSizeVal" style="font-size:11.5px; font-weight:800; color:#0284c7; background:#f0f9ff; padding:1px 8px; border-radius:4px; border:1px solid #bae6fd;">58px</span>
-              </div>
-              <input type="range" min="30" max="150" value="58" id="logoSizeRange" oninput="updateLogoSize(this.value)" style="accent-color:#0284c7; width:100%;">
-              <div style="display:flex; gap:6px; margin-top:4px;">
-                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateLogoSize(45)">45px</button>
-                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateLogoSize(58)">58px 기본</button>
-                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateLogoSize(75)">75px 중간</button>
-                <button type="button" class="preset-pill-btn" style="flex:1; font-size:11px; padding:3px 6px;" onclick="updateLogoSize(100)">100px 대형</button>
+              <div class="preset-pill-row" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <button type="button" class="preset-pill-btn active" id="pldColAuto" onclick="setPledgeColorScheme('auto', this)">🎨 테마 연동</button>
+                <button type="button" class="preset-pill-btn" onclick="setPledgeColorScheme('gold', this)">👑 골드 에디션</button>
+                <button type="button" class="preset-pill-btn" onclick="setPledgeColorScheme('navy', this)">🏛️ 클래식 네이비</button>
+                <button type="button" class="preset-pill-btn" onclick="setPledgeColorScheme('cream', this)">📜 크림 파치먼트</button>
+                <button type="button" class="preset-pill-btn" onclick="setPledgeColorScheme('dark', this)">🌙 다크 차콜</button>
               </div>
             </div>
 
-            <div class="form-row" style="margin-top:12px;">
-              <label class="form-label" style="font-size:12px; font-weight:700; color:#334155;">내 로고 이미지 직접 등록</label>
-              <input type="file" class="form-input" id="logoUploadInput" accept="image/*" onchange="handleLogoUpload(this)">
+            <!-- B. 서약 문구 편집기 -->
+            <div class="form-row" style="margin-bottom: 10px;">
+              <label class="form-label" style="margin-bottom: 6px; font-weight: 750; color: #334155; font-size: 12.5px;">
+                <i class="fa-solid fa-pen-nib mr-1" style="color: #0284c7;"></i> 서약 / 각오 문구 내용
+              </label>
+              <textarea class="form-textarea" id="inputPledgeText" style="min-height: 85px; width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-size: 12.5px; line-height: 1.5; box-sizing: border-box;" oninput="updatePledgeText(this.value)">가입할 때의 달콤한 약속보다,&#10;고객님께 보험금이 필요한 순간&#10;가장 정직하고 든든하게&#10;곁을 지키겠습니다.</textarea>
             </div>
-            <div style="display:flex; gap:8px; margin-top:8px;">
-              <button type="button" class="btn-action primary" style="flex:1.2; font-size:12px; padding:8px 10px;" onclick="document.getElementById('logoUploadInput').click()">
-                <i class="fa-solid fa-upload"></i> 로고 파일 선택
-              </button>
-              <button type="button" class="btn-action secondary" style="flex:1; font-size:12px; padding:8px 10px;" onclick="resetLogoToDefault()">
-                기본 로고 복원
-              </button>
+
+            <!-- C. 추천 서약문 프리셋 -->
+            <div style="margin-top: 8px;">
+              <label class="form-label" style="margin-bottom: 4px; font-size: 11.5px; color: #64748b;">추천 문구 바로 적용</label>
+              <div class="preset-pill-row" style="display: flex; flex-direction: column; gap: 5px;">
+                <button type="button" class="preset-pill-btn" style="text-align: left; padding: 6px 10px; font-size: 11.5px;" onclick="applyPledgePreset(1)">
+                  <b>추천 1 (신뢰와 동행):</b> "가입할 때의 달콤한 약속보다, 보험금이 필요한 순간 가장 정직하게..."
+                </button>
+                <button type="button" class="preset-pill-btn" style="text-align: left; padding: 6px 10px; font-size: 11.5px;" onclick="applyPledgePreset(2)">
+                  <b>추천 2 (객관적 분석):</b> "복잡한 보험 문구 뒤에 숨지 않고, 오직 고객님의 삶만을 기준으로..."
+                </button>
+                <button type="button" class="preset-pill-btn" style="text-align: left; padding: 6px 10px; font-size: 11.5px;" onclick="applyPledgePreset(3)">
+                  <b>추천 3 (정직한 진단):</b> "불필요한 과다 보장은 덜어내고, 꼭 필요한 핵심 보장만 채워..."
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. 담당 컨설턴트 정보 (간결하고 핵심적인 1개 카드) -->
+          <div class="form-card" style="margin-bottom: 16px;">
+            <div class="form-section-title" style="margin-bottom: 8px;">
+              <span><i class="fa-solid fa-id-card" style="color: #0284c7;"></i> 담당 컨설턴트 정보</span>
+            </div>
+            <p class="form-subtext" style="margin-bottom: 10px;">보고서 하단에 출력될 담당자 성함과 직통 연락처입니다.</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+              <div class="form-row" style="margin: 0;">
+                <label class="form-label" style="font-size: 11.5px; margin-bottom: 2px;">성함 및 직책</label>
+                <input type="text" class="form-input" id="inputAdvisorName" value="담당 설계사" oninput="updateOfficialInfo()" style="height: 32px; font-size: 12px;">
+              </div>
+              <div class="form-row" style="margin: 0;">
+                <label class="form-label" style="font-size: 11.5px; margin-bottom: 2px;">직통 연락처</label>
+                <input type="text" class="form-input" id="inputAdvisorPhone" value="010-0000-0000" oninput="updateOfficialInfo()" style="height: 32px; font-size: 12px;">
+              </div>
+            </div>
+            <div class="form-row" style="margin: 0;">
+              <label class="form-label" style="font-size: 11.5px; margin-bottom: 2px;">소속 지사 / 법인명</label>
+              <input type="text" class="form-input" id="inputAdvisorBranch" value="금융보험서비스" oninput="updateOfficialInfo()" style="height: 32px; font-size: 12px;">
             </div>
           </div>
 
         </div>
-
 
         <!-- ================= TAB 4: 내 보관함 ================= -->
         <div class="tab-pane" id="libraryTab">

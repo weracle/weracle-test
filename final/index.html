@@ -4532,7 +4532,7 @@ if (logoData && event.source) {
 // --- Google Identity Services (GIS) Logic ---
 let googleTokenClient;
 const GOOGLE_CLIENT_ID = "281609603311-j6ie378elv518odovep2rjemeaffb40b.apps.googleusercontent.com";
-const SCOPES = "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events";
+const SCOPES = "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events";
 
 function initGoogleClient() {
 if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
@@ -4953,12 +4953,10 @@ async function checkSession() {
             
             if (data.session.provider_token) {
                 try {
-                    const gisTime = parseInt(localStorage.getItem('g_token_time') || '0');
-                    const loginTime = new Date(data.session.user.last_sign_in_at).getTime();
-                    if (loginTime > gisTime) {
-                        await window.sb.from('profiles').update({ google_access_token: data.session.provider_token }).eq('id', window.currentUser.id);
-                        localStorage.setItem('g_access_token', data.session.provider_token);
-                        localStorage.setItem('g_token_time', Date.now().toString()); 
+                    localStorage.setItem('g_access_token', data.session.provider_token);
+                    localStorage.setItem('g_token_time', Date.now().toString()); 
+                    if (window.sb && window.currentUser) {
+                        window.sb.from('profiles').update({ google_access_token: data.session.provider_token }).eq('id', window.currentUser.id).then(()=>{});
                     }
                 } catch(e) {}
             }
@@ -5171,9 +5169,7 @@ const options = {
   skipBrowserRedirect: true
 };
 if (provider === 'google') {
-options.scopes = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events';
-options.queryParams = { access_type: 'offline' };
-
+options.scopes = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events';
 }
 const { data, error } = await window.sb.auth.signInWithOAuth({
 provider,

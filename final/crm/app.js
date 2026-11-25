@@ -227,6 +227,129 @@ function getGlobalInsuranceList(client, includeInsured = false) {
         }
     }
 
+    // [PERF FIX 2026-11-25] High-Performance Cross-Customer Insured Index Cache (Zero O(N^2) Lag)
+    const extractPureName = (str) => {
+        if (!str) return "";
+        let s = String(str).replace(/\s*\(.*?\)/g, '');
+        s = s.replace(/\s+/g, '');
+        const suffixes = ["본인", "배우자", "자녀", "부", "모", "동생", "형제", "자매", "형님", "대표", "대표자"];
+        for (let suf of suffixes) {
+            if (s.endsWith(suf) && s !== suf) {
+                s = s.slice(0, -suf.length);
+                break;
+            }
+        }
+        return s;
+    };
+
+    function getInsuredIndexMap() {
+        if (window._insuredIndexCache && window._insuredIndexDataRef === globalCustomerData && window._insuredIndexLength === (globalCustomerData ? globalCustomerData.length : 0)) {
+            return window._insuredIndexCache;
+        }
+        const indexMap = {};
+        if (typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData)) {
+            for (let f = 0; f < globalCustomerData.length; f++) {
+                const fm = globalCustomerData[f];
+                if (!fm) continue;
+                const fmId = String(fm['고객번호'] || fm['ID'] || '').trim();
+                const fmName = String(fm['고객명'] || fm['이름'] || fm['대표자명'] || '').trim();
+                
+                let fmInsArray = [];
+                try {
+                    if (Array.isArray(fm['가입내역'])) fmInsArray = fm['가입내역'];
+                    else if (typeof fm['가입내역'] === 'string') fmInsArray = JSON.parse(fm['가입내역'] || '[]');
+                } catch(e){}
+                if (!fmInsArray || fmInsArray.length === 0) {
+                    if (Array.isArray(fm['보험가입리스트'])) fmInsArray = fm['보험가입리스트'];
+                }
+                if (!Array.isArray(fmInsArray)) fmInsArray = [];
+                
+                const fmMaxLen = Math.max(10, fmInsArray.length);
+                for (let i = 1; i <= fmMaxLen; i++) {
+                    const slotData = fmInsArray[i - 1] || {};
+                    let d = {};
+                    try {
+                        const p = fm['보험' + i + '_가입내역'];
+                        if (typeof p === 'object' && p !== null) d = p;
+                        else if (typeof p === 'string' && (p.trim().startsWith('{') || p.trim().startsWith('['))) {
+                            d = JSON.parse(p);
+                        } else if (typeof p === 'string') {
+                            d['가입내역'] = p.replace(/^"|"$/g, '');
+                        }
+                    } catch(e){}
+                    d = { ...slotData, ...d };
+                    
+                    if (fm['보험' + i + '_사명'] || fm['보험' + i + '_상품명'] || fm['차_보험사'] || fm['차_상품명'] || d['보험사명'] || d['상품명'] || d['차_보험사명'] || d['차_상품명'] || d['company'] || d['product']) {
+                        const fmContractor = String(d['계약자'] || d['차_계약자'] || '').trim();
+                        const fmInsured = String(d['피보험자'] || d['차_피보험자'] || d['기본피보험자'] || d['차_기본피보험자'] || d['insured'] || d['insuredName'] || '').trim();
+                        
+                        let fmContractorDisplay = fmContractor;
+                        if (fmContractor === "본인" || fmContractor === "") fmContractorDisplay = fmName || "본인";
+                        
+                        const cleanFmInsured = extractPureName(fmInsured);
+                        const cleanFmContractor = extractPureName(fmContractorDisplay);
+                        
+                        let pVal = '자동이체';
+                        if (fm['보험' + i + '_결제방식'] === '신용카드' || fm['보험' + i + '_결제방식'] === '카드' || d['결제방식'] === '신용카드' || d['결제방식'] === '카드') pVal = '카드';
+                        const rawCov = fm['보험' + i + '_가입내역'] || '';
+                        const parsedCov = typeof rawCov === 'string' ? rawCov.replace(/^"|"$/g, '') : rawCov;
+                        
+                        const itemObj = {
+                            ...d,
+                            피보험자: fmInsured,
+                            contractorId: fmId,
+                            contractorName: fmContractorDisplay,
+                            sourceCustomerId: fmId,
+                            sourceCustomerName: fmName,
+                            계약자: fmContractorDisplay,
+                            company: fm['보험' + i + '_사명'] || fm['차_보험사'] || d['보험사명'] || d['차_보험사명'] || d['company'] || '',
+                            product: fm['보험' + i + '_상품명'] || fm['차_상품명'] || d['상품명'] || d['차_상품명'] || d['product'] || '',
+                            details: d,
+                            date: fm['보험' + i + '_체결일'] || d['체결일'] || '',
+                            premium: fm['보험' + i + '_보험료'] || d['보험료'] || '',
+                            payDate: fm['보험' + i + '_결제일'] || d['결제일'] || '',
+                            payPeriod: fm['보험' + i + '_납입기간'] || d['납입기간'] || '',
+                            expireDate: fm['보험' + i + '_만기일'] || d['만기일'] || '',
+                            renewalDate: fm['보험' + i + '_갱신일'] || d['갱신일'] || '',
+                            payment: pVal,
+                            paymentInfo: fm['보험' + i + '_결제정보'] || d['결제정보'] || '',
+                            보험사명: fm['보험' + i + '_사명'] || fm['차_보험사'] || d['보험사명'] || d['차_보험사명'] || d['company'] || '',
+                            상품명: fm['보험' + i + '_상품명'] || fm['차_상품명'] || d['상품명'] || d['차_상품명'] || d['product'] || '',
+                            가입내역: parsedCov || d['가입내역'] || '',
+                            _가입내역: d,
+                            체결일: fm['보험' + i + '_체결일'] || d['체결일'] || '',
+                            보험료: fm['보험' + i + '_보험료'] || d['보험료'] || '',
+                            결제일: fm['보험' + i + '_결제일'] || d['결제일'] || '',
+                            납입기간: fm['보험' + i + '_납입기간'] || d['납입기간'] || '',
+                            만기일: fm['보험' + i + '_만기일'] || d['만기일'] || '',
+                            갱신일: fm['보험' + i + '_갱신일'] || d['갱신일'] || '',
+                            결제방식: pVal,
+                            결제정보: fm['보험' + i + '_결제정보'] || d['결제정보'] || ''
+                        };
+                        
+                        if (cleanFmInsured) {
+                            if (!indexMap[cleanFmInsured]) indexMap[cleanFmInsured] = [];
+                            indexMap[cleanFmInsured].push(itemObj);
+                        }
+                        if (cleanFmContractor && cleanFmContractor !== cleanFmInsured) {
+                            if (!indexMap[cleanFmContractor]) indexMap[cleanFmContractor] = [];
+                            indexMap[cleanFmContractor].push(itemObj);
+                        }
+                    }
+                }
+            }
+        }
+        window._insuredIndexCache = indexMap;
+        window._insuredIndexDataRef = globalCustomerData;
+        window._insuredIndexLength = globalCustomerData ? globalCustomerData.length : 0;
+        return indexMap;
+    }
+    window.invalidateInsuredIndex = function() {
+        window._insuredIndexCache = null;
+        window._insuredIndexDataRef = null;
+        window._insuredIndexLength = 0;
+    };
+
     if (includeInsured) {
         try {
             if (typeof globalCustomerData !== 'undefined' && Array.isArray(globalCustomerData)) {
@@ -235,111 +358,29 @@ function getGlobalInsuranceList(client, includeInsured = false) {
                 const myRootId = myIdStr.split('-')[0];
                 
                 if (myName) {
-                    const otherCustomers = globalCustomerData.filter(c => {
-                        const cid = String(c['고객번호'] || c['ID'] || '');
-                        return cid !== myIdStr;
-                    });
+                    const cleanMyName = extractPureName(myName);
+                    const indexMap = getInsuredIndexMap();
+                    const candidates = indexMap[cleanMyName] || [];
                     
-                    otherCustomers.forEach(fm => {
-                        let fmInsArray = [];
-                        try {
-                            if (Array.isArray(fm['가입내역'])) fmInsArray = fm['가입내역'];
-                            else if (typeof fm['가입내역'] === 'string') fmInsArray = JSON.parse(fm['가입내역'] || '[]');
-                        } catch(e){}
-                        if (!fmInsArray || fmInsArray.length === 0) { if (Array.isArray(fm['보험가입리스트'])) fmInsArray = fm['보험가입리스트']; } if (!Array.isArray(fmInsArray)) fmInsArray = [];
-                        
-                        let fmMaxLen = Math.max(10, fmInsArray.length);
-                        for (let i = 1; i <= fmMaxLen; i++) {
-                            let slotData = fmInsArray[i - 1] || {};
-                            let d = {};
-                            try {
-                                let p = fm['보험' + i + '_가입내역'];
-                                if (typeof p === 'object' && p !== null) d = p;
-                                else if (typeof p === 'string' && (p.trim().startsWith('{') || p.trim().startsWith('['))) {
-                                    d = JSON.parse(p);
-                                } else if (typeof p === 'string') {
-                                    d['가입내역'] = p.replace(/^"|"$/g, '');
-                                }
-                            } catch(e){}
-                            d = { ...slotData, ...d };
-                            
-                            if (fm['보험' + i + '_사명'] || fm['보험' + i + '_상품명'] || fm['차_보험사'] || fm['차_상품명'] || d['보험사명'] || d['상품명'] || d['차_보험사명'] || d['차_상품명'] || d['company'] || d['product']) {
-                                const fmContractor = String(d['계약자'] || d['차_계약자'] || '').trim();
-                                const fmInsured = String(d['피보험자'] || d['차_피보험자'] || d['기본피보험자'] || d['차_기본피보험자'] || d['insured'] || d['insuredName'] || '').trim();
-                                
-                                let fmContractorDisplay = fmContractor;
-                                if (fmContractor === "본인" || fmContractor === "") fmContractorDisplay = fm['고객명'] || fm['이름'] || fm['대표자명'] || "본인";
-                                
-                                const extractPureName = (str) => {
-                                    if (!str) return "";
-                                    let s = String(str).replace(/\s*\(.*?\)/g, '');
-                                    s = s.replace(/\s+/g, '');
-                                    const suffixes = ["본인", "배우자", "자녀", "부", "모", "동생", "형제", "자매", "형님", "대표", "대표자"];
-                                    for (let suf of suffixes) {
-                                        if (s.endsWith(suf) && s !== suf) {
-                                            s = s.slice(0, -suf.length);
-                                            break;
-                                        }
-                                    }
-                                    return s;
-                                };
-
-                                const cleanMyName = extractPureName(myName);
-                                const cleanFmInsured = extractPureName(fmInsured);
-                                const cleanFmContractor = extractPureName(fmContractorDisplay);
-                                
-                                if (cleanFmInsured === cleanMyName || cleanFmContractor === cleanMyName) {
-                                    let pVal = '자동이체';
-                                    if (fm['보험' + i + '_결제방식'] === '신용카드' || fm['보험' + i + '_결제방식'] === '카드' || d['결제방식'] === '신용카드' || d['결제방식'] === '카드') pVal = '카드';
-                                    let rawCov = fm['보험' + i + '_가입내역'] || '';
-                                    let parsedCov = typeof rawCov === 'string' ? rawCov.replace(/^"|"$/g, '') : rawCov;
-                                    
-                                    let finalObj = {
-                                        ...d,
-                                        피보험자: fmInsured,
-                                        contractorId: String(fm['고객번호'] || fm['ID'] || '').trim(),
-                                        contractorName: fmContractorDisplay,
-                                        sourceCustomerId: String(fm['고객번호'] || fm['ID'] || '').trim(),
-                                        sourceCustomerName: String(fm['고객명'] || fm['이름'] || fm['대표자명'] || '').trim(),
-                                        isExternalContractor: myRootId ? (String(fm['고객번호'] || fm['ID'] || '').trim().split('-')[0] !== myRootId) : true,
-                                        계약자: fmContractorDisplay,
-                                        company: fm['보험' + i + '_사명'] || fm['차_보험사'] || d['보험사명'] || d['차_보험사명'] || d['company'] || '',
-                                        product: fm['보험' + i + '_상품명'] || fm['차_상품명'] || d['상품명'] || d['차_상품명'] || d['product'] || '',
-                                        details: d,
-                                        date: fm['보험' + i + '_체결일'] || d['체결일'] || '',
-                                        premium: fm['보험' + i + '_보험료'] || d['보험료'] || '',
-                                        payDate: fm['보험' + i + '_결제일'] || d['결제일'] || '',
-                                        payPeriod: fm['보험' + i + '_납입기간'] || d['납입기간'] || '',
-                                        expireDate: fm['보험' + i + '_만기일'] || d['만기일'] || '',
-                                        renewalDate: fm['보험' + i + '_갱신일'] || d['갱신일'] || '',
-                                        payment: pVal,
-                                        paymentInfo: fm['보험' + i + '_결제정보'] || d['결제정보'] || '',
-                                        보험사명: fm['보험' + i + '_사명'] || fm['차_보험사'] || d['보험사명'] || d['차_보험사명'] || d['company'] || '',
-                                        상품명: fm['보험' + i + '_상품명'] || fm['차_상품명'] || d['상품명'] || d['차_상품명'] || d['product'] || '',
-                                        가입내역: parsedCov || d['가입내역'] || '',
-                                        _가입내역: d,
-                                        체결일: fm['보험' + i + '_체결일'] || d['체결일'] || '',
-                                        보험료: fm['보험' + i + '_보험료'] || d['보험료'] || '',
-                                        결제일: fm['보험' + i + '_결제일'] || d['결제일'] || '',
-                                        납입기간: fm['보험' + i + '_납입기간'] || d['납입기간'] || '',
-                                        만기일: fm['보험' + i + '_만기일'] || d['만기일'] || '',
-                                        갱신일: fm['보험' + i + '_갱신일'] || d['갱신일'] || '',
-                                        결제방식: pVal,
-                                        결제정보: fm['보험' + i + '_결제정보'] || d['결제정보'] || ''
-                                    };
-                                    
-                                    const isDup = list.some(ex => ex.company === finalObj.company && ex.product === finalObj.product && ex.보험료 === finalObj.보험료 && ex.피보험자 === finalObj.피보험자);
-                                    if (!isDup) list.push(finalObj);
-                                }
-                            }
+                    for (let c = 0; c < candidates.length; c++) {
+                        const item = candidates[c];
+                        if (item.sourceCustomerId !== myIdStr) {
+                            const isExt = myRootId ? (item.contractorId.split('-')[0] !== myRootId) : true;
+                            const finalObj = {
+                                ...item,
+                                isExternalContractor: isExt
+                            };
+                            const isDup = list.some(ex => ex.company === finalObj.company && ex.product === finalObj.product && ex.보험료 === finalObj.보험료 && ex.피보험자 === finalObj.피보험자);
+                            if (!isDup) list.push(finalObj);
                         }
-                    });
+                    }
                 }
             }
         } catch(err) {
             console.error("Error finding family insured data:", err);
         }
     }
+
     return list;
 }
 function calculateJuminData(juminStr) {

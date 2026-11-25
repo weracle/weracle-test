@@ -7,14 +7,15 @@ popbill.config({
   LinkID: process.env.POPBILL_LINK_ID || 'WERACLELAB',
   SecretKey: process.env.POPBILL_SECRET_KEY || 'dJeTv/Yfc5xc8xfImnY2ypmt1aVfv/tG4LcPzP1FBec=',
   IsTest: isTestMode,
-  defaultErrorHandler: function(err) {
+  defaultErrorHandler: function (err) {
     console.error('[Popbill Webhook Default Error]', err);
   }
 });
 
 const kakaoService = popbill.KakaoService();
+const messageService = popbill.MessageService();
 
-// 팝빌 승인 카카오 알림톡 템플릿 (성공 / 실패)
+// 팝빌 승인 카카오 알림톡 템플릿 (팩스 성공: 026100002384, 팩스 실패: 026100002386)
 const TEMPLATES = {
   SUCCESS: {
     code: '026100002384',
@@ -64,7 +65,7 @@ function fillTemplate(raw, vars) {
 
 function formatDateTime(dStr) {
   if (!dStr) {
-    const now = new Date();
+    const now = new Date(Date.now() + 9 * 3600 * 1000);
     const pad = (n) => String(n).padStart(2, '0');
     return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
   }
@@ -103,7 +104,7 @@ function getFailReason(resultCode) {
   }
 }
 
-// 팩스 전송 메타데이터 조회
+// 팩스 전송 원본 메타데이터 조회
 async function getFaxMeta(receiptNum) {
   try {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "https://tjohrovsvgnkrlqhjkwt.supabase.co";
@@ -124,7 +125,7 @@ async function getFaxMeta(receiptNum) {
   }
 }
 
-// 알림톡 발송
+// 알림톡 발송 (대체문자 폴백 지원)
 function sendAlimtalk(corpNum, templateCode, sender, content, receiver, receiverName) {
   return new Promise((resolve) => {
     if (!receiver) {
@@ -132,7 +133,9 @@ function sendAlimtalk(corpNum, templateCode, sender, content, receiver, receiver
       return resolve({ success: false, reason: 'No receiver' });
     }
     const cleanReceiver = String(receiver).replace(/[^0-9]/g, '');
-    if (!cleanReceiver) return resolve({ success: false, reason: 'Invalid receiver' });
+    if (!cleanReceiver || cleanReceiver.length < 10) {
+      return resolve({ success: false, reason: 'Invalid receiver' });
+    }
 
     const trySend = (altType) => {
       kakaoService.sendATS_one(
@@ -165,7 +168,6 @@ function sendAlimtalk(corpNum, templateCode, sender, content, receiver, receiver
 }
 
 module.exports = async function handler(req, res) {
-  // CORS 및 팝빌 콜백 허용
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
@@ -175,8 +177,16 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // 팝빌 웹훅 검증/헬스체크 GET 허용
+  // 1. Meta Webhook 검증 및 헬스체크 GET 지원 (하이브리드 호환)
   if (req.method === 'GET') {
+    const VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN || 'weracle_verify_token';
+    const mode = req.query?.['hub.mode'];
+    const token = req.query?.['hub.verify_token'];
+    const challenge = req.query?.['hub.challenge'];
+
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+      return res.status(200).send(challenge);
+    }
     return res.status(200).json({ status: 'ok', service: 'weracle-fax-webhook' });
   }
 
@@ -194,7 +204,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // 팝빌에서 단일 객체 또는 배열로 전송될 수 있음
+    // 팝빌 웹훅은 단일 객체 또는 배열로 전송됨
     const item = Array.isArray(payload) ? payload[0] : payload;
     console.log('[Popbill Webhook Received]', JSON.stringify(item));
 
@@ -202,76 +212,90 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ result: 'OK', message: 'Empty payload' });
     }
 
-    const {
-      receiptNum,
-      state, // 3: 성공, 4: 실패
-      sendNum,
-      receiveNum,
-      receiveName,
-      pageCount,
-      sendDate,
-      resultDate,
-      eventTime,
-      result
-    } = item;
+    // =========================================================================
+    // [경로 A] 팝빌 팩스 결과 웹훅 처리 (표준)
+    // =========================================================================
+    const receiptNum = item.receiptNum || item.receipt_num;
+    const state = item.state; // 3: 성공, 4: 실패
+    const sendNum = item.sendNum || item.send_num;
+    const receiveNum = item.receiveNum || item.receive_num;
+    const receiveName = item.receiveName || item.receive_name;
+    const totalPages = item.sendPageCnt || item.successPageCnt || item.pageCount || 1;
+    const resultTime = item.resultDT || item.sendDT || item.eventDT || item.sendDate || item.resultDate || item.eventTime;
+    const resultCode = item.result;
 
-    // 테스트 핑 또는 접수번호가 없는 경우 200 반환
-    if (!receiptNum) {
-      return res.status(200).json({ result: 'OK', message: 'Ping/Test received' });
+    if (receiptNum) {
+      const corpNum = process.env.POPBILL_CORP_NUM || '1168180481';
+      const defaultSender = process.env.POPBILL_SENDER || '0318755188';
+
+      // 저장해둔 팩스 발송 원본 메타데이터 조회
+      const meta = await getFaxMeta(receiptNum);
+      const plannerPhone = meta?.plannerPhone;
+      const plannerName = meta?.plannerName || '담당자';
+      const clientName = meta?.clientName || '고객';
+      const companyName = meta?.companyName || receiveName || '보험사';
+      const callCenter = meta?.callCenter || '대표 콜센터';
+      const finalPages = totalPages || meta?.pageCount || 1;
+      const senderFax = formatPhoneNumber(sendNum || meta?.sender || defaultSender);
+      const targetFax = formatPhoneNumber(receiveNum || meta?.receiverNumber || '');
+      const completionDate = formatDateTime(resultTime);
+
+      // [상태 3: 전송 성공] 알림톡 템플릿 2 (026100002384) 발송
+      if (String(state) === '3') {
+        if (plannerPhone) {
+          const successContent = fillTemplate(TEMPLATES.SUCCESS.raw, {
+            '담당자명': plannerName,
+            '고객명': clientName,
+            '보험사명': companyName,
+            '발신팩스번호': senderFax,
+            '수신팩스번호': targetFax,
+            '전송완료일시': completionDate,
+            '페이지수': finalPages,
+            '콜센터번호': callCenter
+          });
+          await sendAlimtalk(corpNum, TEMPLATES.SUCCESS.code, defaultSender, successContent, plannerPhone, plannerName);
+        }
+      }
+      // [상태 4: 전송 실패] 알림톡 템플릿 3 (026100002386) 발송
+      else if (String(state) === '4') {
+        if (plannerPhone) {
+          const failReason = getFailReason(resultCode);
+          const failContent = fillTemplate(TEMPLATES.FAIL.raw, {
+            '담당자명': plannerName,
+            '고객명': clientName,
+            '보험사명': companyName,
+            '수신팩스번호': targetFax,
+            '전송실패일시': completionDate,
+            '실패사유': failReason
+          });
+          await sendAlimtalk(corpNum, TEMPLATES.FAIL.code, defaultSender, failContent, plannerPhone, plannerName);
+        }
+      }
+
+      // ★ 팝빌 공식 웹훅 표준 응답 규격: 반드시 {"result": "OK"} 반환
+      return res.status(200).json({ result: 'OK' });
     }
 
-    const corpNum = process.env.POPBILL_CORP_NUM || '1168180481';
-    const defaultSender = process.env.POPBILL_SENDER || '0318755188';
-
-    // 저장해둔 팩스 발송 원본 메타데이터 조회
-    const meta = await getFaxMeta(receiptNum);
-    const plannerPhone = meta?.plannerPhone;
-    const plannerName = meta?.plannerName || '담당자';
-    const clientName = meta?.clientName || '고객';
-    const companyName = meta?.companyName || receiveName || '보험사';
-    const callCenter = meta?.callCenter || '대표 콜센터';
-    const totalPages = pageCount || meta?.pageCount || 1;
-    const senderFax = formatPhoneNumber(sendNum || meta?.sender || defaultSender);
-    const targetFax = formatPhoneNumber(receiveNum || meta?.receiverNumber || '');
-    const completionDate = formatDateTime(sendDate || resultDate || eventTime);
-
-    // 1. [상태 3: 전송 성공] 알림톡 템플릿 2 (026100002384) 발송
-    if (String(state) === '3') {
-      if (plannerPhone) {
-        const successContent = fillTemplate(TEMPLATES.SUCCESS.raw, {
-          '담당자명': plannerName,
-          '고객명': clientName,
-          '보험사명': companyName,
-          '발신팩스번호': senderFax,
-          '수신팩스번호': targetFax,
-          '전송완료일시': completionDate,
-          '페이지수': totalPages,
-          '콜센터번호': callCenter
-        });
-        await sendAlimtalk(corpNum, TEMPLATES.SUCCESS.code, defaultSender, successContent, plannerPhone, plannerName);
+    // =========================================================================
+    // [경로 B] 혹시 Meta 요청(SAVE_LEAD 또는 entry)이 이 엔드포인트로 들어온 경우 호환 처리
+    // =========================================================================
+    if (item.action === 'SAVE_LEAD' || item.entry || item.object === 'page') {
+      try {
+        const metaHandler = require('./meta-webhook.js');
+        if (typeof metaHandler === 'function') {
+          return await metaHandler(req, res);
+        }
+      } catch (me) {
+        console.warn('[Meta Webhook Delegate Notice]', me.message);
       }
-    } 
-    // 2. [상태 4: 전송 실패] 알림톡 템플릿 3 (026100002386) 발송
-    else if (String(state) === '4') {
-      if (plannerPhone) {
-        const failReason = getFailReason(result);
-        const failContent = fillTemplate(TEMPLATES.FAIL.raw, {
-          '담당자명': plannerName,
-          '고객명': clientName,
-          '보험사명': companyName,
-          '수신팩스번호': targetFax,
-          '전송실패일시': completionDate,
-          '실패사유': failReason
-        });
-        await sendAlimtalk(corpNum, TEMPLATES.FAIL.code, defaultSender, failContent, plannerPhone, plannerName);
-      }
+      return res.status(200).send('EVENT_RECEIVED');
     }
 
-    // 팝빌 웹훅 확인 응답 (표준: {"result": "OK"})
+    // 팝빌 헬스체크/핑 등 기타 호출에 대해 표준 {"result": "OK"} 응답
     return res.status(200).json({ result: 'OK' });
   } catch (err) {
-    console.error('[Popbill Webhook Server Error]', err);
-    // 팝빌 재전송 방지를 위해 200 반환하되 에러 로그 남김
+    console.error('[Fax Webhook Server Error]', err);
+    // 팝빌 반복 실패 및 재전송 방지를 위해 HTTP 200과 {"result": "OK"} 반환
     return res.status(200).json({ result: 'OK', error: err.message });
   }
 };

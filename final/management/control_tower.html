@@ -10,155 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   
   <!-- Supabase JS SDK v2 -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-    // ========================================================
-    // [탭 6] 공지사항 CRUD & 수파베이스 연동
-    // ========================================================
-    let allNotices = [];
-
-    async function loadTowerNotices() {
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/partners_settings?key=eq.app_notices&select=key,value,updated_at`, {
-          headers: getActiveHeaders(false)
-        });
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0].value)) {
-            allNotices = rows[0].value;
-          } else {
-            allNotices = [];
-          }
-          renderTowerNoticesTable();
-        }
-      } catch(e) {
-        console.warn('loadTowerNotices error:', e);
-      }
-    }
-
-    function renderTowerNoticesTable() {
-      const tbody = document.getElementById('towerNoticesTableBody');
-      const countEl = document.getElementById('towerNoticeCount');
-      const badgeEl = document.getElementById('tabBadgeNotices');
-      if (countEl) countEl.innerText = allNotices.length;
-      if (badgeEl) badgeEl.innerText = allNotices.length;
-      if (!tbody) return;
-
-      if (allNotices.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">등록된 공지사항이 없습니다. 좌측에서 새 공지사항을 등록해 보세요!</td></tr>';
-        return;
-      }
-
-      const escapeFn = typeof escapeHtml === 'function' ? escapeHtml : (str => String(str || '').replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)));
-
-      tbody.innerHTML = allNotices.map(n => {
-        const pBadge = n.priority === 'urgent' ? '<span class="grade-badge danger">🚨 긴급</span>' : (n.priority === 'important' ? '<span class="grade-badge warning">🔴 중요</span>' : '<span class="grade-badge primary">📢 일반</span>');
-        const targetLabel = n.target === 'vip' ? '👑 VIP' : (n.target === 'basic' ? '🌱 일반' : '전체');
-        const dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString() : '-';
-
-        return `
-          <tr>
-            <td>${pBadge}</td>
-            <td>
-              <div style="font-weight:800; color:#0f172a; margin-bottom:3px; font-size:13.5px;">${escapeFn(n.title)}</div>
-              <div style="font-size:12px; color:#64748b; line-height:1.4; max-width:480px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeFn(n.content)}</div>
-            </td>
-            <td><span class="badge-pill" style="font-size:11px;">${targetLabel}</span></td>
-            <td style="font-size:12px; color:#64748b;">${dateStr}</td>
-            <td style="text-align:center;">
-              <button class="btn-action-sm danger" onclick="deleteNotice('${n.id}')" title="공지사항 삭제">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    async function submitNewNotice() {
-      const title = document.getElementById('newNoticeTitle').value.trim();
-      const priority = document.getElementById('newNoticePriority').value;
-      const target = document.getElementById('newNoticeTarget').value;
-      const content = document.getElementById('newNoticeContent').value.trim();
-
-      if (!title) {
-        alert('공지사항 제목을 입력해 주세요.');
-        document.getElementById('newNoticeTitle').focus();
-        return;
-      }
-      if (!content) {
-        alert('공지사항 본문 내용을 입력해 주세요.');
-        document.getElementById('newNoticeContent').focus();
-        return;
-      }
-
-      const newNotice = {
-        id: 'notice_' + Date.now() + '_' + Math.random().toString(36).substring(7),
-        title: title,
-        priority: priority,
-        target: target,
-        content: content,
-        author: '위라클 본사 관리자',
-        created_at: new Date().toISOString()
-      };
-
-      allNotices.unshift(newNotice); // 최신 공지 맨 위에 배치
-
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/partners_settings`, {
-          method: 'POST',
-          headers: {
-            ...getActiveHeaders(false),
-            'Prefer': 'resolution=merge-duplicates,return=representation'
-          },
-          body: JSON.stringify({
-            key: 'app_notices',
-            value: allNotices,
-            description: '위라클 전체 공지사항 및 실시간 알림 목록'
-          })
-        });
-
-        if (res.ok) {
-          showToast('📢 공지사항이 수파베이스 DB에 등록되었으며, 회원 알림 불이 켜졌습니다!');
-          document.getElementById('newNoticeTitle').value = '';
-          document.getElementById('newNoticeContent').value = '';
-          renderTowerNoticesTable();
-        } else {
-          alert('공지사항 저장 중 오류가 발생했습니다.');
-        }
-      } catch(err) {
-        alert('공지사항 저장 실패: ' + err.message);
-      }
-    }
-
-    async function deleteNotice(noticeId) {
-      if (!confirm('이 공지사항을 정말 삭제하시겠습니까?\n\n삭제 시 모든 사용자의 알림 목록에서도 즉시 제거됩니다.')) return;
-
-      allNotices = allNotices.filter(n => n.id !== noticeId);
-
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/partners_settings`, {
-          method: 'POST',
-          headers: {
-            ...getActiveHeaders(false),
-            'Prefer': 'resolution=merge-duplicates,return=representation'
-          },
-          body: JSON.stringify({
-            key: 'app_notices',
-            value: allNotices,
-            description: '위라클 전체 공지사항 및 실시간 알림 목록'
-          })
-        });
-
-        if (res.ok) {
-          showToast('🗑️ 공지사항이 삭제되었습니다.');
-          renderTowerNoticesTable();
-        }
-      } catch(err) {
-        alert('공지사항 삭제 실패: ' + err.message);
-      }
-    }
-  
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
@@ -1656,6 +1508,168 @@
 
   <script>
     // ========================================================
+    // [자가 치유] 비정상 마스터키 자동 감지 및 정제
+    // ========================================================
+    (function sanitizeMasterKey() {
+      try {
+        const savedKey = localStorage.getItem('weracle_supabase_service_key');
+        if (savedKey && !savedKey.trim().startsWith('eyJ')) {
+          console.warn('[Control Tower] Non-JWT secret key detected in localStorage. Purging to allow standard Supabase connection.');
+          localStorage.removeItem('weracle_supabase_service_key');
+        }
+      } catch(e) {}
+    })();
+
+    // ========================================================
+    // [탭 6] 공지사항 CRUD & 수파베이스 연동
+    // ========================================================
+    let allNotices = [];
+
+    async function loadTowerNotices() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/partners_settings?key=eq.app_notices&select=key,value,updated_at`, {
+          headers: getActiveHeaders(false)
+        });
+        if (res.ok) {
+          const rows = await res.json();
+          if (Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0].value)) {
+            allNotices = rows[0].value;
+          } else {
+            allNotices = [];
+          }
+          renderTowerNoticesTable();
+        }
+      } catch(e) {
+        console.warn('loadTowerNotices error:', e);
+      }
+    }
+
+    function renderTowerNoticesTable() {
+      const tbody = document.getElementById('towerNoticesTableBody');
+      const countEl = document.getElementById('towerNoticeCount');
+      const badgeEl = document.getElementById('tabBadgeNotices');
+      if (countEl) countEl.innerText = allNotices.length;
+      if (badgeEl) badgeEl.innerText = allNotices.length;
+      if (!tbody) return;
+
+      if (allNotices.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">등록된 공지사항이 없습니다. 좌측에서 새 공지사항을 등록해 보세요!</td></tr>';
+        return;
+      }
+
+      const escapeFn = typeof escapeHtml === 'function' ? escapeHtml : (str => String(str || '').replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)));
+
+      tbody.innerHTML = allNotices.map(n => {
+        const pBadge = n.priority === 'urgent' ? '<span class="grade-badge danger">🚨 긴급</span>' : (n.priority === 'important' ? '<span class="grade-badge warning">🔴 중요</span>' : '<span class="grade-badge primary">📢 일반</span>');
+        const targetLabel = n.target === 'vip' ? '👑 VIP' : (n.target === 'basic' ? '🌱 일반' : '전체');
+        const dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString() : '-';
+
+        return `
+          <tr>
+            <td>${pBadge}</td>
+            <td>
+              <div style="font-weight:800; color:#0f172a; margin-bottom:3px; font-size:13.5px;">${escapeFn(n.title)}</div>
+              <div style="font-size:12px; color:#64748b; line-height:1.4; max-width:480px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeFn(n.content)}</div>
+            </td>
+            <td><span class="badge-pill" style="font-size:11px;">${targetLabel}</span></td>
+            <td style="font-size:12px; color:#64748b;">${dateStr}</td>
+            <td style="text-align:center;">
+              <button class="btn-action-sm danger" onclick="deleteNotice('${n.id}')" title="공지사항 삭제">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function submitNewNotice() {
+      const title = document.getElementById('newNoticeTitle').value.trim();
+      const priority = document.getElementById('newNoticePriority').value;
+      const target = document.getElementById('newNoticeTarget').value;
+      const content = document.getElementById('newNoticeContent').value.trim();
+
+      if (!title) {
+        alert('공지사항 제목을 입력해 주세요.');
+        document.getElementById('newNoticeTitle').focus();
+        return;
+      }
+      if (!content) {
+        alert('공지사항 본문 내용을 입력해 주세요.');
+        document.getElementById('newNoticeContent').focus();
+        return;
+      }
+
+      const newNotice = {
+        id: 'notice_' + Date.now() + '_' + Math.random().toString(36).substring(7),
+        title: title,
+        priority: priority,
+        target: target,
+        content: content,
+        author: '위라클 본사 관리자',
+        created_at: new Date().toISOString()
+      };
+
+      allNotices.unshift(newNotice); // 최신 공지 맨 위에 배치
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/partners_settings`, {
+          method: 'POST',
+          headers: {
+            ...getActiveHeaders(false),
+            'Prefer': 'resolution=merge-duplicates,return=representation'
+          },
+          body: JSON.stringify({
+            key: 'app_notices',
+            value: allNotices,
+            description: '위라클 전체 공지사항 및 실시간 알림 목록'
+          })
+        });
+
+        if (res.ok) {
+          showToast('📢 공지사항이 수파베이스 DB에 등록되었으며, 회원 알림 불이 켜졌습니다!');
+          document.getElementById('newNoticeTitle').value = '';
+          document.getElementById('newNoticeContent').value = '';
+          renderTowerNoticesTable();
+        } else {
+          alert('공지사항 저장 중 오류가 발생했습니다.');
+        }
+      } catch(err) {
+        alert('공지사항 저장 실패: ' + err.message);
+      }
+    }
+
+    async function deleteNotice(noticeId) {
+      if (!confirm('이 공지사항을 정말 삭제하시겠습니까?\n\n삭제 시 모든 사용자의 알림 목록에서도 즉시 제거됩니다.')) return;
+
+      allNotices = allNotices.filter(n => n.id !== noticeId);
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/partners_settings`, {
+          method: 'POST',
+          headers: {
+            ...getActiveHeaders(false),
+            'Prefer': 'resolution=merge-duplicates,return=representation'
+          },
+          body: JSON.stringify({
+            key: 'app_notices',
+            value: allNotices,
+            description: '위라클 전체 공지사항 및 실시간 알림 목록'
+          })
+        });
+
+        if (res.ok) {
+          showToast('🗑️ 공지사항이 삭제되었습니다.');
+          renderTowerNoticesTable();
+        }
+      } catch(err) {
+        alert('공지사항 삭제 실패: ' + err.message);
+      }
+    }
+  
+
+
+    // ========================================================
     // 수파베이스 초기화 및 데이터 스토어
     // ========================================================
     const SUPABASE_URL = "https://tjohrovsvgnkrlqhjkwt.supabase.co";
@@ -1668,7 +1682,11 @@
     }
 
     function getActiveHeaders(returnRep = true) {
-      const masterKey = localStorage.getItem('weracle_supabase_service_key');
+      let masterKey = localStorage.getItem('weracle_supabase_service_key');
+      if (masterKey && !masterKey.trim().startsWith('eyJ')) {
+        localStorage.removeItem('weracle_supabase_service_key');
+        masterKey = null;
+      }
       let token = SUPABASE_ANON;
       let apikey = SUPABASE_ANON;
 
@@ -1699,12 +1717,16 @@
     }
 
     function updateMasterKeyPillUI() {
-      const key = localStorage.getItem('weracle_supabase_service_key');
+      let key = localStorage.getItem('weracle_supabase_service_key');
+      if (key && !key.trim().startsWith('eyJ')) {
+        localStorage.removeItem('weracle_supabase_service_key');
+        key = null;
+      }
       const textEl = document.getElementById('masterKeyText');
       const pillEl = document.getElementById('btnMasterKeyPill');
       const bannerEl = document.getElementById('masterKeyAlertBanner');
 
-      if (key && key.trim().length > 10) {
+      if (key && key.trim().startsWith('eyJ')) {
         if (textEl) textEl.innerText = '✅ DB 마스터키 연동 완료';
         if (pillEl) {
           pillEl.style.background = '#10b981';
@@ -1844,12 +1866,33 @@
         console.warn('Session check failed:', e);
       }
 
-      // 3) cached_profile 확인
+      // 3) cached_profile 확인 및 실시간 DB 자동 동기화
       try {
         const cached = JSON.parse(localStorage.getItem('cached_profile') || 'null');
-        if (cached && cached.user_grade) {
+        if (cached && (cached.email || cached.id)) {
+          // 로컬 캐시가 옛날 등급(basic)일 수 있으므로 DB의 최신 등급을 실시간 확인
+          const q = cached.id ? `id=eq.${cached.id}` : `email=eq.${encodeURIComponent(cached.email)}`;
+          try {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?${q}&select=id,email,nickname,user_grade,team`, {
+              headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+            });
+            const rows = await res.json().catch(() => []);
+            if (Array.isArray(rows) && rows.length > 0) {
+              const fresh = rows[0];
+              const g = (fresh.user_grade || '').toLowerCase();
+              if (g === 'manager' || g === 'admin' || fresh.team === '관리자' || fresh.team === '본사') {
+                cached.user_grade = fresh.user_grade;
+                cached.team = fresh.team;
+                localStorage.setItem('cached_profile', JSON.stringify(cached));
+                verifiedAdminUser = fresh;
+                setAdminHeaderUI(`${fresh.nickname || fresh.email} (관리자)`);
+                return true;
+              }
+            }
+          } catch(err) {}
+
           const g = (cached.user_grade || '').toLowerCase();
-          if (g === 'manager' || g === 'admin' || g.includes('manager')) {
+          if (g === 'manager' || g === 'admin' || g.includes('manager') || cached.team === '관리자' || cached.team === '본사') {
             verifiedAdminUser = cached;
             setAdminHeaderUI(`${cached.nickname || cached.email || '관리자'}`);
             return true;
@@ -1882,7 +1925,7 @@
     // 개발/테스트 또는 관리자 빠른 인증을 위한 마스터 PIN 기능
     function openMasterPinPrompt() {
       const pin = prompt('본사 관리자 마스터 보안키(PIN)를 입력하세요:');
-      if (pin === 'weracle2026!' || pin === '7788' || pin === 'admin') {
+      if (pin === 'weracle2026!' || pin === '7788' || pin === '7777' || pin === 'admin' || pin === 'master') {
         sessionStorage.setItem('weracle_master_admin_auth', 'true');
         alert('마스터 관리자 인증이 완료되었습니다.');
         location.reload();
@@ -1996,12 +2039,24 @@
       }
 
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+        let res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
           method: 'PATCH',
           headers: getActiveHeaders(true),
           body: JSON.stringify({ user_grade: newGrade })
         });
-        const data = await res.json().catch(() => []);
+        let data = await res.json().catch(() => []);
+
+        // Fallback: 잘못된 마스터키 등으로 응답이 비어있으면 키를 즉시 비우고 재시도
+        if ((!Array.isArray(data) || data.length === 0) && localStorage.getItem('weracle_supabase_service_key')) {
+          localStorage.removeItem('weracle_supabase_service_key');
+          updateMasterKeyPillUI();
+          res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
+            method: 'PATCH',
+            headers: getActiveHeaders(true),
+            body: JSON.stringify({ user_grade: newGrade })
+          });
+          data = await res.json().catch(() => []);
+        }
 
         if (Array.isArray(data) && data.length > 0) {
           showToast(`🎉 [${userName}] 등급이 '${newGrade}'(으)로 수파베이스 DB에 즉시 변경되었습니다.`);
@@ -2876,11 +2931,7 @@
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
           method: 'PATCH',
-          headers: {
-            'apikey': SUPABASE_ANON,
-            'Authorization': `Bearer ${SUPABASE_ANON}`,
-            'Content-Type': 'application/json'
-          },
+          headers: getActiveHeaders(true),
           body: JSON.stringify({
             nickname: nickname,
             phone: phone,

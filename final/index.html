@@ -2700,7 +2700,10 @@ transform: translateY(-2px);
         display: none !important;
     }
     #mobileWorkHub {
-        display: none !important;
+        display: block;
+        max-width: 540px;
+        margin: 0 auto;
+        padding: 20px 16px 60px;
     }
     .main-workspace.iframe-active #mobileWorkHub {
         display: none !important;
@@ -6130,17 +6133,22 @@ window.openDynamicList = function(type, val) {
         if (homeTab) homeTab.classList.add('active');
 
         const dbHome = document.getElementById('dashboardHome');
-        const bSec = document.getElementById('homeBottomSection'); if (bSec) bSec.style.display = (window.innerWidth <= 768) ? 'none' : 'block';
+        const bSec = document.getElementById('homeBottomSection'); if (bSec) bSec.style.display = 'block';
         if (dbHome) dbHome.style.display = 'none';
 
         const mHub = document.getElementById('mobileWorkHub');
-        if (mHub) mHub.style.display = 'none';
-
-        const frame = document.getElementById('mainFrame');
-        if (frame) {
-            frame.style.display = 'block';
-            if (!frame.src || !frame.src.includes('dashboard/dashboard.html')) {
-                frame.src = 'dashboard/dashboard.html';
+        if (mHub && window.innerWidth <= 900) {
+            mHub.style.display = 'block';
+            const frame = document.getElementById('mainFrame');
+            if (frame) frame.style.display = 'none';
+        } else {
+            if (mHub) mHub.style.display = 'none';
+            const frame = document.getElementById('mainFrame');
+            if (frame) {
+                frame.style.display = 'block';
+                if (!frame.src || !frame.src.includes('dashboard/dashboard.html')) {
+                    frame.src = 'dashboard/dashboard.html';
+                }
             }
         }
 

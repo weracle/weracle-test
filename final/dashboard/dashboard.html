@@ -20,7 +20,7 @@
 <style>
 /* ========================================================
    [모바일 전용 최적화] dashboard.html 모바일 반응형 스타일
-   (PC 화면 > 768px 에는 영향 없음)
+   (PC 화면 > 768px 에는 0.001%도 침투하지 않음)
    ======================================================== */
 @media (max-width: 768px) {
     body {
@@ -43,13 +43,14 @@
         gap: 10px !important;
     }
     .dash-card:first-child > div:first-child > div:first-child {
+        /* 프로필 아바타 + 이름 한 줄 정렬 */
         display: flex !important;
         align-items: center !important;
-        gap: 10px !important;
+        gap: 12px !important;
     }
     #welcome-msg {
         white-space: nowrap !important;
-        font-size: 16px !important;
+        font-size: 17px !important;
     }
     #dashPlannerInfo {
         white-space: nowrap !important;
@@ -69,11 +70,16 @@
         font-size: 12px !important;
     }
 
-    /* 모바일에서는 상단 잔여 팩스 및 체결 실적 요약 바 완전 숨김 */
-    .dash-card:first-child > div:last-child,
-    #quota-summary,
-    #dashGoalAchieved {
-        display: none !important;
+    /* 실적 요약 바 */
+    .dash-card:first-child > div:last-child {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+    .dash-card:first-child > div:last-child > div {
+        flex: 1 !important;
+        justify-content: center !important;
+        font-size: 12.5px !important;
+        padding: 8px 10px !important;
     }
 
     /* 2. 스케줄러 헤더 모바일 최적화 */
@@ -83,23 +89,16 @@
         gap: 10px !important;
     }
     .cal-title-group {
-        display: flex !important;
-        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
         justify-content: space-between !important;
-        width: 100% !important;
-        gap: 6px !important;
     }
     .cal-title {
-        font-size: 14.5px !important;
+        font-size: 15px !important;
         white-space: nowrap !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        margin: 0 !important;
     }
     .cal-period-badge {
-        font-size: 11px !important;
-        padding: 2px 6px !important;
+        font-size: 12px !important;
     }
     .cal-nav-buttons {
         gap: 3px !important;
@@ -108,176 +107,49 @@
         padding: 4px 8px !important;
         font-size: 11px !important;
     }
-
-    /* 모바일에서는 가로형 달력 뷰 토글을 완전히 숨기고 세로형 전용으로 고정 */
     .cal-view-switcher {
-        display: none !important;
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        margin-top: 4px !important;
+    }
+    .cal-view-btn {
+        justify-content: center !important;
+        padding: 6px !important;
+        font-size: 12px !important;
     }
 
-    /* 구글 연동 / 알림 연동 / 일정 추가 3종 버튼 깔끔한 3분할 배치 */
     .cal-action-group {
         width: 100% !important;
         display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 6px !important;
-    }
-    .google-sync-btn, .cal-sync-export-btn, .btn-add-schedule {
-        width: 100% !important;
-        justify-content: center !important;
-        padding: 8px 4px !important;
-        font-size: 11px !important;
-        border-radius: 8px !important;
-        text-align: center !important;
-        white-space: nowrap !important;
-        box-sizing: border-box !important;
-    }
-    .google-sync-btn span, .cal-sync-export-btn, .btn-add-schedule {
-        font-size: 11px !important;
-    }
-
-    /* 3. 모바일 전용 컴팩트 5종 일정 필터 (2줄 최적 균등 배치) */
-    .cal-filter-bar {
-        display: grid !important;
-        grid-template-columns: repeat(6, 1fr) !important;
-        gap: 6px !important;
-        overflow-x: visible !important;
-        white-space: normal !important;
-        padding: 4px 0 !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
-    /* 모바일에서는 데이터 과다 방지를 위해 '전체' 필터 숨김 */
-    .cal-filter-chip[data-filter="all"],
-    .cal-filter-tab[data-filter="all"] {
-        display: none !important;
-    }
-    /* 1행 3개 균등 분할 (각 33.3%): 내 일정, 생일, 상령일 */
-    .cal-filter-chip[data-filter="google"] {
-        grid-column: span 2 !important;
-    }
-    .cal-filter-chip[data-filter="bday"] {
-        grid-column: span 2 !important;
-    }
-    .cal-filter-chip[data-filter="sang"] {
-        grid-column: span 2 !important;
-    }
-    /* 2행 2개 균등 분할 (각 50%): 만기, 결제일 */
-    .cal-filter-chip[data-filter="expiry"] {
-        grid-column: span 3 !important;
-    }
-    .cal-filter-chip[data-filter="pay"] {
-        grid-column: span 3 !important;
-    }
-    .cal-filter-tab, .cal-filter-chip {
-        width: 100% !important;
-        box-sizing: border-box !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 4px !important;
-        padding: 8px 4px !important;
-        font-size: 11.5px !important;
-        border-radius: 8px !important;
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        cursor: pointer !important;
-        text-align: center !important;
-        transition: all 0.15s ease !important;
-    }
-    .cal-filter-tab.active, .cal-filter-chip.active {
-        background: #e0f2fe !important;
-        border-color: #0284c7 !important;
-        color: #0284c7 !important;
-        font-weight: 800 !important;
-        box-shadow: 0 1px 4px rgba(2, 132, 199, 0.15) !important;
-    }
-    .filter-tab-icon {
-        font-size: 11px !important;
-        display: inline-flex !important;
-    }
-    .filter-tab-name {
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        white-space: nowrap !important;
-    }
-    .filter-count {
-        font-size: 10px !important;
-        font-weight: 800 !important;
-        padding: 1px 5px !important;
-        border-radius: 10px !important;
-        background: rgba(0, 0, 0, 0.06) !important;
-    }
-    .cal-filter-tab.active .filter-count, .cal-filter-chip.active .filter-count {
-        background: #0284c7 !important;
-        color: #ffffff !important;
-    }
-
-    /* 4. 세로형 타임라인 카드 모바일 최적화 (날짜 68px + 이벤트 내용 넓게 확보) */
-    .cal-vertical-timeline {
-        padding: 8px 2px !important;
+        grid-template-columns: 1fr 1fr !important;
         gap: 8px !important;
     }
-    .cal-timeline-day-card {
-        grid-template-columns: 68px 1fr !important;
-        border-radius: 10px !important;
-    }
-    .cal-day-left-badge {
-        padding: 10px 2px !important;
-    }
-    .cal-day-date-number {
-        font-size: 18px !important;
-    }
-    .cal-day-weekday-text {
-        font-size: 11px !important;
-    }
-    .cal-today-pill {
-        font-size: 9px !important;
-        padding: 1px 4px !important;
-    }
-    .cal-day-right-content {
+    .google-sync-btn, .cal-add-btn {
+        width: 100% !important;
+        justify-content: center !important;
         padding: 8px 10px !important;
-        min-height: 52px !important;
-        gap: 5px !important;
-    }
-    .cal-v-event-item {
-        padding: 6px 8px !important;
         font-size: 11.5px !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 4px !important;
-    }
-    .cal-v-event-info {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        align-items: center !important;
-        gap: 6px !important;
-    }
-    .cal-v-event-badge {
-        font-size: 10px !important;
-        padding: 1px 5px !important;
-    }
-    .cal-v-event-title {
-        font-size: 12px !important;
-        font-weight: 700 !important;
-    }
-    .cal-v-event-sub {
-        font-size: 10.5px !important;
-        color: #64748b !important;
     }
 
-    /* 5. 우측 콕핏 및 플로팅 바 모바일 정리 */
-    .dashboard-main-grid {
-        grid-template-columns: 1fr !important;
-        gap: 14px !important;
+    /* 필터 탭 바 모바일 가로 스크롤 */
+    .cal-filter-bar {
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        scrollbar-width: none !important;
+        display: flex !important;
     }
-    .dashboard-side-panel {
-        width: 100% !important;
+    .cal-filter-bar::-webkit-scrollbar { display: none !important; }
+    .cal-filter-tab, .cal-filter-chip {
+        flex: 0 0 auto !important;
+        font-size: 12.5px !important;
+        padding: 10px 14px !important;
     }
-    .side-slider-card {
-        padding: 14px 12px !important;
-    }
-    .ins-sidebar-container {
-        display: none !important;
+
+    /* 타임라인 카드 모바일 최적화 */
+    .cal-timeline-day-card {
+        padding: 10px 12px !important;
+        border-radius: 12px !important;
     }
 }
 </style>

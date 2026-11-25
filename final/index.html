@@ -3758,6 +3758,14 @@ html.is-mobile-device .pb-login-dropdown {
     z-index: 99999 !important;
 }
 
+/* 모바일 화면에서는 PC 전용 위라클톡 앱 로그인 버튼 자동 숨김 */
+html.is-mobile-device .pb-talk-pc-item,
+@media (max-width: 768px) {
+    .pb-talk-pc-item {
+        display: none !important;
+    }
+}
+
 /* 공지사항 알림 드롭다운도 우측 잘림 방지 */
 html.is-mobile-device .notice-dropdown-box {
     position: fixed !important;
@@ -3768,6 +3776,14 @@ html.is-mobile-device .notice-dropdown-box {
     max-width: 320px !important;
     box-sizing: border-box !important;
     z-index: 99999 !important;
+}
+
+/* 모바일 화면에서는 PC 전용 위라클톡 앱 로그인 버튼 자동 숨김 */
+html.is-mobile-device .pb-talk-pc-item,
+@media (max-width: 768px) {
+    .pb-talk-pc-item {
+        display: none !important;
+    }
 }
 
 /* 모바일 레거시 중복 허브 숨김 (real dashboard.html 사용) */
@@ -4969,12 +4985,13 @@ link.setAttribute('href', '/shop_integrated.html');
 
 // 마이페이지 이동 패치
 window.openLinkedGoogleSheet = function() {
-const sheetId = localStorage.getItem('g_sheet_id');
-if (sheetId) {
-window.open('https://docs.google.com/spreadsheets/d/' + sheetId + '/edit', '_blank');
-} else {
-alert('연동된 구글 시트를 찾을 수 없습니다.');
-}
+    const profile = window.currentProfile || {};
+    const sheetId = localStorage.getItem('g_sheet_id') || localStorage.getItem('user_spreadsheet_id') || profile.google_sheet_id;
+    if (sheetId) {
+        window.open('https://docs.google.com/spreadsheets/d/' + sheetId + '/edit', '_blank');
+    } else {
+        alert('현재 계정에 연동된 구글 시트를 찾을 수 없습니다.\n대시보드에서 시트 연동을 먼저 진행해 주세요.');
+    }
 };
 
 window.loginToWeracleTalk = function() {
@@ -5464,12 +5481,11 @@ function updateProfileUI(user, profile) {
 
             <!-- 3. 메뉴 리스트 (일관된 구조 & 아이콘) -->
             <div class="dd-section-label">내 업무 & 활동</div>
-            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); loadSubPage('브랜딩', '디지털 명함', 'card/card_edit.html');" class="pb-dropdown-item">
+            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const isMob = document.documentElement.classList.contains('is-mobile-device') || window.innerWidth <= 768; loadSubPage('브랜딩', '디지털 명함', isMob ? 'card/card.html' : 'card/card_edit.html');" class="pb-dropdown-item">
                 <div class="dd-item-left">
                     <span class="dd-icon-box blue"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" stroke-width="2"/><circle cx="9" cy="10" r="2" stroke-width="2"/><line x1="15" y1="8" x2="17" y2="8" stroke-width="2"/><line x1="15" y1="12" x2="17" y2="12" stroke-width="2"/><line x1="7" y1="16" x2="17" y2="16" stroke-width="2"/></svg></span>
                     <span class="dd-item-text">내 디지털 명함</span>
                 </div>
-                
             </a>
 
             <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); const mf = document.getElementById('mainFrame'); mf.src='login/myposts.html'; mf.style.display='block'; document.getElementById('dashboardHome').style.display='none'; document.querySelector('.main-workspace').classList.add('iframe-active');" class="pb-dropdown-item">
@@ -5504,14 +5520,14 @@ function updateProfileUI(user, profile) {
                 </div>
             </a>
 
-            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.loginToWeracleTalk ? window.loginToWeracleTalk() : safeAlert('위라클톡 PC앱 간편 로그인을 실행합니다.', 'info');" class="pb-dropdown-item">
+            <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); window.loginToWeracleTalk ? window.loginToWeracleTalk() : safeAlert('위라클톡 PC앱 간편 로그인을 실행합니다.', 'info');" class="pb-dropdown-item pb-talk-pc-item">
                 <div class="dd-item-left">
                     <span class="dd-icon-box sky"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg></span>
                     <span class="dd-item-text">위라클톡 PC앱 로그인</span>
                 </div>
             </a>
 
-            <div class="dd-divider"></div>
+            <div class="dd-divider pb-talk-pc-item"></div>
 
             <a href="javascript:void(0)" onclick="document.getElementById('pbLoginInfo')?.classList.remove('open'); showWeracleAlert('정말 위라클에서 로그아웃 하시겠습니까?', { isConfirm: true, title: '로그아웃 확인', confirmText: '로그아웃', onConfirm: () => handleLogout() });" class="pb-dropdown-item logout">
                 <div class="dd-item-left">

@@ -227,6 +227,36 @@
         color: #0f172a;
       }
 
+      @media (max-width: 768px) {
+        .mypage-mobile-top-bar {
+          display: flex !important;
+        }
+        .sb-mypage-grid {
+          padding: 8px 6px 40px !important;
+          flex-direction: column !important;
+          align-items: center !important;
+        }
+        .sb-glass-card {
+          flex-direction: column !important;
+          padding: 16px 14px !important;
+          gap: 18px !important;
+          border-radius: 12px !important;
+        }
+        #mypageLeftCol {
+          min-width: 100% !important;
+          width: 100% !important;
+          border-right: none !important;
+          border-bottom: 1px solid #e2edf7 !important;
+          padding-right: 0 !important;
+          padding-bottom: 20px !important;
+        }
+        #mypageRightCol {
+          min-width: 100% !important;
+          width: 100% !important;
+          gap: 18px !important;
+        }
+      }
+
     </style>
 
     
@@ -983,10 +1013,15 @@
 
             this.container.innerHTML = `
                 <div class="sb-mypage-grid" style="display: flex; justify-content: center; padding: 12px; box-sizing: border-box; width: 100%; overflow: hidden;">
+                    <div class="mypage-mobile-top-bar" style="display:none; width:100%; max-width:850px; margin-bottom:12px; align-items:center; justify-content:space-between;">
+                        <button type="button" onclick="if(window.parent&&window.parent.showDashboardHome)window.parent.showDashboardHome();" style="display:inline-flex; align-items:center; gap:6px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; color:#334155; cursor:pointer;">
+                            <i class="fa-solid fa-chevron-left"></i> 대시보드로 돌아가기
+                        </button>
+                    </div>
                     <div class="sb-glass-card" style="width: 100%; max-width: 850px; display: flex; flex-direction: row; flex-wrap: wrap; gap: 28px; text-align: left; padding: 28px; align-items: stretch; border-radius: 16px; box-sizing: border-box; overflow: hidden; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
                         
                         <!-- 좌측: 프로필 메인 (사진, 이름, 등급, 로고) -->
-                        <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border-right: 1px solid #e2edf7; padding-right: 24px; box-sizing: border-box;">
+                        <div id="mypageLeftCol" style="flex: 1; min-width: 250px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border-right: 1px solid #e2edf7; padding-right: 24px; box-sizing: border-box;">
                             
                             <!-- 아바타 이미지 영역 -->
                             <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; width: 100%; box-sizing: border-box;">
@@ -1028,7 +1063,7 @@
                         </div>
                         
                         <!-- 우측: 기본정보, 포인트, 구독/결제 D-Day -->
-                        <div style="flex: 2; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; overflow: hidden; width: 100%; gap: 24px;">
+                        <div id="mypageRightCol" style="flex: 2; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; overflow: hidden; width: 100%; gap: 24px;">
                             
                             <!-- 0. 모바일 디지털 명함 관리 카드 -->
                             <div style="width: 100%; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 14px; padding: 18px 20px; border: 1px solid #bae6fd; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.08);">

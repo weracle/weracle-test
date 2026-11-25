@@ -1669,6 +1669,43 @@ html.is-mobile-device .dd-menu-mobile {
     }
 }
 
+
+/* 서브페이지 열람 시 메인 홈 바텀시트 100% 완전 숨김 (서브페이지 하단 독바/버튼 가림 차단) */
+.subpage-viewing #mobileBottomSheetWrap,
+#mobileBottomSheetWrap.subpage-hidden,
+html.is-mobile-device .subpage-viewing #mobileBottomSheetWrap,
+html.is-mobile-device #mobileBottomSheetWrap.subpage-hidden {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .subpage-viewing #mobileBottomSheetWrap,
+    #mobileBottomSheetWrap.subpage-hidden {
+        display: none !important;
+    }
+}
+
+html.is-mobile-device .subpage-viewing,
+html.is-mobile-device .pb-content-area.subpage-viewing,
+html.is-mobile-device .main-workspace.subpage-viewing {
+    height: calc(100vh - 56px) !important;
+    height: calc(100dvh - 56px) !important;
+    max-height: calc(100dvh - 56px) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+html.is-mobile-device .subpage-viewing #mainFrame {
+    height: 100% !important;
+    min-height: 100% !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    display: block !important;
+    border: none !important;
+    flex: 1 !important;
+}
+
 </style>
 <style id="navy-toss-theme">
 /* =========================================
@@ -4800,7 +4837,8 @@ if (typeof toggleWidget === 'function') toggleWidget(false);
 
 
 document.querySelector('.main-workspace').classList.add('iframe-active');
-const dbHome = document.getElementById('dashboardHome');
+const bSheet = document.getElementById('mobileBottomSheetWrap'); if (bSheet) { bSheet.style.display = 'none'; bSheet.classList.add('subpage-hidden'); }
+        const dbHome = document.getElementById('dashboardHome');
 if (dbHome) dbHome.style.display = 'none';
 
 const frame = document.getElementById('mainFrame');
@@ -6392,6 +6430,7 @@ window.openDynamicList = function(type, val) {
         const sheet = document.getElementById('mobileBottomSheetWrap');
         if (sheet && (window.isMobileDevice || window.innerWidth <= 900)) {
             sheet.style.display = 'block';
+            sheet.classList.remove('subpage-hidden');
             isMDashSheetCollapsed = false;
             updateMDashSheetUI();
         }

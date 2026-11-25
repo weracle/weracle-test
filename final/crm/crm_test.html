@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="../weracle_device.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WERACLE CRM - 반응형 하이브리드 (PC: 3번 세일즈퍼널 & 오리지널 스피드검색 / Mobile: 10번 네이티브)</title>
@@ -26,7 +27,36 @@ window.addEventListener('error', function(e) {
     }
 });
 </script>
-<style>.edit-tab-content { display: flex; flex-direction: column; }</style>
+<style>.edit-tab-content { display: flex; flex-direction: column; }
+/* weracle_device.js 기기 판별 엔진 연동: 모바일 기기 접속 시 고객관리 독바 및 모바일 화면 100% 보장 */
+html.is-mobile-device .mobile-dock {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 9999999 !important;
+}
+html.is-mobile-device .crm-mobile-10-wrap {
+    display: block !important;
+    padding-bottom: 90px !important;
+}
+html.is-mobile-device .container {
+    display: none !important;
+}
+
+html.is-desktop-device .mobile-dock {
+    display: none !important;
+}
+html.is-desktop-device .crm-mobile-10-wrap {
+    display: none !important;
+}
+html.is-desktop-device .container {
+    display: block !important;
+}
+
+</style>
 
 <style>
 .touch-sub-tags {
@@ -1574,6 +1604,9 @@ window.addEventListener('error', function(e) {
     <!-- Mobile App Header Bar -->
     <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:14px 18px; border-radius:18px; border:1px solid #e2e8f0; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
         <div style="display:flex; align-items:center; gap:8px;">
+            <button type="button" onclick="if(window.parent&&window.parent.showDashboardHome){window.parent.showDashboardHome();}else{window.history.back();}" style="background:#f1f5f9; border:none; border-radius:8px; width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; color:#475569; font-size:13px; cursor:pointer;" title="홈으로 이동">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
             <div style="width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg, #2563eb, #3b82f6); display:flex; align-items:center; justify-content:center; color:white; font-size:13px; font-weight:900;">W</div>
             <span style="font-weight:900; font-size:15px; color:#0f172a; letter-spacing:-0.3px;">WERACLE CRM</span>
         </div>
@@ -5462,6 +5495,7 @@ window.addEventListener('resize', function() {
                         }
                     `;
                     pDoc.head.appendChild(style);
+                    const bSheet = pDoc.getElementById('mobileBottomSheetWrap'); if (bSheet) { bSheet.style.setProperty('display', 'none', 'important'); bSheet.classList.add('subpage-hidden'); }
                     console.log("[CRM] Mobile iframe viewport lock applied to parent!");
                 }
             } catch(e) {

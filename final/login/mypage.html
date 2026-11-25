@@ -913,13 +913,8 @@
                 gradeBadge = `<span class="weracle-badge weracle-badge-manager weracle-badge" style="font-size:12px; padding:4px 10px; border-radius:12px; font-weight:700;">관리자(Manager)</span>`;
             }
 
-            // D-Day calculation for subscription
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const targetBillingDate = new Date(2026, 10, 15); // 2026-11-15
-            targetBillingDate.setHours(0, 0, 0, 0);
-            const diffDays = Math.ceil((targetBillingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            const ddayText = diffDays > 0 ? `D-${diffDays}일 남음` : (diffDays === 0 ? '오늘 결제일' : `결제 완료 (D+${Math.abs(diffDays)})`);
+            // 구독 및 결제 관리 (정식 결제 오픈 전 베타 TEST 기간 표시)
+            const ddayText = 'TEST 기간 (무료 체험)';
 
             // Device list logic for max 3 devices
             const uid = window.currentUser ? window.currentUser.id : 'guest';
@@ -1109,30 +1104,35 @@
                                     <div class="sub-period-head">
                                         <div>
                                             <span style="font-size: 11.5px; color: #0369a1; font-weight: 700; display: block; margin-bottom: 2px;">이용 중인 플랜</span>
-                                            <div style="font-size: 16px; font-weight: 800; color: #0f172a;">위라클 VIP 멤버십 (월간 정기결제)</div>
+                                            <div style="font-size: 16px; font-weight: 800; color: #0f172a;">위라클 전체 서비스 [오픈 베타 / TEST 기간]</div>
                                         </div>
-                                        <div class="dday-pill" id="subDdayBadge">
-                                            <i class="fa-regular fa-clock"></i> <span>${ddayText}</span>
+                                        <div class="dday-pill" id="subDdayBadge" style="background: linear-gradient(135deg, #0284c7, #0369a1);">
+                                            <i class="fa-solid fa-flask-vial"></i> <span>${ddayText}</span>
                                         </div>
                                     </div>
 
                                     <div class="sub-info-grid">
                                         <div class="sub-info-item">
-                                            <span>다음 정기 결제 예정일</span>
-                                            <span>2026년 11월 15일</span>
+                                            <span>구독 시스템 상태</span>
+                                            <span style="color: #0284c7; font-weight: 800;">정식 오픈 준비 중 (TEST 기간)</span>
                                         </div>
                                         <div class="sub-info-item">
-                                            <span>결제 예정 금액</span>
-                                            <span>월 39,000원 (자동 갱신)</span>
+                                            <span>체험 이용 요금</span>
+                                            <span style="color: #059669; font-weight: 800;">전체 기능 무료 제공</span>
                                         </div>
                                         <div class="sub-info-item">
-                                            <span>현재 구독 상태</span>
-                                            <span style="color: #059669; font-weight: 800;">정상 이용 중 (활성)</span>
+                                            <span>정식 오픈 일정</span>
+                                            <span style="color: #475569; font-weight: 600;">정식 결제 오픈 시 별도 공지</span>
                                         </div>
                                         <div class="sub-info-item">
                                             <span>결제 수단</span>
-                                            <span>등록 카드 (토스페이먼츠)</span>
+                                            <span style="color: #475569; font-weight: 600;">등록 불필요 (무료 이용)</span>
                                         </div>
+                                    </div>
+
+                                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #bae6fd; font-size: 11.5px; color: #0369a1; line-height: 1.5; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-circle-info" style="font-size: 13px; color: #0284c7; flex-shrink: 0;"></i>
+                                        <span>현재 정식 결제 시스템 도입 전 베타 TEST 기간으로, 모든 설계사님들께 전 기능을 무료로 제공해 드리고 있습니다.</span>
                                     </div>
                                 </div>
                             </div>

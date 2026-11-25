@@ -88,6 +88,7 @@ let agentEvents = [];     // 구글 캘린더에서 가져온 개인 일정 리�
 let currentCalDate = new Date(); // 현재 캘린더가 가리키는 기준일 (기본: 오늘)
 let activeFilter = 'all'; // 'all', 'google', 'bday', 'sang', 'expiry', 'pay'
 let isMobileDevice = window.innerWidth <= 768;
+let activeFilter = isMobileDevice ? 'google' : 'all'; // 모바일은 '내 일정' 기본 활성화 ('전체' 제외)
 let calViewMode = isMobileDevice ? 'vertical' : (localStorage.getItem('weracle_cal_view_mode') || 'horizontal');
 let currentMonthStr = new Date().toISOString().substring(0, 7);
 let checkDataInterval = null;
@@ -745,7 +746,7 @@ function renderV3Calendar() {
             <i class="fa-solid fa-circle-info" style="color:#0284c7; font-size:15px;"></i>
             <span>이번 주에는 <b>${getFilterKoreanName(activeFilter)}</b> 일정이 없습니다.</span>
           </div>
-          <button type="button" onclick="setCalendarFilter('all')" style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; font-weight:700; font-size:12px; padding:4px 10px; border-radius:6px; cursor:pointer;">전체 일정 보기</button>
+          ${window.innerWidth <= 768 ? '' : '<button type="button" onclick="setCalendarFilter(\'all\')" style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; font-weight:700; font-size:12px; padding:4px 10px; border-radius:6px; cursor:pointer;">전체 일정 보기</button>'}
         `;
         grid.appendChild(banner);
       }
@@ -1784,6 +1785,15 @@ function getInitialMockData() {
 }
 
 async function initDashboard() {
+  // 모바일인 경우 '내 일정'을 기본 활성 필터로 적용 ('전체'는 숨김)
+  if (window.innerWidth <= 768) {
+    activeFilter = 'google';
+    const allChip = document.querySelector('.cal-filter-chip[data-filter="all"]');
+    if (allChip) allChip.classList.remove('active');
+    const googleChip = document.querySelector('.cal-filter-chip[data-filter="google"]');
+    if (googleChip) googleChip.classList.add('active');
+  }
+
   // 슬라이더 초기 렌더링 (Items 6-3, 6-4)
   renderPromoSlide();
   renderVideoSlide();

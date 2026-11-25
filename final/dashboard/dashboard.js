@@ -34,11 +34,6 @@ function updatePartnersTabVisibility() {
 // ==========================================================================
 const SALES_INSIGHT_VIDEOS = [
   {
-    title: "위라클매니지먼트 보험설계사 기획사",
-    subtitle: "보험설계사의 가치와 성장을 위한 위라클 공식 소개 영상",
-    url: "https://www.youtube.com/watch?v=bSl--FrNKyY"
-  },
-  {
     title: "설계사 세일즈 화법 & 실전 클로징 노하우",
     subtitle: "고객의 거절을 극복하고 계약 체결로 이끄는 핵심 화법",
     url: "https://www.youtube.com/watch?v=ScMzIvxBSi4"
@@ -320,6 +315,14 @@ function renderVideoSlide() {
   const counter = document.getElementById('videoSlideCounter');
   if (!area) return;
 
+  if (!SALES_INSIGHT_VIDEOS || SALES_INSIGHT_VIDEOS.length === 0) {
+    if (counter) counter.innerText = '0 / 0';
+    area.innerHTML = '<div style="padding:40px 20px; text-align:center; color:var(--text-muted); background:#f8fafc; border-radius:8px;">준비 중인 영상입니다.</div>';
+    return;
+  }
+  if (currentVideoIdx >= SALES_INSIGHT_VIDEOS.length) {
+    currentVideoIdx = 0;
+  }
   const item = SALES_INSIGHT_VIDEOS[currentVideoIdx] || SALES_INSIGHT_VIDEOS[0];
   if (counter) counter.innerText = `${currentVideoIdx + 1} / ${SALES_INSIGHT_VIDEOS.length}`;
 

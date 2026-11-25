@@ -257,7 +257,16 @@
         }
       }
 
-    </style>
+    
+        /* 모바일에서는 명함 꾸미기 에디터 버튼 숨김 (PC에서만 노출) */
+        html.is-mobile-device .sb-pc-only-card-btn,
+        @media (max-width: 768px) {
+            .sb-pc-only-card-btn {
+                display: none !important;
+            }
+        }
+
+</style>
 
     
 
@@ -1080,7 +1089,10 @@
                                     </div>
                                 </div>
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                    <a href="../card/card.html?u=${encodeURIComponent(profile.card_slug || profile.id)}" target="_blank" style="background: #0284c7; color: #ffffff; padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(2,132,199,0.3);">
+                                    <a href="../card/card_edit.html" class="sb-pc-only-card-btn" style="background: #0284c7; color: #ffffff; padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(2,132,199,0.3);">
+                                        <i class="fa-solid fa-pen-to-square"></i> 명함 꾸미기
+                                    </a>
+                                    <a href="../card/card.html?u=${encodeURIComponent(profile.card_slug || profile.id)}" target="_blank" style="background: #ffffff; color: #0369a1; border: 1px solid #bae6fd; padding: 9px 14px; border-radius: 10px; font-size: 13px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                                         <i class="fa-solid fa-arrow-up-right-from-square"></i> 실제 공유 화면 바로보기
                                     </a>
                                     <button type="button" onclick="navigator.clipboard.writeText('${baseCardOrigin}/c/${profile.card_slug || 'my'}'); alert('디지털 명함 주소가 클립보드에 복사되었습니다!');" style="background: #ffffff; color: #0369a1; border: 1px solid #bae6fd; padding: 9px 14px; border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">

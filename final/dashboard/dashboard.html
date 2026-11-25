@@ -135,10 +135,10 @@
         font-size: 11px !important;
     }
 
-    /* 3. 모바일 전용 컴팩트 일정 필터 (전체 일정 제외 + 5종 깔끔 배치) */
+    /* 3. 모바일 전용 컴팩트 5종 일정 필터 (2줄 최적 균등 배치) */
     .cal-filter-bar {
-        display: flex !important;
-        flex-wrap: wrap !important;
+        display: grid !important;
+        grid-template-columns: repeat(6, 1fr) !important;
         gap: 6px !important;
         overflow-x: visible !important;
         white-space: normal !important;
@@ -151,35 +151,32 @@
     .cal-filter-tab[data-filter="all"] {
         display: none !important;
     }
-    /* 내 일정 (개인/구글 캘린더) 1행 단독 배치 */
+    /* 1행 3개 균등 분할 (각 33.3%): 내 일정, 생일, 상령일 */
     .cal-filter-chip[data-filter="google"] {
-        flex: 1 1 100% !important;
+        grid-column: span 2 !important;
+    }
+    .cal-filter-chip[data-filter="bday"] {
+        grid-column: span 2 !important;
+    }
+    .cal-filter-chip[data-filter="sang"] {
+        grid-column: span 2 !important;
+    }
+    /* 2행 2개 균등 분할 (각 50%): 만기, 결제일 */
+    .cal-filter-chip[data-filter="expiry"] {
+        grid-column: span 3 !important;
+    }
+    .cal-filter-chip[data-filter="pay"] {
+        grid-column: span 3 !important;
+    }
+    .cal-filter-tab, .cal-filter-chip {
         width: 100% !important;
         box-sizing: border-box !important;
         display: flex !important;
         align-items: center !important;
-        justify-content: space-between !important;
-        padding: 9px 12px !important;
-        font-size: 12px !important;
-        border-radius: 8px !important;
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        cursor: pointer !important;
-    }
-    /* 고객 4종 이벤트 (생일, 상령일, 만기, 결제일) 2행 4분할 균등 배치 */
-    .cal-filter-chip[data-filter="bday"],
-    .cal-filter-chip[data-filter="sang"],
-    .cal-filter-chip[data-filter="expiry"],
-    .cal-filter-chip[data-filter="pay"] {
-        flex: 1 1 calc(25% - 6px) !important;
-        min-width: 0 !important;
-        box-sizing: border-box !important;
-        display: flex !important;
-        align-items: center !important;
         justify-content: center !important;
-        gap: 3px !important;
-        padding: 8px 2px !important;
-        font-size: 11px !important;
+        gap: 4px !important;
+        padding: 8px 4px !important;
+        font-size: 11.5px !important;
         border-radius: 8px !important;
         background: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;

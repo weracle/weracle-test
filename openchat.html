@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>위라클랩 한장 비교표 체험 & 설계사 오픈톡방 입장</title>
+  
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <style>
+    :root {
+      --weracle-main: #113f67;
+      --weracle-dark: #0a2946;
+      --cyan-mint: #00e6f6;
+      --kakao-yellow: #FEE500;
+      --kakao-text: #191919;
+      --text-main: #333d4b;
+      --text-muted: #64748b;
+      --border-outer: #cbd5e1;
+      --border-cell: #cbd5e1;
+      --border-strong: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      letter-spacing: -0.02em;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #f1f5f9;
+      color: var(--text-main);
+      line-height: 1.5;
+      padding-bottom: 92px; /* 하단 고정 오픈톡 CTA 여백 */
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .landing-wrapper {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 12px;
+    }
+
+    /* ============================================================ */
+    /* 1. 상단 모바일 히어로: 위라클랩 한장 비교표 핵심 소개            */
+    /* ============================================================ */
+    .hero-section {
+      background: linear-gradient(155deg, #0b2944 0%, var(--weracle-main) 65%, #165082 100%);
+      color: #ffffff;
+      padding: 28px 18px 26px;
+      border-radius: 0 0 22px 22px;
+      box-shadow: 0 10px 28px rgba(17, 63, 103, 0.22);
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-section::after {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(0, 230, 246, 0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .hero-brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(0, 230, 246, 0.45);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--cyan-mint);
+      margin-bottom: 14px;
+    }
+
+    .hero-headline {
+      font-size: 23px;
+      font-weight: 900;
+      line-height: 1.35;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+      word-break: keep-all;
+    }
+
+    .hero-headline .accent {
+      color: var(--cyan-mint);
+      box-shadow: inset 0 -8px 0 rgba(0, 230, 246, 0.2);
+    }
+
+    .hero-subcopy {
+      font-size: 14px;
+      color: #dbeafe;
+      font-weight: 500;
+      line-height: 1.55;
+      margin-bottom: 18px;
+      word-break: keep-all;
+    }
+
+    /* 핵심 장점 3가지 요약 카드 */
+    .hero-feature-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: left;
+    }
+
+    .hero-feature-item {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      padding: 11px 12px;
+      backdrop-filter: blur(4px);
+    }
+
+    .hf-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 3px;
+    }
+
+    .hf-top i {
+      color: var(--cyan-mint);
+      font-size: 13px;
+    }
+
+    .hf-desc {
+      font-size: 11.5px;
+      color: #cbd5e1;
+      line-height: 1.4;
+      word-break: keep-all;
+    }
+
+    @media (max-width: 640px) {
+      .hero-feature-list {
+        grid-template-columns: 1fr;
+        gap: 7px;
+      }
+      .hero-feature-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 13px;
+      }
+      .hf-top {
+        margin-bottom: 0;
+        white-space: nowrap;
+        min-width: 108px;
+      }
+      .hf-desc {
+        font-size: 12px;
+        color: #e2e8f0;
+      }
+    }
+
+    /* ============================================================ */
+    /* 2. 시뮬레이션 체험 안내 배너 & 퀵 체험 버튼                      */
+    /* ============================================================ */
+    .sim-guide-banner {
+      background: #ffffff;
+      border: 1.5px solid var(--weracle-main);
+      border-radius: 14px;
+      padding: 13px 15px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(17, 63, 103, 0.07);
+    }
+
+    .sim-guide-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 9px;
+    }
+
+    .sim-guide-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--weracle-main);
+    }
+
+    .sim-guide-badge .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+    }
+
+    .swipe-hint {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #0284c7;
+      background: #f0f9ff;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid #bae6fd;
+    }
+
+    .quick-demo-pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .quick-demo-pills::-webkit-scrollbar { display: none; }
+
+    .demo-pill-btn {
+      flex: 1;
+      min-width: fit-content;
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      color: #b91c1c;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 7px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .demo-pill-btn:active, .demo-pill-btn:hover {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+
+    /* ============================================================ */
+    /* 3. 한장 비교표 인터랙티브 컨테이너                                */
+    /* ============================================================ */
+    .main-container {
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+      border: 1px solid var(--border-outer);
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 22px;
+    }
+
+    .wrc-premium-header {
+      padding: 16px 16px 14px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-cell);
+    }
+
+    .wrc-title-area {
+      position: relative;
+      padding-left: 13px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .wrc-title-area::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 2px;
+      bottom: 2px;
+      width: 4px;
+      background: linear-gradient(to bottom, var(--weracle-main) 0%, var(--cyan-mint) 100%);
+      border-radius: 4px;
+    }
+
+    .wrc-brand-logo {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .wrc-brand-text {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--weracle-main);
+      letter-spacing: -0.8px;
+    }
+    .wrc-brand-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--weracle-main);
+      padding: 2px 7px;
+      border-radius: 5px;
+      margin-left: 6px;
+    }
+    .wrc-brand-icon { color: var(--cyan-mint); font-size: 10px; line-height: 1; }
+    .wrc-brand-sub { font-size: 10px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
+
+    .wrc-main-title {
+      font-size: 15.5px;
+      font-weight: 800;
+      color: var(--weracle-main);
+      background-color: rgba(0, 230, 246, 0.1);
+      padding: 4px 9px;
+      border-radius: 5px;
+      line-height: 1.3;
+      word-break: keep-all;
+    }
+
+    /* 컴팩트해진 상단 샘플 블러 배너 (모바일 세로 공간 절약) */
+    .advert-blur-wrapper {
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      max-height: 96px;
+    }
+    .advert-blur-inner {
+      filter: blur(5px) grayscale(20%);
+      opacity: 0.4;
+      pointer-events: none;
+      user-select: none;
+      padding: 10px;
+      font-size: 11px;
+    }
+    .advert-blur-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      padding: 10px 14px;
+      text-align: center;
+      border-radius: 10px;
+      border: 1px dashed rgba(255, 255, 255, 0.35);
+    }
+    .advert-blur-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .advert-blur-badge {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .advert-blur-title {
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .advert-blur-desc {
+      color: #bae6fd;
+      font-size: 11.5px;
+      margin-top: 4px;
+      font-weight: 600;
+      word-break: keep-all;
+    }
+
+    /* 툴바 (말풍선 여백 확보) */
+    .controls-bar {
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border-cell);
+      padding: 34px 14px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .controls-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .controls-right {
+      display: flex;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-outline {
+      background: #ffffff;
+      border: 1px solid var(--border-cell);
+      color: #475569;
+    }
+    .btn-outline:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .btn-primary {
+      background: var(--weracle-main);
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background: #0c2d4a;
+    }
+
+    /* 테이블 스크롤 래퍼 */
+    .table-responsive {
+      overflow-x: auto;
+      overflow-y: visible;
+      position: relative;
+      -webkit-overflow-scrolling: touch;
+    }
+    .table-responsive::-webkit-scrollbar {
+      height: 7px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 999px;
+    }
+
+    #standardMasterTable {
+      width: 100%;
+      min-width: 960px; /* 모바일 첫 화면에 KB손보 + 현대해상(빨간 버튼) 동시 노출 */
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    #standardMasterTable th,
+    #standardMasterTable td {
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: middle;
+    }
+
+    /* 모바일 좌측 고정 연령 컬럼 */
+    .sticky-age-col {
+      position: sticky;
+      left: 0;
+      z-index: 15;
+      width: 84px;
+      min-width: 84px;
+      max-width: 84px;
+      background: #f8fafc !important;
+      border-right: 1.5px solid var(--border-strong) !important;
+      box-shadow: 3px 0 8px rgba(15, 23, 42, 0.05);
+    }
+    thead .sticky-age-col {
+      z-index: 25;
+      background: #f1f5f9 !important;
+    }
+
+    /* 눈(Eye) 숨김 버튼 */
+    .col-hide-btn {
+      position: absolute;
+      top: 6px;
+      right: 5px;
+      width: 22px;
+      height: 22px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 11.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      z-index: 10;
+    }
+    .col-hide-btn .eye-slash-icon { display: none; }
+    .col-hide-btn:hover {
+      background: #fee2e2 !important;
+      color: #dc2626 !important;
+    }
+    .col-hide-btn:hover .eye-open-icon { display: none; }
+    .col-hide-btn:hover .eye-slash-icon { display: inline-block; }
+
+    /* 브랜드 컬럼 컬러 & 호버 */
+    .col-brand-0 { background-color: rgba(217, 119, 6, 0.025) !important; border-right: 1px solid #e2e8f0; }
+    .th-brand-0 { border-top: 3px solid #d97706 !important; border-right: 1px solid #e2e8f0 !important; }
+    .col-brand-1 { background-color: rgba(0, 48, 135, 0.025) !important; border-right: 1px solid #e2e8f0; }
+    .th-brand-1 { border-top: 3px solid #003087 !important; border-right: 1px solid #e2e8f0 !important; }
+    .col-brand-2 { background-color: rgba(237, 28, 36, 0.025) !important; border-right: 1px solid #e2e8f0; }
+    .th-brand-2 { border-top: 3px solid #ed1c24 !important; border-right: 1px solid #e2e8f0 !important; }
+    .col-brand-3 { background-color: rgba(243, 115, 33, 0.025) !important; border-right: 1px solid #e2e8f0; }
+    .th-brand-3 { border-top: 3px solid #f37321 !important; border-right: 1px solid #e2e8f0 !important; }
+    .col-brand-4 { background-color: rgba(0, 136, 80, 0.025) !important; border-right: 1px solid #e2e8f0; }
+    .th-brand-4 { border-top: 3px solid #008850 !important; border-right: 1px solid #e2e8f0 !important; }
+    .col-brand-5 { background-color: rgba(237, 28, 36, 0.025) !important; border-right: 1px solid #e2e8f0; }
+    .th-brand-5 { border-top: 3px solid #ed1c24 !important; border-right: 1px solid #e2e8f0 !important; }
+    .col-brand-6 { background-color: rgba(3, 78, 162, 0.025) !important; border-right: 1px solid #e2e8f0; }
+    .th-brand-6 { border-top: 3px solid #034ea2 !important; border-right: 1px solid #e2e8f0 !important; }
+
+    /* 블러(흐림) 숨김 효과 - 칸 너비 변동 없음 */
+    .comp-hidden,
+    .demo-blurred-col,
+    [data-comp].demo-blurred-col {
+      filter: blur(4.5px) grayscale(75%) !important;
+      opacity: 0.22 !important;
+      background: #f1f5f9 !important;
+      color: #94a3b8 !important;
+      pointer-events: none !important;
+      user-select: none !important;
+      transition: filter 0.3s ease, opacity 0.3s ease, background 0.3s ease !important;
+    }
+    .row-hidden td:not(.sticky-age-col),
+    tr.demo-blurred-row td {
+      filter: blur(4.5px) grayscale(75%) !important;
+      opacity: 0.22 !important;
+      background: #f1f5f9 !important;
+      color: #94a3b8 !important;
+      pointer-events: none !important;
+      user-select: none !important;
+      transition: filter 0.3s ease, opacity 0.3s ease, background 0.3s ease !important;
+    }
+
+    /* 빨간 동그라미 강조 & 말풍선 */
+    .guide-circle-icon-btn {
+      width: 24px !important;
+      height: 24px !important;
+      border-radius: 50% !important;
+      background: #fee2e2 !important;
+      border: 2px solid #ef4444 !important;
+      color: #dc2626 !important;
+      font-size: 11px !important;
+      cursor: pointer !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      animation: circlePulse 1.8s infinite ease-in-out !important;
+      z-index: 20 !important;
+      flex-shrink: 0;
+    }
+
+    .guide-circle-button {
+      border: 2px solid #ef4444 !important;
+      border-radius: 30px !important;
+      animation: circlePulse 1.8s infinite ease-in-out !important;
+      cursor: pointer !important;
+      z-index: 20 !important;
+    }
+
+    @keyframes circlePulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.32), 0 2px 8px rgba(239, 68, 68, 0.35); }
+      50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.65), 0 4px 14px rgba(239, 68, 68, 0.55); }
+    }
+
+    .guide-speech-bubble {
+      position: absolute;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 7px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+      white-space: nowrap;
+      cursor: pointer;
+      z-index: 35;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      animation: bubbleFloat 1.8s infinite ease-in-out;
+      user-select: none;
+    }
+
+    @keyframes bubbleFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    .bubble-tail-down::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      right: 16px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #ef4444 transparent transparent transparent;
+    }
+    .bubble-tail-left::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      transform: translateY(-50%);
+      border-width: 5px;
+      border-style: solid;
+      border-color: transparent #ef4444 transparent transparent;
+    }
+
+    .table-bottom-note {
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 12px 16px;
+      font-size: 11.5px;
+      color: #475569;
+    }
+
+    /* ============================================================ */
+    /* 4. 하단 오픈톡방 입장 유도 섹션 (클로징 카드)                      */
+    /* ============================================================ */
+    .openchat-cta-section {
+      background: linear-gradient(160deg, #0b2944 0%, var(--weracle-main) 100%);
+      border-radius: 18px;
+      padding: 26px 18px;
+      color: #ffffff;
+      box-shadow: 0 12px 30px rgba(17, 63, 103, 0.22);
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .oc-tag {
+      display: inline-block;
+      background: rgba(0, 230, 246, 0.16);
+      color: var(--cyan-mint);
+      border: 1px solid rgba(0, 230, 246, 0.4);
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    .oc-title {
+      font-size: 21px;
+      font-weight: 900;
+      line-height: 1.35;
+      margin-bottom: 8px;
+      word-break: keep-all;
+    }
+
+    .oc-subtitle {
+      font-size: 13.5px;
+      color: #cbd5e1;
+      margin-bottom: 18px;
+      word-break: keep-all;
+    }
+
+    .oc-benefit-box {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      padding: 15px 16px;
+      text-align: left;
+      max-width: 540px;
+      margin: 0 auto 16px;
+    }
+
+    .oc-benefit-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 13px;
+      color: #f1f5f9;
+      font-weight: 600;
+      line-height: 1.45;
+      margin-bottom: 10px;
+      word-break: keep-all;
+    }
+    .oc-benefit-item:last-child { margin-bottom: 0; }
+    .oc-benefit-item i {
+      color: var(--cyan-mint);
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+
+    .oc-notice-bar {
+      max-width: 540px;
+      margin: 0 auto 18px;
+      background: rgba(15, 23, 42, 0.45);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #e2e8f0;
+      line-height: 1.45;
+      word-break: keep-all;
+    }
+
+    .btn-kakao-main {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      width: 100%;
+      max-width: 440px;
+      background: var(--kakao-yellow);
+      color: var(--kakao-text);
+      text-decoration: none;
+      font-size: 16.5px;
+      font-weight: 900;
+      padding: 16px 22px;
+      border-radius: 14px;
+      box-shadow: 0 8px 22px rgba(254, 229, 0, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn-kakao-main:hover, .btn-kakao-main:active {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px rgba(254, 229, 0, 0.48);
+    }
+
+    /* ============================================================ */
+    /* 5. 모바일 하단 고정 오픈톡방 유도 바 (Sticky Bottom CTA)          */
+    /* ============================================================ */
+    .sticky-bottom-cta {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-top: 1px solid #cbd5e1;
+      box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.1);
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      z-index: 9000;
+    }
+
+    .sticky-cta-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .sticky-cta-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .sticky-cta-sub {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--weracle-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sticky-cta-main {
+      font-size: 13.5px;
+      font-weight: 900;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-kakao-sticky {
+      background: var(--kakao-yellow);
+      color: var(--kakao-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 900;
+      padding: 12px 18px;
+      border-radius: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 400px) {
+      .sticky-cta-text { display: none; }
+      .btn-kakao-sticky { width: 100%; justify-content: center; font-size: 15px; }
+    }
+
+    /* ============================================================ */
+    /* 6. 시뮬레이션 포커스 박스, 가이드 카드, 스냅샷 모달 (모바일 대응)  */
+    /* ============================================================ */
+    #guide-focus-box {
+      position: fixed;
+      z-index: 99998;
+      pointer-events: none;
+      border: 3px solid #ef4444;
+      border-radius: 8px;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25), 0 8px 24px rgba(239, 68, 68, 0.35);
+      transition: all 0.15s ease;
+      display: none;
+    }
+
+    #simple-guide-card {
+      position: fixed;
+      z-index: 99999;
+      width: calc(100vw - 24px);
+      max-width: 350px;
+      background: #ffffff;
+      border: 2px solid #ef4444;
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+      padding: 13px 15px;
+      display: none;
+    }
+    .sg-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .sg-tag {
+      font-size: 11px;
+      font-weight: 800;
+      color: #b91c1c;
+      background: #fee2e2;
+      padding: 2px 7px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .sg-close-btn {
+      background: none;
+      border: none;
+      font-size: 16px;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    .sg-title {
+      font-size: 14px;
+      font-weight: 900;
+      color: #0f172a;
+      margin: 0 0 6px 0;
+    }
+    .sg-content-box {
+      background: #f8fafc;
+      border-left: 3.5px solid #ef4444;
+      border-radius: 0 6px 6px 0;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+    }
+    .sg-sentence {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.48;
+      word-break: keep-all;
+    }
+    .sg-action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      border-top: 1px dashed #e2e8f0;
+      padding-top: 7px;
+    }
+    .sg-status-text {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-replay-demo {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #camera-flash-overlay {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 999998;
+      transition: opacity 0.12s ease-out;
+    }
+    #camera-flash-overlay.flashing {
+      opacity: 0.95;
+      transition: opacity 0.04s ease-in;
+    }
+
+    #snapshot-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      z-index: 999999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      opacity: 0;
+      transition: opacity 0.18s ease-out;
+    }
+    #snapshot-modal-overlay.show {
+      display: flex !important;
+      opacity: 1 !important;
+    }
+    #snapshot-modal-overlay.hide-anim {
+      opacity: 0 !important;
+      transition: opacity 0.22s ease-in;
+    }
+    .snapshot-photo-frame {
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 0 0 3px #0284c7;
+      width: 100%;
+      max-width: 900px;
+      overflow: hidden;
+    }
+    .spf-header {
+      background: #0f2744;
+      color: white;
+      padding: 12px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .spf-header-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+    .spf-icon-cam {
+      width: 30px;
+      height: 30px;
+      background: rgba(2, 132, 199, 0.25);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #38bdf8;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .spf-title { font-size: 14px; font-weight: 800; color: #ffffff; }
+    .spf-sub { font-size: 10.5px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .spf-badge {
+      background: #10b981;
+      color: white;
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 4px 9px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .spf-image-view {
+      padding: 12px;
+      background: #f1f5f9;
+      max-height: 55vh;
+      overflow-x: auto;
+      overflow-y: auto;
+    }
+    .spf-preview-grid-wrap {
+      min-width: 620px; /* 스마트폰에서도 캡처 미리보기 표가 찌그러지지 않게 유지 */
+    }
+    .spf-footer {
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================ -->
+  <!-- 1. 상단 히어로 섹션: 위라클랩 한장 비교표 핵심 소개                -->
+  <!-- ============================================================ -->
+  <section class="hero-section">
+    <div class="hero-inner">
+      <div class="hero-brand-pill">
+        <i class="fa-solid fa-bolt"></i> WERACLE LAB · 설계사 전용 세일즈 무기
+      </div>
+      <h1 class="hero-headline">
+        여러 단톡방 뒤지며 찾는 비교자료,<br>
+        이제 <span class="accent">딱 '한 장'으로</span> 끝내세요
+      </h1>
+      <p class="hero-subcopy">
+        수십 개 보험사 소식지를 일일이 대조할 필요 없습니다.<br>
+        전 보험사 한도·인수기준을 한눈에 비교하고, 내 고객에게 필요한 조건만 남겨 <b>1초 만에 고화질 이미지로 캡처</b>해 전송하세요.
+      </p>
+
+      <div class="hero-feature-list">
+        <div class="hero-feature-item">
+          <div class="hf-top"><i class="fa-solid fa-table-columns"></i> 전 보험사 한눈 비교</div>
+          <div class="hf-desc">손·생보 핵심 담보와 연령별 한도를 한 장에 압축</div>
+        </div>
+        <div class="hero-feature-item">
+          <div class="hf-top"><i class="fa-solid fa-eye-slash"></i> 맞춤 숨김·블러</div>
+          <div class="hf-desc">불필요한 보험사·연령은 터치 한 번으로 깔끔 정리</div>
+        </div>
+        <div class="hero-feature-item">
+          <div class="hf-top"><i class="fa-solid fa-camera"></i> 2배율 즉시 캡처</div>
+          <div class="hf-desc">깨짐 없는 초고화질 사진 저장으로 카톡 상담 즉시 활용</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="landing-wrapper">
+
+    <!-- ============================================================ -->
+    <!-- 2. 모바일 시뮬레이션 체험 안내 & 원터치 퀵 버튼                  -->
+    <!-- ============================================================ -->
+    <div class="sim-guide-banner">
+      <div class="sim-guide-header">
+        <div class="sim-guide-badge">
+          <span class="pulse-dot"></span> 직접 눌러서 한장 비교표 기능을 체험해보세요!
+        </div>
+        <span class="swipe-hint">↔ 좌우로 밀면 7개사 전체 확인</span>
+      </div>
+      <div class="quick-demo-pills">
+        <button type="button" class="demo-pill-btn" onclick="triggerQuickDemo('col-hide-btn', 'spot-col-hide')">
+          <i class="fa-regular fa-eye-slash"></i> ① 회사 숨기기 시연
+        </button>
+        <button type="button" class="demo-pill-btn" onclick="triggerQuickDemo('row-hide-btn', 'spot-row-hide')">
+          <i class="fa-solid fa-bars-staggered"></i> ② 연령 숨기기 시연
+        </button>
+        <button type="button" class="demo-pill-btn" onclick="triggerQuickDemo('download-btn', 'spot-capture-btn')">
+          <i class="fa-solid fa-camera"></i> ③ 고화질 캡처 시연
+        </button>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 3. 한장 비교표 인터랙티브 시뮬레이션 영역                       -->
+    <!-- ============================================================ -->
+    <div class="main-container" id="captureArea">
+      <div class="wrc-premium-header">
+        <div class="wrc-title-area">
+          <div class="wrc-brand-logo">
+            <span class="wrc-brand-text">WERACLE</span>
+            <div class="wrc-brand-badge">
+              <span class="wrc-brand-icon">❖</span>
+              <span class="wrc-brand-sub">INSIGHT</span>
+            </div>
+          </div>
+          <h2 class="wrc-main-title">8090 간병인 한도 비교 (손보·355 유병자)</h2>
+        </div>
+
+        <!-- 컴팩트 상단 블러 배너 -->
+        <div class="advert-blur-wrapper">
+          <div class="advert-blur-inner">
+            기준일: 2026.11 최신 | 비교군: 7개 손해보험사 | 가입조건: 간편 3.5.5 유병자 | 간병인일당 한도표시: 요양병원제외 / 요양병원 / 간호간병통합서비스일당 (단위: 만원) | 연령별 세부 인수기준 요약 데이터
+          </div>
+          <div class="advert-blur-overlay">
+            <div class="advert-blur-row">
+              <span class="advert-blur-badge"><i class="fa-solid fa-lock"></i> 샘플 미리보기</span>
+              <span class="advert-blur-title">상단 전체 전문 요약은 회원 전용입니다</span>
+            </div>
+            <div class="advert-blur-desc">아래 표에서 <b style="color:#fca5a5;">빨간 동그라미 버튼</b>을 직접 터치해 기능을 체험해보세요!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 액션 툴바 -->
+      <div class="controls-bar" id="masterToolbar">
+        <div class="controls-left">
+          <button class="btn btn-outline" onclick="restoreAllCompanies()">
+            <i class="fa-regular fa-eye"></i> 숨김 복원 (<span id="hiddenCompCount">0</span>)
+          </button>
+          <button class="btn btn-outline" onclick="resetAll()">
+            <i class="fa-solid fa-arrows-rotate"></i> 초기화
+          </button>
+        </div>
+        <div class="controls-right">
+          <div style="position: relative; display: inline-block;">
+            <div class="guide-speech-bubble bubble-tail-down" style="bottom: 38px; right: 0;" onclick="openSimpleGuide('download-btn', document.getElementById('spot-capture-btn'), event)">
+              👇 눌러서 캡처 체험
+            </div>
+            <button class="btn btn-primary guide-circle-button" id="spot-capture-btn" onclick="openSimpleGuide('download-btn', this, event)" style="font-weight: 800; padding: 7px 14px;">
+              <i class="fa-solid fa-camera"></i> 화면 캡처 저장
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 비교표 본문 -->
+      <div style="background: linear-gradient(135deg, #065f46, #059669); color: #fff; padding: 9px 14px; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+        <span><i class="fa-solid fa-shield-halved"></i> 손보 7개사 8090 간병인 한도 (355)</span>
+        <span style="font-size: 10.5px; background: rgba(255,255,255,0.22); padding: 2px 7px; border-radius: 4px;">요양제외/요양/간간통 (만원)</span>
+      </div>
+
+      <div class="table-responsive" id="tableContainer">
+        <table id="standardMasterTable">
+          <thead>
+            <tr style="background: #f8fafc; border-bottom: 2px solid #cbd5e1;">
+              <th rowspan="2" class="sticky-age-col" style="text-align: center; font-weight: 800; color: #334155; padding: 10px 4px;">연 령</th>
+
+              <!-- 0. KB손보 -->
+              <th colspan="2" class="th-company th-brand-0 col-brand-0" data-comp="0" style="position: relative; text-align: center; padding: 12px 4px 8px; min-width: 124px;">
+                <button class="col-hide-btn" onclick="hideCompany(event, 0)" title="KB손보(355) 숨기기">
+                  <i class="fa-regular fa-eye eye-open-icon"></i>
+                  <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+                </button>
+                <div style="font-weight: 800; font-size: 12.5px; color: #1e293b; margin-bottom: 4px;">KB손보(355)</div>
+                <div style="height: 18px; display: flex; align-items: center; justify-content: center;"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxMy4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDE0OTQ4KSAgLS0+DQo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPg0KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCINCgkgd2lkdGg9IjExMC42OHB4IiBoZWlnaHQ9IjM2LjE4NHB4IiB2aWV3Qm94PSIwIDAgMTEwLjY4IDM2LjE4NCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMTEwLjY4IDM2LjE4NCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMwMEFFRUYiIHN0cm9rZS13aWR0aD0iMC4yIiBzdHJva2UtZGFzaGFycmF5PSIyLDIiIGQ9Ik02Mi4zMywyOS42MTQiLz4NCjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwQUVFRiIgc3Ryb2tlLXdpZHRoPSIwLjIiIHN0cm9rZS1kYXNoYXJyYXk9IjIsMiIgZD0iTTYyLjE5Myw1LjAzMiIvPg0KPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBBRUVGIiBzdHJva2Utd2lkdGg9IjAuMiIgc3Ryb2tlLWRhc2hhcnJheT0iMiwyIiBkPSJNNjIuMzMsNS4wMzIiLz4NCjxnPg0KCTxnPg0KCQk8cGF0aCBmaWxsPSIjRkNBRjE2IiBkPSJNNDkuOTc1LDE4LjU2OGMwLTAuMDAxLTAuNDM5LTAuMjgtMC40MzktMC4yOGMtMS40OTgtMS40OTUtMy41ODQtMi4xNDMtNi4zNzMtMS45OA0KCQkJYy0yLjMyMiwwLjE0Mi00LjE2NCwxLjA2My01LjU3LDEuOTE4YzAtMC4wMjEtMC4wMDItMC4wNDItMC4wMDItMC4wNjNjMC0wLjcyOCwwLjA4Mi0xLjUxNiwwLjE2NC0yLjI4Mg0KCQkJYzAuMDgtMC43NzgsMC4xNjQtMS41NywwLjE2NC0yLjMxOWMwLTAuNzY1LTAuMDg2LTEuNDktMC4zNS0yLjExYy0wLjA2Ni0wLjE1OS0wLjIxMy0wLjI1NC0wLjM5OC0wLjI1NA0KCQkJYy0wLjc1LDAuMDE3LTIuMjE1LDAuNTMtMi41NywwLjg0MmMwLDAuMDAyLTAuMTkzLDAuNDIzLTAuMTkzLDAuNDIzYy0wLjAxMiwwLjgzMS0wLjE5NSwzLjE1LTAuMzgxLDMuNDMyDQoJCQljMC4wMDgtMC4wMS0wLjA5OCwwLjI4LTAuMDk4LDAuMjhjLTAuMzE2LDMuMzEzLTAuMzIyLDYuMjI2LTAuMDMxLDguNzI3YzAuMDMzLDAuMjUsMC41MTYsMC42MjUsMC44ODcsMC43NjENCgkJCWMwLjQwOCwwLjE1MSwxLjY4NC0wLjE5MSwyLjQyLTAuNDY3Yy0wLjAxLDAuMDAzLDAuMjc1LTAuMDQ0LDAuMjc1LTAuMDQ0YzAuMjMyLTAuMDI1LDAuMzY5LTAuMjIxLDAuMzU5LTAuNDg2DQoJCQljLTAuMDA0LTAuMDA2LDAuMDE4LTAuNzIsMC4wMTgtMC43MmMwLjUzMS0yLjE1OCwyLjY4LTQuNzM0LDUuMjIzLTUuMTIxYzEuNDM4LTAuMjI4LDIuNTcyLDAuMTQyLDMuNDY5LDEuMTE4DQoJCQljMC4xMjEsMC4xNzYsMC4zODMsMS43MjktMC41NjQsMy41MTRjLTAuNzA1LDEuMzIxLTIuMTE1LDIuNDM2LTMuOTcxLDMuMTMxYy0xLjc1NiwwLjY2OC0zLjY4OCwwLjkzNy02LjA3NCwwLjg1NQ0KCQkJYy0wLjEtMC4wNjQtMi4yMzQtMS41MTEtMi4yMzQtMS41MTFjLTEuODkzLTEuMzI5LTQuMjQ0LTIuOTgyLTYuMzc1LTMuNzkxYy0wLjM3NS0wLjE0NC0xLjA0NS0wLjcwMS0xLjQ0OS0xLjAzNWwtMC4yMjEtMC4xODENCgkJCWMtMS4yMjktMC45ODUtMy41NjgtMi41NDYtNS40NDctMy43OTZjMCwwLTAuODQ4LTAuNTY5LTEuMDEyLTAuNjc5YzAuMDAyLTAuMDcsMC4wMDItMC4yMTIsMC4wMDItMC4yMTINCgkJCWMwLjA1NS0wLjA2LDEuMjM2LTAuNzY4LDEuMjM2LTAuNzY4YzEuNjUyLTAuOTY3LDIuNDE2LTEuNDQxLDIuNTc4LTEuNjg2Yy0wLjAzMywwLjA0LDAuMjE5LTAuMTI5LDAuMjE5LTAuMTI5DQoJCQljMC4wMTYtMC4wMDcsNC4wOTgtMi4zMTgsNC4wOTgtMi4zMThjMy45MzQtMi4xNiw4LjM4OS00LjYxMywxMC43MjktNy4wMzZjMC4wMDQtMC4wMDMsMC4xMTUtMC4zNzEsMC4xMTUtMC4zNzFMMzguMjI3LDMuNg0KCQkJYzAuMTU2LTAuNTE5LDAuMTY0LTAuOTE1LDAuMDMzLTEuMzc2Yy0wLjAzMy0wLjEzMi0wLjE1NC0wLjI4NC0wLjMxNi0wLjMxM2MtMS44MjgtMC4xODMtNC4xODQsMC45MTMtNi4zMywyLjkyNg0KCQkJYy0wLjQ4NCwwLjQ1My0wLjg5MSwwLjY3Ni0xLjMyLDAuOTA5TDI5Ljk2NSw1LjkzYy0yLjM2NSwxLjM0NS03LjY5Myw0LjY1Mi0xMC40ODQsNi40MzdjMC4xODQtMywwLjczOC03LjI2NywxLjQyMi0xMC44MjQNCgkJCWwtMC4wNzYtMC40MjVjLTAuMDA4LTAuMDE0LTAuMjg5LTAuNTM4LTAuMjg5LTAuNTM4TDIwLjMyLDAuMTk1bC0wLjA2My0wLjAxN2MtMC41NTctMC4yODEtMS4wMTItMC4xNjctMS4zNDYtMC4wODRsLTAuNTU3LDAuMjA2DQoJCQlsLTAuNzQ0LDAuMjdjLTAuMTQ2LDAuMDI5LTAuMjUsMC4xMi0wLjMwNywwLjI2MmMtMS4zMzIsMy4yMi0yLjQ0Myw4LjUxNi0yLjcwNywxMi43NTNjLTIuNjYyLTEuNjkzLTUuMTIzLTIuOTExLTYuMzMtMy40OTkNCgkJCWwtMC4wMzMtMC4wMTlsLTAuMTQzLTAuMDMxQzcuNjU2LDkuOTgsNy4xMjcsOS42NjEsNi42MTksOS4zNTNDNi41NjQsOS4zMiw1LjYwNSw4LjY5Niw1LjYwNSw4LjY5Nkw0LjA1OSw3LjcwNQ0KCQkJQzQuMDcsNy43MTUsMy42NSw3LjYxMiwzLjY1LDcuNjEyQzIuOTg2LDcuNzI3LDEuNzExLDguNTg0LDEuMzMyLDkuMTY4Yy0wLjA0OSwwLjA3OC0wLjA3LDAuMTYxLTAuMDcsMC4yNDgNCgkJCWMwLDAuMTI0LDAuMDM5LDAuMjQ3LDAuMDcsMC4zNjhMMS40LDEwLjA5OWwwLjA3MiwwLjE4OWMwLjc0MiwwLjc2LDIuNjEzLDIuMDI2LDQuNDQ3LDMuMDEzbDIuMTI3LDEuMTI3bDMuMjU2LDEuNzc4DQoJCQljMCwwLjAxNSwwLjU1NSwwLjQ0MSwwLjU1NSwwLjQ0MWwwLjM4MywwLjIyYzAsMCwwLjA0NSwwLjAyNiwwLjA3LDAuMDQzYy0wLjg2NywwLjU4MS01LjkyMiwzLjk1NS01LjkyMiwzLjk1NWwtMy4xMTMsMi4wNjMNCgkJCWMtMC4yOTUsMC4yLTEuNTIzLDAuNzUtMS43OTUsMC44NTljLTAuNjc0LDAuMjc1LTEuMTg2LDAuNjk3LTEuMzk2LDEuMTU1TDAsMjUuMTIzbDAuMDg0LDAuMTE5bDAuMjM4LDAuMTgxDQoJCQljLTAuMDEyLDAsMC4zMTgsMC4yMDgsMC4zMTgsMC4yMDhsMC4zNDQsMC4yMzVjMC4wMDgsMC4wMDMsMC4zMjQsMC4wNTIsMC4zMjQsMC4wNTJjMC41NDcsMC4wMjEsMS4zNTctMC4yOTEsMi44NzMtMC45NTUNCgkJCWMxLjM5My0wLjYxNiw1LjE3NC0yLjg5OCw2Ljc5MS0zLjg3MmwwLjY4OS0wLjQxM2MwLjI4NSwwLjAyMywwLjU5OC0wLjIxOCwwLjg3OS0wLjQyOWMwLjMyNC0wLjI1OSwxLjAyOS0wLjY5MiwxLjQ1OS0wLjg4Mg0KCQkJYzAuMDE0LTAuMDA0LDAuMjU4LTAuMTQxLDAuNDktMC4yN2MtMC4wMDIsMC4wNzEtMC4wMDQsMC4xODUtMC4wMDQsMC4xODVjMC4wNzIsNC45NDYsMC4zNTUsOC41NDEsMC44OTYsMTEuMzEzbDAuMDA4LDAuMDQ3DQoJCQlsMC4wNTMsMC4xMTJjMC4yNjYsMC4zOSwwLjU2OCwxLjU2MywwLjgzOCwyLjU5NmwwLjYxNSwyLjA2NGMwLjAxNCwwLjAyNSwwLjE3NCwwLjE5NCwwLjE3NCwwLjE5NA0KCQkJYzAuMzUyLDAuMjM5LDEuNDI0LDAuNjUsMi4xMzksMC41NjVsMC4xNzgtMC4wMjFMMTkuNSwzNS45YzAuMDYxLTAuMzA5LDAuMDgyLTAuNjEyLDAuMDgyLTAuOTQ2YzAtMC4zNzctMC4wMjctMC43OTItMC4wNjEtMS4zMDINCgkJCWwtMC4wNDktMC43NDRjLTAuMjI3LTMuNDUyLTAuNDUzLTguNDM3LTAuNDUzLTExLjc1MWMwLTAuMDkzLDAtMC4xNzcsMC0wLjI2NGMwLjU4OCwwLjM2NywzLjE1MiwxLjk4NCwzLjE1MiwxLjk4NA0KCQkJYzQuMzY3LDIuODMzLDEwLjk2Myw3LjExMiwxNC45NDksOC4yNDNjMC4yMDcsMC4wNjMsMC40MjYsMC4wMTUsMC41NzgtMC4xMzJjMC4wMDYtMC4wMDgsMC42MTMtMC4zOTQsMC42MTMtMC4zOTRsMC4xMTUtMC4wNDcNCgkJCWMwLjIyOS0wLjEwOSwwLjM4MS0wLjQ5NCwwLjQwOC0wLjkxMmMzLjM1OS0wLjE2OSw4LjA0NS0xLjQ2MywxMC41NTMtNC42MTVjMC45NzEtMS4yMjMsMS40MDYtMi43MTksMS40MDYtNA0KCQkJQzUwLjc5NSwxOS45NzIsNTAuNTA0LDE5LjA2Niw0OS45NzUsMTguNTY4Ii8+DQoJPC9nPg0KCTxwb2x5Z29uIGZpbGw9IiM3NzZDNjEiIHBvaW50cz0iNjIuMzMsNS4wMjYgNjYuMjUsNS4wMjYgNjYuMjUsMTYuMDEzIDc5LjQzOSw1LjAyNiA4NC45OSw1LjAyNiA3MS4wNDksMTYuMTEyIDg2LjE0NiwyOS41NzIgDQoJCTgwLjYwMiwyOS41NzIgNjYuMjUsMTYuNDIgNjYuMjUsMjkuNTcyIDYyLjMzLDI5LjU3MiAJIi8+DQoJPHBhdGggZmlsbD0iIzc3NkM2MSIgZD0iTTg4Ljg3OSw1LjA3NmgxMi4wNjZjNS43MzgsMCw4Ljc0LDEuOTA4LDguNzQsNi4wNzdjMCwyLjk2Ni0yLjA3LDUuMDA2LTQuODI0LDUuNTU0djAuMTA0DQoJCWMzLjk0OSwwLjQ2OCw1LjgxOCwzLjA2Myw1LjgxOCw1Ljk4MmMwLDMuNjYzLTIuNjg2LDYuODMzLTkuMzUyLDYuODMzSDg4Ljg3OVY1LjA3NnogTTkyLjc4OSwxNS40MThoNy45NjMNCgkJYzIuOTU1LDAsNS4xNDEtMS4xMjQsNS4xNDEtMy43NDNjMC0yLjI4MS0xLjA3Ni0zLjgwMi01LjU5NC0zLjgwMmgtNy41MVYxNS40MTh6IE05Mi43ODksMjYuODRoNy43MTcNCgkJYzQuNzkzLDAsNi4wNjQtMS44NzMsNi4wNjQtNC4yNDljMC0yLjgyMy0xLjk1My00LjM4NS02LjI3MS00LjM4NWgtNy41MVYyNi44NHoiLz4NCjwvZz4NCjwvc3ZnPg0K" alt="KB손보(355)" style="max-height: 16px; max-width: 70px; object-fit: contain;"></div>
+              </th>
+
+              <!-- 1. 현대해상 (회사 숨김 시연 스팟) -->
+              <th colspan="2" class="th-company th-brand-1 col-brand-1" data-comp="1" style="position: relative; text-align: center; padding: 26px 4px 8px; min-width: 126px;">
+                <div class="guide-speech-bubble bubble-tail-down" style="top: 2px; right: 2px;" onclick="openSimpleGuide('col-hide-btn', document.getElementById('spot-col-hide'), event)">
+                  👇 회사 숨김
+                </div>
+                <button class="col-hide-btn guide-circle-icon-btn" id="spot-col-hide" onclick="openSimpleGuide('col-hide-btn', this, event)" title="현대해상(3555) 숨기기" style="position: absolute; right: 5px; top: 27px; z-index: 5;">
+                  <i class="fa-regular fa-eye eye-open-icon"></i>
+                  <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+                </button>
+                <div style="font-weight: 800; font-size: 12.5px; color: #1e293b; margin-bottom: 4px; padding-right: 18px;">현대해상(3555)</div>
+                <div style="height: 18px; display: flex; align-items: center; justify-content: center;"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MjUuNTg5IiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDcyNS41ODkgMTUwIj4KICA8cGF0aCBmaWxsPSIjMDAyYzVmIiBkPSJNNjc1Ljg3NCAxMzQuODA2YzguODQ2IDAgMTYuMDExLTYuNjE4IDE2LjAxMS0xNS4wOTcgMC04LjQ2OC03LjE2NS0xNC45MjktMTYuMDEtMTQuOTI5LTguODUyIDAtMTUuNjc5IDYuNDYxLTE1LjY3OSAxNC45MjkgMCA4LjQ3OSA2LjgyNyAxNS4wOTcgMTUuNjc4IDE1LjA5N20tMzMuOTA1LTE1LjA3NWMwLTE2LjU0IDE0LjQ5NS0zMC4xMTYgMzQuMDc1LTMwLjExNiAxOS41NjggMCAzNC4wNjIgMTMuNTc1IDM0LjA2MiAzMC4xMTZTNjk1LjYxMiAxNTAgNjc2LjA0NCAxNTBjLTE5LjU4IDAtMzQuMDc1LTEzLjcyOC0zNC4wNzUtMzAuMjY5bS0zOTguNzI1LTExLjk1NGgxOC44MTNWMTMxLjRoNTUuOTgydjE1LjM4aC03NC43OTV6bTQ2Ny41NTItNzguMDk4djE5Ljg5aDE0Ljc5M3YxNS42NzhoLTE0Ljc5M3YyMy4yMjFoLTE4LjI5NHYtNTguNzlabS03OC40MS4wMzhjLS4wOSAxNi41MjQtLjkxOSAzMC4xMTYtMjUuMTI3IDQxLjQxNGw4LjgxMiAxMy40NzRjMTAuNDQ2LTMuMDE2IDIyLjE5NS0xMi4xMSAyNi42ODgtMjAuMiA0LjUgOC4wOSAxNi4yMzcgMTcuMTg0IDI2LjY4MyAyMC4ybDguODE4LTEzLjQ3NGMtMjQuMjAzLTExLjI5OC0yNS4wNDgtMjQuODktMjUuMTI3LTQxLjQxNFptLTIwMC4yIDI3Ljc0NWgtOS42NTJWMjkuOTA1aC0xNy4yNTFWMTQ4LjcyaDE3LjI1MVY3NC43NjRoOS42NTJ2NzMuOTU1aDE3Ljc2NFYyOS45MDVoLTE3Ljc2NHptMTM4LjI4MiAwaC04LjM2VjI5LjkwNWgtMTcuNDU1VjE0OC43MmgxNy40NTRWNzQuNzY0aDguMzYxdjczLjk1NWgxNy45NVYyOS45MDVoLTE3Ljk1em0tMjcwLjY1MiAzNS4yaC0xMy44ODVWNzcuMzc4aDEzLjg4NVY2Ny4xMzRoLTEzLjkwOHYtMTUuMjloMTMuOTA4VjI5Ljg0OGgxOC4zdjg3LjM3MmgtMTguM3ptMjIxLjUyOS0yMy45NzRjMCA2LjMzMS01LjQxMiAxMi40NDItMTIuNDQ4IDEyLjQ0Mi03LjAyNSAwLTEyLjQ0Mi02LjExMS0xMi40NDItMTIuNDQyIDAtNi4zMTQgNS40MTctMTIuNDQ4IDEyLjQ0Mi0xMi40NDggNy4wMzYgMCAxMi40NDggNi4xMzQgMTIuNDQ4IDEyLjQ0OG0tMjEuNjgzLTQ0LjAzNnY5LjQ0OWgtMjAuODc2djE0LjUxMWgxMC4yOTRjLTYuMTU2IDQuMTM4LTkuNzM2IDEyLjAyLTkuNzM2IDIwLjM5MiAwIDE0LjQzOCAxMi40MjYgMjYuNzczIDI5LjU4MSAyNi43NzMgMTcuMTYxIDAgMjkuNTc1LTEyLjMzNSAyOS41NzUtMjYuNzczIDAtOC4zNzItMy41NjgtMTYuMjU0LTkuNzM2LTIwLjM5MmgxMC4zMDZWMzQuMTAxaC0yMC44ODh2LTkuNDQ5ek0yNjAuOTkgNjcuNTEzYzAgNi4zMy01LjQyOCAxMS44MTYtMTIuNDQ3IDExLjgxNi03LjAzIDAtMTIuNDQ4LTUuNDg1LTEyLjQ0OC0xMS44MTYgMC02LjMyIDUuNDE4LTExLjgxMSAxMi40NDgtMTEuODExIDcuMDE5IDAgMTIuNDQ4IDUuNDkgMTIuNDQ4IDExLjgxbS0yMi4xOTYtNDIuNzc4djkuNDU0aC0yMy4yMjd2MTQuNTE3aDEyLjkxYy02LjAxNSA0LjAwMy05LjQ4OCAxMS43NzctOS40ODggMTkuMTI5IDAgMTQuNDM4IDEyLjQyIDI2LjE0NyAyOS41NzUgMjYuMTQ3IDE3LjE2MSAwIDI5LjU3NS0xMS43MSAyOS41NzUtMjYuMTQ3IDAtNy4zNTItMy40NjctMTUuMTI2LTkuNDkzLTE5LjEyOWgxMi45MTZWMzQuMTg4SDI1OC4zM3YtOS40NTR6TTM5OS4wMSA5My45MjNoLTI5Ljg3VjQ4LjgzOGgyNC41NDJWMzMuMjU2aC00My4xOXY3Ni4zMTdoNDguNTE3eiIvPgogIDxwYXRoIGZpbGw9IiNmZjY3MDAiIGQ9Ik01NS43MjggNDguMzA0YzI2LjczNCAwIDQ4LjM1NS0yMS41NjQgNDguMzU1LTQ4LjI5OEwxNDguNjcgMGwtLjAyOCAxNDguNjMxaC01NS43NFY4NS40NzNINTUuNzI4djYzLjE4MUgwVi4wMDZoNTUuNzI4eiIvPgo8L3N2Zz4=" alt="현대해상(3555)" style="max-height: 16px; max-width: 70px; object-fit: contain;"></div>
+              </th>
+
+              <!-- 2. 메리츠 -->
+              <th colspan="2" class="th-company th-brand-2 col-brand-2" data-comp="2" style="position: relative; text-align: center; padding: 12px 4px 8px; min-width: 124px;">
+                <button class="col-hide-btn" onclick="hideCompany(event, 2)" title="메리츠(355) 숨기기">
+                  <i class="fa-regular fa-eye eye-open-icon"></i>
+                  <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+                </button>
+                <div style="font-weight: 800; font-size: 12.5px; color: #1e293b; margin-bottom: 4px;">메리츠(355)</div>
+                <div style="height: 18px; display: flex; align-items: center; justify-content: center;"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMzMiIGhlaWdodD0iMzIiIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyMzMgMzIiPjxwYXRoIGZpbGw9IiNFRjNCMjQiIGQ9Ik0yMS40NjkgMTAuNTgyYy0yLjQ0MiAwLTQuMTkyLjgtNS42MTMgMi44MzMtLjkxMi0xLjc4LTIuNzctMi44MzMtNS4zNTgtMi44MzMtMS45NjkgMC00LjMwMiAxLjAxNy01LjIxMyAyLjYxNXYtMi4wN0gwVjI5LjE4aDUuNTR2LTEwLjM5YzAtMS42MzQgMS4wNTctMy4xMjMgMi45OS0zLjEyMyAxLjkzMSAwIDIuOTE1IDEuMzQ0IDIuOTE1IDMuMDUxdjEwLjQ2Mmg1LjQ2OFYxOC43NTVjMC0xLjU5OCAxLjA1Ny0zLjA4NyAzLjAyNS0zLjA4N3MyLjg4IDEuMzQ0IDIuODggMy4wNTF2MTAuNDYyaDUuMzU4VjE3LjQ4NGMwLTQuOTA0LTMuMjgtNi45MDItNi43MDctNi45MDJNNTUuNTYzIDEzLjU2di0yLjQzM2gtNS4zNThWMjkuMThoNS41NHYtNy44ODNjMC0zLjU5NiAyLjAwNS00LjkwNCA0LjIyOS00LjkwNC41NDYgMCAxLjEzLjAzNyAxLjc1LjE4MnYtNS40NWMtLjM2NS0uMTA4LS45MTItLjE4LTEuNDU5LS4xOC0xLjQ1OCAwLTMuNzU0LjU4LTQuNzAyIDIuNjE1TTY5LjE2MyAxMS4xMjdoLTUuNTR2MTguMDU0aDUuNTR6TTc5LjE4NyA1Ljg2SDc0LjIzdjIuMzI0YzAgMS42NzEtLjkxMiAyLjk0My0yLjgwNyAyLjk0M2gtLjkxMXY0LjgzMWgzLjIwN3Y3LjczN2MwIDMuNTk3IDIuMjk3IDUuODEzIDYuMDUxIDUuODEzIDEuNzUgMCAyLjY2LS40IDIuODgtLjUwOXYtNC41NzdhNyA3IDAgMCAxLTEuNDU5LjE4MmMtMS4yMDIgMC0yLjAwNC0uNC0yLjAwNC0xLjg5di02Ljc1NmgzLjUzNXYtNC44MzFoLTMuNTM1ek02Ni4zNSAxYy0xLjkyNiAwLTMuNTMzIDEuNi0zLjUzMyAzLjU2MyAwIDEuOTYxIDEuNjA3IDMuNTYgMy41MzMgMy41NiAxLjkyNyAwIDMuNjE0LTEuNjAxIDMuNjE0LTMuNTZTNjguMzU4IDEgNjYuMzUgMU0zOS4xMjQgMTAuNDczYy00Ljc1NyAwLTkuMTQyIDMuNzQ2LTkuMTQyIDkuNjI2czQuNDk3IDkuNzM1IDkuNTQ4IDkuNzM1YzQuMTUyIDAgNi45MTctMi4xMTQgOC4wODktNC44MmwtNC41ODItMS43MzRjLS42IDEuMTEtMS42ODcgMS44MTYtMy40MzIgMS44MTYtMi4xNzQgMC00LjA1Ni0xLjQ2OC00LjE2NS0zLjUyNmgxMi43NTRjLjAzNy0uMTA5LjExMi0uOTU1LjExMi0xLjcyNSAwLTUuODc3LTMuNTAxLTkuMzctOS4xOC05LjM3bS0zLjU3NSA3LjQ5NmMuMTEyLTEuMzYgMS4yOTItMy4wODcgMy42NS0zLjA4NyAyLjY1NiAwIDMuNjE0IDEuNjg5IDMuNjg3IDMuMDg3ek05MS41NzcgMjQuMzVsOC4yOC04LjY4MnYtNC41NDFIODUuMDE4djQuODMyMDAwMDAwMDAwMDAxaDcuNjYyTDg0LjggMjQuMzEydjQuODY4SDEwMFYyNC4zNXoiLz48cGF0aCBmaWxsPSIjMTQxNDE0IiBkPSJNMTE4LjEwNSAxMi44NmgtNy4wN3YxMS40NjRoNy4wN1YxOS40OGgxLjc3OHY4LjQ5N2gyLjM0NHYtMTYuN2gtMi4zNDR2Ni4yMTFoLTEuNzc4em0tNC43NDYgOS41MTF2LTcuNTM5aDIuNDIydjcuNTR6bTEwLjE5NiA2LjQyNmgyLjM4M1YxMS4wMjNoLTIuMzgzem0xOS4zNi0xNy43NzRoLTIuNDgxdjE3LjgxM2gyLjQ4MXpNMTI4Ljk1IDE0LjUyaDUuOTE4djIuODdoLTUuODk4djcuMjg2aDEuNjAxYzMuMjQyIDAgNS44ODktLjEwOCA4LjgwOS0uNjI1bC0uMjE1LTIuMDEyYy0yLjYwOC40My00LjkwMi41NjYtNy42MTcuNTg2di0zLjI2Mmg1Ljg1OXYtNi44NTVoLTguNDU3em0zMi44MTcgMTAuMTk1aC0xNi4yNjl2Mi4wMTJoMTYuMjY5em0tMTUuNzAzLTQuMzM2LjkzOCAxLjk5MmMzLjE0NC0uNDc4IDUuNDE5LTEuOTE0IDYuNjAxLTMuODQ4IDEuMTgyIDEuOTM0IDMuNDU3IDMuMzcgNi42MjEgMy44NDhsLjk1Ny0xLjk5MmMtNC4wMzMtLjU0Ny02LjA3NC0yLjcxNS02LjI2OS00Ljg2M2g1LjQyOXYtMi4wMTJoLTUuNDg4di0yLjIwN2gtMi40OHYyLjIwN2gtNS40Njl2Mi4wMTJoNS40M2MtLjIxNSAyLjE0OC0yLjI0NiA0LjMxNi02LjI3IDQuODYzbTMxLjI1NS04LjU1NWgtMTIuMzQ0djEuOTkyaDkuODYzYy0uMDE5IDEuMjUtLjA2OCAyLjYyNy0uNDQ5IDQuMzk1aC0xMS40MDZ2Mi4wMTJoMTYuMjY5VjE4LjIxaC0yLjM1M2MuNDMtMi4wNDEuNDMtMy41NzQuNDItNC45NjF6bS0xMi40MDMgMTYuNzc4aDEyLjM0NHYtNi41MDRoLTEyLjM0NHptMi40NDItMS45OTN2LTIuNTU4aDcuNDIydjIuNTU4em0yOS4zMjEtNy42MTdoLTE2LjIxMXYyLjAxMmgzLjYzM3YyLjA4Yy0xLjE1My41NTctMS43NzggMS4zODctMS43NzggMi40NyAwIDIuMSAyLjMzNCAzLjI2MiA2LjIzMSAzLjI2MiAzLjgzOCAwIDYuMTcyLTEuMTYyIDYuMTkxLTMuMjYxLS4wMDktMS4wNDUtLjU5NS0xLjg1Ni0xLjY2LTIuNDAzdi0yLjE0OGgzLjU5NHptLTE0LjU5LTQuMjM4YzAgMi4xMSAyLjUyOSAzLjM3OSA2LjQ4NCAzLjM3OSAzLjkyNiAwIDYuNDU2LTEuMjcgNi40NjUtMy4zOC0uMDA5LTIuMTQ4LTIuNTM5LTMuNDU2LTYuNDY1LTMuNDU2LTMuOTU1IDAtNi40ODQgMS4zMDgtNi40ODQgMy40NTdtMi41OTggMGMtLjAyLTEuMDA2IDEuMzk2LTEuNTI0IDMuODg2LTEuNTI0IDIuNDUyIDAgMy44ODcuNTE4IDMuODg3IDEuNTI0IDAgLjk3Ni0xLjQzNSAxLjQ4NC0zLjg4NyAxLjQ4NC0yLjQ5IDAtMy45MDYtLjUwOC0zLjg4Ni0xLjQ4NG0uMTc2IDEwLjhjLS4wMS0uOTE3IDEuMjMtMS4zNTcgMy42OTEtMS4zNjYgMi40MTIuMDEgMy42ODIuNDQ5IDMuNjkxIDEuMzY3LS4wMDkuOTI3LTEuMjc5IDEuMzY3LTMuNjkxIDEuMzY3LTIuNDYxIDAtMy43MDEtLjQ0LTMuNjkxLTEuMzY3bTEuNzE4LTMuMTI0di0xLjQyNmg0LjAwNHYxLjQzNWExNC41IDE0LjUgMCAwIDAtMi4wMzEtLjEyN2MtLjcxMyAwLTEuMzY3LjA0LTEuOTczLjExOG0yNS41OTEtOS43NjZoLTEyLjUzOXYxLjk5MmgxMC4wNTh2LjEzN2MtLjAwOSAyLjM2My0uMDA5IDQuOTAyLS42ODMgOC4zMmwyLjUxOS4yMTVjLjYzNS0zLjY4MS42MzUtNi4wOTQuNjQ1LTguNTM1em0tMTQuMjE5IDEzLjgwOWgxNi4yMTF2LTIuMDUxaC0xNi4yMTF6bTMzLjczNS02Ljg1NmgtMTYuMjY5djEuOTczaDYuODc1djEuNTQzaDIuNDYxVjIxLjU5aDYuOTMzem0tMTQuMjc3LTYuNDY1aDkuODA1di45NTdoLTkuNzY2djQuNjFoMTIuNTk4di0xLjgzNkgyMTkuOTN2LTEuMDM1aDkuNzg2di00LjU3aC0xMi4zMDV6bS4wMzkgMTUuNDVoMTIuMjg1di02LjI1aC0yLjQ2MXYxLjQ2NGgtNy4zNjN2LTEuNDY0aC0yLjQ2MXptMi40NjEtMS44OTV2LTEuMDc0aDcuMzYzdjEuMDc0eiIvPjwvc3ZnPg==" alt="메리츠(355)" style="max-height: 16px; max-width: 70px; object-fit: contain;"></div>
+              </th>
+
+              <!-- 3. 한화손보 -->
+              <th colspan="2" class="th-company th-brand-3 col-brand-3" data-comp="3" style="position: relative; text-align: center; padding: 12px 4px 8px; min-width: 124px;">
+                <button class="col-hide-btn" onclick="hideCompany(event, 3)" title="한화손보(355) 숨기기">
+                  <i class="fa-regular fa-eye eye-open-icon"></i>
+                  <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+                </button>
+                <div style="font-weight: 800; font-size: 12.5px; color: #1e293b; margin-bottom: 4px;">한화손보(355)</div>
+                <div style="height: 18px; display: flex; align-items: center; justify-content: center;"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJf66CI7J207Ja0XzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDEzNC40NyA4Ny44MyI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiNmNGEwNTE7fS5jbHMtMntmaWxsOiNmN2JiODI7fS5jbHMtM3tmaWxsOiNlZDcxMDA7fS5jbHMtNHtmaWxsOiMyMzE4MTU7fTwvc3R5bGU+PC9kZWZzPjxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTU5LjA3LDI5LjA2Yy0uODEtNy4zNyw2LjkyLTEzLjI4LDE3LjI2LTEzLjIsMTAuMzQsLjA4LDE5LjM4LDYuMTIsMjAuMTksMTMuNDgsLjgyLDcuMzctNi45LDEzLjI4LTE3LjI1LDEzLjItMTAuMzQtLjA4LTE5LjM5LTYuMTEtMjAuMi0xMy40OG0zOS4zNywyLjI5Yy0uOTQtOS4xNC0xMS4zNC0xNi42Mi0yMy4yNC0xNi43My0xMS45MS0uMS0yMC43OSw3LjIzLTE5Ljg2LDE2LjM3LC45Myw5LjE0LDExLjM0LDE2LjYzLDIzLjI0LDE2LjczLDExLjksLjEsMjAuOC03LjIzLDE5Ljg2LTE2LjM3Ii8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNODAuNDgsNDcuOWMtNS44Niw2LjEzLTE1LjI3LDYuNjMtMjEuMDEsMS4xNC01Ljc1LTUuNS01LjY1LTE0LjkyLC4yMS0yMS4wNSw1Ljg2LTYuMTIsMTUuMjctNi42MywyMS4wMi0xLjEzLDUuNzQsNS41LDUuNjQsMTQuOTItLjIyLDIxLjA0bS0yMS43Mi0yMC4xYy02LjgxLDcuMTItNi45MiwxOC4wNy0uMjUsMjQuNDYsNi42OCw2LjM5LDE3LjYyLDUuOCwyNC40My0xLjMyLDYuODItNy4xMiw2LjkzLTE4LjA3LC4yNS0yNC40Ni02LjY3LTYuMzktMTcuNjEtNS44LTI0LjQzLDEuMzIiLz48cGF0aCBjbGFzcz0iY2xzLTMiIGQ9Ik01OS4zOCw0Ljg4YzEyLjItNC41NywyNC4yNSwuMDUsMjYuOTMsMTAuMzMsMi42OSwxMC4yNy01LjAzLDIyLjMtMTcuMjIsMjYuODctMTIuMiw0LjU3LTI0LjI1LS4wNi0yNi45My0xMC4zMi0yLjY4LTEwLjI3LDUuMDMtMjIuMywxNy4yMi0yNi44N20tMTEuMzIsMy45M2MtMTIuNjUsMTAuMDItMTUuODcsMjQuNTMtNy4yLDMyLjQxLDguNjgsNy44OCwyNS45Nyw2LjE2LDM4LjYyLTMuODYsMTIuNjUtMTAuMDEsMTUuODgtMjQuNTMsNy4xOS0zMi40MS04LjY4LTcuODktMjUuOTctNi4xNi0zOC42MSwzLjg2Ii8+PGc+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNMjAuNTQsNjUuMTV2MjIuNjdoLTMuNTV2LTExLjk2SDMuNTV2MTEuOTZIMHYtMjIuNjdIMy41NXY3LjYxaDEzLjQ0di03LjYxaDMuNTVaIi8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNMjkuMDcsODcuODNjLTEuNjYsMC0yLjk3LS40Ni0zLjk0LTEuMzktLjk5LS45My0xLjQ4LTIuMTItMS40OC0zLjU4di0xLjIxYzAtMS40OCwuNDktMi42OCwxLjQ4LTMuNjEsLjk3LS45NSwyLjI4LTEuNDIsMy45NC0xLjQyaDkuMjZ2LS4wOWMwLTEuODItMS0yLjcyLTIuOTktMi43MmgtMTAuM3YtMy4wMmgxMC4yNGMyLjEzLDAsMy43NiwuNTQsNC44OCwxLjYzLDEuMTQsMS4wNSwxLjcyLDIuNTcsMS43Miw0LjU2djYuMDFjMCwxLjU0LS41MiwyLjc1LTEuNTcsMy42NC0uOTUsLjgxLTIuMjgsMS4yMS00LDEuMjFoLTcuMjVabTYuNDgtOC4yaC01LjYyYy0xLjgyLDAtMi43MiwuNzctMi43MiwyLjMxdi41NmMwLDEuNTIsLjkxLDIuMjgsMi43MiwyLjI4aDUuNjJjMS44NSwwLDIuNzgtLjc2LDIuNzgtMi4yOHYtLjU2YzAtMS41NC0uOTMtMi4zMS0yLjc4LTIuMzFaIi8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJNNTIuMjcsNzAuNzhoMy40OWMyLjIxLDAsMy45NSwuNjQsNS4yMSwxLjkyLDEuMjYsMS4yOCwxLjg5LDMuMDcsMS44OSw1LjM2djkuNzdoLTMuNTV2LTkuNTljMC0xLjQyLS4yOC0yLjQ2LS44My0zLjExLS42OS0uODUtMS42OS0xLjI3LTIuOTktMS4yN2gtMy4wMmMtMS4yNiwwLTIuMjUsLjQyLTIuOTYsMS4yNy0uNTEsLjY1LS43NywxLjY5LS43NywzLjExdjkuNTloLTMuNTV2LTkuNzdjMC0yLjI5LC42My00LjA3LDEuODktNS4zNiwxLjI2LTEuMjgsMi45OS0xLjkyLDUuMTgtMS45MloiLz48cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Ik03OS4yNCw4NS41NWMtMS4yNiwxLjUyLTIuODMsMi4yOC00LjcxLDIuMjhoLTIuMTljLTEuOTcsMC0zLjU0LS42Mi00LjcxLTEuODYtMS4xMS0xLjE2LTEuNjYtMi44MS0xLjY2LTQuOTR2LTEwLjI0aDMuNTJ2MTAuMjdjMCwxLjI0LC4yNywyLjE1LC44LDIuNzIsLjYxLC42NSwxLjQxLC45OCwyLjQsLjk4aDEuNTRjMS4wMSwwLDEuODItLjMzLDIuNDMtLjk4LC41NS0uNTcsLjgzLTEuNDgsLjgzLTIuNzJ2LTEwLjI3aDMuNDl2MTAuMjdjMCwxLjI0LC4yNywyLjE1LC44LDIuNzIsLjYxLC42NSwxLjQxLC45OCwyLjQsLjk4aDEuNTRjMS4wMSwwLDEuODItLjMzLDIuNDMtLjk4LC41NS0uNTcsLjgzLTEuNDgsLjgzLTIuNzJ2LTEwLjI3aDMuNTJ2MTAuMjRjMCwyLjEzLS41NywzLjc4LTEuNzIsNC45NC0xLjE3LDEuMjQtMi43NCwxLjg2LTQuNzQsMS44NmgtMi4xNmMtMS44NCwwLTMuMzgtLjc2LTQuNjUtMi4yOFoiLz48cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Ik0xMDIuOTIsNzMuODZjLTEuMjYsMC0yLjI1LC40Mi0yLjk2LDEuMjctLjUxLC42NS0uNzcsMS42OS0uNzcsMy4xMXY5LjU5aC0zLjU1di0yMi43M2gzLjU1djYuNzJjMS4wMy0uNjksMi4yLTEuMDQsMy41Mi0xLjA0aDMuNDljMi4yMSwwLDMuOTUsLjY0LDUuMjEsMS45MnMxLjg5LDMuMDcsMS44OSw1LjM2djkuNzdoLTMuNTV2LTkuNTljMC0xLjQyLS4yOC0yLjQ2LS44My0zLjExLS42OS0uODUtMS42OS0xLjI3LTIuOTktMS4yN2gtMy4wMloiLz48cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Ik0xMjEuNjYsODcuODNjLTEuNjYsMC0yLjk3LS40Ni0zLjk0LTEuMzktLjk5LS45My0xLjQ4LTIuMTItMS40OC0zLjU4di0xLjIxYzAtMS40OCwuNDktMi42OCwxLjQ4LTMuNjEsLjk3LS45NSwyLjI4LTEuNDIsMy45NC0xLjQyaDkuMjZ2LS4wOWMwLTEuODItMS0yLjcyLTIuOTktMi43MmgtMTAuM3YtMy4wMmgxMC4yNGMyLjEzLDAsMy43NiwuNTQsNC44OCwxLjYzLDEuMTQsMS4wNSwxLjcyLDIuNTcsMS43Miw0LjU2djYuMDFjMCwxLjU0LS41MiwyLjc1LTEuNTcsMy42NC0uOTUsLjgxLTIuMjgsMS4yMS00LDEuMjFoLTcuMjVabTYuNDgtOC4yaC01LjYyYy0xLjgyLDAtMi43MiwuNzctMi43MiwyLjMxdi41NmMwLDEuNTIsLjkxLDIuMjgsMi43MiwyLjI4aDUuNjJjMS44NSwwLDIuNzgtLjc2LDIuNzgtMi4yOHYtLjU2YzAtMS41NC0uOTMtMi4zMS0yLjc4LTIuMzFaIi8+PC9nPjwvc3ZnPg==" alt="한화손보(355)" style="max-height: 16px; max-width: 70px; object-fit: contain;"></div>
+              </th>
+
+              <!-- 4. DB손보 -->
+              <th colspan="2" class="th-company th-brand-4 col-brand-4" data-comp="4" style="position: relative; text-align: center; padding: 12px 4px 8px; min-width: 124px;">
+                <button class="col-hide-btn" onclick="hideCompany(event, 4)" title="DB손보(355) 숨기기">
+                  <i class="fa-regular fa-eye eye-open-icon"></i>
+                  <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+                </button>
+                <div style="font-weight: 800; font-size: 12.5px; color: #1e293b; margin-bottom: 4px;">DB손보(355)</div>
+                <div style="height: 18px; display: flex; align-items: center; justify-content: center;"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhLS0gQ3JlYXRlZCB3aXRoIElua3NjYXBlIChodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy8pIC0tPgoKPHN2ZwogICB3aWR0aD0iMTM2LjY1Mjk0bW0iCiAgIGhlaWdodD0iNzYuMjY1MDA3bW0iCiAgIHZpZXdCb3g9IjAgMCAxMzYuNjUyOTQgNzYuMjY1MDA3IgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmc1IgogICB4bWw6c3BhY2U9InByZXNlcnZlIgogICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzCiAgICAgaWQ9ImRlZnMyIj48Y2xpcFBhdGgKICAgICAgIGNsaXBQYXRoVW5pdHM9InVzZXJTcGFjZU9uVXNlIgogICAgICAgaWQ9ImNsaXBQYXRoMjMiPjxwYXRoCiAgICAgICAgIGQ9Ik0gMCw1OTUuMjggSCA4NDEuODkgViAwIEggMCBaIgogICAgICAgICBpZD0icGF0aDIxIiAvPjwvY2xpcFBhdGg+PGNsaXBQYXRoCiAgICAgICBjbGlwUGF0aFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIKICAgICAgIGlkPSJjbGlwUGF0aDI3MyI+PHBhdGgKICAgICAgICAgZD0ibSAyMjguNjEzLDMzMy41NTYgYyAtMi4yNDIsLTEwLjI3NyAtMS4xOTcsLTk4LjU5NCAtMC4zODgsLTEwOC44MTIgdiAwIGMgMC41NTksLTcuNTA5IDMuNzI0LC0xMS44OTMgMTIuNTI1LC0xMS43MTkgdiAwIGMgNjEuNDA4LDAuOTg4IDc3LjUxNSw3NS40MTQgMzkuNTg2LDExMC40NDEgdiAwIGMgLTYuMDczLDUuNjAxIC0xMy40NzMsMTAuMjA0IC0yMi4zODEsMTMuMzMxIHYgMCBjIC00LjQ3NSwxLjU4IC0xMS44NTcsMy44NzIgLTE4LjE1MywzLjg3MiB2IDAgYyAtNS4zOTYsMCAtMTAuMDEzLC0xLjcxMyAtMTEuMTg5LC03LjExMyIKICAgICAgICAgaWQ9InBhdGgyNzEiIC8+PC9jbGlwUGF0aD48bGluZWFyR3JhZGllbnQKICAgICAgIHgxPSIwIgogICAgICAgeTE9IjAiCiAgICAgICB4Mj0iMSIKICAgICAgIHkyPSIwIgogICAgICAgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiCiAgICAgICBncmFkaWVudFRyYW5zZm9ybT0ibWF0cml4KC03NS45MTU0NDMsMC43MjM3Mjk4LC0wLjcyMzcyOTgsLTc1LjkxNTQ0MywzMDEuMTU4MiwyNzYuMjgwMjcpIgogICAgICAgc3ByZWFkTWV0aG9kPSJwYWQiCiAgICAgICBpZD0ibGluZWFyR3JhZGllbnQyODciPjxzdG9wCiAgICAgICAgIHN0eWxlPSJzdG9wLW9wYWNpdHk6MTtzdG9wLWNvbG9yOiNmNDc5MjAiCiAgICAgICAgIG9mZnNldD0iMCIKICAgICAgICAgaWQ9InN0b3AyNzkiIC8+PHN0b3AKICAgICAgICAgc3R5bGU9InN0b3Atb3BhY2l0eToxO3N0b3AtY29sb3I6I2Y0NzkyMCIKICAgICAgICAgb2Zmc2V0PSIwLjEiCiAgICAgICAgIGlkPSJzdG9wMjgxIiAvPjxzdG9wCiAgICAgICAgIHN0eWxlPSJzdG9wLW9wYWNpdHk6MTtzdG9wLWNvbG9yOiNmNDc5MjAiCiAgICAgICAgIG9mZnNldD0iMC40NDA2NjAyNyIKICAgICAgICAgaWQ9InN0b3AyODMiIC8+PHN0b3AKICAgICAgICAgc3R5bGU9InN0b3Atb3BhY2l0eToxO3N0b3AtY29sb3I6I2M5MjQyYiIKICAgICAgICAgb2Zmc2V0PSIxIgogICAgICAgICBpZD0ic3RvcDI4NSIgLz48L2xpbmVhckdyYWRpZW50PjxjbGlwUGF0aAogICAgICAgY2xpcFBhdGhVbml0cz0idXNlclNwYWNlT25Vc2UiCiAgICAgICBpZD0iY2xpcFBhdGgyOTciPjxwYXRoCiAgICAgICAgIGQ9Im0gMzAzLjY4Miw0MDMuNTMgYyAtMi4wMjUsLTkuMzAxIC0xLjA2MSwtODkuNDg5IC0wLjM1NiwtOTguNzg4IHYgMCBjIDAuNTI5LC02Ljc5NyAzLjM4NSwtMTAuNzcgMTEuMzc1LC0xMC42NTQgdiAwIGMgNTUuNzY4LDAuOTMxIDcwLjQxOCw2OC41MDggMzUuOTc3LDEwMC4zMDIgdiAwIGMgLTUuNTE0LDUuMDc4IC0xMi4yODcsOS4yNjIgLTIwLjMwOSwxMi4wODkgdiAwIGMgLTQuMDc4LDEuNDUyIC0xMC43NjcsMy41MzggLTE2LjQ4OCwzLjUzOCB2IDAgYyAtNC45NDIsMCAtOS4xMTYsLTEuNTk5IC0xMC4xOTksLTYuNDg3IgogICAgICAgICBpZD0icGF0aDI5NSIgLz48L2NsaXBQYXRoPjxsaW5lYXJHcmFkaWVudAogICAgICAgeDE9IjAiCiAgICAgICB5MT0iMCIKICAgICAgIHgyPSIxIgogICAgICAgeTI9IjAiCiAgICAgICBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIKICAgICAgIGdyYWRpZW50VHJhbnNmb3JtPSJtYXRyaXgoNjguMDA1OTQzLC0wLjY0ODI2NjksMC42NDgyNjY5LDY4LjAwNTk0MywzMDIuNjI2OTUsMzUyLjE4NjUyKSIKICAgICAgIHNwcmVhZE1ldGhvZD0icGFkIgogICAgICAgaWQ9ImxpbmVhckdyYWRpZW50MzA3Ij48c3RvcAogICAgICAgICBzdHlsZT0ic3RvcC1vcGFjaXR5OjE7c3RvcC1jb2xvcjojMTViMWU3IgogICAgICAgICBvZmZzZXQ9IjAiCiAgICAgICAgIGlkPSJzdG9wMzAzIiAvPjxzdG9wCiAgICAgICAgIHN0eWxlPSJzdG9wLW9wYWNpdHk6MTtzdG9wLWNvbG9yOiMwMDYwYWYiCiAgICAgICAgIG9mZnNldD0iMSIKICAgICAgICAgaWQ9InN0b3AzMDUiIC8+PC9saW5lYXJHcmFkaWVudD48Y2xpcFBhdGgKICAgICAgIGNsaXBQYXRoVW5pdHM9InVzZXJTcGFjZU9uVXNlIgogICAgICAgaWQ9ImNsaXBQYXRoMzE3Ij48cGF0aAogICAgICAgICBkPSJtIDMxNi4yMywzMzEuMzYgYyAtMi41ODIsLTExLjcxNSAtMS4zMzQsLTExMi40NTQgLTAuNDM1LC0xMjQuMTM4IHYgMCBjIDAuNjg5LC04LjU4NyA0LjI0LC0xMy41MzUgMTQuMjcxLC0xMy4zODYgdiAwIGMgNzAuMDg3LDEuMTE3IDg4LjUwOCw4Ni4wNTMgNDUuMjM5LDEyNi4wMTggdiAwIGMgLTYuOTIxLDYuMzgyIC0xNS40NTMsMTEuNjQ3IC0yNS41MjUsMTUuMTkyIHYgMCBjIC01LjE0NywxLjgyOSAtMTMuNTcxLDQuNDM2IC0yMC43MTksNC40MzYgdiAwIGMgLTYuMTk2LDAgLTExLjQ4MywtMS45NjIgLTEyLjgzMSwtOC4xMjIiCiAgICAgICAgIGlkPSJwYXRoMzE1IiAvPjwvY2xpcFBhdGg+PGxpbmVhckdyYWRpZW50CiAgICAgICB4MT0iMCIKICAgICAgIHkxPSIwIgogICAgICAgeDI9IjEiCiAgICAgICB5Mj0iMCIKICAgICAgIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIgogICAgICAgZ3JhZGllbnRUcmFuc2Zvcm09Im1hdHJpeCgxMDAuNDE4MTcsLTAuOTU3Mzc5OCwwLjk1NzM3OTgsMTAwLjQxODE3LDMwNy41MDE5NSwyNjYuODQyNzcpIgogICAgICAgc3ByZWFkTWV0aG9kPSJwYWQiCiAgICAgICBpZD0ibGluZWFyR3JhZGllbnQzMjkiPjxzdG9wCiAgICAgICAgIHN0eWxlPSJzdG9wLW9wYWNpdHk6MTtzdG9wLWNvbG9yOiM4Y2M2M2YiCiAgICAgICAgIG9mZnNldD0iMCIKICAgICAgICAgaWQ9InN0b3AzMjMiIC8+PHN0b3AKICAgICAgICAgc3R5bGU9InN0b3Atb3BhY2l0eToxO3N0b3AtY29sb3I6IzhjYzYzZiIKICAgICAgICAgb2Zmc2V0PSIwLjM3ODUxMTQxIgogICAgICAgICBpZD0ic3RvcDMyNSIgLz48c3RvcAogICAgICAgICBzdHlsZT0ic3RvcC1vcGFjaXR5OjE7c3RvcC1jb2xvcjojMDA5NTU5IgogICAgICAgICBvZmZzZXQ9IjEiCiAgICAgICAgIGlkPSJzdG9wMzI3IiAvPjwvbGluZWFyR3JhZGllbnQ+PGNsaXBQYXRoCiAgICAgICBjbGlwUGF0aFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIKICAgICAgIGlkPSJjbGlwUGF0aDMzOSI+PHBhdGgKICAgICAgICAgZD0iTSAwLDU5NS4yOCBIIDg0MS44OSBWIDAgSCAwIFoiCiAgICAgICAgIGlkPSJwYXRoMzM3IiAvPjwvY2xpcFBhdGg+PC9kZWZzPjxnCiAgICAgaWQ9ImxheWVyMSIKICAgICB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjUuODg3MDE0LC05OS41OTQwOTcpIj48ZwogICAgICAgaWQ9ImcxNSIKICAgICAgIHRyYW5zZm9ybT0ibWF0cml4KDAuMzUyNzc3NzcsMCwwLC0wLjM1Mjc3Nzc3LC01NC4yODYwMDgsMjQ0LjIzODk4KSI+PGcKICAgICAgICAgaWQ9ImcyNjciPjxnCiAgICAgICAgICAgaWQ9ImcyNjkiCiAgICAgICAgICAgY2xpcC1wYXRoPSJ1cmwoI2NsaXBQYXRoMjczKSI+PGcKICAgICAgICAgICAgIGlkPSJnMjc1Ij48ZwogICAgICAgICAgICAgICBpZD0iZzI3NyI+PHBhdGgKICAgICAgICAgICAgICAgICBkPSJtIDIyOC42MTMsMzMzLjU1NiBjIC0yLjI0MiwtMTAuMjc3IC0xLjE5NywtOTguNTk0IC0wLjM4OCwtMTA4LjgxMiB2IDAgYyAwLjU1OSwtNy41MDkgMy43MjQsLTExLjg5MyAxMi41MjUsLTExLjcxOSB2IDAgYyA2MS40MDgsMC45ODggNzcuNTE1LDc1LjQxNCAzOS41ODYsMTEwLjQ0MSB2IDAgYyAtNi4wNzMsNS42MDEgLTEzLjQ3MywxMC4yMDQgLTIyLjM4MSwxMy4zMzEgdiAwIGMgLTQuNDc1LDEuNTggLTExLjg1NywzLjg3MiAtMTguMTUzLDMuODcyIHYgMCBjIC01LjM5NiwwIC0xMC4wMTMsLTEuNzEzIC0xMS4xODksLTcuMTEzIgogICAgICAgICAgICAgICAgIHN0eWxlPSJmaWxsOnVybCgjbGluZWFyR3JhZGllbnQyODcpO3N0cm9rZTpub25lIgogICAgICAgICAgICAgICAgIGlkPSJwYXRoMjg5IiAvPjwvZz48L2c+PC9nPjwvZz48ZwogICAgICAgICBpZD0iZzI5MSI+PGcKICAgICAgICAgICBpZD0iZzI5MyIKICAgICAgICAgICBjbGlwLXBhdGg9InVybCgjY2xpcFBhdGgyOTcpIj48ZwogICAgICAgICAgICAgaWQ9ImcyOTkiPjxnCiAgICAgICAgICAgICAgIGlkPSJnMzAxIj48cGF0aAogICAgICAgICAgICAgICAgIGQ9Im0gMzAzLjY4Miw0MDMuNTMgYyAtMi4wMjUsLTkuMzAxIC0xLjA2MSwtODkuNDg5IC0wLjM1NiwtOTguNzg4IHYgMCBjIDAuNTI5LC02Ljc5NyAzLjM4NSwtMTAuNzcgMTEuMzc1LC0xMC42NTQgdiAwIGMgNTUuNzY4LDAuOTMxIDcwLjQxOCw2OC41MDggMzUuOTc3LDEwMC4zMDIgdiAwIGMgLTUuNTE0LDUuMDc4IC0xMi4yODcsOS4yNjIgLTIwLjMwOSwxMi4wODkgdiAwIGMgLTQuMDc4LDEuNDUyIC0xMC43NjcsMy41MzggLTE2LjQ4OCwzLjUzOCB2IDAgYyAtNC45NDIsMCAtOS4xMTYsLTEuNTk5IC0xMC4xOTksLTYuNDg3IgogICAgICAgICAgICAgICAgIHN0eWxlPSJmaWxsOnVybCgjbGluZWFyR3JhZGllbnQzMDcpO3N0cm9rZTpub25lIgogICAgICAgICAgICAgICAgIGlkPSJwYXRoMzA5IiAvPjwvZz48L2c+PC9nPjwvZz48ZwogICAgICAgICBpZD0iZzMxMSI+PGcKICAgICAgICAgICBpZD0iZzMxMyIKICAgICAgICAgICBjbGlwLXBhdGg9InVybCgjY2xpcFBhdGgzMTcpIj48ZwogICAgICAgICAgICAgaWQ9ImczMTkiPjxnCiAgICAgICAgICAgICAgIGlkPSJnMzIxIj48cGF0aAogICAgICAgICAgICAgICAgIGQ9Im0gMzE2LjIzLDMzMS4zNiBjIC0yLjU4MiwtMTEuNzE1IC0xLjMzNCwtMTEyLjQ1NCAtMC40MzUsLTEyNC4xMzggdiAwIGMgMC42ODksLTguNTg3IDQuMjQsLTEzLjUzNSAxNC4yNzEsLTEzLjM4NiB2IDAgYyA3MC4wODcsMS4xMTcgODguNTA4LDg2LjA1MyA0NS4yMzksMTI2LjAxOCB2IDAgYyAtNi45MjEsNi4zODIgLTE1LjQ1MywxMS42NDcgLTI1LjUyNSwxNS4xOTIgdiAwIGMgLTUuMTQ3LDEuODI5IC0xMy41NzEsNC40MzYgLTIwLjcxOSw0LjQzNiB2IDAgYyAtNi4xOTYsMCAtMTEuNDgzLC0xLjk2MiAtMTIuODMxLC04LjEyMiIKICAgICAgICAgICAgICAgICBzdHlsZT0iZmlsbDp1cmwoI2xpbmVhckdyYWRpZW50MzI5KTtzdHJva2U6bm9uZSIKICAgICAgICAgICAgICAgICBpZD0icGF0aDMzMSIgLz48L2c+PC9nPjwvZz48L2c+PGcKICAgICAgICAgaWQ9ImczMzMiPjxnCiAgICAgICAgICAgaWQ9ImczMzUiCiAgICAgICAgICAgY2xpcC1wYXRoPSJ1cmwoI2NsaXBQYXRoMzM5KSI+PGcKICAgICAgICAgICAgIGlkPSJnMzQxIgogICAgICAgICAgICAgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTAxLjIzNDQsMjkxLjAyMjUpIj48cGF0aAogICAgICAgICAgICAgICBkPSJNIDAsMCBDIDAsLTIyLjcyNCAtMTUuMDkyLC0zNy40MTEgLTM3Ljc1OCwtMzcuNDExIEggLTU3LjcwMyBWIDM3LjU0IGggMTkuOTQxIEMgLTE0LjQwMiwzNy41NDIgMCwyMy40MiAwLDAgTSAtMzcuMjQ4LDU0LjExMSBIIC03Ni43ODUgViAtNTMuOTc4IGggMzkuNTQ1IGMgMzIuNjQsMCA1Ni4zMjYsMjIuNjQ1IDU2LjMyNiw1My44NDMgLTAuMDA2LDMyLjQ1MiAtMjIuNjQzLDU0LjI1MSAtNTYuMzM0LDU0LjI0NiIKICAgICAgICAgICAgICAgc3R5bGU9ImZpbGw6IzAwODU0YTtmaWxsLW9wYWNpdHk6MTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6bm9uZSIKICAgICAgICAgICAgICAgaWQ9InBhdGgzNDMiIC8+PC9nPjxnCiAgICAgICAgICAgICBpZD0iZzM0NSIKICAgICAgICAgICAgIHRyYW5zZm9ybT0idHJhbnNsYXRlKDU2NC42MzI4LDMwMC43NzM0KSI+PHBhdGgKICAgICAgICAgICAgICAgZD0ibSAwLDAgYyAtMy40OTYsLTAuODQzIC01LjYxNSwtMi45ODUgLTYuMTY0LC02LjI1OCAtMC40MjYsLTIuNTAzIDAuMTQzLC01LjEzNSAxLjUxMiwtNy4wNTEgMS4wOTMsLTEuNTI2IDIuNjExLC0yLjQ5IDQuMzksLTIuNzgyIDIuNDY3LC0wLjQwOSA1LjE4NiwtMC41MzMgOC4wNjksLTAuNjYgOC41MDUsLTAuMzc3IDE3LjUyMSwtMC43NjcgMjEuNTM1LC04LjMwOSAyLjM4MywtNC40NzkgMi4wMjUsLTEwLjMwNyAtMC44OTMsLTE0LjUwOSAtMy4wMTIsLTQuMzU3IC04LjkxOCwtNi45ODcgLTE3LjU2OCwtNy40OTQgLTEuMTA2LC0wLjA2NSAtMi4yNSwtMC4wOTggLTMuNDgxLC0wLjA5OCBsIC0yNC4wNjQsLTEwZS00IC0wLjAxLDc0Ljk1MSBIIDUuMTM1IEMgMTkuNTA0LDI3Ljc5MSAyNS4zMDEsMjMuNjYxIDI1LjMwMSwxNC44OTcgMjUuMzA1LDEwLjA4IDIzLjQ3NSw1LjYzOCAxOS44NDIsMy4wMjIgMTYuNTYxLDAuNjUyIDExLjgxNiwwLjU5NiA3LjIzLDAuNTQ1IDUuMTg2LDAuNTIgMi4yNjIsMC40NzMgMCwwIE0gMzIuNzA5LC03Ljc4OCBDIDM5Ljc1MiwtMyA0NC4zOTEsNi41NzUgNDQuMzkxLDE2LjYyOCA0NC4zOTEsMzMuOTk5IDMwLjQ1Nyw0NC4zNjcgNy4xMTUsNDQuMzYgSCAtMzUuNzQ2IFYgLTYzLjcyMiBIIDcuODgxIGMgMjYuMzY5LDAgNDIuMTE1LDExLjU0NCA0Mi4xMTEsMzAuODc1IDAsMTEuNTUzIC01LjY2LDE5Ljc2NiAtMTcuMjgzLDI1LjA1OSIKICAgICAgICAgICAgICAgc3R5bGU9ImZpbGw6IzAwODU0YTtmaWxsLW9wYWNpdHk6MTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6bm9uZSIKICAgICAgICAgICAgICAgaWQ9InBhdGgzNDciIC8+PC9nPjwvZz48L2c+PC9nPjwvZz48L3N2Zz4K" alt="DB손보(355)" style="max-height: 16px; max-width: 70px; object-fit: contain;"></div>
+              </th>
+
+              <!-- 5. 롯데손보 -->
+              <th colspan="2" class="th-company th-brand-5 col-brand-5" data-comp="5" style="position: relative; text-align: center; padding: 12px 4px 8px; min-width: 124px;">
+                <button class="col-hide-btn" onclick="hideCompany(event, 5)" title="롯데손보(355) 숨기기">
+                  <i class="fa-regular fa-eye eye-open-icon"></i>
+                  <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+                </button>
+                <div style="font-weight: 800; font-size: 12.5px; color: #1e293b; margin-bottom: 4px;">롯데손보(355)</div>
+                <div style="height: 18px; display: flex; align-items: center; justify-content: center;"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbDpzcGFjZT0icHJlc2VydmUiIHdpZHRoPSI1ODIuODgyMzIiIGhlaWdodD0iODguMTk2OTM4IiB2aWV3Qm94PSIwIDAgNTgyLjg4MjMyIDg4LjE5NjkzOSI+PGRlZnM+PGNsaXBQYXRoIGlkPSJhIiBjbGlwUGF0aFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTTAgMTUwaDMwMFYwSDBaIi8+PC9jbGlwUGF0aD48L2RlZnM+PGcgc3R5bGU9ImZpbGw6Izg4ODtmaWxsLW9wYWNpdHk6MTtzdHJva2Utd2lkdGg6LjMzNDgwOCI+PGcgc3R5bGU9ImZpbGw6Izg4ODtmaWxsLW9wYWNpdHk6MTtzdHJva2Utd2lkdGg6LjMzNDgwOCI+PHBhdGggZD0ibTAgMC0uNjQ5LS45ODFDLTEuOTYzLS44NTktNS4wODQuMTI1LTYuOTQyIDIuMTc3LTguNzk5LjEyNS0xMS44NzItLjg1OS0xMy4yMzYtLjk4MWwtLjY1My45ODFjMS4zMi4xOTQgNC45NjUgMS44NDMgNS43MTcgNC4zNjdoMi40NTVDLTQuOTYgMS44NDMtMS4zMTQuMTc3IDAgMG0uNzcyIDYuNTI0VjUuNEgtMTQuNjR2MS4xMjRoNi41NTh2MS41NDNoLTMuNjMxYy0uNjMyIDAtMS4xNzQuNDkxLTEuMTc0IDEuMTU4djIuNjgyaDkuMzk0djEuNTYxaC05LjM5NHYxLjEyaDExLjYyNnYtMy44MjJoLTkuMzY2VjkuNjk4YzAtLjM1MS4xMjUtLjQ3My40MzktLjQ3M2g5LjEzOFY4LjA2N2gtNC43NTFWNi41MjRaIiBzdHlsZT0iZmlsbDojODg4O2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpub25lO3N0cm9rZS13aWR0aDouMzM0ODA4IiB0cmFuc2Zvcm09Im1hdHJpeCg0LjAyNDQ1IDAgMCAtMy45NDA3NiAyNDguNzAzIDc5Ljk3NSkiLz48L2c+PHBhdGggZD0iTTEyNC41ODEgNzkuMTIxaDIuMjI2VjYzLjQ0NWgtMi4yMjZ6bS01LjU0Mi05LjkwOGMuODc2IDAgMS4zNjktLjAxNyAxLjc1Mi4zMTZ2My40ODloLTMuMjA3djEuMTU4aDMuMjA3djQuOTQ1aDIuMjI2VjYzLjQ0NWgtMi4yMjZ2NC44NzRjLS4zMTMtLjE3My0uODc2LS4yNzgtMS43NTItLjI3OGgtNC41NzZjLS45MTMgMC0xLjUwOS42ODItMS41MDkgMS40ODh2OC45NzloNi4zODN2LTEuMTc1SDExNS4ydi03LjU0YzAtLjM1MS4xMjMtLjU4LjU0Mi0uNTh6IiBzdHlsZT0iZmlsbDojODg4O2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpub25lO3N0cm9rZS13aWR0aDouMzM0ODA4IiB0cmFuc2Zvcm09Im1hdHJpeCg0LjAyNDQ1IDAgMCAtMy45NDA3NiAtMTk1LjI5NCAzMzMuMjQyKSIvPjxnIHN0eWxlPSJmaWxsOiM4ODg7ZmlsbC1vcGFjaXR56MTtzdHJva2Utd2lkdGg6LjMzNDgwOCI+PHBhdGggZD0iTTAgMGMwLS4yOTkgMC0uNTc5LjU3OS0uNTc5aDkuMDQ3di0xLjE1N2gtMTAuNzNjLTEuMTU3IDAtMS4xNTcuODQxLTEuMTU3IDEuNDM3djMuMjY0SDBabTQuNjEyIDEzLjY3NXYtLjY4M2MwLTIuNjI4IDMuMDE0LTQuNTU4IDUuNDE4LTUuMDQ5bC0uNTQ0LS44NTljLTEuMzUuMDE3LTQuOTEgMS4xOTItNi4xNTQgMy4xMi0xLjE0Mi0xLjc3LTQuMTIyLTIuOTgtNi4wMy0zLjA4NWwtLjU0My44NDJjMi43MzMuNDczIDUuMzYzIDIuNTQxIDUuMzYzIDUuMDMxdi42ODN6bTYuNjk3LTkuNDQ5SC00LjEwM3YxLjE1OGg2LjM4NVY3Ljc1aDIuMjc1VjUuMzg0aDYuNzUyeiIgc3R5bGU9ImZpbGw6Izg4ODtmaWxsLW9wYWNpdHk6MTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6bm9uZTtzdHJva2Utd2lkdGg6LjMzNDgwOCIgdHJhbnNmb3JtPSJtYXRyaXgoNC4wMjQ0NSAwIDAgLTMuOTQwNzYgMzQwLjM2MyA3Ni4zNzcpIi8+PC9nPjxnIHN0eWxlPSJmaWxsOiM4ODg7ZmlsbC1vcGFjaXR5OjE7c3Ryb2tlLXdpZHRoOi4zMzQ4MDgiPjxwYXRoIGQ9Ik0wIDBoMi4yMXYtNS40NTRoMS4yNFYwaDIuMjQ2di0xNS42NzZIMy40NXY5LjA2NUgyLjIxdi05LjA2NUgwWm0tNC44NDEtMTAuNDY4YzEuMDUyIDAgMS43MzggMS41NDQgMS43MzggMy42MTNzLS42ODYgMy40NTQtMS43MzggMy40NTRjLTEuMDM1IDAtMS43MTgtMS4zODUtMS43MTgtMy40NTRzLjY4My0zLjYxMyAxLjcxOC0zLjYxM20tMi4yOTcgNy4yNGgtMS44NDF2MS4xNTloMi45ODN2Mi4wMTZoMi4yNHYtMi4wMTZoMy4wNzN2LTEuMTU5aC0xLjg2M2MuODk4LS42ODIgMS41My0yLjEzOCAxLjUzLTMuNjEgMC0yLjM1LTEuMjExLTQuNzU0LTMuODI1LTQuNzU0cy0zLjgyMyAyLjQwNC0zLjgyMyA0Ljc1NGMwIDEuNDcyLjYxNiAyLjkyOCAxLjUyNiAzLjYxIiBzdHlsZT0iZmlsbDojODg4O2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpub25lO3N0cm9rZS13aWR0aDouMzM0ODA4IiB0cmFuc2Zvcm09Im1hdHJpeCg0LjAyNDQ1IDAgMCAtMy45NDA3NiA0MjcuNTggMjEuNDQ1KSIvPjwvZz48ZyBzdHlsZT0iZmlsbDojODg4O2ZpbGwtb3BhY2l0eToxO3N0cm9rZS13aWR0aDouMzM0ODA4Ij48cGF0aCBkPSJNMCAwYzAtLjI2Mi4xMDQtLjQwMy40MDItLjQwM2g2LjYxdjMuMDE4SDBabTAgNi41MDZWMi43N2g3LjAxMnYyLjczNmgyLjIyNXYtOC4wNjRINC44di0yLjk2M2g2LjUyM3YtMS4xNTdILTEuMTAydjEuMTU3aDYuNTcxdi0yLjk2M0gtLjg0MmMtLjkzIDAtMS40MjUuNTYtMS40MjUgMS40MTl2Ni42NDV6IiBzdHlsZT0iZmlsbDojODg4O2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpub25lO3N0cm9rZS13aWR0aDouMzM0ODA4IiB0cmFuc2Zvcm09Im1hdHJpeCg0LjAyNDQ1IDAgMCAtMy45NDA3NiA0NzUuNzc1IDQ4Ljg4MikiLz48L2c+PGcgc3R5bGU9ImZpbGw6Izg4ODtmaWxsLW9wYWNpdHk6MTtzdHJva2Utd2lkdGg6LjMzNDgwOCI+PHBhdGggZD0iTTAgMGMwLS4yNjUuMTA2LS40MDQuNDAzLS40MDRoNi4zM3YzLjM1SDBabS0uMzQ5IDYuNTAyYzEuMTkxIDAgMS44OTQgMS4xOTMgMS44OTQgMi41NjIgMCAxLjM2Ny0uNzAzIDIuNTYtMS44OTQgMi41Ni0xLjE5NSAwLTEuODkxLTEuMTkzLTEuODkxLTIuNTYgMC0xLjM2OS42OTYtMi41NjIgMS44OTEtMi41NjJtLS40OTItOC4wNjRjLS45MjggMC0xLjQyLjU2LTEuNDIgMS40MjJ2NC4yMjVIOS4wMTN2LTUuNjQ3em0tMi40MzUgMTMuMjU3aC0yLjEwN3YxLjEyMWgzLjg5NXYxLjgyNEguNzkzdi0xLjgyNGgzLjg3NHYtMS4xMjFIMi41ODFjLjU5OC0uNTA5IDEuMDAxLTEuMTU5IDEuMTU0LTEuOTEzaDMuMDM0djQuNDg5aDIuMjYzVjUuMDEzSDYuNzY5djMuNTk1SDMuNzcxQzMuNTYgNi43NDkgMi4wMTcgNS40NjktLjM0OSA1LjQ2OWMtMi41NTggMC00LjE1NyAxLjQ5Mi00LjE1NyAzLjU5NSAwIDEuMDY4LjQyNCAxLjk4IDEuMjMgMi42MzEiIHN0eWxlPSJmaWxsOiM4ODg7ZmlsbC1vcGFjaXR5OjE7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOm5vbmU7c3Ryb2tlLXdpZHRoOi4zMzQ4MDgiIHRyYW5zZm9ybT0ibWF0cml4KDQuMDI0NDUgMCAwIC0zLjk0MDc2IDU0Ni41MzQgNzcuNjg1KSIvPjwvZz48L2c+PGcgY2xpcC1wYXRoPSJ1cmwoI2EpIiBzdHlsZT0ic3Ryb2tlLXdpZHRoOjIuMDAzODQiIHRyYW5zZm9ybT0ibWF0cml4KC42NzA1NSAwIDAgLS42NjAyNyAtMTQuMDYgOTMuMDM4KSI+PGcgc3R5bGU9InN0cm9rZS13aWR0aDoyLjAwMzg0Ij48cGF0aCBkPSJNMCAwYy02LjMyMSA0LjU4NC02LjIzIDEwLjQ2NS02LjIzIDE1LjUzM3YxMDQuMzQyYzAgMS40OTItMS41MTYgMi44MzMtMy40NjMgMS45OTZsLTM0Ljk0OC0xNi4xMDJjLTEuMTI1LS40NDQtMS42MDUtMS4wOTUtMS42MDUtMS44MjlhMS42IDEuNiAwIDAgMSAuNzE5LTEuMzM1bDUuOTI0LTQuMzQyYzQuMTk1LTIuNjEgNS40NTEtNy41NzcgNS40NTEtMTIuMjQ5bC0uMTA4LTkzLjIzM2MwLTEuMTc3Ljk1OS0yLjEzOCAyLjE0MS0yLjEzOEg4LjM4NWMxLjA3OCAwIDEuOTQuODg0IDEuOTE0IDEuOTU3LS4wMTguNzM0LS40ODQgMS4zMjYtMS4xMTkgMS42OTlDNi4zNjktNC4wNzYgNC45MjMtMy4yMDUgMCAwIiBzdHlsZT0iZmlsbDojMjMxZjIwO2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpub25lO3N0cm9rZS13aWR0aDoyLjAwMzg0IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg2Ny4yMTMgMTguNzgxKSIvPjwvZz48ZyBzdHlsZT0ic3Ryb2tlLXdpZHRoOjIuMDAzODQiPjxwYXRoIGQ9Ik0wIDBjLS41My0uMTkzLS43OTgtLjc4OS0uNzk4LTEuMzQ4IDAtLjg2MS42OTMtMS41NTYgMS41NTQtMS41NTZINDguMTJhMi40NyAyLjQ3IDAgMCAxIDIuNDYxIDIuNDcyYzAgMjAuOTA3LTEzLjA0NSAzMS45NDItMjEuODA5IDM1Ljg1LTUuNjQ4IDIuNTEyLTExLjIwNSAzLjYxNi0xNy40NjggMy42MTYtNi4xOTIgMC0xMi4wMi0xLjIyMy0xNy40ODUtMy42ODJxLTguMTk2LTMuNjc1LTE0LjQwNC0xMC4yMzdjLTQuMTQ3LTQuMzg4LTcuMzgxLTkuNDQ4LTkuNzEzLTE1LjIwMXEtMy40OTktOC42MjktMy40OTgtMTguNDI4YzAtOC4zMDYgMS45MTUtMTUuNzIgNS43NDItMjIuMjU3cTUuNzQ0LTkuODA4IDE1LjYxLTE1LjAwMmM2LjU3OS0zLjQ1NyAxMy42OTItNS4xOTIgMjEuMzQ5LTUuMTkycTguNDU3LjAwMSAxNi4yMzUgMi41NDVjNS4xODMgMS42OTcgOS45MzUgNC4zMTYgMTQuMjQ5IDcuODQ2IDMuNDY5IDIuODQgNi41NTcgNi4zMDMgOS4yNjQgMTAuNDEuNTY2Ljg2My0uMzQ2IDEuOTM5LTEuMjk1IDEuNTM1LTQuMTM5LTEuNzc1LTEyLjE4My00LjM5OC0yMy41MDQtNC4zOThxLTQuOTM0LS4wMDItMTAuMzM5IDEuODYzdC0xMC4xOTQgNi4xOHEtNC43OTMgNC4zMDgtNy43NzUgMTEuMzczQy02LjIyNC05LjQzOC03LjcwNi0yLjUxNC03LjcwNiAyLjA4YzAgMTEuMjkxIDIuMDY5IDE4Ljc4NCA0Ljc0NiAyMy44NjIgMi40NDEgNC42MzUgNi4yNTggNi42MTkgMTAuMzA4IDYuNjE5IDEwLjMyNSAwIDEyLjUwNC0xNC44MyAxMi43ODgtMTcuNzU4LjIzNC0yLjM2Ny4wNjYtMi43NDgtMS41ODYtNC4zNzlDMTcuOTE5IDkuNzk3IDEwLjc0NiAzLjk0OSAwIDAiIHN0eWxlPSJmaWxsOiMyMzFmMjA7ZmlsbC1vcGFjaXR5OjE7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOm5vbmU7c3Ryb2tlLXdpZHRoOjIuMDAzODQiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDExMS4wOTUgNTguMzUpIi8+PC9nPjxnIHN0eWxlPSJzdHJva2Utd2lkdGg6Mi4wMDM4NCI+PHBhdGggZD0iTTAgMHYtMjEuNDA0aDIwLjE4MnYtNy43NDFIMHYtNTIuMDYzcS4wMDItNi40NyAxLjY4NC05LjY1NmMxLjEwNy0yLjEyNSAyLjk5NC0zLjMzNCA1LjYzLTMuMTgxIDIuNjY1LjE0MiA2LjQzOCAxLjU0MSA5LjE0MSAyLjkyNS45NzkuNTAyIDIuMDE0LS41NDEgMS40OTQtMS41MTctMS44MDQtMy40MDYtNS4yODUtOC40OTYtMTEuMDc2LTExLjUzMy00LjQyMi0yLjMyNS05LjM0NC0zLjY4LTE0Ljk4Mi0zLjY4LTUuMzYgMC05LjUzNCAxLjExNS0xMi41MjggMy4zMzYtMi45OTQgMi4yMTktNS4wNiA1LjI0NC02LjIxNSA5LjA2OC0xLjE0OCAzLjgyMi0xLjcxNiA4LjQ3OS0xLjcxNiAxMy45Njl2NTIuNjE0aC05LjM1MmMtLjkxNCAwLTEuNjU4LjczOC0xLjY2NCAxLjY1NCAwIC41MDcuMjI3Ljk4Mi42MjEgMS4zMDUgMCAwIDE4LjEyMyA4LjQ5MiAzNS4zMTggMjcuMzM2Qy0yLjM1NSAyLjg0NiAwIDEuOTE1IDAgMCIgc3R5bGU9ImZpbGw6IzIzMWYyMDtmaWxsLW9wYWNpdHk6MTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6bm9uZTtzdHJva2Utd2lkdGg6Mi4wMDM4NCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjA2LjQwNCAxMTUuMjE3KSIvPjwvZz48ZyBzdHlsZT0ic3Ryb2tlLXdpZHRoOjIuMDAzODQiPjxwYXRoIGQ9Ik0wIDBjMC04Ljk5NS03LjI4OS0xNi4yODYtMTYuMjgzLTE2LjI4Ni05IDAtMTYuMjg5IDcuMjkxLTE2LjI4OSAxNi4yODYgMCA4Ljk5MyA3LjI4OSAxNi4yODEgMTYuMjg5IDE2LjI4MUMtNy4yODkgMTYuMjgxIDAgOC45OTMgMCAwIiBzdHlsZT0iZmlsbDojZWU0NjI4O2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpub25lO3N0cm9rZS13aWR0aDoyLjAwMzg0IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyNzYuMDg2IDc5LjExOCkiLz48L2c+PGcgc3R5bGU9InN0cm9rZS13aWR0aDoyLjAwMzg0Ij48cGF0aCBkPSJNMCAwYzAtOC45ODgtNy4yODktMTYuMjgzLTE2LjI4My0xNi4yODMtOSAwLTE2LjI4OSA3LjI5NS0xNi4yODkgMTYuMjgzIDAgOC45OTQgNy4yODkgMTYuMjg5IDE2LjI4OSAxNi4yODlDLTcuMjg5IDE2LjI4OSAwIDguOTk0IDAgMCIgc3R5bGU9ImZpbGw6I2VlNDYyODtmaWxsLW9wYWNpdHk6MTtmaWxsLXJ1bGU6bm9uemVybztzdHJva2U6bm9uZTtzdHJva2Utd2lkdGg6Mi4wMDM4NCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjc2LjA4NiAyMy42MTUpIi8+PC9nPjwvZz48L3N2Zz4=" alt="롯데손보(355)" style="max-height: 16px; max-width: 70px; object-fit: contain;"></div>
+              </th>
+
+              <!-- 6. 삼성화재 -->
+              <th colspan="2" class="th-company th-brand-6 col-brand-6" data-comp="6" style="position: relative; text-align: center; padding: 12px 4px 8px; min-width: 124px;">
+                <button class="col-hide-btn" onclick="hideCompany(event, 6)" title="삼성화재(355-5) 숨기기">
+                  <i class="fa-regular fa-eye eye-open-icon"></i>
+                  <i class="fa-regular fa-eye-slash eye-slash-icon"></i>
+                </button>
+                <div style="font-weight: 800; font-size: 12.5px; color: #1e293b; margin-bottom: 4px;">삼성화재(355-5)</div>
+                <div style="height: 18px; display: flex; align-items: center; justify-content: center;"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhLS0gQ3JlYXRlZCB3aXRoIElua3NjYXBlIChodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy8pIC0tPgoKPHN2ZwogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmcyIgogICB4bWw6c3BhY2U9InByZXNlcnZlIgogICB3aWR0aD0iNzA1MS40MDIzIgogICBoZWlnaHQ9IjEwODAiCiAgIHZpZXdCb3g9IjAgMCA3MDUxLjQwMjQgMTA4MCIKICAgc29kaXBvZGk6ZG9jbmFtZT0iU2Ftc3VuZ193b3JkbWFyay5zdmciCiAgIGlua3NjYXBlOnZlcnNpb249IjEuMSAoYzY4ZTIyYzM4NywgMjAyMS0wNS0yMykiCiAgIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIgogICB4bWxuczpzb2RpcG9kaT0iaHR0cDovL3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHNvZGlwb2RpOm5hbWVkdmlldwogICAgIGlkPSJuYW1lZHZpZXcxMSIKICAgICBwYWdlY29sb3I9IiNmZmZmZmYiCiAgICAgYm9yZGVyY29sb3I9IiM2NjY2NjYiCiAgICAgYm9yZGVyb3BhY2l0eT0iMS4wIgogICAgIGlua3NjYXBlOnBhZ2VzaGFkb3c9IjIiCiAgICAgaW5rc2NhcGU6cGFnZW9wYWNpdHk9IjAuMCIKICAgICBpbmtzY2FwZTpwYWdlY2hlY2tlcmJvYXJkPSIwIgogICAgIHNob3dncmlkPSJmYWxzZSIKICAgICBmaXQtbWFyZ2luLXRvcD0iMCIKICAgICBmaXQtbWFyZ2luLWxlZnQ9IjAiCiAgICAgZml0LW1hcmdpbi1yaWdodD0iMCIKICAgICBmaXQtbWFyZ2luLWJvdHRvbT0iMCIKICAgICBpbmtzY2FwZTp6b29tPSIwLjA1OTgyOTQ2NSIKICAgICBpbmtzY2FwZTpjeD0iMjg0OS43NjY0IgogICAgIGlua3NjYXBlOmN5PSIxNDI5LjA2MTciCiAgICAgaW5rc2NhcGU6d2luZG93LXdpZHRoPSIxOTIwIgogICAgIGlua3NjYXBlOndpbmRvdy1oZWlnaHQ9IjEwMTciCiAgICAgaW5rc2NhcGU6d2luZG93LXg9IjE5MTIiCiAgICAgaW5rc2NhcGU6d2luZG93LXk9Ii04IgogICAgIGlua3NjYXBlOndpbmRvdy1tYXhpbWl6ZWQ9IjEiCiAgICAgaW5rc2NhcGU6Y3VycmVudC1sYXllcj0ic3ZnMiIgLz48ZGVmcwogICAgIGlkPSJkZWZzNiI+PGNsaXBQYXRoCiAgICAgICBjbGlwUGF0aFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIKICAgICAgIGlkPSJjbGlwUGF0aDE2Ij48cGF0aAogICAgICAgICBkPSJNIDAsMTY2Ljg4NSBIIDYyOC4yMzggViAwIEggMCBaIgogICAgICAgICBpZD0icGF0aDE0IiAvPjwvY2xpcFBhdGg+PC9kZWZzPjxnCiAgICAgaWQ9Imc4IgogICAgIHRyYW5zZm9ybT0ibWF0cml4KDEyLjk0NDA1MywwLDAsLTEyLjk0NDA1MywtNTQwLjAzNjI1LDE2MjAuMDIzMykiPjxnCiAgICAgICBpZD0iZzEwIj48ZwogICAgICAgICBpZD0iZzEyIgogICAgICAgICBjbGlwLXBhdGg9InVybCgjY2xpcFBhdGgxNikiPjxnCiAgICAgICAgICAgaWQ9ImcxOCIKICAgICAgICAgICB0cmFuc2Zvcm09InRyYW5zbGF0ZSg1NTguOTMyOCw4OC41MDk4KSI+PHBhdGgKICAgICAgICAgICAgIGQ9Im0gMCwwIHYgLTExLjM1OCBoIDcuOTgyIHYgLTExLjI2OSBjIDAuMDI1LC0xLjAwNyAtMC4wMywtMi4wOTMgLTAuMjAzLC0yLjk2MiAtMC4zMTcsLTIuMTAyIC0yLjMxNCwtNS42ODEgLTcuOTgsLTUuNjgxIC01LjYzMiwwIC03LjU5MywzLjU3OSAtNy45MzMsNS42ODEgLTAuMTQzLDAuODY5IC0wLjIwNCwxLjk1NSAtMC4yMDQsMi45NjIgdiAzNS41OTMgYyAwLDEuMjU5IDAuMDg1LDIuNjM3IDAuMzUyLDMuNjggMC4zODcsMS44OTcgMi4wNjgsNS42MzggNy43NDMsNS42MzggNS45NTcsMCA3LjQ0NCwtMy45NDQgNy43ODUsLTUuNjM4IDAuMjI0LC0xLjEyMiAwLjIzNywtMy4wMDQgMC4yMzcsLTMuMDA0IFYgOS4zMiBoIDE5LjYxMyB2IDIuNTU1IGMgMCwwIDAuMDg5LDIuNjY2IC0wLjE0OSw1LjE1NCBDIDI1Ljc2OSwzMS42MzggMTMuNzMyLDM2LjI2IC0wLjA3LDM2LjI2IGMgLTEzLjgyNywwIC0yNS42MiwtNC42NjUgLTI3LjMzOCwtMTkuMjMxIC0wLjE1NSwtMS4zMzIgLTAuMzkyLC0zLjcyOCAtMC4zOTIsLTUuMTU0IHYgLTMyLjc0MiBjIDAsLTEuNDI2IDAuMDQ2LC0yLjUzIDAuMzEsLTUuMTM2IDEuMjgsLTE0LjIwNyAxMy41OTMsLTE5LjI0MyAyNy4zNjUsLTE5LjI0MyAxMy44NTcsMCAyNi4wODUsNS4wMzYgMjcuMzg3LDE5LjI0MyAwLjIzMSwyLjYwNiAwLjI1NSwzLjcxIDAuMjg2LDUuMTM2IFYgMCBaIG0gLTEzNS4yMzUsMzQuMTY1IGggLTE5LjY5NiB2IC01Ny42MTMgYyAwLjAzMSwtMS4wMDQgMCwtMi4xMzIgLTAuMTczLC0yLjk1OSAtMC40MTEsLTEuOTM0IC0yLjA1LC01LjY1NiAtNy40ODQsLTUuNjU2IC01LjM2NCwwIC03LjA0NiwzLjcyMiAtNy40MjYsNS42NTYgLTAuMTk3LDAuODI3IC0wLjIyMiwxLjk1NSAtMC4xOTcsMi45NTkgdiA1Ny42MTMgaCAtMTkuNjkgViAtMjEuNjYgYyAtMC4wMjUsLTEuNDM5IDAuMDg4LC00LjM3OSAwLjE3MywtNS4xNDkgMS4zNTksLTE0LjU0NyAxMi44MjQsLTE5LjI3IDI3LjE0LC0xOS4yNyAxNC4zNDQsMCAyNS44MDIsNC43MjMgMjcuMTg2LDE5LjI3IDAuMTA5LDAuNzcgMC4yNTIsMy43MSAwLjE2Nyw1LjE0OSB6IG0gLTE4MC45NywwIC05LjgyNSwtNjAuODc2IC05LjgxOSw2MC44NzYgaCAtMzEuNzcxIGwgLTEuNjg1LC03Ny44NzggaCAxOS40NjQgbCAwLjUyNyw3Mi4wOTQgMTMuMzkyLC03Mi4wOTQgaCAxOS43NDggbCAxMy40MDQsNzIuMDk0IDAuNTI5LC03Mi4wOTQgaCAxOS41MTMgbCAtMS43NDIsNzcuODc4IHogbSAtMTE3LjYzMSwwIC0xNC40MjYsLTc3Ljg3OCBoIDIxLjAzNyBsIDEwLjg3MSw3Mi4wOTQgMTAuNjEsLTcyLjA5NCBoIDIwLjg5MSBsIC0xNC4zNjYsNzcuODc4IHogbSAzNjcuNDM1LC02Mi43MDEgLTE4LjM0LDYyLjcwMSBoIC0yOC45IHYgLTc3LjA2NiBoIDE5LjExOCBsIC0xLjExLDY0LjcwNyAxOS42OTYsLTY0LjcwNyBoIDI3LjcxNyB2IDc3LjA2NiBoIC0xOS4yNDMgeiBtIC0xNzYuODM4LDQyLjQzMyBjIC0wLjM0NiwxLjUzOCAtMC4yNDYsMy4xNzIgLTAuMDY3LDQuMDI2IDAuNTU3LDIuNDkzIDIuMjMyLDUuMjEyIDcuMDU4LDUuMjEyIDQuNDk4LDAgNy4xMzUsLTIuODA0IDcuMTM1LC03LjAxMiB2IC00Ljc2MiBoIDE5LjIgdiA1LjQyOCBjIDAsMTYuNzggLTE1LjA0NCwxOS40MTYgLTI1LjkzNiwxOS40MTYgLTEzLjcxOCwwIC0yNC45MjEsLTQuNTIyIC0yNi45NjcsLTE3LjE0OCAtMC41NDEsLTMuNDM2IC0wLjY3NSwtNi40ODYgMC4xODYsLTEwLjM3OCAzLjMzNiwtMTUuNzQzIDMwLjc0MywtMjAuMzEgMzQuNzIxLC0zMC4yNjYgMC43MDIsLTEuODg2IDAuNTAxLC00LjI5MSAwLjE0MywtNS43MDggLTAuNTk2LC0yLjU5MSAtMi4zMzksLTUuMTk3IC03LjUwNiwtNS4xOTcgLTQuODQ2LDAgLTcuNzYzLDIuNzg2IC03Ljc2Myw2Ljk4NSBsIC0wLjAwNiw3LjQ3NCBoIC0yMC42NjYgdiAtNS45NDEgYyAwLC0xNy4yMTUgMTMuNDg0LC0yMi40MDkgMjguMDA3LC0yMi40MDkgMTMuOTA5LDAgMjUuMzk3LDQuNzUzIDI3LjI0LDE3LjYzNyAwLjg3OSw2LjY1NyAwLjIxNiwxMC45OTMgLTAuMTM3LDEyLjYyNiAtMy4yMiwxNi4xNDcgLTMyLjQzMSwyMS4wMDQgLTM0LjY0MiwzMC4wMTcgbSAtMjUzLjI3MywwLjE5MSBjIC0wLjM3NywxLjU3IC0wLjI4OSwzLjIyNyAtMC4wNzksNC4wOTEgMC41MzIsMi40ODEgMi4yMTcsNS4yNDggNy4xMjgsNS4yNDggNC41NTUsMCA3LjIzNywtMi44MzEgNy4yMzcsLTcuMDczIHYgLTQuODIgaCAxOS40MjUgdiA1LjQ3MSBjIDAsMTYuOTQxIC0xNS4yNzQsMTkuNjQxIC0yNi4yODUsMTkuNjQxIC0xMy44MzMsMCAtMjUuMTM2LC00LjU5MiAtMjcuMjA0LC0xNy4zMDkgLTAuNTY2LC0zLjQ5MSAtMC42NjMsLTYuNTYyIDAuMTU1LC0xMC40OTcgMy4zNzIsLTE1LjkyMiAzMS4wNSwtMjAuNTI2IDM1LjA3NywtMzAuNjAxIDAuNzU0LC0xLjg3MyAwLjUyNiwtNC4yNzggMC4xNTIsLTUuNzUgLTAuNjM5LC0yLjYxOCAtMi4zOTYsLTUuMjYxIC03LjYwNiwtNS4yNjEgLTQuODY1LDAgLTcuNzc1LDIuODM0IC03Ljc3NSw3LjA5MSBsIC0wLjAyNyw3LjQ5NCBoIC0yMC44OTggdiAtNS45NTUgYyAwLC0xNy40MTIgMTMuNjc1LC0yMi42NDggMjguMzExLC0yMi42NDggMTQuMDcxLDAgMjUuNjI2LDQuNzk1IDI3LjUxMSwxNy44MjggMC45MzcsNi43MTggMC4yMzQsMTEuMDkgLTAuMDgyLDEyLjc0OCAtMy4yODcsMTYuMzQ1IC0zMi44MjMsMjEuMTg2IC0zNS4wNCwzMC4zMDIiCiAgICAgICAgICAgICBzdHlsZT0iZmlsbDojMTQyOGEwO2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpub25lIgogICAgICAgICAgICAgaWQ9InBhdGgyMCIgLz48L2c+PC9nPjwvZz48L2c+PC9zdmc+Cg==" alt="삼성화재(355-5)" style="max-height: 16px; max-width: 70px; object-fit: contain;"></div>
+              </th>
+            </tr>
+            <tr style="border-bottom: 2px solid #cbd5e1;">
+              <th data-comp="0" class="col-brand-0" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">한도</th>
+              <th data-comp="0" class="col-brand-0" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">납기/만기</th>
+              <th data-comp="1" class="col-brand-1" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">한도</th>
+              <th data-comp="1" class="col-brand-1" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">납기/만기</th>
+              <th data-comp="2" class="col-brand-2" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">한도</th>
+              <th data-comp="2" class="col-brand-2" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">납기/만기</th>
+              <th data-comp="3" class="col-brand-3" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">한도</th>
+              <th data-comp="3" class="col-brand-3" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">납기/만기</th>
+              <th data-comp="4" class="col-brand-4" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">한도</th>
+              <th data-comp="4" class="col-brand-4" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">납기/만기</th>
+              <th data-comp="5" class="col-brand-5" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">한도</th>
+              <th data-comp="5" class="col-brand-5" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">납기/만기</th>
+              <th data-comp="6" class="col-brand-6" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">한도</th>
+              <th data-comp="6" class="col-brand-6" style="padding: 5px 3px; font-size: 11px; background: #e2e8f0; color: #475569;">납기/만기</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 행 숨기기 시연 스팟 -->
+            <tr style="background: #ffffff;">
+              <td class="sticky-age-col" style="padding: 10px 4px; overflow: visible;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 4px; position: relative;">
+                  <span style="font-size: 12px; font-weight: 800; color: #0f172a;">81~90세</span>
+                  <div style="position: relative; display: inline-flex; align-items: center;">
+                    <button type="button" class="guide-circle-icon-btn" id="spot-row-hide" onclick="openSimpleGuide('row-hide-btn', this, event)" title="81~90세 행 숨기기">
+                      <i class="fa-regular fa-eye-slash"></i>
+                    </button>
+                    <div class="guide-speech-bubble bubble-tail-left" style="left: 30px; top: -2px;" onclick="openSimpleGuide('row-hide-btn', document.getElementById('spot-row-hide'), event)">
+                      👈 행 숨김
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td data-comp="0" class="col-brand-0" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">※5(상급포함)/2/3</td>
+              <td data-comp="0" class="col-brand-0" style="font-size: 11px; color: #475569; padding: 8px 4px;">20년갱/무해지</td>
+              <td data-comp="1" class="col-brand-1" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">※2/1/2</td>
+              <td data-comp="1" class="col-brand-1" style="font-size: 11px; color: #475569; padding: 8px 4px;">10년갱/무해지</td>
+              <td data-comp="2" class="col-brand-2" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">5/2/3</td>
+              <td data-comp="2" class="col-brand-2" style="font-size: 11px; color: #475569; padding: 8px 4px;">10년갱/표준형</td>
+              <td data-comp="3" class="col-brand-3" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">5/3/0</td>
+              <td data-comp="3" class="col-brand-3" style="font-size: 11px; color: #475569; padding: 8px 4px;">10년갱/무해지</td>
+              <td data-comp="4" class="col-brand-4" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">불가</td>
+              <td data-comp="4" class="col-brand-4" style="font-size: 11px; color: #475569; padding: 8px 4px;">-</td>
+              <td data-comp="5" class="col-brand-5" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">※4/2/1(상해)<br>5/2/3(질병)</td>
+              <td data-comp="5" class="col-brand-5" style="font-size: 11px; color: #475569; padding: 8px 4px;">10년갱/무해지</td>
+              <td data-comp="6" class="col-brand-6" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">불가</td>
+              <td data-comp="6" class="col-brand-6" style="font-size: 11px; color: #475569; padding: 8px 4px;">-</td>
+            </tr>
+
+            <tr style="background: #ffffff;">
+              <td class="sticky-age-col" style="font-weight: 800; color: #334155; padding: 8px 4px;">76~80세</td>
+              <td data-comp="0" class="col-brand-0" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">※20/5/3</td>
+              <td data-comp="0" class="col-brand-0" style="font-size: 11px; color: #475569; padding: 8px 4px;">15년납/100세<br>30년갱/무해지</td>
+              <td data-comp="1" class="col-brand-1" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">※20/5/4</td>
+              <td data-comp="1" class="col-brand-1" style="font-size: 11px; color: #475569; padding: 8px 4px;">20년납/100세<br>20년갱/무해지</td>
+              <td data-comp="2" class="col-brand-2" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">10/5/5</td>
+              <td data-comp="2" class="col-brand-2" style="font-size: 11px; color: #475569; padding: 8px 4px;">10년/100세<br>20년갱/무해지</td>
+              <td data-comp="3" class="col-brand-3" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">15/5/7</td>
+              <td data-comp="3" class="col-brand-3" style="font-size: 11px; color: #475569; padding: 8px 4px;">15년납/100세<br>20년갱/무해지</td>
+              <td data-comp="4" class="col-brand-4" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">10/5/3</td>
+              <td data-comp="4" class="col-brand-4" style="font-size: 11px; color: #475569; padding: 8px 4px;">10년납/100세<br>20년갱/무해지</td>
+              <td data-comp="5" class="col-brand-5" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">※4/2/1(상해)<br>5/2/3(질병)</td>
+              <td data-comp="5" class="col-brand-5" style="font-size: 11px; color: #475569; padding: 8px 4px;">15년납/100세<br>20년갱/무해지</td>
+              <td data-comp="6" class="col-brand-6" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">10/5/3</td>
+              <td data-comp="6" class="col-brand-6" style="font-size: 11px; color: #475569; padding: 8px 4px;">20년납/100세<br>20년갱신/무해지</td>
+            </tr>
+
+            <tr style="background: #ffffff;">
+              <td class="sticky-age-col" style="font-weight: 800; color: #334155; padding: 8px 4px;">75세</td>
+              <td data-comp="0" class="col-brand-0" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">※20/5/3</td>
+              <td data-comp="0" class="col-brand-0" style="font-size: 11px; color: #475569; padding: 8px 4px;">20년납/100세<br>30년갱/무해지</td>
+              <td data-comp="1" class="col-brand-1" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">※20/5/4</td>
+              <td data-comp="1" class="col-brand-1" style="font-size: 11px; color: #475569; padding: 8px 4px;">20년납/100세<br>20년갱/무해지</td>
+              <td data-comp="2" class="col-brand-2" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">10/5/5</td>
+              <td data-comp="2" class="col-brand-2" style="font-size: 11px; color: #475569; padding: 8px 4px;">20년/100세<br>20년갱/무해지</td>
+              <td data-comp="3" class="col-brand-3" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">15/5/7</td>
+              <td data-comp="3" class="col-brand-3" style="font-size: 11px; color: #475569; padding: 8px 4px;">20년납/100세<br>20년갱/무해지</td>
+              <td data-comp="4" class="col-brand-4" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">10/5/3</td>
+              <td data-comp="4" class="col-brand-4" style="font-size: 11px; color: #475569; padding: 8px 4px;">15년납/100세<br>20년갱/무해지</td>
+              <td data-comp="5" class="col-brand-5" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">※15/5/3(상해)<br>20/5/5(질병)</td>
+              <td data-comp="5" class="col-brand-5" style="font-size: 11px; color: #475569; padding: 8px 4px;">20년납/100세<br>20년갱/무해지</td>
+              <td data-comp="6" class="col-brand-6" style="font-weight: 700; color: #1e293b; padding: 8px 4px;">10/5/3</td>
+              <td data-comp="6" class="col-brand-6" style="font-size: 11px; color: #475569; padding: 8px 4px;">20년납/100세<br>20년갱신/무해지</td>
+            </tr>
+
+            <tr style="background: #ffffff;">
+              <td class="sticky-age-col" style="font-weight: 800; color: #334155; padding: 8px 4px;">연계 / 특징</td>
+              <td colspan="2" data-comp="0" class="col-brand-0" style="font-size: 11.5px; color: #334155; padding: 8px 5px; line-height: 1.45;">3N5)슬기로운간편<br>비갱신,갱신 선택<br>76세이상 간간통181일이상X<br>체증형X<br>요양/정신/한방제외 365일한도<br><br><span style="color:#d97706;font-weight:700;">※20</span> : 일반10만+상급10만<br><span style="color:#d97706;font-weight:700;">※5</span> : 일반3만+상급2만</td>
+              <td colspan="2" data-comp="1" class="col-brand-1" style="font-size: 11.5px; color: #334155; padding: 8px 5px; line-height: 1.45;">내삶엔(3N)맞춤간편<br>간병인(요양병원제외/포함)<br>간간통(일반,재활병동)<br>181일이상O, 체증형O<br><br><span style="color:#d97706;font-weight:700;">※20</span> : 일반10+상급10<br>보장보험료 7만이상 또는<br>간병비율 70%미만 / 상해사망 5천</td>
+              <td colspan="2" data-comp="2" class="col-brand-2" style="font-size: 11.5px; color: #334155; padding: 8px 5px; line-height: 1.45;">통합간편건강<br>181일이상 O<br>75세까지 체증형O<br>*80세(비),90세 - 해약환급금지급형</td>
+              <td colspan="2" data-comp="3" class="col-brand-3" style="font-size: 11.5px; color: #334155; padding: 8px 5px; line-height: 1.45;">3N5간편건강(올인원)<br>간병사용입원생활비<br>181일이상 O<br>365일 요양병원간병인가능<br>체증형X</td>
+              <td colspan="2" data-comp="4" class="col-brand-4" style="font-size: 11.5px; color: #334155; padding: 8px 5px; line-height: 1.45;">나에게맞춘간편건강<br>비갱신-암주치1천 연계<br>간병비율 70%미만 또는 암주치1천<br>181일이상O, 체증형X<br>81세부터 가입제한</td>
+              <td colspan="2" data-comp="5" class="col-brand-5" style="font-size: 11.5px; color: #334155; padding: 8px 5px; line-height: 1.45;">3N5간편맞춤건강<br>상해중환자10~20연계<br>181일이상O, 체증형X<br><br><span style="color:#d97706;font-weight:700;">※15</span> : 간병10만+상급5만<br><span style="color:#d97706;font-weight:700;">※4</span> : 간병1만+상급3만</td>
+              <td colspan="2" data-comp="6" class="col-brand-6" style="font-size: 11.5px; color: #334155; padding: 8px 5px; line-height: 1.45;">간편더핏1680 / 새로고침<br>체증형O(한도작음)<br>181일이상O<br>특정수술 간병인 5만추가<br>상해사망 1천만 이상 가입</td>
+            </tr>
+
+            <tr style="background: #ffffff;">
+              <td class="sticky-age-col" style="font-weight: 800; color: #334155; padding: 8px 4px;">납입면제</td>
+              <td colspan="2" data-comp="0" class="col-brand-0" style="font-weight: 600; padding: 8px 4px;">1대/6대납면선택</td>
+              <td colspan="2" data-comp="1" class="col-brand-1" style="font-weight: 600; padding: 8px 4px;">2대/6대납면</td>
+              <td colspan="2" data-comp="2" class="col-brand-2" style="font-weight: 600; padding: 8px 4px;">납면선택</td>
+              <td colspan="2" data-comp="3" class="col-brand-3" style="font-weight: 600; padding: 8px 4px;">납면선택</td>
+              <td colspan="2" data-comp="4" class="col-brand-4" style="font-weight: 600; padding: 8px 4px;">납면선택</td>
+              <td colspan="2" data-comp="5" class="col-brand-5" style="font-weight: 600; padding: 8px 4px;">납면선택</td>
+              <td colspan="2" data-comp="6" class="col-brand-6" style="font-weight: 600; padding: 8px 4px;">납면선택</td>
+            </tr>
+
+            <tr style="background: #ffffff;">
+              <td class="sticky-age-col" style="font-weight: 800; color: #334155; padding: 8px 4px;">최소보험료</td>
+              <td colspan="2" data-comp="0" class="col-brand-0" style="font-weight: 800; color: #059669; padding: 8px 4px;">3만원</td>
+              <td colspan="2" data-comp="1" class="col-brand-1" style="font-weight: 800; color: #059669; padding: 8px 4px;">2만원</td>
+              <td colspan="2" data-comp="2" class="col-brand-2" style="font-weight: 800; color: #059669; padding: 8px 4px;">3만원</td>
+              <td colspan="2" data-comp="3" class="col-brand-3" style="font-weight: 800; color: #059669; padding: 8px 4px;">3만원</td>
+              <td colspan="2" data-comp="4" class="col-brand-4" style="font-weight: 800; color: #059669; padding: 8px 4px;">2만원</td>
+              <td colspan="2" data-comp="5" class="col-brand-5" style="font-weight: 800; color: #059669; padding: 8px 4px;">3만원</td>
+              <td colspan="2" data-comp="6" class="col-brand-6" style="font-weight: 800; color: #059669; padding: 8px 4px;">5만원</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-bottom-note">
+        <strong>※ 간병인일당 한도표시:</strong> 요양병원제외 / 요양병원 / 간호간병통합서비스일당 (단위: 만원) · 유병자(355) 인수기준은 시기별 변경될 수 있습니다.
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 4. 하단 오픈톡방 입장 유도 섹션                                  -->
+    <!-- ============================================================ -->
+    <section class="openchat-cta-section">
+      <span class="oc-tag">설계사 전용 실시간 정보방</span>
+      <h2 class="oc-title">
+        방금 체험한 '한장 비교표',<br>
+        오픈톡방에서 무료로 받아보세요!
+      </h2>
+      <p class="oc-subtitle">
+        위라클랩 공식 오픈톡방에 입장하시면 매주 현장에서 바로 쓰는 핵심 자료를 공유해 드립니다.
+      </p>
+
+      <div class="oc-benefit-box">
+        <div class="oc-benefit-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>매월·매주 개정되는 <b>주요 담보 한장 비교표 샘플 & 인수기준 변경 속보</b> 무료 배포</span>
+        </div>
+        <div class="oc-benefit-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>출근길 1분 컷! 고객 안부 카톡에 바로 복붙하는 <b>데일리 보험 이슈 브리핑</b></span>
+        </div>
+        <div class="oc-benefit-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>스마트 고객관리 · 자동 청구 · 디지털 명함 <b>위라클랩 실전 활용 노하우 & 혜택</b> 안내</span>
+        </div>
+      </div>
+
+      <div class="oc-notice-bar">
+        💡 <b>입장 안내:</b> 현직 설계사님들의 쾌적한 정보 교류를 위해 입장 후 공지사항의 프로필 양식(성함/소속/지역)을 확인해 주세요.
+      </div>
+
+      <a href="#" class="btn-kakao-main js-openchat-link" target="_blank" rel="noopener noreferrer">
+        <i class="fa-solid fa-comment"></i> 카카오 오픈톡방 바로 입장하기 <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </section>
+
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 5. 모바일 스크롤 추적 하단 고정 바 (Sticky CTA)                  -->
+  <!-- ============================================================ -->
+  <div class="sticky-bottom-cta">
+    <div class="sticky-cta-inner">
+      <div class="sticky-cta-text">
+        <span class="sticky-cta-sub">매주 최신 한장 비교표 & 영업 이슈 무료 배포</span>
+        <span class="sticky-cta-main">위라클랩 설계사 공식 오픈톡방</span>
+      </div>
+      <a href="#" class="btn-kakao-sticky js-openchat-link" target="_blank" rel="noopener noreferrer">
+        <i class="fa-solid fa-comment"></i> 오픈톡방 입장하기
+      </a>
+    </div>
+  </div>
+
+  <!-- 카메라 플래시 효과 레이어 -->
+  <div id="camera-flash-overlay"></div>
+
+  <!-- 캡처된 사진 미리보기 팝업 모달 -->
+  <div id="snapshot-modal-overlay" onclick="closeSimpleGuide()">
+    <div class="snapshot-photo-frame" onclick="event.stopPropagation()">
+      <div class="spf-header">
+        <div class="spf-header-left">
+          <div class="spf-icon-cam"><i class="fas fa-camera"></i></div>
+          <div>
+            <div class="spf-title">맞춤 비교표 캡처 완료!</div>
+            <div class="spf-sub">8090_간병인한도_손보355_고해상도.png (2x 초고화질)</div>
+          </div>
+        </div>
+        <span class="spf-badge"><i class="fas fa-check-circle"></i> 저장 완료</span>
+      </div>
+
+      <div class="spf-image-view">
+        <div class="spf-preview-grid-wrap" style="background: #ffffff; border-radius: 10px; border: 1.5px solid #0d9488; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #065f46, #059669); color: #fff; padding: 9px 14px; font-weight: 800; font-size: 12.5px; display: flex; align-items: center; justify-content: space-between;">
+            <span><i class="fa-solid fa-shield-halved"></i> 손해보험사 (7개사) 8090 간병인 한도 (355 유병자)</span>
+            <span style="font-size: 10px; background: rgba(255,255,255,0.25); padding: 2px 7px; border-radius: 4px;">단위: 만원</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 74px repeat(7, 1fr); background: #f8fafc; border-bottom: 2px solid #cbd5e1; font-size: 11px; text-align: center; font-weight: 800;">
+            <div style="padding: 8px 4px; background: #f1f5f9; border-right: 1px solid #e2e8f0;">연령</div>
+            <div style="padding: 8px 4px; border-right: 1px solid #e2e8f0; border-top: 3px solid #d97706;">KB손보</div>
+            <div style="padding: 8px 4px; border-right: 1px solid #e2e8f0; border-top: 3px solid #003087;">현대해상</div>
+            <div style="padding: 8px 4px; border-right: 1px solid #e2e8f0; border-top: 3px solid #ed1c24;">메리츠</div>
+            <div style="padding: 8px 4px; border-right: 1px solid #e2e8f0; border-top: 3px solid #f37321;">한화손보</div>
+            <div style="padding: 8px 4px; border-right: 1px solid #e2e8f0; border-top: 3px solid #008850;">DB손보</div>
+            <div style="padding: 8px 4px; border-right: 1px solid #e2e8f0; border-top: 3px solid #ed1c24;">롯데손보</div>
+            <div style="padding: 8px 4px; border-top: 3px solid #034ea2;">삼성화재</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 74px repeat(7, 1fr); border-bottom: 1px solid #e2e8f0; font-size: 11px; text-align: center; background: #ffffff;">
+            <div style="padding: 8px 4px; background: #f8fafc; font-weight: 800; border-right: 1px solid #e2e8f0;">81~90세</div>
+            <div style="padding: 8px 4px; font-weight: 800; color: #2563eb; border-right: 1px solid #e2e8f0; background: #f0fdf4;">※5 / 2 / 3</div>
+            <div style="padding: 8px 4px; font-weight: 700; border-right: 1px solid #e2e8f0;">※2 / 1 / 2</div>
+            <div style="padding: 8px 4px; font-weight: 800; color: #dc2626; border-right: 1px solid #e2e8f0; background: #fef2f2;">5 / 2 / 3</div>
+            <div style="padding: 8px 4px; font-weight: 700; border-right: 1px solid #e2e8f0;">5 / 3 / 0</div>
+            <div style="padding: 8px 4px; font-weight: 700; color: #94a3b8; border-right: 1px solid #e2e8f0;">불가</div>
+            <div style="padding: 8px 4px; font-weight: 700; border-right: 1px solid #e2e8f0;">5 / 2 / 3</div>
+            <div style="padding: 8px 4px; font-weight: 700; color: #94a3b8;">불가</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 74px repeat(7, 1fr); border-bottom: 1px solid #e2e8f0; font-size: 11px; text-align: center; background: #f8fafc;">
+            <div style="padding: 8px 4px; background: #f1f5f9; font-weight: 800; border-right: 1px solid #e2e8f0;">76~80세</div>
+            <div style="padding: 8px 4px; font-weight: 800; color: #2563eb; border-right: 1px solid #e2e8f0; background: #dcfce7;">※20 / 5 / 3</div>
+            <div style="padding: 8px 4px; font-weight: 700; border-right: 1px solid #e2e8f0;">※20 / 5 / 4</div>
+            <div style="padding: 8px 4px; font-weight: 800; color: #dc2626; border-right: 1px solid #e2e8f0; background: #fee2e2;">10 / 5 / 5</div>
+            <div style="padding: 8px 4px; font-weight: 700; border-right: 1px solid #e2e8f0;">15 / 5 / 7</div>
+            <div style="padding: 8px 4px; font-weight: 700; border-right: 1px solid #e2e8f0;">10 / 5 / 3</div>
+            <div style="padding: 8px 4px; font-weight: 700; border-right: 1px solid #e2e8f0;">5 / 2 / 3</div>
+            <div style="padding: 8px 4px; font-weight: 700;">10 / 5 / 3</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 74px repeat(7, 1fr); font-size: 11px; text-align: center; background: #ffffff;">
+            <div style="padding: 8px 4px; background: #f8fafc; font-weight: 800; border-right: 1px solid #e2e8f0;">75세</div>
+            <div style="padding: 8px 4px; font-weight: 800; color: #2563eb; border-right: 1px solid #e2e8f0; background: #dcfce7;">※20 / 5 / 3</div>
+            <div style="padding: 8px 4px; font-weight: 700; border-right: 1px solid #e2e8f0;">※20 / 5 / 4</div>
+            <div style="padding: 8px 4px; font-weight: 800; color: #dc2626; border-right: 1px solid #e2e8f0; background: #fee2e2;">10 / 5 / 5</div>
+            <div style="padding: 8px 4px; font-weight: 700; border-right: 1px solid #e2e8f0;">15 / 5 / 7</div>
+            <div style="padding: 8px 4px; font-weight: 700; border-right: 1px solid #e2e8f0;">10 / 5 / 3</div>
+            <div style="padding: 8px 4px; font-weight: 700; border-right: 1px solid #e2e8f0;">20 / 5 / 5</div>
+            <div style="padding: 8px 4px; font-weight: 700;">10 / 5 / 3</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spf-footer">
+        <span><i class="fas fa-file-image" style="color:#0284c7;"></i> 세팅한 화면 그대로 깨끗한 2x 초고화질 사진으로 저장됩니다.</span>
+        <span style="color:#10b981; font-weight:800;">✓ 카톡 즉시 전송 가능</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 포커스 박스 & 1문장 팁 카드 -->
+  <div id="guide-focus-box"></div>
+
+  <div id="simple-guide-card">
+    <div class="sg-top-row">
+      <span class="sg-tag"><i class="fas fa-lightbulb"></i> 기능 시연</span>
+      <button class="sg-close-btn" onclick="closeSimpleGuide()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="sg-title" id="sg-title">기능 안내</div>
+    <div class="sg-content-box">
+      <p class="sg-sentence" id="sg-sentence">버튼을 클릭하면 기능이 작동합니다.</p>
+    </div>
+    <div class="sg-action-bar">
+      <span class="sg-status-text">
+        <i class="fas fa-play-circle"></i> <span id="sg-status-msg">화면 동작 시연 중..</span>
+      </span>
+      <button class="btn-replay-demo" onclick="replayCurrentDemo()">
+        <i class="fas fa-rotate-right"></i> 다시 보기
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* ========================================================
+       ★ 여기에 실제 카카오 오픈채팅방 링크를 입력해 주세요 ★
+       ======================================================== */
+    const OPEN_KAKAO_URL = 'https://open.kakao.com/o/gD7lYlYi';
+
+    document.querySelectorAll('.js-openchat-link').forEach(link => {
+      link.href = OPEN_KAKAO_URL;
+    });
+
+    /* 테이블 수동 숨김/복원 로직 */
+    const hiddenComps = new Set();
+    const hiddenRows = new Set();
+
+    function hideCompany(e, compIdx) {
+      if (e) e.stopPropagation();
+      hiddenComps.add(String(compIdx));
+      document.querySelectorAll('[data-comp="' + compIdx + '"]').forEach(c => c.classList.add('comp-hidden'));
+      updateHiddenCounts();
+    }
+
+    function restoreAllCompanies() {
+      hiddenComps.clear();
+      document.querySelectorAll('.comp-hidden').forEach(c => c.classList.remove('comp-hidden'));
+      updateHiddenCounts();
+    }
+
+    function restoreAllRows() {
+      hiddenRows.clear();
+      document.querySelectorAll('.row-hidden').forEach(r => r.classList.remove('row-hidden'));
+      updateHiddenCounts();
+    }
+
+    function resetAll() {
+      closeSimpleGuide();
+      restoreAllCompanies();
+      restoreAllRows();
+    }
+
+    function updateHiddenCounts() {
+      const compEl = document.getElementById('hiddenCompCount');
+      if (compEl) compEl.innerText = hiddenComps.size;
+    }
+
+    /* 가이드 시뮬레이션 엔진 */
+    const simpleGuides = {
+      'col-hide-btn': {
+        title: '특정 보험사 숨기기 (흐림 처리)',
+        sentence: '상담에 불필요한 보험사를 제자리에서 흐릿하게 처리하여, 표 칸이 틀어지지 않고 원하는 회사끼리 깔끔하게 비교합니다.'
+      },
+      'row-hide-btn': {
+        title: '원하지 않는 연령 숨기기 (흐림 처리)',
+        sentence: '고객 연령대가 아닌 구간(81~90세)을 흐릿하게 가려서 필요한 연령 한도만 한눈에 집중 비교할 수 있습니다.'
+      },
+      'download-btn': {
+        title: '맞춤 비교표 2배율 초고화질 캡처',
+        sentence: '내가 숨기고 세팅한 화면 그대로 깨짐 없는 고해상도 이미지로 저장되어 카카오톡 상담창에 바로 전송할 수 있습니다.'
+      }
+    };
+
+    let currentGuideKey = 'col-hide-btn';
+    let currentTargetEl = null;
+    let demoTimer = null;
+    let snapshotTimer = null;
+
+    function restoreAllTableStates() {
+      if (demoTimer) clearTimeout(demoTimer);
+      if (snapshotTimer) clearTimeout(snapshotTimer);
+
+      document.querySelectorAll('#standardMasterTable [data-comp]').forEach(c => {
+        c.classList.remove('demo-blurred-col');
+      });
+      document.querySelectorAll('#standardMasterTable tbody tr').forEach(tr => {
+        tr.classList.remove('demo-blurred-row');
+      });
+
+      const flash = document.getElementById('camera-flash-overlay');
+      if (flash) flash.classList.remove('flashing');
+
+      const snapModal = document.getElementById('snapshot-modal-overlay');
+      if (snapModal) {
+        snapModal.classList.remove('show', 'hide-anim');
+        snapModal.style.display = 'none';
+      }
+    }
+
+    function updateGuidePositions() {
+      if (!currentTargetEl) return;
+      const focusBox = document.getElementById('guide-focus-box');
+      const card = document.getElementById('simple-guide-card');
+      if (!focusBox || focusBox.style.display === 'none') return;
+
+      const rect = currentTargetEl.getBoundingClientRect();
+      const pad = 4;
+      focusBox.style.top = (rect.top - pad) + 'px';
+      focusBox.style.left = (rect.left - pad) + 'px';
+      focusBox.style.width = (rect.width + pad * 2) + 'px';
+      focusBox.style.height = (rect.height + pad * 2) + 'px';
+
+      if (card && card.style.display === 'block') {
+        const cardWidth = card.offsetWidth || 320;
+        const cardHeight = card.offsetHeight || 140;
+        let left = rect.left;
+        let top = rect.bottom + 12;
+
+        if (left + cardWidth > window.innerWidth - 12) {
+          left = window.innerWidth - cardWidth - 12;
+        }
+        if (left < 12) left = 12;
+
+        if (top + cardHeight > window.innerHeight - 90) {
+          top = Math.max(12, rect.top - cardHeight - 12);
+        }
+        card.style.left = left + 'px';
+        card.style.top = top + 'px';
+      }
+    }
+
+    /* 모바일 스크롤/터치 이동 시 포커스 박스 위치 실시간 동기화 */
+    window.addEventListener('scroll', updateGuidePositions, { passive: true });
+    window.addEventListener('resize', updateGuidePositions, { passive: true });
+    document.getElementById('tableContainer')?.addEventListener('scroll', updateGuidePositions, { passive: true });
+
+    function triggerQuickDemo(guideKey, elementId) {
+      const targetEl = document.getElementById(elementId);
+      if (!targetEl) return;
+      if (guideKey === 'col-hide-btn') {
+        document.getElementById('tableContainer')?.scrollTo({ left: 0, behavior: 'smooth' });
+      }
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        openSimpleGuide(guideKey, targetEl);
+      }, 260);
+    }
+
+    function runFeatureSimulation(guideKey) {
+      restoreAllTableStates();
+      const msgText = document.getElementById('sg-status-msg');
+
+      if (guideKey === 'col-hide-btn') {
+        if (msgText) msgText.innerText = "'현대해상' 열 흐림 처리 중... (2.6초 후 복구)";
+        document.querySelectorAll('#standardMasterTable [data-comp="1"]').forEach(cell => {
+          cell.classList.add('demo-blurred-col');
+        });
+        demoTimer = setTimeout(() => {
+          restoreAllTableStates();
+          updateGuidePositions();
+          if (msgText) msgText.innerText = '원상복구 완료! 다른 회사 눈 아이콘도 눌러보세요.';
+        }, 2600);
+
+      } else if (guideKey === 'row-hide-btn') {
+        if (msgText) msgText.innerText = "'81~90세' 행 흐림 처리 중... (2.6초 후 복구)";
+        const tr = document.getElementById('spot-row-hide')?.closest('tr');
+        if (tr) tr.classList.add('demo-blurred-row');
+        demoTimer = setTimeout(() => {
+          restoreAllTableStates();
+          updateGuidePositions();
+          if (msgText) msgText.innerText = '원상복구 완료! 상담 연령만 깔끔하게 남길 수 있습니다.';
+        }, 2600);
+
+      } else if (guideKey === 'download-btn') {
+        if (msgText) msgText.innerText = '찰칵! 고화질 비교표 이미지를 생성 중입니다...';
+        const flash = document.getElementById('camera-flash-overlay');
+        if (flash) {
+          flash.classList.add('flashing');
+          setTimeout(() => flash.classList.remove('flashing'), 180);
+        }
+        setTimeout(() => {
+          const snapModal = document.getElementById('snapshot-modal-overlay');
+          if (snapModal) {
+            snapModal.classList.remove('hide-anim');
+            snapModal.classList.add('show');
+            snapshotTimer = setTimeout(() => {
+              snapModal.classList.add('hide-anim');
+              setTimeout(() => {
+                snapModal.classList.remove('show', 'hide-anim');
+                snapModal.style.display = 'none';
+                restoreAllTableStates();
+                updateGuidePositions();
+                if (msgText) msgText.innerText = '2배율 고화질 캡처 시연이 완료되었습니다.';
+              }, 220);
+            }, 2200);
+          }
+        }, 150);
+      }
+    }
+
+    function replayCurrentDemo() {
+      if (currentGuideKey) runFeatureSimulation(currentGuideKey);
+    }
+
+    function openSimpleGuide(guideKey, targetEl, event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      currentGuideKey = guideKey;
+      currentTargetEl = targetEl;
+
+      const focusBox = document.getElementById('guide-focus-box');
+      const card = document.getElementById('simple-guide-card');
+      if (focusBox) focusBox.style.display = 'block';
+      if (card) card.style.display = 'block';
+
+      const guide = simpleGuides[guideKey];
+      if (guide) {
+        document.getElementById('sg-title').innerText = guide.title;
+        document.getElementById('sg-sentence').innerText = guide.sentence;
+      }
+
+      updateGuidePositions();
+      runFeatureSimulation(guideKey);
+    }
+
+    function closeSimpleGuide() {
+      restoreAllTableStates();
+      currentTargetEl = null;
+      const focusBox = document.getElementById('guide-focus-box');
+      if (focusBox) focusBox.style.display = 'none';
+      const card = document.getElementById('simple-guide-card');
+      if (card) card.style.display = 'none';
+    }
+  </script>
+</body>
+</html>

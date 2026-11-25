@@ -1885,7 +1885,7 @@ async function initDashboard() {
 
 function sendResize() {
   if (window.parent && window.parent !== window) {
-    if (window.innerWidth > 900) return;
+    if (!window.isMobileDevice && window.innerWidth > 900) return;
     window.parent.postMessage({ type: 'CRM_RESIZE', height: document.body.scrollHeight }, '*');
   }
 }

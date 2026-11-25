@@ -3680,6 +3680,121 @@ transform: translateY(-2px);
     text-align: center;
   }
   </style>
+
+<style id="weracle-mobile-global-style">
+/* ========================================================
+   [위라클 모바일 상단 네비게이션 & 로그인/프로필 팝업 최적화]
+   html.is-mobile-device 기기에서만 단독 실행
+   PC 환경에는 0.0001%도 간섭하지 않음
+   ======================================================== */
+html.is-mobile-device .top-global-nav,
+html.is-mobile-device .top-global-nav.open {
+    height: 56px !important;
+    min-height: 56px !important;
+}
+html.is-mobile-device .top-nav-inner {
+    height: 56px !important;
+    padding: 0 10px !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+}
+html.is-mobile-device .brand-logo {
+    font-size: 19px !important;
+    letter-spacing: -0.5px !important;
+}
+html.is-mobile-device .nav-right {
+    gap: 6px !important;
+}
+/* 모바일 헤더 가로폭 압축을 위해 구독서비스 pill 숨김 (전체메뉴 시트에 포함) */
+html.is-mobile-device .header-sub-pill-btn {
+    display: none !important;
+}
+/* 모바일 전체메뉴 버튼 활성화 */
+html.is-mobile-device .mobile-all-menu-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 5px 8px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    color: #334155 !important;
+}
+html.is-mobile-device .mobile-all-menu-btn svg {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+/* 로그인/프로필 버튼 모바일 최적화: 아바타 + 이름만 콤팩트하게 노출 (이메일 및 등급 배지 숨김) */
+html.is-mobile-device .pb-login-info {
+    padding: 3px 6px !important;
+    gap: 4px !important;
+    font-size: 12px !important;
+    max-width: 130px !important;
+    box-sizing: border-box !important;
+}
+html.is-mobile-device .user-email-preview {
+    display: none !important;
+}
+html.is-mobile-device .w-gate-badge {
+    display: none !important;
+}
+html.is-mobile-device .pb-login-info > span:not(.user-email-preview):not(.w-gate-badge) {
+    max-width: 70px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 12px !important;
+}
+html.is-mobile-device .header-login-btn {
+    padding: 5px 9px !important;
+    font-size: 11.5px !important;
+}
+
+/* [중요] 프로필 클릭 시 드롭다운 레이어가 화면 우측으로 짤리는 현상 100% 원천 차단
+   뷰포트 고정(fixed)으로 우측 여백 8px 기준으로 안전하게 핏 */
+html.is-mobile-device .pb-login-dropdown {
+    position: fixed !important;
+    top: 58px !important;
+    right: 8px !important;
+    left: auto !important;
+    width: calc(100vw - 16px) !important;
+    max-width: 290px !important;
+    box-sizing: border-box !important;
+    border-radius: 14px !important;
+    max-height: calc(100vh - 70px) !important;
+    overflow-y: auto !important;
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.22) !important;
+    z-index: 99999 !important;
+}
+
+/* 공지사항 알림 드롭다운도 우측 잘림 방지 */
+html.is-mobile-device .notice-dropdown-box {
+    position: fixed !important;
+    top: 58px !important;
+    right: 8px !important;
+    left: auto !important;
+    width: calc(100vw - 16px) !important;
+    max-width: 320px !important;
+    box-sizing: border-box !important;
+    z-index: 99999 !important;
+}
+
+/* [중요] 모바일 레거시 하드코딩 허브 및 3x3 슬라이딩 바텀시트 완전 숨김
+   (진짜 데이터가 연동된 dashboard.html을 메인 프레임으로 바로 표시) */
+#mobileWorkHub,
+#mobileBottomSheetWrap {
+    display: none !important;
+}
+html.is-mobile-device #mobileWorkHub,
+html.is-mobile-device #mobileBottomSheetWrap {
+    display: none !important;
+}
+</style>
+
 </head>
 <body><script></script>
 <!-- PWA Mobile Install Overlay Removed -->
@@ -5198,7 +5313,10 @@ function openAuthModal(type) {
         iframe.src = targetSrc;
     }
     const mainWorkspace = document.querySelector('.main-workspace');
-    if (mainWorkspace) mainWorkspace.classList.add('iframe-active');
+    if (mainWorkspace) {
+        mainWorkspace.classList.add('iframe-active');
+        mainWorkspace.classList.add('subpage-viewing');
+    }
     const dashboardHome = document.getElementById('dashboardHome');
     if (dashboardHome) dashboardHome.style.display = 'none';
     const bSec = document.getElementById('homeBottomSection'); if (bSec) bSec.style.display = 'none';
@@ -6138,18 +6256,15 @@ window.openDynamicList = function(type, val) {
         if (dbHome) dbHome.style.display = 'none';
 
         const mHub = document.getElementById('mobileWorkHub');
-        if (mHub && window.innerWidth <= 900) {
-            mHub.style.display = 'block';
-            const frame = document.getElementById('mainFrame');
-            if (frame) frame.style.display = 'none';
-        } else {
-            if (mHub) mHub.style.display = 'none';
-            const frame = document.getElementById('mainFrame');
-            if (frame) {
-                frame.style.display = 'block';
-                if (!frame.src || !frame.src.includes('dashboard/dashboard.html')) {
-                    frame.src = 'dashboard/dashboard.html';
-                }
+        if (mHub) mHub.style.display = 'none';
+        const sheet = document.getElementById('mobileBottomSheetWrap');
+        if (sheet) sheet.style.display = 'none';
+
+        const frame = document.getElementById('mainFrame');
+        if (frame) {
+            frame.style.display = 'block';
+            if (!frame.src || !frame.src.includes('dashboard/dashboard.html')) {
+                frame.src = 'dashboard/dashboard.html';
             }
         }
 
@@ -6452,15 +6567,9 @@ window.toggleMobileFullMenu = toggleMobileFullMenu;
             origShowHome();
         }
         const mHub = document.getElementById('mobileWorkHub');
-        if (mHub && window.innerWidth <= 900) {
-            mHub.style.display = 'block';
-        }
+        if (mHub) mHub.style.display = 'none';
         const sheet = document.getElementById('mobileBottomSheetWrap');
-        if (sheet && window.innerWidth <= 900) {
-            sheet.style.display = 'block';
-            isMDashSheetCollapsed = false;
-            updateMDashSheetUI();
-        }
+        if (sheet) sheet.style.display = 'none';
     };
 
 </script>

@@ -146,35 +146,42 @@ html.is-mobile-device .btn-add-schedule {
     font-weight: 700 !important;
 }
 
-/* [사용자 요청 3] 캘린더 필터: 전체 일정 숨김 및 5개 버튼 2줄 균형 배치
+/* [사용자 요청 3] 캘린더 필터: 전체 일정 숨김 및 5개 버튼 2줄 균형 배치 (Flexbox 100% 강제 2줄)
    1행 (3개, 33.3%씩): [내 일정] [고객 생일] [상령일]
    2행 (2개, 50%씩): [만기·갱신] [보험 결제일]
 */
 html.is-mobile-device .cal-filter-bar {
-    display: grid !important;
-    grid-template-columns: repeat(6, 1fr) !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
     gap: 6px !important;
     padding: 6px 0 !important;
     overflow-x: visible !important;
     width: 100% !important;
+    box-sizing: border-box !important;
+    background: transparent !important;
+    border: none !important;
+    margin: 8px 0 !important;
 }
 html.is-mobile-device .cal-filter-chip[data-filter="all"] {
     display: none !important;
 }
-html.is-mobile-device .cal-filter-chip[data-filter="google"] {
-    grid-column: span 2 !important;
+html.is-mobile-device .cal-filter-chip[data-filter="weracle"] {
+    display: none !important;
 }
-html.is-mobile-device .cal-filter-chip[data-filter="bday"] {
-    grid-column: span 2 !important;
-}
+/* 1행: 3개 균등 분할 (각 33.333% - 간격 보정) */
+html.is-mobile-device .cal-filter-chip[data-filter="google"],
+html.is-mobile-device .cal-filter-chip[data-filter="bday"],
 html.is-mobile-device .cal-filter-chip[data-filter="sang"] {
-    grid-column: span 2 !important;
+    flex: 1 1 calc(33.333% - 4.5px) !important;
+    max-width: calc(33.333% - 4.5px) !important;
+    min-width: 0 !important;
 }
-html.is-mobile-device .cal-filter-chip[data-filter="expiry"] {
-    grid-column: span 3 !important;
-}
+/* 2행: 2개 균등 분할 (각 50% - 간격 보정) */
+html.is-mobile-device .cal-filter-chip[data-filter="expiry"],
 html.is-mobile-device .cal-filter-chip[data-filter="pay"] {
-    grid-column: span 3 !important;
+    flex: 1 1 calc(50% - 3px) !important;
+    max-width: calc(50% - 3px) !important;
+    min-width: 0 !important;
 }
 
 html.is-mobile-device .cal-filter-tab,
@@ -209,6 +216,10 @@ html.is-mobile-device .cal-timeline-day-card {
     padding: 0 !important;
     border-radius: 10px !important;
     overflow: hidden !important;
+    opacity: 1 !important;
+}
+html.is-mobile-device .cal-timeline-day-card.has-no-filtered-events {
+    opacity: 0.8 !important;
 }
 html.is-mobile-device .cal-day-left-badge {
     padding: 10px 4px !important;

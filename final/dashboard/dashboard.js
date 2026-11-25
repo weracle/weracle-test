@@ -86,7 +86,7 @@ let targetData = [];
 let crmEventsList = [];   // 파싱된 모든 CRM 고객 이벤트 리스트
 let agentEvents = [];     // 구글 캘린더에서 가져온 개인 일정 리스트
 let currentCalDate = new Date(); // 현재 캘린더가 가리키는 기준일 (기본: 오늘)
-let activeFilter = (window.isMobileDevice) ? 'google' : 'all'; // 모바일: 'google'(내 일정), PC: 'all'(전체)
+let activeFilter = 'all'; // 전체 데이터가 기본으로 정상 노출되도록 설정
 let calViewMode = (window.isMobileDevice) ? 'vertical' : (localStorage.getItem('weracle_cal_view_mode') || 'horizontal');
 if (!window.isMobileDevice && (!calViewMode || calViewMode === 'vertical')) {
   calViewMode = 'horizontal';
@@ -403,6 +403,15 @@ function getFilterKoreanName(type) {
 }
 
 function setCalendarFilter(filterType) {
+  // 모바일에서 이미 활성화된 버튼을 다시 누르면 전체 보기(all)로 토글
+  if (window.isMobileDevice && activeFilter === filterType) {
+    activeFilter = 'all';
+    document.querySelectorAll('.cal-filter-chip, .cal-filter-tab').forEach(chip => {
+      chip.classList.remove('active');
+    });
+    renderV3Calendar();
+    return;
+  }
   activeFilter = filterType;
   document.querySelectorAll('.cal-filter-chip, .cal-filter-tab').forEach(chip => {
     if (chip.getAttribute('data-filter') === filterType) {
@@ -1787,14 +1796,14 @@ function getInitialMockData() {
 }
 
 async function initDashboard() {
-  // 모바일 전용 초기 뷰 및 필터 동기화
+  // 모바일 전용 초기 뷰 동기화 (세로형 고정, 데이터는 전체 정상 노출)
   if (window.isMobileDevice) {
     calViewMode = 'vertical';
-    activeFilter = 'google';
-    const allChip = document.querySelector('.cal-filter-chip[data-filter="all"]');
-    const googleChip = document.querySelector('.cal-filter-chip[data-filter="google"]');
-    if (allChip) allChip.classList.remove('active');
-    if (googleChip) googleChip.classList.add('active');
+    activeFilter = 'all';
+    // 모바일에서는 전체 칩이 숨겨져 있으므로 개별 칩은 비활성 상태(전체 모드)로 시작
+    document.querySelectorAll('.cal-filter-chip, .cal-filter-tab').forEach(chip => {
+      chip.classList.remove('active');
+    });
   }
 
   // 슬라이더 초기 렌더링 (Items 6-3, 6-4)

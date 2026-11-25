@@ -3710,22 +3710,9 @@ html.is-mobile-device .nav-right {
 html.is-mobile-device .header-sub-pill-btn {
     display: none !important;
 }
-/* 모바일 전체메뉴 버튼 활성화 */
+/* [대표님 요청] 모바일 상단 헤더 우측 '전체메뉴' 파란 버튼 영구 제거 (하단 바텀시트 메뉴가 메인이므로 헤더에서 제거) */
 html.is-mobile-device .mobile-all-menu-btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    padding: 5px 8px !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    background: #f1f5f9 !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 8px !important;
-    color: #334155 !important;
-}
-html.is-mobile-device .mobile-all-menu-btn svg {
-    width: 14px !important;
-    height: 14px !important;
+    display: none !important;
 }
 
 /* 로그인/프로필 버튼 모바일 최적화: 아바타 + 이름만 콤팩트하게 노출 (이메일 및 등급 배지 숨김) */
@@ -3783,14 +3770,36 @@ html.is-mobile-device .notice-dropdown-box {
     z-index: 99999 !important;
 }
 
-/* [중요] 모바일 레거시 하드코딩 허브 및 3x3 슬라이딩 바텀시트 완전 숨김
-   (진짜 데이터가 연동된 dashboard.html을 메인 프레임으로 바로 표시) */
+/* 모바일 레거시 중복 허브 숨김 (real dashboard.html 사용) */
 #mobileWorkHub,
-#mobileBottomSheetWrap {
+html.is-mobile-device #mobileWorkHub {
     display: none !important;
 }
-html.is-mobile-device #mobileWorkHub,
+
+/* [중요 복원] 사용자가 세팅해둔 하단 슬라이딩 바텀 시트 (토스/당근 스타일 메뉴바) 100% 정상 상시 노출 */
+html.is-mobile-device .mobile-bottom-sheet-wrap,
 html.is-mobile-device #mobileBottomSheetWrap {
+    display: block !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 99999 !important;
+    max-width: 540px !important;
+    margin: 0 auto !important;
+    background: #ffffff !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-top-left-radius: 24px !important;
+    border-top-right-radius: 24px !important;
+    box-shadow: 0 -8px 25px rgba(15, 23, 42, 0.14) !important;
+}
+html.is-mobile-device .mobile-bottom-sheet-wrap.collapsed,
+html.is-mobile-device #mobileBottomSheetWrap.collapsed {
+    transform: translateY(calc(100% - 46px)) !important;
+}
+/* 서브페이지 열람 시에만 바텀시트 숨김 */
+html.is-mobile-device .main-workspace.subpage-viewing ~ #mobileBottomSheetWrap,
+html.is-mobile-device .subpage-viewing #mobileBottomSheetWrap {
     display: none !important;
 }
 </style>
@@ -6258,7 +6267,11 @@ window.openDynamicList = function(type, val) {
         const mHub = document.getElementById('mobileWorkHub');
         if (mHub) mHub.style.display = 'none';
         const sheet = document.getElementById('mobileBottomSheetWrap');
-        if (sheet) sheet.style.display = 'none';
+        if (sheet && (window.isMobileDevice || window.innerWidth <= 900)) {
+            sheet.style.display = 'block';
+            isMDashSheetCollapsed = false;
+            updateMDashSheetUI();
+        }
 
         const frame = document.getElementById('mainFrame');
         if (frame) {
@@ -6543,6 +6556,14 @@ window.toggleMobileFullMenu = toggleMobileFullMenu;
         }
     }
 
+    document.addEventListener('DOMContentLoaded', () => {
+        const sheet = document.getElementById('mobileBottomSheetWrap');
+        if (sheet && (window.isMobileDevice || window.innerWidth <= 900)) {
+            sheet.style.display = 'block';
+            updateMDashSheetUI();
+        }
+    });
+
     
     function navigateMobileTile(menuName, subName, url) {
         isMDashSheetCollapsed = true;
@@ -6569,7 +6590,11 @@ window.toggleMobileFullMenu = toggleMobileFullMenu;
         const mHub = document.getElementById('mobileWorkHub');
         if (mHub) mHub.style.display = 'none';
         const sheet = document.getElementById('mobileBottomSheetWrap');
-        if (sheet) sheet.style.display = 'none';
+        if (sheet && (window.isMobileDevice || window.innerWidth <= 900)) {
+            sheet.style.display = 'block';
+            isMDashSheetCollapsed = false;
+            updateMDashSheetUI();
+        }
     };
 
 </script>

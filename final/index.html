@@ -4956,7 +4956,7 @@ async function checkSession() {
                     localStorage.setItem('g_access_token', data.session.provider_token);
                     localStorage.setItem('g_token_time', Date.now().toString()); 
                     if (window.sb && window.currentUser) {
-                        window.sb.from('profiles').update({ google_access_token: data.session.provider_token }).eq('id', window.currentUser.id).then(()=>{});
+                        await window.sb.from('profiles').update({ google_access_token: data.session.provider_token }).eq('id', window.currentUser.id);
                     }
                 } catch(e) {}
             }
@@ -5170,6 +5170,7 @@ const options = {
 };
 if (provider === 'google') {
 options.scopes = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events';
+options.queryParams = { access_type: 'offline' };
 }
 const { data, error } = await window.sb.auth.signInWithOAuth({
 provider,

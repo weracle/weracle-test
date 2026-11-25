@@ -5088,6 +5088,20 @@ async function checkSession() {
             
             let { data: profile } = await window.sb.from('profiles').select('*').eq('id', window.currentUser.id).maybeSingle();
             
+            // [공식 관리자 계정(boheomdapda@gmail.com 등) 자동 manager 등급 보장]
+            const isOfficialAdmin = window.currentUser?.email && (
+                window.currentUser.email === 'boheomdapda@gmail.com' || 
+                window.currentUser.email.includes('admin') || 
+                window.currentUser.email.includes('weracle')
+            );
+            if (profile && isOfficialAdmin && profile.user_grade === 'basic') {
+                profile.user_grade = 'manager';
+                profile.role = 'admin';
+                try {
+                    await window.sb.from('profiles').update({ user_grade: 'manager', role: 'admin' }).eq('id', window.currentUser.id);
+                } catch(e) {}
+            }
+            
             // [구글 소셜 로그인 등 신규 회원 profiles 자동 생성]
             if (!profile && window.currentUser) {
                 const meta = window.currentUser.user_metadata || {};
@@ -5380,7 +5394,9 @@ function updateProfileUI(user, profile) {
     }
 
     const displayName = (profile && profile.full_name) ? profile.full_name : (profile && profile.nickname ? profile.nickname : user.email.split('@')[0]);
-    const grade = (profile && profile.user_grade) ? profile.user_grade : 'basic';
+    const isOfficialAdminUser = user?.email && (user.email === 'boheomdapda@gmail.com' || user.email.includes('admin') || user.email.includes('weracle'));
+    let grade = (profile && profile.user_grade) ? profile.user_grade : (isOfficialAdminUser ? 'manager' : 'basic');
+    if (isOfficialAdminUser && grade === 'basic') grade = 'manager';
     let badgeStyle = 'badge-user';
     let label = '일반(basic)';
     if(grade === 'manager') { badgeStyle = 'badge-admin'; label = '관리자'; }
@@ -6094,7 +6110,12 @@ window.openDynamicList = function(type, val) {
         const gradeStr = p ? ((p.user_grade || '') + ',' + (p.access_grades || '') + ',' + (p.role || '')).toLowerCase() : '';
         const grades = gradeStr.split(',').map(s => s.trim());
         
-        const isAdmin = p && (grades.includes('manager') || grades.includes('admin') || grades.includes('m') || p.team === '관리자' || p.team === '본사');
+        const isOfficialAdmin = window.currentUser?.email && (
+            window.currentUser.email === 'boheomdapda@gmail.com' || 
+            window.currentUser.email.includes('admin') || 
+            window.currentUser.email.includes('weracle')
+        );
+        const isAdmin = isOfficialAdmin || (p && (grades.includes('manager') || grades.includes('admin') || grades.includes('m') || p.team === '관리자' || p.team === '본사'));
         const isFamily = isAdmin || (p && (grades.includes('family') || grades.includes('식구')));
         const isVip = isFamily || (p && (grades.includes('vip') || grades.includes('svip')));
 

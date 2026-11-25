@@ -86,12 +86,12 @@ let targetData = [];
 let crmEventsList = [];   // 파싱된 모든 CRM 고객 이벤트 리스트
 let agentEvents = [];     // 구글 캘린더에서 가져온 개인 일정 리스트
 let currentCalDate = new Date(); // 현재 캘린더가 가리키는 기준일 (기본: 오늘)
-let activeFilter = 'all'; // 'all', 'google', 'bday', 'sang', 'expiry', 'pay'
-let calViewMode = localStorage.getItem('weracle_cal_view_mode');
-if (!calViewMode || calViewMode === 'vertical') {
+let activeFilter = (window.isMobileDevice) ? 'google' : 'all'; // 모바일: 'google'(내 일정), PC: 'all'(전체)
+let calViewMode = (window.isMobileDevice) ? 'vertical' : (localStorage.getItem('weracle_cal_view_mode') || 'horizontal');
+if (!window.isMobileDevice && (!calViewMode || calViewMode === 'vertical')) {
   calViewMode = 'horizontal';
   try { localStorage.setItem('weracle_cal_view_mode', 'horizontal'); } catch(e){}
-} // 기본값: 세로형(vertical)
+}
 let currentMonthStr = new Date().toISOString().substring(0, 7);
 let checkDataInterval = null;
 
@@ -141,8 +141,13 @@ function handleGoogleSyncClick() {
 // 2. 뷰 전환 & 주간 네비게이션 & 필터링
 // ==========================================
 function switchCalendarView(mode) {
+  if (window.isMobileDevice) {
+    mode = 'vertical';
+  }
   calViewMode = mode;
-  localStorage.setItem('weracle_cal_view_mode', mode);
+  if (!window.isMobileDevice) {
+    localStorage.setItem('weracle_cal_view_mode', mode);
+  }
 
   const btnV = document.getElementById('btnViewVertical');
   const btnH = document.getElementById('btnViewHorizontal');
@@ -1782,6 +1787,16 @@ function getInitialMockData() {
 }
 
 async function initDashboard() {
+  // 모바일 전용 초기 뷰 및 필터 동기화
+  if (window.isMobileDevice) {
+    calViewMode = 'vertical';
+    activeFilter = 'google';
+    const allChip = document.querySelector('.cal-filter-chip[data-filter="all"]');
+    const googleChip = document.querySelector('.cal-filter-chip[data-filter="google"]');
+    if (allChip) allChip.classList.remove('active');
+    if (googleChip) googleChip.classList.add('active');
+  }
+
   // 슬라이더 초기 렌더링 (Items 6-3, 6-4)
   renderPromoSlide();
   renderVideoSlide();

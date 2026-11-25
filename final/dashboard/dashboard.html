@@ -19,141 +19,228 @@
 
 <style>
 /* ========================================================
-   [모바일 전용 최적화] dashboard.html 모바일 반응형 스타일
-   (PC 화면 > 768px 에는 0.001%도 침투하지 않음)
+   [PC 데스크톱/노트북 무결성 보장]
+   html.is-desktop-device 기기에서는 가로 2단 콕핏 및 우측 퀵바 100% 상시 고정
    ======================================================== */
-@media (max-width: 768px) {
-    body {
-        padding: 12px 10px !important;
-    }
-    .dash-card {
-        padding: 14px 12px !important;
-        border-radius: 14px !important;
-    }
+html.is-desktop-device .dashboard-main-grid {
+    grid-template-columns: 1.55fr 1fr !important;
+}
+html.is-desktop-device .ins-sidebar-container {
+    display: flex !important;
+}
 
-    /* 1. 상단 프로필 바 모바일 최적화 */
-    .dash-card:first-child {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 12px !important;
-    }
-    .dash-card:first-child > div:first-child {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 10px !important;
-    }
-    .dash-card:first-child > div:first-child > div:first-child {
-        /* 프로필 아바타 + 이름 한 줄 정렬 */
-        display: flex !important;
-        align-items: center !important;
-        gap: 12px !important;
-    }
-    #welcome-msg {
-        white-space: nowrap !important;
-        font-size: 17px !important;
-    }
-    #dashPlannerInfo {
-        white-space: nowrap !important;
-        font-size: 12px !important;
-    }
-    .planner-quick-actions {
-        margin-left: 0 !important;
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 8px !important;
-        width: 100% !important;
-    }
-    .dash-top-btn {
-        width: 100% !important;
-        justify-content: center !important;
-        padding: 8px 10px !important;
-        font-size: 12px !important;
-    }
+/* ========================================================
+   [모바일 스마트폰 전용 격리 최적화]
+   html.is-mobile-device 가 적용된 실제 모바일 기기에서만 작동
+   PC 환경 (데스크톱, 노트북, 듀얼모니터) 에는 0.0001%도 간섭하지 않음
+   ======================================================== */
+html.is-mobile-device body {
+    padding: 12px 10px !important;
+}
+html.is-mobile-device .dash-card {
+    padding: 14px 12px !important;
+    border-radius: 14px !important;
+}
 
-    /* 실적 요약 바 */
-    .dash-card:first-child > div:last-child {
-        width: 100% !important;
-        justify-content: space-between !important;
-    }
-    .dash-card:first-child > div:last-child > div {
-        flex: 1 !important;
-        justify-content: center !important;
-        font-size: 12.5px !important;
-        padding: 8px 10px !important;
-    }
+/* 1. 상단 프로필 바 모바일 최적화 */
+html.is-mobile-device .dash-card:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+}
+html.is-mobile-device .dash-card:first-child > div:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+}
+html.is-mobile-device .dash-card:first-child > div:first-child > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+html.is-mobile-device #welcome-msg {
+    white-space: nowrap !important;
+    font-size: 16px !important;
+}
+html.is-mobile-device #dashPlannerInfo {
+    white-space: nowrap !important;
+    font-size: 12px !important;
+}
+html.is-mobile-device .planner-quick-actions {
+    margin-left: 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+}
+html.is-mobile-device .dash-top-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 8px 10px !important;
+    font-size: 11.5px !important;
+}
 
-    /* 2. 스케줄러 헤더 모바일 최적화 */
-    .cal-main-header {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 10px !important;
-    }
-    .cal-title-group {
-        flex-wrap: wrap !important;
-        gap: 8px !important;
-        justify-content: space-between !important;
-    }
-    .cal-title {
-        font-size: 15px !important;
-        white-space: nowrap !important;
-    }
-    .cal-period-badge {
-        font-size: 12px !important;
-    }
-    .cal-nav-buttons {
-        gap: 3px !important;
-    }
-    .cal-nav-btn {
-        padding: 4px 8px !important;
-        font-size: 11px !important;
-    }
-    .cal-view-switcher {
-        width: 100% !important;
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        margin-top: 4px !important;
-    }
-    .cal-view-btn {
-        justify-content: center !important;
-        padding: 6px !important;
-        font-size: 12px !important;
-    }
+/* [사용자 요청 1] 모바일에서 잔여팩스 및 체결 실적 부분 완전 숨김 */
+html.is-mobile-device .dash-card:first-child > div:last-child {
+    display: none !important;
+}
 
-    .cal-action-group {
-        width: 100% !important;
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 8px !important;
-    }
-    .google-sync-btn, .cal-add-btn {
-        width: 100% !important;
-        justify-content: center !important;
-        padding: 8px 10px !important;
-        font-size: 11.5px !important;
-    }
+/* 2. 스케줄러 헤더 모바일 최적화 */
+html.is-mobile-device .cal-main-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+}
+html.is-mobile-device .cal-title-group {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+html.is-mobile-device .cal-title {
+    font-size: 15px !important;
+    white-space: nowrap !important;
+}
+html.is-mobile-device .cal-period-badge {
+    font-size: 12px !important;
+}
+html.is-mobile-device .cal-nav-buttons {
+    gap: 3px !important;
+}
+html.is-mobile-device .cal-nav-btn {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+}
 
-    /* 필터 탭 바 모바일 가로 스크롤 */
-    .cal-filter-bar {
-        overflow-x: auto !important;
-        white-space: nowrap !important;
-        scrollbar-width: none !important;
-        display: flex !important;
-    }
-    .cal-filter-bar::-webkit-scrollbar { display: none !important; }
-    .cal-filter-tab, .cal-filter-chip {
-        flex: 0 0 auto !important;
-        font-size: 12.5px !important;
-        padding: 10px 14px !important;
-    }
+/* [사용자 요청 2] 캘린더 세로형 고정이므로 모바일에서 뷰 전환 토글 숨김 */
+html.is-mobile-device .cal-view-switcher {
+    display: none !important;
+}
 
-    /* 타임라인 카드 모바일 최적화 */
-    .cal-timeline-day-card {
-        padding: 10px 12px !important;
-        border-radius: 12px !important;
-    }
+/* 액션 버튼 그룹 (연동 및 일정 추가) */
+html.is-mobile-device .cal-action-group {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+}
+html.is-mobile-device .google-sync-btn {
+    flex: 1 1 calc(50% - 3px) !important;
+    justify-content: center !important;
+    padding: 8px 6px !important;
+    font-size: 11.5px !important;
+    white-space: nowrap !important;
+}
+html.is-mobile-device .cal-sync-export-btn {
+    flex: 1 1 calc(50% - 3px) !important;
+    justify-content: center !important;
+    padding: 8px 6px !important;
+    font-size: 11.5px !important;
+    white-space: nowrap !important;
+}
+html.is-mobile-device .btn-add-schedule {
+    flex: 1 1 100% !important;
+    justify-content: center !important;
+    padding: 9px 8px !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+}
+
+/* [사용자 요청 3] 캘린더 필터: 전체 일정 숨김 및 5개 버튼 2줄 균형 배치
+   1행 (3개, 33.3%씩): [내 일정] [고객 생일] [상령일]
+   2행 (2개, 50%씩): [만기·갱신] [보험 결제일]
+*/
+html.is-mobile-device .cal-filter-bar {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 6px !important;
+    padding: 6px 0 !important;
+    overflow-x: visible !important;
+    width: 100% !important;
+}
+html.is-mobile-device .cal-filter-chip[data-filter="all"] {
+    display: none !important;
+}
+html.is-mobile-device .cal-filter-chip[data-filter="google"] {
+    grid-column: span 2 !important;
+}
+html.is-mobile-device .cal-filter-chip[data-filter="bday"] {
+    grid-column: span 2 !important;
+}
+html.is-mobile-device .cal-filter-chip[data-filter="sang"] {
+    grid-column: span 2 !important;
+}
+html.is-mobile-device .cal-filter-chip[data-filter="expiry"] {
+    grid-column: span 3 !important;
+}
+html.is-mobile-device .cal-filter-chip[data-filter="pay"] {
+    grid-column: span 3 !important;
+}
+
+html.is-mobile-device .cal-filter-tab,
+html.is-mobile-device .cal-filter-chip {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    padding: 8px 4px !important;
+    font-size: 11.5px !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    min-width: 0 !important;
+}
+html.is-mobile-device .cal-filter-chip .filter-tab-name {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+}
+html.is-mobile-device .cal-filter-chip .filter-count {
+    font-size: 10px !important;
+    padding: 1px 4px !important;
+    border-radius: 10px !important;
+    min-width: 16px !important;
+    text-align: center !important;
+}
+
+/* 세로 타임라인 카드 모바일 최적화 */
+html.is-mobile-device .cal-timeline-day-card {
+    grid-template-columns: 66px 1fr !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+}
+html.is-mobile-device .cal-day-left-badge {
+    padding: 10px 4px !important;
+    gap: 2px !important;
+}
+html.is-mobile-device .cal-day-date-number {
+    font-size: 18px !important;
+}
+html.is-mobile-device .cal-day-weekday-text {
+    font-size: 11px !important;
+}
+html.is-mobile-device .cal-day-right-content {
+    padding: 8px 10px !important;
+    gap: 5px !important;
+}
+html.is-mobile-device .cal-timeline-event-item {
+    font-size: 11.5px !important;
+    padding: 5px 8px !important;
+    border-radius: 6px !important;
+}
+
+/* 모바일 메인 그리드 1열 배치 & 오른쪽 사이드바 모바일 숨김 */
+html.is-mobile-device .dashboard-main-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+}
+html.is-mobile-device .ins-sidebar-container {
+    display: none !important;
 }
 </style>
 
+  <script src="../weracle_device.js"></script>
   <script src="../weracle_modal.js"></script>
 </head>
 <body>

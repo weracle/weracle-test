@@ -87,11 +87,8 @@ let crmEventsList = [];   // 파싱된 모든 CRM 고객 이벤트 리스트
 let agentEvents = [];     // 구글 캘린더에서 가져온 개인 일정 리스트
 let currentCalDate = new Date(); // 현재 캘린더가 가리키는 기준일 (기본: 오늘)
 let activeFilter = 'all'; // 'all', 'google', 'bday', 'sang', 'expiry', 'pay'
-let calViewMode = localStorage.getItem('weracle_cal_view_mode');
-if (!calViewMode || calViewMode === 'vertical') {
-  calViewMode = 'horizontal';
-  try { localStorage.setItem('weracle_cal_view_mode', 'horizontal'); } catch(e){}
-} // 기본값: 세로형(vertical)
+let isMobileDevice = window.innerWidth <= 768;
+let calViewMode = isMobileDevice ? 'vertical' : (localStorage.getItem('weracle_cal_view_mode') || 'horizontal');
 let currentMonthStr = new Date().toISOString().substring(0, 7);
 let checkDataInterval = null;
 
@@ -141,8 +138,13 @@ function handleGoogleSyncClick() {
 // 2. 뷰 전환 & 주간 네비게이션 & 필터링
 // ==========================================
 function switchCalendarView(mode) {
+  if (window.innerWidth <= 768) {
+    mode = 'vertical';
+  }
   calViewMode = mode;
-  localStorage.setItem('weracle_cal_view_mode', mode);
+  if (window.innerWidth > 768) {
+    try { localStorage.setItem('weracle_cal_view_mode', mode); } catch(e){}
+  }
 
   const btnV = document.getElementById('btnViewVertical');
   const btnH = document.getElementById('btnViewHorizontal');

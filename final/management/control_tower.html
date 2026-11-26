@@ -1915,15 +1915,19 @@
 
     
     function returnToMainHome() {
-      if (window.top && window.top !== window.self) {
-        if (typeof window.top.showDashboardHome === 'function') {
-          window.top.showDashboardHome();
-          return;
-        }
-        window.top.location.href = '/final/index.html';
-      } else {
-        location.href = '/final/index.html';
+      if (window.parent && typeof window.parent.showDashboardHome === 'function') {
+        window.parent.showDashboardHome();
+        return;
       }
+      if (window.top && typeof window.top.showDashboardHome === 'function') {
+        window.top.showDashboardHome();
+        return;
+      }
+      if (window.top) {
+        window.top.location.href = '/';
+        return;
+      }
+      location.href = '/';
     }
 
     function showAccessDeniedScreen(statusText) {

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script src="../weracle_modal.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta charset="UTF-8">
@@ -470,6 +471,27 @@
 
     const sbUrl = "https://tjohrovsvgnkrlqhjkwt.supabase.co";
     const sbKey = "sb_publishable_m2fpA60L66F8uGnynEbmvg_BBepUlmR"; // 로컬 백업용
+
+    
+    async function mypagePrompt(title, defaultValue, placeholder) {
+        if (window.parent && typeof window.parent.weraclePrompt === 'function') {
+            return await window.parent.weraclePrompt(title, defaultValue, { placeholder: placeholder });
+        }
+        if (typeof window.weraclePrompt === 'function') {
+            return await window.weraclePrompt(title, defaultValue, { placeholder: placeholder });
+        }
+        return prompt(title, defaultValue);
+    }
+
+    async function mypageConfirm(message) {
+        if (window.parent && typeof window.parent.weracleConfirm === 'function') {
+            return await window.parent.weracleConfirm(message);
+        }
+        if (typeof window.weracleConfirm === 'function') {
+            return await window.weracleConfirm(message);
+        }
+        return confirm(message);
+    }
 
     class MyPageWidget {
         constructor() {
@@ -1254,7 +1276,8 @@
         }
 
         async removeDevice(devId) {
-            if (!confirm('이 기기를 등록 해제하시겠습니까?\n해제 후 새로운 기기를 최대 3대까지 등록할 수 있습니다.')) return;
+            const ok = await mypageConfirm('이 기기를 등록 해제하시겠습니까?\n해제 후 새로운 기기를 최대 3대까지 등록할 수 있습니다.');
+            if (!ok) return;
             const uid = window.currentUser?.id;
             try {
                 let devList = [];
@@ -1328,22 +1351,22 @@
                     const profile = window.currentProfile || {};
 
                     if (field === 'nickname') {
-                        const val = prompt('새로운 닉네임을 입력하세요:', profile.nickname || '');
+                        const val = await mypagePrompt('플랫폼 닉네임 변경', profile.nickname || '', '새로운 닉네임을 입력하세요');
                         if (val !== null && val.trim() !== '') this.updateProfileField('nickname', val.trim());
                     } else if (field === 'slogan') {
-                        const val = prompt('새로운 슬로건(나의 각오 / 한 줄 소개)을 입력하세요:', profile.slogan || userMeta.slogan || '');
+                        const val = await mypagePrompt('나의 슬로건 / 한 줄 소개 변경', profile.slogan || userMeta.slogan || '', '나만의 멋진 슬로건을 입력해 주세요 (예: 언제나 고객 곁을 지키는 든든한 동반자)');
                         if (val !== null) this.updateProfileField('slogan', val.trim());
                     } else if (field === 'company') {
-                        const val = prompt('새로운 소속을 입력하세요:', profile.company || '');
+                        const val = await mypagePrompt('소속 회사/지점 변경', profile.company || '', '소속을 입력하세요 (예: OO생명 강남지점)');
                         if (val !== null) this.updateProfileField('company', val.trim());
                     } else if (field === 'name') {
-                        const val = prompt('새로운 실명을 입력하세요:', profile.name || userMeta.name || '');
+                        const val = await mypagePrompt('실명(성함) 변경', profile.name || userMeta.name || '', '새로운 실명을 입력하세요');
                         if (val !== null && val.trim() !== '') this.updateProfileField('name', val.trim());
                     } else if (field === 'position') {
-                        const val = prompt('새로운 직책을 입력하세요:', profile.position || userMeta.position || '');
+                        const val = await mypagePrompt('직책 변경', profile.position || userMeta.position || '', '직책을 입력하세요 (예: 팀장, 지점장, FC)');
                         if (val !== null && val.trim() !== '') this.updateProfileField('position', val.trim());
                     } else if (field === 'phone') {
-                        const val = prompt('새로운 연락처를 입력하세요:', profile.phone || '');
+                        const val = await mypagePrompt('연락처(휴대폰 번호) 변경', profile.phone || '', '010-0000-0000');
                         if (val !== null) this.updateProfileField('phone', val.trim());
                     } else if (field === 'avatar') {
                         const avatarInput = this.container.querySelector('#sb-avatar-file-input') || document.getElementById('sb-avatar-file-input');

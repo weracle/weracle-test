@@ -1197,13 +1197,10 @@ function updateAgentHeaderUI(errorMessage = "") {
     if (hasGoogleAuth) {
         bannerContainer.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; background: white; padding: 6px 14px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                <div style="display: flex; align-items: center; gap: 6px; padding-right: 8px; border-right: 1px solid #e2e8f0;">
+                <div style="display: flex; align-items: center; gap: 6px;">
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="14" height="14">
                     <span style="font-size: 12.5px; color: #10b981; font-weight: 800;">연동됨</span>
                 </div>
-                <button type="button" onclick="relinkUserOwnGoogleSheet()" style="background: #f8fafc; border: 1px solid #cbd5e1; font-size: 11.5px; color: #475569; cursor: pointer; padding: 4px 9px; border-radius: 6px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="다른 계정과 꼬인 시트를 해제하고 내 구글 계정 전용 시트를 새로 생성합니다.">
-                    <i class="fa-solid fa-arrows-rotate"></i> 시트 재연동/새시트
-                </button>
             </div>
         `;
     } else {

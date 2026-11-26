@@ -1193,6 +1193,10 @@
             const hasExistingProfile = !!(window.currentProfile || cachedProf);
             if (hasExistingProfile) {
                 window.currentProfile = window.currentProfile || cachedProf;
+                const isOfficialAdmin = window.currentUser?.email && (window.currentUser.email === 'boheomdapda@gmail.com' || window.currentUser.email === 'bohwan5189@gmail.com');
+                if (isOfficialAdmin && window.currentProfile && window.currentProfile.user_grade === 'basic') {
+                    window.currentProfile.user_grade = 'manager';
+                }
                 if (savedLogo && !window.currentProfile.logo_url) {
                     window.currentProfile.logo_url = savedLogo;
                 }
@@ -1216,19 +1220,35 @@
                         avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + window.currentUser.id
                     };
                 }
+
+                // 공식 관리자 계정 등급 보장
+                const isOfficialAdmin = window.currentUser?.email && (window.currentUser.email === 'boheomdapda@gmail.com' || window.currentUser.email === 'bohwan5189@gmail.com');
+                if (isOfficialAdmin && window.currentProfile && window.currentProfile.user_grade === 'basic') {
+                    window.currentProfile.user_grade = 'manager';
+                }
+
                 if (savedLogo && !window.currentProfile.logo_url) {
                     window.currentProfile.logo_url = savedLogo;
                 }
+
+                // 최신 프로필 캐시 및 부모창 실시간 동기화
+                try {
+                    localStorage.setItem('cached_profile', JSON.stringify(window.currentProfile));
+                    if (window.parent && window.parent !== window) {
+                        window.parent.currentProfile = Object.assign(window.parent.currentProfile || {}, window.currentProfile);
+                        if (typeof window.parent.updateProfileUI === 'function') {
+                            window.parent.updateProfileUI(window.currentUser, window.currentProfile);
+                        }
+                    }
+                } catch(e) {}
 
                 const isManager = window.currentProfile && window.currentProfile.user_grade === 'manager';
                 const promises = [ this.loadMyOrders() ];
                 if (isManager) promises.push(this.loadAllOrders());
                 await Promise.all(promises);
 
-                // 최초 진입이라 로딩 화면이었던 경우에만 대시보드 렌더링
-                if (!hasExistingProfile) {
-                    this.renderDashboard();
-                }
+                // 서버 최신 데이터로 화면 반드시 최신화 갱신
+                this.renderDashboard();
             } catch (error) {
                 console.error("Error loading MyPage data:", error);
                 if (!hasExistingProfile) {

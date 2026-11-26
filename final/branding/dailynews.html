@@ -1,7 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>데일리 뉴스 생성기 (고객용)</title>
     
@@ -83,53 +86,6 @@
             align-items: flex-start;
             gap: 10px;
             margin-bottom: -5px;
-        }
-        
-        .upload-card {
-            border: 2px dashed #dcdde1;
-            border-radius: 12px;
-            padding: 30px 20px;
-            text-align: center;
-            background: #fafbfc;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            display: block;
-        }
-        .upload-card:hover {
-            border-color: var(--weracle-cyan);
-            background: var(--weracle-hover);
-        }
-        .upload-card i {
-            font-size: 32px;
-            color: #8b95a1;
-            margin-bottom: 15px;
-            transition: color 0.3s;
-        }
-        .upload-card:hover i {
-            color: var(--weracle-cyan);
-        }
-        .upload-card .desc {
-            font-size: 14px;
-            color: #555;
-            word-break: keep-all;
-            line-height: 1.4;
-        }
-        .upload-card input[type="file"] {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            opacity: 0; cursor: pointer;
-        }
-        .selected-file {
-            margin-top: 15px;
-            font-size: 13px;
-            color: #27ae60;
-            font-weight: bold;
-            background: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            display: inline-block;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .theme-options {
@@ -255,14 +211,15 @@
             
             <div class="content">
                 <div class="section-title">
-                    <i class="fa-solid fa-image"></i> 로고 파일 넣기 (선택)
+                    <i class="fa-solid fa-id-card-clip"></i> 로고 자동 연동 안내
                 </div>
-                <label class="upload-card" id="logoUploadCard" for="logoInput">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                    <div class="desc">우측 상단에 표시될 회사 또는 나만의 로고를 첨부해주세요.</div>
-                    <div class="selected-file" id="logoFileName" style="display: none;"></div>
-                    <input type="file" id="logoInput" accept="image/*">
-                </label>
+                <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 16px; font-size: 13px; color: #166534; line-height: 1.5;">
+                    <div style="font-weight: 800; font-size: 14px; color: #15803d; margin-bottom: 6px; display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-circle-check"></i> 마이페이지 자동 연동 중
+                    </div>
+                    마이페이지에 등록된 <b>회사 로고</b>가 실시간 자동 반영됩니다.<br>
+                    <span style="color:#16a34a; font-size:12.5px;">(로고 미등록 시 프로필 사진·성함·슬로건의 <b>퍼스널 브랜드 로고</b>가 자동 적용됩니다)</span>
+                </div>
 
                 <div class="section-title">
                     <i class="fa-solid fa-palette"></i> 브랜드 색상 (테마) 선택
@@ -348,34 +305,6 @@
     </div>
 
     <script>
-        // CRM(사내 시스템) 로고 자동 연동 로직
-        window.addEventListener('message', function(e) {
-            if (e.data && e.data.type === 'setLogo' && e.data.data) {
-                customLogo = new Image();
-                customLogo.onload = function() {
-                    // 수동 업로드 UI 숨기기
-                    const logoCard = document.getElementById('logoUploadCard');
-                    if (logoCard) {
-                        logoCard.style.display = 'none';
-                        const sectionTitle = logoCard.previousElementSibling;
-                        if (sectionTitle && sectionTitle.classList.contains('section-title')) {
-                            sectionTitle.style.display = 'none';
-                        }
-                    }
-                    console.log("CRM 연동 로고 반영 완료");
-                    triggerDraw();
-                };
-                customLogo.src = e.data.data;
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', function() {
-            if (window.parent !== window) {
-                window.parent.postMessage({ type: 'requestLogo' }, '*');
-            }
-        });
-
-
         // 구글 시트 연동 정보
         const SHEET_ID = '1rfanzbOCpG9cFDJ-jwUQJx5nNhSIrCXh4YklZEJdIEw';
         const API_KEY = 'AIzaSyD9XOJBgaaUh6XVAx_az6Ka0IlUUsc2pSw';
@@ -408,6 +337,198 @@
         const c3 = document.getElementById('c3');
 
         let customLogo = new Image();
+        customLogo.crossOrigin = "anonymous";
+
+        // 설계사 프로필 데이터 조회
+        function getPlannerProfileData() {
+            let prof = {};
+            try {
+                if (window.parent && window.parent !== window && window.parent.currentProfile) {
+                    prof = Object.assign({}, window.parent.currentProfile);
+                }
+            } catch(e) {}
+            try {
+                const raw = localStorage.getItem('cached_profile');
+                if (raw) {
+                    const p = JSON.parse(raw);
+                    prof = Object.assign({}, p, prof);
+                }
+            } catch(e) {}
+            try {
+                const rawWeracle = localStorage.getItem('weracle_user_profile');
+                if (rawWeracle) {
+                    const p = JSON.parse(rawWeracle);
+                    prof = Object.assign({}, p, prof);
+                }
+            } catch(e) {}
+            return prof;
+        }
+
+        // 직접 등록한 회사/개인 로고 확인 (기존 기본 fallback 로고 560fa4f67c898 제외)
+        function getCustomUploadedLogo() {
+            try {
+                const directLogo = localStorage.getItem('weracle_user_logo');
+                if (directLogo && typeof directLogo === 'string' && directLogo.trim().length > 10) {
+                    if (!directLogo.includes('560fa4f67c898.png')) {
+                        return directLogo.trim();
+                    }
+                }
+                const prof = getPlannerProfileData();
+                if (prof && prof.logo_url && typeof prof.logo_url === 'string' && prof.logo_url.trim().length > 10) {
+                    if (!prof.logo_url.includes('560fa4f67c898.png')) {
+                        return prof.logo_url.trim();
+                    }
+                }
+            } catch(e) {}
+            return '';
+        }
+
+        // 설계사 아바타 이미지 프리로드
+        let plannerAvatarImg = new Image();
+        plannerAvatarImg.crossOrigin = "anonymous";
+        plannerAvatarImg.isLoaded = false;
+        plannerAvatarImg.onload = () => {
+            plannerAvatarImg.isLoaded = true;
+            triggerDraw();
+        };
+
+        function preloadPlannerAvatar() {
+            const p = getPlannerProfileData();
+            const avatar = p.avatar_url || p.photo_url || p.profile_image || '';
+            if (avatar && avatar.length > 10 && !avatar.includes('consultant_model.jpg')) {
+                if (plannerAvatarImg.src !== avatar) {
+                    plannerAvatarImg.src = avatar;
+                }
+            }
+        }
+        preloadPlannerAvatar();
+
+        // [핵심] 로고 미등록 시 자동 생성되는 퍼스널 브랜딩 로고 SVG (외곽 테두리 없이 투명 배경)
+        function generatePersonalBrandLogoSvg(profile) {
+            const p = profile || getPlannerProfileData() || {};
+            const name = (p.name || '담당 설계사').trim();
+            const rawRole = (p.position || p.officialTitle || p.official_title || p.job || '보험전문가').trim();
+            const slogan = (p.slogan || '마음을 전하는').trim();
+            const avatar = p.avatar_url || p.photo_url || p.profile_image || '';
+
+            let avatarSvg = '';
+            if (avatar && avatar.length > 10 && !avatar.includes('consultant_model.jpg')) {
+                const safeAvatar = avatar.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                avatarSvg = `
+                  <circle cx="44" cy="44" r="40" fill="none" stroke="#f472b6" stroke-width="4"/>
+                  <image href="${safeAvatar}" x="8" y="8" width="72" height="72" clip-path="url(#pbAvatarClip)" preserveAspectRatio="xMidYMid slice"/>
+                `;
+            } else {
+                avatarSvg = `
+                  <circle cx="44" cy="44" r="40" fill="none" stroke="#f472b6" stroke-width="4"/>
+                  <circle cx="44" cy="44" r="36" fill="#fdf2f8"/>
+                  <text x="44" y="52" font-family="'Pretendard', sans-serif" font-size="24" font-weight="900" fill="#ec4899" text-anchor="middle">${name.charAt(0)}</text>
+                `;
+            }
+
+            const safeSlogan = slogan.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '');
+            const safeName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const safeRole = rawRole.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 92" width="380" height="92">
+              <defs>
+                <clipPath id="pbAvatarClip">
+                  <circle cx="44" cy="44" r="36"/>
+                </clipPath>
+                <style>
+                  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+                  .pb-slogan { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 19px; font-weight: 800; fill: #0f172a; letter-spacing: -0.3px; }
+                  .pb-name { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 30px; font-weight: 900; fill: #a855f7; letter-spacing: -0.5px; }
+                  .pb-role { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 17px; font-weight: 800; fill: #1e1b4b; letter-spacing: -0.2px; }
+                </style>
+              </defs>
+              ${avatarSvg}
+              <text x="104" y="37" class="pb-slogan">${safeSlogan}</text>
+              <text x="104" y="76">
+                <tspan class="pb-name">${safeName}</tspan>
+                <tspan dx="10" class="pb-role">${safeRole}</tspan>
+              </text>
+            </svg>`;
+
+            return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+        }
+
+        // [캔버스 직접 렌더링 헬퍼] 데일리뉴스 카드 상단 로고 슬롯(100px)에 즉시 정밀 렌더링
+        function drawPersonalBrandLogoDirect(ctx, x, y, maxH, profile) {
+            const p = profile || getPlannerProfileData() || {};
+            const name = (p.name || '담당 설계사').trim();
+            const rawRole = (p.position || p.officialTitle || p.official_title || p.job || '보험전문가').trim();
+            const slogan = (p.slogan || '마음을 전하는').trim();
+
+            ctx.save();
+
+            // 1. 아바타 원형 (핑크 링)
+            const avatarSize = 88;
+            const cx = x + avatarSize / 2;
+            const cy = y + maxH / 2;
+            const radius = avatarSize / 2;
+
+            // 핑크 외곽선 링
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#f472b6';
+            ctx.fill();
+
+            const innerRadius = radius - 4;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2);
+            ctx.clip();
+
+            if (plannerAvatarImg && plannerAvatarImg.isLoaded && plannerAvatarImg.src) {
+                try {
+                    ctx.drawImage(plannerAvatarImg, cx - innerRadius, cy - innerRadius, innerRadius * 2, innerRadius * 2);
+                } catch(e) {
+                    ctx.fillStyle = '#fdf2f8';
+                    ctx.fillRect(cx - innerRadius, cy - innerRadius, innerRadius * 2, innerRadius * 2);
+                    ctx.fillStyle = '#ec4899';
+                    ctx.font = '900 28px "Pretendard", "Noto Sans KR", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(name.charAt(0), cx, cy);
+                }
+            } else {
+                ctx.fillStyle = '#fdf2f8';
+                ctx.fillRect(cx - innerRadius, cy - innerRadius, innerRadius * 2, innerRadius * 2);
+                ctx.fillStyle = '#ec4899';
+                ctx.font = '900 28px "Pretendard", "Noto Sans KR", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(name.charAt(0), cx, cy);
+            }
+            ctx.restore();
+
+            // 2. 슬로건 텍스트 (상단)
+            const textX = x + avatarSize + 18;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillStyle = '#0f172a';
+            ctx.font = '800 20px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.fillText(slogan, textX, y + 42);
+
+            // 3. 성함 + 직책 텍스트 (하단)
+            ctx.fillStyle = '#a855f7';
+            ctx.font = '900 32px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.fillText(name, textX, y + 84);
+
+            const nameWidth = ctx.measureText(name).width;
+            ctx.fillStyle = '#1e1b4b';
+            ctx.font = '800 18px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.fillText(rawRole, textX + nameWidth + 10, y + 84);
+
+            ctx.restore();
+        }
+
+        // 초기 로고 초기화
+        const initCustomLogoSrc = getCustomUploadedLogo();
+        if (initCustomLogoSrc) {
+            customLogo.src = initCustomLogoSrc;
+        }
         let pendingDraw = null;
 
         async function fetchNewsData() {
@@ -642,19 +763,27 @@
             ctx.strokeRect(45, 45, width - 90, canvas.height - 90);
             ctx.shadowColor = 'transparent'; 
 
-            if (customLogo.src) {
-                const logoH = 100; 
-                const logoW = (customLogo.width / customLogo.height) * logoH;
-                ctx.drawImage(customLogo, 85, 45, logoW, logoH); 
+            const customUploaded = (typeof getCustomUploadedLogo === 'function') ? getCustomUploadedLogo() : '';
+            const activeLogoSrc = (customLogo && customLogo.src && customLogo.src.trim().length > 10 && !customLogo.src.includes('560fa4f67c898.png')) 
+                ? customLogo.src.trim() 
+                : customUploaded;
+
+            if (activeLogoSrc) {
+                if (customLogo.src !== activeLogoSrc) {
+                    customLogo.src = activeLogoSrc;
+                }
+                const naturalW = customLogo.naturalWidth || customLogo.width;
+                const naturalH = customLogo.naturalHeight || customLogo.height;
+                if (naturalW && naturalH) {
+                    const logoH = 100;
+                    const logoW = (naturalW / naturalH) * logoH;
+                    ctx.drawImage(customLogo, 85, 45, logoW, logoH);
+                } else {
+                    customLogo.onload = () => { triggerDraw(); };
+                }
             } else {
-                ctx.fillStyle = '#f1f5f9';
-                drawRoundRect(ctx, 85, 45, 260, 100, 8); 
-                ctx.fill();
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = '600 20px "Noto Sans KR"';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('로고를 등록해주세요', 85 + 130, 45 + 50);
+                // 마이페이지에 로고 미등록 시: 원형 아바타(핑크 링) + 슬로건 + 성함 및 직책 결합형 퍼스널 로고 자동 렌더링
+                drawPersonalBrandLogoDirect(ctx, 85, 45, 100);
             }
 
             ctx.font = '700 28px "Noto Sans KR"';
@@ -752,19 +881,19 @@
             });
         }
 
-        logoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                logoUploadText.textContent = " " + file.name;
-                logoUploadText.style.display = "inline-block";
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    customLogo.onload = function() { triggerDraw(); }
-                    customLogo.src = event.target.result;
+        if (logoInput) {
+            logoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        customLogo.onload = function() { triggerDraw(); }
+                        customLogo.src = event.target.result;
+                    }
+                    reader.readAsDataURL(file);
                 }
-                reader.readAsDataURL(file);
-            }
-        });
+            });
+        }
 
         document.getElementById('downloadBtn').addEventListener('click', function() {
             const link = document.createElement('a');
@@ -782,13 +911,7 @@
             storyCanvas.height = targetH;
             const sCtx = storyCanvas.getContext('2d');
             
-            // 배경색 채우기 (캔버스 바깥 배경색) - 제거함
-            // sCtx.fillStyle = typeof canvasOuterBg !== 'undefined' ? canvasOuterBg : '#f1f5f9';
-            // sCtx.fillRect(0, 0, targetW, targetH);
-            // 의도적으로 배경을 투명하게 두어, 인스타/카카오펑 업로드 시 앱에서 자동으로 예쁜 그라데이션 배경을 깔아주도록 유도합니다.
-            
             // 스토리 해상도(1080x1920)에 맞게 1000x(내용높이) 캔버스 사이즈 조정
-            // 가로 또는 세로에 맞춰 비율 유지하며 축소
             const scale = Math.min(1000 / canvas.width, 1750 / canvas.height); 
             const drawW = canvas.width * scale;
             const drawH = canvas.height * scale;
@@ -817,10 +940,23 @@
         window.addEventListener('message', function(e) {
             if (e.data && e.data.type === 'setLogo' && e.data.data) {
                 customLogo = new Image();
+                customLogo.crossOrigin = "anonymous";
                 customLogo.onload = function() {
                     triggerDraw();
                 };
                 customLogo.src = e.data.data;
+            }
+            if (e.data && (e.data.type === 'profileUpdated' || e.data.type === 'setProfile')) {
+                preloadPlannerAvatar();
+                triggerDraw();
+            }
+        });
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'weracle_user_logo' || e.key === 'cached_profile' || e.key === 'weracle_user_profile') {
+                preloadPlannerAvatar();
+                const newLogo = getCustomUploadedLogo();
+                if (newLogo) customLogo.src = newLogo;
+                triggerDraw();
             }
         });
 
@@ -832,4 +968,3 @@
     </script>
 </body>
 </html>
-

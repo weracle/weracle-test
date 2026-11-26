@@ -5231,6 +5231,10 @@ async function checkSession() {
                         user_grade: uMeta.user_grade || 'basic'
                     };
                 }
+                const isOffAdmin = window.currentUser?.email && (window.currentUser.email === 'boheomdapda@gmail.com' || window.currentUser.email === 'bohwan5189@gmail.com');
+                if (isOffAdmin && quickProf && quickProf.user_grade === 'basic') {
+                    quickProf.user_grade = 'manager';
+                }
                 window.currentProfile = quickProf;
                 if (typeof updateProfileUI === 'function') {
                     updateProfileUI(window.currentUser, window.currentProfile);
@@ -6461,7 +6465,8 @@ window.openDynamicList = function(type, val) {
         if (frame) {
             frame.style.display = 'block';
             frame.style.height = ''; // Clear legacy inline height
-            frame.src = url;
+            const bust = (url.includes('?') ? '&' : '?') + 'v=' + Date.now();
+            frame.src = (url.startsWith('http') || url.startsWith('data:')) ? url : (url + bust);
         }
 
         const authCont = document.getElementById('w-auth-workspace-container');

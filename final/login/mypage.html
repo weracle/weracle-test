@@ -1144,6 +1144,7 @@
                 if (raw) cachedProf = JSON.parse(raw);
             } catch(e) {}
             const savedLogo = localStorage.getItem('weracle_user_logo') || (cachedProf && cachedProf.logo_url) || '';
+            const savedAvatar = localStorage.getItem('weracle_user_avatar') || (cachedProf && cachedProf.avatar_url) || '';
 
             if (!sb) {
                 window.currentUser = window.currentUser || { email: 'weracle_pro@partners.com' };
@@ -1197,8 +1198,11 @@
                 if (isOfficialAdmin && window.currentProfile && window.currentProfile.user_grade === 'basic') {
                     window.currentProfile.user_grade = 'manager';
                 }
-                if (savedLogo && !window.currentProfile.logo_url) {
+                if (savedLogo && (!window.currentProfile.logo_url || window.currentProfile.logo_url.includes('560fa4f67c898.png'))) {
                     window.currentProfile.logo_url = savedLogo;
+                }
+                if (savedAvatar && (!window.currentProfile.avatar_url || window.currentProfile.avatar_url.includes('dicebear.com/7.x/bottts') || window.currentProfile.avatar_url.includes('consultant_model.jpg'))) {
+                    window.currentProfile.avatar_url = savedAvatar;
                 }
                 this.renderDashboard();
             } else {
@@ -1874,7 +1878,7 @@
                 img.addEventListener('mouseout', e => e.target.style.transform = 'scale(1)');
             });
 
-            // Avatar file input handler
+            // Avatar file input handler (클라이언트 캔버스 고압축: 5MB 원본 -> 25KB 안전 변환으로 DB 및 로컬스토리지 영구 보존)
             const avatarInput = this.container.querySelector('#sb-avatar-file-input');
             if (avatarInput) {
                 avatarInput.addEventListener('change', (e) => {
@@ -1882,14 +1886,34 @@
                     if (file) {
                         const reader = new FileReader();
                         reader.onload = (event) => {
-                            this.updateProfileField('avatar_url', event.target.result);
+                            const img = new Image();
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                const maxDim = 320;
+                                let w = img.width;
+                                let h = img.height;
+                                if (w > h) {
+                                    if (w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; }
+                                } else {
+                                    if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; }
+                                }
+                                canvas.width = w; canvas.height = h;
+                                ctx.drawImage(img, 0, 0, w, h);
+                                const compressedAvatar = canvas.toDataURL('image/jpeg', 0.85);
+                                try {
+                                    localStorage.setItem('weracle_user_avatar', compressedAvatar);
+                                } catch(e) {}
+                                this.updateProfileField('avatar_url', compressedAvatar);
+                            };
+                            img.src = event.target.result;
                         };
                         reader.readAsDataURL(file);
                     }
                 });
             }
 
-            // Logo file input handler
+            // Logo file input handler (클라이언트 캔버스 최적화: 용량 초과로 인한 풀림 현상 원천 차단)
             const logoInput = this.container.querySelector('#sb-logo-file-input') || document.getElementById('sb-logo-file-input');
             if (logoInput) {
                 logoInput.addEventListener('change', (e) => {
@@ -1903,10 +1927,17 @@
                                 const ctx = canvas.getContext('2d');
                                 let width = img.width;
                                 let height = img.height;
-                                if (width > 600) { height = height * (600 / width); width = 600; }
+                                const maxW = 420;
+                                const maxH = 180;
+                                if (width > maxW) { height = Math.round(height * (maxW / width)); width = maxW; }
+                                if (height > maxH) { width = Math.round(width * (maxH / height)); height = maxH; }
                                 canvas.width = width; canvas.height = height;
                                 ctx.drawImage(img, 0, 0, width, height);
-                                this.updateProfileField('logo_url', canvas.toDataURL('image/png'));
+                                const compressedLogo = canvas.toDataURL('image/png');
+                                try {
+                                    localStorage.setItem('weracle_user_logo', compressedLogo);
+                                } catch(e) {}
+                                this.updateProfileField('logo_url', compressedLogo);
                             };
                             img.src = event.target.result;
                         };
@@ -1921,11 +1952,17 @@
                 const updateData = {};
                 updateData[field] = value;
 
-                // 전용 로고 등록 시 localStorage 영구 보존
+                // [영구 보존] 전용 로고 및 아바타 등록 시 localStorage 전용 키에 영구 보존
                 if (field === 'logo_url') {
                     try {
                         if (value) localStorage.setItem('weracle_user_logo', value);
                         else localStorage.removeItem('weracle_user_logo');
+                    } catch(e) {}
+                }
+                if (field === 'avatar_url') {
+                    try {
+                        if (value) localStorage.setItem('weracle_user_avatar', value);
+                        else localStorage.removeItem('weracle_user_avatar');
                     } catch(e) {}
                 }
 

@@ -2634,16 +2634,24 @@ function extractCustomerPhone(c) {
                             const uploaded = getCustomUploadedLogo();
                             const isCustomReady = uploaded && customLogo && customLogo.src && ((customLogo.naturalWidth || customLogo.width) > 0);
 
+                            // [요청 반영: 제일 오른쪽 구석에 깔끔하고 일관된 크기로 배치]
+                            const marginX = Math.max(8, Math.round(img.width * 0.02));
+                            const marginY = Math.max(8, Math.round(img.width * 0.016));
+
                             if (isCustomReady) {
                                 const logoNaturalW = customLogo.naturalWidth || customLogo.width;
                                 const logoNaturalH = customLogo.naturalHeight || customLogo.height;
-                                const logoH = Math.max(img.height * 0.075, 48); 
-                                let logoW = (logoNaturalW / logoNaturalH) * logoH;
-                                if (logoW > img.width * 0.32) logoW = img.width * 0.32;
+                                const maxW = Math.round(img.width * 0.25);
+                                const maxH = Math.round(maxW * 0.45);
+                                let logoW = (logoNaturalW / logoNaturalH) * maxH;
+                                let logoH = maxH;
+                                if (logoW > maxW) {
+                                    logoW = maxW;
+                                    logoH = (logoNaturalH / logoNaturalW) * maxW;
+                                }
 
-                                const paddingX = img.width * 0.04;
-                                const posX = img.width - logoW - paddingX;
-                                const posY = Math.max(8, Math.round(img.width * 0.022));
+                                const posX = Math.round(img.width - logoW - marginX);
+                                const posY = marginY;
 
                                 const strokeWidth = Math.max(2, Math.round(logoH * 0.04));
                                 const margin = Math.ceil(strokeWidth * 4) + 6;
@@ -2678,11 +2686,10 @@ function extractCustomerPhone(c) {
                                 ctx.drawImage(off, posX - ox, posY - oy);
                             } else {
                                 const prof = (typeof getPlannerProfileData === 'function') ? getPlannerProfileData() : {};
-                                const logoH = Math.max(Math.round(img.height * 0.075), 48);
-                                const logoW = Math.round(logoH * (420 / 92));
-                                const paddingX = Math.round(img.width * 0.04);
-                                const posX = Math.round(img.width - logoW - paddingX);
-                                const posY = Math.max(10, Math.round(img.width * 0.022));
+                                const logoW = Math.round(img.width * 0.25);
+                                const logoH = Math.round(logoW * (92 / 420));
+                                const posX = Math.round(img.width - logoW - marginX);
+                                const posY = marginY;
 
                                 drawPersonalBrandLogoDirect(ctx, posX, posY, logoH, prof);
                             }

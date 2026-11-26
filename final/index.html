@@ -5326,6 +5326,16 @@ async function checkSession() {
                 profile.position = profile.position || meta.position || '';
                 profile.nickname = profile.nickname || meta.nickname || meta.full_name || meta.name || (window.currentUser?.email ? window.currentUser.email.split('@')[0] : '');
                 profile.slogan = profile.slogan || meta.slogan || '';
+
+                // [마이페이지 이미지 영구 보존] Supabase에서 null/기본값으로 오더라도 사용자가 등록한 로고/아바타 절대 유실 방지
+                const savedLogo = localStorage.getItem('weracle_user_logo');
+                if (savedLogo && (!profile.logo_url || profile.logo_url.includes('560fa4f67c898.png'))) {
+                    profile.logo_url = savedLogo;
+                }
+                const savedAvatar = localStorage.getItem('weracle_user_avatar');
+                if (savedAvatar && (!profile.avatar_url || profile.avatar_url.includes('dicebear.com/7.x/bottts') || profile.avatar_url.includes('consultant_model.jpg'))) {
+                    profile.avatar_url = savedAvatar;
+                }
             }
             window.currentProfile = profile;
             try {

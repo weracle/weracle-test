@@ -2612,6 +2612,87 @@
         }
         window.onLogoUrlInput = onLogoUrlInput;
 
+        // Dynamic Personal Brand Logo Generator for users without uploaded logo (시안 2번: 클래식 럭셔리 & 신뢰)
+function generatePersonalBrandLogoSvg(profile) {
+    const p = profile || window.currentProfile || (window.parent && window.parent.currentProfile) || {};
+    const inpName = document.getElementById('input-name');
+    const rawCandidates = [
+        p.name,
+        p.full_name,
+        inpName ? inpName.value : '',
+        p.real_name,
+        p.nickname,
+        p.user_name,
+        p.email ? p.email.split('@')[0] : ''
+    ];
+    let name = '';
+    for (let c of rawCandidates) {
+        if (c && typeof c === 'string') {
+            const tr = c.trim();
+            if (tr && tr !== '담당 설계사' && tr !== '담당설계사' && tr !== '위라클 파트너') {
+                name = tr;
+                break;
+            }
+        }
+    }
+    if (!name) name = '설계사';
+
+    const inpJob = document.getElementById('input-job-title');
+    const rawRole = (p.position || p.officialTitle || p.official_title || p.job || (inpJob ? inpJob.value : '') || '보험전문가').trim();
+    const inpSlogan = document.getElementById('input-quote');
+    const slogan = (p.slogan || (inpSlogan ? inpSlogan.value : '') || '마음을 전하는').trim();
+    const avatar = p.avatar_url || p.photo_url || p.profile_image || '';
+
+    let avatarSvg = '';
+    if (avatar && avatar.length > 10) {
+        const safeAvatar = avatar.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+        avatarSvg = `
+          <circle cx="38" cy="38" r="35" fill="#ffffff" filter="drop-shadow(0px 3px 6px rgba(2, 132, 199, 0.16))"/>
+          <circle cx="38" cy="38" r="35" fill="none" stroke="#0284c7" stroke-width="3"/>
+          <circle cx="38" cy="38" r="32" fill="#ffffff"/>
+          <image href="${safeAvatar}" x="6" y="6" width="64" height="64" clip-path="url(#pbAvatarClip)" preserveAspectRatio="xMidYMid slice"/>
+          <circle cx="38" cy="38" r="32" fill="none" stroke="rgba(2, 132, 199, 0.2)" stroke-width="1"/>
+        `;
+    } else {
+        avatarSvg = `
+          <circle cx="38" cy="38" r="35" fill="#ffffff" filter="drop-shadow(0px 3px 6px rgba(2, 132, 199, 0.16))"/>
+          <circle cx="38" cy="38" r="35" fill="none" stroke="#0284c7" stroke-width="3"/>
+          <circle cx="38" cy="38" r="32" fill="#f0f9ff"/>
+          <text x="38" y="46" font-family="'Pretendard', sans-serif" font-size="20" font-weight="900" fill="#0284c7" text-anchor="middle">${name.charAt(0)}</text>
+        `;
+    }
+
+    const safeSlogan = slogan.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '');
+    const safeName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const safeRole = rawRole.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 76" width="360" height="76">
+        <defs>
+          <clipPath id="pbAvatarClip">
+            <circle cx="38" cy="38" r="32"/>
+          </clipPath>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Noto+Sans+KR:wght@500;700;900&display=swap');
+            @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+            .pb-slogan { font-family: 'Nanum Myeongjo', serif; font-size: 14.5px; font-weight: 700; font-style: italic; fill: #0284c7; letter-spacing: 0.2px; }
+            .pb-name { font-family: 'Pretendard', sans-serif; font-size: 26px; font-weight: 900; fill: #1e1b4b; letter-spacing: -0.5px; }
+            .pb-divider { font-family: 'Pretendard', sans-serif; font-size: 16px; font-weight: 300; fill: #cbd5e1; }
+            .pb-role { font-family: 'Pretendard', sans-serif; font-size: 14.5px; font-weight: 800; fill: #3b82f6; letter-spacing: 0.2px; }
+          </style>
+        </defs>
+        ${avatarSvg}
+        <text x="86" y="30" class="pb-slogan">“ ${safeSlogan} ”</text>
+        <text x="86" y="62">
+          <tspan class="pb-name">${safeName}</tspan>
+          <tspan dx="10" class="pb-divider">|</tspan>
+          <tspan dx="10" class="pb-role">${safeRole}</tspan>
+        </text>
+    </svg>`;
+
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+window.generatePersonalBrandLogoSvg = generatePersonalBrandLogoSvg;
+
         function importMyPageLogo() {
             const myLogo = window.myPageRegisteredLogo || (function() {
                 try {
@@ -2624,7 +2705,23 @@
             })();
 
             if (!myLogo) {
-                alert('마이페이지에 등록된 로고가 없습니다.\n마이페이지에서 먼저 로고를 등록하시거나, 직접 파일 업로드 버튼을 이용해 주세요.');
+                // 로고 미등록 시 프로필 기반 퍼스널 브랜드 로고 자동 생성
+                const prof = window.currentProfile || (window.parent && window.parent.currentProfile) || JSON.parse(localStorage.getItem('cached_profile') || '{}');
+                const personalLogo = generatePersonalBrandLogoSvg(prof);
+                currentLogoUrl = personalLogo;
+                const logoUrlInput = document.getElementById('input-logo-url');
+                if (logoUrlInput) logoUrlInput.value = personalLogo;
+                const previewImg = document.getElementById('logo-preview-img');
+                const placeholder = document.getElementById('logo-placeholder');
+                if (previewImg) { previewImg.src = personalLogo; previewImg.style.display = 'block'; }
+                if (placeholder) placeholder.style.display = 'none';
+                const mpBadge = document.getElementById('mypage-logo-badge');
+                if (mpBadge) {
+                    mpBadge.textContent = '✨ 퍼스널 브랜드 로고 생성됨';
+                    mpBadge.style.display = 'inline-flex';
+                }
+                syncLivePreview();
+                showToast('✨ 프로필 기반 퍼스널 브랜드 로고가 자동 생성되어 적용되었습니다!');
                 return;
             }
 

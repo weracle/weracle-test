@@ -9,7 +9,7 @@
     <title>데일리 뉴스 생성기 (고객용)</title>
     
     <!-- 캔버스 드로잉용 폰트 (뉴스 디자인 유지) -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Noto+Sans+KR:wght@400;500;700;800;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
     
     <!-- UI용 프리텐다드 및 아이콘 (pdf_p 스타일) -->
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
@@ -558,7 +558,7 @@
         }
         syncProfileFromParent();
 
-        // [핵심] 로고 미등록 시 자동 생성되는 퍼스널 브랜딩 로고 SVG (외곽 테두리 없이 투명 배경)
+        // [핵심] 로고 미등록 시 자동 생성되는 퍼스널 브랜딩 로고 SVG (시안 2번: 클래식 럭셔리 & 신뢰)
         function generatePersonalBrandLogoSvg(profile) {
             const p = profile || getPlannerProfileData() || {};
             const name = resolvePlannerName(p);
@@ -589,30 +589,33 @@
             const safeName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const safeRole = rawRole.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 92" width="380" height="92">
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 92" width="420" height="92">
               <defs>
                 <clipPath id="pbAvatarClip">
                   <circle cx="44" cy="44" r="37.5"/>
                 </clipPath>
                 <style>
+                  @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Noto+Sans+KR:wght@500;700;900&display=swap');
                   @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
-                  .pb-slogan { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 19px; font-weight: 700; fill: #64748b; letter-spacing: -0.3px; }
-                  .pb-name { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 31px; font-weight: 900; fill: #0f172a; letter-spacing: -0.5px; }
-                  .pb-role { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 18px; font-weight: 700; fill: #0284c7; letter-spacing: -0.2px; }
+                  .pb-slogan { font-family: 'Nanum Myeongjo', serif; font-size: 17px; font-weight: 700; font-style: italic; fill: #0284c7; letter-spacing: 0.2px; }
+                  .pb-name { font-family: 'Pretendard', sans-serif; font-size: 33px; font-weight: 900; fill: #1e1b4b; letter-spacing: -0.6px; }
+                  .pb-divider { font-family: 'Pretendard', sans-serif; font-size: 20px; font-weight: 300; fill: #cbd5e1; }
+                  .pb-role { font-family: 'Pretendard', sans-serif; font-size: 17px; font-weight: 800; fill: #3b82f6; letter-spacing: 0.3px; }
                 </style>
               </defs>
               ${avatarSvg}
-              <text x="104" y="37" class="pb-slogan">${safeSlogan}</text>
+              <text x="104" y="37" class="pb-slogan">“ ${safeSlogan} ”</text>
               <text x="104" y="76">
                 <tspan class="pb-name">${safeName}</tspan>
-                <tspan dx="10" class="pb-role">${safeRole}</tspan>
+                <tspan dx="12" class="pb-divider">|</tspan>
+                <tspan dx="12" class="pb-role">${safeRole}</tspan>
               </text>
             </svg>`;
 
             return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
         }
 
-        // [캔버스 직접 렌더링 헬퍼] 데일리뉴스 카드 상단 로고 슬롯(100px)에 즉시 정밀 렌더링
+        // [캔버스 직접 렌더링 헬퍼] 데일리뉴스 카드 상단 로고 슬롯(100px)에 즉시 정밀 렌더링 (시안 2번: 클래식 럭셔리 & 신뢰)
         function drawPersonalBrandLogoDirect(ctx, x, y, maxH, profile) {
             const p = profile || getPlannerProfileData() || {};
             const name = resolvePlannerName(p);
@@ -687,23 +690,31 @@
             ctx.strokeStyle = 'rgba(2, 132, 199, 0.2)';
             ctx.stroke();
 
-            // 2. 슬로건 텍스트 (상단)
+            // 2. 슬로건 텍스트 (상단) - 시안 2번: 나눔명조 이탤릭 + 따옴표 장식
             const textX = x + avatarSize + 18;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'alphabetic';
-            ctx.fillStyle = '#64748b';
-            ctx.font = '700 19px "Pretendard", "Noto Sans KR", sans-serif';
-            ctx.fillText(slogan, textX, y + 42);
+            ctx.fillStyle = '#0284c7';
+            ctx.font = 'italic 700 17px "Nanum Myeongjo", "Batang", serif';
+            ctx.fillText('“ ' + slogan + ' ”', textX, y + 42);
 
-            // 3. 성함 + 직책 텍스트 (하단)
-            ctx.fillStyle = '#0f172a';
-            ctx.font = '900 31px "Pretendard", "Noto Sans KR", sans-serif';
+            // 3. 성함 + 디바이더 + 직책 텍스트 (하단) - 시안 2번: 딥 챠콜 네이비 성함 & 버티컬 바 & 로열 블루 직책
+            ctx.fillStyle = '#1e1b4b';
+            ctx.font = '900 33px "Pretendard", "Noto Sans KR", sans-serif';
             ctx.fillText(name, textX, y + 84);
 
             const nameWidth = ctx.measureText(name).width;
-            ctx.fillStyle = '#0284c7';
-            ctx.font = '700 18px "Pretendard", "Noto Sans KR", sans-serif';
-            ctx.fillText(rawRole, textX + nameWidth + 10, y + 84);
+
+            // 디바이더 바
+            ctx.font = '300 20px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillText('|', textX + nameWidth + 12, y + 83);
+
+            // 직책 텍스트
+            const divWidth = ctx.measureText('|').width;
+            ctx.fillStyle = '#3b82f6';
+            ctx.font = '800 17px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.fillText(rawRole, textX + nameWidth + 12 + divWidth + 12, y + 84);
 
             ctx.restore();
         }

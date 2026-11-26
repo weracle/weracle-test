@@ -1231,7 +1231,7 @@
                     window.currentProfile.user_grade = 'manager';
                 }
 
-                if (savedLogo && !window.currentProfile.logo_url) {
+                if (savedLogo && (!window.currentProfile.logo_url || window.currentProfile.logo_url.includes('560fa4f67c898.png'))) {
                     window.currentProfile.logo_url = savedLogo;
                 }
 
@@ -1446,18 +1446,18 @@
                                     <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 6px;">
                                         <img src="${profile.logo_url}" style="max-width: 100%; max-height: 54px; object-fit: contain;" />
                                     </div>
-                                    <button type="button" id="btn-trigger-logo" class="studio-btn-sm" style="width: 100%; padding: 7px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;">
+                                    <label for="sb-logo-file-input" id="btn-trigger-logo" class="studio-btn-sm" style="width: 100%; padding: 7px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; display: block; text-align: center; cursor: pointer; box-sizing: border-box;">
                                         <i class="fa-solid fa-arrow-rotate-right"></i> 로고 변경하기
-                                    </button>
+                                    </label>
                                 ` : `
-                                    <div class="studio-logo-uploader" id="studio-logo-uploader-btn">
+                                    <label for="sb-logo-file-input" class="studio-logo-uploader" id="studio-logo-uploader-btn" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                                         <i class="fa-regular fa-image" style="font-size: 22px; color: #94a3b8; margin-bottom: 4px;"></i>
                                         <span style="font-weight: 700;">+ 로고 이미지 등록</span>
-                                        <span style="font-size: 11px; color: #94a3b8; margin-top: 2px;">투명 배경 PNG 권장 (최대 2MB)</span>
-                                    </div>
+                                        <span style="font-size: 11px; color: #64748b; margin-top: 2px;">클릭하여 이미지 파일(PNG/JPG) 선택</span>
+                                    </label>
                                 `}
                             </div>
-                            <input type="file" id="sb-logo-file-input" accept="image/*" style="display: none;" />
+                            <input type="file" id="sb-logo-file-input" accept="image/*" style="opacity: 0; position: absolute; z-index: -1; width: 0.1px; height: 0.1px; overflow: hidden;" />
                         </div>
 
                         <!-- 우측: 프로필 상세 입력 폼 -->
@@ -1913,12 +1913,13 @@
                 });
             }
 
-            // Logo file input handler (클라이언트 캔버스 최적화: 용량 초과로 인한 풀림 현상 원천 차단)
+            // Logo file input handler (클라이언트 캔버스 고화질 최적화 및 즉각적인 로컬/서버 동기화)
             const logoInput = this.container.querySelector('#sb-logo-file-input') || document.getElementById('sb-logo-file-input');
             if (logoInput) {
                 logoInput.addEventListener('change', (e) => {
                     const file = e.target.files[0];
                     if (file) {
+                        this.showToast('로고 이미지를 최적화하는 중입니다...');
                         const reader = new FileReader();
                         reader.onload = (event) => {
                             const img = new Image();
@@ -1927,21 +1928,39 @@
                                 const ctx = canvas.getContext('2d');
                                 let width = img.width;
                                 let height = img.height;
-                                const maxW = 420;
-                                const maxH = 180;
+                                const maxW = 500;
+                                const maxH = 220;
                                 if (width > maxW) { height = Math.round(height * (maxW / width)); width = maxW; }
                                 if (height > maxH) { width = Math.round(width * (maxH / height)); height = maxH; }
                                 canvas.width = width; canvas.height = height;
                                 ctx.drawImage(img, 0, 0, width, height);
                                 const compressedLogo = canvas.toDataURL('image/png');
+                                
                                 try {
                                     localStorage.setItem('weracle_user_logo', compressedLogo);
-                                } catch(e) {}
+                                } catch(err) {
+                                    console.warn('localStorage logo save warning:', err);
+                                }
+                                
+                                window.currentProfile = window.currentProfile || {};
+                                window.currentProfile.logo_url = compressedLogo;
+                                if (window.parent) {
+                                    window.parent.currentProfile = window.parent.currentProfile || {};
+                                    window.parent.currentProfile.logo_url = compressedLogo;
+                                }
+
                                 this.updateProfileField('logo_url', compressedLogo);
+                            };
+                            img.onerror = () => {
+                                alert('이미지를 불러오지 못했습니다. 올바른 이미지 파일인지 확인해 주세요.');
                             };
                             img.src = event.target.result;
                         };
+                        reader.onerror = () => {
+                            alert('파일을 읽는 도중 오류가 발생했습니다.');
+                        };
                         reader.readAsDataURL(file);
+                        e.target.value = ''; // 재선택 가능하도록 리셋
                     }
                 });
             }

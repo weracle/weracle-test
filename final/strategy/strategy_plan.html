@@ -1208,9 +1208,12 @@
           if (!logoSrc) return;
           if (customLogo.src === logoSrc && customLogo.isLoaded) return;
           customLogo = new Image();
-          customLogo.crossOrigin = "anonymous";
+          if (!logoSrc.startsWith('data:')) {
+              customLogo.crossOrigin = "anonymous";
+          }
           customLogo.isLoaded = false;
           customLogo.onload = () => { customLogo.isLoaded = true; };
+          customLogo.onerror = () => { console.warn("Failed to load logo", logoSrc.slice(0, 50)); };
           customLogo.src = logoSrc;
       }
 
@@ -1930,8 +1933,11 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
                                   logoH = (logoNaturalH / logoNaturalW) * maxW;
                               }
 
-                              const posX = Math.round(img.width - logoW - marginX);
-                              const posY = marginY;
+                              // [요청 반영: 등록된 회사 로고는 모서리에 박지 않고 기존의 편안한 여백 유지]
+                              const customMarginX = Math.max(24, Math.round(img.width * 0.026));
+                              const customMarginY = Math.max(20, Math.round(img.width * 0.022));
+                              const posX = Math.round(img.width - logoW - customMarginX);
+                              const posY = customMarginY;
 
                               const strokeWidth = Math.max(2, Math.round(logoH * 0.04));
                               const margin = Math.ceil(strokeWidth * 4) + 6;

@@ -7109,19 +7109,8 @@ window.toggleMobileFullMenu = toggleMobileFullMenu;
         var user = res.data && res.data.user;
         if (user) {
           localStorage.setItem('onboarding_done_' + user.id, 'true');
-          await window.sb.auth.updateUser({
-            data: {
-              name: 'Meta Reviewer',
-              nickname: 'Meta Reviewer',
-              phone: '010-0000-0000',
-              company: 'Meta App Review',
-              position: 'Reviewer',
-              onboarding_done: true,
-              registered_devices: []
-            }
-          }).catch(function () {});
-
-          await window.sb.from('profiles').upsert({
+          window.currentUser = user;
+          window.sb.from('profiles').upsert({
             id: user.id,
             email: REVIEWER_EMAIL,
             name: 'Meta Reviewer',
@@ -7130,21 +7119,19 @@ window.toggleMobileFullMenu = toggleMobileFullMenu;
             company: 'Meta App Review',
             position: 'Reviewer',
             user_grade: 'vip'
-          }).catch(function () {});
+          }).then(function () {}, function () {});
         }
 
         activateReviewerBypass();
         wrap.remove();
         window.history.replaceState({}, document.title, window.location.pathname);
 
-        if (typeof window.checkSession === 'function') {
-          await window.checkSession();
-        }
-        activateReviewerBypass();
-
-        if (typeof window.loadSubPage === 'function') {
-          window.loadSubPage('광고관리', '광고관리', 'meta_ads.html');
-        }
+        setTimeout(function () {
+          activateReviewerBypass();
+          if (typeof window.loadSubPage === 'function') {
+            window.loadSubPage('광고관리', '광고관리', 'meta_ads.html');
+          }
+        }, 400);
       } catch (err) {
         errBox.style.display = 'block';
         errBox.innerText = 'Sign-in failed: ' + (err.message || 'Invalid credentials');

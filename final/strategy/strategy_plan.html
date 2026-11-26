@@ -998,6 +998,178 @@
           ctx.restore();
       }
 
+
+      // [시안 B: 코너 도킹 일체형 박스형 네임표 캔버스 렌더러]
+      function drawCornerDockedBrandBadge(ctx, imgW, imgH, profile) {
+          try {
+              const p = profile || (typeof getPlannerProfileData === 'function' ? getPlannerProfileData() : {}) || {};
+              const name = typeof resolvePlannerName === 'function' ? resolvePlannerName(p) : (p.name || '설계사');
+              const rawRole = typeof resolvePlannerRole === 'function' ? resolvePlannerRole(p) : (p.position || '보험전문가');
+              const slogan = typeof resolvePlannerSlogan === 'function' ? resolvePlannerSlogan(p) : (p.slogan || '마음을 전하는');
+
+              // 카드 가로폭 35% 비례 크기로 자연스럽게 스케일링
+              const baseW = Math.round(imgW * 0.35);
+              const scale = Math.max(0.65, Math.min(1.45, baseW / 380));
+
+              // 폰트 설정
+              const sloganFont = 'italic 700 ' + Math.round(15 * scale) + 'px "Nanum Myeongjo", "Batang", serif';
+              const nameFont = '900 ' + Math.round(28 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+              const divFont = '300 ' + Math.round(18 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+              const roleFont = '800 ' + Math.round(16 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+
+              // 텍스트 실측
+              ctx.save();
+              ctx.font = sloganFont;
+              const sloganW = ctx.measureText('“ ' + slogan + ' ”').width;
+              ctx.font = nameFont;
+              const nameW = ctx.measureText(name).width;
+              ctx.font = divFont;
+              const divW = ctx.measureText('|').width;
+              ctx.font = roleFont;
+              const roleW = ctx.measureText(rawRole).width;
+              ctx.restore();
+
+              const nameRowW = nameW + Math.round(10 * scale) + divW + Math.round(10 * scale) + roleW;
+              const maxTextW = Math.max(sloganW, nameRowW);
+
+              // 박스 내부 여백 및 치수 계산 (시안 B 코너 도킹 일체형)
+              const padLeft = Math.round(16 * scale);
+              const avatarSize = Math.round(76 * scale);
+              const gap = Math.round(14 * scale);
+              const padRight = Math.round(20 * scale);
+
+              const boxW = Math.ceil(padLeft + avatarSize + gap + maxTextW + padRight);
+              const padTop = Math.round(10 * scale);
+              const padBottom = Math.round(10 * scale);
+              const boxH = Math.round(padTop + avatarSize + padBottom);
+
+              // 우측 상단 모서리에 완벽하게 도킹
+              const boxX = imgW - boxW;
+              const boxY = 0;
+              const radiusBL = Math.round(20 * scale);
+
+              ctx.save();
+
+              // 1. 박스 그림자 (하단 및 좌측으로 부드럽게 퍼짐)
+              ctx.save();
+              ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
+              ctx.shadowBlur = Math.round(16 * scale);
+              ctx.shadowOffsetX = Math.round(-4 * scale);
+              ctx.shadowOffsetY = Math.round(6 * scale);
+
+              // 2. 박스 배경 (순백색 #ffffff, 좌측 하단만 20px 둥글게)
+              ctx.beginPath();
+              ctx.moveTo(boxX, 0);
+              ctx.lineTo(imgW, 0);
+              ctx.lineTo(imgW, boxH);
+              ctx.lineTo(boxX + radiusBL, boxH);
+              ctx.quadraticCurveTo(boxX, boxH, boxX, boxH - radiusBL);
+              ctx.lineTo(boxX, 0);
+              ctx.closePath();
+              ctx.fillStyle = '#ffffff';
+              ctx.fill();
+              ctx.restore();
+
+              // 3. 박스 테두리선 (왼쪽 선과 아래쪽 선에 스카이블루 #0284c7 보더)
+              ctx.save();
+              ctx.beginPath();
+              ctx.moveTo(boxX, 0);
+              ctx.lineTo(boxX, boxH - radiusBL);
+              ctx.quadraticCurveTo(boxX, boxH, boxX + radiusBL, boxH);
+              ctx.lineTo(imgW, boxH);
+              ctx.lineWidth = Math.max(2, Math.round(3 * scale));
+              ctx.strokeStyle = '#0284c7';
+              ctx.lineCap = 'square';
+              ctx.stroke();
+              ctx.restore();
+
+              // 4. 원형 아바타 렌더링
+              const cx = boxX + padLeft + avatarSize / 2;
+              const cy = boxY + boxH / 2;
+              const radius = avatarSize / 2;
+
+              // 아바타 외곽 스카이블루 테두리
+              ctx.beginPath();
+              ctx.arc(cx, cy, radius - 1.5 * scale, 0, Math.PI * 2);
+              ctx.lineWidth = Math.max(2, Math.round(2.5 * scale));
+              ctx.strokeStyle = '#0284c7';
+              ctx.stroke();
+
+              // 아바타 내부 사진 / 이니셜
+              const photoRadius = radius - 4 * scale;
+              ctx.save();
+              ctx.beginPath();
+              ctx.arc(cx, cy, photoRadius, 0, Math.PI * 2);
+              ctx.clip();
+
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+
+              if (typeof plannerAvatarImg !== 'undefined' && plannerAvatarImg && plannerAvatarImg.isLoaded && plannerAvatarImg.src) {
+                  try {
+                      ctx.drawImage(plannerAvatarImg, cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+                  } catch(e) {
+                      ctx.fillStyle = '#f0f9ff';
+                      ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+                      ctx.fillStyle = '#0284c7';
+                      ctx.font = '900 ' + Math.round(24 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+                      ctx.textAlign = 'center';
+                      ctx.textBaseline = 'middle';
+                      ctx.fillText(name.charAt(0), cx, cy);
+                  }
+              } else {
+                  ctx.fillStyle = '#f0f9ff';
+                  ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+                  ctx.fillStyle = '#0284c7';
+                  ctx.font = '900 ' + Math.round(24 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  ctx.fillText(name.charAt(0), cx, cy);
+              }
+              ctx.restore();
+
+              // 아바타 미세 경계선
+              ctx.beginPath();
+              ctx.arc(cx, cy, photoRadius, 0, Math.PI * 2);
+              ctx.lineWidth = 1;
+              ctx.strokeStyle = 'rgba(2, 132, 199, 0.2)';
+              ctx.stroke();
+
+              // 5. 텍스트 렌더링
+              const textX = boxX + padLeft + avatarSize + gap;
+              ctx.textAlign = 'left';
+
+              // A. 슬로건 (나눔명조 이탤릭 따옴표 #0284c7)
+              const sloganY = Math.round(boxY + boxH / 2 - 8 * scale);
+              ctx.font = sloganFont;
+              ctx.textBaseline = 'alphabetic';
+              ctx.fillStyle = '#0284c7';
+              ctx.fillText('“ ' + slogan + ' ”', textX, sloganY);
+
+              // B. 성함 (프리텐다드 900 딥 챠콜 네이비 #0f172a)
+              const nameY = Math.round(boxY + boxH / 2 + 25 * scale);
+              ctx.font = nameFont;
+              ctx.fillStyle = '#0f172a';
+              ctx.fillText(name, textX, nameY);
+
+              // C. 디바이더 버티컬 바 (| #cbd5e1)
+              const divX = textX + nameW + Math.round(9 * scale);
+              ctx.font = divFont;
+              ctx.fillStyle = '#cbd5e1';
+              ctx.fillText('|', divX, nameY - 1 * scale);
+
+              // D. 직책/역할 (프리텐다드 800 로열 블루 #0284c7)
+              const roleX = divX + divW + Math.round(9 * scale);
+              ctx.font = roleFont;
+              ctx.fillStyle = '#0284c7';
+              ctx.fillText(rawRole, roleX, nameY);
+
+              ctx.restore();
+          } catch(e) {
+              console.warn('drawCornerDockedBrandBadge error:', e);
+          }
+      }
+
       function getPersonalBrandLogoWidth(ctx, maxH, profile) {
           try {
               const p = profile || getPlannerProfileData() || {};
@@ -1792,15 +1964,9 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
                               octx.drawImage(customLogo, ox, oy, logoW, logoH);
                               ctx.drawImage(off, posX - ox, posY - oy);
                           } else {
-                              // 가로폭 34% 비례 크기로 시원하고 크게, 실제 너비 측정 기반 우측 상단 구석 밀착 렌더링
+                              // [요청 반영: 시안 B 코너 도킹 일체형 박스형 네임표 렌더링]
                               const prof = getPlannerProfileData();
-                              const baseW = Math.round(img.width * 0.34);
-                              const logoH = Math.round(baseW * (92 / 420));
-                              const actualLogoW = getPersonalBrandLogoWidth(ctx, logoH, prof);
-                              const posX = Math.round(img.width - actualLogoW - marginX);
-                              const posY = marginY;
-
-                              drawPersonalBrandLogoDirect(ctx, posX, posY, logoH, prof);
+                              drawCornerDockedBrandBadge(ctx, img.width, img.height, prof);
                           }
                       }
                       

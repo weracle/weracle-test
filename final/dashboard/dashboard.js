@@ -237,7 +237,10 @@ function copyMyCardLink() {
 
 function openConnectedSheet() {
   const profile = getParentProp('currentProfile') || window.currentProfile;
-  const sheetId = localStorage.getItem('g_sheet_id') || localStorage.getItem('user_spreadsheet_id') || (profile && profile.google_sheet_id);
+  const user = getParentProp('currentUser') || window.currentUser;
+  const uId = user ? user.id : (profile ? profile.id : null);
+  // [다중 사용자 격리] 1순위: 현재 로그인된 프로필의 DB google_sheet_id, 2순위: 유저 ID별 격리 키
+  const sheetId = (profile && profile.google_sheet_id) || (uId ? localStorage.getItem('g_sheet_id_' + uId) : null);
   if (sheetId) {
     window.open(`https://docs.google.com/spreadsheets/d/${sheetId}/edit`, '_blank');
   } else {
@@ -1756,7 +1759,9 @@ async function loadDataAndRender() {
     // 2. If still empty, check google sheet directly using gToken
     if ((!crmData || crmData.length === 0) && window.gToken) {
       const profile = getParentProp('currentProfile');
-      const sheetId = localStorage.getItem('g_sheet_id') || localStorage.getItem('user_spreadsheet_id') || (profile && profile.google_sheet_id);
+      const user = getParentProp('currentUser') || window.currentUser;
+      const uId = user ? user.id : (profile ? profile.id : null);
+      const sheetId = (profile && profile.google_sheet_id) || (uId ? localStorage.getItem('g_sheet_id_' + uId) : null);
       if (sheetId) {
         try {
           const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/weraclecrm!A:Z`, {

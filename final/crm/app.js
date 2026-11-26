@@ -722,16 +722,15 @@ if (memoryAccessToken) {
     syncCredentialsToSupabase(memoryAccessToken, null);
 }
 if (profile && profile.google_sheet_id) {
-try { localStorage.setItem("g_sheet_id", profile.google_sheet_id); } catch(e) {}
-spreadsheetId = profile.google_sheet_id;
-console.log("Sync: Google Sheet ID loaded from Supabase profile.");
+    const uId = profile.id || (window.currentUser && window.currentUser.id);
+    if (uId) try { localStorage.setItem("g_sheet_id_" + uId, profile.google_sheet_id); } catch(e) {}
+    try { localStorage.setItem("g_sheet_id", profile.google_sheet_id); } catch(e) {}
+    spreadsheetId = profile.google_sheet_id;
+    console.log("Sync: Google Sheet ID loaded from Supabase profile.");
 } else {
-const localSheetId = spreadsheetId || (function() { try { return localStorage.getItem("g_sheet_id"); } catch(e) { return null; } })();
-if (localSheetId) {
-spreadsheetId = localSheetId;
-console.log("Sync: Fallback to cached Google Sheet ID:", spreadsheetId);
-syncCredentialsToSupabase(null, spreadsheetId);
-}
+    // [계정 오염 차단] 현재 계정에 시트가 없을 때는 절대로 로컬스토리지의 타 계정 시트 ID를 DB로 역동기화하지 않음
+    spreadsheetId = "";
+    console.log("Sync: No sheet ID found for current user profile. Waiting for user's own sheet link.");
 }
 
 // 화면 전환 및 로드
@@ -817,14 +816,13 @@ if (memoryAccessToken) {
     syncCredentialsToSupabase(memoryAccessToken, null);
 }
 if (profile && profile.google_sheet_id) {
-try { localStorage.setItem("g_sheet_id", profile.google_sheet_id); } catch(e) {}
-spreadsheetId = profile.google_sheet_id;
+    const uId = profile.id || (window.currentUser && window.currentUser.id);
+    if (uId) try { localStorage.setItem("g_sheet_id_" + uId, profile.google_sheet_id); } catch(e) {}
+    try { localStorage.setItem("g_sheet_id", profile.google_sheet_id); } catch(e) {}
+    spreadsheetId = profile.google_sheet_id;
 } else {
-const localSheetId = spreadsheetId || (function() { try { return localStorage.getItem("g_sheet_id"); } catch(e) { return null; } })();
-if (localSheetId) {
-spreadsheetId = localSheetId;
-syncCredentialsToSupabase(null, spreadsheetId);
-}
+    // [계정 오염 차단] 타 계정 캐시 DB 오염 방지
+    spreadsheetId = "";
 }
 
 // 구글 연동 여부 체크하여 강제 전환
@@ -1436,17 +1434,20 @@ return;
 const token = await ensureValidToken();
 if (!token) { window.isSubmittingCrm = false; return; }
 // 0. 시트ID 복원 시도 (localStorage → Supabase profile 순서 - 다중 사용자 개별 연동 보장)
-  if (!spreadsheetId) {
-      const cachedSheetId = (function() { try { return localStorage.getItem('g_sheet_id'); } catch(e) { return null; } })();
-      if (cachedSheetId) {
-          spreadsheetId = cachedSheetId;
-          console.log(" 시트ID 로컬캐시에서 복원:", spreadsheetId);
-      }
-  }
-  if (!spreadsheetId && window.currentProfile && window.currentProfile.google_sheet_id) {
+  // 0. [다중 사용자 개별 연동 보장] 1순위는 무조건 현재 로그인한 사용자 DB 프로필!
+  const currentUserId = (window.currentUser && window.currentUser.id) || (window.currentProfile && window.currentProfile.id) || (window.parent && window.parent.currentUser && window.parent.currentUser.id);
+  if (window.currentProfile && window.currentProfile.google_sheet_id) {
       spreadsheetId = window.currentProfile.google_sheet_id;
+      if (currentUserId) try { localStorage.setItem("g_sheet_id_" + currentUserId, spreadsheetId); } catch(e) {}
       try { localStorage.setItem("g_sheet_id", spreadsheetId); } catch(e) {}
       console.log(" 시트ID 로그인 사용자 Supabase 프로필에서 복원:", spreadsheetId);
+  } else if (!spreadsheetId && currentUserId) {
+      // 2순위: 현재 유저 ID로 격리된 캐시만 참조 (타 계정 캐시 절대 참조 금지)
+      const userCachedSheetId = (function() { try { return localStorage.getItem('g_sheet_id_' + currentUserId); } catch(e) { return null; } })();
+      if (userCachedSheetId) {
+          spreadsheetId = userCachedSheetId;
+          console.log(" 시트ID 사용자별 로컬캐시에서 복원:", spreadsheetId);
+      }
   }
 
   // 0.5. 검증: 시트가 유효한지 (휴지통에 있거나 삭제되지 않았는지) 확인

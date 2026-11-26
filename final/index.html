@@ -4996,14 +4996,16 @@ if (event.data && event.data.type === 'CRM_RESIZE') {
 // 자식 iframe(CRM)에서 세션 요청 신호가 왔을 때 즉시 전송
 else if (event.data && event.data.type === 'CRM_TOKEN_UPDATED') {
     console.log(" Received updated CRM tokens from iframe.");
-    if (event.data.google_sheet_id) {
+    if (event.data.google_sheet_id && window.currentUser) {
+        const uId = window.currentUser.id;
+        localStorage.setItem('g_sheet_id_' + uId, event.data.google_sheet_id);
         localStorage.setItem('g_sheet_id', event.data.google_sheet_id);
         if (window.currentProfile) window.currentProfile.google_sheet_id = event.data.google_sheet_id;
         
         // Update Supabase DB since iframe cannot do it
-        if (window.sb && window.currentUser) {
+        if (window.sb) {
             window.sb.from('profiles').update({ google_sheet_id: event.data.google_sheet_id })
-                .eq('id', window.currentUser.id)
+                .eq('id', uId)
                 .then(({error}) => { if (error) console.error("Failed to sync sheet ID to Supabase:", error); });
         }
     }
@@ -5139,13 +5141,16 @@ link.setAttribute('href', '/shop_integrated.html');
 // 마이페이지 이동 패치
 window.openLinkedGoogleSheet = function() {
     const profile = window.currentProfile || {};
-    const sheetId = localStorage.getItem('g_sheet_id') || localStorage.getItem('user_spreadsheet_id') || profile.google_sheet_id;
+    const userId = window.currentUser ? window.currentUser.id : (profile ? profile.id : null);
+    // [다중 사용자 격리] 1순위: 현재 로그인된 프로필의 DB google_sheet_id, 2순위: 사용자 ID별 격리 캐시
+    const sheetId = (profile && profile.google_sheet_id) || (userId ? localStorage.getItem('g_sheet_id_' + userId) : null);
     if (sheetId) {
         window.open('https://docs.google.com/spreadsheets/d/' + sheetId + '/edit', '_blank');
     } else {
-        alert('현재 계정에 연동된 구글 시트를 찾을 수 없습니다.\n대시보드에서 시트 연동을 먼저 진행해 주세요.');
+        alert('현재 로그인된 계정(' + (window.currentUser?.email || '회원') + ')에 연동된 구글 시트를 찾을 수 없습니다.\n대시보드 또는 고객관리(CRM) 페이지에서 본인 구글 계정으로 시트를 연동해 주세요.');
     }
 };
+
 
 window.loginToWeracleTalk = function() {
     if (!window.currentUser) {
@@ -5340,6 +5345,18 @@ async function checkSession() {
             window.currentProfile = profile;
             try {
                 localStorage.setItem('cached_profile', JSON.stringify(window.currentProfile));
+                if (window.currentUser) {
+                    const uId = window.currentUser.id;
+                    if (profile && profile.google_sheet_id) {
+                        localStorage.setItem('g_sheet_id_' + uId, profile.google_sheet_id);
+                        localStorage.setItem('g_sheet_id', profile.google_sheet_id);
+                    } else {
+                        // [계정 오염 차단] 현재 계정에 연동된 시트가 없으면 이전 계정의 잔여 캐시 즉시 파기
+                        localStorage.removeItem('g_sheet_id');
+                        localStorage.removeItem('user_spreadsheet_id');
+                        localStorage.removeItem('g_sheet_id_' + uId);
+                    }
+                }
             } catch(e) {}
             
             // 기기 등록 자동 동기화 (최대 3대)
@@ -5889,8 +5906,12 @@ async function handleLogout() {
   try {
       localStorage.removeItem('weracle_preview_login');
       localStorage.removeItem('g_sheet_id');
+      localStorage.removeItem('user_spreadsheet_id');
       localStorage.removeItem('g_access_token');
       localStorage.removeItem('google_access_token');
+      if (window.currentUser) {
+          localStorage.removeItem('g_sheet_id_' + window.currentUser.id);
+      }
       if (window.sb) {
           await window.sb.auth.signOut();
       }

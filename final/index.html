@@ -5216,6 +5216,27 @@ async function checkSession() {
             window.currentUser = data.session.user;
             wIsLoggedIn = true;
 
+            // [초고속 즉시 반응형 UI] 세션 확인 즉시 0.1초 만에 상단 프로필 헤더 갱신 (지연 체감 100% 해소)
+            try {
+                let quickProf = window.currentProfile;
+                if (!quickProf) {
+                    const rawCached = localStorage.getItem('cached_profile');
+                    if (rawCached) quickProf = JSON.parse(rawCached);
+                }
+                if (!quickProf) {
+                    const uMeta = window.currentUser.user_metadata || {};
+                    quickProf = {
+                        nickname: uMeta.full_name || uMeta.name || uMeta.nickname || window.currentUser.email?.split('@')[0],
+                        avatar_url: uMeta.avatar_url || uMeta.picture || ('https://api.dicebear.com/7.x/bottts/svg?seed=' + window.currentUser.id),
+                        user_grade: uMeta.user_grade || 'basic'
+                    };
+                }
+                window.currentProfile = quickProf;
+                if (typeof updateProfileUI === 'function') {
+                    updateProfileUI(window.currentUser, window.currentProfile);
+                }
+            } catch(e) {}
+
             // OAuth 리다이렉트 후 브라우저 주소창의 긴 해시(#access_token=...) 깔끔하게 자동 정리
             if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('provider_token'))) {
                 try {

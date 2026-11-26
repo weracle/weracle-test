@@ -225,6 +225,7 @@ async function updateSessionState(session) {
                 id: session.user.id,
                 email: session.user.email,
                 nickname: session.user.user_metadata?.nickname || session.user.email.split('@')[0],
+                slogan: session.user.user_metadata?.slogan || '',
                 user_grade: 'basic',
                 subscription_status: 'none',
                 fax_quota: 0,

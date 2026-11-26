@@ -1078,6 +1078,13 @@
                                     <button class="sb-btn-inline-edit" data-field="nickname" style="${btnStyle}">변경</button>
                                 </div>
                                 <div>${gradeBadge}</div>
+                                <!-- 슬로건 뱃지 -->
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 4px; box-sizing: border-box;">
+                                    <span style="font-size: 12px; font-weight: 600; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 4px 10px; border-radius: 9999px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${this.escapeHtml(profile.slogan || userMeta.slogan || '나만의 슬로건을 등록해보세요!')}">
+                                        "${this.escapeHtml(profile.slogan || userMeta.slogan || '나만의 슬로건을 등록해보세요!')}"
+                                    </span>
+                                    <button class="sb-btn-inline-edit" data-field="slogan" style="${btnStyle}; font-size: 11px; padding: 2px 7px;">변경</button>
+                                </div>
                             </div>
                             
                             <!-- 전용 로고 -->
@@ -1157,6 +1164,13 @@
                                     <div style="display:flex; align-items:center; gap: 8px; min-width: 0;">
                                         <span style="font-weight:700; color:#1e293b; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${this.escapeHtml(profile.phone || userMeta.phone || '010-8765-4321')}</span>
                                         <button class="sb-btn-inline-edit" data-field="phone" style="${btnStyle}">변경</button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-top:12px; align-items: center; flex-wrap: nowrap; gap: 8px;">
+                                    <span style="color:#64748b; font-weight:600; font-size: 13.5px; flex-shrink: 0;">나의 슬로건</span>
+                                    <div style="display:flex; align-items:center; gap: 8px; min-width: 0;">
+                                        <span style="font-weight:700; color:#1e293b; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;" title="${this.escapeHtml(profile.slogan || userMeta.slogan || '등록된 슬로건이 없습니다.')}">${this.escapeHtml(profile.slogan || userMeta.slogan || '등록된 슬로건이 없습니다.')}</span>
+                                        <button class="sb-btn-inline-edit" data-field="slogan" style="${btnStyle}">변경</button>
                                     </div>
                                 </div>
                             </div>
@@ -1316,6 +1330,9 @@
                     if (field === 'nickname') {
                         const val = prompt('새로운 닉네임을 입력하세요:', profile.nickname || '');
                         if (val !== null && val.trim() !== '') this.updateProfileField('nickname', val.trim());
+                    } else if (field === 'slogan') {
+                        const val = prompt('새로운 슬로건(나의 각오 / 한 줄 소개)을 입력하세요:', profile.slogan || userMeta.slogan || '');
+                        if (val !== null) this.updateProfileField('slogan', val.trim());
                     } else if (field === 'company') {
                         const val = prompt('새로운 소속을 입력하세요:', profile.company || '');
                         if (val !== null) this.updateProfileField('company', val.trim());

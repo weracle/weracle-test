@@ -6083,8 +6083,11 @@ const dashResolutionText = document.getElementById('dashResolutionText');
         });
     }
 
-if (dashResolutionText && targetObj['이번달_다짐']) {
-dashResolutionText.innerText = `"${targetObj['이번달_다짐']}"`;
+if (dashResolutionText) {
+    const activeSlogan = (window.currentProfile && window.currentProfile.slogan) || targetObj['이번달_다짐'] || targetObj['다짐'];
+    if (activeSlogan) {
+        dashResolutionText.innerText = `"${activeSlogan}"`;
+    }
 }
 }
 window.openDynamicList = function(type, val) {
@@ -6134,6 +6137,11 @@ window.openDynamicList = function(type, val) {
                 <div>
                     <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 5px;">플랫폼 닉네임 <span style="color:#ef4444;">*</span></label>
                     <input type="text" id="w-onboarding-nickname" placeholder="플랫폼 활동 닉네임" required style="width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 14px; box-sizing: border-box; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="this.style.borderColor='#cbd5e1'">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 5px;">나의 슬로건 / 한 줄 각오</label>
+                    <input type="text" id="w-onboarding-slogan" placeholder="예: 언제나 고객 곁을 지키는 든든한 동반자" style="width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 14px; box-sizing: border-box; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#0284c7'" onblur="this.style.borderColor='#cbd5e1'">
                 </div>
 
                 <button type="submit" style="width: 100%; margin-top: 10px; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 12px; font-size: 15.5px; font-weight: 800; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);">
@@ -6205,6 +6213,7 @@ window.openDynamicList = function(type, val) {
         const position = document.getElementById('w-onboarding-position').value.trim();
         const phone = document.getElementById('w-onboarding-phone').value.trim();
         const nickname = document.getElementById('w-onboarding-nickname').value.trim();
+        const slogan = document.getElementById('w-onboarding-slogan') ? document.getElementById('w-onboarding-slogan').value.trim() : '';
 
         if(!name || !company || !position || !phone || !nickname) {
             alert('모든 필수 항목을 입력해 주세요.');
@@ -6223,7 +6232,8 @@ window.openDynamicList = function(type, val) {
                 company: company,
                 nickname: nickname,
                 name: name,
-                position: position
+                position: position,
+                slogan: slogan
             };
 
             // 1. Supabase profiles 테이블 업데이트
@@ -6251,6 +6261,7 @@ window.openDynamicList = function(type, val) {
                         position: position,
                         phone: phone,
                         nickname: nickname,
+                        slogan: slogan,
                         onboarding_done: true
                     }
                 });

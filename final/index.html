@@ -4785,7 +4785,7 @@ const mf = document.getElementById('mainFrame');
 if (token && mf && mf.contentWindow) {
   mf.contentWindow.postMessage({ type: 'GOOGLE_TOKEN', token: token }, '*');
 }
-} else if (event.data && event.data.type === 'requestLogo') {
+} else if (event.data && (event.data.type === 'requestLogo' || event.data.type === 'requestProfile')) {
 let logoData = (window.currentProfile && window.currentProfile.logo_url) || localStorage.getItem('weracle_user_logo');
 if (!logoData) {
   try {
@@ -4793,8 +4793,17 @@ if (!logoData) {
     if (cp && cp.logo_url) logoData = cp.logo_url;
   } catch(e) {}
 }
-if (logoData && event.source) {
-  event.source.postMessage({ type: 'setLogo', data: logoData }, '*');
+if (event.source) {
+  if (logoData) {
+    event.source.postMessage({ type: 'setLogo', data: logoData }, '*');
+  }
+  if (window.currentProfile || window.currentUser) {
+    event.source.postMessage({
+      type: 'setProfile',
+      profile: window.currentProfile,
+      user: window.currentUser ? { email: window.currentUser.email, user_metadata: window.currentUser.user_metadata } : null
+    }, '*');
+  }
 }
 }
 });
@@ -5312,12 +5321,16 @@ async function checkSession() {
             const meta = window.currentUser ? (window.currentUser.user_metadata || {}) : {};
             if (profile) {
                 profile.phone = profile.phone || meta.phone || localStorage.getItem('user_phone_' + window.currentUser?.id) || '';
-                profile.name = profile.name || meta.name || '';
+                profile.name = profile.name || meta.name || meta.full_name || '';
                 profile.company = profile.company || meta.company || '';
                 profile.position = profile.position || meta.position || '';
-                profile.nickname = profile.nickname || meta.nickname || '';
+                profile.nickname = profile.nickname || meta.nickname || meta.full_name || meta.name || (window.currentUser?.email ? window.currentUser.email.split('@')[0] : '');
+                profile.slogan = profile.slogan || meta.slogan || '';
             }
             window.currentProfile = profile;
+            try {
+                localStorage.setItem('cached_profile', JSON.stringify(window.currentProfile));
+            } catch(e) {}
             
             // 기기 등록 자동 동기화 (최대 3대)
             if (window.currentUser && typeof syncUserDeviceRegistration === 'function') {

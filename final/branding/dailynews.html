@@ -339,29 +339,161 @@
         let customLogo = new Image();
         customLogo.crossOrigin = "anonymous";
 
-        // 설계사 프로필 데이터 조회
+        // 설계사 프로필 데이터 조회 (다중 소스 통합 추출)
         function getPlannerProfileData() {
             let prof = {};
+            let userObj = null;
+
+            // 1. 부모창(window.parent) 객체 탐색
             try {
-                if (window.parent && window.parent !== window && window.parent.currentProfile) {
-                    prof = Object.assign({}, window.parent.currentProfile);
+                if (window.parent && window.parent !== window) {
+                    if (window.parent.currentProfile && typeof window.parent.currentProfile === 'object') {
+                        Object.assign(prof, window.parent.currentProfile);
+                    }
+                    if (window.parent.currentUser && typeof window.parent.currentUser === 'object') {
+                        userObj = window.parent.currentUser;
+                    }
                 }
             } catch(e) {}
-            try {
-                const raw = localStorage.getItem('cached_profile');
-                if (raw) {
-                    const p = JSON.parse(raw);
-                    prof = Object.assign({}, p, prof);
-                }
-            } catch(e) {}
-            try {
-                const rawWeracle = localStorage.getItem('weracle_user_profile');
-                if (rawWeracle) {
-                    const p = JSON.parse(rawWeracle);
-                    prof = Object.assign({}, p, prof);
-                }
-            } catch(e) {}
+
+            // 2. localStorage 탐색 (속성별 안전 병합)
+            const storageKeys = ['cached_profile', 'weracle_current_profile', 'weracle_user_profile'];
+            for (const key of storageKeys) {
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && typeof parsed === 'object') {
+                            for (const k in parsed) {
+                                if (parsed[k] !== undefined && parsed[k] !== null && parsed[k] !== '') {
+                                    if (!prof[k] || prof[k] === '') {
+                                        prof[k] = parsed[k];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // 3. Supabase 인증 토큰 (sb-*-auth-token) 탐색
+            if (!userObj) {
+                try {
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const k = localStorage.key(i);
+                        if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+                            const raw = localStorage.getItem(k);
+                            if (raw) {
+                                const parsed = JSON.parse(raw);
+                                if (parsed && parsed.user) {
+                                    userObj = parsed.user;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // 4. currentUser 정보에서 이름, 슬로건, 직책 보강
+            if (userObj) {
+                const meta = userObj.user_metadata || {};
+                prof.email = prof.email || userObj.email || '';
+                prof.user_metadata = Object.assign({}, meta, prof.user_metadata || {});
+                if (!prof.name) prof.name = meta.name || meta.full_name || meta.user_name || '';
+                if (!prof.nickname) prof.nickname = meta.nickname || meta.full_name || meta.name || (userObj.email ? userObj.email.split('@')[0] : '');
+                if (!prof.slogan) prof.slogan = meta.slogan || '';
+                if (!prof.position) prof.position = meta.position || meta.job || '';
+                if (!prof.avatar_url) prof.avatar_url = meta.avatar_url || meta.picture || '';
+            }
+
             return prof;
+        }
+
+        // 설계사 실명(성함) 추출 헬퍼 (모든 필드 포괄, '담당 설계사' 절대 노출 방지)
+        function resolvePlannerName(profile) {
+            const p = profile || getPlannerProfileData() || {};
+            const meta = p.user_metadata || {};
+            
+            // 실명/이름 우선 탐색 후보 목록
+            const candidates = [
+                p.name,
+                p.full_name,
+                meta.name,
+                meta.full_name,
+                p.real_name,
+                p.nickname,
+                meta.nickname,
+                p.user_name,
+                p.userName,
+                meta.user_name
+            ];
+
+            for (let c of candidates) {
+                if (c && typeof c === 'string') {
+                    const trimmed = c.trim();
+                    if (trimmed && 
+                        trimmed !== '담당 설계사' && 
+                        trimmed !== '담당설계사' && 
+                        trimmed !== '위라클 파트너' && 
+                        trimmed !== '위라클회원' && 
+                        trimmed !== 'null' && 
+                        trimmed !== 'undefined') {
+                        return trimmed;
+                    }
+                }
+            }
+
+            // 이메일 아이디 (예: boheomdapda)
+            const email = p.email || (window.parent && window.parent.currentUser && window.parent.currentUser.email) || '';
+            if (email && email.includes('@')) {
+                const idPart = email.split('@')[0];
+                if (idPart && idPart.trim()) return idPart.trim();
+            }
+
+            return (p.nickname || p.name || '설계사').trim();
+        }
+
+        // 설계사 직책/역할 추출 헬퍼
+        function resolvePlannerRole(profile) {
+            const p = profile || getPlannerProfileData() || {};
+            const meta = p.user_metadata || {};
+            const roleCandidates = [
+                p.position,
+                p.officialTitle,
+                p.official_title,
+                p.job,
+                meta.position,
+                meta.job
+            ];
+            for (let r of roleCandidates) {
+                if (r && typeof r === 'string') {
+                    const trimmed = r.trim();
+                    if (trimmed && trimmed !== 'null' && trimmed !== 'undefined') {
+                        return trimmed;
+                    }
+                }
+            }
+            return '보험전문가';
+        }
+
+        // 설계사 슬로건 추출 헬퍼
+        function resolvePlannerSlogan(profile) {
+            const p = profile || getPlannerProfileData() || {};
+            const meta = p.user_metadata || {};
+            const sloganCandidates = [
+                p.slogan,
+                meta.slogan
+            ];
+            for (let s of sloganCandidates) {
+                if (s && typeof s === 'string') {
+                    const trimmed = s.trim();
+                    if (trimmed && trimmed !== 'null' && trimmed !== 'undefined') {
+                        return trimmed;
+                    }
+                }
+            }
+            return '마음을 전하는';
         }
 
         // 직접 등록한 회사/개인 로고 확인 (기존 기본 fallback 로고 560fa4f67c898 제외)
@@ -394,7 +526,7 @@
 
         function preloadPlannerAvatar() {
             const p = getPlannerProfileData();
-            const avatar = p.avatar_url || p.photo_url || p.profile_image || '';
+            const avatar = p.avatar_url || p.photo_url || p.profile_image || (p.user_metadata && (p.user_metadata.avatar_url || p.user_metadata.picture)) || '';
             if (avatar && avatar.length > 10 && !avatar.includes('consultant_model.jpg')) {
                 if (plannerAvatarImg.src !== avatar) {
                     plannerAvatarImg.src = avatar;
@@ -403,26 +535,53 @@
         }
         preloadPlannerAvatar();
 
+        // 부모 창 및 Supabase 최신 프로필 비동기 능동 동기화
+        async function syncProfileFromParent() {
+            try {
+                const activeSb = (window.parent && window.parent.sb) || window.sb;
+                const user = (window.parent && window.parent.currentUser) || 
+                             (activeSb && activeSb.auth && (await activeSb.auth.getUser())?.data?.user);
+                if (activeSb && user && user.id) {
+                    const { data: prof, error } = await activeSb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+                    if (!error && prof) {
+                        if (window.parent) {
+                            window.parent.currentProfile = Object.assign({}, window.parent.currentProfile || {}, prof);
+                        }
+                        try {
+                            localStorage.setItem('cached_profile', JSON.stringify(prof));
+                        } catch(e) {}
+                        preloadPlannerAvatar();
+                        triggerDraw();
+                    }
+                }
+            } catch(e) {}
+        }
+        syncProfileFromParent();
+
         // [핵심] 로고 미등록 시 자동 생성되는 퍼스널 브랜딩 로고 SVG (외곽 테두리 없이 투명 배경)
         function generatePersonalBrandLogoSvg(profile) {
             const p = profile || getPlannerProfileData() || {};
-            const name = (p.name || '담당 설계사').trim();
-            const rawRole = (p.position || p.officialTitle || p.official_title || p.job || '보험전문가').trim();
-            const slogan = (p.slogan || '마음을 전하는').trim();
-            const avatar = p.avatar_url || p.photo_url || p.profile_image || '';
+            const name = resolvePlannerName(p);
+            const rawRole = resolvePlannerRole(p);
+            const slogan = resolvePlannerSlogan(p);
+            const avatar = p.avatar_url || p.photo_url || p.profile_image || (p.user_metadata && (p.user_metadata.avatar_url || p.user_metadata.picture)) || '';
 
             let avatarSvg = '';
             if (avatar && avatar.length > 10 && !avatar.includes('consultant_model.jpg')) {
                 const safeAvatar = avatar.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
                 avatarSvg = `
-                  <circle cx="44" cy="44" r="40" fill="none" stroke="#0284c7" stroke-width="3.5"/>
-                  <image href="${safeAvatar}" x="8" y="8" width="72" height="72" clip-path="url(#pbAvatarClip)" preserveAspectRatio="xMidYMid slice"/>
+                  <circle cx="44" cy="44" r="41" fill="#ffffff" filter="drop-shadow(0px 3px 6px rgba(2, 132, 199, 0.16))"/>
+                  <circle cx="44" cy="44" r="41" fill="none" stroke="#0284c7" stroke-width="3"/>
+                  <circle cx="44" cy="44" r="37.5" fill="#ffffff"/>
+                  <image href="${safeAvatar}" x="6.5" y="6.5" width="75" height="75" clip-path="url(#pbAvatarClip)" preserveAspectRatio="xMidYMid slice"/>
+                  <circle cx="44" cy="44" r="37.5" fill="none" stroke="rgba(2, 132, 199, 0.2)" stroke-width="1"/>
                 `;
             } else {
                 avatarSvg = `
-                  <circle cx="44" cy="44" r="40" fill="none" stroke="#0284c7" stroke-width="3.5"/>
-                  <circle cx="44" cy="44" r="36" fill="#f0f9ff"/>
-                  <text x="44" y="52" font-family="'Pretendard', sans-serif" font-size="24" font-weight="900" fill="#0284c7" text-anchor="middle">${name.charAt(0)}</text>
+                  <circle cx="44" cy="44" r="41" fill="#ffffff" filter="drop-shadow(0px 3px 6px rgba(2, 132, 199, 0.16))"/>
+                  <circle cx="44" cy="44" r="41" fill="none" stroke="#0284c7" stroke-width="3"/>
+                  <circle cx="44" cy="44" r="37.5" fill="#f0f9ff"/>
+                  <text x="44" y="53" font-family="'Pretendard', sans-serif" font-size="24" font-weight="900" fill="#0284c7" text-anchor="middle">${name.charAt(0)}</text>
                 `;
             }
 
@@ -433,7 +592,7 @@
             const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 92" width="380" height="92">
               <defs>
                 <clipPath id="pbAvatarClip">
-                  <circle cx="44" cy="44" r="36"/>
+                  <circle cx="44" cy="44" r="37.5"/>
                 </clipPath>
                 <style>
                   @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
@@ -456,36 +615,54 @@
         // [캔버스 직접 렌더링 헬퍼] 데일리뉴스 카드 상단 로고 슬롯(100px)에 즉시 정밀 렌더링
         function drawPersonalBrandLogoDirect(ctx, x, y, maxH, profile) {
             const p = profile || getPlannerProfileData() || {};
-            const name = (p.name || '담당 설계사').trim();
-            const rawRole = (p.position || p.officialTitle || p.official_title || p.job || '보험전문가').trim();
-            const slogan = (p.slogan || '마음을 전하는').trim();
+            const name = resolvePlannerName(p);
+            const rawRole = resolvePlannerRole(p);
+            const slogan = resolvePlannerSlogan(p);
 
             ctx.save();
 
-            // 1. 아바타 원형 (심플 & 모던 스카이블루 링)
+            // 1. 아바타 컨테이너 (하얀 배경 + 또렷한 스카이블루 테두리 + 부드러운 입체 그림자)
             const avatarSize = 88;
             const cx = x + avatarSize / 2;
             const cy = y + maxH / 2;
             const radius = avatarSize / 2;
 
-            // 스카이블루 외곽선 링
+            // 부드러운 그림자와 순백색 베이스 배경
+            ctx.save();
+            ctx.shadowColor = 'rgba(2, 132, 199, 0.16)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 3;
             ctx.beginPath();
             ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#0284c7';
+            ctx.fillStyle = '#ffffff';
             ctx.fill();
+            ctx.restore();
 
-            const innerRadius = radius - 3.5;
+            // 외곽 정밀 테두리 (스카이블루 3px)
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius - 1.5, 0, Math.PI * 2);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#0284c7';
+            ctx.stroke();
+
+            // 내부 사진/이니셜 영역 (흰색 여백 링 안쪽)
+            const photoRadius = radius - 4.5;
             ctx.save();
             ctx.beginPath();
-            ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2);
+            ctx.arc(cx, cy, photoRadius, 0, Math.PI * 2);
             ctx.clip();
+
+            // 사진 배경을 흰색으로 보장
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
 
             if (plannerAvatarImg && plannerAvatarImg.isLoaded && plannerAvatarImg.src) {
                 try {
-                    ctx.drawImage(plannerAvatarImg, cx - innerRadius, cy - innerRadius, innerRadius * 2, innerRadius * 2);
+                    ctx.drawImage(plannerAvatarImg, cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
                 } catch(e) {
                     ctx.fillStyle = '#f0f9ff';
-                    ctx.fillRect(cx - innerRadius, cy - innerRadius, innerRadius * 2, innerRadius * 2);
+                    ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
                     ctx.fillStyle = '#0284c7';
                     ctx.font = '900 28px "Pretendard", "Noto Sans KR", sans-serif';
                     ctx.textAlign = 'center';
@@ -494,7 +671,7 @@
                 }
             } else {
                 ctx.fillStyle = '#f0f9ff';
-                ctx.fillRect(cx - innerRadius, cy - innerRadius, innerRadius * 2, innerRadius * 2);
+                ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
                 ctx.fillStyle = '#0284c7';
                 ctx.font = '900 28px "Pretendard", "Noto Sans KR", sans-serif';
                 ctx.textAlign = 'center';
@@ -502,6 +679,13 @@
                 ctx.fillText(name.charAt(0), cx, cy);
             }
             ctx.restore();
+
+            // 사진 내부 미세 경계 헤어라인
+            ctx.beginPath();
+            ctx.arc(cx, cy, photoRadius, 0, Math.PI * 2);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(2, 132, 199, 0.2)';
+            ctx.stroke();
 
             // 2. 슬로건 텍스트 (상단)
             const textX = x + avatarSize + 18;
@@ -936,7 +1120,7 @@
             fetchNewsData(); 
         }
 
-        // CRM(사내 시스템) 로고 연동 자동 로직
+        // CRM(사내 시스템) 로고 및 프로필 연동 자동 로직
         window.addEventListener('message', function(e) {
             if (e.data && e.data.type === 'setLogo' && e.data.data) {
                 customLogo = new Image();
@@ -947,6 +1131,13 @@
                 customLogo.src = e.data.data;
             }
             if (e.data && (e.data.type === 'profileUpdated' || e.data.type === 'setProfile')) {
+                if (e.data.profile) {
+                    try {
+                        const existing = JSON.parse(localStorage.getItem('cached_profile') || '{}');
+                        const merged = Object.assign({}, existing, e.data.profile);
+                        localStorage.setItem('cached_profile', JSON.stringify(merged));
+                    } catch(err) {}
+                }
                 preloadPlannerAvatar();
                 triggerDraw();
             }
@@ -963,6 +1154,7 @@
         window.addEventListener('DOMContentLoaded', function() {
             if (window.parent !== window) {
                 window.parent.postMessage({ type: 'requestLogo' }, '*');
+                window.parent.postMessage({ type: 'requestProfile' }, '*');
             }
         });
     </script>

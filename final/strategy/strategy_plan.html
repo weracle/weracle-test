@@ -998,6 +998,35 @@
           ctx.restore();
       }
 
+      function getPersonalBrandLogoWidth(ctx, maxH, profile) {
+          const p = profile || getPlannerProfileData() || {};
+          const name = resolvePlannerName(p);
+          const rawRole = resolvePlannerRole(p);
+          const slogan = resolvePlannerSlogan(p);
+
+          const scale = maxH / 92;
+          const avatarSize = 88 * scale;
+          const textGap = 16 * scale;
+
+          ctx.save();
+          ctx.font = 'italic 700 ' + Math.round(17 * scale) + 'px "Nanum Myeongjo", "Batang", serif';
+          const sloganWidth = ctx.measureText('“ ' + slogan + ' ”').width;
+
+          ctx.font = '900 ' + Math.round(33 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+          const nameWidth = ctx.measureText(name).width;
+
+          ctx.font = '300 ' + Math.round(20 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+          const divWidth = ctx.measureText('|').width;
+
+          ctx.font = '800 ' + Math.round(17 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+          const roleWidth = ctx.measureText(rawRole).width;
+          ctx.restore();
+
+          const nameRowWidth = nameWidth + 12 * scale + divWidth + 12 * scale + roleWidth;
+          const maxTextWidth = Math.max(sloganWidth, nameRowWidth);
+          return Math.ceil(avatarSize + textGap + maxTextWidth);
+      }
+
       function applyResolvedLogo(logoSrc) {
           if (!logoSrc) return;
           if (customLogo.src === logoSrc && customLogo.isLoaded) return;
@@ -1707,9 +1736,9 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
                           const uploaded = getCustomUploadedLogo();
                           const isCustomReady = uploaded && customLogo && customLogo.src && ((customLogo.naturalWidth || customLogo.width) > 0);
 
-                          // [요청 반영: 제일 크고 오른쪽 구석에 있는 크기로 모든 카드 통일!]
-                          const marginX = Math.max(12, Math.round(img.width * 0.022));
-                          const marginY = Math.max(12, Math.round(img.width * 0.018));
+                          // [요청 반영: 카드 우측 구석에 깔끔하게 밀착 정렬]
+                          const marginX = Math.max(8, Math.round(img.width * 0.01));
+                          const marginY = Math.max(8, Math.round(img.width * 0.012));
 
                           if (isCustomReady) {
                               const logoNaturalW = customLogo.naturalWidth || customLogo.width;
@@ -1758,11 +1787,12 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
                               octx.drawImage(customLogo, ox, oy, logoW, logoH);
                               ctx.drawImage(off, posX - ox, posY - oy);
                           } else {
-                              // 가로폭 34% 크기로 시원하고 크게, 우측 상단 구석에 완벽 밀착 렌더링
+                              // 가로폭 34% 비례 크기로 시원하고 크게, 실제 너비 측정 기반 우측 상단 구석 밀착 렌더링
                               const prof = getPlannerProfileData();
-                              const logoW = Math.round(img.width * 0.34);
-                              const logoH = Math.round(logoW * (92 / 420));
-                              const posX = Math.round(img.width - logoW - marginX);
+                              const baseW = Math.round(img.width * 0.34);
+                              const logoH = Math.round(baseW * (92 / 420));
+                              const actualLogoW = getPersonalBrandLogoWidth(ctx, logoH, prof);
+                              const posX = Math.round(img.width - actualLogoW - marginX);
                               const posY = marginY;
 
                               drawPersonalBrandLogoDirect(ctx, posX, posY, logoH, prof);

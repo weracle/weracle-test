@@ -310,24 +310,36 @@ module.exports = async function handler(req, res) {
             const instaRules = await ruleRes.json();
             if (!Array.isArray(instaRules) || instaRules.length === 0) continue;
 
-            const matchedRule = instaRules.find(r => {
-              if (mediaId && r.ig_media_id && String(r.ig_media_id) === mediaId) return true;
-              if (r.target_summary && String(r.target_summary).startsWith('{')) {
-                try {
-                  const pObj = JSON.parse(r.target_summary);
-                  if (pObj.igId && String(pObj.igId) === entryAccountId) return true;
-                  if (pObj.pageId && String(pObj.pageId) === entryAccountId) return true;
-                } catch (e) {}
-              }
-              return false;
-            });
+        const hasKeywordMatch = (ruleObj) => {
+              const rKw = String(ruleObj.keyword || '').trim();
+              const kws = rKw.split(/[,/|]+/).map(k => k.trim().replace(/^\[|\]$/g, '')).filter(Boolean);
+              if (kws.length === 0) return false;
+              return kws.some(kw => commentText.toLowerCase().includes(kw.toLowerCase()));
+            };
+
+            // 1순위: 댓글이 달린 해당 게시물(ig_media_id) 전용 규칙 중 키워드 일치 항목
+            let matchedRule = mediaId
+              ? instaRules.find(r => r.ig_media_id && String(r.ig_media_id) === mediaId && hasKeywordMatch(r))
+              : null;
+
+            // 2순위: 특정 게시물 ID가 없는 계정 공통 규칙 중 키워드 일치 항목
+            if (!matchedRule) {
+              matchedRule = instaRules.find(r => {
+                if (r.ig_media_id) return false;
+                if (!hasKeywordMatch(r)) return false;
+                if (r.target_summary && String(r.target_summary).startsWith('{')) {
+                  try {
+                    const pObj = JSON.parse(r.target_summary);
+                    if (pObj.igId && String(pObj.igId) === entryAccountId) return true;
+                    if (pObj.pageId && String(pObj.pageId) === entryAccountId) return true;
+                  } catch (e) {}
+                }
+                return false;
+              });
+            }
 
             if (!matchedRule) continue;
-
-            const rawKw = String(matchedRule.keyword || '').trim();
-            const keywords = rawKw.split(/[,/|]+/).map(k => k.trim().replace(/^\[|\]$/g, '')).filter(Boolean);
-            const isKwMatched = keywords.some(kw => commentText.toLowerCase().includes(kw.toLowerCase()));
-            if (!isKwMatched) continue;
+            const rawKw = String(matchedRule.keyword || '').trim();  
 
             let pageToken = '';
             let pageId = '';

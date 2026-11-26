@@ -3596,6 +3596,60 @@ window.addEventListener('message', function(e) {
 });
 
 // Auto-load MyPage Logo & Profile on page start
+// [설계사 프로필 데이터 조회 - 로컬스토리지 / 부모창 통합]
+function getPlannerProfileData() {
+    let prof = {};
+    try {
+        if (window.parent && window.parent !== window && window.parent.currentProfile) {
+            prof = Object.assign({}, window.parent.currentProfile);
+        }
+    } catch(e) {}
+    try {
+        const raw = localStorage.getItem('cached_profile');
+        if (raw) {
+            const p = JSON.parse(raw);
+            prof = Object.assign({}, p, prof);
+        }
+    } catch(e) {}
+    try {
+        const rawWeracle = localStorage.getItem('weracle_user_profile');
+        if (rawWeracle) {
+            const p = JSON.parse(rawWeracle);
+            prof = Object.assign({}, p, prof);
+        }
+    } catch(e) {}
+    try {
+        const rawUser = localStorage.getItem('user_profile');
+        if (rawUser) {
+            const p = JSON.parse(rawUser);
+            prof = Object.assign({}, p, prof);
+        }
+    } catch(e) {}
+    
+    let userObj = (window.parent && window.parent.currentUser) || null;
+    if (!userObj) {
+        try {
+            const tokenKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+            if (tokenKey) {
+                const sessionData = JSON.parse(localStorage.getItem(tokenKey));
+                userObj = sessionData?.user || null;
+            }
+        } catch(e) {}
+    }
+    if (userObj) {
+        const meta = userObj.user_metadata || {};
+        prof.email = prof.email || userObj.email || '';
+        prof.user_metadata = Object.assign({}, meta, prof.user_metadata || {});
+        if (!prof.name) prof.name = meta.name || meta.full_name || meta.user_name || '';
+        if (!prof.nickname) prof.nickname = meta.nickname || meta.full_name || meta.name || (userObj.email ? userObj.email.split('@')[0] : '');
+        if (!prof.slogan) prof.slogan = meta.slogan || '';
+        if (!prof.position) prof.position = meta.position || meta.job || '';
+        if (!prof.avatar_url) prof.avatar_url = meta.avatar_url || meta.picture || '';
+    }
+    return prof;
+}
+window.getPlannerProfileData = getPlannerProfileData;
+
 // [퍼스널 브랜딩 로고] 시안 2번: 클래식 럭셔리 & 신뢰 (나눔명조 이탤릭 따옴표 + 버티컬 바)
 function generatePersonalBrandLogoSvg(profile) {
     const p = profile || (typeof getPlannerProfileData === 'function' ? getPlannerProfileData() : (window.currentProfile || (window.parent && window.parent.currentProfile) || {}));

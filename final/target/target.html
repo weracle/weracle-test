@@ -2614,7 +2614,7 @@ function extractCustomerPhone(c) {
         function getWatermarkedBase64(imageUrl, useLogo, callback) {
             if (!imageUrl) return callback('');
 
-            const effWatermarkLogo = (typeof getSavedPersonalLogo === 'function') ? getSavedPersonalLogo() : '';
+            const effWatermarkLogo = getCustomUploadedLogo();
             if (effWatermarkLogo && customLogo.src !== effWatermarkLogo) {
                 applyResolvedLogo(effWatermarkLogo);
             }
@@ -2630,55 +2630,62 @@ function extractCustomerPhone(c) {
                         const ctx = cvs.getContext('2d');
                         ctx.drawImage(img, 0, 0);
 
-                        const isLogoReady = customLogo && customLogo.src && ((customLogo.naturalWidth || customLogo.width) > 0);
-                        if (useLogo && isLogoReady) {
-                            const logoNaturalW = customLogo.naturalWidth || customLogo.width;
-                            const logoNaturalH = customLogo.naturalHeight || customLogo.height;
-                            const logoH = Math.max(img.height * 0.075, 48); 
-                            let logoW = (logoNaturalW / logoNaturalH) * logoH;
-                            if (logoW > img.width * 0.32) logoW = img.width * 0.32;
+                        if (useLogo) {
+                            const uploaded = getCustomUploadedLogo();
+                            const isCustomReady = uploaded && customLogo && customLogo.src && ((customLogo.naturalWidth || customLogo.width) > 0);
 
-                            const paddingX = img.width * 0.04;
-                            const posX = img.width - logoW - paddingX;
-                            const posY = Math.max(8, Math.round(img.width * 0.022));
+                            if (isCustomReady) {
+                                const logoNaturalW = customLogo.naturalWidth || customLogo.width;
+                                const logoNaturalH = customLogo.naturalHeight || customLogo.height;
+                                const logoH = Math.max(img.height * 0.075, 48); 
+                                let logoW = (logoNaturalW / logoNaturalH) * logoH;
+                                if (logoW > img.width * 0.32) logoW = img.width * 0.32;
 
-                            // 글자 및 원형 심볼 모양 그대로 정밀 외곽 라인(스트로크) 생성
-                            const strokeWidth = Math.max(2, Math.round(logoH * 0.04));
-                            const margin = Math.ceil(strokeWidth * 4) + 6;
-                            const offW = Math.ceil(logoW + margin * 2);
-                            const offH = Math.ceil(logoH + margin * 2);
+                                const paddingX = img.width * 0.04;
+                                const posX = img.width - logoW - paddingX;
+                                const posY = Math.max(8, Math.round(img.width * 0.022));
 
-                            const off = document.createElement('canvas');
-                            off.width = offW;
-                            off.height = offH;
-                            const octx = off.getContext('2d');
-                            const ox = margin;
-                            const oy = margin;
+                                const strokeWidth = Math.max(2, Math.round(logoH * 0.04));
+                                const margin = Math.ceil(strokeWidth * 4) + 6;
+                                const offW = Math.ceil(logoW + margin * 2);
+                                const offH = Math.ceil(logoH + margin * 2);
 
-                            // 로고 실루엣 마스크 생성 (외곽 라인용)
-                            const mask = document.createElement('canvas');
-                            mask.width = offW;
-                            mask.height = offH;
-                            const mctx = mask.getContext('2d');
-                            mctx.drawImage(customLogo, ox, oy, logoW, logoH);
-                            mctx.globalCompositeOperation = 'source-in';
-                            mctx.fillStyle = '#ffffff';
-                            mctx.fillRect(0, 0, mask.width, mask.height);
+                                const off = document.createElement('canvas');
+                                off.width = offW;
+                                off.height = offH;
+                                const octx = off.getContext('2d');
+                                const ox = margin;
+                                const oy = margin;
 
-                            // 순수 화이트 외곽 라인만 깔끔하게 렌더링
-                            const points = 16;
-                            for (let r = 0.8; r <= strokeWidth; r += 0.6) {
-                                for (let i = 0; i < points; i++) {
-                                    const angle = (i * 2 * Math.PI) / points;
-                                    octx.drawImage(mask, Math.cos(angle) * r, Math.sin(angle) * r);
+                                const mask = document.createElement('canvas');
+                                mask.width = offW;
+                                mask.height = offH;
+                                const mctx = mask.getContext('2d');
+                                mctx.drawImage(customLogo, ox, oy, logoW, logoH);
+                                mctx.globalCompositeOperation = 'source-in';
+                                mctx.fillStyle = '#ffffff';
+                                mctx.fillRect(0, 0, mask.width, mask.height);
+
+                                const points = 16;
+                                for (let r = 0.8; r <= strokeWidth; r += 0.6) {
+                                    for (let i = 0; i < points; i++) {
+                                        const angle = (i * 2 * Math.PI) / points;
+                                        octx.drawImage(mask, Math.cos(angle) * r, Math.sin(angle) * r);
+                                    }
                                 }
+
+                                octx.drawImage(customLogo, ox, oy, logoW, logoH);
+                                ctx.drawImage(off, posX - ox, posY - oy);
+                            } else {
+                                const prof = (typeof getPlannerProfileData === 'function') ? getPlannerProfileData() : {};
+                                const logoH = Math.max(Math.round(img.height * 0.075), 48);
+                                const logoW = Math.round(logoH * (420 / 92));
+                                const paddingX = Math.round(img.width * 0.04);
+                                const posX = Math.round(img.width - logoW - paddingX);
+                                const posY = Math.max(10, Math.round(img.width * 0.022));
+
+                                drawPersonalBrandLogoDirect(ctx, posX, posY, logoH, prof);
                             }
-
-                            // 중앙에 원본 로고 합성
-                            octx.drawImage(customLogo, ox, oy, logoW, logoH);
-
-                            // 메인 카드 캔버스에 합성
-                            ctx.drawImage(off, posX - ox, posY - oy);
                         }
                         callback(cvs.toDataURL('image/jpeg', 0.9)); 
                     } catch (e) {
@@ -2687,7 +2694,8 @@ function extractCustomerPhone(c) {
                     }
                 };
 
-                if (useLogo && customLogo && customLogo.src && !customLogo.complete) {
+                const uploaded = getCustomUploadedLogo();
+                if (useLogo && uploaded && customLogo && customLogo.src && !customLogo.complete) {
                     customLogo.onload = () => { customLogo.isLoaded = true; proceed(); };
                     customLogo.onerror = () => { proceed(); };
                 } else {

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&display=swap">
     <meta charset="UTF-8">
     <title>Weracle Insight</title>
     <style>
@@ -623,17 +624,103 @@
       customLogo.onload = () => { customLogo.isLoaded = true; };
 
       // 1. 등록된 개인 로고 우선 탐색 함수 (localStorage -> parent -> fallback)
+// [퍼스널 브랜딩 로고] 시안 2번: 클래식 럭셔리 & 신뢰 (나눔명조 이탤릭 따옴표 + 버티컬 바)
+function generatePersonalBrandLogoSvg(profile) {
+    const p = profile || (typeof getPlannerProfileData === 'function' ? getPlannerProfileData() : (window.currentProfile || (window.parent && window.parent.currentProfile) || {}));
+    
+    // 다중 후보 실명/성함 안전 추출 (담당 설계사 절대 노출 방지)
+    const inpName = document.getElementById('input-name') || document.getElementById('inputAdvisorName');
+    const curAdv = inpName ? (inpName.value || '').trim() : '';
+    const rawCandidates = [
+        p.name,
+        p.full_name,
+        curAdv ? curAdv.split(' ')[0] : '',
+        p.real_name,
+        p.nickname,
+        p.user_name,
+        p.userName,
+        p.user_metadata ? (p.user_metadata.name || p.user_metadata.full_name || p.user_metadata.nickname) : '',
+        p.email ? p.email.split('@')[0] : ''
+    ];
+    let name = '';
+    for (let c of rawCandidates) {
+        if (c && typeof c === 'string') {
+            const tr = c.trim();
+            if (tr && tr !== '담당 설계사' && tr !== '담당설계사' && tr !== '위라클 파트너' && tr !== 'null' && tr !== 'undefined') {
+                name = tr;
+                break;
+            }
+        }
+    }
+    if (!name) name = (p.nickname || p.name || '설계사').trim();
+
+    const inpJob = document.getElementById('input-job-title') || document.getElementById('inputJobTitle');
+    const rawRole = (p.position || p.officialTitle || p.official_title || p.job || (inpJob ? inpJob.value : '') || '보험전문가').trim();
+    
+    const inpSlogan = document.getElementById('input-quote') || document.getElementById('inputAdvisorSlogan');
+    const slogan = (p.slogan || (inpSlogan ? inpSlogan.value : '') || (p.user_metadata && p.user_metadata.slogan) || '마음을 전하는').trim();
+    const avatar = p.avatar_url || p.photo_url || p.profile_image || (p.user_metadata && (p.user_metadata.avatar_url || p.user_metadata.picture)) || '';
+
+    let avatarSvg = '';
+    if (avatar && avatar.length > 10 && !avatar.includes('consultant_model.jpg')) {
+        const safeAvatar = avatar.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+        avatarSvg = `
+          <circle cx="44" cy="44" r="41" fill="#ffffff" filter="drop-shadow(0px 3px 6px rgba(2, 132, 199, 0.16))"/>
+          <circle cx="44" cy="44" r="41" fill="none" stroke="#0284c7" stroke-width="3"/>
+          <circle cx="44" cy="44" r="37.5" fill="#ffffff"/>
+          <image href="${safeAvatar}" x="6.5" y="6.5" width="75" height="75" clip-path="url(#pbAvatarClip)" preserveAspectRatio="xMidYMid slice"/>
+          <circle cx="44" cy="44" r="37.5" fill="none" stroke="rgba(2, 132, 199, 0.2)" stroke-width="1"/>
+        `;
+    } else {
+        avatarSvg = `
+          <circle cx="44" cy="44" r="41" fill="#ffffff" filter="drop-shadow(0px 3px 6px rgba(2, 132, 199, 0.16))"/>
+          <circle cx="44" cy="44" r="41" fill="none" stroke="#0284c7" stroke-width="3"/>
+          <circle cx="44" cy="44" r="37.5" fill="#f0f9ff"/>
+          <text x="44" y="53" font-family="'Pretendard', sans-serif" font-size="24" font-weight="900" fill="#0284c7" text-anchor="middle">${name.charAt(0)}</text>
+        `;
+    }
+
+    const safeSlogan = slogan.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '');
+    const safeName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const safeRole = rawRole.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 92" width="420" height="92">
+      <defs>
+        <clipPath id="pbAvatarClip">
+          <circle cx="44" cy="44" r="37.5"/>
+        </clipPath>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Noto+Sans+KR:wght@500;700;900&display=swap');
+          @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+          .pb-slogan { font-family: 'Nanum Myeongjo', serif; font-size: 17px; font-weight: 700; font-style: italic; fill: #0284c7; letter-spacing: 0.2px; }
+          .pb-name { font-family: 'Pretendard', sans-serif; font-size: 33px; font-weight: 900; fill: #1e1b4b; letter-spacing: -0.6px; }
+          .pb-divider { font-family: 'Pretendard', sans-serif; font-size: 20px; font-weight: 300; fill: #cbd5e1; }
+          .pb-role { font-family: 'Pretendard', sans-serif; font-size: 17px; font-weight: 800; fill: #3b82f6; letter-spacing: 0.3px; }
+        </style>
+      </defs>
+      ${avatarSvg}
+      <text x="104" y="37" class="pb-slogan">“ ${safeSlogan} ”</text>
+      <text x="104" y="76">
+        <tspan class="pb-name">${safeName}</tspan>
+        <tspan dx="12" class="pb-divider">|</tspan>
+        <tspan dx="12" class="pb-role">${safeRole}</tspan>
+      </text>
+    </svg>`;
+
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
       function getSavedPersonalLogo() {
           try {
               // A. 직접 등록된 전용 로고 키 확인
               const directLogo = localStorage.getItem('weracle_user_logo');
-              if (directLogo) return directLogo;
+              if (directLogo && !directLogo.includes('560fa4f67c898.png')) return directLogo;
 
               // B. cached_profile 내 logo_url 확인
               const rawProfile = localStorage.getItem('cached_profile');
               if (rawProfile) {
                   const prof = JSON.parse(rawProfile);
-                  if (prof && prof.logo_url) return prof.logo_url;
+                  if (prof && prof.logo_url && !prof.logo_url.includes('560fa4f67c898.png')) return prof.logo_url;
               }
 
               // C. 부모 창 객체 직접 확인
@@ -658,7 +745,7 @@
 
       // 초기 로고 지정: 개인 로고가 있으면 개인 로고 우선 적용, 없으면 기본 로고 적용
       const initialPersonalLogo = getSavedPersonalLogo();
-      applyResolvedLogo(initialPersonalLogo || DEFAULT_FALLBACK_LOGO);
+      applyResolvedLogo(initialPersonalLogo || generatePersonalBrandLogoSvg());
 
       // 메시지 수신 핸들러 (부모 창에서 setLogo가 오는 경우 실시간 반영)
       window.addEventListener('message', function(e) {

@@ -1134,6 +1134,51 @@ console.warn("Failed to fetch Google profile info:", err);
 }
 // 설계사 정보 영역 UI 동적 업데이트 (구글 연동 여부에 따라 분기)
 
+// [시트 격리/재연동] 다른 계정과 꼬인 시트를 즉시 분리하고 현재 구글 계정 전용 시트로 신규 생성/연동
+window.relinkUserOwnGoogleSheet = async function() {
+    if (!confirm("현재 연결된 구글 시트를 분리하고, 현재 로그인된 구글 계정에 [새 전용 시트]를 생성하여 연동하시겠습니까?\n\n(※ 다른 사람의 시트와 연동이 꼬였을 때 완벽하게 내 전용 시트로 분리됩니다.)")) return;
+    try {
+        if (typeof showLoading === 'function') showLoading(true);
+        const currentUserId = (window.currentUser && window.currentUser.id) || (window.currentProfile && window.currentProfile.id) || (window.parent && window.parent.currentUser && window.parent.currentUser.id);
+        
+        // 1. 기존 시트 ID 메모리 및 로컬 캐시 즉시 초기화
+        spreadsheetId = "";
+        try { localStorage.removeItem("g_sheet_id"); } catch(e) {}
+        try { localStorage.removeItem("user_spreadsheet_id"); } catch(e) {}
+        if (currentUserId) {
+            try { localStorage.removeItem("g_sheet_id_" + currentUserId); } catch(e) {}
+        }
+
+        // 2. Supabase DB에서 google_sheet_id 초기화
+        const activeSb = window.sb || (window.parent && window.parent.sb);
+        if (activeSb && currentUserId) {
+            await activeSb.from('profiles').update({ google_sheet_id: null }).eq('id', currentUserId);
+        }
+
+        // 3. 현재 로그인된 구글 계정으로 전용 시트 검색 또는 신규 생성
+        spreadsheetId = await findOrCreateClientSheet();
+        if (currentUserId) try { localStorage.setItem("g_sheet_id_" + currentUserId, spreadsheetId); } catch(e) {}
+        try { localStorage.setItem("g_sheet_id", spreadsheetId); } catch(e) {}
+
+        await syncCredentialsToSupabase(null, spreadsheetId);
+        await initSheetMetadata(spreadsheetId);
+        await loadCRMData();
+
+        // 4. 부모 창으로 업데이트된 시트 ID 전송
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'CRM_TOKEN_UPDATED', google_sheet_id: spreadsheetId }, '*');
+        }
+
+        alert("본인 구글 계정에 전용 시트가 정상적으로 연결되었습니다!\n이제 고객 데이터가 다른 계정과 절대 섞이지 않습니다.");
+    } catch(err) {
+        console.error("시트 재연동 실패:", err);
+        alert("시트 재연동 중 오류가 발생했습니다: " + (err.message || err));
+    } finally {
+        if (typeof showLoading === 'function') showLoading(false);
+        if (typeof updateAgentHeaderUI === 'function') updateAgentHeaderUI();
+    }
+};
+
 function updateAgentHeaderUI(errorMessage = "") {
     let bannerContainer = document.getElementById("google-auth-banner-container");
     if (!bannerContainer) {
@@ -1156,7 +1201,9 @@ function updateAgentHeaderUI(errorMessage = "") {
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="14" height="14">
                     <span style="font-size: 12.5px; color: #10b981; font-weight: 800;">연동됨</span>
                 </div>
-                
+                <button type="button" onclick="relinkUserOwnGoogleSheet()" style="background: #f8fafc; border: 1px solid #cbd5e1; font-size: 11.5px; color: #475569; cursor: pointer; padding: 4px 9px; border-radius: 6px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="다른 계정과 꼬인 시트를 해제하고 내 구글 계정 전용 시트를 새로 생성합니다.">
+                    <i class="fa-solid fa-arrows-rotate"></i> 시트 재연동/새시트
+                </button>
             </div>
         `;
     } else {

@@ -319,8 +319,7 @@ window.guardPageAccess = guardPageAccess;
 async function loginWithGoogle() {
     if(!window.sb) { alert("서버 연결 중입니다. 잠시 후 다시 시도해주세요."); return; }
     try {
-        const topOrigin = (window.top && window.top !== window && window.top.location.origin) ? window.top.location.origin : window.location.origin;
-        const redirectUrl = topOrigin + '/';
+        const redirectUrl = (window.top && window.top !== window) ? window.top.location.href.split('?')[0].split('#')[0] : window.location.href.split('?')[0].split('#')[0];
         const { data, error } = await window.sb.auth.signInWithOAuth({
             provider: 'google',
             options: {

@@ -1269,35 +1269,36 @@ function generatePersonalBrandLogoSvg(profile) {
             const rawRole = (p.position || p.officialTitle || p.official_title || p.job || '보험전문가').trim();
             const slogan = (p.slogan || (p.user_metadata && p.user_metadata.slogan) || '마음을 전하는').trim();
 
+            const scale = (maxH || 80) / 92;
             ctx.save();
 
             // 1. 아바타 컨테이너 (하얀 배경 + 또렷한 스카이블루 테두리 + 부드러운 입체 그림자)
-            const avatarSize = 72;
+            const avatarSize = 88 * scale;
             const cx = x + avatarSize / 2;
-            const cy = y + maxH / 2;
+            const cy = y + (maxH || 80) / 2;
             const radius = avatarSize / 2;
 
             // 부드러운 그림자와 순백색 베이스 배경
             ctx.save();
-            ctx.shadowColor = 'rgba(2, 132, 199, 0.16)';
-            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'rgba(2, 132, 199, 0.2)';
+            ctx.shadowBlur = Math.round(10 * scale);
             ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 2;
+            ctx.shadowOffsetY = Math.round(3 * scale);
             ctx.beginPath();
             ctx.arc(cx, cy, radius, 0, Math.PI * 2);
             ctx.fillStyle = '#ffffff';
             ctx.fill();
             ctx.restore();
 
-            // 외곽 정밀 테두리 (스카이블루 2.5px)
+            // 외곽 정밀 테두리 (스카이블루 #0284c7)
             ctx.beginPath();
-            ctx.arc(cx, cy, radius - 1.25, 0, Math.PI * 2);
-            ctx.lineWidth = 2.5;
+            ctx.arc(cx, cy, radius - 1.5 * scale, 0, Math.PI * 2);
+            ctx.lineWidth = Math.max(2, 3 * scale);
             ctx.strokeStyle = '#0284c7';
             ctx.stroke();
 
-            // 내부 사진/이니셜 영역 (흰색 여백 링 안쪽)
-            const photoRadius = radius - 4;
+            // 내부 사진/이니셜 영역
+            const photoRadius = radius - 4.5 * scale;
             ctx.save();
             ctx.beginPath();
             ctx.arc(cx, cy, photoRadius, 0, Math.PI * 2);
@@ -1313,7 +1314,7 @@ function generatePersonalBrandLogoSvg(profile) {
                     ctx.fillStyle = '#f0f9ff';
                     ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
                     ctx.fillStyle = '#0284c7';
-                    ctx.font = '900 24px "Pretendard", "Noto Sans KR", sans-serif';
+                    ctx.font = '900 ' + Math.round(26 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(name.charAt(0), cx, cy);
@@ -1322,7 +1323,7 @@ function generatePersonalBrandLogoSvg(profile) {
                 ctx.fillStyle = '#f0f9ff';
                 ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
                 ctx.fillStyle = '#0284c7';
-                ctx.font = '900 24px "Pretendard", "Noto Sans KR", sans-serif';
+                ctx.font = '900 ' + Math.round(26 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(name.charAt(0), cx, cy);
@@ -1336,31 +1337,52 @@ function generatePersonalBrandLogoSvg(profile) {
             ctx.strokeStyle = 'rgba(2, 132, 199, 0.2)';
             ctx.stroke();
 
-            // 2. 슬로건 텍스트 (상단) - 나눔명조 이탤릭 + 따옴표 장식
-            const textX = x + avatarSize + 16;
+            // 2. 텍스트 영역 (화이트 아웃라인 스트로크를 주어 사진/어두운 배경에서도 선명하게 노출)
+            const textX = x + avatarSize + 16 * scale;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'alphabetic';
-            ctx.fillStyle = '#0284c7';
-            ctx.font = 'italic 700 15px "Nanum Myeongjo", "Batang", serif';
-            ctx.fillText('“ ' + slogan + ' ”', textX, y + 36);
 
-            // 3. 성함 + 디바이더 + 직책 텍스트 (하단)
+            // A. 슬로건 (나눔명조 이탤릭 따옴표 #0284c7)
+            const sloganY = y + 38 * scale;
+            ctx.font = 'italic 700 ' + Math.round(17 * scale) + 'px "Nanum Myeongjo", "Batang", serif';
+            ctx.lineJoin = 'round';
+            ctx.miterLimit = 2;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(3, 4 * scale);
+            ctx.strokeText('“ ' + slogan + ' ”', textX, sloganY);
+            ctx.fillStyle = '#0284c7';
+            ctx.fillText('“ ' + slogan + ' ”', textX, sloganY);
+
+            // B. 성함 (프리텐다드 900 딥 챠콜 네이비 #1e1b4b)
+            const nameY = y + 80 * scale;
+            ctx.font = '900 ' + Math.round(33 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(4, 5 * scale);
+            ctx.strokeText(name, textX, nameY);
             ctx.fillStyle = '#1e1b4b';
-            ctx.font = '900 27px "Pretendard", "Noto Sans KR", sans-serif';
-            ctx.fillText(name, textX, y + 70);
+            ctx.fillText(name, textX, nameY);
 
             const nameWidth = ctx.measureText(name).width;
 
-            // 디바이더 바
-            ctx.font = '300 17px "Pretendard", "Noto Sans KR", sans-serif';
+            // C. 디바이더 버티컬 바 (| #cbd5e1)
+            const divX = textX + nameWidth + 12 * scale;
+            ctx.font = '300 ' + Math.round(20 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(2, 3 * scale);
+            ctx.strokeText('|', divX, nameY - 1 * scale);
             ctx.fillStyle = '#cbd5e1';
-            ctx.fillText('|', textX + nameWidth + 10, y + 69);
+            ctx.fillText('|', divX, nameY - 1 * scale);
 
-            // 직책 텍스트
             const divWidth = ctx.measureText('|').width;
+
+            // D. 직책/역할 (프리텐다드 800 로열 블루 #3b82f6)
+            const roleX = divX + divWidth + 12 * scale;
+            ctx.font = '800 ' + Math.round(17 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(3, 4 * scale);
+            ctx.strokeText(rawRole, roleX, nameY);
             ctx.fillStyle = '#3b82f6';
-            ctx.font = '800 15px "Pretendard", "Noto Sans KR", sans-serif';
-            ctx.fillText(rawRole, textX + nameWidth + 10 + divWidth + 10, y + 70);
+            ctx.fillText(rawRole, roleX, nameY);
 
             ctx.restore();
         }
@@ -2634,14 +2656,14 @@ function extractCustomerPhone(c) {
                             const uploaded = getCustomUploadedLogo();
                             const isCustomReady = uploaded && customLogo && customLogo.src && ((customLogo.naturalWidth || customLogo.width) > 0);
 
-                            // [요청 반영: 제일 오른쪽 구석에 깔끔하고 일관된 크기로 배치]
-                            const marginX = Math.max(8, Math.round(img.width * 0.02));
-                            const marginY = Math.max(8, Math.round(img.width * 0.016));
+                            // [요청 반영: 제일 크고 오른쪽 구석에 있는 크기로 모든 탭 통일!]
+                            const marginX = Math.max(12, Math.round(img.width * 0.022));
+                            const marginY = Math.max(12, Math.round(img.width * 0.018));
 
                             if (isCustomReady) {
                                 const logoNaturalW = customLogo.naturalWidth || customLogo.width;
                                 const logoNaturalH = customLogo.naturalHeight || customLogo.height;
-                                const maxW = Math.round(img.width * 0.25);
+                                const maxW = Math.round(img.width * 0.34);
                                 const maxH = Math.round(maxW * 0.45);
                                 let logoW = (logoNaturalW / logoNaturalH) * maxH;
                                 let logoH = maxH;
@@ -2685,8 +2707,9 @@ function extractCustomerPhone(c) {
                                 octx.drawImage(customLogo, ox, oy, logoW, logoH);
                                 ctx.drawImage(off, posX - ox, posY - oy);
                             } else {
+                                // 카드 가로폭의 34% 크기로 시원하고 크게, 우측 상단 구석에 완벽 밀착 렌더링
                                 const prof = (typeof getPlannerProfileData === 'function') ? getPlannerProfileData() : {};
-                                const logoW = Math.round(img.width * 0.25);
+                                const logoW = Math.round(img.width * 0.34);
                                 const logoH = Math.round(logoW * (92 / 420));
                                 const posX = Math.round(img.width - logoW - marginX);
                                 const posY = marginY;

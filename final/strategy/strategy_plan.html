@@ -1707,16 +1707,15 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
                           const uploaded = getCustomUploadedLogo();
                           const isCustomReady = uploaded && customLogo && customLogo.src && ((customLogo.naturalWidth || customLogo.width) > 0);
 
-                          // [요청 반영: 제일 오른쪽 구석에 깔끔하고 일관된 크기로 배치]
-                          const marginX = Math.max(8, Math.round(img.width * 0.02));
-                          const marginY = Math.max(8, Math.round(img.width * 0.016));
+                          // [요청 반영: 제일 크고 오른쪽 구석에 있는 크기로 모든 카드 통일!]
+                          const marginX = Math.max(12, Math.round(img.width * 0.022));
+                          const marginY = Math.max(12, Math.round(img.width * 0.018));
 
                           if (isCustomReady) {
-                              // A. 직접 업로드한 커스텀 로고가 있는 경우: 실루엣 스트로크 합성 (우측 상단 구석)
                               const logoNaturalW = customLogo.naturalWidth || customLogo.width;
                               const logoNaturalH = customLogo.naturalHeight || customLogo.height;
                               
-                              const maxW = Math.round(img.width * 0.25);
+                              const maxW = Math.round(img.width * 0.34);
                               const maxH = Math.round(maxW * 0.45);
                               let logoW = (logoNaturalW / logoNaturalH) * maxH;
                               let logoH = maxH;
@@ -1759,10 +1758,9 @@ document.addEventListener('DOMContentLoaded', function() { setTimeout(function()
                               octx.drawImage(customLogo, ox, oy, logoW, logoH);
                               ctx.drawImage(off, posX - ox, posY - oy);
                           } else {
-                              // B. 등록 로고가 없는 경우: 시안 2번 퍼스널 브랜드 로고 직접 정밀 렌더링
-                              // 카드 가로폭(img.width) 기준 균일 비율(25%)로 계산하여 모든 카드에서 동일한 크기로 제일 오른쪽 구석에 밀착 배치
+                              // 가로폭 34% 크기로 시원하고 크게, 우측 상단 구석에 완벽 밀착 렌더링
                               const prof = getPlannerProfileData();
-                              const logoW = Math.round(img.width * 0.25);
+                              const logoW = Math.round(img.width * 0.34);
                               const logoH = Math.round(logoW * (92 / 420));
                               const posX = Math.round(img.width - logoW - marginX);
                               const posY = marginY;

@@ -323,7 +323,9 @@ async function loginWithGoogle() {
             provider: 'google',
             options: {
                 redirectTo: redirectUrl,
-                skipBrowserRedirect: true
+                skipBrowserRedirect: true,
+                scopes: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events',
+                queryParams: { access_type: 'offline', prompt: 'select_account' }
             }
         });
         if(error) throw error;

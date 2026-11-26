@@ -2,6 +2,30 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 카카오톡/인스타그램/네이버 인앱 브라우저 탈출 및 구글 로그인 정상화 엔진 -->
+<script>
+(function checkInAppBrowser() {
+    try {
+        const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+        const isKakao = ua.indexOf('kakaotalk') > -1;
+        const isLine = ua.indexOf('line') > -1;
+        const isNaver = ua.indexOf('naver') > -1;
+        const isInstagram = ua.indexOf('instagram') > -1;
+        const isFacebook = ua.indexOf('fb') > -1 || ua.indexOf('fban') > -1 || ua.indexOf('fbav') > -1;
+        const isInApp = isKakao || isLine || isNaver || isInstagram || isFacebook;
+
+        if (!isInApp) return;
+
+        const currentUrl = window.location.href;
+        if (ua.indexOf('android') > -1) {
+            const cleanUrl = currentUrl.replace(/^https?:\/\//i, '');
+            window.location.href = 'intent://' + cleanUrl + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(currentUrl) + ';end;';
+        } else if (/iphone|ipad|ipod/.test(ua) && isKakao) {
+            window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(currentUrl);
+        }
+    } catch(e) {}
+})();
+</script>
 <script src="login/config.js?v=1.0.1"></script>
 <script src="login/auth.js?v=1.0.1"></script>
 <script src="security.js?v=1.0.0"></script>
@@ -5438,7 +5462,7 @@ const options = {
 };
 if (provider === 'google') {
 options.scopes = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events';
-options.queryParams = { access_type: 'offline' };
+options.queryParams = { access_type: 'offline', prompt: 'select_account' };
 }
 const { data, error } = await window.sb.auth.signInWithOAuth({
 provider,

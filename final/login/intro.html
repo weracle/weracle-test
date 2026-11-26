@@ -210,7 +210,18 @@
 
   <script>
     function triggerGoogleLogin() {
-      // 상위 부모 윈도우(index_hyphen.html)에 소셜 로그인 요청 전달
+      try {
+        const ua = (navigator.userAgent || '').toLowerCase();
+        const isInApp = ua.indexOf('kakaotalk') > -1 || ua.indexOf('naver') > -1 || ua.indexOf('instagram') > -1 || ua.indexOf('fb') > -1;
+        if (isInApp && ua.indexOf('android') > -1) {
+          const topUrl = window.top ? window.top.location.href : window.location.href;
+          const cleanUrl = topUrl.replace(/^https?:\/\//i, '');
+          window.top.location.href = 'intent://' + cleanUrl + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(topUrl) + ';end;';
+          return;
+        }
+      } catch(e) {}
+
+      // 상위 부모 윈도우에 소셜 로그인 요청 전달
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({ type: 'AUTH_SOCIAL', provider: 'google' }, '*');
       } else if (typeof window.handleSocial === 'function') {

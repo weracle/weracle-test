@@ -1046,14 +1046,51 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, status: newStatus });
     }
 
-    // [7] 예산 및 종료일 수정
+   // [7] 캠페인 및 인스타 자동DM 통합 수정 (기존 토큰 안전 보존 병합)
     if (action === 'UPDATE_CAMPAIGN') {
-      const { id, newBudget, newEndDate, adSetId } = body;
+      const {
+        id,
+        title,
+        description,
+        ctaType,
+        newBudget,
+        newEndDate,
+        adSetId,
+        adId,
+        keyword,
+        dmMessage,
+        landingUrl,
+        metaPatch
+      } = body;
+
       if (supabaseKey && id) {
         const patchObj = {};
-        if (newBudget) patchObj.budget = Number(newBudget);
-        if (newEndDate) patchObj.end_date = newEndDate;
+        if (title !== undefined) patchObj.title = String(title).trim();
+        if (description !== undefined) patchObj.description = String(description).trim();
+        if (ctaType !== undefined) patchObj.cta_type = ctaType;
+        if (newBudget !== undefined && newBudget !== null) patchObj.budget = Number(newBudget);
+        if (newEndDate !== undefined) patchObj.end_date = newEndDate;
         if (adSetId) patchObj.adset_id = adSetId;
+        if (adId) patchObj.ad_id = adId;
+        if (keyword !== undefined) patchObj.keyword = String(keyword).trim();
+        if (dmMessage !== undefined) patchObj.dm_message = dmMessage;
+        if (landingUrl !== undefined) patchObj.landing_url = landingUrl;
+
+        if (metaPatch && typeof metaPatch === 'object') {
+          let baseMeta = {};
+          try {
+            const curRes = await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(id)}&select=target_summary&limit=1`, {
+              headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+            });
+            const curRows = await curRes.json();
+            if (Array.isArray(curRows) && curRows[0] && curRows[0].target_summary) {
+              const rawTs = String(curRows[0].target_summary).trim();
+              if (rawTs.startsWith('{')) baseMeta = JSON.parse(rawTs);
+              else if (rawTs) baseMeta = { summary: rawTs };
+            }
+          } catch (e) {}
+          patchObj.target_summary = JSON.stringify({ ...baseMeta, ...metaPatch });
+        }
 
         await fetch(`${supabaseUrl}/rest/v1/meta_campaigns?id=eq.${encodeURIComponent(id)}`, {
           method: 'PATCH',

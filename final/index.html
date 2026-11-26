@@ -32,14 +32,12 @@
 <script src="weracle_device.js"></script>
 <script src="weracle_modal.js"></script>
 <script>
-    /* iframe 중복 index.html 방지 (헤더 2중 형성 차단) */
-    if (window.top !== window.self) {
-        try {
-            if (window.top.location.hostname === window.location.hostname) {
-                window.top.location.href = window.location.href;
-            }
-        } catch(e) {}
-    }
+    /* mainFrame 내부 중복 진입 시에만 부모 창의 대시보드 홈으로 정리 (최상위 루트 appFrame 탈출 방지) */
+    try {
+        if (window.frameElement && window.frameElement.id === 'mainFrame' && window.parent && typeof window.parent.showDashboardHome === 'function') {
+            window.parent.showDashboardHome();
+        }
+    } catch(e) {}
 // Chrome [Violation] unload 강제 차단 심화 코드
 (function() {
 const originalAddEventListener = EventTarget.prototype.addEventListener;

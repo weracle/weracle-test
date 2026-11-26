@@ -1189,7 +1189,17 @@
                 return;
             }
 
-            this.renderLoadingState();
+            // [부드러운 즉시 렌더링] 기존 프로필/캐시가 있으면 "연동중..." 없이 0초 만에 대시보드 즉시 표시!
+            const hasExistingProfile = !!(window.currentProfile || cachedProf);
+            if (hasExistingProfile) {
+                window.currentProfile = window.currentProfile || cachedProf;
+                if (savedLogo && !window.currentProfile.logo_url) {
+                    window.currentProfile.logo_url = savedLogo;
+                }
+                this.renderDashboard();
+            } else {
+                this.renderLoadingState();
+            }
             
             try {
                 const { data: latestProfile, error: profileErr } = await activeSb
@@ -1206,31 +1216,28 @@
                         avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + window.currentUser.id
                     };
                 }
-                // 등록된 로고가 누락되지 않도록 확실하게 바인딩
                 if (savedLogo && !window.currentProfile.logo_url) {
                     window.currentProfile.logo_url = savedLogo;
                 }
 
                 const isManager = window.currentProfile && window.currentProfile.user_grade === 'manager';
-                
-                const promises = [
-                    this.loadMyOrders()
-                ];
-
-                if (isManager) {
-                    promises.push(this.loadAllOrders());
-                }
-                
+                const promises = [ this.loadMyOrders() ];
+                if (isManager) promises.push(this.loadAllOrders());
                 await Promise.all(promises);
-                this.renderDashboard();
-                
+
+                // 최초 진입이라 로딩 화면이었던 경우에만 대시보드 렌더링
+                if (!hasExistingProfile) {
+                    this.renderDashboard();
+                }
             } catch (error) {
                 console.error("Error loading MyPage data:", error);
-                this.container.innerHTML = `
-                    <div class="sb-glass-card" style="text-align: center; color: #dc2626; padding: 30px;">
-                        데이터를 불러오는 중 오류가 발생했습니다: ${error.message}
-                    </div>
-                `;
+                if (!hasExistingProfile) {
+                    this.container.innerHTML = `
+                        <div class="sb-glass-card" style="text-align: center; color: #dc2626; padding: 30px;">
+                            데이터를 불러오는 중 오류가 발생했습니다: ${error.message}
+                        </div>
+                    `;
+                }
             }
         }
 
@@ -1649,6 +1656,11 @@
 
         
         async saveAllProfileFields() {
+            const btnSaveInit = this.container.querySelector('#btn-save-all-profile');
+            if (btnSaveInit) {
+                btnSaveInit.disabled = true;
+                btnSaveInit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...';
+            }
             const name = (this.container.querySelector('#input-name')?.value || '').trim();
             const nickname = (this.container.querySelector('#input-nickname')?.value || '').trim();
             const company = (this.container.querySelector('#input-company')?.value || '').trim();
@@ -1713,10 +1725,35 @@
                     authEvents.emit('stateChange', { event: 'PROFILE_UPDATED', session: null, profile: window.currentProfile });
                 }
 
-                alert('프로필 정보와 슬로건이 성공적으로 저장되었습니다!');
-                this.renderDashboard();
+                // 부드러운 인라인 피드백
+                const btnSave = this.container.querySelector('#btn-save-all-profile');
+                if (btnSave) {
+                    btnSave.disabled = false;
+                    btnSave.style.background = '#059669';
+                    btnSave.innerHTML = '<i class="fa-solid fa-check"></i> 저장 완료!';
+                    setTimeout(() => {
+                        btnSave.style.background = '';
+                        btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 프로필 정보 저장';
+                    }, 1800);
+                }
+
+                // 좌측 미리보기 텍스트 실시간 반영
+                const prevName = this.container.querySelector('.studio-user-name');
+                if (prevName) prevName.innerText = payload.nickname || payload.name || '위라클 파트너';
+                const prevSlogan = this.container.querySelector('.studio-slogan-text');
+                if (prevSlogan) {
+                    prevSlogan.innerText = `"${payload.slogan || '나만의 슬로건을 등록해보세요!'}"`;
+                    prevSlogan.title = payload.slogan || '';
+                }
+
+                this.showToast('프로필 정보가 안전하게 저장되었습니다.');
             } catch(err) {
                 console.error('saveAllProfileFields error:', err);
+                const btnSave = this.container.querySelector('#btn-save-all-profile');
+                if (btnSave) {
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 프로필 정보 저장';
+                }
                 alert('프로필 저장 중 오류가 발생했습니다: ' + err.message);
             }
         }
@@ -1909,7 +1946,9 @@
                     authEvents.emit('stateChange', { event: 'PROFILE_UPDATED', session: null, profile: window.currentProfile });
                 }
                 
-                this.render();
+                // [개선]: this.render() 대신 this.renderDashboard()를 호출하여 로딩창 없이 0초 만에 부드럽게 갱신
+                this.renderDashboard();
+                this.showToast('변경 사항이 즉시 반영되었습니다.');
             } catch (err) {
                 alert("프로필 업데이트 중 오류가 발생했습니다: " + err.message);
             }
@@ -1929,6 +1968,26 @@
 
 
 
+
+        showToast(message) {
+            let toast = document.getElementById('mypage-toast-alert');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'mypage-toast-alert';
+                toast.style.cssText = 'position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: #0f172a; color: #ffffff; padding: 10px 22px; border-radius: 9999px; font-size: 13px; font-weight: 700; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); z-index: 999999; display: flex; align-items: center; gap: 8px; opacity: 0; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none;';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> <span>' + message + '</span>';
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(-50%) translateY(0)';
+            });
+            if (this.toastTimeout) clearTimeout(this.toastTimeout);
+            this.toastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+            }, 2000);
+        }
 
         escapeHtml(str) {
             if (!str) return '';

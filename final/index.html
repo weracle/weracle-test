@@ -32,12 +32,14 @@
 <script src="weracle_device.js"></script>
 <script src="weracle_modal.js"></script>
 <script>
-    /* mainFrame 내부 중복 진입 시에만 부모 창의 대시보드 홈으로 정리 (최상위 루트 appFrame 탈출 방지) */
-    try {
-        if (window.frameElement && window.frameElement.id === 'mainFrame' && window.parent && typeof window.parent.showDashboardHome === 'function') {
-            window.parent.showDashboardHome();
-        }
-    } catch(e) {}
+    /* iframe 중복 index.html 방지 (헤더 2중 형성 차단) */
+    if (window.top !== window.self) {
+        try {
+            if (window.top.location.hostname === window.location.hostname) {
+                window.top.location.href = window.location.href;
+            }
+        } catch(e) {}
+    }
 // Chrome [Violation] unload 강제 차단 심화 코드
 (function() {
 const originalAddEventListener = EventTarget.prototype.addEventListener;
@@ -6967,4 +6969,201 @@ window.toggleMobileFullMenu = toggleMobileFullMenu;
     setInterval(loadAppNotices, 30000);
     window.addEventListener('DOMContentLoaded', loadAppNotices);
   </script>
+    <!-- ===================================================================== -->
+<!-- [START] 메타 앱 검수 전용 완전 격리 모듈 (기존 기능 간섭 0% / 검수 후 삭제 가능) -->
+<!-- ===================================================================== -->
+<script id="weracle-meta-review-isolated">
+(function () {
+  var REVIEWER_EMAIL = 'reviewer@weraclelab.com';
+  var params = new URLSearchParams(window.location.search);
+  var isReviewUrl = params.get('mode') === 'review';
+
+  function isReviewerTokenInStorage() {
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf('sb-') === 0 && k.indexOf('-auth-token') !== -1) {
+          var raw = JSON.parse(localStorage.getItem(k) || '{}');
+          var u = raw.user || (raw.currentSession && raw.currentSession.user);
+          if (u && u.email && String(u.email).trim().toLowerCase() === REVIEWER_EMAIL) {
+            return true;
+          }
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  // ★ 일반 설계사·팀원·관리자 접속 시 아무것도 실행하지 않고 0.01초 만에 즉시 종료!
+  if (!isReviewUrl && !isReviewerTokenInStorage()) {
+    return;
+  }
+
+  // 심사관 세션일 때만 적용되는 격리 스타일 (구글 시트 재연동 경고 및 온보딩 팝업 숨김)
+  var styleEl = document.createElement('style');
+  styleEl.id = 'meta-reviewer-isolated-css';
+  styleEl.textContent = [
+    'html.is-meta-reviewer #googleAuthUI,',
+    'html.is-meta-reviewer #dropdownGoogleSyncCard,',
+    'html.is-meta-reviewer #w-onboarding-modal { display: none !important; }',
+    'html.is-meta-reviewer #headerAvatarSyncDot { background-color: #10b981 !important; animation: none !important; }',
+    '#metaReviewLoginModal { position: fixed; inset: 0; z-index: 9999999; background: rgba(15,23,42,0.72); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 20px; }',
+    '#metaReviewLoginCard { background: #ffffff; width: 100%; max-width: 400px; border-radius: 20px; padding: 32px 28px; box-shadow: 0 25px 50px rgba(0,0,0,0.28); font-family: Pretendard, sans-serif; position: relative; }',
+    '#metaReviewLoginCard h3 { margin: 0 0 6px 0; font-size: 20px; font-weight: 900; color: #113f67; }',
+    '#metaReviewLoginCard p { margin: 0 0 20px 0; font-size: 13px; color: #64748b; line-height: 1.5; }',
+    '#metaReviewLoginCard .mr-input { width: 100%; box-sizing: border-box; padding: 12px 14px !important; margin-bottom: 10px; border: 1.5px solid #cbd5e1 !important; border-radius: 10px !important; font-size: 14px !important; background: #f8fafc !important; }',
+    '#metaReviewLoginCard .mr-btn { width: 100%; padding: 13px !important; background: #113f67 !important; color: #ffffff !important; border: none !important; border-radius: 10px !important; font-size: 14.5px !important; font-weight: 800 !important; cursor: pointer; margin-top: 6px; }',
+    '#metaReviewLoginCard .mr-close { position: absolute; top: 16px; right: 16px; background: #f1f5f9 !important; color: #475569 !important; width: 30px; height: 30px; padding: 0 !important; border-radius: 50% !important; font-size: 14px !important; cursor: pointer; }'
+  ].join('\n');
+  document.head.appendChild(styleEl);
+
+  function activateReviewerBypass() {
+    document.documentElement.classList.add('is-meta-reviewer');
+    if (window.currentUser && String(window.currentUser.email || '').toLowerCase() === REVIEWER_EMAIL) {
+      try { localStorage.setItem('onboarding_done_' + window.currentUser.id, 'true'); } catch (e) {}
+      if (!window.currentProfile) {
+        window.currentProfile = {
+          id: window.currentUser.id,
+          email: REVIEWER_EMAIL,
+          name: 'Meta Reviewer',
+          nickname: 'Meta Reviewer',
+          phone: '010-0000-0000',
+          user_grade: 'vip',
+          onboarding_done: true
+        };
+      } else {
+        window.currentProfile.user_grade = 'vip';
+        window.currentProfile.onboarding_done = true;
+        if (!window.currentProfile.phone) window.currentProfile.phone = '010-0000-0000';
+      }
+    }
+  }
+
+  // 이미 심사관 계정으로 로그인된 상태면 즉시 바이패스 적용
+  if (isReviewerTokenInStorage()) {
+    activateReviewerBypass();
+    var syncTimer = setInterval(function () {
+      if (window.currentUser && String(window.currentUser.email || '').toLowerCase() === REVIEWER_EMAIL) {
+        activateReviewerBypass();
+        if (isReviewUrl && typeof window.loadSubPage === 'function') {
+          clearInterval(syncTimer);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          window.loadSubPage('광고관리', '광고관리', 'meta_ads.html');
+        }
+      }
+    }, 300);
+    setTimeout(function () { clearInterval(syncTimer); }, 8000);
+    if (!isReviewUrl) return;
+  }
+
+  // ?mode=review 로 접속했고 아직 심사관 로그인이 안 된 경우 전용 로그인 모달 표시
+  function mountReviewerModal() {
+    if (document.getElementById('metaReviewLoginModal') || isReviewerTokenInStorage()) return;
+    var wrap = document.createElement('div');
+    wrap.id = 'metaReviewLoginModal';
+    wrap.innerHTML = [
+      '<div id="metaReviewLoginCard">',
+      '  <button type="button" class="mr-close" id="mrCloseBtn">✕</button>',
+      '  <div style="font-size:11.5px; font-weight:800; color:#0284c7; margin-bottom:4px;">META APP REVIEW PORTAL</div>',
+      '  <h3>WERACLE LAB Reviewer Login</h3>',
+      '  <p>This sign-in portal is strictly reserved for the Meta App Review team. Regular users must sign in with Google.</p>',
+      '  <form id="mrLoginForm">',
+      '    <input type="email" id="mrEmailInput" class="mr-input" placeholder="Reviewer Email" value="' + REVIEWER_EMAIL + '" required />',
+      '    <input type="password" id="mrPwInput" class="mr-input" placeholder="Password" required />',
+      '    <div id="mrErrorMsg" style="display:none; color:#dc2626; font-size:12.5px; font-weight:700; margin:4px 0 8px 0;"></div>',
+      '    <button type="submit" class="mr-btn" id="mrSubmitBtn">Sign In to Ad Manager</button>',
+      '  </form>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(wrap);
+
+    document.getElementById('mrCloseBtn').onclick = function () {
+      wrap.remove();
+    };
+
+    document.getElementById('mrLoginForm').onsubmit = async function (ev) {
+      ev.preventDefault();
+      var em = String(document.getElementById('mrEmailInput').value || '').trim().toLowerCase();
+      var pw = document.getElementById('mrPwInput').value || '';
+      var errBox = document.getElementById('mrErrorMsg');
+      var btn = document.getElementById('mrSubmitBtn');
+      errBox.style.display = 'none';
+
+      // ★ 화이트리스트 잠금: 지정된 심사관 이메일 외 일반 유저 이메일은 100% 차단
+      if (em !== REVIEWER_EMAIL) {
+        errBox.style.display = 'block';
+        errBox.innerText = '일반 회원님은 상단 [로그인] 버튼의 Google 로그인을 이용해 주세요. (Authorized Meta Reviewer email only.)';
+        return;
+      }
+
+      if (!window.sb || !window.sb.auth) {
+        errBox.style.display = 'block';
+        errBox.innerText = 'Initializing authentication... Please try again in 2 seconds.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'Signing in...';
+
+      try {
+        var res = await window.sb.auth.signInWithPassword({ email: em, password: pw });
+        if (res.error) throw res.error;
+        var user = res.data && res.data.user;
+        if (user) {
+          localStorage.setItem('onboarding_done_' + user.id, 'true');
+          await window.sb.auth.updateUser({
+            data: {
+              name: 'Meta Reviewer',
+              nickname: 'Meta Reviewer',
+              phone: '010-0000-0000',
+              company: 'Meta App Review',
+              position: 'Reviewer',
+              onboarding_done: true,
+              registered_devices: []
+            }
+          }).catch(function () {});
+
+          await window.sb.from('profiles').upsert({
+            id: user.id,
+            email: REVIEWER_EMAIL,
+            name: 'Meta Reviewer',
+            nickname: 'Meta Reviewer',
+            phone: '010-0000-0000',
+            company: 'Meta App Review',
+            position: 'Reviewer',
+            user_grade: 'vip'
+          }).catch(function () {});
+        }
+
+        activateReviewerBypass();
+        wrap.remove();
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        if (typeof window.checkSession === 'function') {
+          await window.checkSession();
+        }
+        activateReviewerBypass();
+
+        if (typeof window.loadSubPage === 'function') {
+          window.loadSubPage('광고관리', '광고관리', 'meta_ads.html');
+        }
+      } catch (err) {
+        errBox.style.display = 'block';
+        errBox.innerText = 'Sign-in failed: ' + (err.message || 'Invalid credentials');
+        btn.disabled = false;
+        btn.innerText = 'Sign In to Ad Manager';
+      }
+    };
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mountReviewerModal);
+  } else {
+    mountReviewerModal();
+  }
+})();
+</script>
+<!-- ===================================================================== -->
+<!-- [END] 메타 앱 검수 전용 완전 격리 모듈                                  -->
+<!-- ===================================================================== -->
 </body>

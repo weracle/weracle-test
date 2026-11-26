@@ -6299,11 +6299,15 @@ async function loadServerCampaigns(showLoading) {
         const syncedList = [];
         for (const row of rawList) {
           let parsedPermalink = row.permalink || '';
+          let parsedPdfUrl = '';
+          let parsedPrId = '';
           let cleanTargetSummary = row.target_summary || '';
           if (cleanTargetSummary.startsWith('{')) {
             try {
               const pObj = JSON.parse(cleanTargetSummary);
               if (pObj.permalink) parsedPermalink = pObj.permalink;
+              if (pObj.pdfUrl) parsedPdfUrl = pObj.pdfUrl;
+              if (pObj.prId) parsedPrId = pObj.prId;
               cleanTargetSummary = pObj.summary || '인스타 24h 댓글 자동DM 연결됨';
             } catch (e) {}
           }
@@ -6332,6 +6336,8 @@ async function loadServerCampaigns(showLoading) {
             leadsCount: Number(row.leads_count || 0),
             dmSentCount: Number(row.dm_sent_count || 0),
             permalink: parsedPermalink,
+            pdfUrl: parsedPdfUrl,
+            prId: parsedPrId,
             metrics: { impressions: 0, reach: 0, clicks: 0, ctr: '0.00', cpc: 0, spend: 0, likes: 0, comments: 0 }
           };
 
@@ -6426,14 +6432,14 @@ async function loadServerCampaigns(showLoading) {
 
 
 
-    function getStatusBadgeHtml(c) {
+   function getStatusBadgeHtml(c) {
 
       if (c.track === 'insta') {
-
+        if (c.status === 'PAUSED') {
+          return `<span style="background:#f1f5f9; color:#475569; padding:4px 10px; border-radius:20px; font-size:11.5px; font-weight:800;">⏸️ 자동DM 일시중지</span>`;
+        }
         return `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:20px; font-size:11.5px; font-weight:800;">📸 24h 자동DM 작동중</span>`;
-
       }
-
       const eff = c.effectiveStatus || c.status;
 
       if (eff === 'IN_PROCESS' || eff === 'PENDING_REVIEW' || eff === 'PREAPPROVED') {
@@ -6636,17 +6642,18 @@ async function loadServerCampaigns(showLoading) {
                 </div>
               </div>
 
-              <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-                ${isMeta ? `
-                  <label class="switch" title="클릭 시 실제 메타 광고 관리자에서도 즉시 켜짐/꺼짐 반영">
-                    <input type="checkbox" ${isOn ? 'checked' : ''} onchange="toggleCampaignStatus(${originalIdx}, this.checked)" />
-                    <span class="slider"></span>
-                  </label>
-                  <span style="font-size:12px; font-weight:800; color:${isOn ? 'var(--green)' : 'var(--sub)'}; margin-right:4px;">${isOn ? 'ON' : 'OFF'}</span>
-                  <button class="btn-header-action" onclick="promptEditCampaign(${originalIdx})">✏️ 예산·기간</button>
-                ` : (c.permalink ? `
-                  <a href="${c.permalink}" target="_blank" class="btn-header-action" style="text-decoration:none; color:var(--insta);">📸 게시물 보기</a>
-                ` : '')}
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0; flex-wrap:wrap;">
+                <label class="switch" title="${isMeta ? '클릭 시 메타 광고 게재 ON/OFF 즉시 반영' : '클릭 시 인스타 댓글 자동DM ON/OFF 즉시 전환'}">
+                  <input type="checkbox" ${isOn ? 'checked' : ''} onchange="toggleCampaignStatus(${originalIdx}, this.checked)" />
+                  <span class="slider"></span>
+                </label>
+                <span style="font-size:12px; font-weight:800; color:${isOn ? 'var(--green)' : 'var(--sub)'}; margin-right:2px;">${isOn ? 'ON' : 'OFF'}</span>
+                <button class="btn-header-action" onclick="openEditCampaignModal(${originalIdx})" style="border-color:var(--primary); color:var(--primary); background:#eff6ff;">
+                  ✏️ ${isMeta ? '광고 수정' : '설정 수정'}
+                </button>
+                ${!isMeta && c.permalink ? `
+                  <a href="${c.permalink}" target="_blank" class="btn-header-action" style="text-decoration:none; color:var(--insta);">📸 원본 보기 ↗</a>
+                ` : ''}
                 <button class="btn-header-action" style="color:var(--red); border-color:#fecaca; background:#fef2f2;" onclick="deleteCampaignRow(${originalIdx})">🗑️ 삭제</button>
               </div>
             </div>
@@ -6705,34 +6712,469 @@ async function toggleCampaignStatus(idx, isChecked) {
       } catch (e) {}
     }
 
-    async function promptEditCampaign(idx) {
+   let editingCampaignIdx = -1;
+    let loadedEditStorySpec = null;
+    let loadedOriginalAdMessage = '';
+    let isEditingInstantFormAd = false;
+
+    function ensureCampaignEditModalDom() {
+      if (document.getElementById('campaignEditModal')) return;
+      const modalHtml = `
+        <div class="modal-overlay" id="campaignEditModal">
+          <div class="onboarding-card" style="max-width:700px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+              <div>
+                <h2 id="editModalHeaderTitle" style="margin:0; font-size:19px; font-weight:900; color:var(--navy);">✏️ 캠페인 설정 수정</h2>
+                <p id="editModalSubDesc" style="margin:4px 0 0 0; font-size:12.5px; color:var(--sub);">수정 후 저장 버튼을 누르면 실시간으로 반영됩니다.</p>
+              </div>
+              <button type="button" class="btn-header-action" onclick="closeEditCampaignModal()">✕ 닫기</button>
+            </div>
+
+            <div id="editInstaOriginBanner" style="display:none; background:#fff1f2; border:1px solid #fecdd3; border-radius:12px; padding:11px 14px; margin-bottom:14px; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+              <div style="font-size:12px; color:#be123c; font-weight:700; line-height:1.45;">
+                📸 이미 게시된 인스타 피드·릴스의 <strong>원본 본문(캡션)</strong> 수정은 우측 버튼에서 가능하며,<br/>아래 <strong>댓글 키워드·DM 메시지·연결 링크</strong>는 저장 즉시 실시간 반영됩니다.
+              </div>
+              <a id="editInstaOriginLink" href="#" target="_blank" class="btn-header-action" style="text-decoration:none; color:var(--insta); border-color:#fda4af; background:#fff;">
+                📸 인스타 원본 열기 ↗
+              </a>
+            </div>
+
+            <div id="editMetaInstantNotice" style="display:none; background:#eff6ff; border:1px solid #bfdbfe; border-radius:11px; padding:10px 14px; margin-bottom:14px; font-size:12px; color:#1e40af; font-weight:700;">
+              ⚡ <strong>메타 인스턴트 양식 캠페인</strong>입니다. 예산·기간·광고 제목·본문 문구를 실시간 수정할 수 있습니다.
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:13px;">
+              <div>
+                <label class="target-label" id="lblEditCampTitle">📌 제목 (광고 제목 / 관리명)</label>
+                <input type="text" id="editCampTitle" class="form-input" style="background:#fff; font-weight:800;" />
+              </div>
+
+              <!-- 메타 광고 전용 영역 -->
+              <div id="editMetaOnlyFields" style="display:none; flex-direction:column; gap:13px;">
+                <div class="form-row-2">
+                  <div>
+                    <label class="target-label">💰 1일 광고 예산 (최소 15,000원)</label>
+                    <input type="number" id="editMetaBudget" class="form-input" step="5000" min="15000" style="background:#fff; font-weight:800; color:var(--navy);" />
+                  </div>
+                  <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                      <label class="target-label" style="margin:0;">📅 종료일자</label>
+                      <label style="font-size:12px; font-weight:800; color:var(--primary); cursor:pointer; display:flex; align-items:center; gap:4px;">
+                        <input type="checkbox" id="editMetaContinuous" onchange="document.getElementById('editMetaEndDate').disabled = this.checked;" /> 상시 게재
+                      </label>
+                    </div>
+                    <input type="date" id="editMetaEndDate" class="form-input" style="background:#fff;" />
+                  </div>
+                </div>
+
+                <div class="form-row-2">
+                  <div>
+                    <label class="target-label">💬 보조 설명 (이미지 하단 서브문구)</label>
+                    <input type="text" id="editMetaDesc" class="form-input" style="background:#fff;" />
+                  </div>
+                  <div>
+                    <label class="target-label">👆 행동 유도(CTA) 버튼</label>
+                    <select id="editMetaCta" class="form-select" style="background:#fff;">
+                      <option value="LEARN_MORE">더 알아보기 (권장)</option>
+                      <option value="APPLY_NOW">지금 신청하기</option>
+                      <option value="GET_QUOTE">견적 받기</option>
+                      <option value="SIGN_UP">가입하기</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <label class="target-label" style="margin:0;">📝 광고 본문 문구</label>
+                    <span id="editMetaCreativeStatus" style="font-size:11.5px; color:var(--sub); font-weight:700;"></span>
+                  </div>
+                  <textarea id="editMetaCaption" class="form-textarea" rows="4" style="background:#fff; line-height:1.55;" placeholder="광고 본문 문구를 불러오는 중..."></textarea>
+                </div>
+              </div>
+
+              <!-- 인스타 자동DM 전용 영역 -->
+              <div id="editInstaOnlyFields" style="display:none; flex-direction:column; gap:13px;">
+                <div>
+                  <label class="target-label">💬 감지할 댓글 키워드 * (쉼표로 여러 개 지정 가능)</label>
+                  <input type="text" id="editInstaKeyword" class="form-input" placeholder="예: 궁금, 비교표, 점검" style="background:#fff; font-weight:800;" />
+                </div>
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <label class="target-label" style="margin:0;">💌 댓글 작성자에게 자동 발송할 DM 메시지</label>
+                    <span style="font-size:11px; color:var(--insta); font-weight:800;">{신청링크} 자리에 단축주소가 자동 삽입됩니다</span>
+                  </div>
+                  <textarea id="editInstaDmMessage" class="form-textarea" rows="3" style="background:#fff; line-height:1.5;"></textarea>
+                </div>
+              </div>
+
+              <!-- 공통 목적지(PR 랜딩 / 외부 URL / 제공 PDF) 설정 영역 -->
+              <div id="editDestSection" style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:13px 15px; display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                  <span class="target-label" style="margin:0;">🎯 클릭 시 연결할 페이지 방식</span>
+                  <div style="display:flex; gap:14px;">
+                    <label style="font-size:12.5px; font-weight:800; color:var(--navy); cursor:pointer; display:flex; align-items:center; gap:5px;">
+                      <input type="radio" name="editDestModeRadio" value="pr_page" checked onchange="toggleEditDestModeUI()" /> 🪪 내 PR 랜딩페이지 연결
+                    </label>
+                    <label style="font-size:12.5px; font-weight:800; color:#475569; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                      <input type="radio" name="editDestModeRadio" value="custom_url" onchange="toggleEditDestModeUI()" /> 🔗 외부 URL 직접 입력
+                    </label>
+                  </div>
+                </div>
+
+                <div id="editPrSelectWrap" style="display:flex; flex-direction:column; gap:10px;">
+                  <div>
+                    <label style="font-size:12px; font-weight:800; color:#334155; display:block; margin-bottom:4px;">🪪 열릴 내 PR 랜딩페이지 버전</label>
+                    <select id="editPrPageSelect" class="form-select" style="background:#fff; font-weight:800; color:var(--navy);"></select>
+                  </div>
+                  <div>
+                    <label style="font-size:12px; font-weight:800; color:#334155; display:block; margin-bottom:4px;">🎁 신청 완료 시 제공되는 PDF / 이동 링크 (선택)</label>
+                    <div style="display:flex; gap:6px;">
+                      <input type="url" id="editCampPdfUrl" class="form-input" placeholder="https://drive.google.com/... 또는 이동할 링크" style="flex:1; background:#fff;" />
+                      <button type="button" class="btn-header-action" onclick="previewPdfUrl('editCampPdfUrl')" style="padding:0 12px; flex-shrink:0;">미리보기 ↗</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="editCustomUrlWrap" style="display:none;">
+                  <label style="font-size:12px; font-weight:800; color:#334155; display:block; margin-bottom:4px;">🔗 이동할 외부 웹사이트 주소 (자사 도메인 권장 · open.kakao 직통 비권장)</label>
+                  <input type="url" id="editCustomLandingUrl" class="form-input" placeholder="예: https://www.weraclelab.com/openchat.html" style="background:#fff;" />
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px; padding-top:14px; border-top:1px solid var(--border);">
+              <button type="button" class="btn-prev" onclick="closeEditCampaignModal()">취소</button>
+              <button type="button" class="btn-launch" id="btnSaveEditedCamp" onclick="saveEditedCampaign()">💾 변경사항 저장하기</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    function toggleEditDestModeUI() {
+      const sel = document.querySelector('input[name="editDestModeRadio"]:checked');
+      const isCustom = sel && sel.value === 'custom_url';
+      const prWrap = document.getElementById('editPrSelectWrap');
+      const customWrap = document.getElementById('editCustomUrlWrap');
+      if (prWrap) prWrap.style.display = isCustom ? 'none' : 'flex';
+      if (customWrap) customWrap.style.display = isCustom ? 'block' : 'none';
+    }
+
+    function closeEditCampaignModal() {
+      const m = document.getElementById('campaignEditModal');
+      if (m) m.style.display = 'none';
+    }
+
+    async function openEditCampaignModal(idx) {
       const item = myCampaigns[idx];
       if (!item) return;
-      const newBudgetStr = prompt(`✏️ [${item.title}]\n1일 광고 예산(원)을 입력해 주세요 (최소 15,000원):`, item.budget || 15000);
-      if (newBudgetStr === null) return;
-      const newBudget = Math.max(15000, parseInt(String(newBudgetStr).replace(/,/g, ''), 10) || 15000);
+      ensureCampaignEditModalDom();
+      editingCampaignIdx = idx;
+      loadedEditStorySpec = null;
+      loadedOriginalAdMessage = '';
+      isEditingInstantFormAd = false;
 
-      const newEndDate = prompt(`📅 종료일자 입력 (YYYY-MM-DD 또는 '상시 게재'):`, item.endDate || '상시 게재');
-      if (newEndDate === null) return;
+      await fetchMySavedPrPagesForSelect();
+      const typeLabelMap = { A: '🅰️ 브랜딩·점검', B: '🅱️ 핵심상품 집중', C: '🅲 리쿠르팅·채용' };
+      const prSelect = document.getElementById('editPrPageSelect');
+      if (prSelect) {
+        prSelect.innerHTML = `<option value="">⭐ 나의 기본 대표 PR 페이지 (자동 적용)</option>` +
+          mySavedPrPagesList.map(p => {
+            const tBadge = typeLabelMap[p.presetType] || '🅰️ 브랜딩';
+            const defStar = p.isDefault ? ' [대표]' : '';
+            return `<option value="${p.id}">[${tBadge}] ${p.title}${defStar}</option>`;
+          }).join('');
+        prSelect.value = item.prId || '';
+      }
 
-      const metaConn = getMyMetaConn();
-      const token = metaConn ? metaConn.token : '';
-      let targetAdSetId = item.adSetId;
+      const isMeta = item.track === 'meta';
+      document.getElementById('editModalHeaderTitle').innerText = isMeta
+        ? '🚀 메타 유료 광고 통합 수정'
+        : '📸 인스타 게시물 & 자동 DM 설정 수정';
+      document.getElementById('lblEditCampTitle').innerText = isMeta
+        ? '📌 광고 제목 (이미지 하단 제목 & 캠페인명)'
+        : '📌 관리용 게시물 제목';
+
+      document.getElementById('editMetaOnlyFields').style.display = isMeta ? 'flex' : 'none';
+      document.getElementById('editInstaOnlyFields').style.display = isMeta ? 'none' : 'flex';
+      document.getElementById('editMetaInstantNotice').style.display = 'none';
+      document.getElementById('editDestSection').style.display = 'flex';
+
+      const originBanner = document.getElementById('editInstaOriginBanner');
+      if (!isMeta && item.permalink) {
+        originBanner.style.display = 'flex';
+        document.getElementById('editInstaOriginLink').href = item.permalink;
+      } else {
+        originBanner.style.display = 'none';
+      }
+
+      document.getElementById('editCampTitle').value = item.title || '';
+      document.getElementById('editCampPdfUrl').value = item.pdfUrl || '';
+
+      const curLanding = String(item.landingUrl || '').trim();
+      const isDirectExternal = Boolean(
+        curLanding &&
+        !curLanding.includes('sns_apply.html') &&
+        !curLanding.includes('/api/meta-execute') &&
+        curLanding !== item.pdfUrl
+      );
+
+      const destRadios = document.querySelectorAll('input[name="editDestModeRadio"]');
+      destRadios.forEach(r => { r.checked = (r.value === (isDirectExternal ? 'custom_url' : 'pr_page')); });
+      document.getElementById('editCustomLandingUrl').value = isDirectExternal ? curLanding : '';
+      toggleEditDestModeUI();
+
+      if (!isMeta) {
+        document.getElementById('editInstaKeyword').value = item.keyword || '궁금';
+        const displayDm = String(item.dmMessage || '')
+          .replace(/https?:\/\/[^\s]+\/api\/meta-execute\?c=[^\s]+/g, '{신청링크}');
+        document.getElementById('editInstaDmMessage').value = displayDm || '댓글 감사합니다! 요청하신 안내 및 무료 상담 신청 링크입니다 👉 {신청링크}';
+      } else {
+        document.getElementById('editMetaBudget').value = item.budget || 15000;
+        const isCont = !item.endDate || item.endDate === '상시 게재';
+        document.getElementById('editMetaContinuous').checked = isCont;
+        document.getElementById('editMetaEndDate').disabled = isCont;
+        document.getElementById('editMetaEndDate').value = isCont ? '' : item.endDate;
+        document.getElementById('editMetaDesc').value = item.description || '';
+        document.getElementById('editMetaCta').value = item.ctaType || 'LEARN_MORE';
+
+        const capEl = document.getElementById('editMetaCaption');
+        const stEl = document.getElementById('editMetaCreativeStatus');
+        capEl.value = '';
+        capEl.placeholder = '메타 광고 소재에서 현재 본문을 불러오는 중...';
+        if (stEl) stEl.innerText = '⏳ 소재 조회 중...';
+
+        const metaConn = getMyMetaConn();
+        const token = metaConn ? metaConn.token : '';
+        if (token && item.adId) {
+          fetch(`https://graph.facebook.com/v21.0/${item.adId}?fields=creative{id,object_story_spec}&access_token=${encodeURIComponent(token)}`)
+            .then(r => r.json())
+            .then(d => {
+              const spec = d && d.creative && d.creative.object_story_spec ? d.creative.object_story_spec : null;
+              if (spec) {
+                loadedEditStorySpec = spec;
+                const msg = (spec.video_data && spec.video_data.message) || (spec.link_data && spec.link_data.message) || '';
+                loadedOriginalAdMessage = msg;
+                capEl.value = msg;
+                capEl.placeholder = '수정할 광고 본문을 입력하세요';
+
+                const lfId = (spec.video_data && spec.video_data.call_to_action && spec.video_data.call_to_action.value && spec.video_data.call_to_action.value.lead_gen_form_id) ||
+                             (spec.link_data && spec.link_data.call_to_action && spec.link_data.call_to_action.value && spec.link_data.call_to_action.value.lead_gen_form_id) || '';
+                if (lfId) {
+                  isEditingInstantFormAd = true;
+                  document.getElementById('editMetaInstantNotice').style.display = 'block';
+                  document.getElementById('editDestSection').style.display = 'none';
+                }
+                if (stEl) stEl.innerText = '✅ 메타 원본 연동됨 (수정 시 재심사 후 반영)';
+              } else {
+                capEl.placeholder = '원본 소재 본문을 불러올 수 없어 예산·기간·링크만 수정됩니다.';
+                if (stEl) stEl.innerText = 'ℹ️ 예산·기간·링크 수정 가능';
+              }
+            })
+            .catch(() => {
+              if (stEl) stEl.innerText = 'ℹ️ 예산·기간·링크 수정 가능';
+            });
+        } else {
+          capEl.placeholder = '연동된 광고 소재 ID가 없어 예산·기간·링크만 수정됩니다.';
+          if (stEl) stEl.innerText = '';
+        }
+      }
+
+      const modal = document.getElementById('campaignEditModal');
+      modal.style.display = 'flex';
+      modal.scrollTop = 0;
+    }
+
+    async function saveEditedCampaign() {
+      const item = myCampaigns[editingCampaignIdx];
+      if (!item) return;
+
+      const saveBtn = document.getElementById('btnSaveEditedCamp');
+      const origBtnText = saveBtn.innerText;
+      saveBtn.disabled = true;
+      saveBtn.innerText = '⏳ 저장 중...';
+
+      const isMeta = item.track === 'meta';
+      const newTitle = document.getElementById('editCampTitle').value.trim() || item.title;
+      const destRadio = document.querySelector('input[name="editDestModeRadio"]:checked');
+      const destMode = destRadio ? destRadio.value : 'pr_page';
+      const pickedPrId = document.getElementById('editPrPageSelect').value || '';
+      const newPdfUrl = document.getElementById('editCampPdfUrl').value.trim();
+      let customUrl = document.getElementById('editCustomLandingUrl').value.trim();
+      if (customUrl && !/^https?:\/\//i.test(customUrl)) customUrl = 'https://' + customUrl;
+
+      if (destMode === 'custom_url' && customUrl.includes('open.kakao.com')) {
+        if (!confirm('⚠️ 주의: 메타 유료 광고나 인스타 DM에 open.kakao.com 직통 주소를 넣으면 스팸 정책(spam_policy)으로 차단될 수 있습니다.\n자사 도메인(weraclelab.com) 브릿지 페이지 사용을 권장합니다.\n그래도 그대로 저장하시겠습니까?')) {
+          saveBtn.disabled = false;
+          saveBtn.innerText = origBtnText;
+          return;
+        }
+      }
+
+      const curOrigin = (window.location.origin && !window.location.origin.includes('localhost')) ? window.location.origin : 'https://www.weraclelab.com';
+      const srcTag = isMeta ? 'meta_ad' : 'insta_dm';
+      const builtPrUrl = `${curOrigin}/sns_apply.html?utm_source=${srcTag}&camp_id=${encodeURIComponent(item.id)}&camp=${encodeURIComponent(newTitle)}&agent=${encodeURIComponent(getMyAgentName())}&agent_phone=${encodeURIComponent(getMyAgentPhone())}&agent_id=${encodeURIComponent(getActiveAgentId())}&doc=${encodeURIComponent(newPdfUrl)}${pickedPrId ? '&pr_id=' + encodeURIComponent(pickedPrId) : ''}`;
+
+      const finalDbLandingUrl = isEditingInstantFormAd
+        ? item.landingUrl
+        : ((destMode === 'custom_url' && customUrl) ? customUrl : builtPrUrl);
 
       try {
+        if (!isMeta) {
+          const newKeyword = document.getElementById('editInstaKeyword').value.trim() || '궁금';
+          const rawDmMsg = document.getElementById('editInstaDmMessage').value.trim();
+          const finalDmMessage = cleanDmMessageText(rawDmMsg, item.id, Boolean(newPdfUrl && newPdfUrl.startsWith('http')));
+
+          await fetch('/api/meta-execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'UPDATE_CAMPAIGN',
+              id: item.id,
+              title: newTitle,
+              keyword: newKeyword,
+              dmMessage: finalDmMessage,
+              landingUrl: finalDbLandingUrl,
+              metaPatch: {
+                pdfUrl: newPdfUrl,
+                prId: destMode === 'pr_page' ? pickedPrId : ''
+              }
+            })
+          });
+
+          closeEditCampaignModal();
+          await loadServerCampaigns(true);
+          alert('✅ 인스타그램 자동 DM 설정(키워드 · 메시지 · 연결 링크)이 즉시 반영되었습니다!');
+          return;
+        }
+
+        // 메타 유료 광고 수정 처리
+        const newBudget = Math.max(15000, parseInt(String(document.getElementById('editMetaBudget').value || '15000').replace(/,/g, ''), 10) || 15000);
+        const isCont = document.getElementById('editMetaContinuous').checked;
+        const dateVal = document.getElementById('editMetaEndDate').value.trim();
+        const newEndDate = (!isCont && dateVal) ? dateVal : '상시 게재';
+        const newDesc = document.getElementById('editMetaDesc').value.trim();
+        const newCta = document.getElementById('editMetaCta').value || 'LEARN_MORE';
+        const newCaption = document.getElementById('editMetaCaption').value.trim();
+
+        const metaConn = getMyMetaConn();
+        const token = metaConn ? metaConn.token : '';
+        const rawAct = metaConn ? (metaConn.adAcc || '') : '';
+        const cleanActId = rawAct.startsWith('act_') ? rawAct : `act_${rawAct}`;
+        let targetAdSetId = item.adSetId;
+
+        if (token && item.metaCampaignId && newTitle !== item.title) {
+          await fetch(`https://graph.facebook.com/v21.0/${item.metaCampaignId}`, {
+            method: 'POST',
+            body: new URLSearchParams({ name: `[위라클랩] ${newTitle}`, access_token: token })
+          }).catch(() => {});
+        }
+
         if (token && !targetAdSetId && item.metaCampaignId) {
-          const asRes = await fetch(`https://graph.facebook.com/v21.0/${item.metaCampaignId}/adsets?fields=id&limit=1&access_token=${token}`);
-          const asData = await asRes.json();
-          if (asData && asData.data && asData.data[0]) targetAdSetId = asData.data[0].id;
+          try {
+            const asRes = await fetch(`https://graph.facebook.com/v21.0/${item.metaCampaignId}/adsets?fields=id&limit=1&access_token=${token}`);
+            const asData = await asRes.json();
+            if (asData && asData.data && asData.data[0]) targetAdSetId = asData.data[0].id;
+          } catch (e) {}
         }
 
         if (token && targetAdSetId) {
           const upParams = new URLSearchParams({ daily_budget: String(newBudget), access_token: token });
-          if (newEndDate && newEndDate.trim() !== '상시 게재') {
-            const et = new Date(newEndDate.trim() + 'T23:59:59+09:00');
+          if (newEndDate !== '상시 게재') {
+            const et = new Date(newEndDate + 'T23:59:59+09:00');
             if (!isNaN(et.getTime())) upParams.append('end_time', et.toISOString());
+          } else if (item.endDate && item.endDate !== '상시 게재') {
+            upParams.append('end_time', '0');
           }
-          await fetch(`https://graph.facebook.com/v21.0/${targetAdSetId}`, { method: 'POST', body: upParams });
+          const asUpRes = await fetch(`https://graph.facebook.com/v21.0/${targetAdSetId}`, { method: 'POST', body: upParams });
+          const asUpJson = await asUpRes.json().catch(() => ({}));
+          if (asUpJson && asUpJson.error && upParams.has('end_time')) {
+            await fetch(`https://graph.facebook.com/v21.0/${targetAdSetId}`, {
+              method: 'POST',
+              body: new URLSearchParams({ daily_budget: String(newBudget), access_token: token })
+            }).catch(() => {});
+          }
+        }
+
+        // 본문·제목·설명·CTA·외부URL 변경 시 메타 광고 소재(Creative) 실시간 교체
+        let creativeUpdatedNotice = '';
+        if (token && item.adId && loadedEditStorySpec && rawAct) {
+          const metaTargetLink = (destMode === 'custom_url' && customUrl)
+            ? customUrl
+            : buildCleanShortApplyUrl(item.id);
+
+          const textOrLinkChanged =
+            (newCaption && newCaption !== loadedOriginalAdMessage) ||
+            newTitle !== item.title ||
+            newDesc !== item.description ||
+            newCta !== item.ctaType ||
+            finalDbLandingUrl !== item.landingUrl;
+
+          if (textOrLinkChanged) {
+            const clonedSpec = JSON.parse(JSON.stringify(loadedEditStorySpec));
+            const captionToApply = newCaption || loadedOriginalAdMessage || newTitle;
+
+            if (clonedSpec.video_data) {
+              clonedSpec.video_data.message = captionToApply;
+              clonedSpec.video_data.title = newTitle;
+              if (clonedSpec.video_data.call_to_action) {
+                clonedSpec.video_data.call_to_action.type = newCta;
+                if (clonedSpec.video_data.call_to_action.value && !clonedSpec.video_data.call_to_action.value.lead_gen_form_id) {
+                  clonedSpec.video_data.call_to_action.value.link = metaTargetLink;
+                }
+              }
+            } else if (clonedSpec.link_data) {
+              clonedSpec.link_data.message = captionToApply;
+              if (Array.isArray(clonedSpec.link_data.child_attachments)) {
+                if (!isEditingInstantFormAd) clonedSpec.link_data.link = metaTargetLink;
+                clonedSpec.link_data.child_attachments.forEach((att, sIdx) => {
+                  if (sIdx === 0) att.name = newTitle;
+                  if (newDesc) att.description = newDesc;
+                  if (!isEditingInstantFormAd) att.link = metaTargetLink;
+                  if (att.call_to_action) {
+                    att.call_to_action.type = newCta;
+                    if (att.call_to_action.value && !att.call_to_action.value.lead_gen_form_id) {
+                      att.call_to_action.value.link = metaTargetLink;
+                    }
+                  }
+                });
+              } else {
+                clonedSpec.link_data.name = newTitle;
+                if (newDesc) clonedSpec.link_data.description = newDesc;
+                if (!isEditingInstantFormAd) clonedSpec.link_data.link = metaTargetLink;
+                if (clonedSpec.link_data.call_to_action) {
+                  clonedSpec.link_data.call_to_action.type = newCta;
+                  if (clonedSpec.link_data.call_to_action.value && !clonedSpec.link_data.call_to_action.value.lead_gen_form_id) {
+                    clonedSpec.link_data.call_to_action.value.link = metaTargetLink;
+                  }
+                }
+              }
+            }
+
+            const crRes = await fetch(`https://graph.facebook.com/v21.0/${cleanActId}/adcreatives`, {
+              method: 'POST',
+              body: new URLSearchParams({
+                name: `[수정소재] ${newTitle} (${Date.now().toString().slice(-4)})`,
+                object_story_spec: JSON.stringify(clonedSpec),
+                access_token: token
+              })
+            });
+            const crData = await crRes.json().catch(() => ({}));
+            if (crData && crData.id) {
+              const adUpRes = await fetch(`https://graph.facebook.com/v21.0/${item.adId}`, {
+                method: 'POST',
+                body: new URLSearchParams({
+                  creative: JSON.stringify({ creative_id: crData.id }),
+                  access_token: token
+                })
+              });
+              const adUpData = await adUpRes.json().catch(() => ({}));
+              if (adUpData && adUpData.success) {
+                creativeUpdatedNotice = '\n• 메타 광고 본문·제목·연결 링크 소재 교체 완료 (메타 재검토 후 반영)';
+              }
+            }
+          }
         }
 
         await fetch('/api/meta-execute', {
@@ -6741,14 +7183,29 @@ async function toggleCampaignStatus(idx, isChecked) {
           body: JSON.stringify({
             action: 'UPDATE_CAMPAIGN',
             id: item.id,
+            title: newTitle,
+            description: newDesc,
+            ctaType: newCta,
             adSetId: targetAdSetId,
             newBudget,
-            newEndDate: newEndDate.trim()
+            newEndDate,
+            landingUrl: finalDbLandingUrl,
+            metaPatch: {
+              pdfUrl: newPdfUrl,
+              prId: destMode === 'pr_page' ? pickedPrId : ''
+            }
           })
         });
-        alert('✅ 예산 및 종료일자가 실시간으로 반영되었습니다.');
+
+        closeEditCampaignModal();
         await loadServerCampaigns(true);
-      } catch (e) {}
+        alert(`✅ 메타 유료 광고 수정 완료!\n• 1일 예산: ₩${newBudget.toLocaleString()} / 종료일: ${newEndDate}${creativeUpdatedNotice}`);
+      } catch (err) {
+        alert('수정 저장 중 오류가 발생했습니다: ' + err.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = origBtnText;
+      }
     }
 
     async function deleteCampaignRow(idx) {

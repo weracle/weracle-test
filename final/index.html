@@ -26,6 +26,20 @@
     } catch(e) {}
 })();
 </script>
+<script>
+// 도메인 주소창에 불필요한 /index, /index.html이 노출되지 않도록 최상단 루트(/)로 항상 깔끔하게 정제
+(function normalizeRootUrl() {
+  try {
+    const clean = p => (p || '').replace(/\/index(\.html)?$/i, '') || '/';
+    if (window.location.pathname && (window.location.pathname === '/index' || window.location.pathname.endsWith('/index') || window.location.pathname.endsWith('/index.html'))) {
+      history.replaceState(null, '', clean(window.location.pathname) + window.location.search + window.location.hash);
+    }
+    if (window.top && window.top.location && window.top.location.pathname && (window.top.location.pathname === '/index' || window.top.location.pathname.endsWith('/index') || window.top.location.pathname.endsWith('/index.html'))) {
+      window.top.history.replaceState(null, '', clean(window.top.location.pathname) + window.top.location.search + window.top.location.hash);
+    }
+  } catch(e) {}
+})();
+</script>
 <script src="login/config.js?v=1.0.1"></script>
 <script src="login/auth.js?v=1.0.1"></script>
 <script src="security.js?v=1.0.0"></script>
@@ -5213,17 +5227,15 @@ async function checkSession() {
             window.currentUser = data.session.user;
             wIsLoggedIn = true;
 
-            // OAuth 리다이렉트 후 브라우저 주소창의 긴 해시(#access_token=...) 깔끔하게 자동 정리
-            if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('provider_token'))) {
-                try {
-                    history.replaceState(null, '', window.location.pathname + window.location.search);
-                } catch(e) {}
-            }
+            // OAuth 리다이렉트 후 브라우저 주소창의 긴 해시(#access_token=...) 및 /index 깔끔하게 자동 정리
+            try {
+                let cleanPath = (window.location.pathname || '').replace(/\/index(\.html)?$/i, '') || '/';
+                history.replaceState(null, '', cleanPath + window.location.search);
+            } catch(e) {}
             if (window.top && window.top !== window) {
                 try {
-                    if (window.top.location.hash && (window.top.location.hash.includes('access_token') || window.top.location.hash.includes('provider_token'))) {
-                        window.top.history.replaceState(null, '', window.top.location.pathname + window.top.location.search);
-                    }
+                    let topCleanPath = (window.top.location.pathname || '').replace(/\/index(\.html)?$/i, '') || '/';
+                    window.top.history.replaceState(null, '', topCleanPath + window.top.location.search);
                 } catch(e) {}
             }
 
@@ -5455,7 +5467,8 @@ safeAlert("회원가입 실패: " + err.message);
 
 async function handleSocial(provider) {
 try {
-const redirectUrl = (window.top && window.top !== window) ? window.top.location.href.split('?')[0].split('#')[0] : window.location.href.split('?')[0].split('#')[0];
+const topOrigin = (window.top && window.top !== window && window.top.location.origin) ? window.top.location.origin : window.location.origin;
+const redirectUrl = topOrigin + '/';
 const options = { 
   redirectTo: redirectUrl,
   skipBrowserRedirect: true

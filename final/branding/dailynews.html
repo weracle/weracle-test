@@ -415,14 +415,14 @@
             if (avatar && avatar.length > 10 && !avatar.includes('consultant_model.jpg')) {
                 const safeAvatar = avatar.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
                 avatarSvg = `
-                  <circle cx="44" cy="44" r="40" fill="none" stroke="#f472b6" stroke-width="4"/>
+                  <circle cx="44" cy="44" r="40" fill="none" stroke="#0284c7" stroke-width="3.5"/>
                   <image href="${safeAvatar}" x="8" y="8" width="72" height="72" clip-path="url(#pbAvatarClip)" preserveAspectRatio="xMidYMid slice"/>
                 `;
             } else {
                 avatarSvg = `
-                  <circle cx="44" cy="44" r="40" fill="none" stroke="#f472b6" stroke-width="4"/>
-                  <circle cx="44" cy="44" r="36" fill="#fdf2f8"/>
-                  <text x="44" y="52" font-family="'Pretendard', sans-serif" font-size="24" font-weight="900" fill="#ec4899" text-anchor="middle">${name.charAt(0)}</text>
+                  <circle cx="44" cy="44" r="40" fill="none" stroke="#0284c7" stroke-width="3.5"/>
+                  <circle cx="44" cy="44" r="36" fill="#f0f9ff"/>
+                  <text x="44" y="52" font-family="'Pretendard', sans-serif" font-size="24" font-weight="900" fill="#0284c7" text-anchor="middle">${name.charAt(0)}</text>
                 `;
             }
 
@@ -437,9 +437,9 @@
                 </clipPath>
                 <style>
                   @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
-                  .pb-slogan { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 19px; font-weight: 800; fill: #0f172a; letter-spacing: -0.3px; }
-                  .pb-name { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 30px; font-weight: 900; fill: #a855f7; letter-spacing: -0.5px; }
-                  .pb-role { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 17px; font-weight: 800; fill: #1e1b4b; letter-spacing: -0.2px; }
+                  .pb-slogan { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 19px; font-weight: 700; fill: #64748b; letter-spacing: -0.3px; }
+                  .pb-name { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 31px; font-weight: 900; fill: #0f172a; letter-spacing: -0.5px; }
+                  .pb-role { font-family: 'Pretendard', -apple-system, sans-serif; font-size: 18px; font-weight: 700; fill: #0284c7; letter-spacing: -0.2px; }
                 </style>
               </defs>
               ${avatarSvg}
@@ -462,19 +462,19 @@
 
             ctx.save();
 
-            // 1. 아바타 원형 (핑크 링)
+            // 1. 아바타 원형 (심플 & 모던 스카이블루 링)
             const avatarSize = 88;
             const cx = x + avatarSize / 2;
             const cy = y + maxH / 2;
             const radius = avatarSize / 2;
 
-            // 핑크 외곽선 링
+            // 스카이블루 외곽선 링
             ctx.beginPath();
             ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#f472b6';
+            ctx.fillStyle = '#0284c7';
             ctx.fill();
 
-            const innerRadius = radius - 4;
+            const innerRadius = radius - 3.5;
             ctx.save();
             ctx.beginPath();
             ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2);
@@ -484,18 +484,18 @@
                 try {
                     ctx.drawImage(plannerAvatarImg, cx - innerRadius, cy - innerRadius, innerRadius * 2, innerRadius * 2);
                 } catch(e) {
-                    ctx.fillStyle = '#fdf2f8';
+                    ctx.fillStyle = '#f0f9ff';
                     ctx.fillRect(cx - innerRadius, cy - innerRadius, innerRadius * 2, innerRadius * 2);
-                    ctx.fillStyle = '#ec4899';
+                    ctx.fillStyle = '#0284c7';
                     ctx.font = '900 28px "Pretendard", "Noto Sans KR", sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(name.charAt(0), cx, cy);
                 }
             } else {
-                ctx.fillStyle = '#fdf2f8';
+                ctx.fillStyle = '#f0f9ff';
                 ctx.fillRect(cx - innerRadius, cy - innerRadius, innerRadius * 2, innerRadius * 2);
-                ctx.fillStyle = '#ec4899';
+                ctx.fillStyle = '#0284c7';
                 ctx.font = '900 28px "Pretendard", "Noto Sans KR", sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -507,18 +507,18 @@
             const textX = x + avatarSize + 18;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'alphabetic';
-            ctx.fillStyle = '#0f172a';
-            ctx.font = '800 20px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.fillStyle = '#64748b';
+            ctx.font = '700 19px "Pretendard", "Noto Sans KR", sans-serif';
             ctx.fillText(slogan, textX, y + 42);
 
             // 3. 성함 + 직책 텍스트 (하단)
-            ctx.fillStyle = '#a855f7';
-            ctx.font = '900 32px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.fillStyle = '#0f172a';
+            ctx.font = '900 31px "Pretendard", "Noto Sans KR", sans-serif';
             ctx.fillText(name, textX, y + 84);
 
             const nameWidth = ctx.measureText(name).width;
-            ctx.fillStyle = '#1e1b4b';
-            ctx.font = '800 18px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.fillStyle = '#0284c7';
+            ctx.font = '700 18px "Pretendard", "Noto Sans KR", sans-serif';
             ctx.fillText(rawRole, textX + nameWidth + 10, y + 84);
 
             ctx.restore();

@@ -2550,6 +2550,7 @@
     .btn-lib-del:hover { background: #ef4444; color: #ffffff; }
   </style>
 
+    <script src="weracle_brand_badge.js"></script>
 </head>
 <body>
 
@@ -6048,80 +6049,13 @@
     // =========================================================================
     // [퍼스널 브랜딩 로고] 시안 2번: 클래식 럭셔리 & 신뢰 (나눔명조 이탤릭 따옴표 + 버티컬 바)
 function generatePersonalBrandLogoSvg(card) {
-    const p = card || (typeof getPlannerProfileData === 'function' ? getPlannerProfileData() : (window.currentProfile || (window.parent && window.parent.currentProfile) || {}));
-    
-    // 다중 후보 실명/성함 안전 추출
-    const inpName = document.getElementById('input-name') || document.getElementById('inputAdvisorName');
-    const curAdv = inpName ? (inpName.value || '').trim() : '';
-    const rawCandidates = [
-        p.name,
-        p.full_name,
-        curAdv ? curAdv.split(' ')[0] : '',
-        p.real_name,
-        p.nickname,
-        p.user_name,
-        p.userName,
-        p.user_metadata ? (p.user_metadata.name || p.user_metadata.full_name || p.user_metadata.nickname) : '',
-        p.email ? p.email.split('@')[0] : ''
-    ];
-    let name = '';
-    for (let c of rawCandidates) {
-        if (c && typeof c === 'string') {
-            const tr = c.trim();
-            if (tr && tr !== '담당 설계사' && tr !== '담당설계사' && tr !== '위라클 파트너' && tr !== 'null' && tr !== 'undefined') {
-                name = tr;
-                break;
-            }
-        }
+    if (window.WeracleBrandBadge && typeof window.WeracleBrandBadge.generateSvgDataUrl === 'function') {
+        return window.WeracleBrandBadge.generateSvgDataUrl(card);
     }
-    if (!name) name = (p.nickname || p.name || '설계사').trim();
-
-    const avatar = p.avatar_url || p.photo_url || p.profile_image || (p.user_metadata && (p.user_metadata.avatar_url || p.user_metadata.picture)) || '';
-
-    let avatarSvg = '';
-    if (avatar && avatar.length > 10 && !avatar.includes('consultant_model.jpg')) {
-        const safeAvatar = avatar.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-        avatarSvg = `
-          <circle cx="37" cy="35" r="24" fill="#ffffff" filter="drop-shadow(0px 2px 4px rgba(2, 132, 199, 0.2))"/>
-          <image href="${safeAvatar}" x="13" y="11" width="48" height="48" clip-path="url(#pbAvatarClip)" preserveAspectRatio="xMidYMid slice"/>
-          <circle cx="37" cy="35" r="24" fill="none" stroke="#0284c7" stroke-width="1.8"/>
-        `;
-    } else {
-        avatarSvg = `
-          <circle cx="37" cy="35" r="24" fill="#0284c7" filter="drop-shadow(0px 2px 4px rgba(2, 132, 199, 0.2))"/>
-          <text x="37" y="43" font-family="'Pretendard', sans-serif" font-size="20" font-weight="900" fill="#ffffff" text-anchor="middle">${name.charAt(0)}</text>
-          <circle cx="37" cy="35" r="24" fill="none" stroke="#0284c7" stroke-width="1.8"/>
-        `;
-    }
-
-    const safeName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 276 98" width="276" height="98">
-      <defs>
-        <filter id="softShadow" x="-10%" y="-10%" width="120%" height="125%">
-          <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="rgba(0,0,0,0.15)"/>
-        </filter>
-        <clipPath id="pbAvatarClip">
-          <circle cx="37" cy="35" r="24"/>
-        </clipPath>
-      </defs>
-      <!-- [2단 네임표 순백색 배경 박스 및 은은한 테두리] -->
-      <rect x="2" y="2" width="272" height="94" rx="16" ry="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.2" filter="url(#softShadow)"/>
-      ${avatarSvg}
-      <!-- 상단 우측: 1행 보험전문가 / 2행 성함 -->
-      <text x="69" y="27" font-family="'Pretendard', sans-serif" font-size="12" font-weight="800" fill="#0284c7" letter-spacing="-0.3">보험전문가</text>
-      <text x="69" y="48" font-family="'Pretendard', sans-serif" font-size="19" font-weight="900" fill="#0f172a" letter-spacing="-0.5">${safeName}</text>
-      <!-- 중간 구분선 -->
-      <line x1="12" y1="65" x2="264" y2="65" stroke="#e2e8f0" stroke-width="1"/>
-      <!-- 하단 슬로건: 블루 체크 아이콘 + 30개 생·손보사 비교 · 청구 전담 파트너 -->
-      <circle cx="21" cy="80" r="6.5" fill="#0284c7"/>
-      <path d="M18 80 L20.2 82.2 L24.2 77.8" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <text x="32" y="83.5" font-family="'Pretendard', sans-serif" font-size="11.5" font-weight="700" fill="#1e293b" letter-spacing="-0.4">30개 생·손보사 비교 · 청구 전담 파트너</text>
-    </svg>`;
-
-    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    return '';
 }
-    window.generatePersonalBrandLogoSvg = generatePersonalBrandLogoSvg;
+
+window.generatePersonalBrandLogoSvg = generatePersonalBrandLogoSvg;
 
     function getRegisteredLogoSrc() {
       // 1. In-memory customLogoSrc if set and not default WERACLE placeholder

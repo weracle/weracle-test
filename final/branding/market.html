@@ -3876,10 +3876,10 @@
             </div>
           </div>
 
-         <div style="margin-top: 10px;">
-            <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 14px;">
-              <span class="kurly-price-val" id="kurlyProductPrice">3,780원</span>
-              <span style="font-size: 12px; color: #64748b; font-weight: 600;">(부가세 별도)</span>
+        <div style="margin-top: 10px;">
+            <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+              <span class="kurly-price-val" id="kurlyProductPrice">113,400원</span>
+              <span id="kurlyPriceSubInfo" style="font-size: 12.5px; color: #64748b; font-weight: 600;">(부가세 별도)</span>
             </div>
 
             <!-- 고객센터 문의 직통 -->
@@ -3898,14 +3898,15 @@
               <tr>
                 <th>구매수량</th>
                 <td>
-                  <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                     <div style="display: flex; align-items: center; border: 1.5px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff;">
                       <button type="button" onclick="changeQuoteQty(-1)" style="width: 28px; height: 28px; border: none; background: #f8fafc; font-weight: 800; cursor: pointer; color: #334155; font-size: 13px;">-</button>
-                      <input type="number" id="quoteQtyInput" value="1" min="1" step="1" oninput="handleQuoteQtyInput(this.value)" onblur="enforceMinQuoteQty(this)" style="width: 64px; height: 28px; text-align: center; border: none; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-size: 13px; font-weight: 800; color: #0f172a;">
+                      <input type="number" id="quoteQtyInput" value="30" min="1" step="1" oninput="handleQuoteQtyInput(this.value)" onblur="enforceMinQuoteQty(this)" style="width: 64px; height: 28px; text-align: center; border: none; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; font-size: 13px; font-weight: 800; color: #0f172a;">
                       <button type="button" onclick="changeQuoteQty(1)" style="width: 28px; height: 28px; border: none; background: #f8fafc; font-weight: 800; cursor: pointer; color: #334155; font-size: 13px;">+</button>
                     </div>
                     <span style="font-weight: 700; color: #475569; font-size: 12.5px;">개 (권)</span>
-                    <span style="font-size: 11.5px; color: #64748b;">(최소 주문수량: <b id="detailMinQtyBadge" style="color:#0284c7;">1</b>개)</span>
+                    <span id="detailBoxCountBadge" style="font-size: 12px; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 6px; display: none;">1박스</span>
+                    <span style="font-size: 11.5px; color: #64748b;">(1박스/최소 단위: <b id="detailMinQtyBadge" style="color:#0284c7;">30</b>개)</span>
                   </div>
                   <div id="quoteMinQtyNotice" style="margin-top: 5px; font-size: 11.5px; color: #dc2626; font-weight: 800; line-height: 1.3; display: none;"></div>
                 </td>
@@ -4424,7 +4425,10 @@
       } else {
 filteredKeys.forEach(key => {
           const p = products[key];
-          const currentPriceStr = (p.price || 0).toLocaleString() + '원';
+          const boxQty = getBoxUnitQty(p);
+          const unitPrice = p.price || 0;
+          const boxTotalPriceStr = (unitPrice * boxQty).toLocaleString() + '원';
+          const boxSubText = boxQty > 1 ? `(${boxQty.toLocaleString()}개/1박스 기준)` : '';
           const tagInfo = CATEGORY_MAP[p.category] ? CATEGORY_MAP[p.category].tag : '📁 개인 브랜딩 상품';
 
           html += `
@@ -4444,8 +4448,9 @@ filteredKeys.forEach(key => {
               </div>
 
               <div>
-             <div class="card-price-row">
-                  <span class="card-price-current">${currentPriceStr}</span>
+           <div class="card-price-row">
+                  <span class="card-price-current">${boxTotalPriceStr}</span>
+                  ${boxSubText ? `<span style="font-size:11.5px; color:#64748b; font-weight:600;">${boxSubText}</span>` : ''}
                 </div>
 
                 <div style="display: flex; gap: 6px; margin-top: 8px;">
@@ -4795,10 +4800,20 @@ filteredKeys.forEach(key => {
         const summaryEl = document.getElementById('kurlyProductSummary');
         if (summaryEl) summaryEl.innerText = item.summary || '1:1 맞춤 제작 프리미엄 브랜딩 상품';
 
-       // 상단 판매가 단독 동기화 (할인율·원가 완전 제거)
-        const priceDisplayEl = document.getElementById('kurlyProductPrice');
-        if (priceDisplayEl) priceDisplayEl.innerText = ((item.price || 0).toLocaleString()) + '원';
+      // 상단 대표 금액: [1개당 판매단가 × 기본 주문수량(1박스)] 기준으로 표기
+        const boxQty = getBoxUnitQty(item);
+        const unitPriceVal = item.price || 0;
+        const boxTotalVal = unitPriceVal * boxQty;
 
+        const priceDisplayEl = document.getElementById('kurlyProductPrice');
+        if (priceDisplayEl) priceDisplayEl.innerText = boxTotalVal.toLocaleString() + '원';
+
+        const priceSubEl = document.getElementById('kurlyPriceSubInfo');
+        if (priceSubEl) {
+          priceSubEl.innerText = boxQty > 1
+            ? `(1박스 ${boxQty.toLocaleString()}개 기준 · 개당 ${unitPriceVal.toLocaleString()}원 / 부가세 별도)`
+            : `(부가세 별도)`;
+        }
         // 슬라이더 렌더링
         const allThumbs = (item.thumbs && item.thumbs.length > 0) ? item.thumbs.slice() : [item.thumb];
         renderProductSlider(allThumbs, 0);
@@ -4857,20 +4872,19 @@ filteredKeys.forEach(key => {
         // 2. 상세페이지 복합 블록 (이미지 + 텍스트) 렌더링
         renderDetailBlocks();
 
-      // 1. 최소 주문수량 배지 동기화
-        const minQty = Math.max(1, parseInt(item.minQty) || 1);
+     // 1. 기본 주문수량(1박스 단위) 배지 동기화
         const minBadge = document.getElementById('detailMinQtyBadge');
-        if (minBadge) minBadge.innerText = minQty.toLocaleString();
+        if (minBadge) minBadge.innerText = boxQty.toLocaleString();
 
-        // 2. 견적 연산 초기화 (관리자가 셋팅한 최소 주문수량으로 시작)
-        quoteQty = minQty;
+        // 2. 견적 연산 초기화 (1박스 수량으로 시작 & step을 박스 단위로 설정)
+        quoteQty = boxQty;
         const qtyInp = document.getElementById('quoteQtyInput');
         if (qtyInp) {
-          qtyInp.min = minQty;
-          qtyInp.value = minQty;
+          qtyInp.min = boxQty;
+          qtyInp.step = boxQty;
+          qtyInp.value = boxQty;
         }
         calcQuoteTotal();
-
         // 1. 상품정보 탭 활성화 (초기 열림 시 스크롤 이동 방지)
         switchKurlyPageTab(0, null, false);
 
@@ -5056,36 +5070,54 @@ filteredKeys.forEach(key => {
       }
     }
 
-  // 견적 연산 (관리자가 설정한 최소수량 기준)
-    function changeQuoteQty(delta) {
-      const minAllowed = Math.max(1, (currentItem && currentItem.minQty) ? parseInt(currentItem.minQty) : 1);
-      let val = parseInt(document.getElementById('quoteQtyInput').value) || minAllowed;
-      val = Math.max(minAllowed, val + delta);
-      document.getElementById('quoteQtyInput').value = val;
-      quoteQty = val;
+ // 상품별 1박스(기본 주문단위) 수량 반환 헬퍼
+    function getBoxUnitQty(item) {
+      if (!item) return 1;
+      // item1 초기 샘플처럼 baseQty(120)와 minQty(30)가 다르게 남아 있던 경우 더 작은 단위(30)를 우선 사용하되, 관리자 저장 시 두 값은 동일하게 맞춰짐
+      const bq = parseInt(item.baseQty) || 0;
+      const mq = parseInt(item.minQty) || 0;
+      if (bq > 0 && mq > 0 && bq !== mq) return Math.max(1, Math.min(bq, mq));
+      return Math.max(1, bq || mq || 1);
+    }
+
+    // 견적 수량 증감: 1박스(기본 주문수량) 배수 단위로 이동 (예: 30 -> 60 -> 90...)
+    function changeQuoteQty(boxDelta) {
+      const boxQty = getBoxUnitQty(currentItem);
+      const inp = document.getElementById('quoteQtyInput');
+      let currentVal = parseInt(inp.value) || boxQty;
+      let currentBoxes = Math.max(1, Math.round(currentVal / boxQty));
+      let nextBoxes = Math.max(1, currentBoxes + boxDelta);
+      let nextVal = nextBoxes * boxQty;
+
+      inp.value = nextVal;
+      quoteQty = nextVal;
       calcQuoteTotal();
     }
 
     function handleQuoteQtyInput(val) {
-      const minAllowed = Math.max(1, (currentItem && currentItem.minQty) ? parseInt(currentItem.minQty) : 1);
+      const boxQty = getBoxUnitQty(currentItem);
       let num = parseInt(val);
-      if (isNaN(num) || num < 1) {
-        quoteQty = minAllowed;
+      if (isNaN(num) || num < boxQty) {
+        quoteQty = boxQty;
       } else {
         quoteQty = num;
       }
       calcQuoteTotal();
     }
 
-    // 입력창에서 포커스가 벗어날 때 최소수량 미만이면 최소수량으로 자동 보정
+    // 입력창 포커스 해제 시 무조건 박스(배수) 단위로 자동 맞춤 (예: 45 입력 시 60 또는 30으로 스냅)
     function enforceMinQuoteQty(inputEl) {
-      const minAllowed = Math.max(1, (currentItem && currentItem.minQty) ? parseInt(currentItem.minQty) : 1);
+      const boxQty = getBoxUnitQty(currentItem);
       let num = parseInt(inputEl.value);
-      if (isNaN(num) || num < minAllowed) {
-        inputEl.value = minAllowed;
-        quoteQty = minAllowed;
-        calcQuoteTotal();
+      if (isNaN(num) || num <= boxQty) {
+        num = boxQty;
+      } else {
+        const boxes = Math.max(1, Math.round(num / boxQty));
+        num = boxes * boxQty;
       }
+      inputEl.value = num;
+      quoteQty = num;
+      calcQuoteTotal();
     }
     // =========================================================
     //  수량별 단가 및 동적 견적 계산 엔진 (weraclemarket.com 규격)
@@ -5193,20 +5225,21 @@ filteredKeys.forEach(key => {
       });
     }
 
-   function calcQuoteTotal() {
+ function calcQuoteTotal() {
       const item = currentItem || products.item1;
+      const boxQty = getBoxUnitQty(item);
       const unitPrice = getItemUnitPrice(item, quoteQty);
 
       const printSelect = document.getElementById('quotePrintOption');
-      const printSurcharge = printSelect ? parseInt(printSelect.value) || 0 : 0;
+      const optionAmount = printSelect ? parseInt(printSelect.value) || 0 : 0;
 
-      const appliedUnit = unitPrice + printSurcharge;
-      const supplyAmount = appliedUnit * quoteQty; // 주문금액 (부가세 별도)
-      const vatAmount = Math.round(supplyAmount * 0.1); // 부가세
-      const totalAmount = supplyAmount + vatAmount; // 총합계금액 (부가세 포함)
+      // 상품 금액(개당 단가 × 수량)에 옵션 금액을 중복 곱셈 없이 그대로 합산
+      const supplyAmount = (unitPrice * quoteQty) + optionAmount;
+      const vatAmount = Math.round(supplyAmount * 0.1);
+      const totalAmount = supplyAmount + vatAmount;
 
       if (document.getElementById('quoteUnitPrice')) {
-        document.getElementById('quoteUnitPrice').innerText = appliedUnit.toLocaleString() + ' 원';
+        document.getElementById('quoteUnitPrice').innerText = unitPrice.toLocaleString() + ' 원 (개당)';
       }
       if (document.getElementById('quoteSupplyPrice')) {
         document.getElementById('quoteSupplyPrice').innerText = supplyAmount.toLocaleString() + ' 원';
@@ -5218,20 +5251,30 @@ filteredKeys.forEach(key => {
         document.getElementById('quoteTotalPrice').innerText = totalAmount.toLocaleString() + ' 원';
       }
 
-      // 최소 주문수량 미만 타이핑 시 안내 표시
-      const minQty = Math.max(1, parseInt(item.minQty) || 1);
+      // 현재 선택된 박스 수 배지 업데이트
+      const boxBadge = document.getElementById('detailBoxCountBadge');
+      if (boxBadge) {
+        if (boxQty > 1) {
+          const boxCount = Math.max(1, Math.round(quoteQty / boxQty));
+          boxBadge.style.display = 'inline-block';
+          boxBadge.innerText = `${boxCount}박스`;
+        } else {
+          boxBadge.style.display = 'none';
+        }
+      }
+
+      // 박스 단위 외 숫자 직접 타이핑 시 안내 표시
       const noticeEl = document.getElementById('quoteMinQtyNotice');
       if (noticeEl) {
-        if (quoteQty < minQty) {
+        if (quoteQty < boxQty || (boxQty > 1 && quoteQty % boxQty !== 0)) {
           noticeEl.style.display = 'block';
           noticeEl.style.color = '#dc2626';
-          noticeEl.innerHTML = `⚠️ 최소 주문수량은 <b>${minQty.toLocaleString()}개</b>부터 가능합니다.`;
+          noticeEl.innerHTML = `⚠️ 이 상품은 <b>${boxQty.toLocaleString()}개(1박스)</b> 배수 단위로 주문 가능합니다.`;
         } else {
           noticeEl.style.display = 'none';
         }
       }
     }
-
     function simulateKurlyOrder() {
       const item = currentItem || products.item1;
       const totalText = document.getElementById('quoteTotalPrice') ? document.getElementById('quoteTotalPrice').innerText : '';
@@ -5418,12 +5461,13 @@ filteredKeys.forEach(key => {
       regThumbSlideIdx = 0;
       updateRegThumbSlider();
 
-      // 2. 탭 1 단가표 & 옵션 데이터 채우기
+   // 2. 탭 1 기본 주문수량(1박스 기준) 데이터 채우기
+      const boxQty = getBoxUnitQty(item);
       const bqInp = document.getElementById('adminProdBaseQty');
-      if (bqInp) bqInp.value = item.baseQty || 120;
+      if (bqInp) bqInp.value = boxQty;
 
       const mqInp = document.getElementById('adminProdMinQty');
-      if (mqInp) mqInp.value = item.minQty || 30;
+      if (mqInp) mqInp.value = boxQty;
 
       adminTierList = getItemTierList(item);
       renderAdminTierRows();
@@ -6132,9 +6176,9 @@ filteredKeys.forEach(key => {
         { name: "1도 실크인쇄 (무료)", price: 0 }
       ];
 
-    // 기본수량, 최소주문수량, 수량별 단가 구간 수집 (1개 단위 설정 완벽 호환)
+    // 기본 주문수량(1박스 기준) = 최소 주문수량 일원화 저장
       const baseQty = Math.max(1, parseInt(document.getElementById('adminProdBaseQty')?.value) || 1);
-      const minQty = Math.max(1, parseInt(document.getElementById('adminProdMinQty')?.value) || 1);
+      const minQty = baseQty;
 
   // 고객 화면 단가표 제거에 맞춰, 단가 구간을 따로 안 쓰거나 1번 탭 판매가를 수정했을 때 판매가(price)가 그대로 적용되도록 연동
       let tierList = [];
@@ -6488,30 +6532,37 @@ filteredKeys.forEach(key => {
       }
     }
 
-    // [장바구니 담기] 실행
+// [장바구니 담기] 실행
     function addToCart() {
       const item = currentItem || products.item1;
       if (!item) return;
+
+      const boxQty = getBoxUnitQty(item);
+      if (quoteQty < boxQty || (boxQty > 1 && quoteQty % boxQty !== 0)) {
+        quoteQty = Math.max(1, Math.round(quoteQty / boxQty)) * boxQty;
+        const qtyInp = document.getElementById('quoteQtyInput');
+        if (qtyInp) qtyInp.value = quoteQty;
+      }
 
       const colorEl = document.querySelector('.detail-color-chip.active');
       const colorName = colorEl ? colorEl.getAttribute('data-color-name') : (item.colorOptions && item.colorOptions[0] ? item.colorOptions[0].name : '기본 색상');
 
       const printSelect = document.getElementById('quotePrintOption');
-      const printOptionText = printSelect && printSelect.options[printSelect.selectedIndex] ? printSelect.options[printSelect.selectedIndex].text : '1도 실크인쇄 (무료)';
-      const printSurcharge = printSelect ? parseInt(printSelect.value) || 0 : 0;
+      const printOptionText = printSelect && printSelect.options[printSelect.selectedIndex] ? printSelect.options[printSelect.selectedIndex].text : '기본 옵션';
+      const optionAmount = printSelect ? parseInt(printSelect.value) || 0 : 0;
 
       const unitPrice = getItemUnitPrice(item, quoteQty);
-      const appliedUnit = unitPrice + printSurcharge;
-      const supplyAmount = appliedUnit * quoteQty; // 주문금액 (부가세 별도)
-      const vatAmount = Math.round(supplyAmount * 0.1); // 부가세
-      const totalAmount = supplyAmount + vatAmount; // 총합계금액 (부가세 포함)
+      const supplyAmount = (unitPrice * quoteQty) + optionAmount;
+      const vatAmount = Math.round(supplyAmount * 0.1);
+      const totalAmount = supplyAmount + vatAmount;
 
       const cartItems = getCartItems();
       const existingIdx = cartItems.findIndex(ci => ci.productId === (item.id || 'item1') && ci.color === colorName && ci.printOption === printOptionText);
 
       if (existingIdx !== -1) {
         cartItems[existingIdx].qty += quoteQty;
-        cartItems[existingIdx].totalPrice = Math.round((appliedUnit * cartItems[existingIdx].qty) * 1.1);
+        const newSupply = (unitPrice * cartItems[existingIdx].qty) + optionAmount;
+        cartItems[existingIdx].totalPrice = newSupply + Math.round(newSupply * 0.1);
       } else {
         cartItems.push({
           cartId: 'cart_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -6521,7 +6572,9 @@ filteredKeys.forEach(key => {
           color: colorName,
           printOption: printOptionText,
           qty: quoteQty,
-          unitPrice: appliedUnit,
+          boxQty: boxQty,
+          unitPrice: unitPrice,
+          optionPrice: optionAmount,
           totalPrice: totalAmount
         });
       }
@@ -6538,18 +6591,24 @@ filteredKeys.forEach(key => {
       const item = currentItem || products.item1;
       if (!item) return;
 
+      const boxQty = getBoxUnitQty(item);
+      if (quoteQty < boxQty || (boxQty > 1 && quoteQty % boxQty !== 0)) {
+        quoteQty = Math.max(1, Math.round(quoteQty / boxQty)) * boxQty;
+        const qtyInp = document.getElementById('quoteQtyInput');
+        if (qtyInp) qtyInp.value = quoteQty;
+      }
+
       const colorEl = document.querySelector('.detail-color-chip.active');
       const colorName = colorEl ? colorEl.getAttribute('data-color-name') : (item.colorOptions && item.colorOptions[0] ? item.colorOptions[0].name : '기본 색상');
 
       const printSelect = document.getElementById('quotePrintOption');
-      const printOptionText = printSelect && printSelect.options[printSelect.selectedIndex] ? printSelect.options[printSelect.selectedIndex].text : '1도 실크인쇄 (무료)';
-      const printSurcharge = printSelect ? parseInt(printSelect.value) || 0 : 0;
+      const printOptionText = printSelect && printSelect.options[printSelect.selectedIndex] ? printSelect.options[printSelect.selectedIndex].text : '기본 옵션';
+      const optionAmount = printSelect ? parseInt(printSelect.value) || 0 : 0;
 
       const unitPrice = getItemUnitPrice(item, quoteQty);
-      const appliedUnit = unitPrice + printSurcharge;
-      const supplyAmount = appliedUnit * quoteQty; // 주문금액 (부가세 별도)
-      const vatAmount = Math.round(supplyAmount * 0.1); // 부가세
-      const totalAmount = supplyAmount + vatAmount; // 총합계금액 (부가세 포함)
+      const supplyAmount = (unitPrice * quoteQty) + optionAmount;
+      const vatAmount = Math.round(supplyAmount * 0.1);
+      const totalAmount = supplyAmount + vatAmount;
 
       currentCheckoutItems = [{
         cartId: 'direct_' + Date.now(),
@@ -6559,7 +6618,9 @@ filteredKeys.forEach(key => {
         color: colorName,
         printOption: printOptionText,
         qty: quoteQty,
-        unitPrice: appliedUnit,
+        boxQty: boxQty,
+        unitPrice: unitPrice,
+        optionPrice: optionAmount,
         totalPrice: totalAmount
       }];
 
@@ -6581,10 +6642,8 @@ filteredKeys.forEach(key => {
       const countEl = document.getElementById('cartModalCount');
       const subtotalEl = document.getElementById('cartSubtotal');
       const totalSumEl = document.getElementById('cartTotalSum');
-      const footerEl = document.getElementById('cartSummaryFooter');
 
       if (countEl) countEl.innerText = items.length;
-
       if (!listEl) return;
 
       if (items.length === 0) {
@@ -6606,8 +6665,12 @@ filteredKeys.forEach(key => {
       let subtotal = 0;
       let html = '';
 
-      items.forEach((it, idx) => {
+      items.forEach((it) => {
         subtotal += (it.totalPrice || 0);
+        const prod = products[it.productId];
+        const boxQty = it.boxQty || getBoxUnitQty(prod);
+        const boxLabel = boxQty > 1 ? ` (${Math.max(1, Math.round(it.qty / boxQty))}박스)` : '';
+
         html += `
           <div style="display: flex; gap: 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; position: relative; align-items: center;">
             <img src="${it.thumb}" alt="${it.title}" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; flex-shrink: 0;" onerror="this.src='branding_img/KakaoTalk_20261109_105448276.jpg'">
@@ -6620,8 +6683,8 @@ filteredKeys.forEach(key => {
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 6px;">
                   <button type="button" onclick="changeCartQty('${it.cartId}', -1)" style="width: 24px; height: 24px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; cursor: pointer; font-weight: bold;">-</button>
-                  <span style="font-size: 13px; font-weight: 800; min-width: 38px; text-align: center;">${it.qty}권</span>
-                  <button type="button" onclick="changeCartQty('${it.cartId}', 10)" style="width: 24px; height: 24px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; cursor: pointer; font-weight: bold;">+</button>
+                  <span style="font-size: 13px; font-weight: 800; min-width: 44px; text-align: center;">${it.qty}개${boxLabel}</span>
+                  <button type="button" onclick="changeCartQty('${it.cartId}', 1)" style="width: 24px; height: 24px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; cursor: pointer; font-weight: bold;">+</button>
                 </div>
                 <div style="font-size: 14px; font-weight: 800; color: #0284c7;">${(it.totalPrice || 0).toLocaleString()}원</div>
               </div>
@@ -6636,23 +6699,26 @@ filteredKeys.forEach(key => {
       if (totalSumEl) totalSumEl.innerText = subtotal.toLocaleString() + ' 원';
     }
 
-   function changeCartQty(cartId, delta) {
+    function changeCartQty(cartId, boxDelta) {
       const items = getCartItems();
       const it = items.find(c => c.cartId === cartId);
       if (!it) return;
 
       const prod = products[it.productId];
-      const minAllowed = Math.max(1, (prod && prod.minQty) ? parseInt(prod.minQty) : 1);
-      const newQty = (it.qty || minAllowed) + delta;
+      const boxQty = it.boxQty || getBoxUnitQty(prod);
+      const currentBoxes = Math.max(1, Math.round((it.qty || boxQty) / boxQty));
+      const nextBoxes = currentBoxes + boxDelta;
 
-      if (newQty < minAllowed) {
-        if (confirm(`최소 주문수량(${minAllowed}개) 미만입니다. 상품을 장바구니에서 삭제하시겠습니까?`)) {
+      if (nextBoxes < 1) {
+        if (confirm(`최소 주문단위(${boxQty}개 / 1박스) 미만입니다. 상품을 장바구니에서 삭제하시겠습니까?`)) {
           removeCartItem(cartId);
         }
         return;
       }
-      it.qty = newQty;
-      it.totalPrice = Math.round((it.unitPrice * newQty) * 1.1);
+      it.qty = nextBoxes * boxQty;
+      const optAmt = parseInt(it.optionPrice) || 0;
+      const supply = (it.unitPrice * it.qty) + optAmt;
+      it.totalPrice = supply + Math.round(supply * 0.1);
       saveCartItems(items);
       renderCartModalList();
     }
@@ -7007,12 +7073,13 @@ filteredKeys.forEach(key => {
                 <input type="text" id="adminProdSummary" placeholder="상품에 대한 간단한 설명을 입력하세요" style="width: 100%; height: 42px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 12px;">
               </div>
 
-             <!-- 금액 설정 (판매가 단독) -->
+            <!-- 금액 설정 (1개당 단가 입력 -> 고객 화면에는 1박스 기준 금액으로 자동 표시) -->
               <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
-                <div style="font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 8px;">💰 금액 설정</div>
+                <div style="font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 8px;">💰 금액 설정 (1개당 단가)</div>
                 <div>
-                  <label style="font-size: 12px; font-weight: 700; color: #475569; display: block;">판매가 (원) <span style="color:#ef4444;">*</span></label>
-                  <input type="number" id="adminProdPrice" min="0" step="1" placeholder="판매가 입력 (예: 3780)" required style="width: 100%; height: 40px; margin-top: 4px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 10px;">
+                  <label style="font-size: 12px; font-weight: 700; color: #475569; display: block;">1개당 판매단가 (원, 부가세 별도) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="adminProdPrice" min="0" step="1" placeholder="1개당 판매단가 입력 (예: 3780)" required style="width: 100%; height: 40px; margin-top: 4px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 10px;">
+                  <span style="display: block; margin-top: 6px; font-size: 11.5px; color: #0284c7; font-weight: 600;">💡 고객 화면에는 [1개당 판매단가 × 2번 탭의 기본 주문수량(1박스)] 금액으로 자동 표기됩니다.</span>
                 </div>
               </div>
             </div>
@@ -7044,26 +7111,16 @@ filteredKeys.forEach(key => {
               </div>
             </div>
 
-          <!-- 수량 설정 (기본수량, 최소 주문수량 - 1개/1권 단위부터 자유 설정) -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; background: #fff; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 14px;">
-              <div>
-                <label style="font-size: 12px; font-weight: 800; color: #334155;">기본 주문수량 (개/권) *</label>
-                <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-                  <input type="number" id="adminProdBaseQty" value="1" min="1" step="1" style="width: 100%; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 800; color: #0284c7;">
-                  <span style="font-size: 12px; color: #64748b; font-weight: 700;">개(권)</span>
-                </div>
-                <span style="font-size: 11px; color: #64748b;">1개(1권)부터 원하는 기본 수량을 자유롭게 설정하세요.</span>
+         <!-- 기본 주문수량 (1박스 기준 단위 = 최소 주문수량 & 배수 선택 단위) -->
+            <div style="background: #fff; padding: 14px 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 14px;">
+              <label style="font-size: 13px; font-weight: 800; color: #0f172a;">📦 기본 주문수량 (1박스 기준 수량 / 최소 주문단위) *</label>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; max-width: 280px;">
+                <input type="number" id="adminProdBaseQty" value="1" min="1" step="1" oninput="document.getElementById('adminProdMinQty').value = this.value;" style="width: 100%; height: 36px; border: 1.5px solid #0284c7; border-radius: 6px; padding: 0 10px; font-size: 14px; font-weight: 800; color: #0284c7;">
+                <span style="font-size: 13px; color: #334155; font-weight: 800; white-space: nowrap;">개 (1박스)</span>
               </div>
-              <div>
-                <label style="font-size: 12px; font-weight: 800; color: #334155;">최소 주문수량 (개/권) *</label>
-                <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-                  <input type="number" id="adminProdMinQty" value="1" min="1" step="1" style="width: 100%; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 800; color: #0f172a;">
-                  <span style="font-size: 12px; color: #64748b; font-weight: 700;">개(권)</span>
-                </div>
-                <span style="font-size: 11px; color: #64748b;">주문 가능한 최소 수량입니다. (1개부터 설정 가능)</span>
-              </div>
-            </div> 
-
+              <input type="hidden" id="adminProdMinQty" value="1">
+              <span style="display: block; margin-top: 6px; font-size: 11.5px; color: #64748b;">예: <b>30</b> 입력 시 → 대표 금액이 <b>30개(1박스) 합산 금액</b>으로 표시되며, 고객 구매수량도 <b>30개, 60개, 90개...</b> 박스 단위로만 선택됩니다. (낱개 상품은 <b>1</b> 입력)</span>
+            </div>
             <!-- 단가 구간 목록 테이블 -->
             <div style="font-size: 12.5px; font-weight: 800; color: #334155; margin-bottom: 6px;">
               구간별 수량 및 일반가(권당 공급단가)

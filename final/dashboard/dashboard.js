@@ -239,10 +239,15 @@ function openConnectedSheet() {
   const profile = getParentProp('currentProfile') || window.currentProfile;
   const user = getParentProp('currentUser') || window.currentUser;
   const uId = user ? user.id : (profile ? profile.id : null);
+  const userEmail = (user && user.email) || (profile && profile.email) || '';
   // [다중 사용자 격리] 1순위: 현재 로그인된 프로필의 DB google_sheet_id, 2순위: 유저 ID별 격리 키
   const sheetId = (profile && profile.google_sheet_id) || (uId ? localStorage.getItem('g_sheet_id_' + uId) : null);
   if (sheetId) {
-    window.open(`https://docs.google.com/spreadsheets/d/${sheetId}/edit`, '_blank');
+    let url = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
+    if (userEmail) {
+      url += `?authuser=${encodeURIComponent(userEmail)}`;
+    }
+    window.open(url, '_blank');
   } else {
     if (confirm('현재 연결된 구글 시트 ID를 찾을 수 없습니다.\n고객관리(CRM) 페이지로 이동하여 시트를 연동하시겠습니까?')) {
       if (window.parent && typeof window.parent.loadSubPage === 'function') {

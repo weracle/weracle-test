@@ -558,18 +558,165 @@
         }
         syncProfileFromParent();
 
-        // [통합 브랜드 뱃지 & 로고 엔진 위임]
+        // [핵심] 로고 미등록 시 자동 생성되는 퍼스널 브랜딩 로고 SVG (시안 2번: 클래식 럭셔리 & 신뢰)
         function generatePersonalBrandLogoSvg(profile) {
-            if (window.WeracleBrandBadge) {
-                return window.WeracleBrandBadge.generateSvgDataUrl(profile);
+            const p = profile || getPlannerProfileData() || {};
+            const name = resolvePlannerName(p);
+            const rawRole = resolvePlannerRole(p);
+            const slogan = resolvePlannerSlogan(p);
+            const avatar = p.avatar_url || p.photo_url || p.profile_image || (p.user_metadata && (p.user_metadata.avatar_url || p.user_metadata.picture)) || '';
+
+            let avatarSvg = '';
+            if (avatar && avatar.length > 10 && !avatar.includes('consultant_model.jpg')) {
+                const safeAvatar = avatar.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                avatarSvg = `
+                  <circle cx="44" cy="44" r="41" fill="#ffffff" filter="drop-shadow(0px 3px 6px rgba(2, 132, 199, 0.16))"/>
+                  <circle cx="44" cy="44" r="41" fill="none" stroke="#0284c7" stroke-width="3"/>
+                  <circle cx="44" cy="44" r="37.5" fill="#ffffff"/>
+                  <image href="${safeAvatar}" x="6.5" y="6.5" width="75" height="75" clip-path="url(#pbAvatarClip)" preserveAspectRatio="xMidYMid slice"/>
+                  <circle cx="44" cy="44" r="37.5" fill="none" stroke="rgba(2, 132, 199, 0.2)" stroke-width="1"/>
+                `;
+            } else {
+                avatarSvg = `
+                  <circle cx="44" cy="44" r="41" fill="#ffffff" filter="drop-shadow(0px 3px 6px rgba(2, 132, 199, 0.16))"/>
+                  <circle cx="44" cy="44" r="41" fill="none" stroke="#0284c7" stroke-width="3"/>
+                  <circle cx="44" cy="44" r="37.5" fill="#f0f9ff"/>
+                  <text x="44" y="53" font-family="'Pretendard', sans-serif" font-size="24" font-weight="900" fill="#0284c7" text-anchor="middle">${name.charAt(0)}</text>
+                `;
             }
-            return '';
+
+            const safeSlogan = slogan.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '');
+            const safeName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const safeRole = rawRole.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 92" width="420" height="92">
+              <defs>
+                <clipPath id="pbAvatarClip">
+                  <circle cx="44" cy="44" r="37.5"/>
+                </clipPath>
+                <style>
+                  @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Noto+Sans+KR:wght@500;700;900&display=swap');
+                  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+                  .pb-slogan { font-family: 'Nanum Myeongjo', serif; font-size: 17px; font-weight: 700; font-style: italic; fill: #0284c7; letter-spacing: 0.2px; }
+                  .pb-name { font-family: 'Pretendard', sans-serif; font-size: 33px; font-weight: 900; fill: #1e1b4b; letter-spacing: -0.6px; }
+                  .pb-divider { font-family: 'Pretendard', sans-serif; font-size: 20px; font-weight: 300; fill: #cbd5e1; }
+                  .pb-role { font-family: 'Pretendard', sans-serif; font-size: 17px; font-weight: 800; fill: #3b82f6; letter-spacing: 0.3px; }
+                </style>
+              </defs>
+              ${avatarSvg}
+              <text x="104" y="37" class="pb-slogan">“ ${safeSlogan} ”</text>
+              <text x="104" y="76">
+                <tspan class="pb-name">${safeName}</tspan>
+                <tspan dx="12" class="pb-divider">|</tspan>
+                <tspan dx="12" class="pb-role">${safeRole}</tspan>
+              </text>
+            </svg>`;
+
+            return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
         }
 
+        // [캔버스 직접 렌더링 헬퍼] 데일리뉴스 카드 상단 로고 슬롯(100px)에 즉시 정밀 렌더링 (시안 2번: 클래식 럭셔리 & 신뢰)
         function drawPersonalBrandLogoDirect(ctx, x, y, maxH, profile) {
-            if (window.WeracleBrandBadge) {
-                return window.WeracleBrandBadge.draw(ctx, 1000, 1000, profile, null);
+            const p = profile || getPlannerProfileData() || {};
+            const name = resolvePlannerName(p);
+            const rawRole = resolvePlannerRole(p);
+            const slogan = resolvePlannerSlogan(p);
+
+            ctx.save();
+
+            // 1. 아바타 컨테이너 (하얀 배경 + 또렷한 스카이블루 테두리 + 부드러운 입체 그림자)
+            const avatarSize = 88;
+            const cx = x + avatarSize / 2;
+            const cy = y + maxH / 2;
+            const radius = avatarSize / 2;
+
+            // 부드러운 그림자와 순백색 베이스 배경
+            ctx.save();
+            ctx.shadowColor = 'rgba(2, 132, 199, 0.16)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 3;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.restore();
+
+            // 외곽 정밀 테두리 (스카이블루 3px)
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius - 1.5, 0, Math.PI * 2);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#0284c7';
+            ctx.stroke();
+
+            // 내부 사진/이니셜 영역 (흰색 여백 링 안쪽)
+            const photoRadius = radius - 4.5;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, photoRadius, 0, Math.PI * 2);
+            ctx.clip();
+
+            // 사진 배경을 흰색으로 보장
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+
+            if (plannerAvatarImg && plannerAvatarImg.isLoaded && plannerAvatarImg.src) {
+                try {
+                    ctx.drawImage(plannerAvatarImg, cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+                } catch(e) {
+                    ctx.fillStyle = '#f0f9ff';
+                    ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+                    ctx.fillStyle = '#0284c7';
+                    ctx.font = '900 28px "Pretendard", "Noto Sans KR", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(name.charAt(0), cx, cy);
+                }
+            } else {
+                ctx.fillStyle = '#f0f9ff';
+                ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+                ctx.fillStyle = '#0284c7';
+                ctx.font = '900 28px "Pretendard", "Noto Sans KR", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(name.charAt(0), cx, cy);
             }
+            ctx.restore();
+
+            // 사진 내부 미세 경계 헤어라인
+            ctx.beginPath();
+            ctx.arc(cx, cy, photoRadius, 0, Math.PI * 2);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(2, 132, 199, 0.2)';
+            ctx.stroke();
+
+            // 2. 슬로건 텍스트 (상단) - 시안 2번: 나눔명조 이탤릭 + 따옴표 장식
+            const textX = x + avatarSize + 18;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillStyle = '#0284c7';
+            ctx.font = 'italic 700 17px "Nanum Myeongjo", "Batang", serif';
+            ctx.fillText('“ ' + slogan + ' ”', textX, y + 42);
+
+            // 3. 성함 + 디바이더 + 직책 텍스트 (하단) - 시안 2번: 딥 챠콜 네이비 성함 & 버티컬 바 & 로열 블루 직책
+            ctx.fillStyle = '#1e1b4b';
+            ctx.font = '900 33px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.fillText(name, textX, y + 84);
+
+            const nameWidth = ctx.measureText(name).width;
+
+            // 디바이더 바
+            ctx.font = '300 20px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillText('|', textX + nameWidth + 12, y + 83);
+
+            // 직책 텍스트
+            const divWidth = ctx.measureText('|').width;
+            ctx.fillStyle = '#3b82f6';
+            ctx.font = '800 17px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.fillText(rawRole, textX + nameWidth + 12 + divWidth + 12, y + 84);
+
+            ctx.restore();
         }
 
         // 초기 로고 초기화

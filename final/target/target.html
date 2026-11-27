@@ -1249,23 +1249,395 @@
         preloadPlannerAvatar();
 
         // [초고속 즉시 렌더링] 상위 프레임 유저 정보 즉시 동기화
-// [통합 브랜드 뱃지 & 로고 엔진 위임]
-      function generatePersonalBrandLogoSvg(card) {
-          if (window.WeracleBrandBadge) {
-              return window.WeracleBrandBadge.generateSvgDataUrl(card);
-          }
-          return '';
-      }
+function generatePersonalBrandLogoSvg(card) {
+    const p = card || (typeof getPlannerProfileData === 'function' ? getPlannerProfileData() : (window.currentProfile || (window.parent && window.parent.currentProfile) || {}));
+    
+    // 다중 후보 실명/성함 안전 추출
+    const inpName = document.getElementById('input-name') || document.getElementById('inputAdvisorName');
+    const curAdv = inpName ? (inpName.value || '').trim() : '';
+    const rawCandidates = [
+        p.name,
+        p.full_name,
+        curAdv ? curAdv.split(' ')[0] : '',
+        p.real_name,
+        p.nickname,
+        p.user_name,
+        p.userName,
+        p.user_metadata ? (p.user_metadata.name || p.user_metadata.full_name || p.user_metadata.nickname) : '',
+        p.email ? p.email.split('@')[0] : ''
+    ];
+    let name = '';
+    for (let c of rawCandidates) {
+        if (c && typeof c === 'string') {
+            const tr = c.trim();
+            if (tr && tr !== '담당 설계사' && tr !== '담당설계사' && tr !== '위라클 파트너' && tr !== 'null' && tr !== 'undefined') {
+                name = tr;
+                break;
+            }
+        }
+    }
+    if (!name) name = (p.nickname || p.name || '설계사').trim();
 
-      function drawPersonalBrandLogoDirect(ctx, x, y, maxH, profile) {
-          if (window.WeracleBrandBadge) {
-              return window.WeracleBrandBadge.draw(ctx, 1000, 1000, profile, null);
-          }
-      }
+    const avatar = p.avatar_url || p.photo_url || p.profile_image || (p.user_metadata && (p.user_metadata.avatar_url || p.user_metadata.picture)) || '';
 
+    let avatarSvg = '';
+    if (avatar && avatar.length > 10 && !avatar.includes('consultant_model.jpg')) {
+        const safeAvatar = avatar.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+        avatarSvg = `
+          <circle cx="37" cy="35" r="24" fill="#ffffff" filter="drop-shadow(0px 2px 4px rgba(2, 132, 199, 0.2))"/>
+          <image href="${safeAvatar}" x="13" y="11" width="48" height="48" clip-path="url(#pbAvatarClip)" preserveAspectRatio="xMidYMid slice"/>
+          <circle cx="37" cy="35" r="24" fill="none" stroke="#0284c7" stroke-width="1.8"/>
+        `;
+    } else {
+        avatarSvg = `
+          <circle cx="37" cy="35" r="24" fill="#0284c7" filter="drop-shadow(0px 2px 4px rgba(2, 132, 199, 0.2))"/>
+          <text x="37" y="43" font-family="'Pretendard', sans-serif" font-size="20" font-weight="900" fill="#ffffff" text-anchor="middle">${name.charAt(0)}</text>
+          <circle cx="37" cy="35" r="24" fill="none" stroke="#0284c7" stroke-width="1.8"/>
+        `;
+    }
+
+    const safeName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 276 98" width="276" height="98">
+      <defs>
+        <filter id="softShadow" x="-10%" y="-10%" width="120%" height="125%">
+          <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="rgba(0,0,0,0.15)"/>
+        </filter>
+        <clipPath id="pbAvatarClip">
+          <circle cx="37" cy="35" r="24"/>
+        </clipPath>
+      </defs>
+      <!-- [2단 네임표 순백색 배경 박스 및 은은한 테두리] -->
+      <rect x="2" y="2" width="272" height="94" rx="16" ry="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.2" filter="url(#softShadow)"/>
+      ${avatarSvg}
+      <!-- 상단 우측: 1행 보험전문가 / 2행 성함 -->
+      <text x="69" y="27" font-family="'Pretendard', sans-serif" font-size="12" font-weight="800" fill="#0284c7" letter-spacing="-0.3">보험전문가</text>
+      <text x="69" y="48" font-family="'Pretendard', sans-serif" font-size="19" font-weight="900" fill="#0f172a" letter-spacing="-0.5">${safeName}</text>
+      <!-- 중간 구분선 -->
+      <line x1="12" y1="65" x2="264" y2="65" stroke="#e2e8f0" stroke-width="1"/>
+      <!-- 하단 슬로건: 블루 체크 아이콘 + 30개 생·손보사 비교 · 청구 전담 파트너 -->
+      <circle cx="21" cy="80" r="6.5" fill="#0284c7"/>
+      <path d="M18 80 L20.2 82.2 L24.2 77.8" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="32" y="83.5" font-family="'Pretendard', sans-serif" font-size="11.5" font-weight="700" fill="#1e293b" letter-spacing="-0.4">30개 생·손보사 비교 · 청구 전담 파트너</text>
+    </svg>`;
+
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+        // [초고속 즉시 렌더링] 상위 프레임 유저 정보 즉시 동기화
+        function drawPersonalBrandLogoDirect(ctx, x, y, maxH, profile) {
+            const p = profile || (typeof getPlannerProfileData === 'function' ? getPlannerProfileData() : {});
+            
+            // 다중 후보 실명/성함 안전 추출
+            const rawCandidates = [
+                p.name,
+                p.full_name,
+                p.real_name,
+                p.nickname,
+                p.user_name,
+                p.userName,
+                p.user_metadata ? (p.user_metadata.name || p.user_metadata.full_name || p.user_metadata.nickname) : '',
+                p.email ? p.email.split('@')[0] : ''
+            ];
+            let name = '';
+            for (let c of rawCandidates) {
+                if (c && typeof c === 'string') {
+                    const tr = c.trim();
+                    if (tr && tr !== '담당 설계사' && tr !== '담당설계사' && tr !== '위라클 파트너' && tr !== 'null' && tr !== 'undefined') {
+                        name = tr;
+                        break;
+                    }
+                }
+            }
+            if (!name) name = (p.nickname || p.name || '설계사').trim();
+
+            const rawRole = (p.position || p.officialTitle || p.official_title || p.job || '보험전문가').trim();
+            const slogan = (p.slogan || (p.user_metadata && p.user_metadata.slogan) || '마음을 전하는').trim();
+
+            const scale = (maxH || 80) / 92;
+            ctx.save();
+
+            // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+            const avatarSize = 88 * scale;
+            const cx = x + avatarSize / 2;
+            const cy = y + (maxH || 80) / 2;
+            const radius = avatarSize / 2;
+
+            // 부드러운 그림자와 순백색 베이스 배경
+            ctx.save();
+            ctx.shadowColor = 'rgba(2, 132, 199, 0.2)';
+            ctx.shadowBlur = Math.round(10 * scale);
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = Math.round(3 * scale);
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.restore();
+
+            // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius - 1.5 * scale, 0, Math.PI * 2);
+            ctx.lineWidth = Math.max(2, 3 * scale);
+            ctx.strokeStyle = '#0284c7';
+            ctx.stroke();
+
+            // 내부 사진/이니셜 영역
+            const photoRadius = radius - 4.5 * scale;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, photoRadius, 0, Math.PI * 2);
+            ctx.clip();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+
+            if (plannerAvatarImg && plannerAvatarImg.isLoaded && plannerAvatarImg.src) {
+                try {
+                    ctx.drawImage(plannerAvatarImg, cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+                } catch(e) {
+                    ctx.fillStyle = '#f0f9ff';
+                    ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+                    ctx.fillStyle = '#0284c7';
+                    ctx.font = '900 ' + Math.round(26 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(name.charAt(0), cx, cy);
+                }
+            } else {
+                ctx.fillStyle = '#f0f9ff';
+                ctx.fillRect(cx - photoRadius, cy - photoRadius, photoRadius * 2, photoRadius * 2);
+                ctx.fillStyle = '#0284c7';
+                ctx.font = '900 ' + Math.round(26 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(name.charAt(0), cx, cy);
+            }
+            ctx.restore();
+
+            // 사진 내부 미세 경계 헤어라인
+            ctx.beginPath();
+            ctx.arc(cx, cy, photoRadius, 0, Math.PI * 2);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(2, 132, 199, 0.2)';
+            ctx.stroke();
+
+            // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+            const textX = x + avatarSize + 16 * scale;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+
+            // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+            const sloganY = y + 38 * scale;
+            ctx.font = 'italic 700 ' + Math.round(17 * scale) + 'px "Nanum Myeongjo", "Batang", serif';
+            ctx.lineJoin = 'round';
+            ctx.miterLimit = 2;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(3, 4 * scale);
+            ctx.strokeText('“ ' + slogan + ' ”', textX, sloganY);
+            ctx.fillStyle = '#0284c7';
+            ctx.fillText('“ ' + slogan + ' ”', textX, sloganY);
+
+            // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+            const nameY = y + 80 * scale;
+            ctx.font = '900 ' + Math.round(33 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(4, 5 * scale);
+            ctx.strokeText(name, textX, nameY);
+            ctx.fillStyle = '#1e1b4b';
+            ctx.fillText(name, textX, nameY);
+
+            const nameWidth = ctx.measureText(name).width;
+
+            // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+            const divX = textX + nameWidth + 12 * scale;
+            ctx.font = '300 ' + Math.round(20 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(2, 3 * scale);
+            ctx.strokeText('|', divX, nameY - 1 * scale);
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillText('|', divX, nameY - 1 * scale);
+
+            const divWidth = ctx.measureText('|').width;
+
+            // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+            const roleX = divX + divWidth + 12 * scale;
+            ctx.font = '800 ' + Math.round(17 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(3, 4 * scale);
+            ctx.strokeText(rawRole, roleX, nameY);
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillText(rawRole, roleX, nameY);
+
+            ctx.restore();
+        }
+
+
+      // [시안 B: 코너 도킹 일체형 박스형 네임표 캔버스 렌더러]
+      // [위라클 2단 네임표 캔버스 렌더러 - 기존 로고 위치 & 슬로건 맞춤 가로폭]
       function drawTwoTierNameplateBadge(ctx, imgW, imgH, profile, userImg) {
-          if (window.WeracleBrandBadge) {
-              return window.WeracleBrandBadge.draw(ctx, imgW, imgH, profile, userImg);
+          try {
+              const p = profile || (typeof getPlannerProfileData === 'function' ? getPlannerProfileData() : {}) || {};
+              const name = typeof resolvePlannerName === 'function' ? resolvePlannerName(p) : (p.name || '설계사');
+              
+              // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+              const roleText = '보험전문가';
+              const sloganText = '30개 생·손보사 비교 · 청구 전담 파트너';
+
+              // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+              const scale = Math.max(0.7, Math.min(1.5, imgW / 1000));
+
+              // 폰트 설정
+              const roleFont = '800 ' + Math.round(12.5 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+              const nameFont = '900 ' + Math.round(19.5 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+              const sloganFont = '700 ' + Math.round(12 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+
+              // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+              ctx.save();
+              ctx.font = sloganFont;
+              const sloganTextW = ctx.measureText(sloganText).width;
+              ctx.restore();
+
+              const padL = Math.round(12 * scale);
+              const padR = Math.round(14 * scale);
+              const padT = Math.round(10 * scale);
+              const padB = Math.round(9 * scale);
+
+              const checkIconR = Math.round(7 * scale);
+              const checkIconW = checkIconR * 2;
+              const bottomRowContentW = checkIconW + Math.round(6 * scale) + sloganTextW;
+              const boxW = Math.round(bottomRowContentW + padL + padR);
+
+              const avatarD = Math.round(50 * scale);
+              const avatarR = avatarD / 2;
+              const divMarginY = Math.round(7 * scale);
+              const bottomH = Math.round(16 * scale);
+              const boxH = Math.round(padT + avatarD + divMarginY + 1 * scale + divMarginY + bottomH + padB);
+
+              // [기존 로고 자리의 편안한 여백 안착 (구석 모서리 밀착 아님)]
+              const marginX = Math.max(22, Math.round(imgW * 0.024));
+              const marginY = Math.max(18, Math.round(imgW * 0.02));
+              const posX = Math.round(imgW - boxW - marginX);
+              const posY = marginY;
+              const radius = Math.round(16 * scale);
+
+              ctx.save();
+
+              // A. 순백색 소프트 섀도우 박스 배경
+              ctx.save();
+              ctx.shadowColor = 'rgba(0, 0, 0, 0.16)';
+              ctx.shadowBlur = Math.round(16 * scale);
+              ctx.shadowOffsetY = Math.round(5 * scale);
+              ctx.fillStyle = '#ffffff';
+              ctx.beginPath();
+              if (typeof ctx.roundRect === 'function') {
+                  ctx.roundRect(posX, posY, boxW, boxH, radius);
+              } else {
+                  ctx.rect(posX, posY, boxW, boxH);
+              }
+              ctx.fill();
+              ctx.restore();
+
+              // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+              ctx.lineWidth = Math.max(1, Math.round(1.2 * scale));
+              ctx.strokeStyle = '#e2e8f0';
+              ctx.beginPath();
+              if (typeof ctx.roundRect === 'function') {
+                  ctx.roundRect(posX, posY, boxW, boxH, radius);
+              } else {
+                  ctx.rect(posX, posY, boxW, boxH);
+              }
+              ctx.stroke();
+
+              // B. 상단 좌측: 50px 원형 프로필 이미지
+              const avatarCenterX = posX + padL + avatarR;
+              const avatarCenterY = posY + padT + avatarR;
+
+              const activeAvatar = (userImg && userImg.isLoaded && userImg.naturalWidth > 0) ? userImg : 
+                                   (typeof plannerAvatarImg !== 'undefined' && plannerAvatarImg && plannerAvatarImg.isLoaded && plannerAvatarImg.naturalWidth > 0 ? plannerAvatarImg : null);
+
+              if (activeAvatar) {
+                  ctx.save();
+                  ctx.beginPath();
+                  ctx.arc(avatarCenterX, avatarCenterY, avatarR - 1, 0, Math.PI * 2);
+                  ctx.clip();
+                  ctx.drawImage(activeAvatar, avatarCenterX - avatarR, avatarCenterY - avatarR, avatarD, avatarD);
+                  ctx.restore();
+
+                  ctx.beginPath();
+                  ctx.arc(avatarCenterX, avatarCenterY, avatarR, 0, Math.PI * 2);
+                  ctx.lineWidth = Math.max(1.5, Math.round(1.5 * scale));
+                  ctx.strokeStyle = '#0284c7';
+                  ctx.stroke();
+              } else {
+                  // 프로필 미등록 시: 신뢰감 있는 블루 원형 + 성함 첫 글자
+                  ctx.beginPath();
+                  ctx.arc(avatarCenterX, avatarCenterY, avatarR, 0, Math.PI * 2);
+                  ctx.fillStyle = '#0284c7';
+                  ctx.fill();
+
+                  ctx.font = '900 ' + Math.round(22 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+                  ctx.fillStyle = '#ffffff';
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  ctx.fillText(name.charAt(0), avatarCenterX, avatarCenterY + 1 * scale);
+              }
+
+              // C. 상단 우측: 1행 보험전문가 / 2행 성함
+              const textX = posX + padL + avatarD + Math.round(11 * scale);
+              const roleY = posY + padT + Math.round(16 * scale);
+
+              ctx.font = roleFont;
+              ctx.fillStyle = '#0284c7';
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'alphabetic';
+              ctx.fillText(roleText, textX, roleY);
+
+              const nameY = roleY + Math.round(22 * scale);
+              ctx.font = nameFont;
+              ctx.fillStyle = '#0f172a';
+              ctx.fillText(name, textX, nameY);
+
+              // D. 중간 가로 슬림 구분선
+              const divY = posY + padT + avatarD + divMarginY;
+              ctx.beginPath();
+              ctx.moveTo(posX + padL, divY);
+              ctx.lineTo(posX + boxW - padR, divY);
+              ctx.strokeStyle = '#e2e8f0';
+              ctx.lineWidth = Math.max(1, Math.round(1 * scale));
+              ctx.stroke();
+
+              // [백그라운드 비동기 처리] 세션 및 로고/청구내역 비차단 처리
+              const checkIconX = posX + padL + checkIconR;
+              const checkIconCenterY = divY + divMarginY + Math.round(8 * scale);
+
+              ctx.beginPath();
+              ctx.arc(checkIconX, checkIconCenterY, checkIconR, 0, Math.PI * 2);
+              ctx.fillStyle = '#0284c7';
+              ctx.fill();
+
+              // 흰색 체크 아이콘
+              ctx.beginPath();
+              ctx.strokeStyle = '#ffffff';
+              ctx.lineWidth = Math.max(1.2, Math.round(1.5 * scale));
+              ctx.lineCap = 'round';
+              ctx.lineJoin = 'round';
+              ctx.moveTo(checkIconX - 3.2 * scale, checkIconCenterY);
+              ctx.lineTo(checkIconX - 0.8 * scale, checkIconCenterY + 2.5 * scale);
+              ctx.lineTo(checkIconX + 3.2 * scale, checkIconCenterY - 2.5 * scale);
+              ctx.stroke();
+
+              // 슬로건 텍스트
+              const sloganTextX = checkIconX + checkIconR + Math.round(6 * scale);
+              ctx.font = sloganFont;
+              ctx.fillStyle = '#1e293b';
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(sloganText, sloganTextX, checkIconCenterY);
+
+              ctx.restore();
+          } catch(e) {
+              console.warn('drawTwoTierNameplateBadge error:', e);
           }
       }
 

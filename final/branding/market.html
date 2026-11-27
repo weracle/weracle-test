@@ -5219,15 +5219,164 @@ filteredKeys.forEach(key => {
       });
     }
 
- function calcQuoteTotal() {
+// 대분류 그룹별 고객의 현재 선택 인덱스 기억
+    let selectedOptionByGroup = {};
+
+    // 상품의 옵션 그룹 정규화 (기존 단일 printOptions 데이터도 하위 호환 변환)
+    function getNormalizedOptionGroups(item) {
+      if (!item) return [];
+      if (Array.isArray(item.optionGroups) && item.optionGroups.length > 0) {
+        return item.optionGroups;
+      }
+      if (Array.isArray(item.printOptions) && item.printOptions.length > 0) {
+        return [{
+          groupName: "옵션 1",
+          items: item.printOptions.map(o => ({
+            name: o.name || '기본 옵션',
+            price: parseInt(o.price) || 0,
+            targetQty: o.targetQty || ''
+          }))
+        }];
+      }
+      return [];
+    }
+
+    // 소분류의 연동수량(targetQty) 조건이 현재 구매수량(qty)과 일치하는지 판별
+    function isSubOptionMatchedForQty(targetQtyStr, qty) {
+      const raw = String(targetQtyStr || '').trim();
+      if (!raw || raw === '전체' || raw === '0') return true;
+
+      const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+      for (const part of parts) {
+        if (part.includes('~') || (part.includes('-') && !part.endsWith('-'))) {
+          const sep = part.includes('~') ? '~' : '-';
+          const [minS, maxS] = part.split(sep).map(v => parseInt(v.trim()));
+          const minV = isNaN(minS) ? 0 : minS;
+          const maxV = isNaN(maxS) ? Infinity : maxS;
+          if (qty >= minV && qty <= maxV) return true;
+        } else if (part.endsWith('+') || part.endsWith('이상')) {
+          const minV = parseInt(part.replace(/[^0-9]/g, ''));
+          if (!isNaN(minV) && qty >= minV) return true;
+        } else if (part.endsWith('-') || part.endsWith('이하') || part.endsWith('미만')) {
+          const numV = parseInt(part.replace(/[^0-9]/g, ''));
+          if (!isNaN(numV)) {
+            if (part.endsWith('미만') ? qty < numV : qty <= numV) return true;
+          }
+        } else {
+          const exact = parseInt(part.replace(/[^0-9]/g, ''));
+          if (!isNaN(exact) && qty === exact) return true;
+        }
+      }
+      return false;
+    }
+
+    // 현재 구매수량(quoteQty)에 맞춰 대분류별 옵션 행(<tr>) 렌더링 & 자동 활성화
+    function renderQuoteDynamicOptions() {
+      const tbody = document.getElementById('quoteDynamicOptionRows');
+      if (!tbody) return;
+
+      const item = currentItem || products.item1;
+      const groups = getNormalizedOptionGroups(item);
+
+      if (groups.length === 0) {
+        tbody.innerHTML = '';
+        return;
+      }
+
+      const escapeHtml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      let html = '';
+
+      groups.forEach((grp, gIdx) => {
+        const groupLabel = grp.groupName || `옵션 ${gIdx + 1}`;
+        const allItems = Array.isArray(grp.items) ? grp.items : [];
+
+        const matchedItems = allItems
+          .map((sub, sIdx) => ({ ...sub, origIdx: sIdx }))
+          .filter(sub => isSubOptionMatchedForQty(sub.targetQty, quoteQty));
+
+        if (matchedItems.length === 0) {
+          delete selectedOptionByGroup[gIdx];
+          html += `
+            <tr>
+              <th>${escapeHtml(groupLabel)}</th>
+              <td style="font-size: 12px; color: #94a3b8;">현재 수량(${quoteQty.toLocaleString()}개)에는 해당 옵션이 적용되지 않습니다.</td>
+            </tr>
+          `;
+          return;
+        }
+
+        let activeOrigIdx = selectedOptionByGroup[gIdx];
+        const stillValid = matchedItems.some(m => m.origIdx === activeOrigIdx);
+        if (!stillValid) {
+          const exactMatched = matchedItems.find(m => String(m.targetQty || '').trim() !== '');
+          activeOrigIdx = exactMatched ? exactMatched.origIdx : matchedItems[0].origIdx;
+          selectedOptionByGroup[gIdx] = activeOrigIdx;
+        }
+
+        const optionsHtml = matchedItems.map(m => {
+          const p = parseInt(m.price) || 0;
+          const priceLabel = p > 0 ? ` (+${p.toLocaleString()}원)` : (p < 0 ? ` (${p.toLocaleString()}원)` : '');
+          const selAttr = (m.origIdx === activeOrigIdx) ? 'selected' : '';
+          return `<option value="${m.origIdx}" data-price="${p}" ${selAttr}>${escapeHtml(m.name)}${priceLabel}</option>`;
+        }).join('');
+
+        html += `
+          <tr>
+            <th>${escapeHtml(groupLabel)}</th>
+            <td>
+              <select class="quote-dynamic-opt-select" data-group-idx="${gIdx}" onchange="handleDynamicOptionChange(${gIdx}, this.value)" style="width: 100%; height: 34px; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12px; font-weight: 700; color: #1e293b; background: #fff;">
+                ${optionsHtml}
+              </select>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // 고객이 특정 대분류의 소분류를 직접 변경했을 때 호출
+    function handleDynamicOptionChange(groupIdx, origSubIdx) {
+      selectedOptionByGroup[groupIdx] = parseInt(origSubIdx);
+      calcQuoteTotal(true);
+    }
+
+    // 현재 선택된 모든 대분류 옵션의 합산 금액 및 요약 텍스트 반환
+    function getSelectedOptionsSummary() {
+      const item = currentItem || products.item1;
+      const groups = getNormalizedOptionGroups(item);
+      let totalOptPrice = 0;
+      const labels = [];
+
+      groups.forEach((grp, gIdx) => {
+        const sIdx = selectedOptionByGroup[gIdx];
+        if (sIdx !== undefined && grp.items && grp.items[sIdx]) {
+          const sub = grp.items[sIdx];
+          if (isSubOptionMatchedForQty(sub.targetQty, quoteQty)) {
+            const p = parseInt(sub.price) || 0;
+            totalOptPrice += p;
+            labels.push(`${grp.groupName || ('옵션' + (gIdx + 1))}: ${sub.name}`);
+          }
+        }
+      });
+
+      return {
+        optionAmount: totalOptPrice,
+        optionText: labels.length > 0 ? labels.join(' / ') : '기본 옵션'
+      };
+    }
+
+    function calcQuoteTotal(skipOptionRender) {
+      if (!skipOptionRender) {
+        renderQuoteDynamicOptions();
+      }
+
       const item = currentItem || products.item1;
       const boxQty = getBoxUnitQty(item);
       const unitPrice = getItemUnitPrice(item, quoteQty);
 
-      const printSelect = document.getElementById('quotePrintOption');
-      const optionAmount = printSelect ? parseInt(printSelect.value) || 0 : 0;
+      const { optionAmount } = getSelectedOptionsSummary();
 
-      // 상품 금액(개당 단가 × 수량)에 옵션 금액을 중복 곱셈 없이 그대로 합산
       const supplyAmount = (unitPrice * quoteQty) + optionAmount;
       const vatAmount = Math.round(supplyAmount * 0.1);
       const totalAmount = supplyAmount + vatAmount;
@@ -5245,7 +5394,6 @@ filteredKeys.forEach(key => {
         document.getElementById('quoteTotalPrice').innerText = totalAmount.toLocaleString() + ' 원';
       }
 
-      // 현재 선택된 박스 수 배지 업데이트
       const boxBadge = document.getElementById('detailBoxCountBadge');
       if (boxBadge) {
         if (boxQty > 1) {
@@ -5257,7 +5405,6 @@ filteredKeys.forEach(key => {
         }
       }
 
-      // 박스 단위 외 숫자 직접 타이핑 시 안내 표시
       const noticeEl = document.getElementById('quoteMinQtyNotice');
       if (noticeEl) {
         if (quoteQty < boxQty || (boxQty > 1 && quoteQty % boxQty !== 0)) {
@@ -5466,14 +5613,10 @@ filteredKeys.forEach(key => {
       adminTierList = getItemTierList(item);
       renderAdminTierRows();
 
-      adminPrintOptionList = (item.printOptions && item.printOptions.length > 0) 
-        ? JSON.parse(JSON.stringify(item.printOptions))
-        : [
-            { name: "박인쇄 1면", price: 150 },
-            { name: "박인쇄 2면", price: 250 },
-            { name: "실크인쇄 1도", price: 350 },
-            { name: "인쇄 없음 (무지 / 빠른 출고)", price: 0 }
-          ];
+   const existingGroups = getNormalizedOptionGroups(item);
+      adminOptionGroups = existingGroups.length > 0
+        ? JSON.parse(JSON.stringify(existingGroups))
+        : [{ groupName: "옵션 1", items: [{ name: "", price: 0, targetQty: "" }] }];
       renderAdminPrintOptionRows();
 
       adminColorList = (item.colorOptions && item.colorOptions.length > 0)
@@ -5536,12 +5679,9 @@ filteredKeys.forEach(key => {
       adminTierList = [];
       renderAdminTierRows();
 
-      // 인쇄 옵션 기본값 (weraclemarket.com 규격)
-      adminPrintOptionList = [
-        { name: "박인쇄 1면", price: 150 },
-        { name: "박인쇄 2면", price: 250 },
-        { name: "실크인쇄 1도", price: 350 },
-        { name: "인쇄 없음 (무지 / 빠른 출고)", price: 0 }
+  // 계층형 옵션 그룹 초기화 (옵션 1 빈 그룹 1개로 시작)
+      adminOptionGroups = [
+        { groupName: "옵션 1", items: [{ name: "", price: 0, targetQty: "" }] }
       ];
       renderAdminPrintOptionRows();
 
@@ -5641,30 +5781,98 @@ filteredKeys.forEach(key => {
       updateRegThumbSlider();
     }
 
-    // 인쇄 옵션 동적 추가/삭제
+ // 계층형 옵션(대분류 그룹 + 소분류 항목 + 연동수량) 상태 및 렌더링
+    let adminOptionGroups = [];
+
     function renderAdminPrintOptionRows() {
       const container = document.getElementById('adminPrintOptionRows');
       if (!container) return;
       container.innerHTML = '';
 
-      if (adminPrintOptionList.length === 0) {
-        container.innerHTML = '<span style="font-size:12px; color:#64748b;">인쇄 옵션이 없습니다. (+ 인쇄 옵션 추가 클릭)</span>';
+      if (!Array.isArray(adminOptionGroups) || adminOptionGroups.length === 0) {
+        container.innerHTML = '<div style="padding:14px; text-align:center; background:#fff; border-radius:8px; border:1px dashed #86efac; font-size:12.5px; color:#166534; font-weight:600;">등록된 옵션 그룹이 없습니다. 우측 상단 <b>[+ 대분류 옵션 그룹 추가]</b>를 눌러 옵션 1, 옵션 2를 구성하세요.</div>';
         return;
       }
 
-      adminPrintOptionList.forEach((opt, idx) => {
-        const row = document.createElement('div');
-        row.style.cssText = 'display: flex; gap: 8px; align-items: center; background: #fff; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;';
-        row.innerHTML = `
-          <span style="font-weight:700; font-size:12px; color:#475569; width:55px;">옵션 ${idx + 1}</span>
-          <input type="text" value="${opt.name}" placeholder="옵션명 (예: 1도 실크인쇄)" onchange="adminPrintOptionList[${idx}].name = this.value" style="flex:1; height:34px; border:1px solid #cbd5e1; border-radius:6px; padding:0 8px; font-size:13px; font-weight:700;">
-          <span style="font-size:12px; font-weight:700; color:#64748b;">추가금액:</span>
-          <input type="number" value="${opt.price}" placeholder="0" onchange="adminPrintOptionList[${idx}].price = parseInt(this.value) || 0" style="width:90px; height:34px; border:1px solid #cbd5e1; border-radius:6px; padding:0 8px; font-size:13px; text-align:right;">
-          <span style="font-size:12px; font-weight:700; color:#475569;">원</span>
-          <button type="button" onclick="adminRemovePrintOptionRow(${idx})" style="background:#fee2e2; color:#dc2626; border:none; width:28px; height:28px; border-radius:6px; cursor:pointer; font-weight:bold;">✕</button>
+      const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      adminOptionGroups.forEach((grp, gIdx) => {
+        const groupBox = document.createElement('div');
+        groupBox.style.cssText = 'background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);';
+
+        const subItems = Array.isArray(grp.items) ? grp.items : [];
+        let subRowsHtml = '';
+
+        if (subItems.length === 0) {
+          subRowsHtml = `<div style="font-size:12px; color:#94a3b8; padding:8px 4px;">소분류 항목이 없습니다. 우측 [+ 소분류 항목 추가]를 눌러주세요.</div>`;
+        } else {
+          subRowsHtml = subItems.map((sub, sIdx) => `
+            <div style="display: flex; gap: 8px; align-items: center; background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap;">
+              <span style="font-size: 11.5px; font-weight: 800; color: #0284c7; min-width: 52px;">소분류 ${sIdx + 1}</span>
+              <input type="text" value="${esc(sub.name)}" placeholder="소분류명 (예: 1박스(30개) 4,500원)" oninput="adminOptionGroups[${gIdx}].items[${sIdx}].name = this.value" style="flex: 1; min-width: 180px; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; font-size: 12.5px; font-weight: 700; background: #fff;">
+              <div style="display: flex; align-items: center; gap: 4px;" title="비워두면 모든 수량에서 노출됩니다. 특정 수량에서만 자동 선택되게 하려면 30, 60, 30~90, 120+ 형식으로 입력하세요.">
+                <span style="font-size: 11.5px; font-weight: 800; color: #0369a1;">연동수량:</span>
+                <input type="text" value="${esc(sub.targetQty || '')}" placeholder="전체 (예: 30, 30~90, 120+)" oninput="adminOptionGroups[${gIdx}].items[${sIdx}].targetQty = this.value" style="width: 135px; height: 34px; border: 1px solid #93c5fd; border-radius: 6px; padding: 0 8px; font-size: 12px; font-weight: 700; color: #1e40af; background: #eff6ff; text-align: center;">
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span style="font-size: 11.5px; font-weight: 700; color: #475569;">추가금액:</span>
+                <input type="number" value="${parseInt(sub.price) || 0}" step="1" placeholder="0" oninput="adminOptionGroups[${gIdx}].items[${sIdx}].price = parseInt(this.value) || 0" style="width: 92px; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-size: 12.5px; font-weight: 800; text-align: right; background: #fff;">
+                <span style="font-size: 12px; font-weight: 700; color: #475569;">원</span>
+              </div>
+              <button type="button" onclick="adminRemoveSubOption(${gIdx}, ${sIdx})" style="background: #fee2e2; color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: bold;" title="소분류 삭제">✕</button>
+            </div>
+          `).join('');
+        }
+
+        groupBox.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #cbd5e1; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px;">
+              <span style="background: #166534; color: #fff; font-size: 11.5px; font-weight: 800; padding: 4px 9px; border-radius: 6px; white-space: nowrap;">대분류 ${gIdx + 1}</span>
+              <input type="text" value="${esc(grp.groupName)}" placeholder="대분류명 입력 (예: 옵션 1 - 동판 제작 / 옵션 2 - 수량별 인쇄)" oninput="adminOptionGroups[${gIdx}].groupName = this.value" style="flex: 1; height: 36px; border: 1.5px solid #86efac; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 800; color: #0f172a;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button type="button" onclick="adminAddSubOption(${gIdx})" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer;">
+                + 소분류 항목 추가
+              </button>
+              <button type="button" onclick="adminRemoveOptionGroup(${gIdx})" style="background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                그룹 삭제
+              </button>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${subRowsHtml}
+          </div>
         `;
-        container.appendChild(row);
+        container.appendChild(groupBox);
       });
+    }
+
+    function adminAddOptionGroup() {
+      const nextNum = adminOptionGroups.length + 1;
+      adminOptionGroups.push({
+        groupName: `옵션 ${nextNum}`,
+        items: [{ name: "", price: 0, targetQty: "" }]
+      });
+      renderAdminPrintOptionRows();
+    }
+
+    function adminRemoveOptionGroup(gIdx) {
+      if (!confirm(`대분류 ${gIdx + 1} 그룹 전체를 삭제하시겠습니까?`)) return;
+      adminOptionGroups.splice(gIdx, 1);
+      renderAdminPrintOptionRows();
+    }
+
+    function adminAddSubOption(gIdx) {
+      if (!adminOptionGroups[gIdx]) return;
+      if (!Array.isArray(adminOptionGroups[gIdx].items)) adminOptionGroups[gIdx].items = [];
+      adminOptionGroups[gIdx].items.push({ name: "", price: 0, targetQty: "" });
+      renderAdminPrintOptionRows();
+    }
+
+    function adminRemoveSubOption(gIdx, sIdx) {
+      if (!adminOptionGroups[gIdx] || !adminOptionGroups[gIdx].items) return;
+      adminOptionGroups[gIdx].items.splice(sIdx, 1);
+      renderAdminPrintOptionRows();
     }
 
     
@@ -6165,23 +6373,30 @@ filteredKeys.forEach(key => {
         { type: 'text', title: title, body: summary || '1:1 맞춤 제작 프리미엄 브랜딩 상품' }
       ];
 
-      // 인쇄 옵션 복사
-      const printOpts = adminPrintOptionList.length > 0 ? adminPrintOptionList.slice() : [
-        { name: "1도 실크인쇄 (무료)", price: 0 }
-      ];
+     // 계층형 옵션 그룹(대분류 + 소분류 + 연동수량) 정리 및 저장
+      const cleanedOptionGroups = (adminOptionGroups || [])
+        .map((grp, idx) => ({
+          groupName: (grp.groupName || '').trim() || `옵션 ${idx + 1}`,
+          items: (grp.items || [])
+            .filter(sub => (sub.name || '').trim() !== '')
+            .map(sub => ({
+              name: sub.name.trim(),
+              price: parseInt(sub.price) || 0,
+              targetQty: String(sub.targetQty || '').trim()
+            }))
+        }))
+        .filter(grp => grp.items.length > 0);
 
-    // 기본 주문수량(1박스 기준) = 최소 주문수량 일원화 저장
+      // 기본 주문수량(1박스 기준) = 최소 주문수량 일원화 저장
       const baseQty = Math.max(1, parseInt(document.getElementById('adminProdBaseQty')?.value) || 1);
       const minQty = baseQty;
 
-  // 고객 화면 단가표 제거에 맞춰, 단가 구간을 따로 안 쓰거나 1번 탭 판매가를 수정했을 때 판매가(price)가 그대로 적용되도록 연동
       let tierList = [];
       if (adminTierList.length > 0) {
         tierList = adminTierList.map(t => ({
           qty: Math.max(1, parseInt(t.qty) || minQty),
           price: parseInt(t.price) || price
         })).sort((a,b) => a.qty - b.qty);
-      // 1번 탭 판매가를 변경하면 기준 단가도 항상 새 판매가로 동기화
         tierList[0].price = price;
       } else {
         tierList = [{ qty: minQty, price: price }];
@@ -6208,11 +6423,11 @@ filteredKeys.forEach(key => {
         thumbs: thumbs,
         summary: summary || '1:1 맞춤 제작 프리미엄 브랜딩 상품',
         notice: '기본 배송: 무료배송 / 주문제작 상품 (시안 확정 후 2~4일 출고)',
-        printOptions: printOpts,
+        optionGroups: cleanedOptionGroups,
+        printOptions: [],
         colorOptions: colorOpts,
         detailBlocks: detailBlocks
       };
-
       products[targetId] = targetProduct;
       if (targetId === 'item1') {
         DEFAULT_PRODUCTS.item1 = Object.assign({}, targetProduct);
@@ -6541,10 +6756,10 @@ filteredKeys.forEach(key => {
       const colorEl = document.querySelector('.detail-color-chip.active');
       const colorName = colorEl ? colorEl.getAttribute('data-color-name') : (item.colorOptions && item.colorOptions[0] ? item.colorOptions[0].name : '기본 색상');
 
-      const printSelect = document.getElementById('quotePrintOption');
-      const printOptionText = printSelect && printSelect.options[printSelect.selectedIndex] ? printSelect.options[printSelect.selectedIndex].text : '기본 옵션';
-      const optionAmount = printSelect ? parseInt(printSelect.value) || 0 : 0;
-
+     const optSummary = getSelectedOptionsSummary();
+      const printOptionText = optSummary.optionText;
+      const optionAmount = optSummary.optionAmount;
+      
       const unitPrice = getItemUnitPrice(item, quoteQty);
       const supplyAmount = (unitPrice * quoteQty) + optionAmount;
       const vatAmount = Math.round(supplyAmount * 0.1);

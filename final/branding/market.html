@@ -4452,10 +4452,11 @@
           </div>
         `;
       } else {
-        filteredKeys.forEach(key => {
+       filteredKeys.forEach(key => {
           const p = products[key];
-          const discountRate = p.discountRate || '10%';
-          const origPriceStr = p.originalPrice ? (p.originalPrice.toLocaleString() + '원') : '';
+          const hasDiscount = p.originalPrice && p.originalPrice > p.price && p.discountRate && p.discountRate !== '0%';
+          const discountRate = hasDiscount ? p.discountRate : '';
+          const origPriceStr = (p.originalPrice && p.originalPrice > p.price) ? (p.originalPrice.toLocaleString() + '원') : '';
           const currentPriceStr = (p.price || 0).toLocaleString() + '원';
           const tagInfo = CATEGORY_MAP[p.category] ? CATEGORY_MAP[p.category].tag : '📁 개인 브랜딩 상품';
 
@@ -4476,8 +4477,8 @@
               </div>
 
               <div>
-                <div class="card-price-row">
-                  <span class="card-discount-val">${discountRate}</span>
+               <div class="card-price-row">
+                  ${discountRate ? `<span class="card-discount-val">${discountRate}</span>` : ''}
                   <span class="card-price-current">${currentPriceStr}</span>
                   ${origPriceStr ? `<span class="card-price-original">${origPriceStr}</span>` : ''}
                 </div>
@@ -4829,6 +4830,22 @@
         const summaryEl = document.getElementById('kurlyProductSummary');
         if (summaryEl) summaryEl.innerText = item.summary || '1:1 맞춤 제작 프리미엄 브랜딩 상품';
 
+        // 상단 판매가 및 할인율 동기화 (정상가 없을 시 깔끔하게 숨김)
+        const priceDisplayEl = document.getElementById('kurlyProductPrice');
+        if (priceDisplayEl) priceDisplayEl.innerText = ((item.price || 0).toLocaleString()) + '원';
+
+        const hasValidOrig = item.originalPrice && item.originalPrice > item.price;
+        const discEl = document.getElementById('detailDiscountRate');
+        if (discEl) {
+          discEl.innerText = hasValidOrig && item.discountRate ? item.discountRate : '';
+          discEl.style.display = (hasValidOrig && item.discountRate && item.discountRate !== '0%') ? 'inline' : 'none';
+        }
+        const origEl = document.getElementById('detailOrigPrice');
+        if (origEl) {
+          origEl.innerText = hasValidOrig ? (item.originalPrice.toLocaleString() + '원') : '';
+          origEl.style.display = hasValidOrig ? 'inline' : 'none';
+        }
+
         // 슬라이더 렌더링
         const allThumbs = (item.thumbs && item.thumbs.length > 0) ? item.thumbs.slice() : [item.thumb];
         renderProductSlider(allThumbs, 0);
@@ -5082,18 +5099,23 @@
       }
     }
 
-    // 견적 연산
+   // 견적 연산 (최소 1개 단위부터 상품별 최소수량까지 유연하게 대응)
     function changeQuoteQty(delta) {
-      let val = parseInt(document.getElementById('quoteQtyInput').value) || 160;
-      val = Math.max(10, val + delta);
+      const minAllowed = Math.max(1, (currentItem && currentItem.minQty) ? parseInt(currentItem.minQty) : 1);
+      const stepUnit = (currentItem && currentItem.baseQty && currentItem.baseQty < 10) ? 1 : Math.abs(delta);
+      const actualDelta = delta < 0 ? -stepUnit : stepUnit;
+      let val = parseInt(document.getElementById('quoteQtyInput').value) || minAllowed;
+      val = Math.max(minAllowed, val + actualDelta);
       document.getElementById('quoteQtyInput').value = val;
       quoteQty = val;
       calcQuoteTotal();
     }
 
     function handleQuoteQtyInput(val) {
-      let num = parseInt(val) || 10;
-      quoteQty = Math.max(10, num);
+      const minAllowed = Math.max(1, (currentItem && currentItem.minQty) ? parseInt(currentItem.minQty) : 1);
+      let num = parseInt(val);
+      if (isNaN(num) || num < 1) num = minAllowed;
+      quoteQty = Math.max(1, num);
       calcQuoteTotal();
     }
 
@@ -5420,11 +5442,8 @@
       const summaryEl = document.getElementById('adminProdSummary');
       if (summaryEl) summaryEl.value = item.summary || '';
 
-      const priceEl = document.getElementById('adminProdPrice');
+     const priceEl = document.getElementById('adminProdPrice');
       if (priceEl) priceEl.value = item.price || 3780;
-
-      const origEl = document.getElementById('adminProdOrigPrice');
-      if (origEl) origEl.value = item.originalPrice || '';
 
       const catSelect = document.getElementById('adminProdCategory');
       if (catSelect) catSelect.value = item.category || 'binder';
@@ -5494,11 +5513,10 @@
       const catSelect = document.getElementById('adminProdCategory');
       if (catSelect) catSelect.value = (initialCategory && initialCategory !== 'all') ? initialCategory : 'binder';
 
-      // 완전 빈칸 세팅
+     // 완전 빈칸 세팅
       document.getElementById('adminProdTitle').value = '';
       document.getElementById('adminProdSummary').value = '';
       document.getElementById('adminProdPrice').value = '';
-      document.getElementById('adminProdOrigPrice').value = '';
 
       // 대표 썸네일 초기화 (빈 상태)
       adminThumbImages = [];
@@ -5687,8 +5705,8 @@
 
         row.innerHTML = `
           <span style="font-weight:700; font-size:12px; color:#475569; width:45px;">구간 ${idx + 1}</span>
-          <div style="display:flex; align-items:center; gap:4px;">
-            <input type="number" value="${tier.qty}" placeholder="수량" min="1" step="10" oninput="adminTierList[${idx}].qty = parseInt(this.value)||0;" style="width:75px; height:32px; border:1px solid #cbd5e1; border-radius:6px; padding:0 8px; font-size:13px; font-weight:800; text-align:center;">
+       <div style="display:flex; align-items:center; gap:4px;">
+            <input type="number" value="${tier.qty}" placeholder="수량" min="1" step="1" oninput="adminTierList[${idx}].qty = Math.max(1, parseInt(this.value)||1);" style="width:75px; height:32px; border:1px solid #cbd5e1; border-radius:6px; padding:0 8px; font-size:13px; font-weight:800; text-align:center;">
             <span style="font-size:12px; color:#64748b; font-weight:700;">개 이상</span>
           </div>
           <div style="display:flex; align-items:center; gap:4px; margin-left:6px;">
@@ -5845,30 +5863,153 @@
       renderAdminColorRows();
     }
 
+// ========================================================
+    // 상품등록 모달 내 상세페이지 블록(이미지+텍스트) 드래그 이동 & 인라인 수정 관리
     // ========================================================
-    // 상품등록 모달 내 상세페이지 블록(이미지+텍스트) 관리
-    // ========================================================
+    let adminDragSrcIdx = null;
+    let adminEditingTextIdx = null; // 현재 인라인 수정 중인 텍스트 블록 인덱스
+
     function handleAdminDetailGalleryInput(input) {
       if (input.files && input.files.length > 0) {
-        Array.from(input.files).forEach(file => {
+        const files = Array.from(input.files);
+        let loaded = 0;
+        files.forEach(file => {
           const reader = new FileReader();
           reader.onload = function(e) {
             adminDetailBlocksList.push({ type: 'image', src: e.target.result });
-            renderAdminDetailBlocksList();
+            loaded++;
+            if (loaded === files.length) {
+              renderAdminDetailBlocksList();
+            }
           };
           reader.readAsDataURL(file);
         });
+        input.value = '';
       }
     }
 
+    // [+ 텍스트 블록 추가] 클릭 시 새 텍스트 블록을 생성하고 즉시 인라인 편집 모드로 전환
     function adminPromptAddText() {
-      const title = prompt('소제목을 입력하세요:', '특장점 안내');
-      if (title === null) return;
-      const body = prompt('설명 본문 내용을 입력하세요:');
-      if (!body) return;
-
-      adminDetailBlocksList.push({ type: 'text', title: title.trim(), body: body.trim() });
+      adminDetailBlocksList.push({
+        type: 'text',
+        title: '특장점 안내',
+        body: ''
+      });
+      adminEditingTextIdx = adminDetailBlocksList.length - 1;
       renderAdminDetailBlocksList();
+
+      setTimeout(() => {
+        const titleInp = document.getElementById('adminEditBlockTitle_' + adminEditingTextIdx);
+        if (titleInp) {
+          titleInp.focus();
+          titleInp.select();
+        }
+      }, 50);
+    }
+
+    // 기존 텍스트 블록 수정 모드 열기
+    function adminStartEditTextBlock(idx) {
+      adminEditingTextIdx = idx;
+      renderAdminDetailBlocksList();
+      setTimeout(() => {
+        const bodyInp = document.getElementById('adminEditBlockBody_' + idx);
+        if (bodyInp) bodyInp.focus();
+      }, 50);
+    }
+
+    // 텍스트 블록 수정 저장
+    function adminSaveEditTextBlock(idx) {
+      const titleEl = document.getElementById('adminEditBlockTitle_' + idx);
+      const bodyEl = document.getElementById('adminEditBlockBody_' + idx);
+      if (!adminDetailBlocksList[idx]) return;
+
+      const newTitle = titleEl ? titleEl.value.trim() : '';
+      const newBody = bodyEl ? bodyEl.value.trim() : '';
+
+      if (!newTitle && !newBody) {
+        alert('소제목 또는 본문 내용을 입력해 주세요.');
+        return;
+      }
+
+      adminDetailBlocksList[idx].title = newTitle || '안내';
+      adminDetailBlocksList[idx].body = newBody;
+      adminEditingTextIdx = null;
+      renderAdminDetailBlocksList();
+    }
+
+    // 텍스트 블록 수정 취소
+    function adminCancelEditTextBlock(idx) {
+      // 방금 새로 추가했는데 본문이 비어있으면 빈 블록 자동 정리
+      if (adminDetailBlocksList[idx] && adminDetailBlocksList[idx].title === '특장점 안내' && !adminDetailBlocksList[idx].body) {
+        adminDetailBlocksList.splice(idx, 1);
+      }
+      adminEditingTextIdx = null;
+      renderAdminDetailBlocksList();
+    }
+
+    // 위/아래 버튼으로 한 칸씩 순서 이동
+    function adminMoveDetailBlock(idx, dir) {
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= adminDetailBlocksList.length) return;
+
+      if (adminEditingTextIdx !== null) {
+        if (adminEditingTextIdx === idx) adminEditingTextIdx = targetIdx;
+        else if (adminEditingTextIdx === targetIdx) adminEditingTextIdx = idx;
+      }
+
+      const temp = adminDetailBlocksList[idx];
+      adminDetailBlocksList[idx] = adminDetailBlocksList[targetIdx];
+      adminDetailBlocksList[targetIdx] = temp;
+      renderAdminDetailBlocksList();
+    }
+
+    // 드래그 앤 드롭 이벤트 핸들러
+    function handleAdminBlockDragStart(e, idx) {
+      // 텍스트 입력창 편집 중일 때는 드래그 방지 (텍스트 드래그 선택 허용)
+      if (adminEditingTextIdx === idx) {
+        e.preventDefault();
+        return;
+      }
+      adminDragSrcIdx = idx;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(idx));
+      e.currentTarget.style.opacity = '0.45';
+    }
+
+    function handleAdminBlockDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      e.currentTarget.style.borderTop = '2.5px solid #2563eb';
+      e.currentTarget.style.background = '#eff6ff';
+    }
+
+    function handleAdminBlockDragLeave(e) {
+      e.currentTarget.style.borderTop = '1px solid #e2e8f0';
+      e.currentTarget.style.background = '#f8fafc';
+    }
+
+    function handleAdminBlockDrop(e, dropIdx) {
+      e.preventDefault();
+      e.currentTarget.style.borderTop = '1px solid #e2e8f0';
+      e.currentTarget.style.background = '#f8fafc';
+
+      if (adminDragSrcIdx === null || adminDragSrcIdx === dropIdx) {
+        adminDragSrcIdx = null;
+        return;
+      }
+
+      const movedItem = adminDetailBlocksList.splice(adminDragSrcIdx, 1)[0];
+      adminDetailBlocksList.splice(dropIdx, 0, movedItem);
+      adminDragSrcIdx = null;
+      adminEditingTextIdx = null;
+      renderAdminDetailBlocksList();
+    }
+
+    function handleAdminBlockDragEnd(e) {
+      e.currentTarget.style.opacity = '1';
+      e.currentTarget.style.borderTop = '1px solid #e2e8f0';
+      e.currentTarget.style.background = '#f8fafc';
+      adminDragSrcIdx = null;
     }
 
     function renderAdminDetailBlocksList() {
@@ -5877,33 +6018,85 @@
       container.innerHTML = '';
 
       if (adminDetailBlocksList.length === 0) {
-        container.innerHTML = '<span style="font-size:12.5px; color:#94a3b8; text-align:center; padding:30px 0;">등록된 상세 블록이 없습니다. (+ 이미지 또는 + 텍스트 블록 추가)</span>';
+        container.innerHTML = '<span style="font-size:12.5px; color:#94a3b8; text-align:center; padding:30px 0;">등록된 상세 블록이 없습니다. (+ 이미지 또는 + 텍스트 블록 추가 후 드래그하여 순서를 배치하세요)</span>';
         return;
       }
 
+      const escapeHtml = (str) => String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
       adminDetailBlocksList.forEach((b, idx) => {
+        const isEditing = (b.type === 'text' && adminEditingTextIdx === idx);
         const item = document.createElement('div');
-        item.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;';
-        
+
+        item.draggable = !isEditing;
+        item.style.cssText = `display:flex; flex-direction:column; gap:8px; background:${isEditing ? '#ffffff' : '#f8fafc'}; padding:10px 12px; border-radius:8px; border:${isEditing ? '1.5px solid #2563eb' : '1px solid #e2e8f0'}; cursor:${isEditing ? 'default' : 'grab'}; transition:background 0.15s;`;
+
+        if (!isEditing) {
+          item.ondragstart = (e) => handleAdminBlockDragStart(e, idx);
+          item.ondragover = (e) => handleAdminBlockDragOver(e);
+          item.ondragleave = (e) => handleAdminBlockDragLeave(e);
+          item.ondrop = (e) => handleAdminBlockDrop(e, idx);
+          item.ondragend = (e) => handleAdminBlockDragEnd(e);
+        }
+
+        const moveBtnsHtml = `
+          <button type="button" onclick="adminMoveDetailBlock(${idx}, -1)" ${idx === 0 ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#e2e8f0; border:none; width:26px; height:26px; border-radius:6px; font-size:11px;"' : 'style="background:#e2e8f0; color:#334155; border:none; width:26px; height:26px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:800;"'} title="위로 이동">▲</button>
+          <button type="button" onclick="adminMoveDetailBlock(${idx}, 1)" ${idx === adminDetailBlocksList.length - 1 ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#e2e8f0; border:none; width:26px; height:26px; border-radius:6px; font-size:11px;"' : 'style="background:#e2e8f0; color:#334155; border:none; width:26px; height:26px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:800;"'} title="아래로 이동">▼</button>
+        `;
+
         if (b.type === 'text') {
-          item.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span style="font-weight:800; font-size:11.5px; background:#e0f2fe; color:#0284c7; padding:2px 6px; border-radius:4px;">텍스트</span>
-              <div>
-                <b style="font-size:13px; color:#0f172a;">${b.title}</b>
-                <p style="font-size:11.5px; color:#64748b; margin:0; max-width:500px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${b.body}</p>
+          if (isEditing) {
+            item.innerHTML = `
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:800; font-size:12px; color:#2563eb;">✏️ #${idx + 1} 텍스트 설명 블록 편집</span>
+                <span style="font-size:11px; color:#64748b;">저장 후 마우스로 드래그해 원하는 이미지 위·아래로 이동할 수 있습니다.</span>
               </div>
-            </div>
-            <button type="button" onclick="adminRemoveDetailBlock(${idx})" style="background:#fee2e2; color:#dc2626; border:none; width:26px; height:26px; border-radius:6px; cursor:pointer; font-weight:bold;">✕</button>
-          `;
+              <input type="text" id="adminEditBlockTitle_${idx}" value="${escapeHtml(b.title)}" placeholder="소제목을 입력하세요 (예: Point 01. 클래식 네이비)" style="width:100%; height:36px; border:1px solid #cbd5e1; border-radius:6px; padding:0 10px; font-size:13px; font-weight:700; color:#0f172a;">
+              <textarea id="adminEditBlockBody_${idx}" rows="3" placeholder="상세 설명 본문을 입력하세요 (엔터 줄바꿈 지원)" style="width:100%; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; font-size:12.5px; color:#334155; line-height:1.5; resize:vertical;">${escapeHtml(b.body)}</textarea>
+              <div style="display:flex; justify-content:flex-end; gap:6px;">
+                <button type="button" onclick="adminCancelEditTextBlock(${idx})" style="padding:5px 12px; font-size:12px; font-weight:700; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;">취소</button>
+                <button type="button" onclick="adminSaveEditTextBlock(${idx})" style="padding:5px 14px; font-size:12px; font-weight:800; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer;">✓ 텍스트 저장</button>
+              </div>
+            `;
+          } else {
+            item.innerHTML = `
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
+                  <span style="color:#94a3b8; font-size:15px; cursor:grab; user-select:none;" title="드래그하여 순서 변경">☰</span>
+                  <span style="font-weight:800; font-size:11px; color:#64748b; min-width:22px;">#${idx + 1}</span>
+                  <span style="font-weight:800; font-size:11.5px; background:#e0f2fe; color:#0284c7; padding:2px 7px; border-radius:4px; flex-shrink:0;">텍스트</span>
+                  <div style="min-width:0; flex:1;">
+                    <b style="font-size:13px; color:#0f172a; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(b.title)}</b>
+                    <p style="font-size:11.5px; color:#64748b; margin:2px 0 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(b.body)}</p>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+                  <button type="button" onclick="adminStartEditTextBlock(${idx})" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; height:26px; padding:0 9px; border-radius:6px; cursor:pointer; font-size:11.5px; font-weight:800;">✏️ 수정</button>
+                  ${moveBtnsHtml}
+                  <button type="button" onclick="adminRemoveDetailBlock(${idx})" style="background:#fee2e2; color:#dc2626; border:none; width:26px; height:26px; border-radius:6px; cursor:pointer; font-weight:bold;" title="삭제">✕</button>
+                </div>
+              </div>
+            `;
+          }
         } else {
           item.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span style="font-weight:800; font-size:11.5px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px;">이미지</span>
-              <img src="${b.src}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1;">
-              <span style="font-size:12px; color:#334155; font-weight:600;">상세컷 ${idx + 1}</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="color:#94a3b8; font-size:15px; cursor:grab; user-select:none;" title="드래그하여 순서 변경">☰</span>
+                <span style="font-weight:800; font-size:11px; color:#64748b; min-width:22px;">#${idx + 1}</span>
+                <span style="font-weight:800; font-size:11.5px; background:#dcfce7; color:#15803d; padding:2px 7px; border-radius:4px;">이미지</span>
+                <img src="${b.src}" style="width:46px; height:46px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; background:#fff;">
+                <span style="font-size:12.5px; color:#334155; font-weight:700;">상세 이미지 컷</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:4px;">
+                ${moveBtnsHtml}
+                <button type="button" onclick="adminRemoveDetailBlock(${idx})" style="background:#fee2e2; color:#dc2626; border:none; width:26px; height:26px; border-radius:6px; cursor:pointer; font-weight:bold;" title="삭제">✕</button>
+              </div>
             </div>
-            <button type="button" onclick="adminRemoveDetailBlock(${idx})" style="background:#fee2e2; color:#dc2626; border:none; width:26px; height:26px; border-radius:6px; cursor:pointer; font-weight:bold;">✕</button>
           `;
         }
         container.appendChild(item);
@@ -5911,12 +6104,25 @@
     }
 
     function adminRemoveDetailBlock(idx) {
+      if (adminEditingTextIdx === idx) adminEditingTextIdx = null;
+      else if (adminEditingTextIdx !== null && adminEditingTextIdx > idx) adminEditingTextIdx--;
       adminDetailBlocksList.splice(idx, 1);
       renderAdminDetailBlocksList();
     }
 
-    // 신규 상품 저장
+   // 신규 상품 저장
     function saveProductFromAdmin() {
+      // 편집 중이던 상세 텍스트 블록이 열려 있다면 누락되지 않게 자동 반영
+      if (adminEditingTextIdx !== null && adminDetailBlocksList[adminEditingTextIdx]) {
+        const tEl = document.getElementById('adminEditBlockTitle_' + adminEditingTextIdx);
+        const bEl = document.getElementById('adminEditBlockBody_' + adminEditingTextIdx);
+        if (tEl || bEl) {
+          adminDetailBlocksList[adminEditingTextIdx].title = (tEl && tEl.value.trim()) ? tEl.value.trim() : '안내';
+          adminDetailBlocksList[adminEditingTextIdx].body = bEl ? bEl.value.trim() : '';
+        }
+        adminEditingTextIdx = null;
+      }
+
       const titleEl = document.getElementById('adminProdTitle');
       const title = titleEl ? titleEl.value.trim() : '';
 
@@ -5931,7 +6137,6 @@
       const summary = summaryEl ? summaryEl.value.trim() : '';
 
       const priceVal = document.getElementById('adminProdPrice').value;
-      const origVal = document.getElementById('adminProdOrigPrice').value;
       const category = document.getElementById('adminProdCategory').value || 'binder';
 
       const price = parseInt(priceVal);
@@ -5942,11 +6147,11 @@
         return;
       }
 
-      const originalPrice = parseInt(origVal) || Math.round(price * 1.15);
-      const discountRate = originalPrice > price ? Math.round((1 - price / originalPrice) * 100) + '%' : '0%';
+      // 정상가 입력폼 제거에 따라 강제 할인율 생성 없이 깔끔하게 저장
+      const originalPrice = null;
+      const discountRate = '';
       const isEditing = !!editingProductId;
       const targetId = isEditing ? editingProductId : ('item_' + Date.now());
-
       const tagText = CATEGORY_MAP[category] ? CATEGORY_MAP[category].tag : '📁 개인 브랜딩 상품';
 
       const thumbs = adminThumbImages.length > 0 ? adminThumbImages.slice() : ['branding_img/KakaoTalk_20261109_105448276.jpg'];
@@ -5970,9 +6175,9 @@
         { name: "1도 실크인쇄 (무료)", price: 0 }
       ];
 
-      // 기본수량, 최소주문수량, 수량별 단가 구간 수집 (weraclemarket.com 연동)
-      const baseQty = parseInt(document.getElementById('adminProdBaseQty')?.value) || 120;
-      const minQty = parseInt(document.getElementById('adminProdMinQty')?.value) || 30;
+    // 기본수량, 최소주문수량, 수량별 단가 구간 수집 (1개 단위 설정 완벽 호환)
+      const baseQty = Math.max(1, parseInt(document.getElementById('adminProdBaseQty')?.value) || 1);
+      const minQty = Math.max(1, parseInt(document.getElementById('adminProdMinQty')?.value) || 1);
 
       let tierList = [];
       if (adminTierList.length > 0) {
@@ -6847,21 +7052,14 @@
                 <input type="text" id="adminProdSummary" placeholder="상품에 대한 간단한 설명을 입력하세요" style="width: 100%; height: 42px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 12px;">
               </div>
 
-              <!-- 금액 설정 (빈칸) -->
+             <!-- 금액 설정 (판매가 단독) -->
               <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
                 <div style="font-weight: 800; font-size: 13.5px; color: #0f172a; margin-bottom: 8px;">💰 금액 설정</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                  <div>
-                    <label style="font-size: 12px; font-weight: 700; color: #475569; display: block;">판매가 (원) <span style="color:#ef4444;">*</span></label>
-                    <input type="number" id="adminProdPrice" placeholder="판매가 입력 (예: 3780)" required style="width: 100%; height: 40px; margin-top: 4px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 10px;">
-                  </div>
-                  <div>
-                    <label style="font-size: 12px; font-weight: 700; color: #475569; display: block;">정상가 (원)</label>
-                    <input type="number" id="adminProdOrigPrice" placeholder="정상가 입력 (예: 4500)" style="width: 100%; height: 40px; margin-top: 4px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 10px;">
-                  </div>
+                <div>
+                  <label style="font-size: 12px; font-weight: 700; color: #475569; display: block;">판매가 (원) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="adminProdPrice" min="0" step="1" placeholder="판매가 입력 (예: 3780)" required style="width: 100%; height: 40px; margin-top: 4px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0 10px;">
                 </div>
               </div>
-
             </div>
           </div>
           <div style="display: flex; justify-content: flex-end; margin-top: 18px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
@@ -6891,25 +7089,25 @@
               </div>
             </div>
 
-            <!-- 수량 설정 (기본수량, 최소 주문수량) -->
+          <!-- 수량 설정 (기본수량, 최소 주문수량 - 1개/1권 단위부터 자유 설정) -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; background: #fff; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 14px;">
               <div>
                 <label style="font-size: 12px; font-weight: 800; color: #334155;">기본 주문수량 (개/권) *</label>
                 <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-                  <input type="number" id="adminProdBaseQty" value="120" min="1" step="10" style="width: 100%; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 800; color: #0284c7;">
-                  <span style="font-size: 12px; color: #64748b; font-weight: 700;">개</span>
+                  <input type="number" id="adminProdBaseQty" value="1" min="1" step="1" style="width: 100%; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 800; color: #0284c7;">
+                  <span style="font-size: 12px; color: #64748b; font-weight: 700;">개(권)</span>
                 </div>
-                <span style="font-size: 11px; color: #64748b;">상세페이지 진입 시 기본 선택되는 수량입니다.</span>
+                <span style="font-size: 11px; color: #64748b;">1개(1권)부터 원하는 기본 수량을 자유롭게 설정하세요.</span>
               </div>
               <div>
                 <label style="font-size: 12px; font-weight: 800; color: #334155;">최소 주문수량 (개/권) *</label>
                 <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-                  <input type="number" id="adminProdMinQty" value="30" min="1" step="5" style="width: 100%; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 800; color: #0f172a;">
-                  <span style="font-size: 12px; color: #64748b; font-weight: 700;">개</span>
+                  <input type="number" id="adminProdMinQty" value="1" min="1" step="1" style="width: 100%; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; font-size: 13px; font-weight: 800; color: #0f172a;">
+                  <span style="font-size: 12px; color: #64748b; font-weight: 700;">개(권)</span>
                 </div>
-                <span style="font-size: 11px; color: #64748b;">주문 가능한 절대 최소 수량입니다.</span>
+                <span style="font-size: 11px; color: #64748b;">주문 가능한 최소 수량입니다. (1개부터 설정 가능)</span>
               </div>
-            </div>
+            </div> 
 
             <!-- 단가 구간 목록 테이블 -->
             <div style="font-size: 12.5px; font-weight: 800; color: #334155; margin-bottom: 6px;">
@@ -6973,9 +7171,9 @@
         <div id="prodRegTabPane2" style="display: none;">
           <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-              <div>
+             <div>
                 <span style="font-weight: 800; font-size: 14px; color: #0f172a;">📸 상세페이지 콘텐츠 구성 (이미지 + 텍스트)</span>
-                <p style="font-size: 12px; color: #64748b; margin: 2px 0 0;">상세페이지에 노출될 실물 이미지와 설명 텍스트 블록을 자유롭게 추가하세요.</p>
+                <p style="font-size: 12px; color: #64748b; margin: 2px 0 0;">항목 왼쪽(☰)을 드래그하거나 ▲/▼ 버튼으로 원하는 이미지 위치에 배치하고, [✏️ 수정]으로 텍스트를 언제든 편집하세요.</p>
               </div>
               <div style="display: flex; gap: 8px;">
                 <input type="file" id="adminDetailGalleryFileInput" accept="image/*" multiple style="display:none;" onchange="handleAdminDetailGalleryInput(this)">

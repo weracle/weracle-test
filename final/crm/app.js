@@ -435,7 +435,7 @@ function calculateJuminData(juminStr) {
     // 예: "AIzaSy..."
 // Google Sheets API 설정
 const DISCOVERY_DOC = "https://sheets.googleapis.com/$discovery/rest?version=v4";
-const SCOPES = "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events";
+const SCOPES = "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events";
 // --- Google Token Listener from Parent (index_test.html) ---
 window.addEventListener('message', function(event) {
 if (event.data && event.data.type === 'GOOGLE_TOKEN') {

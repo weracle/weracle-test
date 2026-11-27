@@ -366,7 +366,7 @@
         // 10. 구글 로그인 및 권한 요청 헬퍼
         requestGoogleAuth: function(callback) {
             const GOOGLE_CLIENT_ID = '281609603311-j6ie378elv518odovep2rjemeaffb40b.apps.googleusercontent.com';
-            const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events';
+            const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events';
             
             if (window.google && window.google.accounts && window.google.accounts.oauth2) {
                 try {

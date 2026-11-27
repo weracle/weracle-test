@@ -5488,22 +5488,14 @@ filteredKeys.forEach(key => {
       regThumbSlideIdx = 0;
       updateRegThumbSlider();
 
-      // 기본/최소 수량 초기화
+// 기본/최소 수량 초기화 (1개 단위 시작)
       const bqInp = document.getElementById('adminProdBaseQty');
-      if (bqInp) bqInp.value = '120';
+      if (bqInp) bqInp.value = '1';
       const mqInp = document.getElementById('adminProdMinQty');
-      if (mqInp) mqInp.value = '30';
+      if (mqInp) mqInp.value = '1';
 
-      // 단가표 초기화 (weraclemarket.com 규격 7단계)
-      adminTierList = [
-        { qty: 120, price: 3780 },
-        { qty: 240, price: 3696 },
-        { qty: 360, price: 3584 },
-        { qty: 600, price: 3528 },
-        { qty: 1200, price: 3444 },
-        { qty: 2400, price: 3360 },
-        { qty: 6000, price: 3220 }
-      ];
+      // 고객 화면 단가표 삭제에 맞춰 빈 구간으로 깔끔하게 시작 (판매가 단일 적용)
+      adminTierList = [];
       renderAdminTierRows();
 
       // 인쇄 옵션 기본값 (weraclemarket.com 규격)
@@ -6151,10 +6143,8 @@ filteredKeys.forEach(key => {
           qty: Math.max(1, parseInt(t.qty) || minQty),
           price: parseInt(t.price) || price
         })).sort((a,b) => a.qty - b.qty);
-        // 첫 구간의 단가가 이전 기본값(3780)에 머물러 있으면 새로 입력한 판매가(price)로 동기화
-        if (tierList.length === 1 || (tierList[0].price === 3780 && price !== 3780)) {
-          tierList[0].price = price;
-        }
+      // 1번 탭 판매가를 변경하면 기준 단가도 항상 새 판매가로 동기화
+        tierList[0].price = price;
       } else {
         tierList = [{ qty: minQty, price: price }];
       }
@@ -6629,7 +6619,7 @@ filteredKeys.forEach(key => {
               </div>
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 6px;">
-                  <button type="button" onclick="changeCartQty('${it.cartId}', -10)" style="width: 24px; height: 24px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; cursor: pointer; font-weight: bold;">-</button>
+                  <button type="button" onclick="changeCartQty('${it.cartId}', -1)" style="width: 24px; height: 24px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; cursor: pointer; font-weight: bold;">-</button>
                   <span style="font-size: 13px; font-weight: 800; min-width: 38px; text-align: center;">${it.qty}권</span>
                   <button type="button" onclick="changeCartQty('${it.cartId}', 10)" style="width: 24px; height: 24px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; cursor: pointer; font-weight: bold;">+</button>
                 </div>
@@ -6646,14 +6636,17 @@ filteredKeys.forEach(key => {
       if (totalSumEl) totalSumEl.innerText = subtotal.toLocaleString() + ' 원';
     }
 
-    function changeCartQty(cartId, delta) {
+   function changeCartQty(cartId, delta) {
       const items = getCartItems();
       const it = items.find(c => c.cartId === cartId);
       if (!it) return;
 
-      const newQty = (it.qty || 160) + delta;
-      if (newQty < 10) {
-        if (confirm('상품을 장바구니에서 삭제하시겠습니까?')) {
+      const prod = products[it.productId];
+      const minAllowed = Math.max(1, (prod && prod.minQty) ? parseInt(prod.minQty) : 1);
+      const newQty = (it.qty || minAllowed) + delta;
+
+      if (newQty < minAllowed) {
+        if (confirm(`최소 주문수량(${minAllowed}개) 미만입니다. 상품을 장바구니에서 삭제하시겠습니까?`)) {
           removeCartItem(cartId);
         }
         return;

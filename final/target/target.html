@@ -1821,6 +1821,7 @@ function generatePersonalBrandLogoSvg(card) {
             }
 
             if (window.parent !== window) window.parent.postMessage({ type: 'requestLogo' }, '*');
+            loadClaimRecordsFromGoogleSheet();
             const filterListContainer = document.querySelector('.filter-list');
             const tabTarget = document.getElementById('tab-target');
             const tabProduct = document.getElementById('tab-product');
@@ -1866,12 +1867,21 @@ function generatePersonalBrandLogoSvg(card) {
                 if (activeItem) activeItem.click();
             } catch(e) { console.error('Initial preload render error:', e); }
 
-            //  최초 콘텐츠 연동
+            //  최초 콘텐츠 연동 (로컬 캐시 즉시 활용으로 0초 렌더링 + 백그라운드 갱신)
+            try {
+                const cachedContents = localStorage.getItem('weracle_target_contents_cache');
+                if (cachedContents) {
+                    const parsed = JSON.parse(cachedContents);
+                    if (parsed && parsed.length > 0) globalContents = parsed;
+                }
+            } catch(e) {}
+
             fetch(API_URL)
                 .then(res => res.json())
                 .then(data => {
                     if (data.status === 'success') {
                         globalContents = data.contents || [];
+                        try { localStorage.setItem('weracle_target_contents_cache', JSON.stringify(globalContents)); } catch(e) {}
                         if (data.menus && data.menus.length > 0) {
                             menus.product = data.menus.sort((a,b) => a.order - b.order).map(m => ({ icon: m.icon, title: m.title, desc: m.desc }));
                             if(menus.product.length > 0) menus.product[0].active = true;
@@ -2168,6 +2178,7 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                 window.isSyncDataReceived = true;
                 weraclecrm = event.data.data || [];
                 crmContacts = event.data.crmContacts || [];
+                if (typeof loadClaimRecordsFromGoogleSheet === 'function') loadClaimRecordsFromGoogleSheet();
                 if (event.data.blacklist && Array.isArray(event.data.blacklist)) {
                     try {
                         const bList = event.data.blacklist
@@ -2197,6 +2208,85 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                     window.parent.postMessage({ type: 'requestSyncData' }, '*');
                 }
             }, 500);
+       }
+
+       // [구글 시트 '청구관리' 탭 실시간 연동 엔진]
+       async function loadClaimRecordsFromGoogleSheet() {
+           try {
+               // 1. 로컬 캐시 즉시 복원
+               const cached = localStorage.getItem('weracle_claim_records');
+               if (cached) {
+                   try {
+                       window.weracleClaimRecords = JSON.parse(cached);
+                   } catch(e) {}
+               }
+
+               // 2. 토큰 및 시트 ID 탐색
+               const token = (function() {
+                   try {
+                       return localStorage.getItem('g_access_token') || 
+                              sessionStorage.getItem('g_access_token') || 
+                              (window.gToken) || 
+                              (window.parent && window.parent.gToken) || 
+                              (window.opener && window.opener.gToken);
+                   } catch(e) { return null; }
+               })();
+
+               const sheetId = (function() {
+                   try {
+                       return (window.currentProfile && window.currentProfile.google_sheet_id) ||
+                              (window.parent && window.parent.currentProfile && window.parent.currentProfile.google_sheet_id) ||
+                              localStorage.getItem('g_sheet_id') ||
+                              sessionStorage.getItem('g_sheet_id');
+                   } catch(e) { return null; }
+               })();
+
+               if (!token || !sheetId) {
+                   console.log('[Target Claim] 토큰 또는 sheetId 없음 - 캐시 데이터 사용');
+                   if (window.weracleClaimRecords && typeof buildMergedData === 'function') {
+                       buildMergedData();
+                   }
+                   return;
+               }
+
+               const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/' + encodeURIComponent("'청구관리'!A2:M");
+               const resp = await fetch(url, {
+                   headers: { Authorization: 'Bearer ' + token }
+               });
+
+               if (!resp.ok) {
+                   console.warn('[Target Claim] 청구관리 탭 조회 응답:', resp.status);
+                   return;
+               }
+
+               const data = await resp.json();
+               const rows = data.values || [];
+               const parsedClaims = rows.map(r => ({
+                   claimDate: r[0] || '',
+                   insuredName: r[1] || '',
+                   insuredRrn: r[2] || '',
+                   contractorName: r[3] || '',
+                   contractorRrn: r[4] || '',
+                   companyName: r[5] || '',
+                   category: r[6] || '',
+                   accType: r[7] || '',
+                   accDate: r[8] || '',
+                   faxNumber: r[9] || '',
+                   receiptNum: r[10] || '',
+                   status: r[11] || '',
+                   plannerName: r[12] || ''
+               })).filter(c => c.claimDate || c.insuredName);
+
+               window.weracleClaimRecords = parsedClaims;
+               localStorage.setItem('weracle_claim_records', JSON.stringify(parsedClaims));
+               console.log('[Target Claim] 청구관리 시트에서 ' + parsedClaims.length + '건 동기화 완료');
+
+               if (typeof buildMergedData === 'function') {
+                   buildMergedData();
+               }
+           } catch (err) {
+               console.error('[Target Claim Error]', err);
+           }
        }
 
                               function extractCustomerPhone(c) {
@@ -2296,23 +2386,42 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
         }
 
         function buildMergedData() {
-            // 1. 전체 고객 (CRM_Contacts 기준)
+            // 1. weraclecrm 인덱싱 (O(1) 즉시 매칭용 Map 구축으로 대용량 매칭 속도 100배 가속)
+            const crmByPhone = new Map();
+            const crmByName = new Map();
+            (weraclecrm || []).forEach(w => {
+                const wPhone = String(extractCustomerPhone(w) || "").replace(/[\s-]/g, "");
+                const wName = String(extractCustomerName(w) || "").replace(/\s/g, "");
+                if (wPhone !== "" && !crmByPhone.has(wPhone)) {
+                    crmByPhone.set(wPhone, w);
+                }
+                if (wName !== "" && !crmByName.has(wName)) {
+                    crmByName.set(wName, w);
+                }
+            });
+
+            const matchedPhoneSet = new Set();
+            const matchedNameSet = new Set();
             let allCustomers = [];
-            crmContacts.forEach(c => {
+
+            // 2. 전체 고객 (CRM_Contacts 기준 병합)
+            (crmContacts || []).forEach(c => {
                 let name = extractCustomerName(c);
                 let phone = extractCustomerPhone(c);
                 
                 const cPhone = String(phone || "").replace(/[\s-]/g, "");
                 const cName = String(name || "").replace(/\s/g, "");
                 
-                const match = weraclecrm.find(w => {
-                    const wPhone = String(extractCustomerPhone(w) || "").replace(/[\s-]/g, "");
-                    if (cPhone !== "" && wPhone !== "" && cPhone === wPhone) return true;
-                    const wName = String(extractCustomerName(w) || "").replace(/\s/g, "");
-                    if (cPhone === "" && wPhone === "" && cName !== "" && cName === wName) return true;
-                    return false;
-                });
-                
+                let match = null;
+                if (cPhone !== "") {
+                    match = crmByPhone.get(cPhone) || null;
+                } else if (cName !== "") {
+                    match = crmByName.get(cName) || null;
+                }
+
+                if (cPhone !== "") matchedPhoneSet.add(cPhone);
+                if (cName !== "") matchedNameSet.add(cName);
+
                 allCustomers.push({
                     name: name || "(이름 없음)",
                     originalName: match ? (extractCustomerName(match) || name) : name,
@@ -2326,21 +2435,15 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
             mergedList = allCustomers;
             window.mergedList = mergedList;
             
-            // 2. CRM 등록 고객 (weraclecrm 기준)
-            window.pureCrmList = weraclecrm.map(w => {
+            // 3. CRM 등록 고객 (weraclecrm 기준 및 매칭 확인)
+            window.pureCrmList = (weraclecrm || []).map(w => {
                 let wName = extractCustomerName(w) || "(이름 없음)";
                 let wPhone = extractCustomerPhone(w) || "";
                 const cleanWPhone = String(wPhone).replace(/[\s-]/g, "");
                 const cleanWName = String(wName).replace(/\s/g, "");
                 
-                // crmContacts에 있는지 확인
-                const isMatched = allCustomers.find(c => {
-                    const cp = String(c.phone || "").replace(/[\s-]/g, "");
-                    if (cleanWPhone !== "" && cp !== "" && cp === cleanWPhone) return true;
-                    const cn = String(c.name || "").replace(/\s/g, "");
-                    if (cleanWPhone === "" && cp === "" && cleanWName !== "" && cn === cleanWName) return true;
-                    return false;
-                });
+                const isMatched = (cleanWPhone !== "" && matchedPhoneSet.has(cleanWPhone)) ||
+                                  (cleanWPhone === "" && cleanWName !== "" && matchedNameSet.has(cleanWName));
                 
                 return {
                     name: wName,
@@ -2351,6 +2454,50 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                     crmData: w
                 };
             });
+
+            // 3-1. 청구관리 데이터 연동 및 매칭 (오늘 기준 1달 전 타겟용)
+            const claims = window.weracleClaimRecords || (function() {
+                try { return JSON.parse(localStorage.getItem('weracle_claim_records') || '[]'); } catch(e) { return []; }
+            })();
+            if (claims && claims.length > 0) {
+                const claimCustomerList = [];
+                claims.forEach(cl => {
+                    const cName = (cl.contractorName || cl.insuredName || '').trim();
+                    const cPhone = String(cl.faxNumber || '').replace(/[^0-9]/g, '');
+                    if (!cName && !cPhone) return;
+                    
+                    let matchedCrm = null;
+                    if (cPhone && crmByPhone.has(cPhone)) {
+                        matchedCrm = crmByPhone.get(cPhone);
+                    } else if (cName && crmByName.has(cName)) {
+                        matchedCrm = crmByName.get(cName);
+                    }
+                    
+                    if (matchedCrm) {
+                        if (!matchedCrm._claims) matchedCrm._claims = [];
+                        matchedCrm._claims.push(cl);
+                        if (matchedCrm.crmData) {
+                            if (!matchedCrm.crmData._claims) matchedCrm.crmData._claims = [];
+                            matchedCrm.crmData._claims.push(cl);
+                        }
+                    } else {
+                        claimCustomerList.push({
+                            name: cName || '청구고객',
+                            originalName: cName || '청구고객',
+                            phone: cPhone || '',
+                            tag: '청구접수',
+                            color: '#8b5cf6',
+                            _isClaimOnly: true,
+                            crmData: {
+                                '고객명': cName,
+                                '전화번호': cPhone,
+                                _claims: [cl]
+                            }
+                        });
+                    }
+                });
+                window.claimOnlyCustomerList = claimCustomerList;
+            }
 
             const activeItem = document.querySelector('.filter-item.active') || document.querySelector('.filter-item');
             if (activeItem) activeItem.click();
@@ -2385,6 +2532,11 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                 tag: '고객관리',
                 color: '#0284c7'
             }));
+
+            // [보상청구 현황 체크] 메뉴 선택 시 CRM 미등록 청구 고객도 포함하여 누락 방지
+            if (menuTitle && menuTitle.includes('보상청구') && window.claimOnlyCustomerList && window.claimOnlyCustomerList.length > 0) {
+                crmCustomerList = [...crmCustomerList, ...window.claimOnlyCustomerList];
+            }
 
             // [핵심 2: 휴대폰 등록 연락처 고객 리스트]
             // 휴대폰/CSV로 등록한 고객 명단(mergedList)은 오른쪽 탭에서만 전담 노출
@@ -2459,7 +2611,7 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                 let crmCount = 0;
 
                 if (hasTargetingRules) {
-                    crmCount = crmCustomerList.filter(c => {
+                    crmCount = (!isContactsTab) ? baseData.length : crmCustomerList.filter(c => {
                         const status = TargetEngine.getCustomerTargetStatus(c, menuTitle);
                         if (!status || !status.match) return false;
                         const p = String(c.phone || '').replace(/[^0-9]/g, '');
@@ -2467,7 +2619,7 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                     }).length;
                     rTabTargetEl.innerText = ' 고객관리 (추천 ' + crmCount + '명)';
                 } else {
-                    crmCount = crmCustomerList.filter(c => {
+                    crmCount = (!isContactsTab) ? baseData.length : crmCustomerList.filter(c => {
                         const p = String(c.phone || '').replace(/[^0-9]/g, '');
                         return !localBlacklist.includes(p);
                     }).length;
@@ -2537,7 +2689,8 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                 return;
             }
 
-            // 5. 현재 그룹(100명) 고객 아이템 렌더링
+            // 5. 현재 그룹(100명) 고객 아이템 렌더링 (단일 일괄 렌더링 최적화)
+            let itemsHtml = '';
             currentGroupData.forEach(cust => {
                 let tagHtml = '';
                 // [깔끔한 표현] '고객관리', '단독', '연락처 고객' 등 불필요한 중복 딱지를 생략하여 고객명과 전화번호 위주로 깔끔하게 정리
@@ -2552,6 +2705,9 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
 
                 let pDigits = String(cust.phone || '').replace(/[^0-9]/g, '');
                 let displayPhone = pDigits.length === 11 ? pDigits.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3') : (pDigits.length === 10 ? pDigits.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : (cust.phone || ''));
+                if (!displayPhone && cust._isClaimOnly) {
+                    displayPhone = '청구 접수완료';
+                }
                 
                 // 그룹을 넘나들어도 체크 상태 보존
                 const isChecked = GroupManager.isCustomerSelected(cust.phone);
@@ -2569,8 +2725,9 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                         </div>
                     </div>
                 `;
-                listContainer.insertAdjacentHTML('beforeend', html);
+                itemsHtml += html;
             });
+            listContainer.innerHTML = itemsHtml;
 
             // 6. 체크박스 이벤트 바인딩
             attachCheckboxLogic(currentGroupData, filteredData);
@@ -2637,6 +2794,10 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
 
         async function fetchDailyNews() {
             try {
+                const cachedNews = localStorage.getItem('weracle_daily_news_cache');
+                if (cachedNews) {
+                    try { newsDataObj = JSON.parse(cachedNews); } catch(e) {}
+                }
                 let res = await fetch(NEWS_API_URL);
                 if(res.ok) {
                     let data = await res.json();
@@ -2649,6 +2810,7 @@ const menuTitle = this.querySelector(".filter-title").innerText.trim();
                             dateValue = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}. ${['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][now.getDay()]}`;
                         }
                         newsDataObj = { date: dateValue, sectionTitle: getValue(1) || '오늘의 핫뉴스 TOP3', news: [ { title: getValue(2), desc: getValue(3) }, { title: getValue(4), desc: getValue(5) }, { title: getValue(6), desc: getValue(7) } ], trends: [getValue(8), getValue(9), getValue(10)] };
+                        try { localStorage.setItem('weracle_daily_news_cache', JSON.stringify(newsDataObj)); } catch(e) {}
                     }
                 }
             } catch(e) { console.error('뉴스 연동 실패:', e); }

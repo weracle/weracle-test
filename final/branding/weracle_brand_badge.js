@@ -219,7 +219,7 @@
         const p = profile || this.getPlannerProfileData();
         const customLogoSrc = this.getCustomUploadedLogo(p);
         const align = options.align || 'right';
-        const scale = options.scale || (options.maxH ? options.maxH / 88 : Math.max(0.65, Math.min(1.4, imgW / 1000)));
+        const scale = options.scale || (options.maxH ? options.maxH / 68 : Math.max(0.65, Math.min(1.4, imgW / 1000)));
 
         // 1. 등록된 커스텀 로고가 존재하는 경우 -> 기존 로고 자리에 로고 렌더링
         let activeLogo = null;
@@ -260,7 +260,7 @@
           return { type: 'custom_logo_loading' };
         }
 
-        // 2. 등록된 로고가 없는 경우 -> 같은 위치에 신규 퍼스널 네임표 (시안 3-1 정밀 개선형) 렌더링
+        // 2. 등록된 로고가 없는 경우 -> 퍼스널 네임표 (시안 A - 4번 소프트 스카이 틴트) 렌더링
         const rawName = this.resolvePlannerName(p);
         const formattedName = rawName.length === 3 ? (rawName[0] + ' ' + rawName[1] + ' ' + rawName[2]) : rawName;
         const role = this.resolvePlannerRole(p);
@@ -269,55 +269,64 @@
         ctx.save();
 
         // 폰트 및 규격 계산
-        const nameFontSize = Math.round(27 * scale);
+        const nameFontSize = Math.round(20 * scale);
         const nameFont = '900 ' + nameFontSize + 'px "Pretendard", "Noto Sans KR", sans-serif';
-        const roleFontSize = Math.round(12.5 * scale);
+        const roleFontSize = Math.round(11 * scale);
         const roleFont = '800 ' + roleFontSize + 'px "Pretendard", "Noto Sans KR", sans-serif';
-        const pillFontSize = Math.round(12 * scale);
+        const pillFontSize = Math.round(11.5 * scale);
         const pillFont = '800 ' + pillFontSize + 'px "Pretendard", "Noto Sans KR", sans-serif';
+
+        ctx.font = pillFont;
+        const tagTextW = ctx.measureText(pillText).width;
+        const dotR = Math.max(2, Math.round(2.5 * scale));
+        const dotGap = Math.round(5 * scale);
+        const topTagW = dotR * 2 + dotGap + tagTextW;
 
         ctx.font = nameFont;
         const nameW = ctx.measureText(formattedName).width;
 
         ctx.font = roleFont;
         const roleTextW = ctx.measureText(role).width;
-        const rolePadX = Math.round(8 * scale);
+        const rolePadX = Math.round(7 * scale);
         const rolePillW = roleTextW + rolePadX * 2;
-        const rolePillH = Math.round(20 * scale);
+        const rolePillH = Math.round(18 * scale);
+        const gapNameRole = Math.round(8 * scale);
+        const nameRowW = nameW + gapNameRole + rolePillW;
 
-        ctx.font = pillFont;
-        const topPillTextW = ctx.measureText(pillText).width;
-        const topPillPadX = Math.round(12 * scale);
-        const topPillW = topPillTextW + topPillPadX * 2;
-        const topPillH = Math.round(22 * scale);
+        const textBlockW = Math.max(topTagW, nameRowW);
 
-        // 카드 및 아바타 기하학적 배치
-        const cardPadL = Math.round(22 * scale);
-        const gapNameRole = Math.round(10 * scale);
-        const gapRoleAvatar = Math.round(24 * scale);
-        const avatarR = Math.round(44 * scale); // 직경 88px
-        const avatarD = avatarR * 2;
-        const avatarOverlapRight = Math.round(22 * scale);
+        // 카드 및 아바타 기하학적 배치 (좌측 아바타, 우측 2단 텍스트 블록)
+        const cardPadL = Math.round(10 * scale);
+        const cardPadR = Math.round(18 * scale);
+        const gapAvatarText = Math.round(12 * scale);
 
-        const contentW = cardPadL + nameW + gapNameRole + rolePillW + gapRoleAvatar;
-        const cardW = Math.round(contentW + avatarD - avatarOverlapRight);
+        const avatarD = Math.round(52 * scale);
+        const avatarR = avatarD / 2;
+        const ringWidth = Math.max(1.5, Math.round(2 * scale));
+        const photoR = avatarR - ringWidth;
+
+        const contentW = cardPadL + avatarD + gapAvatarText + textBlockW + cardPadR;
+        const minCardW = Math.round(260 * scale);
+        const cardW = Math.max(minCardW, contentW);
         const cardH = Math.round(68 * scale);
-        const cardRadius = Math.round(26 * scale);
-
-        const totalW = cardW + avatarOverlapRight;
-        const totalH = cardH + Math.round(11 * scale);
+        const cardRadius = Math.round(16 * scale);
 
         const marginX = Math.max(22, Math.round(imgW * 0.024));
         const marginY = Math.max(18, Math.round(imgW * 0.02));
-        const posX = options.x !== undefined ? options.x : (align === 'right' ? Math.round(imgW - totalW - marginX) : marginX);
-        const posY = options.y !== undefined ? options.y : (marginY + Math.round(11 * scale));
+        const posX = options.x !== undefined ? options.x : (align === 'right' ? Math.round(imgW - cardW - marginX) : marginX);
+        const posY = options.y !== undefined ? options.y : marginY;
 
-        // A. 화이트 카드 부드러운 소프트 섀도우
+        // A. 소프트 스카이 틴트 배경 그라데이션 및 그림자
         ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
-        ctx.shadowBlur = Math.round(18 * scale);
-        ctx.shadowOffsetY = Math.round(6 * scale);
-        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = 'rgba(2, 132, 199, 0.08)';
+        ctx.shadowBlur = Math.round(14 * scale);
+        ctx.shadowOffsetY = Math.round(4 * scale);
+
+        const bgGrad = ctx.createLinearGradient(posX, posY, posX + cardW, posY + cardH);
+        bgGrad.addColorStop(0, '#f0f9ff');
+        bgGrad.addColorStop(1, '#e0f2fe');
+        ctx.fillStyle = bgGrad;
+
         ctx.beginPath();
         if (typeof ctx.roundRect === 'function') {
           ctx.roundRect(posX, posY, cardW, cardH, cardRadius);
@@ -327,10 +336,10 @@
         ctx.fill();
         ctx.restore();
 
-        // B. 화이트 카드 다크 아웃라인 테두리
+        // B. 소프트 스카이 테두리 (border 1.2px solid #bae6fd)
         ctx.save();
-        ctx.lineWidth = Math.max(1.5, Math.round(2 * scale));
-        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = Math.max(1, Math.round(1.2 * scale));
+        ctx.strokeStyle = '#bae6fd';
         ctx.beginPath();
         if (typeof ctx.roundRect === 'function') {
           ctx.roundRect(posX, posY, cardW, cardH, cardRadius);
@@ -340,97 +349,28 @@
         ctx.stroke();
         ctx.restore();
 
-        // C. 상단 고정 플로팅 알약 ("보험분석전문가")
-        const pillX = posX + Math.round(18 * scale);
-        const pillY = posY - Math.round(11 * scale);
-
-        ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
-        ctx.shadowBlur = Math.round(6 * scale);
-        ctx.shadowOffsetY = Math.round(2 * scale);
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') {
-          ctx.roundRect(pillX, pillY, topPillW, topPillH, topPillH / 2);
-        } else {
-          ctx.rect(pillX, pillY, topPillW, topPillH);
-        }
-        ctx.fill();
-        ctx.restore();
-
-        ctx.save();
-        ctx.lineWidth = Math.max(1, Math.round(1.4 * scale));
-        ctx.strokeStyle = '#93c5fd';
-        ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') {
-          ctx.roundRect(pillX, pillY, topPillW, topPillH, topPillH / 2);
-        } else {
-          ctx.rect(pillX, pillY, topPillW, topPillH);
-        }
-        ctx.stroke();
-        ctx.restore();
-
-        ctx.save();
-        ctx.font = pillFont;
-        ctx.fillStyle = '#1e40af';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(pillText, pillX + topPillW / 2, pillY + topPillH / 2);
-        ctx.restore();
-
-        // D. 성함 타이포 (프리텐다드 900)
-        const nameX = posX + cardPadL;
-        const nameCenterY = posY + cardH / 2;
-        ctx.save();
-        ctx.font = nameFont;
-        ctx.fillStyle = '#111827';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(formattedName, nameX, nameCenterY);
-        ctx.restore();
-
-        // E. 직책 뱃지 (라벤더 소프트 필터)
-        const rolePillX = nameX + nameW + gapNameRole;
-        const rolePillY = nameCenterY - rolePillH / 2;
-        ctx.save();
-        ctx.fillStyle = '#f3e8ff';
-        ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') {
-          ctx.roundRect(rolePillX, rolePillY, rolePillW, rolePillH, rolePillH / 2);
-        } else {
-          ctx.rect(rolePillX, rolePillY, rolePillW, rolePillH);
-        }
-        ctx.fill();
-
-        ctx.lineWidth = Math.max(1, Math.round(1 * scale));
-        ctx.strokeStyle = '#d8b4fe';
-        ctx.stroke();
-
-        ctx.font = roleFont;
-        ctx.fillStyle = '#7e22ce';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(role, rolePillX + rolePillW / 2, nameCenterY);
-        ctx.restore();
-
-        // F. 우측 원형 아바타 (수직 중앙 100% 일치)
-        const avatarCenterX = posX + cardW + avatarOverlapRight - avatarR;
+        // C. 좌측 원형 아바타 (아바타 링 + 사진 또는 이니셜)
+        const avatarCenterX = posX + cardPadL + avatarR;
         const avatarCenterY = posY + cardH / 2;
 
+        // 외곽 그라데이션 링 (#0284c7 -> #38bdf8 -> #0369a1)
         ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-        ctx.shadowBlur = Math.round(16 * scale);
-        ctx.shadowOffsetY = Math.round(4 * scale);
-        ctx.fillStyle = '#ffffff';
+        const ringGrad = ctx.createLinearGradient(
+          avatarCenterX - avatarR,
+          avatarCenterY - avatarR,
+          avatarCenterX + avatarR,
+          avatarCenterY + avatarR
+        );
+        ringGrad.addColorStop(0, '#0284c7');
+        ringGrad.addColorStop(0.5, '#38bdf8');
+        ringGrad.addColorStop(1, '#0369a1');
+        ctx.fillStyle = ringGrad;
         ctx.beginPath();
         ctx.arc(avatarCenterX, avatarCenterY, avatarR, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
 
-        const ringWidth = Math.max(2, Math.round(3.8 * scale));
-        const photoR = avatarR - ringWidth;
-
-        // 아바타 이미지 판별
+        // 아바타 내부 이미지 또는 이니셜
         let activeAvatar = null;
         if (options.avatarImg && (options.avatarImg.naturalWidth || options.avatarImg.width) > 0) {
           activeAvatar = options.avatarImg;
@@ -447,19 +387,11 @@
         if (activeAvatar) {
           ctx.drawImage(activeAvatar, avatarCenterX - photoR, avatarCenterY - photoR, photoR * 2, photoR * 2);
         } else {
-          // 사진 미등록 시 세련된 블루 그라데이션 + 첫 글자 볼드 이니셜 아바타
-          const grad = ctx.createLinearGradient(
-            avatarCenterX - photoR,
-            avatarCenterY - photoR,
-            avatarCenterX + photoR,
-            avatarCenterY + photoR
-          );
-          grad.addColorStop(0, '#0284c7');
-          grad.addColorStop(1, '#1e3a8a');
-          ctx.fillStyle = grad;
+          // 사진 미등록 시 소프트 블루 배경 + 화이트 이니셜
+          ctx.fillStyle = '#0284c7';
           ctx.fillRect(avatarCenterX - photoR, avatarCenterY - photoR, photoR * 2, photoR * 2);
 
-          ctx.font = '900 ' + Math.round(32 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+          ctx.font = '900 ' + Math.round(23 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
           ctx.fillStyle = '#ffffff';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -467,17 +399,77 @@
         }
         ctx.restore();
 
-        // 화이트 보더 링 마감
+        // 내부 화이트 보더 링 마감 (border 2px solid #ffffff)
         ctx.save();
-        ctx.lineWidth = ringWidth;
+        ctx.lineWidth = Math.max(1.5, Math.round(2 * scale));
         ctx.strokeStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(avatarCenterX, avatarCenterY, avatarR - ringWidth / 2, 0, Math.PI * 2);
+        ctx.arc(avatarCenterX, avatarCenterY, photoR, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
 
+        // D. 우측 상단 태그: 점(dot) + 보험분석전문가
+        const textX = posX + cardPadL + avatarD + gapAvatarText;
+        const dotCenterX = textX + dotR;
+        const topTagCenterY = posY + Math.round(24 * scale);
+
+        ctx.save();
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.arc(dotCenterX, topTagCenterY, dotR, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.font = pillFont;
+        ctx.fillStyle = '#0369a1';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pillText, textX + dotR * 2 + dotGap, topTagCenterY);
         ctx.restore();
-        return { type: 'nameplate_badge', x: posX, y: posY, width: totalW, height: totalH };
+
+        // E. 우측 하단 성함 (프리텐다드 900, #0c4a6e)
+        const nameCenterY = posY + Math.round(47 * scale);
+        ctx.save();
+        ctx.font = nameFont;
+        ctx.fillStyle = '#0c4a6e';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(formattedName, textX, nameCenterY);
+        ctx.restore();
+
+        // F. 우측 하단 직책 알약 (배경 #ffffff, 텍스트 #0284c7, 테두리 #bae6fd)
+        const rolePillX = textX + nameW + gapNameRole;
+        const rolePillY = Math.round(nameCenterY - rolePillH / 2);
+
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        const pillRadius = Math.round(5 * scale);
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(rolePillX, rolePillY, rolePillW, rolePillH, pillRadius);
+        } else {
+          ctx.rect(rolePillX, rolePillY, rolePillW, rolePillH);
+        }
+        ctx.fill();
+
+        ctx.lineWidth = Math.max(1, Math.round(1 * scale));
+        ctx.strokeStyle = '#bae6fd';
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(rolePillX, rolePillY, rolePillW, rolePillH, pillRadius);
+        } else {
+          ctx.rect(rolePillX, rolePillY, rolePillW, rolePillH);
+        }
+        ctx.stroke();
+
+        ctx.font = roleFont;
+        ctx.fillStyle = '#0284c7';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(role, rolePillX + rolePillW / 2, nameCenterY);
+        ctx.restore();
+
+        ctx.restore();
+        return { type: 'nameplate_badge', x: posX, y: posY, width: cardW, height: cardH };
       } catch (err) {
         console.warn('WeracleBrandBadge.draw error:', err);
         return null;
@@ -508,7 +500,7 @@
         }
       }
       // 로고 미등록 시: 신규 네임표를 해당 슬롯 비율에 맞춰 안착
-      const scale = maxH / 88;
+      const scale = maxH / 68;
       this.draw(ctx, 1000, 1000, p, null, { x: x, y: y, maxH: maxH, scale: scale, align: 'custom' });
     },
 
@@ -525,52 +517,69 @@
       const role = this.resolvePlannerRole(p);
       const avatarUrl = this.getAvatarUrl(p);
 
-      // SVG 너비 산출
-      const charCount = formattedName.length;
-      const nameW = charCount * 17 + 20;
-      const roleW = role.length * 13 + 24;
-      const cardW = 24 + nameW + 12 + roleW + 68;
-      const totalW = cardW + 24;
-      const totalH = 88;
+      // SVG 규격 산출 (시안 A - 4번 소프트 스카이 틴트)
+      const nameW = formattedName.length * 15 + 10;
+      const roleW = role.length * 11 + 14;
+      const cardPadL = 10;
+      const avatarD = 52;
+      const gapAvatarText = 12;
+      const textX = cardPadL + avatarD + gapAvatarText;
+      const rolePillX = textX + nameW + 8;
+      const contentW = rolePillX + roleW + 18;
+      const cardW = Math.max(260, contentW);
+      const cardH = 68;
+
+      const avatarCenterX = cardPadL + avatarD / 2;
+      const avatarCenterY = cardH / 2;
+      const photoR = avatarD / 2 - 2;
 
       const avatarContent = avatarUrl
-        ? `<image href="${avatarUrl}" x="${totalW - 88}" y="6" width="80" height="80" preserveAspectRatio="xMidYMid slice" clip-path="url(#avatarClip)" />`
-        : `<circle cx="${totalW - 48}" cy="46" r="40" fill="url(#avatarGrad)" />
-           <text x="${totalW - 48}" y="55" font-family="'Pretendard', sans-serif" font-size="28" font-weight="900" fill="#ffffff" text-anchor="middle">${rawName.charAt(0)}</text>`;
+        ? `<image href="${avatarUrl}" x="${avatarCenterX - photoR}" y="${avatarCenterY - photoR}" width="${photoR * 2}" height="${photoR * 2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#avatarClip)" />`
+        : `<circle cx="${avatarCenterX}" cy="${avatarCenterY}" r="${photoR}" fill="#0284c7" />
+           <text x="${avatarCenterX}" y="${avatarCenterY + 8}" font-family="'Pretendard', sans-serif" font-size="23" font-weight="900" fill="#ffffff" text-anchor="middle">${rawName.charAt(0)}</text>`;
 
       const svgString = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${cardW} ${cardH}" width="${cardW}" height="${cardH}">
   <defs>
-    <filter id="softShadow" x="-10%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.25" />
+    <filter id="softSkyShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#0284c7" flood-opacity="0.12" />
     </filter>
-    <linearGradient id="avatarGrad" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="cardBgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f0f9ff" />
+      <stop offset="100%" stop-color="#e0f2fe" />
+    </linearGradient>
+    <linearGradient id="avatarRingGrad" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#0284c7" />
-      <stop offset="100%" stop-color="#1e3a8a" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0369a1" />
     </linearGradient>
     <clipPath id="avatarClip">
-      <circle cx="${totalW - 48}" cy="46" r="38" />
+      <circle cx="${avatarCenterX}" cy="${avatarCenterY}" r="${photoR}" />
     </clipPath>
   </defs>
 
   <!-- Card Body -->
-  <rect x="0" y="14" width="${cardW}" height="66" rx="26" fill="#ffffff" stroke="#1e293b" stroke-width="2" filter="url(#softShadow)" />
+  <rect x="0" y="0" width="${cardW}" height="${cardH}" rx="16" fill="url(#cardBgGrad)" stroke="#bae6fd" stroke-width="1.2" filter="url(#softSkyShadow)" />
 
-  <!-- Top Floating Pill -->
-  <rect x="18" y="3" width="102" height="22" rx="11" fill="#ffffff" stroke="#93c5fd" stroke-width="1.4" />
-  <text x="69" y="18" font-family="'Pretendard', sans-serif" font-size="11.5" font-weight="800" fill="#1e40af" text-anchor="middle">보험분석전문가</text>
+  <!-- Avatar Outer Ring -->
+  <circle cx="${avatarCenterX}" cy="${avatarCenterY}" r="${avatarD / 2}" fill="url(#avatarRingGrad)" />
 
-  <!-- Name -->
-  <text x="24" y="53" font-family="'Pretendard', sans-serif" font-size="25" font-weight="900" fill="#111827">${formattedName}</text>
-
-  <!-- Role Badge -->
-  <rect x="${24 + nameW + 8}" y="36" width="${roleW}" height="20" rx="10" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1" />
-  <text x="${24 + nameW + 8 + roleW / 2}" y="50" font-family="'Pretendard', sans-serif" font-size="12" font-weight="800" fill="#7e22ce" text-anchor="middle">${role}</text>
-
-  <!-- Avatar Shadow & Ring -->
-  <circle cx="${totalW - 48}" cy="46" r="42" fill="#ffffff" filter="url(#softShadow)" />
+  <!-- Avatar Inner Photo / Initial -->
   ${avatarContent}
-  <circle cx="${totalW - 48}" cy="46" r="40" fill="none" stroke="#ffffff" stroke-width="4" />
+
+  <!-- Avatar Inner White Border -->
+  <circle cx="${avatarCenterX}" cy="${avatarCenterY}" r="${photoR}" fill="none" stroke="#ffffff" stroke-width="2" />
+
+  <!-- Top Tag: Dot & Text -->
+  <circle cx="${textX + 2.5}" cy="24" r="2.5" fill="#0284c7" />
+  <text x="${textX + 10}" y="27.5" font-family="'Pretendard', sans-serif" font-size="11.5" font-weight="800" fill="#0369a1">보험분석전문가</text>
+
+  <!-- Planner Name -->
+  <text x="${textX}" y="54" font-family="'Pretendard', sans-serif" font-size="20" font-weight="900" letter-spacing="1" fill="#0c4a6e">${formattedName}</text>
+
+  <!-- Role Pill -->
+  <rect x="${rolePillX}" y="38" width="${roleW}" height="18" rx="5" fill="#ffffff" stroke="#bae6fd" stroke-width="1" />
+  <text x="${rolePillX + roleW / 2}" y="51" font-family="'Pretendard', sans-serif" font-size="11" font-weight="800" fill="#0284c7" text-anchor="middle">${role}</text>
 </svg>
 `.trim();
 

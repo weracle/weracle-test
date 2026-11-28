@@ -219,7 +219,7 @@
         const p = profile || this.getPlannerProfileData();
         const customLogoSrc = this.getCustomUploadedLogo(p);
         const align = options.align || 'right';
-        const scale = options.scale || (options.maxH ? options.maxH / 68 : Math.max(0.65, Math.min(1.4, imgW / 1000)));
+        const scale = options.scale || (options.maxH ? options.maxH / 86 : Math.max(0.75, Math.min(1.5, imgW / 900)));
 
         // 1. 등록된 커스텀 로고가 존재하는 경우 -> 기존 로고 자리에 로고 렌더링
         let activeLogo = null;
@@ -268,18 +268,18 @@
 
         ctx.save();
 
-        // 폰트 및 규격 계산
-        const nameFontSize = Math.round(20 * scale);
+        // 폰트 및 규격 계산 (시안 A - 4번 확대형 규격)
+        const nameFontSize = Math.round(27 * scale);
         const nameFont = '900 ' + nameFontSize + 'px "Pretendard", "Noto Sans KR", sans-serif';
-        const roleFontSize = Math.round(11 * scale);
+        const roleFontSize = Math.round(14 * scale);
         const roleFont = '800 ' + roleFontSize + 'px "Pretendard", "Noto Sans KR", sans-serif';
-        const pillFontSize = Math.round(11.5 * scale);
+        const pillFontSize = Math.round(14.5 * scale);
         const pillFont = '800 ' + pillFontSize + 'px "Pretendard", "Noto Sans KR", sans-serif';
 
         ctx.font = pillFont;
         const tagTextW = ctx.measureText(pillText).width;
-        const dotR = Math.max(2, Math.round(2.5 * scale));
-        const dotGap = Math.round(5 * scale);
+        const dotR = Math.max(2.5, Math.round(3.5 * scale));
+        const dotGap = Math.round(6 * scale);
         const topTagW = dotR * 2 + dotGap + tagTextW;
 
         ctx.font = nameFont;
@@ -287,26 +287,26 @@
 
         ctx.font = roleFont;
         const roleTextW = ctx.measureText(role).width;
-        const rolePadX = Math.round(7 * scale);
+        const rolePadX = Math.round(8 * scale);
         const rolePillW = roleTextW + rolePadX * 2;
-        const rolePillH = Math.round(18 * scale);
-        const gapNameRole = Math.round(8 * scale);
+        const rolePillH = Math.round(24 * scale);
+        const gapNameRole = Math.round(9 * scale);
         const nameRowW = nameW + gapNameRole + rolePillW;
 
         const textBlockW = Math.max(topTagW, nameRowW);
 
         // 카드 및 아바타 기하학적 배치 (좌우 대칭 및 완벽 중앙 정렬, 우측 여백 최적화)
-        const avatarD = Math.round(52 * scale);
+        const avatarD = Math.round(70 * scale);
         const avatarR = avatarD / 2;
-        const ringWidth = Math.max(1.5, Math.round(2 * scale));
+        const ringWidth = Math.max(2, Math.round(2.8 * scale));
         const photoR = avatarR - ringWidth;
-        const gapAvatarText = Math.round(12 * scale);
+        const gapAvatarText = Math.round(14 * scale);
 
         const innerContentW = avatarD + gapAvatarText + textBlockW;
-        const padX = Math.round(14 * scale);
+        const padX = Math.round(18 * scale);
         const cardW = innerContentW + padX * 2;
-        const cardH = Math.round(68 * scale);
-        const cardRadius = Math.round(16 * scale);
+        const cardH = Math.round(90 * scale);
+        const cardRadius = Math.round(20 * scale);
         const cardPadL = padX;
 
         const marginX = Math.max(22, Math.round(imgW * 0.024));
@@ -389,7 +389,7 @@
           ctx.fillStyle = '#0284c7';
           ctx.fillRect(avatarCenterX - photoR, avatarCenterY - photoR, photoR * 2, photoR * 2);
 
-          ctx.font = '900 ' + Math.round(23 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
+          ctx.font = '900 ' + Math.round(31 * scale) + 'px "Pretendard", "Noto Sans KR", sans-serif';
           ctx.fillStyle = '#ffffff';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -409,7 +409,7 @@
         // D. 우측 상단 태그: 점(dot) + 보험분석전문가
         const textX = posX + cardPadL + avatarD + gapAvatarText;
         const dotCenterX = textX + dotR;
-        const topTagCenterY = posY + Math.round(24 * scale);
+        const topTagCenterY = posY + Math.round(cardH * 0.35);
 
         ctx.save();
         ctx.fillStyle = '#0284c7';
@@ -425,7 +425,7 @@
         ctx.restore();
 
         // E. 우측 하단 성함 (프리텐다드 900, #0c4a6e)
-        const nameCenterY = posY + Math.round(47 * scale);
+        const nameCenterY = posY + Math.round(cardH * 0.68);
         ctx.save();
         ctx.font = nameFont;
         ctx.fillStyle = '#0c4a6e';
@@ -498,7 +498,7 @@
         }
       }
       // 로고 미등록 시: 신규 네임표를 해당 슬롯 비율에 맞춰 안착
-      const scale = maxH / 68;
+      const scale = maxH / 86;
       this.draw(ctx, 1000, 1000, p, null, { x: x, y: y, maxH: maxH, scale: scale, align: 'custom' });
     },
 
@@ -515,31 +515,31 @@
       const role = this.resolvePlannerRole(p);
       const avatarUrl = this.getAvatarUrl(p);
 
-      // SVG 규격 산출 (시안 A - 4번 소프트 스카이 틴트, 좌우 대칭 중앙 정렬)
-      const nameW = formattedName.length * 15 + 10;
-      const roleW = role.length * 11 + 14;
-      const cardPadX = 14;
-      const avatarD = 52;
-      const gapAvatarText = 12;
-      const nameRowW = nameW + 8 + roleW;
-      const topTagW = 115;
+      // SVG 규격 산출 (시안 A - 4번 소프트 스카이 틴트 확대형, 좌우 대칭 중앙 정렬)
+      const nameW = formattedName.length * 19 + 12;
+      const roleW = role.length * 13 + 16;
+      const cardPadX = 18;
+      const avatarD = 70;
+      const gapAvatarText = 14;
+      const nameRowW = nameW + 9 + roleW;
+      const topTagW = 140;
       const textBlockW = Math.max(nameRowW, topTagW);
 
       const innerContentW = avatarD + gapAvatarText + textBlockW;
       const cardW = innerContentW + cardPadX * 2;
-      const cardH = 68;
+      const cardH = 90;
 
       const avatarCenterX = cardPadX + avatarD / 2;
       const avatarCenterY = cardH / 2;
-      const photoR = avatarD / 2 - 2;
+      const photoR = avatarD / 2 - 2.8;
 
       const textX = cardPadX + avatarD + gapAvatarText;
-      const rolePillX = textX + nameW + 8;
+      const rolePillX = textX + nameW + 9;
 
       const avatarContent = avatarUrl
         ? `<image href="${avatarUrl}" x="${avatarCenterX - photoR}" y="${avatarCenterY - photoR}" width="${photoR * 2}" height="${photoR * 2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#avatarClip)" />`
         : `<circle cx="${avatarCenterX}" cy="${avatarCenterY}" r="${photoR}" fill="#0284c7" />
-           <text x="${avatarCenterX}" y="${avatarCenterY + 8}" font-family="'Pretendard', sans-serif" font-size="23" font-weight="900" fill="#ffffff" text-anchor="middle">${rawName.charAt(0)}</text>`;
+           <text x="${avatarCenterX}" y="${avatarCenterY + 11}" font-family="'Pretendard', sans-serif" font-size="31" font-weight="900" fill="#ffffff" text-anchor="middle">${rawName.charAt(0)}</text>`;
 
       const svgString = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${cardW} ${cardH}" width="${cardW}" height="${cardH}">
@@ -562,7 +562,7 @@
   </defs>
 
   <!-- Card Body -->
-  <rect x="0" y="0" width="${cardW}" height="${cardH}" rx="16" fill="url(#cardBgGrad)" stroke="#bae6fd" stroke-width="1.2" filter="url(#softSkyShadow)" />
+  <rect x="0" y="0" width="${cardW}" height="${cardH}" rx="20" fill="url(#cardBgGrad)" stroke="#bae6fd" stroke-width="1.3" filter="url(#softSkyShadow)" />
 
   <!-- Avatar Outer Ring -->
   <circle cx="${avatarCenterX}" cy="${avatarCenterY}" r="${avatarD / 2}" fill="url(#avatarRingGrad)" />
@@ -574,15 +574,15 @@
   <circle cx="${avatarCenterX}" cy="${avatarCenterY}" r="${photoR}" fill="none" stroke="#ffffff" stroke-width="2" />
 
   <!-- Top Tag: Dot & Text -->
-  <circle cx="${textX + 2.5}" cy="24" r="2.5" fill="#0284c7" />
-  <text x="${textX + 10}" y="27.5" font-family="'Pretendard', sans-serif" font-size="11.5" font-weight="800" fill="#0369a1">보험분석전문가</text>
+  <circle cx="${textX + 3.5}" cy="31" r="3.5" fill="#0284c7" />
+  <text x="${textX + 13}" y="36" font-family="'Pretendard', sans-serif" font-size="14.5" font-weight="800" fill="#0369a1">보험분석전문가</text>
 
   <!-- Planner Name -->
-  <text x="${textX}" y="54" font-family="'Pretendard', sans-serif" font-size="20" font-weight="900" letter-spacing="1" fill="#0c4a6e">${formattedName}</text>
+  <text x="${textX}" y="71" font-family="'Pretendard', sans-serif" font-size="27" font-weight="900" letter-spacing="1" fill="#0c4a6e">${formattedName}</text>
 
   <!-- Role Pill -->
-  <rect x="${rolePillX}" y="38" width="${roleW}" height="18" rx="5" fill="#ffffff" stroke="#bae6fd" stroke-width="1" />
-  <text x="${rolePillX + roleW / 2}" y="51" font-family="'Pretendard', sans-serif" font-size="11" font-weight="800" fill="#0284c7" text-anchor="middle">${role}</text>
+  <rect x="${rolePillX}" y="50" width="${roleW}" height="24" rx="6" fill="#ffffff" stroke="#bae6fd" stroke-width="1" />
+  <text x="${rolePillX + roleW / 2}" y="67" font-family="'Pretendard', sans-serif" font-size="14" font-weight="800" fill="#0284c7" text-anchor="middle">${role}</text>
 </svg>
 `.trim();
 

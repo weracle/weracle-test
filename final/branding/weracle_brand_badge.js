@@ -295,21 +295,19 @@
 
         const textBlockW = Math.max(topTagW, nameRowW);
 
-        // 카드 및 아바타 기하학적 배치 (좌측 아바타, 우측 2단 텍스트 블록)
-        const cardPadL = Math.round(10 * scale);
-        const cardPadR = Math.round(18 * scale);
-        const gapAvatarText = Math.round(12 * scale);
-
+        // 카드 및 아바타 기하학적 배치 (좌우 대칭 및 완벽 중앙 정렬, 우측 여백 최적화)
         const avatarD = Math.round(52 * scale);
         const avatarR = avatarD / 2;
         const ringWidth = Math.max(1.5, Math.round(2 * scale));
         const photoR = avatarR - ringWidth;
+        const gapAvatarText = Math.round(12 * scale);
 
-        const contentW = cardPadL + avatarD + gapAvatarText + textBlockW + cardPadR;
-        const minCardW = Math.round(260 * scale);
-        const cardW = Math.max(minCardW, contentW);
+        const innerContentW = avatarD + gapAvatarText + textBlockW;
+        const padX = Math.round(14 * scale);
+        const cardW = innerContentW + padX * 2;
         const cardH = Math.round(68 * scale);
         const cardRadius = Math.round(16 * scale);
+        const cardPadL = padX;
 
         const marginX = Math.max(22, Math.round(imgW * 0.024));
         const marginY = Math.max(18, Math.round(imgW * 0.02));
@@ -517,21 +515,26 @@
       const role = this.resolvePlannerRole(p);
       const avatarUrl = this.getAvatarUrl(p);
 
-      // SVG 규격 산출 (시안 A - 4번 소프트 스카이 틴트)
+      // SVG 규격 산출 (시안 A - 4번 소프트 스카이 틴트, 좌우 대칭 중앙 정렬)
       const nameW = formattedName.length * 15 + 10;
       const roleW = role.length * 11 + 14;
-      const cardPadL = 10;
+      const cardPadX = 14;
       const avatarD = 52;
       const gapAvatarText = 12;
-      const textX = cardPadL + avatarD + gapAvatarText;
-      const rolePillX = textX + nameW + 8;
-      const contentW = rolePillX + roleW + 18;
-      const cardW = Math.max(260, contentW);
+      const nameRowW = nameW + 8 + roleW;
+      const topTagW = 115;
+      const textBlockW = Math.max(nameRowW, topTagW);
+
+      const innerContentW = avatarD + gapAvatarText + textBlockW;
+      const cardW = innerContentW + cardPadX * 2;
       const cardH = 68;
 
-      const avatarCenterX = cardPadL + avatarD / 2;
+      const avatarCenterX = cardPadX + avatarD / 2;
       const avatarCenterY = cardH / 2;
       const photoR = avatarD / 2 - 2;
+
+      const textX = cardPadX + avatarD + gapAvatarText;
+      const rolePillX = textX + nameW + 8;
 
       const avatarContent = avatarUrl
         ? `<image href="${avatarUrl}" x="${avatarCenterX - photoR}" y="${avatarCenterY - photoR}" width="${photoR * 2}" height="${photoR * 2}" preserveAspectRatio="xMidYMid slice" clip-path="url(#avatarClip)" />`
